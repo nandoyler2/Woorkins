@@ -29,10 +29,10 @@ export default function Admin() {
   const loadStats = async () => {
     try {
       const [usersRes, businessRes, evaluationsRes, postsRes] = await Promise.all([
-        supabase.from('profiles').select('id', { count: 'exact', head: true }),
-        supabase.from('business_profiles').select('id', { count: 'exact', head: true }),
-        supabase.from('evaluations').select('id', { count: 'exact', head: true }),
-        supabase.from('posts').select('id', { count: 'exact', head: true }),
+        supabase.from('profiles' as any).select('id', { count: 'exact', head: true }),
+        supabase.from('business_profiles' as any).select('id', { count: 'exact', head: true }),
+        supabase.from('evaluations' as any).select('id', { count: 'exact', head: true }),
+        supabase.from('posts' as any).select('id', { count: 'exact', head: true }),
       ]);
 
       setStats({

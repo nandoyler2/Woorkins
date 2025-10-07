@@ -310,6 +310,120 @@ export type Database = {
         }
         Relationships: []
       }
+      projects: {
+        Row: {
+          budget_max: number | null
+          budget_min: number | null
+          category: string | null
+          created_at: string
+          deadline: string | null
+          description: string
+          id: string
+          profile_id: string
+          proposals_count: number | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          budget_max?: number | null
+          budget_min?: number | null
+          category?: string | null
+          created_at?: string
+          deadline?: string | null
+          description: string
+          id?: string
+          profile_id: string
+          proposals_count?: number | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          budget_max?: number | null
+          budget_min?: number | null
+          category?: string | null
+          created_at?: string
+          deadline?: string | null
+          description?: string
+          id?: string
+          profile_id?: string
+          proposals_count?: number | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "projects_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      proposals: {
+        Row: {
+          budget: number
+          business_id: string | null
+          created_at: string
+          delivery_days: number
+          freelancer_id: string
+          id: string
+          message: string
+          project_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          budget: number
+          business_id?: string | null
+          created_at?: string
+          delivery_days: number
+          freelancer_id: string
+          id?: string
+          message: string
+          project_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          budget?: number
+          business_id?: string | null
+          created_at?: string
+          delivery_days?: number
+          freelancer_id?: string
+          id?: string
+          message?: string
+          project_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proposals_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "business_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proposals_freelancer_id_fkey"
+            columns: ["freelancer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proposals_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string

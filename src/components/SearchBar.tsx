@@ -62,74 +62,64 @@ export const SearchBar = () => {
 
   return (
     <div className="w-full max-w-3xl mx-auto relative">
-      <div className="relative flex gap-3 items-center">
-        <div className="relative flex-1">
-          {/* Loading border animation */}
-          {isSearching && (
-            <div className="absolute inset-0 rounded-2xl overflow-hidden pointer-events-none">
-              <div className="absolute inset-0 rounded-2xl border-4 border-primary/30"></div>
-              <div 
-                className="absolute top-0 left-0 w-full h-full"
-                style={{
-                  background: 'linear-gradient(90deg, transparent, hsl(var(--primary)), hsl(var(--secondary)), transparent)',
-                  backgroundSize: '200% 100%',
-                  animation: 'shimmer 2s linear infinite',
-                  mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
-                  maskComposite: 'exclude',
-                  WebkitMaskComposite: 'xor',
-                  padding: '4px',
-                  borderRadius: '1rem'
-                }}
-              ></div>
-            </div>
-          )}
-          
-          <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-6 h-6 text-muted-foreground z-10" />
-          <Input
-            type="text"
-            placeholder={placeholder}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className={cn(
-              "h-16 md:h-20 pl-16 md:pl-20 pr-6 text-lg md:text-2xl rounded-2xl border-2 transition-all relative z-10 bg-background",
-              isSearching 
-                ? "border-primary/50 shadow-glow" 
-                : "border-foreground/20 hover:border-primary/30 shadow-elegant hover:shadow-glow"
-            )}
-          />
-        </div>
-        
-        <div className="relative">
-          <Button
-            size="lg"
-            disabled={isSearching}
-            className={cn(
-              "h-16 md:h-20 px-8 md:px-10 rounded-2xl bg-gradient-primary text-white font-semibold text-lg md:text-xl shadow-glow hover:shadow-elegant transition-all relative overflow-visible",
-              isSearching && "pointer-events-none"
-            )}
-          >
-            {isSearching ? (
-              <>
-                <div className="absolute inset-0 rounded-2xl animate-spin-slow">
-                  <div className="absolute inset-0 rounded-2xl border-4 border-transparent border-t-primary border-r-secondary animate-pulse"></div>
-                </div>
-                <Sparkles className="w-6 h-6 animate-pulse" />
-              </>
-            ) : (
-              <>
-                <Search className="w-6 h-6" />
-                <span className="ml-2 hidden md:inline">Buscar</span>
-              </>
-            )}
-          </Button>
-          
-          {/* Loading ring effect */}
-          {isSearching && (
-            <div className="absolute inset-0 -m-2 rounded-3xl">
-              <div className="absolute inset-0 rounded-3xl border-4 border-primary/30 animate-ping"></div>
-              <div className="absolute inset-0 rounded-3xl border-4 border-transparent border-t-primary border-r-secondary animate-spin"></div>
-            </div>
-          )}
+      <div className="relative">
+        {/* Unified circular ring around input + button */}
+        {isSearching && (
+          <div className="pointer-events-none absolute -inset-3 rounded-[1.75rem] z-0">
+            <div
+              className="absolute inset-0 rounded-[1.75rem] animate-spin-slow"
+              style={{
+                background:
+                  'conic-gradient(from 0deg, hsl(var(--primary)), hsl(var(--secondary)), hsl(var(--primary)))',
+              }}
+            />
+            {/* Mask the center so only the ring is visible */}
+            <div className="absolute inset-[3px] rounded-[1.5rem] bg-background" />
+          </div>
+        )}
+
+        {/* Content */}
+        <div className="relative z-10 flex gap-3 items-center rounded-2xl">
+          <div className="relative flex-1">
+            <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-6 h-6 text-muted-foreground z-10" />
+            <Input
+              type="text"
+              placeholder={placeholder}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className={cn(
+                'h-16 md:h-20 pl-16 md:pl-20 pr-6 text-lg md:text-2xl rounded-2xl border-2 transition-all relative z-10 bg-background',
+                isSearching
+                  ? 'border-primary/50 shadow-glow'
+                  : 'border-foreground/20 hover:border-primary/30 shadow-elegant hover:shadow-glow'
+              )}
+            />
+          </div>
+
+          <div className="relative">
+            <Button
+              size="lg"
+              disabled={isSearching}
+              onClick={() => {
+                setIsSearching(true);
+                const filtered = mockData.filter((item) =>
+                  item.toLowerCase().includes(searchTerm.toLowerCase())
+                );
+                setTimeout(() => {
+                  setResults(filtered);
+                  setShowResults(true);
+                  setIsSearching(false);
+                }, 400);
+              }}
+              className={cn(
+                'h-16 md:h-20 px-8 md:px-10 rounded-2xl bg-gradient-primary text-white font-semibold text-lg md:text-xl shadow-glow hover:shadow-elegant transition-all relative',
+                isSearching && 'pointer-events-none'
+              )}
+            >
+              <Search className="w-6 h-6" />
+              <span className="ml-2 hidden md:inline">Buscar</span>
+            </Button>
+          </div>
         </div>
       </div>
 

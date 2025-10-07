@@ -18,6 +18,7 @@ export default function Auth() {
   const mode = searchParams.get('mode') || 'signin'; // 'signin' or 'signup'
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
   const { user, signIn, signUp } = useAuth();
@@ -33,6 +34,16 @@ export default function Auth() {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (password !== confirmPassword) {
+      toast({
+        title: 'Erro ao criar conta',
+        description: 'As senhas não correspondem',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setLoading(true);
 
     const { error } = await signUp(email, password, fullName);
@@ -130,6 +141,19 @@ export default function Auth() {
                   minLength={6}
                   className="h-11"
                   placeholder="Mínimo 6 caracteres"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="signup-confirm-password">Confirmar Senha</Label>
+                <Input
+                  id="signup-confirm-password"
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                  minLength={6}
+                  className="h-11"
+                  placeholder="Repita sua senha"
                 />
               </div>
               <Button type="submit" className="w-full h-11 text-base" disabled={loading}>

@@ -1,16 +1,20 @@
 import { useState, useEffect, useId } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search } from "lucide-react";
+import { Search, Star, Building2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { SafeImage } from "@/components/ui/safe-image";
 
 interface SearchResult {
   slug: string;
   company_name: string;
   category: string | null;
   description: string | null;
+  logo_url: string | null;
+  average_rating: number;
+  total_reviews: number;
 }
 
 export const SearchBar = () => {
@@ -54,7 +58,7 @@ export const SearchBar = () => {
       try {
         const { data, error } = await supabase
           .from('business_profiles' as any)
-          .select('slug, company_name, category, description')
+          .select('slug, company_name, category, description, logo_url, average_rating, total_reviews')
           .or(`company_name.ilike.%${searchTerm}%,category.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`)
           .limit(10);
 
@@ -130,7 +134,7 @@ export const SearchBar = () => {
               try {
                 const { data } = await supabase
                   .from('business_profiles' as any)
-                  .select('slug, company_name, category, description')
+                  .select('slug, company_name, category, description, logo_url, average_rating, total_reviews')
                   .or(`company_name.ilike.%${searchTerm}%,category.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`)
                   .limit(10);
 
@@ -160,7 +164,7 @@ export const SearchBar = () => {
       {showResults && (
         <div className="absolute top-full mt-4 w-full bg-background border-2 border-foreground/20 rounded-2xl shadow-elegant overflow-hidden z-50">
           {results.length > 0 ? (
-            <div className="p-4">
+            <div className="p-2">
               {results.map((result, index) => (
                 <div
                   key={index}
@@ -169,15 +173,48 @@ export const SearchBar = () => {
                     setShowResults(false);
                     setSearchTerm("");
                   }}
-                  className="p-4 hover:bg-muted rounded-lg cursor-pointer transition-colors"
+                  className="p-4 hover:bg-muted rounded-xl cursor-pointer transition-all hover:shadow-sm"
                 >
-                  <h3 className="text-base md:text-lg font-semibold">{result.company_name}</h3>
-                  {result.category && (
-                    <p className="text-sm text-muted-foreground">{result.category}</p>
-                  )}
-                  {result.description && (
-                    <p className="text-sm text-muted-foreground line-clamp-1">{result.description}</p>
-                  )}
+                  <div className="flex gap-4 items-start">
+                    {/* Logo */}
+                    <div className="flex-shrink-0">
+                      {result.logo_url ? (
+                        <SafeImage
+                          src={result.logo_url}
+                          alt={result.company_name}
+                          className="w-16 h-16 md:w-20 md:h-20 rounded-lg object-cover border-2 border-border"
+                        />
+                      ) : (
+                        <div className="w-16 h-16 md:w-20 md:h-20 rounded-lg bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center border-2 border-border">
+                          <Building2 className="w-8 h-8 text-muted-foreground" />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Content */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2 mb-1">
+                        <h3 className="text-base md:text-lg font-bold truncate">{result.company_name}</h3>
+                        
+                        {/* Rating */}
+                        {result.total_reviews > 0 && (
+                          <div className="flex items-center gap-1 px-2 py-1 bg-primary/10 rounded-lg flex-shrink-0">
+                            <Star className="w-4 h-4 fill-primary text-primary" />
+                            <span className="text-sm font-bold">{Number(result.average_rating).toFixed(1)}</span>
+                            <span className="text-xs text-muted-foreground">({result.total_reviews})</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {result.category && (
+                        <p className="text-sm text-primary font-medium mb-1">{result.category}</p>
+                      )}
+                      
+                      {result.description && (
+                        <p className="text-sm text-muted-foreground line-clamp-2">{result.description}</p>
+                      )}
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>

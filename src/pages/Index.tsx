@@ -54,7 +54,7 @@ const Index = () => {
               <SafeImage 
                 src={logoWoorkins} 
                 alt="Woorkins" 
-                className="h-32 md:h-40 w-auto drop-shadow-2xl hover:scale-105 transition-transform duration-500" 
+                className="h-20 md:h-24 w-auto drop-shadow-2xl hover:scale-105 transition-transform duration-500" 
               />
             </div>
 
@@ -91,8 +91,8 @@ const Index = () => {
               </Button>
               <Button 
                 size="lg" 
-                variant="hero" 
-                className="text-base h-14 px-10"
+                variant="outline" 
+                className="text-base h-14 px-10 border-2 border-foreground text-foreground hover:bg-foreground hover:text-background"
                 asChild
               >
                 <Link to="/auth?mode=signup">Sou Empresa</Link>

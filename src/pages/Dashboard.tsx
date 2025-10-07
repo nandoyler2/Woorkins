@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, Building2, Edit, Star, MessageSquare } from 'lucide-react';
+import { Plus, Building2, Edit, Star, MessageSquare, CheckCircle, XCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -37,6 +37,8 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [openDialog, setOpenDialog] = useState(false);
+  const [slugAvailable, setSlugAvailable] = useState<boolean | null>(null);
+  const [checkingSlug, setCheckingSlug] = useState(false);
   
   // Form state
   const [companyName, setCompanyName] = useState('');
@@ -87,6 +89,62 @@ export default function Dashboard() {
     }
   };
 
+  const checkSlugAvailability = async (slugToCheck: string) => {
+    if (!slugToCheck || slugToCheck.length < 3) {
+      setSlugAvailable(null);
+      return;
+    }
+
+    setCheckingSlug(true);
+    
+    try {
+      const { data, error } = await supabase
+        .from('business_profiles' as any)
+        .select('id')
+        .eq('slug', slugToCheck)
+        .maybeSingle();
+
+      setSlugAvailable(!data);
+    } catch (error) {
+      console.error('Error checking slug:', error);
+      setSlugAvailable(null);
+    } finally {
+      setCheckingSlug(false);
+    }
+  };
+
+  const handleCompanyNameChange = (name: string) => {
+    setCompanyName(name);
+    
+    // Auto-generate slug from company name
+    const generatedSlug = name
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '') // Remove accents
+      .replace(/[^a-z0-9\s-]/g, '') // Remove special chars
+      .trim()
+      .replace(/\s+/g, '-') // Replace spaces with hyphens
+      .replace(/-+/g, '-'); // Remove duplicate hyphens
+    
+    setSlug(generatedSlug);
+    
+    // Check availability with debounce
+    if (generatedSlug.length >= 3) {
+      setTimeout(() => checkSlugAvailability(generatedSlug), 500);
+    }
+  };
+
+  const handleSlugChange = (newSlug: string) => {
+    const cleanSlug = newSlug.toLowerCase().replace(/[^a-z0-9-]/g, '');
+    setSlug(cleanSlug);
+    
+    if (cleanSlug.length >= 3) {
+      setTimeout(() => checkSlugAvailability(cleanSlug), 500);
+    } else {
+      setSlugAvailable(null);
+    }
+  };
+
   const handleCreateBusiness = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!profile) return;
@@ -107,7 +165,7 @@ export default function Dashboard() {
 
       toast({
         title: 'Marca criada com sucesso!',
-        description: `Sua marca @${slug} foi criada.`,
+        description: `Sua marca foi criada em woorkins.com/${slug}`,
       });
 
       setOpenDialog(false);
@@ -217,26 +275,41 @@ export default function Dashboard() {
                       <Input
                         id="company-name"
                         value={companyName}
-                        onChange={(e) => setCompanyName(e.target.value)}
+                        onChange={(e) => handleCompanyNameChange(e.target.value)}
                         placeholder="Nome da sua empresa"
                         required
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="slug">@Username (Slug)</Label>
-                      <div className="flex items-center gap-2">
-                        <span className="text-muted-foreground">@</span>
-                        <Input
-                          id="slug"
-                          value={slug}
-                          onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
-                          placeholder="minha-empresa"
-                          required
-                        />
+                      <Label htmlFor="slug">Username (Slug)</Label>
+                      <Input
+                        id="slug"
+                        value={slug}
+                        onChange={(e) => handleSlugChange(e.target.value)}
+                        placeholder="minha-empresa"
+                        required
+                        minLength={3}
+                      />
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs text-muted-foreground">
+                          Será usado como: woorkins.com/{slug || 'minha-empresa'}
+                        </p>
+                        {checkingSlug && (
+                          <span className="text-xs text-muted-foreground">Verificando...</span>
+                        )}
+                        {!checkingSlug && slugAvailable === true && slug.length >= 3 && (
+                          <span className="text-xs text-accent flex items-center gap-1">
+                            <CheckCircle className="w-3 h-3" />
+                            Disponível
+                          </span>
+                        )}
+                        {!checkingSlug && slugAvailable === false && (
+                          <span className="text-xs text-destructive flex items-center gap-1">
+                            <XCircle className="w-3 h-3" />
+                            Indisponível
+                          </span>
+                        )}
                       </div>
-                      <p className="text-xs text-muted-foreground">
-                        Será usado como: woorkins.com/@{slug || 'minha-empresa'}
-                      </p>
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="description">Descrição</Label>
@@ -248,7 +321,11 @@ export default function Dashboard() {
                         rows={4}
                       />
                     </div>
-                    <Button type="submit" className="w-full" disabled={creating}>
+                    <Button 
+                      type="submit" 
+                      className="w-full" 
+                      disabled={creating || slugAvailable === false || checkingSlug}
+                    >
                       {creating ? 'Criando...' : 'Criar Marca'}
                     </Button>
                   </form>
@@ -277,7 +354,7 @@ export default function Dashboard() {
                         <div className="space-y-1">
                           <CardTitle className="text-xl">{business.company_name}</CardTitle>
                           <CardDescription className="text-base">
-                            @{business.slug}
+                            woorkins.com/{business.slug}
                           </CardDescription>
                         </div>
                         <Button variant="ghost" size="icon" asChild>
@@ -305,7 +382,7 @@ export default function Dashboard() {
                       </div>
                       <div className="flex gap-2">
                         <Button variant="outline" className="flex-1" asChild>
-                          <Link to={`/@${business.slug}`}>Ver Perfil</Link>
+                          <Link to={`/${business.slug}`}>Ver Perfil</Link>
                         </Button>
                         <Button className="flex-1 bg-gradient-primary" asChild>
                           <Link to={`/business/${business.slug}/edit`}>Gerenciar</Link>

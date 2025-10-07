@@ -59,9 +59,9 @@ const Index = () => {
             </div>
 
             {/* Main Title */}
-            <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold leading-tight">
+            <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold leading-[1.15] md:leading-[1.2]">
               A plataforma que une
-              <span className="block bg-gradient-primary bg-clip-text text-transparent mt-2 px-1">
+              <span className="block bg-gradient-primary bg-clip-text text-transparent mt-2 px-1 pb-1 md:pb-2">
                 pessoas e negócios
               </span>
             </h1>

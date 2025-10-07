@@ -64,22 +64,21 @@ export const SearchBar = () => {
   return (
     <div className="w-full max-w-3xl mx-auto relative">
       <div className="relative">
-        {/* Unified circular ring around input + button */}
+        {/* Pulsing gradient shadow behind search box */}
         {isSearching && (
-          <div className="pointer-events-none absolute inset-0 rounded-2xl z-0">
+          <div className="pointer-events-none absolute inset-0 rounded-2xl z-0 animate-pulse">
             <div
-              className="absolute inset-0 rounded-2xl animate-spin-slow"
+              className="absolute inset-0 rounded-2xl blur-2xl opacity-60"
               style={{
                 background:
-                  'conic-gradient(from 0deg, hsl(var(--primary)), hsl(var(--secondary)), hsl(var(--primary)))',
+                  'linear-gradient(135deg, hsl(var(--primary)), hsl(var(--secondary)))',
               }}
             />
-            <div className="absolute inset-[2px] rounded-2xl bg-background" />
           </div>
         )}
 
         {/* Content with unified border */}
-        <div className="relative z-10 flex gap-3 items-center rounded-2xl border-2 border-foreground/20 bg-background p-2">
+        <div className="relative z-10 flex gap-3 items-center rounded-2xl border-2 border-foreground/20 bg-background p-2 shadow-elegant">
           <div className="relative flex-1">
             {/* Gradient stroke search icon */}
             <svg
@@ -106,8 +105,7 @@ export const SearchBar = () => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className={cn(
-                'h-16 md:h-20 pl-14 md:pl-16 pr-4 text-lg md:text-2xl rounded-xl border-0 focus-visible:ring-0 bg-transparent transition-all relative z-10',
-                isSearching ? 'shadow-glow' : 'shadow-elegant hover:shadow-glow'
+                'h-16 md:h-20 pl-14 md:pl-16 pr-4 text-lg md:text-2xl rounded-xl border-0 focus-visible:ring-0 bg-transparent transition-all relative z-10'
               )}
             />
           </div>
@@ -124,11 +122,11 @@ export const SearchBar = () => {
                 setResults(filtered);
                 setShowResults(true);
                 setIsSearching(false);
-              }, 400);
+              }, 1200);
             }}
             className={cn(
               'h-16 md:h-20 px-8 md:px-10 rounded-xl bg-gradient-primary text-white font-semibold text-lg md:text-xl shadow-glow hover:shadow-elegant transition-all relative',
-              isSearching && 'pointer-events-none'
+              isSearching && 'pointer-events-none opacity-90'
             )}
           >
             <Search className="w-6 h-6" />

@@ -1,0 +1,86 @@
+import { useState, useEffect } from "react";
+import { Input } from "@/components/ui/input";
+import { Search } from "lucide-react";
+import { Link } from "react-router-dom";
+
+export const SearchBar = () => {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [results, setResults] = useState<string[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showResults, setShowResults] = useState(false);
+
+  // Simulated database of companies, businesses, and products
+  const mockData = [
+    "Tech Solutions", "Digital Marketing", "Software Development",
+    "Cloud Services", "E-commerce Platform", "Mobile Apps",
+    "Web Design", "Consulting Services", "AI Solutions",
+    "Data Analytics", "Cybersecurity", "Social Media Management"
+  ];
+
+  useEffect(() => {
+    if (searchTerm.trim() === "") {
+      setShowResults(false);
+      return;
+    }
+
+    setIsSearching(true);
+    const timer = setTimeout(() => {
+      const filtered = mockData.filter(item =>
+        item.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setResults(filtered);
+      setShowResults(true);
+      setIsSearching(false);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  return (
+    <div className="w-full max-w-3xl mx-auto relative">
+      <div className="relative">
+        <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-7 h-7 text-muted-foreground" />
+        <Input
+          type="text"
+          placeholder="Buscar empresas, negócios e produtos..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="h-16 md:h-20 pl-16 md:pl-20 pr-6 text-lg md:text-2xl rounded-2xl border-2 border-foreground/20 focus:border-primary shadow-elegant hover:shadow-glow transition-all"
+        />
+      </div>
+
+      {showResults && (
+        <div className="absolute top-full mt-4 w-full bg-background border-2 border-foreground/20 rounded-2xl shadow-elegant overflow-hidden z-50">
+          {results.length > 0 ? (
+            <div className="p-4">
+              {results.map((result, index) => (
+                <div
+                  key={index}
+                  className="p-4 hover:bg-muted rounded-lg cursor-pointer transition-colors text-base md:text-lg"
+                >
+                  {result}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="p-6 md:p-8 text-center">
+              <p className="text-base md:text-lg text-muted-foreground mb-4">
+                Não achamos nada para "{searchTerm}"
+              </p>
+              <p className="text-base md:text-lg mb-4">
+                Crie agora a marca ou o produto sobre isso{" "}
+                <Link 
+                  to="/auth?mode=signup" 
+                  className="text-primary font-bold hover:underline"
+                  onClick={() => setShowResults(false)}
+                >
+                  clique aqui
+                </Link>
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};

@@ -6,6 +6,7 @@ import { Link } from "react-router-dom";
 import logoWoorkins from "@/assets/woorkins.png";
 import { SafeImage } from "@/components/ui/safe-image";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { SearchBar } from "@/components/SearchBar";
 const Index = () => {
   const {
     language,
@@ -58,11 +59,10 @@ const Index = () => {
               </span>
             </h1>
 
-            {/* Subtitle */}
-            <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed relative z-20 -mt-8 md:-mt-12 my-[17px]">
-              A plataforma profissional que une consumidores<br />
-              e empresas em um ecossistema de credibilidade
-            </p>
+            {/* Search Bar */}
+            <div className="relative z-20 -mt-4 md:-mt-8">
+              <SearchBar />
+            </div>
 
             {/* CTAs */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-8">

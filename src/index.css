@@ -110,15 +110,15 @@ All colors MUST be HSL.
 
   @keyframes pulse-slow {
     0%, 100% {
-      opacity: 0.3;
+      opacity: 0.5;
     }
     50% {
-      opacity: 0.6;
+      opacity: 0.9;
     }
   }
 
   .animate-pulse-slow {
-    animation: pulse-slow 3s ease-in-out infinite;
+    animation: pulse-slow 2.5s ease-in-out infinite;
   }
 
   @keyframes shimmer {

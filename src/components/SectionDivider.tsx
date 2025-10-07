@@ -1,6 +1,6 @@
 export const SectionDivider = () => {
   return (
-    <div className="relative w-full h-32 overflow-hidden">
+    <div className="relative w-full h-16 -my-8 overflow-hidden">
       {/* Wave SVG with gradient fade */}
       <svg 
         className="absolute inset-0 w-full h-full" 

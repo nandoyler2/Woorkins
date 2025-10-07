@@ -22,6 +22,7 @@ export type Database = {
           company_name: string
           cover_url: string | null
           created_at: string
+          description: string | null
           email: string | null
           id: string
           logo_url: string | null
@@ -40,6 +41,7 @@ export type Database = {
           company_name: string
           cover_url?: string | null
           created_at?: string
+          description?: string | null
           email?: string | null
           id?: string
           logo_url?: string | null
@@ -58,6 +60,7 @@ export type Database = {
           company_name?: string
           cover_url?: string | null
           created_at?: string
+          description?: string | null
           email?: string | null
           id?: string
           logo_url?: string | null

@@ -239,6 +239,100 @@ export type Database = {
           },
         ]
       }
+      negotiation_messages: {
+        Row: {
+          amount: number | null
+          content: string | null
+          created_at: string
+          id: string
+          message_type: string
+          negotiation_id: string
+          sender_id: string
+          sender_type: string
+        }
+        Insert: {
+          amount?: number | null
+          content?: string | null
+          created_at?: string
+          id?: string
+          message_type?: string
+          negotiation_id: string
+          sender_id: string
+          sender_type: string
+        }
+        Update: {
+          amount?: number | null
+          content?: string | null
+          created_at?: string
+          id?: string
+          message_type?: string
+          negotiation_id?: string
+          sender_id?: string
+          sender_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "negotiation_messages_negotiation_id_fkey"
+            columns: ["negotiation_id"]
+            isOneToOne: false
+            referencedRelation: "negotiations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      negotiations: {
+        Row: {
+          accepted_at: string | null
+          business_id: string
+          completed_at: string | null
+          created_at: string
+          current_amount: number | null
+          final_amount: number | null
+          id: string
+          paid_at: string | null
+          service_description: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          business_id: string
+          completed_at?: string | null
+          created_at?: string
+          current_amount?: number | null
+          final_amount?: number | null
+          id?: string
+          paid_at?: string | null
+          service_description?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          accepted_at?: string | null
+          business_id?: string
+          completed_at?: string | null
+          created_at?: string
+          current_amount?: number | null
+          final_amount?: number | null
+          id?: string
+          paid_at?: string | null
+          service_description?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "negotiations_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "business_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       portfolio_items: {
         Row: {
           business_id: string
@@ -489,6 +583,57 @@ export type Database = {
           },
         ]
       }
+      transactions: {
+        Row: {
+          amount: number
+          business_id: string
+          created_at: string
+          id: string
+          negotiation_id: string
+          released_at: string | null
+          status: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          business_id: string
+          created_at?: string
+          id?: string
+          negotiation_id: string
+          released_at?: string | null
+          status?: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          business_id?: string
+          created_at?: string
+          id?: string
+          negotiation_id?: string
+          released_at?: string | null
+          status?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transactions_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "business_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_negotiation_id_fkey"
+            columns: ["negotiation_id"]
+            isOneToOne: false
+            referencedRelation: "negotiations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -510,11 +655,57 @@ export type Database = {
         }
         Relationships: []
       }
+      withdrawals: {
+        Row: {
+          amount: number
+          bank_details: Json | null
+          business_id: string
+          id: string
+          processed_at: string | null
+          requested_at: string
+          status: string
+        }
+        Insert: {
+          amount: number
+          bank_details?: Json | null
+          business_id: string
+          id?: string
+          processed_at?: string | null
+          requested_at?: string
+          status?: string
+        }
+        Update: {
+          amount?: number
+          bank_details?: Json | null
+          business_id?: string
+          id?: string
+          processed_at?: string | null
+          requested_at?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "withdrawals_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "business_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      get_business_balance: {
+        Args: { business_uuid: string }
+        Returns: {
+          available: number
+          pending: number
+          total: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

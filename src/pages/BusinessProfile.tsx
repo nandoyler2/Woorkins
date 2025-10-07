@@ -4,7 +4,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { Header } from '@/components/Header';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Star, MapPin, Phone, Mail, Globe, Image as ImageIcon } from 'lucide-react';
+import { Footer } from '@/components/Footer';
 import { SafeImage } from '@/components/ui/safe-image';
 import { useToast } from '@/hooks/use-toast';
 
@@ -136,80 +138,96 @@ export default function BusinessProfile() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background">
+    <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-secondary/10">
       <Header />
 
       {/* Cover Image */}
       {business.cover_url && (
-        <div className="w-full h-64 md:h-96 relative">
+        <div className="w-full h-64 md:h-96 relative overflow-hidden">
           <SafeImage
             src={business.cover_url}
             alt={`Capa de ${business.company_name}`}
             className="w-full h-full object-cover"
           />
+          <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
         </div>
       )}
 
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-5xl mx-auto space-y-8">
           {/* Header Section */}
-          <div className="flex flex-col md:flex-row gap-6 items-start">
-            {business.logo_url ? (
-              <SafeImage
-                src={business.logo_url}
-                alt={`Logo de ${business.company_name}`}
-                className="w-32 h-32 rounded-lg object-cover border-4 border-background shadow-elegant"
-              />
-            ) : (
-              <div className="w-32 h-32 rounded-lg bg-muted flex items-center justify-center">
-                <ImageIcon className="w-12 h-12 text-muted-foreground" />
-              </div>
-            )}
-
-            <div className="flex-1 space-y-4">
-              <div>
-                <h1 className="text-4xl font-bold mb-2">{business.company_name}</h1>
-                <p className="text-muted-foreground">woorkins.com/{business.slug}</p>
-                {business.category && (
-                  <p className="text-sm text-primary font-medium mt-2">{business.category}</p>
+          <Card className="bg-card/50 backdrop-blur-sm border-2 shadow-elegant">
+            <CardContent className="pt-6">
+              <div className="flex flex-col md:flex-row gap-6 items-start">
+                {business.logo_url ? (
+                  <SafeImage
+                    src={business.logo_url}
+                    alt={`Logo de ${business.company_name}`}
+                    className="w-32 h-32 rounded-2xl object-cover border-4 border-background shadow-glow ring-2 ring-primary/20"
+                  />
+                ) : (
+                  <div className="w-32 h-32 rounded-2xl bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center border-2 border-primary/20">
+                    <ImageIcon className="w-12 h-12 text-primary" />
+                  </div>
                 )}
-              </div>
 
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <Star className="w-5 h-5 fill-primary text-primary" />
-                  <span className="font-bold text-lg">{Number(business.average_rating).toFixed(1)}</span>
-                  <span className="text-muted-foreground">({business.total_reviews} avaliações)</span>
+                <div className="flex-1 space-y-4">
+                  <div>
+                    <h1 className="text-4xl font-bold mb-2 bg-gradient-primary bg-clip-text text-transparent">{business.company_name}</h1>
+                    <p className="text-muted-foreground text-sm">woorkins.com/{business.slug}</p>
+                    {business.category && (
+                      <Badge className="mt-3 bg-gradient-primary text-white border-0 shadow-glow">
+                        {business.category}
+                      </Badge>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-primary/5 to-secondary/5 rounded-xl border-2 border-primary/10">
+                    <div className="flex items-center gap-2">
+                      <div className="p-2 bg-gradient-primary rounded-lg shadow-glow">
+                        <Star className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <span className="font-bold text-2xl">{Number(business.average_rating).toFixed(1)}</span>
+                        <span className="text-muted-foreground text-sm ml-2">({business.total_reviews} avaliações)</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {business.description && (
+                    <p className="text-foreground leading-relaxed text-base">{business.description}</p>
+                  )}
                 </div>
               </div>
-
-              {business.description && (
-                <p className="text-foreground">{business.description}</p>
-              )}
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
           {/* Contact Info */}
-          <Card className="bg-card/50 backdrop-blur-sm border-2">
+          <Card className="bg-card/50 backdrop-blur-sm border-2 shadow-elegant hover:shadow-glow transition-shadow">
             <CardContent className="pt-6">
-              <h2 className="text-xl font-bold mb-4">Informações de Contato</h2>
-              <div className="space-y-3">
+              <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+                <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center shadow-glow">
+                  <Phone className="w-4 h-4 text-white" />
+                </div>
+                Informações de Contato
+              </h2>
+              <div className="space-y-4">
                 {business.address && (
-                  <div className="flex items-start gap-3">
-                    <MapPin className="w-5 h-5 text-primary mt-0.5" />
-                    <span>{business.address}</span>
+                  <div className="flex items-start gap-4 p-4 rounded-xl bg-gradient-to-r from-primary/5 to-transparent hover:from-primary/10 transition-colors">
+                    <MapPin className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                    <span className="leading-relaxed">{business.address}</span>
                   </div>
                 )}
                 {business.phone && (
-                  <div className="flex items-center gap-3">
-                    <Phone className="w-5 h-5 text-primary" />
-                    <a href={`tel:${business.phone}`} className="hover:underline">{business.phone}</a>
+                  <div className="flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-secondary/5 to-transparent hover:from-secondary/10 transition-colors">
+                    <Phone className="w-5 h-5 text-primary flex-shrink-0" />
+                    <a href={`tel:${business.phone}`} className="hover:text-primary transition-colors font-medium">{business.phone}</a>
                   </div>
                 )}
                 {business.email && (
-                  <div className="flex items-center gap-3">
-                    <Mail className="w-5 h-5 text-primary" />
-                    <a href={`mailto:${business.email}`} className="hover:underline">{business.email}</a>
+                  <div className="flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-accent/5 to-transparent hover:from-accent/10 transition-colors">
+                    <Mail className="w-5 h-5 text-primary flex-shrink-0" />
+                    <a href={`mailto:${business.email}`} className="hover:text-primary transition-colors font-medium">{business.email}</a>
                   </div>
                 )}
               </div>
@@ -218,23 +236,31 @@ export default function BusinessProfile() {
 
           {/* Portfolio */}
           {portfolio.length > 0 && (
-            <Card className="bg-card/50 backdrop-blur-sm border-2">
+            <Card className="bg-card/50 backdrop-blur-sm border-2 shadow-elegant">
               <CardContent className="pt-6">
-                <h2 className="text-xl font-bold mb-4">Portfólio</h2>
+                <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+                  <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center shadow-glow">
+                    <ImageIcon className="w-4 h-4 text-white" />
+                  </div>
+                  Portfólio
+                </h2>
                 {business.portfolio_description && (
-                  <p className="text-muted-foreground mb-6">{business.portfolio_description}</p>
+                  <p className="text-muted-foreground mb-8 text-base leading-relaxed">{business.portfolio_description}</p>
                 )}
-                <div className="grid md:grid-cols-3 gap-4">
+                <div className="grid md:grid-cols-3 gap-6">
                   {portfolio.map((item) => (
-                    <div key={item.id} className="space-y-2">
-                      <SafeImage
-                        src={item.media_url}
-                        alt={item.title}
-                        className="w-full h-48 object-cover rounded-lg"
-                      />
-                      <h3 className="font-medium">{item.title}</h3>
+                    <div key={item.id} className="group space-y-3">
+                      <div className="relative overflow-hidden rounded-2xl border-2 border-primary/10 shadow-card hover:shadow-elegant transition-all duration-300 hover:-translate-y-1">
+                        <SafeImage
+                          src={item.media_url}
+                          alt={item.title}
+                          className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </div>
+                      <h3 className="font-bold text-lg">{item.title}</h3>
                       {item.description && (
-                        <p className="text-sm text-muted-foreground">{item.description}</p>
+                        <p className="text-sm text-muted-foreground leading-relaxed">{item.description}</p>
                       )}
                     </div>
                   ))}
@@ -244,47 +270,65 @@ export default function BusinessProfile() {
           )}
 
           {/* Reviews */}
-          <Card className="bg-card/50 backdrop-blur-sm border-2">
+          <Card className="bg-card/50 backdrop-blur-sm border-2 shadow-elegant">
             <CardContent className="pt-6">
-              <h2 className="text-xl font-bold mb-6">Avaliações ({evaluations.length})</h2>
+              <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+                <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center shadow-glow">
+                  <Star className="w-4 h-4 text-white" />
+                </div>
+                Avaliações ({evaluations.length})
+              </h2>
               {evaluations.length === 0 ? (
-                <p className="text-center text-muted-foreground py-8">
-                  Nenhuma avaliação ainda. Seja o primeiro a avaliar!
-                </p>
+                <div className="text-center py-16">
+                  <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-2xl flex items-center justify-center">
+                    <Star className="w-8 h-8 text-primary" />
+                  </div>
+                  <p className="text-muted-foreground text-lg">
+                    Nenhuma avaliação ainda. Seja o primeiro a avaliar!
+                  </p>
+                </div>
               ) : (
                 <div className="space-y-6">
                   {evaluations.map((evaluation) => (
-                    <div key={evaluation.id} className="border-b pb-6 last:border-0">
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex items-center gap-3">
-                          {evaluation.profiles.avatar_url && (
+                    <div key={evaluation.id} className="p-6 rounded-2xl bg-gradient-to-br from-primary/5 to-transparent border-2 border-primary/10 hover:border-primary/20 transition-colors">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex items-center gap-4">
+                          {evaluation.profiles.avatar_url ? (
                             <SafeImage
                               src={evaluation.profiles.avatar_url}
                               alt={evaluation.profiles.full_name}
-                              className="w-10 h-10 rounded-full"
+                              className="w-12 h-12 rounded-full border-2 border-primary/20"
                             />
+                          ) : (
+                            <div className="w-12 h-12 rounded-full bg-gradient-primary flex items-center justify-center text-white font-bold">
+                              {evaluation.profiles.full_name.charAt(0)}
+                            </div>
                           )}
                           <div>
-                            <p className="font-medium">{evaluation.profiles.full_name}</p>
+                            <p className="font-bold text-lg">{evaluation.profiles.full_name}</p>
                             <p className="text-sm text-muted-foreground">
                               @{evaluation.profiles.username}
                             </p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-1">
-                          <Star className="w-4 h-4 fill-primary text-primary" />
-                          <span className="font-bold">{evaluation.rating}</span>
+                        <div className="flex items-center gap-2 px-3 py-1.5 bg-gradient-primary rounded-lg shadow-glow">
+                          <Star className="w-4 h-4 text-white" />
+                          <span className="font-bold text-white">{evaluation.rating}</span>
                         </div>
                       </div>
-                      <h3 className="font-medium mb-2">{evaluation.title}</h3>
-                      <p className="text-muted-foreground mb-2">{evaluation.content}</p>
+                      <h3 className="font-bold text-lg mb-2">{evaluation.title}</h3>
+                      <p className="text-foreground leading-relaxed mb-3">{evaluation.content}</p>
                       <p className="text-xs text-muted-foreground">
-                        {new Date(evaluation.created_at).toLocaleDateString('pt-BR')}
+                        {new Date(evaluation.created_at).toLocaleDateString('pt-BR', {
+                          day: '2-digit',
+                          month: 'long',
+                          year: 'numeric'
+                        })}
                       </p>
                       {evaluation.public_response && (
-                        <div className="mt-4 bg-muted rounded-lg p-4">
-                          <p className="text-sm font-medium mb-1">Resposta da empresa:</p>
-                          <p className="text-sm">{evaluation.public_response}</p>
+                        <div className="mt-4 p-4 bg-background rounded-xl border-2 border-secondary/20">
+                          <p className="text-sm font-bold mb-2 text-secondary">Resposta da empresa:</p>
+                          <p className="text-sm leading-relaxed">{evaluation.public_response}</p>
                         </div>
                       )}
                     </div>
@@ -295,6 +339,8 @@ export default function BusinessProfile() {
           </Card>
         </div>
       </div>
+      
+      <Footer />
     </div>
   );
 }

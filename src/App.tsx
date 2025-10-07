@@ -11,6 +11,7 @@ import Auth from "./pages/Auth";
 import Feed from "./pages/Feed";
 import Admin from "./pages/Admin";
 import Dashboard from "./pages/Dashboard";
+import BusinessEdit from "./pages/BusinessEdit";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -27,6 +28,7 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+              <Route path="/business/:slug/edit" element={<ProtectedRoute><BusinessEdit /></ProtectedRoute>} />
               <Route path="/feed" element={<ProtectedRoute><Feed /></ProtectedRoute>} />
               <Route path="/admin" element={<ProtectedRoute requireAdmin><Admin /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />

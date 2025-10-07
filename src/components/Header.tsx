@@ -97,6 +97,9 @@ export const Header = () => {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem asChild>
+                  <Link to="/dashboard">Dashboard</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
                   <Link to="/profile">{t('profile')}</Link>
                 </DropdownMenuItem>
                 {isAdmin && (

@@ -14,16 +14,337 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      business_profiles: {
+        Row: {
+          address: string | null
+          average_rating: number | null
+          category: string | null
+          company_name: string
+          cover_url: string | null
+          created_at: string
+          email: string | null
+          id: string
+          logo_url: string | null
+          phone: string | null
+          portfolio_description: string | null
+          profile_id: string
+          response_time_avg: number | null
+          slug: string | null
+          total_reviews: number | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          average_rating?: number | null
+          category?: string | null
+          company_name: string
+          cover_url?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          logo_url?: string | null
+          phone?: string | null
+          portfolio_description?: string | null
+          profile_id: string
+          response_time_avg?: number | null
+          slug?: string | null
+          total_reviews?: number | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          average_rating?: number | null
+          category?: string | null
+          company_name?: string
+          cover_url?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          logo_url?: string | null
+          phone?: string | null
+          portfolio_description?: string | null
+          profile_id?: string
+          response_time_avg?: number | null
+          slug?: string | null
+          total_reviews?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_profiles_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      evaluations: {
+        Row: {
+          business_id: string
+          content: string
+          created_at: string
+          evaluation_type: Database["public"]["Enums"]["evaluation_type"]
+          helpful_count: number | null
+          id: string
+          is_verified: boolean | null
+          public_response: string | null
+          rating: number
+          tags: string[] | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          business_id: string
+          content: string
+          created_at?: string
+          evaluation_type: Database["public"]["Enums"]["evaluation_type"]
+          helpful_count?: number | null
+          id?: string
+          is_verified?: boolean | null
+          public_response?: string | null
+          rating: number
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          business_id?: string
+          content?: string
+          created_at?: string
+          evaluation_type?: Database["public"]["Enums"]["evaluation_type"]
+          helpful_count?: number | null
+          id?: string
+          is_verified?: boolean | null
+          public_response?: string | null
+          rating?: number
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evaluations_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      follows: {
+        Row: {
+          created_at: string
+          follower_id: string
+          following_id: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          follower_id: string
+          following_id: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          follower_id?: string
+          following_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "follows_follower_id_fkey"
+            columns: ["follower_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "follows_following_id_fkey"
+            columns: ["following_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      portfolio_items: {
+        Row: {
+          business_id: string
+          created_at: string
+          description: string | null
+          id: string
+          media_type: string
+          media_url: string
+          order_index: number | null
+          title: string
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          media_type: string
+          media_url: string
+          order_index?: number | null
+          title: string
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          media_type?: string
+          media_url?: string
+          order_index?: number | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "portfolio_items_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      posts: {
+        Row: {
+          author_id: string
+          comments_count: number | null
+          content: string | null
+          created_at: string
+          expires_at: string | null
+          id: string
+          is_story: boolean | null
+          likes_count: number | null
+          media_urls: string[] | null
+          updated_at: string
+        }
+        Insert: {
+          author_id: string
+          comments_count?: number | null
+          content?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_story?: boolean | null
+          likes_count?: number | null
+          media_urls?: string[] | null
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string
+          comments_count?: number | null
+          content?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_story?: boolean | null
+          likes_count?: number | null
+          media_urls?: string[] | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "posts_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string
+          full_name: string | null
+          id: string
+          location: string | null
+          trust_level: string | null
+          updated_at: string
+          user_id: string
+          user_type: Database["public"]["Enums"]["user_type"]
+          username: string
+          verified: boolean | null
+          website: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          location?: string | null
+          trust_level?: string | null
+          updated_at?: string
+          user_id: string
+          user_type?: Database["public"]["Enums"]["user_type"]
+          username: string
+          verified?: boolean | null
+          website?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          location?: string | null
+          trust_level?: string | null
+          updated_at?: string
+          user_id?: string
+          user_type?: Database["public"]["Enums"]["user_type"]
+          username?: string
+          verified?: boolean | null
+          website?: string | null
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "moderator" | "user"
+      evaluation_type: "praise" | "complaint" | "suggestion" | "neutral"
+      user_type: "consumer" | "business"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +471,10 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "moderator", "user"],
+      evaluation_type: ["praise", "complaint", "suggestion", "neutral"],
+      user_type: ["consumer", "business"],
+    },
   },
 } as const

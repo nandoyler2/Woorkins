@@ -59,7 +59,7 @@ const Index = () => {
             </div>
 
             {/* Main Title */}
-            <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold leading-[1.15] md:leading-[1.2] relative z-20">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-[1.15] md:leading-[1.2] relative z-20">
               A plataforma que une
               <span className="block bg-gradient-primary bg-clip-text text-transparent mt-2 px-1 pb-1 md:pb-2">
                 pessoas e negócios
@@ -67,7 +67,7 @@ const Index = () => {
             </h1>
 
             {/* Subtitle */}
-            <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed relative z-20 -mt-4 md:-mt-6">
+            <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed relative z-20 -mt-4 md:-mt-6">
               A plataforma profissional que une consumidores e empresas em um ecossistema de credibilidade
             </p>
 

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -7,11 +7,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import logoWoorkins from '@/assets/logo-woorkins.png';
+import { ArrowLeft } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export default function Auth() {
+  const [searchParams] = useSearchParams();
+  const mode = searchParams.get('mode') || 'signin'; // 'signin' or 'signup'
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
@@ -81,91 +84,116 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-background to-accent/10 p-4">
-      <Card className="w-full max-w-md shadow-elegant">
-        <CardHeader className="space-y-4">
-          <div className="flex justify-center">
-            <img src={logoWoorkins} alt="Woorkins" className="h-16" />
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-secondary/5 p-4 relative">
+      <Link to="/" className="absolute top-6 left-6 flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
+        <ArrowLeft className="w-5 h-5" />
+        <span>Voltar</span>
+      </Link>
+      
+      <Card className="w-full max-w-md shadow-elegant border-0">
+        <CardHeader className="space-y-4 pb-8">
+          <Link to="/" className="flex justify-center">
+            <img src={logoWoorkins} alt="Woorkins" className="h-16 hover:scale-105 transition-transform" />
+          </Link>
+          <div className="text-center space-y-2">
+            <CardTitle className="text-3xl font-bold">
+              {mode === 'signup' ? 'Criar Conta' : 'Entrar'}
+            </CardTitle>
+            <CardDescription className="text-base">
+              {mode === 'signup' 
+                ? 'Junte-se à comunidade Woorkins' 
+                : 'Bem-vindo de volta!'}
+            </CardDescription>
           </div>
-          <CardTitle className="text-center text-2xl">{t('hero_title')}</CardTitle>
-          <CardDescription className="text-center">
-            {t('hero_subtitle')}
-          </CardDescription>
         </CardHeader>
-        <CardContent>
-          <Tabs defaultValue="signin" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="signin">{t('login')}</TabsTrigger>
-              <TabsTrigger value="signup">{t('signup')}</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="signin">
-              <form onSubmit={handleSignIn} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="signin-email">{t('email')}</Label>
-                  <Input
-                    id="signin-email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signin-password">{t('password')}</Label>
-                  <Input
-                    id="signin-password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
-                </div>
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? 'Carregando...' : t('login')}
-                </Button>
-              </form>
-            </TabsContent>
-
-            <TabsContent value="signup">
-              <form onSubmit={handleSignUp} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="signup-name">{t('full_name')}</Label>
-                  <Input
-                    id="signup-name"
-                    type="text"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signup-email">{t('email')}</Label>
-                  <Input
-                    id="signup-email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signup-password">{t('password')}</Label>
-                  <Input
-                    id="signup-password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    minLength={6}
-                  />
-                </div>
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? 'Carregando...' : t('signup')}
-                </Button>
-              </form>
-            </TabsContent>
-          </Tabs>
+        
+        <CardContent className="pb-8">
+          {mode === 'signup' ? (
+            <form onSubmit={handleSignUp} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="signup-name">{t('full_name')}</Label>
+                <Input
+                  id="signup-name"
+                  type="text"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  required
+                  className="h-11"
+                  placeholder="Seu nome completo"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="signup-email">{t('email')}</Label>
+                <Input
+                  id="signup-email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="h-11"
+                  placeholder="seu@email.com"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="signup-password">{t('password')}</Label>
+                <Input
+                  id="signup-password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  minLength={6}
+                  className="h-11"
+                  placeholder="Mínimo 6 caracteres"
+                />
+              </div>
+              <Button type="submit" className="w-full h-11 text-base" disabled={loading}>
+                {loading ? 'Criando conta...' : 'Criar Conta'}
+              </Button>
+              <p className="text-center text-sm text-muted-foreground">
+                Já tem uma conta?{' '}
+                <Link to="/auth?mode=signin" className="text-primary hover:underline font-medium">
+                  Entrar
+                </Link>
+              </p>
+            </form>
+          ) : (
+            <form onSubmit={handleSignIn} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="signin-email">{t('email')}</Label>
+                <Input
+                  id="signin-email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="h-11"
+                  placeholder="seu@email.com"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="signin-password">{t('password')}</Label>
+                <Input
+                  id="signin-password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="h-11"
+                  placeholder="Sua senha"
+                />
+              </div>
+              <Button type="submit" className="w-full h-11 text-base" disabled={loading}>
+                {loading ? 'Entrando...' : 'Entrar'}
+              </Button>
+              <p className="text-center text-sm text-muted-foreground">
+                Não tem uma conta?{' '}
+                <Link to="/auth?mode=signup" className="text-primary hover:underline font-medium">
+                  Criar Conta
+                </Link>
+              </p>
+            </form>
+          )}
         </CardContent>
       </Card>
     </div>

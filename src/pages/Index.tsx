@@ -33,13 +33,13 @@ const Index = () => {
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
               <Button size="lg" className="bg-gradient-primary hover:opacity-90 transition-opacity shadow-glow" asChild>
-                <Link to="/auth">
+                <Link to="/auth?mode=signup">
                   {t('hero_cta')}
                   <ChevronRight className="ml-2 w-5 h-5" />
                 </Link>
               </Button>
               <Button size="lg" variant="outline" asChild>
-                <Link to="/auth">{t('hero_cta_business')}</Link>
+                <Link to="/auth?mode=signup">{t('hero_cta_business')}</Link>
               </Button>
             </div>
             <div className="pt-8 flex items-center justify-center gap-8 text-sm text-muted-foreground">
@@ -137,7 +137,7 @@ const Index = () => {
                 ))}
               </ul>
               <Button className="bg-gradient-primary hover:opacity-90 transition-opacity" asChild>
-                <Link to="/auth">Criar Perfil Empresarial</Link>
+                <Link to="/auth?mode=signup">Criar Perfil Empresarial</Link>
               </Button>
             </div>
             <Card className="p-8 bg-gradient-to-br from-primary/5 to-secondary/5">
@@ -187,7 +187,7 @@ const Index = () => {
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
               <Button size="lg" variant="secondary" className="bg-white text-primary hover:bg-white/90" asChild>
-                <Link to="/auth">Criar Conta Gratuita</Link>
+                <Link to="/auth?mode=signup">Criar Conta Gratuita</Link>
               </Button>
               <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
                 Falar com Vendas

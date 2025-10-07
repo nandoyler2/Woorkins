@@ -64,8 +64,10 @@ export function ImageCropDialog({ open, imageSrc, onClose, onCropComplete, aspec
             onMediaLoaded={onMediaLoaded}
             minZoom={minZoom}
             maxZoom={2}
-            zoomSpeed={0.05}
+            zoomSpeed={0.01}
+            zoomWithScroll={true}
             cropSize={{ width: 400, height: 400 / aspect }}
+            restrictPosition={false}
           />
         </div>
 
@@ -76,7 +78,7 @@ export function ImageCropDialog({ open, imageSrc, onClose, onCropComplete, aspec
             onValueChange={(value) => setZoom(value[0])}
             min={minZoom}
             max={2}
-            step={0.01}
+            step={0.001}
             className="w-full"
           />
         </div>

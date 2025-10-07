@@ -321,7 +321,7 @@ export default function BusinessProfile() {
                               <SafeImage
                                 src={item.media_url}
                                 alt={item.title}
-                                className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+                                className="w-full h-48 object-cover object-center group-hover:scale-105 transition-transform duration-300"
                               />
                             </div>
                             <h3 className="font-semibold">{item.title}</h3>

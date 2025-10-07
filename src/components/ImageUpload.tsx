@@ -10,13 +10,18 @@ interface ImageUploadProps {
   onUpload: (url: string) => void;
   bucket: string;
   folder: string;
+  type?: 'logo' | 'cover';
 }
 
-export function ImageUpload({ currentImageUrl, onUpload, bucket, folder }: ImageUploadProps) {
+export function ImageUpload({ currentImageUrl, onUpload, bucket, folder, type = 'logo' }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState<string | null>(currentImageUrl);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+
+  const dimensions = type === 'logo' 
+    ? { width: 'w-32', height: 'h-32', text: '200x200px (quadrado)' }
+    : { width: 'w-full', height: 'h-64', text: '1200x400px (horizontal)' };
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -100,28 +105,48 @@ export function ImageUpload({ currentImageUrl, onUpload, bucket, folder }: Image
         className="hidden"
       />
 
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <span>Tamanho recomendado: {dimensions.text}</span>
+      </div>
+
       {preview ? (
         <div className="relative">
-          <SafeImage
-            src={preview}
-            alt="Preview"
-            className="w-full h-48 object-cover rounded-lg border"
-          />
-          <Button
-            type="button"
-            variant="destructive"
-            size="icon"
-            className="absolute top-2 right-2"
-            onClick={handleRemove}
-          >
-            <X className="w-4 h-4" />
-          </Button>
+          <div className="border rounded-lg overflow-hidden bg-muted">
+            <SafeImage
+              src={preview}
+              alt="Preview"
+              className={`${dimensions.width} ${dimensions.height} object-cover`}
+            />
+          </div>
+          <div className="absolute top-2 right-2 flex gap-2">
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+            >
+              <Upload className="w-4 h-4 mr-2" />
+              Trocar
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              size="sm"
+              onClick={handleRemove}
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground mt-2">
+            Preview: Esta é a visualização de como ficará no perfil
+          </p>
         </div>
       ) : (
         <div className="border-2 border-dashed rounded-lg p-8 text-center">
           <Upload className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
           <p className="text-sm text-muted-foreground mb-4">
-            Clique para enviar uma imagem
+            {type === 'logo' ? 'Logo quadrado' : 'Imagem de capa horizontal'}
           </p>
           <Button
             type="button"

@@ -254,6 +254,7 @@ export default function BusinessEdit() {
                   onUpload={handleLogoUpload}
                   bucket="business-logos"
                   folder={business.id}
+                  type="logo"
                 />
               </div>
               <div className="space-y-2">
@@ -263,6 +264,7 @@ export default function BusinessEdit() {
                   onUpload={handleCoverUpload}
                   bucket="business-covers"
                   folder={business.id}
+                  type="cover"
                 />
               </div>
             </CardContent>

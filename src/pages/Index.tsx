@@ -61,7 +61,7 @@ const Index = () => {
             {/* Main Title */}
             <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold leading-tight">
               A plataforma que une
-              <span className="block bg-gradient-primary bg-clip-text text-transparent mt-2">
+              <span className="block bg-gradient-primary bg-clip-text text-transparent mt-2 px-1">
                 pessoas e negócios
               </span>
             </h1>

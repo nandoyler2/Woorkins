@@ -14,6 +14,44 @@ export type Database = {
   }
   public: {
     Tables: {
+      business_posts: {
+        Row: {
+          business_id: string
+          content: string
+          created_at: string
+          id: string
+          media_types: string[] | null
+          media_urls: string[] | null
+          updated_at: string
+        }
+        Insert: {
+          business_id: string
+          content: string
+          created_at?: string
+          id?: string
+          media_types?: string[] | null
+          media_urls?: string[] | null
+          updated_at?: string
+        }
+        Update: {
+          business_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          media_types?: string[] | null
+          media_urls?: string[] | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_posts_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "business_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       business_profiles: {
         Row: {
           address: string | null
@@ -24,15 +62,24 @@ export type Database = {
           created_at: string
           description: string | null
           email: string | null
+          enable_negotiation: boolean | null
+          facebook: string | null
           id: string
+          instagram: string | null
+          linkedin: string | null
           logo_url: string | null
           phone: string | null
           portfolio_description: string | null
           profile_id: string
           response_time_avg: number | null
+          services_offered: string[] | null
           slug: string | null
           total_reviews: number | null
+          twitter: string | null
           updated_at: string
+          website_url: string | null
+          whatsapp: string | null
+          working_hours: string | null
         }
         Insert: {
           address?: string | null
@@ -43,15 +90,24 @@ export type Database = {
           created_at?: string
           description?: string | null
           email?: string | null
+          enable_negotiation?: boolean | null
+          facebook?: string | null
           id?: string
+          instagram?: string | null
+          linkedin?: string | null
           logo_url?: string | null
           phone?: string | null
           portfolio_description?: string | null
           profile_id: string
           response_time_avg?: number | null
+          services_offered?: string[] | null
           slug?: string | null
           total_reviews?: number | null
+          twitter?: string | null
           updated_at?: string
+          website_url?: string | null
+          whatsapp?: string | null
+          working_hours?: string | null
         }
         Update: {
           address?: string | null
@@ -62,15 +118,24 @@ export type Database = {
           created_at?: string
           description?: string | null
           email?: string | null
+          enable_negotiation?: boolean | null
+          facebook?: string | null
           id?: string
+          instagram?: string | null
+          linkedin?: string | null
           logo_url?: string | null
           phone?: string | null
           portfolio_description?: string | null
           profile_id?: string
           response_time_avg?: number | null
+          services_offered?: string[] | null
           slug?: string | null
           total_reviews?: number | null
+          twitter?: string | null
           updated_at?: string
+          website_url?: string | null
+          whatsapp?: string | null
+          working_hours?: string | null
         }
         Relationships: [
           {

@@ -6,7 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Star, MapPin, Phone, Mail, Globe, Image as ImageIcon } from 'lucide-react';
+import { Star, MapPin, Phone, Mail, Globe, Image as ImageIcon, MessageCircle, Facebook, Instagram, Linkedin, Twitter, Clock } from 'lucide-react';
 import { Footer } from '@/components/Footer';
 import { SafeImage } from '@/components/ui/safe-image';
 import { useToast } from '@/hooks/use-toast';
@@ -25,6 +25,14 @@ interface BusinessData {
   portfolio_description: string | null;
   average_rating: number;
   total_reviews: number;
+  whatsapp: string | null;
+  facebook: string | null;
+  instagram: string | null;
+  linkedin: string | null;
+  twitter: string | null;
+  website_url: string | null;
+  enable_negotiation: boolean;
+  working_hours: string | null;
 }
 
 interface PortfolioItem {
@@ -372,6 +380,35 @@ export default function BusinessProfile() {
 
             {/* Right Column - Sidebar */}
             <div className="space-y-4">
+              {/* Rating Highlight Card - DESTAQUE */}
+              <Card className="bg-gradient-to-br from-primary/10 to-secondary/10 border-2 border-primary/20 shadow-glow">
+                <CardContent className="p-6">
+                  <div className="text-center">
+                    <div className="flex items-center justify-center gap-2 mb-2">
+                      <Star className="w-8 h-8 text-primary fill-primary" />
+                      <span className="text-5xl font-bold text-primary">
+                        {Number(business.average_rating).toFixed(1)}
+                      </span>
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-1">
+                      Baseado em <span className="font-semibold text-foreground">{business.total_reviews}</span> avaliações
+                    </p>
+                    <div className="flex items-center justify-center gap-1 mt-3">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <Star
+                          key={star}
+                          className={`w-5 h-5 ${
+                            star <= Math.round(business.average_rating)
+                              ? 'text-primary fill-primary'
+                              : 'text-muted-foreground'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
               {/* Contact Info Card */}
               <Card className="bg-card border shadow-sm">
                 <CardContent className="p-6">
@@ -399,23 +436,120 @@ export default function BusinessProfile() {
                         <span className="text-sm">{business.address}</span>
                       </div>
                     )}
+                    {business.working_hours && (
+                      <div className="flex items-start gap-3">
+                        <Clock className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                        <span className="text-sm">{business.working_hours}</span>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Social Media Card */}
+              {(business.whatsapp || business.facebook || business.instagram || business.linkedin || business.twitter || business.website_url) && (
+                <Card className="bg-card border shadow-sm">
+                  <CardContent className="p-6">
+                    <h2 className="font-bold mb-4">Redes Sociais</h2>
+                    <div className="flex flex-wrap gap-2">
+                      {business.whatsapp && (
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="rounded-full hover:bg-green-500 hover:text-white transition-colors"
+                          asChild
+                        >
+                          <a href={`https://wa.me/${business.whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer">
+                            <MessageCircle className="w-4 h-4" />
+                          </a>
+                        </Button>
+                      )}
+                      {business.facebook && (
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="rounded-full hover:bg-blue-600 hover:text-white transition-colors"
+                          asChild
+                        >
+                          <a href={business.facebook} target="_blank" rel="noopener noreferrer">
+                            <Facebook className="w-4 h-4" />
+                          </a>
+                        </Button>
+                      )}
+                      {business.instagram && (
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="rounded-full hover:bg-pink-600 hover:text-white transition-colors"
+                          asChild
+                        >
+                          <a href={business.instagram} target="_blank" rel="noopener noreferrer">
+                            <Instagram className="w-4 h-4" />
+                          </a>
+                        </Button>
+                      )}
+                      {business.linkedin && (
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="rounded-full hover:bg-blue-700 hover:text-white transition-colors"
+                          asChild
+                        >
+                          <a href={business.linkedin} target="_blank" rel="noopener noreferrer">
+                            <Linkedin className="w-4 h-4" />
+                          </a>
+                        </Button>
+                      )}
+                      {business.twitter && (
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="rounded-full hover:bg-black hover:text-white transition-colors"
+                          asChild
+                        >
+                          <a href={business.twitter} target="_blank" rel="noopener noreferrer">
+                            <Twitter className="w-4 h-4" />
+                          </a>
+                        </Button>
+                      )}
+                      {business.website_url && (
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="rounded-full hover:bg-primary hover:text-primary-foreground transition-colors"
+                          asChild
+                        >
+                          <a href={business.website_url} target="_blank" rel="noopener noreferrer">
+                            <Globe className="w-4 h-4" />
+                          </a>
+                        </Button>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Negotiation Card */}
+              {business.enable_negotiation && (
+                <Card className="bg-gradient-to-br from-green-500/10 to-green-600/10 border-2 border-green-500/20">
+                  <CardContent className="p-6">
+                    <h2 className="font-bold mb-2">Negociação Disponível</h2>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Esta empresa aceita negociações diretas na plataforma
+                    </p>
+                    <Button className="w-full bg-green-600 hover:bg-green-700">
+                      <MessageCircle className="w-4 h-4 mr-2" />
+                      Iniciar Conversa
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
 
               {/* Quick Stats Card */}
               <Card className="bg-card border shadow-sm">
                 <CardContent className="p-6">
                   <h2 className="font-bold mb-4">Estatísticas</h2>
                   <div className="space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">Avaliação média</span>
-                      <span className="font-semibold">{Number(business.average_rating).toFixed(1)}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">Total de avaliações</span>
-                      <span className="font-semibold">{business.total_reviews}</span>
-                    </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-muted-foreground">Itens no portfólio</span>
                       <span className="font-semibold">{portfolio.length}</span>

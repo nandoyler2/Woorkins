@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useId } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, Sparkles } from "lucide-react";
@@ -81,7 +81,30 @@ export const SearchBar = () => {
         {/* Content */}
         <div className="relative z-10 flex gap-3 items-center rounded-2xl">
           <div className="relative flex-1">
-            <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-6 h-6 text-muted-foreground z-10" />
+            {/* Gradient stroke search icon */}
+            {(() => {
+              const gradId = useId();
+              return (
+                <svg
+                  className="absolute left-6 top-1/2 -translate-y-1/2 w-7 h-7 z-10"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke={`url(#${gradId})`}
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <defs>
+                    <linearGradient id={gradId} x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0%" stopColor="hsl(var(--primary))" />
+                      <stop offset="100%" stopColor="hsl(var(--secondary))" />
+                    </linearGradient>
+                  </defs>
+                  <circle cx="11" cy="11" r="8" />
+                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+              );
+            })()}
             <Input
               type="text"
               placeholder={placeholder}

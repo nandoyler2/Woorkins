@@ -20,14 +20,14 @@ export default function Auth() {
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
-  const { user } = useAuth();
+  const { user, signIn, signUp } = useAuth();
   const { t } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
     if (user) {
-      navigate('/feed');
+      navigate('/dashboard');
     }
   }, [user, navigate]);
 
@@ -35,53 +35,37 @@ export default function Auth() {
     e.preventDefault();
     setLoading(true);
 
-    try {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: { full_name: fullName },
-          emailRedirectTo: `${window.location.origin}/`,
-        },
-      });
+    const { error } = await signUp(email, password, fullName);
 
-      if (error) throw error;
-
-      toast({
-        title: 'Conta criada!',
-        description: 'Você já pode fazer login.',
-      });
-    } catch (error: any) {
+    if (error) {
       toast({
         title: 'Erro ao criar conta',
         description: error.message,
         variant: 'destructive',
       });
-    } finally {
-      setLoading(false);
+    } else {
+      toast({
+        title: 'Conta criada!',
+        description: 'Você já pode fazer login.',
+      });
     }
+    setLoading(false);
   };
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
-    try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+    const { error } = await signIn(email, password);
 
-      if (error) throw error;
-    } catch (error: any) {
+    if (error) {
       toast({
         title: 'Erro ao fazer login',
         description: error.message,
         variant: 'destructive',
       });
-    } finally {
-      setLoading(false);
     }
+    setLoading(false);
   };
 
   return (

@@ -76,28 +76,6 @@ const Index = () => {
                 <Link to="/auth?mode=signup">Sou Empresa</Link>
               </Button>
             </div>
-
-            {/* Social Proof */}
-            <div className="pt-12 flex flex-col sm:flex-row items-center justify-center gap-8 text-sm">
-              <div className="flex items-center gap-3">
-                <div className="flex -space-x-3">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-primary/60 border-4 border-background shadow-lg flex items-center justify-center text-white font-bold">
-                    A
-                  </div>
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-secondary to-secondary/60 border-4 border-background shadow-lg flex items-center justify-center text-white font-bold">
-                    B
-                  </div>
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-accent to-accent/60 border-4 border-background shadow-lg flex items-center justify-center text-white font-bold">
-                    C
-                  </div>
-                </div>
-                <span className="font-medium">+10k usuários</span>
-              </div>
-              <div className="flex items-center gap-2">
-                {[...Array(5)].map((_, i) => <Star key={i} className="w-5 h-5 fill-primary text-primary" />)}
-                <span className="ml-2 font-medium">4.9/5 avaliação</span>
-              </div>
-            </div>
           </div>
         </div>
 

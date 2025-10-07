@@ -64,18 +64,16 @@ export const SearchBar = () => {
   return (
     <div className="w-full max-w-3xl mx-auto relative">
       <div className="relative">
-        {/* Pulsing gradient shadow behind search box */}
-        {isSearching && (
-          <div className="pointer-events-none absolute inset-0 rounded-2xl z-0 animate-pulse">
-            <div
-              className="absolute inset-0 rounded-2xl blur-2xl opacity-60"
-              style={{
-                background:
-                  'linear-gradient(135deg, hsl(var(--primary)), hsl(var(--secondary)))',
-              }}
-            />
-          </div>
-        )}
+        {/* Pulsing gradient shadow behind search box - always visible */}
+        <div className="pointer-events-none absolute inset-0 rounded-2xl z-0 animate-pulse-slow">
+          <div
+            className="absolute inset-0 rounded-2xl blur-2xl opacity-40"
+            style={{
+              background:
+                'linear-gradient(135deg, hsl(var(--primary)), hsl(var(--secondary)))',
+            }}
+          />
+        </div>
 
         {/* Content with unified border */}
         <div className="relative z-10 flex gap-3 items-center rounded-2xl border-2 border-foreground/20 bg-background p-2 shadow-elegant">

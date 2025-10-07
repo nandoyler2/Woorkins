@@ -2,25 +2,26 @@ import { useState, useEffect, useId } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+
+interface SearchResult {
+  slug: string;
+  company_name: string;
+  category: string | null;
+  description: string | null;
+}
 
 export const SearchBar = () => {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
-  const [results, setResults] = useState<string[]>([]);
+  const [results, setResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [placeholder, setPlaceholder] = useState("");
   const fullPlaceholder = "Buscar empresas, negócios e produtos...";
   const gradId = useId();
-
-  // Simulated database of companies, businesses, and products
-  const mockData = [
-    "Tech Solutions", "Digital Marketing", "Software Development",
-    "Cloud Services", "E-commerce Platform", "Mobile Apps",
-    "Web Design", "Consulting Services", "AI Solutions",
-    "Data Analytics", "Cybersecurity", "Social Media Management"
-  ];
 
   // Typing animation for placeholder
   useEffect(() => {
@@ -49,11 +50,23 @@ export const SearchBar = () => {
     }
 
     setIsSearching(true);
-    const timer = setTimeout(() => {
-      const filtered = mockData.filter(item =>
-        item.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      setResults(filtered);
+    const timer = setTimeout(async () => {
+      try {
+        const { data, error } = await supabase
+          .from('business_profiles' as any)
+          .select('slug, company_name, category, description')
+          .or(`company_name.ilike.%${searchTerm}%,category.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`)
+          .limit(10);
+
+        if (!error && data) {
+          setResults(data as unknown as SearchResult[]);
+        } else {
+          setResults([]);
+        }
+      } catch (err) {
+        console.error('Search error:', err);
+        setResults([]);
+      }
       setShowResults(true);
       setIsSearching(false);
     }, 300);
@@ -111,16 +124,27 @@ export const SearchBar = () => {
           <Button
             size="lg"
             disabled={isSearching}
-            onClick={() => {
+            onClick={async () => {
+              if (!searchTerm.trim()) return;
               setIsSearching(true);
-              const filtered = mockData.filter((item) =>
-                item.toLowerCase().includes(searchTerm.toLowerCase())
-              );
-              setTimeout(() => {
-                setResults(filtered);
-                setShowResults(true);
-                setIsSearching(false);
-              }, 1200);
+              try {
+                const { data } = await supabase
+                  .from('business_profiles' as any)
+                  .select('slug, company_name, category, description')
+                  .or(`company_name.ilike.%${searchTerm}%,category.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`)
+                  .limit(10);
+
+                if (data) {
+                  setResults(data as unknown as SearchResult[]);
+                } else {
+                  setResults([]);
+                }
+              } catch (err) {
+                console.error('Search error:', err);
+                setResults([]);
+              }
+              setShowResults(true);
+              setIsSearching(false);
             }}
             className={cn(
               'h-16 md:h-20 px-8 md:px-10 rounded-xl bg-gradient-primary text-white font-semibold text-lg md:text-xl shadow-glow hover:shadow-elegant transition-all relative',
@@ -140,9 +164,20 @@ export const SearchBar = () => {
               {results.map((result, index) => (
                 <div
                   key={index}
-                  className="p-4 hover:bg-muted rounded-lg cursor-pointer transition-colors text-base md:text-lg"
+                  onClick={() => {
+                    navigate(`/${result.slug}`);
+                    setShowResults(false);
+                    setSearchTerm("");
+                  }}
+                  className="p-4 hover:bg-muted rounded-lg cursor-pointer transition-colors"
                 >
-                  {result}
+                  <h3 className="text-base md:text-lg font-semibold">{result.company_name}</h3>
+                  {result.category && (
+                    <p className="text-sm text-muted-foreground">{result.category}</p>
+                  )}
+                  {result.description && (
+                    <p className="text-sm text-muted-foreground line-clamp-1">{result.description}</p>
+                  )}
                 </div>
               ))}
             </div>

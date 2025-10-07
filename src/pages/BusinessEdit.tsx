@@ -141,20 +141,30 @@ export default function BusinessEdit() {
 
     if (!businessData) return;
 
-    const { data } = await supabase
+    const { data: evaluationsData } = await supabase
       .from('evaluations' as any)
-      .select(`
-        *,
-        profiles:user_id (
-          username,
-          full_name
-        )
-      `)
+      .select('id, title, content, rating, created_at, public_response, user_id')
       .eq('business_id', (businessData as any).id)
       .order('created_at', { ascending: false });
 
-    if (data) {
-      setEvaluations(data as any);
+    if (evaluationsData) {
+      // Fetch user profiles separately
+      const userIds = evaluationsData.map((e: any) => e.user_id);
+      const { data: profilesData } = await supabase
+        .from('profiles' as any)
+        .select('user_id, username, full_name')
+        .in('user_id', userIds);
+
+      // Combine data
+      const evaluationsWithProfiles = evaluationsData.map((evaluation: any) => {
+        const profile = profilesData?.find((p: any) => p.user_id === evaluation.user_id);
+        return {
+          ...evaluation,
+          profiles: profile || { username: 'unknown', full_name: 'Unknown User' }
+        };
+      });
+
+      setEvaluations(evaluationsWithProfiles as any);
     }
   };
 

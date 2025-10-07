@@ -174,7 +174,7 @@ export default function BusinessProfile() {
           <SafeImage
             src={business.cover_url}
             alt={`Capa de ${business.company_name}`}
-            className="w-full h-full object-cover"
+            className="absolute inset-0 w-full h-full object-cover object-center block"
           />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-primary/20 to-secondary/20" />
@@ -197,7 +197,7 @@ export default function BusinessProfile() {
                         <SafeImage
                           src={business.logo_url}
                           alt={`Logo de ${business.company_name}`}
-                          className="w-36 h-36 rounded-xl object-cover border-4 border-background shadow-lg"
+                          className="w-36 h-36 rounded-xl object-contain bg-card p-2 border-4 border-background shadow-lg"
                         />
                       ) : (
                         <div className="w-36 h-36 rounded-xl bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center border-4 border-background shadow-lg">

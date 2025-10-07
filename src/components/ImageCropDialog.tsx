@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import Cropper from 'react-easy-crop';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -17,6 +17,7 @@ export function ImageCropDialog({ open, imageSrc, onClose, onCropComplete, aspec
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
   const [minZoom, setMinZoom] = useState(1);
+  const [initialized, setInitialized] = useState(false);
 
   const onMediaLoaded = useCallback((mediaSize: { naturalWidth: number; naturalHeight: number }) => {
     const cropWidth = 400;
@@ -25,6 +26,7 @@ export function ImageCropDialog({ open, imageSrc, onClose, onCropComplete, aspec
     const initialZoom = Math.max(1, requiredZoom * 1.6);
     setMinZoom(requiredZoom);
     setZoom(initialZoom);
+    setInitialized(true);
   }, [aspect]);
 
   const onCropChange = (location: any) => {
@@ -34,6 +36,13 @@ export function ImageCropDialog({ open, imageSrc, onClose, onCropComplete, aspec
   const onZoomChange = (zoom: number) => {
     setZoom(zoom);
   };
+
+  useEffect(() => {
+    // Reset when a new image is opened
+    setInitialized(false);
+    setZoom(1);
+    setCrop({ x: 0, y: 0 });
+  }, [imageSrc, open]);
 
   const onCropCompleteCallback = useCallback((croppedArea: any, croppedAreaPixels: any) => {
     setCroppedAreaPixels(croppedAreaPixels);
@@ -75,14 +84,18 @@ export function ImageCropDialog({ open, imageSrc, onClose, onCropComplete, aspec
 
         <div className="space-y-2 px-4">
           <label className="text-sm font-medium">Zoom</label>
-          <Slider
-            value={[zoom]}
-            onValueChange={(value) => setZoom(value[0])}
-            min={minZoom}
-            max={Math.max(2, minZoom * 2)}
-            step={0.001}
-            className="w-full"
-          />
+          {initialized ? (
+            <Slider
+              value={[zoom]}
+              onValueChange={(value) => setZoom(value[0])}
+              min={minZoom}
+              max={Math.max(2, minZoom * 2)}
+              step={0.001}
+              className="w-full"
+            />
+          ) : (
+            <div className="h-2 w-full rounded-full bg-secondary/60" />
+          )}
         </div>
 
         <DialogFooter>

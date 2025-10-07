@@ -59,7 +59,7 @@ const Index = () => {
             </h1>
 
             {/* Subtitle */}
-            <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed relative z-20 -mt-8 md:-mt-12">
+            <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed relative z-20 -mt-8 md:-mt-12 my-[17px]">
               A plataforma profissional que une consumidores<br />
               e empresas em um ecossistema de credibilidade
             </p>

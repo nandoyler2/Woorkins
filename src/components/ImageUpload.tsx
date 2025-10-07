@@ -56,30 +56,24 @@ export function ImageUpload({ currentImageUrl, onUpload, bucket, folder, type = 
       throw new Error('No 2d context');
     }
 
-    const maxSize = config.outputSize;
-    const safeArea = maxSize * 2;
+    // Target output dimensions based on config
+    const targetWidth = config.outputSize; // width
+    const targetHeight = Math.round(config.outputSize / config.aspect); // height derived from aspect
 
-    canvas.width = safeArea;
-    canvas.height = safeArea;
+    canvas.width = targetWidth;
+    canvas.height = targetHeight;
 
-    ctx.translate(safeArea / 2, safeArea / 2);
-    ctx.translate(-safeArea / 2, -safeArea / 2);
-
+    // Draw the cropped area from the source image scaled to target size
     ctx.drawImage(
       image,
-      safeArea / 2 - image.width * 0.5,
-      safeArea / 2 - image.height * 0.5
-    );
-
-    const data = ctx.getImageData(0, 0, safeArea, safeArea);
-
-    canvas.width = pixelCrop.width;
-    canvas.height = pixelCrop.height;
-
-    ctx.putImageData(
-      data,
-      Math.round(0 - safeArea / 2 + image.width * 0.5 - pixelCrop.x),
-      Math.round(0 - safeArea / 2 + image.height * 0.5 - pixelCrop.y)
+      Math.max(0, Math.floor(pixelCrop.x)),
+      Math.max(0, Math.floor(pixelCrop.y)),
+      Math.floor(pixelCrop.width),
+      Math.floor(pixelCrop.height),
+      0,
+      0,
+      targetWidth,
+      targetHeight
     );
 
     return new Promise((resolve) => {

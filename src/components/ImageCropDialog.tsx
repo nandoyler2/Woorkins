@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import Cropper from 'react-easy-crop';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 
@@ -50,6 +50,7 @@ export function ImageCropDialog({ open, imageSrc, onClose, onCropComplete, aspec
       <DialogContent className="max-w-3xl">
         <DialogHeader>
           <DialogTitle>Ajustar Imagem</DialogTitle>
+          <DialogDescription>Use o mouse para arrastar e o controle para ajustar o zoom.</DialogDescription>
         </DialogHeader>
         
         <div className="relative h-96 bg-muted">

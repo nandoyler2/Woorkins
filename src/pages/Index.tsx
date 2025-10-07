@@ -5,18 +5,14 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Link } from "react-router-dom";
 import logoWoorkins from "@/assets/logo-woorkins.png";
 import { SafeImage } from "@/components/ui/safe-image";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 const Index = () => {
-  const { language, setLanguage, t } = useLanguage();
-
-  return (
-    <div className="min-h-screen bg-background">
+  const {
+    language,
+    setLanguage,
+    t
+  } = useLanguage();
+  return <div className="min-h-screen bg-background">
       {/* Top Bar - Only Language Selector */}
       <div className="absolute top-6 right-6 z-50 flex items-center gap-3">
         <DropdownMenu>
@@ -51,11 +47,7 @@ const Index = () => {
           <div className="max-w-5xl mx-auto text-center space-y-10 md:space-y-12 animate-fade-in py-20">
             {/* Large Logo */}
             <div className="flex justify-center mb-8">
-              <SafeImage 
-                src={logoWoorkins} 
-                alt="Woorkins" 
-                className="h-20 md:h-24 w-auto drop-shadow-2xl hover:scale-105 transition-transform duration-500" 
-              />
+              <SafeImage src={logoWoorkins} alt="Woorkins" className="h-20 md:h-24 w-auto drop-shadow-2xl hover:scale-105 transition-transform duration-500" />
             </div>
 
             {/* Main Title */}
@@ -67,28 +59,18 @@ const Index = () => {
             </h1>
 
             {/* Subtitle */}
-            <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed relative z-20 -mt-4 md:-mt-6">
-              A plataforma profissional que une consumidores e empresas em um ecossistema de credibilidade
-            </p>
+            <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed relative z-20 -mt-4 md:-mt-6 my-[8px]">A plataforma profissional que une consumidores
+e empresas em um ecossistema de credibilidade</p>
 
             {/* CTAs */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-8">
-              <Button 
-                size="lg" 
-                className="bg-gradient-primary hover:opacity-90 transition-all shadow-glow hover:shadow-elegant text-base h-14 px-10" 
-                asChild
-              >
+              <Button size="lg" className="bg-gradient-primary hover:opacity-90 transition-all shadow-glow hover:shadow-elegant text-base h-14 px-10" asChild>
                 <Link to="/auth?mode=signup">
                   Comece Agora
                   <ChevronRight className="ml-2 w-5 h-5" />
                 </Link>
               </Button>
-              <Button 
-                size="lg" 
-                variant="outline" 
-                className="text-base h-14 px-10 border-2 border-foreground text-foreground hover:bg-foreground hover:text-background"
-                asChild
-              >
+              <Button size="lg" variant="outline" className="text-base h-14 px-10 border-2 border-foreground text-foreground hover:bg-foreground hover:text-background" asChild>
                 <Link to="/auth?mode=signup">Sou Empresa</Link>
               </Button>
             </div>
@@ -110,9 +92,7 @@ const Index = () => {
                 <span className="font-medium">+10k usuários</span>
               </div>
               <div className="flex items-center gap-2">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-5 h-5 fill-primary text-primary" />
-                ))}
+                {[...Array(5)].map((_, i) => <Star key={i} className="w-5 h-5 fill-primary text-primary" />)}
                 <span className="ml-2 font-medium">4.9/5 avaliação</span>
               </div>
             </div>
@@ -184,20 +164,12 @@ const Index = () => {
                 Construa uma reputação sólida, mostre seu trabalho e conecte-se com milhares de clientes em potencial.
               </p>
               <ul className="space-y-4">
-                {[
-                  "Perfil verificado com selo de confiança",
-                  "Portfólio multimídia com fotos e vídeos",
-                  "Sistema de reputação transparente",
-                  "Chat seguro para negociações",
-                  "Analytics e relatórios detalhados"
-                ].map((item, i) => (
-                  <li key={i} className="flex items-start gap-4 text-base">
+                {["Perfil verificado com selo de confiança", "Portfólio multimídia com fotos e vídeos", "Sistema de reputação transparente", "Chat seguro para negociações", "Analytics e relatórios detalhados"].map((item, i) => <li key={i} className="flex items-start gap-4 text-base">
                     <div className="w-7 h-7 rounded-full bg-gradient-primary flex items-center justify-center flex-shrink-0 mt-0.5 shadow-sm">
                       <ChevronRight className="w-4 h-4 text-white" />
                     </div>
                     <span className="leading-relaxed">{item}</span>
-                  </li>
-                ))}
+                  </li>)}
               </ul>
               <Button className="bg-gradient-primary hover:opacity-90 transition-opacity text-base h-12 px-8 shadow-glow" asChild>
                 <Link to="/auth?mode=signup">Criar Perfil Empresarial</Link>
@@ -211,9 +183,7 @@ const Index = () => {
                     <div>
                       <h4 className="font-bold text-lg">Tech Solutions Ltd.</h4>
                       <div className="flex items-center gap-1 mt-1">
-                        {[...Array(5)].map((_, i) => (
-                          <Star key={i} className="w-4 h-4 fill-primary text-primary" />
-                        ))}
+                        {[...Array(5)].map((_, i) => <Star key={i} className="w-4 h-4 fill-primary text-primary" />)}
                         <span className="text-sm text-muted-foreground ml-2">(4.9)</span>
                       </div>
                     </div>
@@ -303,8 +273,6 @@ const Index = () => {
           </div>
         </div>
       </footer>
-    </div>
-  );
+    </div>;
 };
-
 export default Index;

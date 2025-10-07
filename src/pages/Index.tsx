@@ -7,6 +7,7 @@ import logoWoorkins from "@/assets/woorkins.png";
 import { SafeImage } from "@/components/ui/safe-image";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { SearchBar } from "@/components/SearchBar";
+import { SectionDivider } from "@/components/SectionDivider";
 const Index = () => {
   const {
     language,
@@ -80,7 +81,7 @@ const Index = () => {
         </div>
 
         {/* Animated Background Elements */}
-        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background to-transparent"></div>
+        <SectionDivider />
       </section>
 
       {/* Como Funciona */}
@@ -125,6 +126,7 @@ const Index = () => {
             </Card>
           </div>
         </div>
+        <SectionDivider />
       </section>
 
       {/* Para Empresas */}
@@ -185,6 +187,7 @@ const Index = () => {
             </Card>
           </div>
         </div>
+        <SectionDivider />
       </section>
 
       {/* CTA Final */}

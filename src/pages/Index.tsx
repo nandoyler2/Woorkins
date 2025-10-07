@@ -1,39 +1,17 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Star, Shield, Users, TrendingUp, MessageSquare, Award, ChevronRight } from "lucide-react";
+import { Header } from "@/components/Header";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { Link } from "react-router-dom";
 import logoWoorkins from "@/assets/logo-woorkins.png";
 
 const Index = () => {
+  const { t } = useLanguage();
+
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <img src={logoWoorkins} alt="Woorkins" className="h-10 md:h-12" />
-          <nav className="hidden md:flex items-center gap-8">
-            <a href="#como-funciona" className="text-sm font-medium hover:text-primary transition-colors">
-              Como Funciona
-            </a>
-            <a href="#para-empresas" className="text-sm font-medium hover:text-primary transition-colors">
-              Para Empresas
-            </a>
-            <a href="#planos" className="text-sm font-medium hover:text-primary transition-colors">
-              Planos
-            </a>
-            <select className="text-sm font-medium bg-transparent border-none cursor-pointer">
-              <option value="pt">🇧🇷 PT</option>
-              <option value="en">🇺🇸 EN</option>
-              <option value="es">🇪🇸 ES</option>
-            </select>
-          </nav>
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="sm">Entrar</Button>
-            <Button size="sm" className="bg-gradient-primary hover:opacity-90 transition-opacity">
-              Cadastrar
-            </Button>
-          </div>
-        </div>
-      </header>
+      <Header />
 
       {/* Hero Section */}
       <section className="relative pt-32 pb-20 overflow-hidden">
@@ -42,7 +20,7 @@ const Index = () => {
           <div className="max-w-4xl mx-auto text-center space-y-8 animate-fade-in">
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full text-primary text-sm font-medium">
               <Shield className="w-4 h-4" />
-              Conecte. Trabalhe. Confie.
+              {t('hero_title')}
             </div>
             <h1 className="text-5xl md:text-7xl font-bold leading-tight">
               A plataforma que une
@@ -51,16 +29,17 @@ const Index = () => {
               </span>
             </h1>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Avalie, contrate e trabalhe com confiança. Um ecossistema completo de credibilidade, 
-              portfólios profissionais e negociações seguras.
+              {t('hero_subtitle')}
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-              <Button size="lg" className="bg-gradient-primary hover:opacity-90 transition-opacity shadow-glow">
-                Começar Gratuitamente
-                <ChevronRight className="ml-2 w-5 h-5" />
+              <Button size="lg" className="bg-gradient-primary hover:opacity-90 transition-opacity shadow-glow" asChild>
+                <Link to="/auth">
+                  {t('hero_cta')}
+                  <ChevronRight className="ml-2 w-5 h-5" />
+                </Link>
               </Button>
-              <Button size="lg" variant="outline">
-                Ver Como Funciona
+              <Button size="lg" variant="outline" asChild>
+                <Link to="/auth">{t('hero_cta_business')}</Link>
               </Button>
             </div>
             <div className="pt-8 flex items-center justify-center gap-8 text-sm text-muted-foreground">
@@ -89,7 +68,7 @@ const Index = () => {
       <section id="como-funciona" className="py-20 bg-muted/30">
         <div className="container mx-auto px-4">
           <div className="text-center max-w-2xl mx-auto mb-16">
-            <h2 className="text-4xl font-bold mb-4">Como Funciona</h2>
+            <h2 className="text-4xl font-bold mb-4">{t('features_title')}</h2>
             <p className="text-lg text-muted-foreground">
               Simples, seguro e transparente. Conecte-se em 3 passos.
             </p>
@@ -99,27 +78,27 @@ const Index = () => {
               <div className="w-16 h-16 mx-auto mb-6 bg-gradient-primary rounded-full flex items-center justify-center">
                 <Users className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-xl font-bold mb-3">1. Crie seu Perfil</h3>
+              <h3 className="text-xl font-bold mb-3">1. {t('feature_evaluate')}</h3>
               <p className="text-muted-foreground">
-                Cadastre-se gratuitamente e monte seu portfólio profissional com fotos, vídeos e informações.
+                {t('feature_evaluate_desc')}
               </p>
             </Card>
             <Card className="p-8 text-center hover:shadow-card transition-shadow">
               <div className="w-16 h-16 mx-auto mb-6 bg-gradient-secondary rounded-full flex items-center justify-center">
                 <MessageSquare className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-xl font-bold mb-3">2. Conecte e Negocie</h3>
+              <h3 className="text-xl font-bold mb-3">2. {t('feature_connect')}</h3>
               <p className="text-muted-foreground">
-                Converse diretamente, envie propostas e negocie com segurança através do chat interno.
+                {t('feature_connect_desc')}
               </p>
             </Card>
             <Card className="p-8 text-center hover:shadow-card transition-shadow">
               <div className="w-16 h-16 mx-auto mb-6 bg-primary rounded-full flex items-center justify-center">
                 <Award className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-xl font-bold mb-3">3. Avalie e Construa Reputação</h3>
+              <h3 className="text-xl font-bold mb-3">3. {t('feature_negotiate')}</h3>
               <p className="text-muted-foreground">
-                Deixe feedback, ganhe credibilidade e seja reconhecido pelo seu profissionalismo.
+                {t('feature_negotiate_desc')}
               </p>
             </Card>
           </div>
@@ -133,14 +112,13 @@ const Index = () => {
             <div>
               <div className="inline-flex items-center gap-2 px-4 py-2 bg-secondary/10 rounded-full text-secondary text-sm font-medium mb-6">
                 <TrendingUp className="w-4 h-4" />
-                Para Empresas e Profissionais
+                {t('business_title')}
               </div>
               <h2 className="text-4xl font-bold mb-6">
                 Destaque seu negócio e atraia mais clientes
               </h2>
               <p className="text-lg text-muted-foreground mb-8">
-                Crie um portfólio profissional, responda avaliações, publique conteúdo e 
-                construa uma reputação sólida na maior plataforma de credibilidade.
+                {t('business_desc')}
               </p>
               <ul className="space-y-4 mb-8">
                 {[
@@ -158,8 +136,8 @@ const Index = () => {
                   </li>
                 ))}
               </ul>
-              <Button className="bg-gradient-primary hover:opacity-90 transition-opacity">
-                Criar Perfil Empresarial
+              <Button className="bg-gradient-primary hover:opacity-90 transition-opacity" asChild>
+                <Link to="/auth">Criar Perfil Empresarial</Link>
               </Button>
             </div>
             <Card className="p-8 bg-gradient-to-br from-primary/5 to-secondary/5">
@@ -208,8 +186,8 @@ const Index = () => {
               Junte-se a milhares de profissionais e empresas que já confiam na Woorkins.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-              <Button size="lg" variant="secondary" className="bg-white text-primary hover:bg-white/90">
-                Criar Conta Gratuita
+              <Button size="lg" variant="secondary" className="bg-white text-primary hover:bg-white/90" asChild>
+                <Link to="/auth">Criar Conta Gratuita</Link>
               </Button>
               <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
                 Falar com Vendas
@@ -226,7 +204,7 @@ const Index = () => {
             <div>
               <img src={logoWoorkins} alt="Woorkins" className="h-10 mb-4 brightness-0 invert" />
               <p className="text-sm opacity-80">
-                Conecte. Trabalhe. Confie.
+                {t('hero_title')}
               </p>
             </div>
             <div>

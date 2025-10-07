@@ -5,6 +5,7 @@ import { Header } from "@/components/Header";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Link } from "react-router-dom";
 import logoWoorkins from "@/assets/logo-woorkins.png";
+import { SafeImage } from "@/components/ui/safe-image";
 
 const Index = () => {
   const { t } = useLanguage();
@@ -202,7 +203,7 @@ const Index = () => {
         <div className="container mx-auto px-4">
           <div className="grid md:grid-cols-4 gap-8 mb-8">
             <div>
-              <img src={logoWoorkins} alt="Woorkins" className="h-10 mb-4 brightness-0 invert" />
+              <SafeImage src={logoWoorkins} alt="Logo Woorkins" className="h-10 w-auto mb-4" />
               <p className="text-sm opacity-80">
                 {t('hero_title')}
               </p>

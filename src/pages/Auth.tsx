@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import logoWoorkins from '@/assets/logo-woorkins.png';
+import { SafeImage } from '@/components/ui/safe-image';
 import { ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -93,7 +94,7 @@ export default function Auth() {
       <Card className="w-full max-w-md shadow-elegant border-0">
         <CardHeader className="space-y-4 pb-8">
           <Link to="/" className="flex justify-center">
-            <img src={logoWoorkins} alt="Woorkins" className="h-16 hover:scale-105 transition-transform" />
+            <SafeImage src={logoWoorkins} alt="Logo Woorkins" className="h-16 w-auto hover:scale-105 transition-transform" />
           </Link>
           <div className="text-center space-y-2">
             <CardTitle className="text-3xl font-bold">

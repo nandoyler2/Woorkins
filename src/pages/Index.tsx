@@ -190,7 +190,7 @@ const Index = () => {
               <Button size="lg" variant="secondary" className="bg-white text-primary hover:bg-white/90" asChild>
                 <Link to="/auth?mode=signup">Criar Conta Gratuita</Link>
               </Button>
-              <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
+              <Button size="lg" variant="hero">
                 Falar com Vendas
               </Button>
             </div>
@@ -203,7 +203,7 @@ const Index = () => {
         <div className="container mx-auto px-4">
           <div className="grid md:grid-cols-4 gap-8 mb-8">
             <div>
-              <SafeImage src={logoWoorkins} alt="Logo Woorkins" className="h-10 w-auto mb-4" />
+              <SafeImage src={logoWoorkins} alt="Logo Woorkins" className="h-10 w-auto mb-4 brightness-0 invert" />
               <p className="text-sm opacity-80">
                 {t('hero_title')}
               </p>

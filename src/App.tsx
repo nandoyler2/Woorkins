@@ -13,6 +13,9 @@ import Admin from "./pages/Admin";
 import Dashboard from "./pages/Dashboard";
 import BusinessEdit from "./pages/BusinessEdit";
 import BusinessProfile from "./pages/BusinessProfile";
+import Projects from "./pages/Projects";
+import ProjectCreate from "./pages/ProjectCreate";
+import ProjectDetails from "./pages/ProjectDetails";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +33,9 @@ const App = () => (
               <Route path="/auth" element={<Auth />} />
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
               <Route path="/business/:slug/edit" element={<ProtectedRoute><BusinessEdit /></ProtectedRoute>} />
+              <Route path="/projects" element={<Projects />} />
+              <Route path="/projects/new" element={<ProtectedRoute><ProjectCreate /></ProtectedRoute>} />
+              <Route path="/projects/:id" element={<ProjectDetails />} />
               <Route path="/:slug" element={<BusinessProfile />} />
               <Route path="/feed" element={<ProtectedRoute><Feed /></ProtectedRoute>} />
               <Route path="/admin" element={<ProtectedRoute requireAdmin><Admin /></ProtectedRoute>} />

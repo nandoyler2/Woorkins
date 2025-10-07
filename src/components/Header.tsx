@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { Globe, LogOut, User, Home, Search, MessageSquare, Shield } from 'lucide-react';
+import { Globe, LogOut, User, Home, Search, MessageSquare, Shield, Briefcase } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import {
   DropdownMenu,
@@ -53,17 +53,17 @@ export const Header = () => {
 
         {user && (
           <nav className="hidden md:flex items-center gap-6">
-            <Link to="/feed" className="flex items-center gap-2 text-foreground/80 hover:text-foreground transition-colors">
+            <Link to="/dashboard" className="flex items-center gap-2 text-foreground/80 hover:text-foreground transition-colors">
               <Home className="w-5 h-5" />
-              <span>{t('feed')}</span>
+              <span>Dashboard</span>
+            </Link>
+            <Link to="/projects" className="flex items-center gap-2 text-foreground/80 hover:text-foreground transition-colors">
+              <Briefcase className="w-5 h-5" />
+              <span>Projetos</span>
             </Link>
             <Link to="/discover" className="flex items-center gap-2 text-foreground/80 hover:text-foreground transition-colors">
               <Search className="w-5 h-5" />
               <span>{t('discover')}</span>
-            </Link>
-            <Link to="/messages" className="flex items-center gap-2 text-foreground/80 hover:text-foreground transition-colors">
-              <MessageSquare className="w-5 h-5" />
-              <span>{t('messages')}</span>
             </Link>
           </nav>
         )}

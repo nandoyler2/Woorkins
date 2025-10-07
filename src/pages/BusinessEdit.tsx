@@ -223,7 +223,7 @@ export default function BusinessEdit() {
   if (!business) return null;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background">
       <Header />
       
       <div className="container mx-auto px-4 py-8">
@@ -241,7 +241,7 @@ export default function BusinessEdit() {
           </div>
 
           {/* Imagens */}
-          <Card>
+          <Card className="bg-card/50 backdrop-blur-sm border-2">
             <CardHeader>
               <CardTitle>Imagens da Marca</CardTitle>
               <CardDescription>Logo e capa do perfil</CardDescription>
@@ -271,7 +271,7 @@ export default function BusinessEdit() {
           </Card>
 
           {/* Informações */}
-          <Card>
+          <Card className="bg-card/50 backdrop-blur-sm border-2">
             <CardHeader>
               <CardTitle>Informações</CardTitle>
               <CardDescription>Dados da empresa</CardDescription>
@@ -338,7 +338,7 @@ export default function BusinessEdit() {
                     placeholder="Descreva seus trabalhos..."
                   />
                 </div>
-                <Button type="submit" className="w-full bg-gradient-primary" disabled={saving}>
+                <Button type="submit" className="w-full bg-gradient-primary hover:shadow-glow transition-all" disabled={saving}>
                   <Save className="w-4 h-4 mr-2" />
                   {saving ? 'Salvando...' : 'Salvar Alterações'}
                 </Button>
@@ -347,7 +347,7 @@ export default function BusinessEdit() {
           </Card>
 
           {/* Avaliações */}
-          <Card>
+          <Card className="bg-card/50 backdrop-blur-sm border-2">
             <CardHeader>
               <CardTitle>Avaliações ({evaluations.length})</CardTitle>
               <CardDescription>Gerencie as avaliações da sua marca</CardDescription>

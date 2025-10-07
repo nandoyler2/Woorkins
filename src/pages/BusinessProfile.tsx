@@ -136,7 +136,7 @@ export default function BusinessProfile() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background">
       <Header />
 
       {/* Cover Image */}
@@ -190,7 +190,7 @@ export default function BusinessProfile() {
           </div>
 
           {/* Contact Info */}
-          <Card>
+          <Card className="bg-card/50 backdrop-blur-sm border-2">
             <CardContent className="pt-6">
               <h2 className="text-xl font-bold mb-4">Informações de Contato</h2>
               <div className="space-y-3">
@@ -218,7 +218,7 @@ export default function BusinessProfile() {
 
           {/* Portfolio */}
           {portfolio.length > 0 && (
-            <Card>
+            <Card className="bg-card/50 backdrop-blur-sm border-2">
               <CardContent className="pt-6">
                 <h2 className="text-xl font-bold mb-4">Portfólio</h2>
                 {business.portfolio_description && (
@@ -244,7 +244,7 @@ export default function BusinessProfile() {
           )}
 
           {/* Reviews */}
-          <Card>
+          <Card className="bg-card/50 backdrop-blur-sm border-2">
             <CardContent className="pt-6">
               <h2 className="text-xl font-bold mb-6">Avaliações ({evaluations.length})</h2>
               {evaluations.length === 0 ? (

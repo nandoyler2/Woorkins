@@ -22,7 +22,7 @@ export function ImageCropDialog({ open, imageSrc, onClose, onCropComplete, aspec
     const cropWidth = 400;
     const cropHeight = 400 / aspect;
     const requiredZoom = Math.max(cropWidth / mediaSize.naturalWidth, cropHeight / mediaSize.naturalHeight);
-    const initialZoom = Math.max(1, requiredZoom * 1.15);
+    const initialZoom = Math.max(1, requiredZoom * 1.35);
     setMinZoom(requiredZoom);
     setZoom(initialZoom);
   }, [aspect]);

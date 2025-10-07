@@ -6,6 +6,7 @@ import { Link } from "react-router-dom";
 import logoWoorkins from "@/assets/logo-woorkins-2.png";
 import { SafeImage } from "@/components/ui/safe-image";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import BuildingsBackground from "@/components/BuildingsBackground";
 const Index = () => {
   const {
     language,
@@ -41,6 +42,7 @@ const Index = () => {
 
        {/* Hero Section with Large Logo */}
        <section className="relative min-h-screen flex items-center justify-center overflow-visible bg-gradient-to-br from-background via-primary/5 to-secondary/10">
+        <BuildingsBackground />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,hsl(var(--primary)/0.1),transparent_50%),radial-gradient(circle_at_70%_80%,hsl(var(--secondary)/0.1),transparent_50%)]"></div>
         
         <div className="container mx-auto px-4 relative z-10">

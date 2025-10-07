@@ -79,10 +79,10 @@ const Index = () => {
             </div>
           </div>
         </div>
-
-        {/* Animated Background Elements */}
-        <SectionDivider />
       </section>
+
+      {/* Divider */}
+      <SectionDivider />
 
       {/* Como Funciona */}
       <section id="como-funciona" className="py-24 bg-muted/30 relative">
@@ -126,8 +126,10 @@ const Index = () => {
             </Card>
           </div>
         </div>
-        <SectionDivider />
       </section>
+
+      {/* Divider */}
+      <SectionDivider />
 
       {/* Para Empresas */}
       <section id="para-empresas" className="py-24 relative overflow-hidden">
@@ -187,8 +189,10 @@ const Index = () => {
             </Card>
           </div>
         </div>
-        <SectionDivider />
       </section>
+
+      {/* Divider */}
+      <SectionDivider />
 
       {/* CTA Final */}
       <section className="py-24 bg-gradient-hero relative overflow-hidden">

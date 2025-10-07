@@ -13,6 +13,8 @@ import Admin from "./pages/Admin";
 import Dashboard from "./pages/Dashboard";
 import BusinessEdit from "./pages/BusinessEdit";
 import BusinessProfile from "./pages/BusinessProfile";
+import BusinessFinances from "./pages/BusinessFinances";
+import UserOrders from "./pages/UserOrders";
 import Projects from "./pages/Projects";
 import ProjectCreate from "./pages/ProjectCreate";
 import ProjectDetails from "./pages/ProjectDetails";
@@ -33,6 +35,8 @@ const App = () => (
               <Route path="/auth" element={<Auth />} />
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
               <Route path="/business/:slug/edit" element={<ProtectedRoute><BusinessEdit /></ProtectedRoute>} />
+              <Route path="/business/finances" element={<ProtectedRoute><BusinessFinances /></ProtectedRoute>} />
+              <Route path="/user/orders" element={<ProtectedRoute><UserOrders /></ProtectedRoute>} />
               <Route path="/projects" element={<Projects />} />
               <Route path="/projects/new" element={<ProtectedRoute><ProjectCreate /></ProtectedRoute>} />
               <Route path="/projects/:id" element={<ProjectDetails />} />

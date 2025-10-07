@@ -6,10 +6,20 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import { Star, MapPin, Phone, Mail, Globe, Image as ImageIcon, MessageCircle, Facebook, Instagram, Linkedin, Twitter, Clock } from 'lucide-react';
 import { Footer } from '@/components/Footer';
 import { SafeImage } from '@/components/ui/safe-image';
 import { useToast } from '@/hooks/use-toast';
+import { NegotiationChat } from '@/components/NegotiationChat';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface BusinessData {
   id: string;
@@ -60,15 +70,72 @@ interface Evaluation {
 export default function BusinessProfile() {
   const { slug } = useParams();
   const { toast } = useToast();
+  const { user } = useAuth();
   const [business, setBusiness] = useState<BusinessData | null>(null);
   const [portfolio, setPortfolio] = useState<PortfolioItem[]>([]);
   const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('inicio');
+  const [currentNegotiation, setCurrentNegotiation] = useState<string | null>(null);
+  const [showNegotiationDialog, setShowNegotiationDialog] = useState(false);
 
   useEffect(() => {
     loadBusinessData();
   }, [slug]);
+
+  const startNegotiation = async () => {
+    if (!user) {
+      toast({
+        title: 'Login necessário',
+        description: 'Faça login para iniciar uma negociação',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!business) return;
+
+    // Check if already has an open negotiation
+    const { data: existing } = await supabase
+      .from('negotiations')
+      .select('id')
+      .eq('business_id', business.id)
+      .eq('user_id', user.id)
+      .in('status', ['open', 'accepted', 'paid'])
+      .maybeSingle();
+
+    if (existing) {
+      setCurrentNegotiation(existing.id);
+      setShowNegotiationDialog(true);
+      return;
+    }
+
+    // Create new negotiation
+    const { data, error } = await supabase
+      .from('negotiations')
+      .insert({
+        business_id: business.id,
+        user_id: user.id,
+        status: 'open',
+      })
+      .select()
+      .single();
+
+    if (error) {
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível iniciar a negociação',
+        variant: 'destructive',
+      });
+    } else {
+      setCurrentNegotiation(data.id);
+      setShowNegotiationDialog(true);
+      toast({
+        title: 'Negociação iniciada!',
+        description: 'Comece a conversar com a empresa',
+      });
+    }
+  };
 
   const loadBusinessData = async () => {
     if (!slug) return;
@@ -554,10 +621,30 @@ export default function BusinessProfile() {
                     <p className="text-sm text-muted-foreground mb-4">
                       Esta empresa aceita negociações diretas na plataforma
                     </p>
-                    <Button className="w-full bg-green-600 hover:bg-green-700">
-                      <MessageCircle className="w-4 h-4 mr-2" />
-                      Iniciar Conversa
-                    </Button>
+                    <Dialog open={showNegotiationDialog} onOpenChange={setShowNegotiationDialog}>
+                      <DialogTrigger asChild>
+                        <Button 
+                          className="w-full bg-green-600 hover:bg-green-700"
+                          onClick={startNegotiation}
+                        >
+                          <MessageCircle className="w-4 h-4 mr-2" />
+                          Iniciar Conversa
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-3xl">
+                        <DialogHeader>
+                          <DialogTitle>
+                            Negociação com {business.company_name}
+                          </DialogTitle>
+                          <DialogDescription>
+                            Converse diretamente e negocie serviços e valores
+                          </DialogDescription>
+                        </DialogHeader>
+                        {currentNegotiation && (
+                          <NegotiationChat negotiationId={currentNegotiation} />
+                        )}
+                      </DialogContent>
+                    </Dialog>
                   </CardContent>
                 </Card>
               )}

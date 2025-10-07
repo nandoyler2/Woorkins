@@ -58,12 +58,6 @@ const Index = () => {
               />
             </div>
 
-            {/* Badge */}
-            <div className="inline-flex items-center gap-2 px-6 py-3 bg-primary/10 rounded-full text-primary text-sm font-medium backdrop-blur-sm border border-primary/20">
-              <Shield className="w-4 h-4" />
-              Conecte. Trabalhe. Confie.
-            </div>
-
             {/* Main Title */}
             <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold leading-tight">
               A plataforma que une

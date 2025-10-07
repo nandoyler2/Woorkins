@@ -52,8 +52,10 @@ export function ImageCropDialog({ open, imageSrc, onClose, onCropComplete, aspec
             onCropChange={onCropChange}
             onZoomChange={onZoomChange}
             onCropComplete={onCropCompleteCallback}
-            minZoom={0.5}
+            minZoom={0.3}
             maxZoom={2}
+            cropSize={{ width: 400, height: 400 / aspect }}
+            restrictPosition={false}
           />
         </div>
 
@@ -62,9 +64,9 @@ export function ImageCropDialog({ open, imageSrc, onClose, onCropComplete, aspec
           <Slider
             value={[zoom]}
             onValueChange={(value) => setZoom(value[0])}
-            min={0.5}
+            min={0.3}
             max={2}
-            step={0.05}
+            step={0.01}
             className="w-full"
           />
         </div>

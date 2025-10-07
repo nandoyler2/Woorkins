@@ -1,7 +1,7 @@
 import { useState, useEffect, useId } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Sparkles } from "lucide-react";
+import { Search } from "lucide-react";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
@@ -12,6 +12,7 @@ export const SearchBar = () => {
   const [showResults, setShowResults] = useState(false);
   const [placeholder, setPlaceholder] = useState("");
   const fullPlaceholder = "Buscar empresas, negócios e produtos...";
+  const gradId = useId();
 
   // Simulated database of companies, businesses, and products
   const mockData = [
@@ -65,84 +66,74 @@ export const SearchBar = () => {
       <div className="relative">
         {/* Unified circular ring around input + button */}
         {isSearching && (
-          <div className="pointer-events-none absolute -inset-3 rounded-[1.75rem] z-0">
+          <div className="pointer-events-none absolute inset-0 rounded-2xl z-0">
             <div
-              className="absolute inset-0 rounded-[1.75rem] animate-spin-slow"
+              className="absolute inset-0 rounded-2xl animate-spin-slow"
               style={{
                 background:
                   'conic-gradient(from 0deg, hsl(var(--primary)), hsl(var(--secondary)), hsl(var(--primary)))',
               }}
             />
-            {/* Mask the center so only the ring is visible */}
-            <div className="absolute inset-[3px] rounded-[1.5rem] bg-background" />
+            <div className="absolute inset-[2px] rounded-2xl bg-background" />
           </div>
         )}
 
-        {/* Content */}
-        <div className="relative z-10 flex gap-3 items-center rounded-2xl">
+        {/* Content with unified border */}
+        <div className="relative z-10 flex gap-3 items-center rounded-2xl border-2 border-foreground/20 bg-background p-2">
           <div className="relative flex-1">
             {/* Gradient stroke search icon */}
-            {(() => {
-              const gradId = useId();
-              return (
-                <svg
-                  className="absolute left-6 top-1/2 -translate-y-1/2 w-7 h-7 z-10"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke={`url(#${gradId})`}
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <defs>
-                    <linearGradient id={gradId} x1="0" y1="0" x2="1" y2="1">
-                      <stop offset="0%" stopColor="hsl(var(--primary))" />
-                      <stop offset="100%" stopColor="hsl(var(--secondary))" />
-                    </linearGradient>
-                  </defs>
-                  <circle cx="11" cy="11" r="8" />
-                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                </svg>
-              );
-            })()}
+            <svg
+              className="absolute left-5 top-1/2 -translate-y-1/2 w-6 h-6 z-10"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke={`url(#${gradId})`}
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <defs>
+                <linearGradient id={gradId} x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stopColor="hsl(var(--primary))" />
+                  <stop offset="100%" stopColor="hsl(var(--secondary))" />
+                </linearGradient>
+              </defs>
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
             <Input
               type="text"
               placeholder={placeholder}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className={cn(
-                'h-16 md:h-20 pl-16 md:pl-20 pr-6 text-lg md:text-2xl rounded-2xl border-2 transition-all relative z-10 bg-background',
-                isSearching
-                  ? 'border-primary/50 shadow-glow'
-                  : 'border-foreground/20 hover:border-primary/30 shadow-elegant hover:shadow-glow'
+                'h-16 md:h-20 pl-14 md:pl-16 pr-4 text-lg md:text-2xl rounded-xl border-0 focus-visible:ring-0 bg-transparent transition-all relative z-10',
+                isSearching ? 'shadow-glow' : 'shadow-elegant hover:shadow-glow'
               )}
             />
           </div>
 
-          <div className="relative">
-            <Button
-              size="lg"
-              disabled={isSearching}
-              onClick={() => {
-                setIsSearching(true);
-                const filtered = mockData.filter((item) =>
-                  item.toLowerCase().includes(searchTerm.toLowerCase())
-                );
-                setTimeout(() => {
-                  setResults(filtered);
-                  setShowResults(true);
-                  setIsSearching(false);
-                }, 400);
-              }}
-              className={cn(
-                'h-16 md:h-20 px-8 md:px-10 rounded-2xl bg-gradient-primary text-white font-semibold text-lg md:text-xl shadow-glow hover:shadow-elegant transition-all relative',
-                isSearching && 'pointer-events-none'
-              )}
-            >
-              <Search className="w-6 h-6" />
-              <span className="ml-2 hidden md:inline">Buscar</span>
-            </Button>
-          </div>
+          <Button
+            size="lg"
+            disabled={isSearching}
+            onClick={() => {
+              setIsSearching(true);
+              const filtered = mockData.filter((item) =>
+                item.toLowerCase().includes(searchTerm.toLowerCase())
+              );
+              setTimeout(() => {
+                setResults(filtered);
+                setShowResults(true);
+                setIsSearching(false);
+              }, 400);
+            }}
+            className={cn(
+              'h-16 md:h-20 px-8 md:px-10 rounded-xl bg-gradient-primary text-white font-semibold text-lg md:text-xl shadow-glow hover:shadow-elegant transition-all relative',
+              isSearching && 'pointer-events-none'
+            )}
+          >
+            <Search className="w-6 h-6" />
+            <span className="ml-2 hidden md:inline">Buscar</span>
+          </Button>
         </div>
       </div>
 

@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Search, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
+import { cn } from "@/lib/utils";
 
 export const SearchBar = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -38,15 +40,50 @@ export const SearchBar = () => {
 
   return (
     <div className="w-full max-w-3xl mx-auto relative">
-      <div className="relative">
-        <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-7 h-7 text-muted-foreground" />
-        <Input
-          type="text"
-          placeholder="Buscar empresas, negócios e produtos..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="h-16 md:h-20 pl-16 md:pl-20 pr-6 text-lg md:text-2xl rounded-2xl border-2 border-foreground/20 focus:border-primary shadow-elegant hover:shadow-glow transition-all"
-        />
+      <div className="relative flex gap-3 items-center">
+        <div className="relative flex-1">
+          <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-7 h-7 text-muted-foreground z-10" />
+          <Input
+            type="text"
+            placeholder="Buscar empresas, negócios e produtos..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="h-16 md:h-20 pl-16 md:pl-20 pr-6 text-lg md:text-2xl rounded-2xl border-2 border-foreground/20 focus:border-primary shadow-elegant hover:shadow-glow transition-all"
+          />
+        </div>
+        
+        <div className="relative">
+          <Button
+            size="lg"
+            disabled={isSearching}
+            className={cn(
+              "h-16 md:h-20 px-8 md:px-10 rounded-2xl bg-gradient-primary text-white font-semibold text-lg md:text-xl shadow-glow hover:shadow-elegant transition-all relative overflow-visible",
+              isSearching && "pointer-events-none"
+            )}
+          >
+            {isSearching ? (
+              <>
+                <div className="absolute inset-0 rounded-2xl animate-spin-slow">
+                  <div className="absolute inset-0 rounded-2xl border-4 border-transparent border-t-primary border-r-secondary animate-pulse"></div>
+                </div>
+                <Sparkles className="w-6 h-6 animate-pulse" />
+              </>
+            ) : (
+              <>
+                <Search className="w-6 h-6" />
+                <span className="ml-2 hidden md:inline">Buscar</span>
+              </>
+            )}
+          </Button>
+          
+          {/* Loading ring effect */}
+          {isSearching && (
+            <div className="absolute inset-0 -m-2 rounded-3xl">
+              <div className="absolute inset-0 rounded-3xl border-4 border-primary/30 animate-ping"></div>
+              <div className="absolute inset-0 rounded-3xl border-4 border-transparent border-t-primary border-r-secondary animate-spin"></div>
+            </div>
+          )}
+        </div>
       </div>
 
       {showResults && (

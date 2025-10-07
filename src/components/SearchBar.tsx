@@ -49,24 +49,24 @@ export const SearchBar = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className={cn(
-              "h-16 md:h-20 pl-16 md:pl-20 pr-6 text-lg md:text-2xl rounded-2xl border-2 border-foreground/20 focus:border-primary shadow-elegant hover:shadow-glow transition-all relative z-10",
-              isSearching && "border-primary/50"
+              "h-16 md:h-20 pl-16 md:pl-20 pr-6 text-lg md:text-2xl rounded-2xl border-2 transition-all relative z-10",
+              isSearching 
+                ? "border-transparent bg-background shadow-glow" 
+                : "border-foreground/20 bg-background hover:border-primary/30 shadow-elegant hover:shadow-glow"
             )}
           />
           
           {/* Loading ring effect around search input */}
           {isSearching && (
-            <>
-              <div className="absolute inset-0 rounded-2xl -m-1 pointer-events-none">
-                <div className="absolute inset-0 rounded-2xl border-4 border-primary/20 animate-ping"></div>
-              </div>
-              <div className="absolute inset-0 rounded-2xl -m-1 pointer-events-none">
-                <div className="absolute inset-0 rounded-2xl border-4 border-transparent border-t-primary border-r-secondary animate-spin"></div>
-              </div>
-              <div className="absolute inset-0 rounded-2xl -m-2 pointer-events-none">
-                <div className="absolute inset-0 rounded-2xl border-2 border-transparent border-b-accent animate-spin-slow"></div>
-              </div>
-            </>
+            <div className="absolute inset-0 -m-[3px] pointer-events-none rounded-2xl overflow-hidden">
+              <div 
+                className="absolute inset-0 rounded-2xl"
+                style={{
+                  background: 'conic-gradient(from 0deg, transparent 0%, hsl(var(--primary)) 50%, hsl(var(--secondary)) 75%, transparent 100%)',
+                  animation: 'spin 2s linear infinite'
+                }}
+              ></div>
+            </div>
           )}
         </div>
         

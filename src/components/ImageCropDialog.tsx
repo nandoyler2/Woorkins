@@ -21,9 +21,10 @@ export function ImageCropDialog({ open, imageSrc, onClose, onCropComplete, aspec
   const onMediaLoaded = useCallback((mediaSize: { naturalWidth: number; naturalHeight: number }) => {
     const cropWidth = 400;
     const cropHeight = 400 / aspect;
-    const min = Math.max(cropWidth / mediaSize.naturalWidth, cropHeight / mediaSize.naturalHeight);
-    setMinZoom(min);
-    setZoom(min);
+    const requiredZoom = Math.max(cropWidth / mediaSize.naturalWidth, cropHeight / mediaSize.naturalHeight);
+    const initialZoom = Math.max(1, requiredZoom);
+    setMinZoom(initialZoom);
+    setZoom(initialZoom);
   }, [aspect]);
 
   const onCropChange = (location: any) => {
@@ -64,7 +65,7 @@ export function ImageCropDialog({ open, imageSrc, onClose, onCropComplete, aspec
             onCropComplete={onCropCompleteCallback}
             onMediaLoaded={onMediaLoaded}
             minZoom={minZoom}
-            maxZoom={2}
+            maxZoom={Math.max(2, minZoom * 2)}
             zoomSpeed={0.01}
             zoomWithScroll={true}
             cropSize={{ width: 400, height: 400 / aspect }}
@@ -78,7 +79,7 @@ export function ImageCropDialog({ open, imageSrc, onClose, onCropComplete, aspec
             value={[zoom]}
             onValueChange={(value) => setZoom(value[0])}
             min={minZoom}
-            max={2}
+            max={Math.max(2, minZoom * 2)}
             step={0.001}
             className="w-full"
           />

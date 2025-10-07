@@ -43,12 +43,12 @@ const Index = () => {
         </Button>
       </div>
 
-      {/* Hero Section with Large Logo */}
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-background via-primary/5 to-secondary/10">
+       {/* Hero Section with Large Logo */}
+       <section className="relative min-h-screen flex items-center justify-center overflow-visible bg-gradient-to-br from-background via-primary/5 to-secondary/10">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,hsl(var(--primary)/0.1),transparent_50%),radial-gradient(circle_at_70%_80%,hsl(var(--secondary)/0.1),transparent_50%)]"></div>
         
         <div className="container mx-auto px-4 relative z-10">
-          <div className="max-w-5xl mx-auto text-center space-y-12 animate-fade-in py-20">
+          <div className="max-w-5xl mx-auto text-center space-y-10 md:space-y-12 animate-fade-in py-20">
             {/* Large Logo */}
             <div className="flex justify-center mb-8">
               <SafeImage 
@@ -59,7 +59,7 @@ const Index = () => {
             </div>
 
             {/* Main Title */}
-            <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold leading-[1.15] md:leading-[1.2]">
+            <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold leading-[1.15] md:leading-[1.2] relative z-20">
               A plataforma que une
               <span className="block bg-gradient-primary bg-clip-text text-transparent mt-2 px-1 pb-1 md:pb-2">
                 pessoas e negócios
@@ -67,7 +67,7 @@ const Index = () => {
             </h1>
 
             {/* Subtitle */}
-            <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+            <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed relative z-20 -mt-4 md:-mt-6">
               A plataforma profissional que une consumidores e empresas em um ecossistema de credibilidade
             </p>
 

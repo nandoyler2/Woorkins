@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Star, Shield, Users, TrendingUp, MessageSquare, Award, ChevronRight, Globe } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Link } from "react-router-dom";
-import logoWoorkins from "@/assets/logo-woorkins-2.png";
+import logoWoorkins from "@/assets/woorkins.png";
 import { SafeImage } from "@/components/ui/safe-image";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 const Index = () => {

@@ -16,6 +16,15 @@ export function ImageCropDialog({ open, imageSrc, onClose, onCropComplete, aspec
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
+  const [minZoom, setMinZoom] = useState(1);
+
+  const onMediaLoaded = useCallback((mediaSize: { naturalWidth: number; naturalHeight: number }) => {
+    const cropWidth = 400;
+    const cropHeight = 400 / aspect;
+    const min = Math.max(cropWidth / mediaSize.naturalWidth, cropHeight / mediaSize.naturalHeight);
+    setMinZoom(min);
+    setZoom(min);
+  }, [aspect]);
 
   const onCropChange = (location: any) => {
     setCrop(location);
@@ -52,10 +61,11 @@ export function ImageCropDialog({ open, imageSrc, onClose, onCropComplete, aspec
             onCropChange={onCropChange}
             onZoomChange={onZoomChange}
             onCropComplete={onCropCompleteCallback}
-            minZoom={0.3}
+            onMediaLoaded={onMediaLoaded}
+            minZoom={minZoom}
             maxZoom={2}
+            zoomSpeed={0.05}
             cropSize={{ width: 400, height: 400 / aspect }}
-            restrictPosition={false}
           />
         </div>
 
@@ -64,7 +74,7 @@ export function ImageCropDialog({ open, imageSrc, onClose, onCropComplete, aspec
           <Slider
             value={[zoom]}
             onValueChange={(value) => setZoom(value[0])}
-            min={0.3}
+            min={minZoom}
             max={2}
             step={0.01}
             className="w-full"

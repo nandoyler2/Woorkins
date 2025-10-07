@@ -10,6 +10,8 @@ export const SearchBar = () => {
   const [results, setResults] = useState<string[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  const [placeholder, setPlaceholder] = useState("");
+  const fullPlaceholder = "Buscar empresas, negócios e produtos...";
 
   // Simulated database of companies, businesses, and products
   const mockData = [
@@ -18,6 +20,26 @@ export const SearchBar = () => {
     "Web Design", "Consulting Services", "AI Solutions",
     "Data Analytics", "Cybersecurity", "Social Media Management"
   ];
+
+  // Typing animation for placeholder
+  useEffect(() => {
+    if (searchTerm) {
+      setPlaceholder("");
+      return;
+    }
+
+    let currentIndex = 0;
+    const typingInterval = setInterval(() => {
+      if (currentIndex <= fullPlaceholder.length) {
+        setPlaceholder(fullPlaceholder.slice(0, currentIndex));
+        currentIndex++;
+      } else {
+        clearInterval(typingInterval);
+      }
+    }, 50);
+
+    return () => clearInterval(typingInterval);
+  }, [searchTerm]);
 
   useEffect(() => {
     if (searchTerm.trim() === "") {
@@ -42,32 +64,39 @@ export const SearchBar = () => {
     <div className="w-full max-w-3xl mx-auto relative">
       <div className="relative flex gap-3 items-center">
         <div className="relative flex-1">
-          <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-7 h-7 text-muted-foreground z-10" />
-          <Input
-            type="text"
-            placeholder="Buscar empresas, negócios e produtos..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className={cn(
-              "h-16 md:h-20 pl-16 md:pl-20 pr-6 text-lg md:text-2xl rounded-2xl border-2 transition-all relative z-10",
-              isSearching 
-                ? "border-transparent bg-background shadow-glow" 
-                : "border-foreground/20 bg-background hover:border-primary/30 shadow-elegant hover:shadow-glow"
-            )}
-          />
-          
-          {/* Loading ring effect around search input */}
+          {/* Loading border animation */}
           {isSearching && (
-            <div className="absolute inset-0 -m-[3px] pointer-events-none rounded-2xl overflow-hidden">
+            <div className="absolute inset-0 rounded-2xl overflow-hidden pointer-events-none">
+              <div className="absolute inset-0 rounded-2xl border-4 border-primary/30"></div>
               <div 
-                className="absolute inset-0 rounded-2xl"
+                className="absolute top-0 left-0 w-full h-full"
                 style={{
-                  background: 'conic-gradient(from 0deg, transparent 0%, hsl(var(--primary)) 50%, hsl(var(--secondary)) 75%, transparent 100%)',
-                  animation: 'spin 2s linear infinite'
+                  background: 'linear-gradient(90deg, transparent, hsl(var(--primary)), hsl(var(--secondary)), transparent)',
+                  backgroundSize: '200% 100%',
+                  animation: 'shimmer 2s linear infinite',
+                  mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+                  maskComposite: 'exclude',
+                  WebkitMaskComposite: 'xor',
+                  padding: '4px',
+                  borderRadius: '1rem'
                 }}
               ></div>
             </div>
           )}
+          
+          <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-6 h-6 text-muted-foreground z-10" />
+          <Input
+            type="text"
+            placeholder={placeholder}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className={cn(
+              "h-16 md:h-20 pl-16 md:pl-20 pr-6 text-lg md:text-2xl rounded-2xl border-2 transition-all relative z-10 bg-background",
+              isSearching 
+                ? "border-primary/50 shadow-glow" 
+                : "border-foreground/20 hover:border-primary/30 shadow-elegant hover:shadow-glow"
+            )}
+          />
         </div>
         
         <div className="relative">

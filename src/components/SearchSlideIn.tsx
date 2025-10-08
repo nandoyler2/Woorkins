@@ -77,12 +77,13 @@ export const SearchSlideIn = ({ isOpen, onClose }: SearchSlideInProps) => {
       />
       
       {/* Modal centered */}
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div 
           className={cn(
-            "w-full max-w-3xl bg-background/80 backdrop-blur-xl rounded-3xl shadow-2xl border-2 border-foreground/10 pointer-events-auto",
+            "w-full max-w-3xl bg-background/80 backdrop-blur-xl rounded-3xl shadow-2xl border-2 border-foreground/10",
             "animate-in zoom-in-95 fade-in duration-300"
           )}
+          onClick={(e) => e.stopPropagation()}
         >
           <div className="flex flex-col max-h-[85vh]">
             {/* Header */}

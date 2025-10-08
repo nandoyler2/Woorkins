@@ -72,28 +72,31 @@ export const SearchSlideIn = ({ isOpen, onClose }: SearchSlideInProps) => {
     <>
       {/* Backdrop */}
       <div 
-        className="fixed inset-0 bg-black/50 z-40 animate-in fade-in duration-200"
+        className="fixed inset-0 bg-black/50 z-[60] animate-in fade-in duration-200"
         onClick={onClose}
       />
       
-      {/* Slide-in panel */}
+      {/* Slide-in panel - aligned with header */}
       <div 
         className={cn(
-          "fixed top-0 right-0 h-full w-full md:w-[500px] bg-background shadow-2xl z-50",
+          "fixed top-0 right-0 h-screen w-full md:w-[600px] lg:w-[700px] bg-background/95 backdrop-blur-xl shadow-2xl z-[70] border-l-2 border-border",
           "animate-in slide-in-from-right duration-300"
         )}
       >
         <div className="h-full flex flex-col">
-          {/* Header */}
-          <div className="p-4 border-b border-border flex items-center justify-between">
-            <h2 className="text-xl font-bold">Buscar</h2>
+          {/* Header - aligned with main header height */}
+          <div className="h-16 px-6 border-b border-border flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Search className="w-5 h-5 text-primary" />
+              <h2 className="text-lg font-bold">Buscar</h2>
+            </div>
             <Button variant="ghost" size="icon" onClick={onClose}>
               <X className="h-5 w-5" />
             </Button>
           </div>
 
           {/* Search box */}
-          <div className="p-4">
+          <div className="p-6">
             <div className="relative">
               {/* Pulsing gradient shadow */}
               <div className="pointer-events-none absolute -inset-1 rounded-xl z-0 animate-pulse-slow">
@@ -107,11 +110,11 @@ export const SearchSlideIn = ({ isOpen, onClose }: SearchSlideInProps) => {
               </div>
 
               {/* Search input */}
-              <div className="relative z-10 flex gap-2 items-center rounded-xl border-2 border-foreground/20 bg-background p-2 shadow-lg">
+              <div className="relative z-10 flex gap-2 items-center rounded-2xl border-2 border-foreground/20 bg-background p-3 shadow-lg">
                 <div className="relative flex-1">
                   {/* Gradient search icon */}
                   <svg
-                    className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 z-10"
+                    className="absolute left-4 top-1/2 -translate-y-1/2 w-6 h-6 z-10"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke={`url(#${gradId})`}
@@ -130,10 +133,10 @@ export const SearchSlideIn = ({ isOpen, onClose }: SearchSlideInProps) => {
                   </svg>
                   <Input
                     type="text"
-                    placeholder="Buscar empresas..."
+                    placeholder="Buscar empresas, serviços..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="h-12 pl-11 pr-4 text-base rounded-lg border-0 focus-visible:ring-0 bg-transparent"
+                    className="h-16 pl-14 pr-4 text-lg rounded-xl border-0 focus-visible:ring-0 bg-transparent"
                     autoFocus
                   />
                 </div>
@@ -142,37 +145,37 @@ export const SearchSlideIn = ({ isOpen, onClose }: SearchSlideInProps) => {
           </div>
 
           {/* Results */}
-          <div className="flex-1 overflow-y-auto p-4">
+          <div className="flex-1 overflow-y-auto px-6 py-4">
             {isSearching ? (
               <div className="flex items-center justify-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
               </div>
             ) : searchTerm.trim() === "" ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <Search className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                <p>Digite para buscar empresas e serviços</p>
+              <div className="text-center py-12 text-muted-foreground">
+                <Search className="w-16 h-16 mx-auto mb-4 opacity-50" />
+                <p className="text-lg">Digite para buscar empresas e serviços</p>
               </div>
             ) : results.length > 0 ? (
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {results.map((result, index) => (
                   <div
                     key={index}
                     onClick={() => handleResultClick(result.slug)}
-                    className="p-3 hover:bg-muted rounded-xl cursor-pointer transition-all hover:shadow-sm animate-in fade-in slide-in-from-right"
+                    className="p-4 hover:bg-muted rounded-xl cursor-pointer transition-all hover:shadow-md animate-in fade-in slide-in-from-right"
                     style={{ animationDelay: `${index * 50}ms` }}
                   >
-                    <div className="flex gap-3 items-start">
+                    <div className="flex gap-4 items-start">
                       {/* Logo */}
                       <div className="flex-shrink-0">
                         {result.logo_url ? (
                           <SafeImage
                             src={result.logo_url}
                             alt={result.company_name}
-                            className="w-12 h-12 rounded-lg object-cover border-2 border-border"
+                            className="w-16 h-16 rounded-lg object-cover border-2 border-border"
                           />
                         ) : (
-                          <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center border-2 border-border">
-                            <Building2 className="w-6 h-6 text-muted-foreground" />
+                          <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center border-2 border-border">
+                            <Building2 className="w-7 h-7 text-muted-foreground" />
                           </div>
                         )}
                       </div>
@@ -180,23 +183,23 @@ export const SearchSlideIn = ({ isOpen, onClose }: SearchSlideInProps) => {
                       {/* Content */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2 mb-1">
-                          <h3 className="text-sm font-bold truncate">{result.company_name}</h3>
+                          <h3 className="text-base font-bold truncate">{result.company_name}</h3>
                           
                           {/* Rating */}
                           {result.total_reviews > 0 && (
-                            <div className="flex items-center gap-1 px-2 py-0.5 bg-primary/10 rounded-md flex-shrink-0">
-                              <Star className="w-3 h-3 fill-primary text-primary" />
-                              <span className="text-xs font-bold">{Number(result.average_rating).toFixed(1)}</span>
+                            <div className="flex items-center gap-1 px-2 py-1 bg-primary/10 rounded-lg flex-shrink-0">
+                              <Star className="w-4 h-4 fill-primary text-primary" />
+                              <span className="text-sm font-bold">{Number(result.average_rating).toFixed(1)}</span>
                             </div>
                           )}
                         </div>
 
                         {result.category && (
-                          <p className="text-xs text-primary font-medium mb-1">{result.category}</p>
+                          <p className="text-sm text-primary font-medium mb-1">{result.category}</p>
                         )}
                         
                         {result.description && (
-                          <p className="text-xs text-muted-foreground line-clamp-2">{result.description}</p>
+                          <p className="text-sm text-muted-foreground line-clamp-2">{result.description}</p>
                         )}
                       </div>
                     </div>
@@ -204,8 +207,8 @@ export const SearchSlideIn = ({ isOpen, onClose }: SearchSlideInProps) => {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-8">
-                <p className="text-sm text-muted-foreground mb-2">
+              <div className="text-center py-12">
+                <p className="text-base text-muted-foreground mb-2">
                   Não achamos nada para "{searchTerm}"
                 </p>
               </div>

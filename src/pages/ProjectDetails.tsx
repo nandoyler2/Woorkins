@@ -77,7 +77,7 @@ export default function ProjectDetails() {
   const [message, setMessage] = useState('');
   const [budget, setBudget] = useState('');
   const [deliveryDays, setDeliveryDays] = useState('');
-  const [selectedBusiness, setSelectedBusiness] = useState('');
+  const [selectedBusiness, setSelectedBusiness] = useState('individual');
 
   useEffect(() => {
     loadProjectData();
@@ -179,7 +179,7 @@ export default function ProjectDetails() {
         .insert({
           project_id: project.id,
           freelancer_id: (profileData as any).id,
-          business_id: selectedBusiness || null,
+          business_id: selectedBusiness && selectedBusiness !== 'individual' ? selectedBusiness : null,
           message,
           budget: parseFloat(budget),
           delivery_days: parseInt(deliveryDays),
@@ -195,7 +195,7 @@ export default function ProjectDetails() {
       setMessage('');
       setBudget('');
       setDeliveryDays('');
-      setSelectedBusiness('');
+      setSelectedBusiness('individual');
       loadProjectData();
     } catch (error: any) {
       toast({
@@ -395,7 +395,7 @@ export default function ProjectDetails() {
                               <SelectValue placeholder="Pessoa física" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="">Pessoa física</SelectItem>
+                              <SelectItem value="individual">Pessoa física</SelectItem>
                               {myBusinesses.map((business) => (
                                 <SelectItem key={business.id} value={business.id}>
                                   {business.company_name}

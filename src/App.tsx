@@ -18,6 +18,7 @@ import UserOrders from "./pages/UserOrders";
 import Projects from "./pages/Projects";
 import ProjectCreate from "./pages/ProjectCreate";
 import ProjectDetails from "./pages/ProjectDetails";
+import MyProjects from "./pages/MyProjects";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -40,6 +41,7 @@ const App = () => (
               <Route path="/projects" element={<Projects />} />
               <Route path="/projects/new" element={<ProtectedRoute><ProjectCreate /></ProtectedRoute>} />
               <Route path="/projects/:id" element={<ProjectDetails />} />
+              <Route path="/my-projects" element={<ProtectedRoute><MyProjects /></ProtectedRoute>} />
               <Route path="/:slug" element={<BusinessProfile />} />
               <Route path="/feed" element={<ProtectedRoute><Feed /></ProtectedRoute>} />
               <Route path="/admin" element={<ProtectedRoute requireAdmin><Admin /></ProtectedRoute>} />

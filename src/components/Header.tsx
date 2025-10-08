@@ -13,11 +13,13 @@ import {
 import logoWoorkins from '@/assets/logo-woorkins.png';
 import { SafeImage } from '@/components/ui/safe-image';
 import { supabase } from '@/integrations/supabase/client';
+import { NotificationBell } from '@/components/NotificationBell';
 
 export const Header = () => {
   const { language, setLanguage, t } = useLanguage();
   const { user, signOut } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
+  const [profileId, setProfileId] = useState<string>('');
 
   useEffect(() => {
     const checkAdminStatus = async () => {
@@ -41,7 +43,22 @@ export const Header = () => {
       }
     };
 
+    const loadProfile = async () => {
+      if (!user) return;
+      
+      const { data } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+      
+      if (data) {
+        setProfileId(data.id);
+      }
+    };
+
     checkAdminStatus();
+    loadProfile();
   }, [user]);
 
   return (
@@ -61,6 +78,10 @@ export const Header = () => {
               <Briefcase className="w-5 h-5" />
               <span>Projetos</span>
             </Link>
+            <Link to="/my-projects" className="flex items-center gap-2 text-foreground/80 hover:text-foreground transition-colors">
+              <Briefcase className="w-5 h-5" />
+              <span>Meus Projetos</span>
+            </Link>
             <Link to="/discover" className="flex items-center gap-2 text-foreground/80 hover:text-foreground transition-colors">
               <Search className="w-5 h-5" />
               <span>{t('discover')}</span>
@@ -69,6 +90,8 @@ export const Header = () => {
         )}
 
         <div className="flex items-center gap-3">
+          {user && profileId && <NotificationBell profileId={profileId} />}
+          
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon">

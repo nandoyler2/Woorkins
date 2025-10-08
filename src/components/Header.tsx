@@ -14,12 +14,14 @@ import logoWoorkins from '@/assets/logo-woorkins.png';
 import { SafeImage } from '@/components/ui/safe-image';
 import { supabase } from '@/integrations/supabase/client';
 import { NotificationBell } from '@/components/NotificationBell';
+import { SearchSlideIn } from '@/components/SearchSlideIn';
 
 export const Header = () => {
   const { language, setLanguage, t } = useLanguage();
   const { user, signOut } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
   const [profileId, setProfileId] = useState<string>('');
+  const [searchOpen, setSearchOpen] = useState(false);
 
   useEffect(() => {
     const checkAdminStatus = async () => {
@@ -82,15 +84,26 @@ export const Header = () => {
               <Briefcase className="w-5 h-5" />
               <span>Meus Projetos</span>
             </Link>
-            <Link to="/discover" className="flex items-center gap-2 text-foreground/80 hover:text-foreground transition-colors">
+            <button 
+              onClick={() => setSearchOpen(true)}
+              className="flex items-center gap-2 text-foreground/80 hover:text-foreground transition-colors"
+            >
               <Search className="w-5 h-5" />
               <span>{t('discover')}</span>
-            </Link>
+            </button>
           </nav>
         )}
 
         <div className="flex items-center gap-3">
           {user && profileId && <NotificationBell profileId={profileId} />}
+          
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={() => setSearchOpen(true)}
+          >
+            <Search className="w-5 h-5" />
+          </Button>
 
           {user ? (
             <DropdownMenu>
@@ -132,6 +145,8 @@ export const Header = () => {
           )}
         </div>
       </div>
+      
+      <SearchSlideIn isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
     </header>
   );
 };

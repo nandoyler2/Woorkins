@@ -47,27 +47,8 @@ const Index = () => {
     loadUserData();
   }, [user]);
   return <div className="min-h-screen bg-background">
-      {/* Top Bar - Language Selector and User Menu */}
+      {/* Top Bar - User Menu */}
       <div className="absolute top-6 right-6 z-50 flex items-center gap-3">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="bg-white/10 backdrop-blur-sm hover:bg-white/20">
-              <Globe className="w-5 h-5" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => setLanguage('pt')}>
-              🇧🇷 Português
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setLanguage('en')}>
-              🇺🇸 English
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setLanguage('es')}>
-              🇪🇸 Español
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-        
         {user ? (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

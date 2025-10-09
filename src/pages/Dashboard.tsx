@@ -169,7 +169,7 @@ export default function Dashboard() {
             <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">
               Olá, {profile?.full_name || profile?.username}!
             </h1>
-            <p className="text-lg text-muted-foreground">Gerencie suas marcas e encontre novos projetos de vinicinhos</p>
+            <p className="text-lg text-muted-foreground">Gerencie suas marcas e encontre novos projetos</p>
           </div>
 
           {/* Stats Cards */}

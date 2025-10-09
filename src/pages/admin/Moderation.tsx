@@ -19,7 +19,7 @@ export default function AdminModeration() {
       const [postsData, projectsData, evaluationsData] = await Promise.all([
         supabase.from('posts').select('*, profiles(*)').order('created_at', { ascending: false }).limit(50),
         supabase.from('projects').select('*, profiles(*)').order('created_at', { ascending: false }).limit(50),
-        supabase.from('evaluations').select('*, business_profiles(*)').order('created_at', { ascending: false }).limit(50)
+        supabase.from('evaluations').select('*').order('created_at', { ascending: false }).limit(50)
       ]);
 
       setPosts(postsData.data || []);
@@ -149,6 +149,9 @@ export default function AdminModeration() {
                     {evaluation.is_verified && <Badge variant="secondary">Verificado</Badge>}
                   </div>
                   <p className="text-sm">{evaluation.content}</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Tipo: {evaluation.evaluation_type}
+                  </p>
                 </div>
                 <div className="flex gap-2">
                   <Button variant="ghost" size="sm">

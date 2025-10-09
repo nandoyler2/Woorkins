@@ -30,16 +30,30 @@ export default function AdminUsers() {
 
   const loadUsers = async () => {
     try {
-      const { data: profiles, error } = await supabase
+      // Buscar profiles
+      const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
-        .select(`
-          *,
-          user_roles (role)
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setUsers(profiles || []);
+      if (profilesError) throw profilesError;
+
+      // Buscar roles separadamente para cada usuário
+      const usersWithRoles = await Promise.all(
+        (profiles || []).map(async (profile) => {
+          const { data: roles } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', profile.user_id);
+          
+          return {
+            ...profile,
+            user_roles: roles || []
+          };
+        })
+      );
+
+      setUsers(usersWithRoles);
     } catch (error: any) {
       toast({
         title: 'Erro ao carregar usuários',

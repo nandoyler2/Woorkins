@@ -11,14 +11,12 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-
 interface Profile {
   id: string;
   username: string;
   full_name: string | null;
   avatar_url: string | null;
 }
-
 interface BusinessProfile {
   id: string;
   company_name: string;
@@ -28,10 +26,13 @@ interface BusinessProfile {
   average_rating: number;
   total_reviews: number;
 }
-
 export default function Dashboard() {
-  const { user } = useAuth();
-  const { toast } = useToast();
+  const {
+    user
+  } = useAuth();
+  const {
+    toast
+  } = useToast();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [businesses, setBusinesses] = useState<BusinessProfile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -39,71 +40,54 @@ export default function Dashboard() {
   const [openDialog, setOpenDialog] = useState(false);
   const [slugAvailable, setSlugAvailable] = useState<boolean | null>(null);
   const [checkingSlug, setCheckingSlug] = useState(false);
-  
+
   // Form state
   const [companyName, setCompanyName] = useState('');
   const [slug, setSlug] = useState('');
   const [description, setDescription] = useState('');
-
   useEffect(() => {
     if (user) {
       loadProfile();
       loadBusinesses();
     }
   }, [user]);
-
   const loadProfile = async () => {
     if (!user) return;
-
-    const { data, error } = await supabase
-      .from('profiles' as any)
-      .select('*')
-      .eq('user_id', user.id)
-      .maybeSingle();
-
+    const {
+      data,
+      error
+    } = await supabase.from('profiles' as any).select('*').eq('user_id', user.id).maybeSingle();
     if (!error && data) {
       setProfile(data as unknown as Profile);
     }
     setLoading(false);
   };
-
   const loadBusinesses = async () => {
     if (!user) return;
-
-    const { data: profileData } = await supabase
-      .from('profiles' as any)
-      .select('id')
-      .eq('user_id', user.id)
-      .maybeSingle();
-
+    const {
+      data: profileData
+    } = await supabase.from('profiles' as any).select('id').eq('user_id', user.id).maybeSingle();
     const profileId = (profileData as any)?.id;
     if (!profileId) return;
-
-    const { data, error } = await supabase
-      .from('business_profiles' as any)
-      .select('*')
-      .eq('profile_id', profileId);
-
+    const {
+      data,
+      error
+    } = await supabase.from('business_profiles' as any).select('*').eq('profile_id', profileId);
     if (!error && data) {
       setBusinesses(data as unknown as BusinessProfile[]);
     }
   };
-
   const checkSlugAvailability = async (slugToCheck: string) => {
     if (!slugToCheck || slugToCheck.length < 3) {
       setSlugAvailable(null);
       return;
     }
-
     setCheckingSlug(true);
-    
     try {
-      const { data, error } = await supabase
-        .from('business_profiles' as any)
-        .select('id')
-        .eq('slug', slugToCheck)
-        .maybeSingle();
-
+      const {
+        data,
+        error
+      } = await supabase.from('business_profiles' as any).select('id').eq('slug', slugToCheck).maybeSingle();
       setSlugAvailable(!data);
     } catch (error) {
       console.error('Error checking slug:', error);
@@ -112,62 +96,49 @@ export default function Dashboard() {
       setCheckingSlug(false);
     }
   };
-
   const handleCompanyNameChange = (name: string) => {
     setCompanyName(name);
-    
+
     // Auto-generate slug from company name
-    const generatedSlug = name
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '') // Remove accents
-      .replace(/[^a-z0-9\s-]/g, '') // Remove special chars
-      .trim()
-      .replace(/\s+/g, '-') // Replace spaces with hyphens
-      .replace(/-+/g, '-'); // Remove duplicate hyphens
-    
+    const generatedSlug = name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '') // Remove accents
+    .replace(/[^a-z0-9\s-]/g, '') // Remove special chars
+    .trim().replace(/\s+/g, '-') // Replace spaces with hyphens
+    .replace(/-+/g, '-'); // Remove duplicate hyphens
+
     setSlug(generatedSlug);
-    
+
     // Check availability with debounce
     if (generatedSlug.length >= 3) {
       setTimeout(() => checkSlugAvailability(generatedSlug), 500);
     }
   };
-
   const handleSlugChange = (newSlug: string) => {
     const cleanSlug = newSlug.toLowerCase().replace(/[^a-z0-9-]/g, '');
     setSlug(cleanSlug);
-    
     if (cleanSlug.length >= 3) {
       setTimeout(() => checkSlugAvailability(cleanSlug), 500);
     } else {
       setSlugAvailable(null);
     }
   };
-
   const handleCreateBusiness = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!profile) return;
-
     setCreating(true);
-
     try {
-      const { error } = await supabase
-        .from('business_profiles' as any)
-        .insert({
-          profile_id: profile.id,
-          company_name: companyName,
-          slug: slug.toLowerCase().replace(/[^a-z0-9-]/g, ''),
-          description,
-        });
-
+      const {
+        error
+      } = await supabase.from('business_profiles' as any).insert({
+        profile_id: profile.id,
+        company_name: companyName,
+        slug: slug.toLowerCase().replace(/[^a-z0-9-]/g, ''),
+        description
+      });
       if (error) throw error;
-
       toast({
         title: 'Marca criada com sucesso!',
-        description: `Sua marca foi criada em woorkins.com/${slug}`,
+        description: `Sua marca foi criada em woorkins.com/${slug}`
       });
-
       setOpenDialog(false);
       setCompanyName('');
       setSlug('');
@@ -177,23 +148,18 @@ export default function Dashboard() {
       toast({
         title: 'Erro ao criar marca',
         description: error.message,
-        variant: 'destructive',
+        variant: 'destructive'
       });
     } finally {
       setCreating(false);
     }
   };
-
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
+    return <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background">
+  return <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background">
       <Header />
       
       <div className="container mx-auto px-4 py-8 max-w-7xl">
@@ -203,9 +169,7 @@ export default function Dashboard() {
             <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">
               Olá, {profile?.full_name || profile?.username}!
             </h1>
-            <p className="text-lg text-muted-foreground">
-              Gerencie suas marcas e encontre novos projetos
-            </p>
+            <p className="text-lg text-muted-foreground">Gerencie suas marcas e encontre novos projetos de vinicinhos</p>
           </div>
 
           {/* Stats Cards */}
@@ -245,9 +209,7 @@ export default function Dashboard() {
               </CardHeader>
               <CardContent>
                 <div className="text-4xl font-bold text-accent">
-                  {businesses.length > 0
-                    ? (businesses.reduce((sum, b) => sum + Number(b.average_rating), 0) / businesses.length).toFixed(1)
-                    : '0.0'}
+                  {businesses.length > 0 ? (businesses.reduce((sum, b) => sum + Number(b.average_rating), 0) / businesses.length).toFixed(1) : '0.0'}
                 </div>
               </CardContent>
             </Card>
@@ -294,60 +256,31 @@ export default function Dashboard() {
                   <form onSubmit={handleCreateBusiness} className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="company-name">Nome da Empresa</Label>
-                      <Input
-                        id="company-name"
-                        value={companyName}
-                        onChange={(e) => handleCompanyNameChange(e.target.value)}
-                        placeholder="Nome da sua empresa"
-                        required
-                      />
+                      <Input id="company-name" value={companyName} onChange={e => handleCompanyNameChange(e.target.value)} placeholder="Nome da sua empresa" required />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="slug">Username (Slug)</Label>
-                      <Input
-                        id="slug"
-                        value={slug}
-                        onChange={(e) => handleSlugChange(e.target.value)}
-                        placeholder="minha-empresa"
-                        required
-                        minLength={3}
-                      />
+                      <Input id="slug" value={slug} onChange={e => handleSlugChange(e.target.value)} placeholder="minha-empresa" required minLength={3} />
                       <div className="flex items-center justify-between">
                         <p className="text-xs text-muted-foreground">
                           Será usado como: woorkins.com/{slug || 'minha-empresa'}
                         </p>
-                        {checkingSlug && (
-                          <span className="text-xs text-muted-foreground">Verificando...</span>
-                        )}
-                        {!checkingSlug && slugAvailable === true && slug.length >= 3 && (
-                          <span className="text-xs text-accent flex items-center gap-1">
+                        {checkingSlug && <span className="text-xs text-muted-foreground">Verificando...</span>}
+                        {!checkingSlug && slugAvailable === true && slug.length >= 3 && <span className="text-xs text-accent flex items-center gap-1">
                             <CheckCircle className="w-3 h-3" />
                             Disponível
-                          </span>
-                        )}
-                        {!checkingSlug && slugAvailable === false && (
-                          <span className="text-xs text-destructive flex items-center gap-1">
+                          </span>}
+                        {!checkingSlug && slugAvailable === false && <span className="text-xs text-destructive flex items-center gap-1">
                             <XCircle className="w-3 h-3" />
                             Indisponível
-                          </span>
-                        )}
+                          </span>}
                       </div>
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="description">Descrição</Label>
-                      <Textarea
-                        id="description"
-                        value={description}
-                        onChange={(e) => setDescription(e.target.value)}
-                        placeholder="Descreva sua empresa..."
-                        rows={4}
-                      />
+                      <Textarea id="description" value={description} onChange={e => setDescription(e.target.value)} placeholder="Descreva sua empresa..." rows={4} />
                     </div>
-                    <Button 
-                      type="submit" 
-                      className="w-full" 
-                      disabled={creating || slugAvailable === false || checkingSlug}
-                    >
+                    <Button type="submit" className="w-full" disabled={creating || slugAvailable === false || checkingSlug}>
                       {creating ? 'Criando...' : 'Criar Marca'}
                     </Button>
                   </form>
@@ -355,8 +288,7 @@ export default function Dashboard() {
               </Dialog>
             </div>
 
-            {businesses.length === 0 ? (
-              <Card className="p-12 bg-card/50 backdrop-blur-sm border-2">
+            {businesses.length === 0 ? <Card className="p-12 bg-card/50 backdrop-blur-sm border-2">
                 <div className="text-center space-y-4">
                   <Building2 className="w-16 h-16 mx-auto text-muted-foreground" />
                   <div>
@@ -366,11 +298,8 @@ export default function Dashboard() {
                     </p>
                   </div>
                 </div>
-              </Card>
-            ) : (
-              <div className="grid md:grid-cols-2 gap-6">
-                {businesses.map((business) => (
-                  <Card key={business.id} className="hover:shadow-elegant transition-all bg-card/50 backdrop-blur-sm border-2 hover:border-primary/50">
+              </Card> : <div className="grid md:grid-cols-2 gap-6">
+                {businesses.map(business => <Card key={business.id} className="hover:shadow-elegant transition-all bg-card/50 backdrop-blur-sm border-2 hover:border-primary/50">
                     <CardHeader>
                       <div className="flex items-start justify-between">
                         <div className="space-y-1 flex-1">
@@ -387,11 +316,9 @@ export default function Dashboard() {
                       </div>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      {business.description && (
-                        <p className="text-sm text-muted-foreground line-clamp-2">
+                      {business.description && <p className="text-sm text-muted-foreground line-clamp-2">
                           {business.description}
-                        </p>
-                      )}
+                        </p>}
                       <div className="flex items-center gap-4 text-sm">
                         <div className="flex items-center gap-1">
                           <Star className="w-4 h-4 text-accent fill-accent" />
@@ -411,13 +338,10 @@ export default function Dashboard() {
                         </Button>
                       </div>
                     </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
+                  </Card>)}
+              </div>}
           </div>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 }

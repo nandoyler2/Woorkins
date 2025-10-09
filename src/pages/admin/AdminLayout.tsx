@@ -26,7 +26,7 @@ const adminMenuItems = [
   { title: "Dashboard", url: "/admin", icon: Home },
   { title: "Usuários", url: "/admin/users", icon: Users },
   { title: "Moderação", url: "/admin/moderation", icon: Flag },
-  { title: "Sinalizações", url: "/admin/reports", icon: Flag },
+  { title: "Denúncias", url: "/admin/reports", icon: Flag },
   { title: "Negócios", url: "/admin/businesses", icon: Briefcase },
   { title: "Analytics", url: "/admin/analytics", icon: BarChart3 },
   { title: "Configurações", url: "/admin/settings", icon: Settings },

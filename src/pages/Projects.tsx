@@ -187,10 +187,13 @@ export default function Projects() {
     if (names.length === 0) return '';
     if (names.length === 1) return names[0];
     
-    // Primeiro nome completo + iniciais dos sobrenomes
+    // Primeiro nome completo + iniciais dos sobrenomes (exceto preposições)
     const firstName = names[0];
-    const lastNames = names.slice(1).map(name => name.charAt(0).toUpperCase() + '.').join(' ');
-    return `${firstName} ${lastNames}`;
+    const lastNames = names.slice(1)
+      .filter(name => name.length > 2) // Remove preposições (de, da, do, dos, das, etc)
+      .map(name => name.charAt(0).toUpperCase() + '.')
+      .join(' ');
+    return lastNames ? `${firstName} ${lastNames}` : firstName;
   };
 
   const toggleFavorite = (projectId: string) => {
@@ -213,7 +216,7 @@ export default function Projects() {
     if (!user || !reportingProject) {
       toast({
         title: 'Erro',
-        description: 'Você precisa estar logado para sinalizar',
+        description: 'Você precisa estar logado para denunciar',
         variant: 'destructive',
       });
       return;
@@ -222,7 +225,7 @@ export default function Projects() {
     if (!reportReason.trim()) {
       toast({
         title: 'Erro',
-        description: 'Selecione um motivo para a sinalização',
+        description: 'Selecione um motivo para a denúncia',
         variant: 'destructive',
       });
       return;
@@ -252,7 +255,7 @@ export default function Projects() {
 
       toast({
         title: 'Sucesso',
-        description: 'Conteúdo sinalizado com sucesso. Nossa equipe irá analisar.',
+        description: 'Conteúdo denunciado com sucesso. Nossa equipe irá analisar.',
       });
 
       setReportDialogOpen(false);
@@ -263,7 +266,7 @@ export default function Projects() {
       console.error('Error reporting project:', error);
       toast({
         title: 'Erro',
-        description: 'Não foi possível enviar a sinalização',
+        description: 'Não foi possível enviar a denúncia',
         variant: 'destructive',
       });
     }
@@ -561,14 +564,14 @@ export default function Projects() {
                               }}
                             >
                               <AlertCircle className="w-4 h-4 mr-2" />
-                              Sinalizar conteúdo
+                              Denunciar
                             </Button>
                           </DialogTrigger>
                           <DialogContent>
                             <DialogHeader>
-                              <DialogTitle>Sinalizar Conteúdo Inadequado</DialogTitle>
+                              <DialogTitle>Denunciar Conteúdo Inadequado</DialogTitle>
                               <DialogDescription>
-                                Ajude-nos a manter a comunidade segura. Sua sinalização será analisada pela nossa equipe.
+                                Ajude-nos a manter a comunidade segura. Sua denúncia será analisada pela nossa equipe.
                               </DialogDescription>
                             </DialogHeader>
                             <div className="space-y-4">
@@ -622,7 +625,7 @@ export default function Projects() {
                                   onClick={handleReport}
                                   disabled={!reportReason}
                                 >
-                                  Enviar Sinalização
+                                  Enviar Denúncia
                                 </Button>
                               </div>
                             </div>

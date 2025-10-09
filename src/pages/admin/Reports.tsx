@@ -64,7 +64,7 @@ export default function Reports() {
       console.error('Error loading reports:', error);
       toast({
         title: 'Erro',
-        description: 'Não foi possível carregar as sinalizações',
+        description: 'Não foi possível carregar as denúncias',
         variant: 'destructive',
       });
     } finally {
@@ -178,9 +178,9 @@ export default function Reports() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Sinalizações</h1>
+          <h1 className="text-3xl font-bold">Denúncias</h1>
           <p className="text-muted-foreground mt-1">
-            Gerencie conteúdos sinalizados pela comunidade
+            Gerencie conteúdos denunciados pela comunidade
           </p>
         </div>
       </div>
@@ -230,11 +230,11 @@ export default function Reports() {
           <div className="text-center space-y-4">
             <AlertCircle className="w-16 h-16 mx-auto text-muted-foreground" />
             <div>
-              <h3 className="text-xl font-bold mb-2">Nenhuma sinalização encontrada</h3>
+              <h3 className="text-xl font-bold mb-2">Nenhuma denúncia encontrada</h3>
               <p className="text-muted-foreground">
                 {filter === 'all' 
-                  ? 'Não há sinalizações no sistema' 
-                  : `Não há sinalizações com status "${getStatusLabel(filter)}"`}
+                  ? 'Não há denúncias no sistema' 
+                  : `Não há denúncias com status "${getStatusLabel(filter)}"`}
               </p>
             </div>
           </div>
@@ -258,7 +258,7 @@ export default function Reports() {
                       </Badge>
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      Sinalizado por {report.reporter.full_name} (@{report.reporter.username})
+                      Denunciado por {report.reporter.full_name} (@{report.reporter.username})
                     </p>
                     <p className="text-xs text-muted-foreground">
                       {new Date(report.created_at).toLocaleString('pt-BR')}
@@ -302,7 +302,7 @@ export default function Reports() {
                     </DialogTrigger>
                     <DialogContent>
                       <DialogHeader>
-                        <DialogTitle>Gerenciar Sinalização</DialogTitle>
+                        <DialogTitle>Gerenciar Denúncia</DialogTitle>
                       </DialogHeader>
                       <div className="space-y-4">
                         <div>
@@ -312,7 +312,7 @@ export default function Reports() {
                           <Textarea
                             value={adminNotes}
                             onChange={(e) => setAdminNotes(e.target.value)}
-                            placeholder="Adicione suas observações sobre esta sinalização..."
+                            placeholder="Adicione suas observações sobre esta denúncia..."
                             rows={4}
                           />
                         </div>

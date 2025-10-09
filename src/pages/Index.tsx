@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Star, Shield, Users, TrendingUp, MessageSquare, Award, ChevronRight, Globe, User, LogOut, Home } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import logoWoorkins from "@/assets/woorkins.png";
 import { SafeImage } from "@/components/ui/safe-image";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
@@ -19,33 +19,15 @@ const Index = () => {
     t
   } = useLanguage();
   const { user, signOut } = useAuth();
+  const navigate = useNavigate();
   const [isAdmin, setIsAdmin] = useState(false);
   const [profile, setProfile] = useState<any>(null);
 
   useEffect(() => {
-    const loadUserData = async () => {
-      if (!user) return;
-
-      // Carregar perfil
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
-      
-      if (profileData) setProfile(profileData);
-
-      // Verificar se é admin
-      const { data: roleData } = await supabase.rpc('has_role', {
-        _user_id: user.id,
-        _role: 'admin'
-      });
-      
-      setIsAdmin(Boolean(roleData));
-    };
-
-    loadUserData();
-  }, [user]);
+    if (user) {
+      navigate('/dashboard');
+    }
+  }, [user, navigate]);
   return <div className="min-h-screen bg-background">
       {/* Top Bar - User Menu */}
       <div className="absolute top-6 right-6 z-50 flex items-center gap-3">

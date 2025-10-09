@@ -177,9 +177,14 @@ export default function Projects() {
   };
 
   const getInitials = (fullName: string) => {
-    const names = fullName.trim().split(' ');
-    if (names.length === 1) return names[0].charAt(0).toUpperCase() + '.';
-    return names[0].charAt(0).toUpperCase() + '. ' + names[names.length - 1].charAt(0).toUpperCase() + '.';
+    const names = fullName.trim().split(' ').filter(n => n.length > 0);
+    if (names.length === 0) return '';
+    if (names.length === 1) return names[0];
+    
+    // Primeiro nome completo + iniciais dos sobrenomes
+    const firstName = names[0];
+    const lastNames = names.slice(1).map(name => name.charAt(0).toUpperCase() + '.').join(' ');
+    return `${firstName} ${lastNames}`;
   };
 
   const toggleFavorite = (projectId: string) => {

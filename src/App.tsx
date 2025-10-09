@@ -21,6 +21,12 @@ import ProjectCreate from "./pages/ProjectCreate";
 import ProjectDetails from "./pages/ProjectDetails";
 import MyProjects from "./pages/MyProjects";
 import NotFound from "./pages/NotFound";
+import { AdminLayout } from "./pages/admin/AdminLayout";
+import AdminUsers from "./pages/admin/Users";
+import AdminModeration from "./pages/admin/Moderation";
+import AdminBusinesses from "./pages/admin/Businesses";
+import AdminAnalytics from "./pages/admin/Analytics";
+import AdminSettings from "./pages/admin/Settings";
 
 const queryClient = new QueryClient();
 
@@ -45,7 +51,14 @@ const App = () => (
               <Route path="/my-projects" element={<ProtectedRoute><MyProjects /></ProtectedRoute>} />
               <Route path="/:slug" element={<BusinessProfile />} />
               <Route path="/feed" element={<ProtectedRoute><Feed /></ProtectedRoute>} />
-              <Route path="/admin" element={<ProtectedRoute requireAdmin><Admin /></ProtectedRoute>} />
+              <Route path="/admin" element={<ProtectedRoute requireAdmin><AdminLayout /></ProtectedRoute>}>
+                <Route index element={<Admin />} />
+                <Route path="users" element={<AdminUsers />} />
+                <Route path="moderation" element={<AdminModeration />} />
+                <Route path="businesses" element={<AdminBusinesses />} />
+                <Route path="analytics" element={<AdminAnalytics />} />
+                <Route path="settings" element={<AdminSettings />} />
+              </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
             <AIAssistant />

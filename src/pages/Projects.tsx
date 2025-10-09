@@ -207,20 +207,22 @@ export default function Projects() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-secondary/10">
       <Header />
       
       <div className="container mx-auto px-4 py-6">
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
           <div>
-            <h1 className="text-3xl font-bold">Encontre Trabalho</h1>
+            <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+              Encontre Trabalho
+            </h1>
             <p className="text-muted-foreground mt-1">
               {projects.length} projeto{projects.length !== 1 ? 's' : ''} disponíve{projects.length !== 1 ? 'is' : 'l'}
             </p>
           </div>
           {user && (
-            <Button asChild className="bg-primary hover:bg-primary/90">
+            <Button asChild className="bg-gradient-primary hover:opacity-90 shadow-glow">
               <Link to="/projects/new">
                 <Plus className="w-4 h-4 mr-2" />
                 Criar Projeto
@@ -322,6 +324,7 @@ export default function Projects() {
                   variant={filter === 'all' ? 'default' : 'ghost'}
                   onClick={() => setFilter('all')}
                   size="sm"
+                  className={filter === 'all' ? 'bg-gradient-primary' : ''}
                 >
                   Todos
                 </Button>
@@ -329,6 +332,7 @@ export default function Projects() {
                   variant={filter === 'open' ? 'default' : 'ghost'}
                   onClick={() => setFilter('open')}
                   size="sm"
+                  className={filter === 'open' ? 'bg-gradient-primary' : ''}
                 >
                   Abertos
                 </Button>
@@ -337,6 +341,7 @@ export default function Projects() {
                     variant={filter === 'my' ? 'default' : 'ghost'}
                     onClick={() => setFilter('my')}
                     size="sm"
+                    className={filter === 'my' ? 'bg-gradient-primary' : ''}
                   >
                     Meus Projetos
                   </Button>
@@ -380,7 +385,7 @@ export default function Projects() {
                 {projects.map((project) => (
                   <Card 
                     key={project.id} 
-                    className="hover:shadow-md transition-all duration-200 hover:border-primary/50"
+                    className="hover:shadow-elegant transition-all duration-300 hover:border-primary/50 bg-card/50 backdrop-blur-sm"
                   >
                     <CardContent className="p-5">
                       <div className="space-y-3">
@@ -395,7 +400,7 @@ export default function Projects() {
                                 {project.title}
                               </Link>
                               {project.category && (
-                                <Badge variant="secondary" className="text-xs">
+                                <Badge variant="secondary" className="text-xs bg-gradient-secondary">
                                   {project.category}
                                 </Badge>
                               )}
@@ -456,7 +461,7 @@ export default function Projects() {
                           <Button 
                             asChild 
                             size="sm" 
-                            className="w-full sm:w-auto"
+                            className="w-full sm:w-auto bg-gradient-primary hover:opacity-90 shadow-glow"
                           >
                             <Link to={`/projects/${project.id}`}>
                               Enviar Proposta

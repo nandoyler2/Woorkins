@@ -31,14 +31,12 @@ export const Header = () => {
       }
 
       try {
-        const { data } = await supabase
-          .from('user_roles' as any)
-          .select('role')
-          .eq('user_id', user.id)
-          .eq('role', 'admin')
-          .maybeSingle();
-
-        setIsAdmin(!!data);
+        const { data, error } = await supabase.rpc('has_role', {
+          _user_id: user.id,
+          _role: 'admin'
+        });
+        if (error) throw error;
+        setIsAdmin(Boolean(data));
       } catch (error) {
         console.error('Error checking admin status:', error);
         setIsAdmin(false);

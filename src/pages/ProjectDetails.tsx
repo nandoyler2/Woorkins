@@ -301,7 +301,7 @@ export default function ProjectDetails() {
                   Projeto
                 </TabsTrigger>
                 <TabsTrigger value="competitors">
-                  Dados dos concorrentes
+                  Propostas recebidas
                 </TabsTrigger>
               </TabsList>
 

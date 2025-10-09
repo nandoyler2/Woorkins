@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { AIAssistant } from "@/components/AIAssistant";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Feed from "./pages/Feed";
@@ -47,6 +48,7 @@ const App = () => (
               <Route path="/admin" element={<ProtectedRoute requireAdmin><Admin /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
+            <AIAssistant />
           </AuthProvider>
         </LanguageProvider>
       </BrowserRouter>

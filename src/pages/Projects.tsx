@@ -6,7 +6,7 @@ import { Footer } from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Briefcase, Calendar, DollarSign, MessageSquare, Heart, Clock, Filter, ChevronDown } from 'lucide-react';
+import { Plus, Briefcase, Calendar, DollarSign, MessageSquare, Heart, Clock, Filter, ChevronDown, AlertCircle, Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -14,6 +14,8 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
 
 interface Project {
   id: string;
@@ -64,6 +66,10 @@ export default function Projects() {
   const [sortBy, setSortBy] = useState<string>('recent');
   const [searchQuery, setSearchQuery] = useState('');
   const [favorites, setFavorites] = useState<string[]>([]);
+  const [reportDialogOpen, setReportDialogOpen] = useState(false);
+  const [reportingProject, setReportingProject] = useState<string | null>(null);
+  const [reportReason, setReportReason] = useState('');
+  const [reportDescription, setReportDescription] = useState('');
 
   useEffect(() => {
     loadProjects();
@@ -201,6 +207,66 @@ export default function Projects() {
         ? prev.filter(c => c !== category)
         : [...prev, category]
     );
+  };
+
+  const handleReport = async () => {
+    if (!user || !reportingProject) {
+      toast({
+        title: 'Erro',
+        description: 'Você precisa estar logado para sinalizar',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!reportReason.trim()) {
+      toast({
+        title: 'Erro',
+        description: 'Selecione um motivo para a sinalização',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      // Get user profile ID
+      const { data: profileData } = await supabase
+        .from('profiles' as any)
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (!profileData) throw new Error('Profile not found');
+
+      const { error } = await supabase
+        .from('reports' as any)
+        .insert({
+          reporter_id: (profileData as any).id,
+          content_type: 'project',
+          content_id: reportingProject,
+          reason: reportReason,
+          description: reportDescription.trim() || null
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: 'Sucesso',
+        description: 'Conteúdo sinalizado com sucesso. Nossa equipe irá analisar.',
+      });
+
+      setReportDialogOpen(false);
+      setReportingProject(null);
+      setReportReason('');
+      setReportDescription('');
+    } catch (error) {
+      console.error('Error reporting project:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível enviar a sinalização',
+        variant: 'destructive',
+      });
+    }
   };
 
   if (loading) {
@@ -392,87 +458,176 @@ export default function Projects() {
                     key={project.id} 
                     className="hover:shadow-elegant transition-all duration-300 hover:border-primary/50 bg-card/50 backdrop-blur-sm"
                   >
-                    <CardContent className="p-5">
-                      <div className="space-y-3">
-                        {/* Header do Card */}
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="flex-1 space-y-2">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <Link 
-                                to={`/projects/${project.id}`}
-                                className="text-lg font-semibold hover:text-primary transition-colors"
-                              >
-                                {project.title}
-                              </Link>
-                              {project.category && (
-                                <Badge variant="secondary" className="text-xs bg-gradient-secondary">
-                                  {project.category}
-                                </Badge>
-                              )}
-                            </div>
-                            
-                            <p className="text-sm text-muted-foreground line-clamp-2">
-                              {project.description}
-                            </p>
-                          </div>
-
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="flex-shrink-0"
-                            onClick={() => toggleFavorite(project.id)}
+                    <CardContent className="p-6">
+                      {/* Header Row: Title + Action Button */}
+                      <div className="flex items-start justify-between gap-4 mb-4">
+                        <div className="flex-1">
+                          <Link 
+                            to={`/projects/${project.id}`}
+                            className="text-xl font-bold hover:text-primary transition-colors block mb-2"
                           >
-                            <Heart 
-                              className={`w-5 h-5 ${
-                                favorites.includes(project.id) 
-                                  ? 'fill-red-500 text-red-500' 
-                                  : 'text-muted-foreground'
-                              }`}
-                            />
-                          </Button>
+                            {project.title}
+                          </Link>
                         </div>
+                        <Button 
+                          asChild 
+                          size="sm" 
+                          variant="outline"
+                          className="border-primary text-primary hover:bg-primary hover:text-white flex-shrink-0"
+                        >
+                          <Link to={`/projects/${project.id}`}>
+                            Fazer uma proposta
+                          </Link>
+                        </Button>
+                      </div>
 
-                        {/* Info Row */}
-                        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
-                          <div className="flex items-center gap-1.5 text-primary font-semibold">
-                            <DollarSign className="w-4 h-4" />
-                            {formatBudget(project.budget_min, project.budget_max)}
-                          </div>
-                          
-                          <div className="flex items-center gap-1.5 text-muted-foreground">
-                            <Clock className="w-4 h-4" />
-                            {getTimeAgo(project.created_at)}
-                          </div>
+                      {/* Meta Info Row */}
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground mb-4">
+                        <span>Publicado: {getTimeAgo(project.created_at)}</span>
+                        <span>Propostas: {project.proposals_count}</span>
+                        {project.deadline && (
+                          <span>Prazo: {formatDate(project.deadline)}</span>
+                        )}
+                        <div className="ml-auto flex items-center gap-2 text-primary font-semibold text-base">
+                          <DollarSign className="w-4 h-4" />
+                          {formatBudget(project.budget_min, project.budget_max)}
+                        </div>
+                      </div>
 
-                          <div className="flex items-center gap-1.5 text-muted-foreground">
-                            <MessageSquare className="w-4 h-4" />
-                            {project.proposals_count} proposta{project.proposals_count !== 1 ? 's' : ''}
-                          </div>
+                      {/* Description */}
+                      <p className="text-sm text-foreground mb-4 leading-relaxed line-clamp-3">
+                        {project.description}
+                      </p>
 
-                          {project.deadline && (
-                            <div className="flex items-center gap-1.5 text-muted-foreground">
-                              <Calendar className="w-4 h-4" />
-                              Prazo: {formatDate(project.deadline)}
+                      {/* Category */}
+                      {project.category && (
+                        <div className="mb-4">
+                          <p className="text-sm mb-1">
+                            <span className="font-semibold">Categoria:</span> {project.category}
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Tags/Skills - Placeholder */}
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        {project.category && (
+                          <Badge variant="secondary" className="bg-muted">
+                            {project.category}
+                          </Badge>
+                        )}
+                      </div>
+
+                      {/* Footer Row: Client Info + Report Button */}
+                      <div className="flex items-center justify-between pt-4 border-t">
+                        <div className="flex items-center gap-4">
+                          {/* Client Avatar + Info */}
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold">
+                              {project.profiles.full_name.charAt(0).toUpperCase()}
                             </div>
-                          )}
+                            <div className="text-sm">
+                              <p className="font-medium">{getInitials(project.profiles.full_name)}</p>
+                              <div className="flex items-center gap-2 text-muted-foreground">
+                                <span>Última resposta: {getTimeAgo(project.created_at)}</span>
+                              </div>
+                            </div>
+                          </div>
 
-                          <div className="flex items-center gap-1.5 text-muted-foreground ml-auto">
-                            Por {getInitials(project.profiles.full_name)}
+                          {/* Star Rating - Placeholder */}
+                          <div className="flex items-center gap-1">
+                            {[...Array(5)].map((_, i) => (
+                              <Star key={i} className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                            ))}
                           </div>
                         </div>
 
-                        {/* Action Button */}
-                        <div className="pt-2">
-                          <Button 
-                            asChild 
-                            size="sm" 
-                            className="w-full sm:w-auto bg-gradient-primary hover:opacity-90 shadow-glow"
-                          >
-                            <Link to={`/projects/${project.id}`}>
-                              Enviar Proposta
-                            </Link>
-                          </Button>
-                        </div>
+                        {/* Report Button */}
+                        <Dialog open={reportDialogOpen && reportingProject === project.id} onOpenChange={(open) => {
+                          setReportDialogOpen(open);
+                          if (!open) {
+                            setReportingProject(null);
+                            setReportReason('');
+                            setReportDescription('');
+                          }
+                        }}>
+                          <DialogTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-muted-foreground hover:text-destructive"
+                              onClick={() => {
+                                setReportingProject(project.id);
+                                setReportDialogOpen(true);
+                              }}
+                            >
+                              <AlertCircle className="w-4 h-4 mr-2" />
+                              Sinalizar conteúdo
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>Sinalizar Conteúdo Inadequado</DialogTitle>
+                              <DialogDescription>
+                                Ajude-nos a manter a comunidade segura. Sua sinalização será analisada pela nossa equipe.
+                              </DialogDescription>
+                            </DialogHeader>
+                            <div className="space-y-4">
+                              <div>
+                                <Label htmlFor="reason" className="text-sm font-semibold mb-2 block">
+                                  Motivo *
+                                </Label>
+                                <Select value={reportReason} onValueChange={setReportReason}>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Selecione o motivo" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="spam">Spam ou propaganda</SelectItem>
+                                    <SelectItem value="inappropriate">Conteúdo inapropriado</SelectItem>
+                                    <SelectItem value="fake">Projeto falso ou fraudulento</SelectItem>
+                                    <SelectItem value="offensive">Linguagem ofensiva</SelectItem>
+                                    <SelectItem value="violation">Viola termos de uso</SelectItem>
+                                    <SelectItem value="other">Outro</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+
+                              <div>
+                                <Label htmlFor="description" className="text-sm font-semibold mb-2 block">
+                                  Descrição (opcional)
+                                </Label>
+                                <Textarea
+                                  id="description"
+                                  value={reportDescription}
+                                  onChange={(e) => setReportDescription(e.target.value)}
+                                  placeholder="Adicione mais detalhes sobre o problema..."
+                                  rows={4}
+                                />
+                              </div>
+
+                              <div className="flex gap-2 pt-2">
+                                <Button
+                                  variant="outline"
+                                  className="flex-1"
+                                  onClick={() => {
+                                    setReportDialogOpen(false);
+                                    setReportingProject(null);
+                                    setReportReason('');
+                                    setReportDescription('');
+                                  }}
+                                >
+                                  Cancelar
+                                </Button>
+                                <Button
+                                  className="flex-1 bg-gradient-primary"
+                                  onClick={handleReport}
+                                  disabled={!reportReason}
+                                >
+                                  Enviar Sinalização
+                                </Button>
+                              </div>
+                            </div>
+                          </DialogContent>
+                        </Dialog>
                       </div>
                     </CardContent>
                   </Card>

@@ -156,7 +156,7 @@ const MyProjects = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      <main className="flex-1 container mx-auto px-4 py-8">
+      <main className="flex-1 container mx-auto px-4 py-8 max-w-7xl">
         <h1 className="text-3xl font-bold mb-8">Meus Projetos</h1>
 
         <Tabs defaultValue="projects" className="space-y-6">

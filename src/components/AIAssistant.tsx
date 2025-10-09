@@ -62,15 +62,21 @@ export const AIAssistant = () => {
       {/* Botão flutuante */}
       <Button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg z-50"
-        size="icon"
+        className="fixed bottom-6 left-6 h-14 px-6 rounded-full shadow-lg z-50 bg-primary/90 hover:bg-primary text-white flex items-center gap-2"
       >
-        {isOpen ? <X className="h-6 w-6" /> : <MessageCircle className="h-6 w-6" />}
+        {isOpen ? (
+          <X className="h-5 w-5" />
+        ) : (
+          <>
+            <MessageCircle className="h-5 w-5" />
+            <span className="font-medium">Ajuda</span>
+          </>
+        )}
       </Button>
 
       {/* Chat window */}
       {isOpen && (
-        <div className="fixed bottom-24 right-6 w-96 h-[500px] bg-background border-2 border-foreground/10 rounded-2xl shadow-2xl z-50 flex flex-col">
+        <div className="fixed bottom-24 left-6 w-96 h-[500px] bg-background border-2 border-foreground/10 rounded-2xl shadow-2xl z-50 flex flex-col">
           {/* Header */}
           <div className="p-4 border-b border-foreground/10">
             <h3 className="font-semibold">Assistente Virtual</h3>

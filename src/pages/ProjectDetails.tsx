@@ -275,7 +275,7 @@ export default function ProjectDetails() {
     <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-secondary/10">
       <Header />
       
-      <div className="container mx-auto px-4 py-6">
+      <div className="container mx-auto px-4 py-6 max-w-7xl">
         {/* Breadcrumbs */}
         <nav className="mb-4 text-sm text-muted-foreground">
           <Link to="/" className="hover:text-primary">Woorkins</Link>

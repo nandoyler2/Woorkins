@@ -63,7 +63,7 @@ export const Header = () => {
 
   return (
     <header className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-50">
-      <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+      <div className="container mx-auto px-4 h-16 flex items-center justify-between max-w-7xl">
           <Link to="/" className="flex items-center gap-3 hover-scale">
             <SafeImage src={logoWoorkins} alt="Logo Woorkins" className="h-10 w-auto" />
           </Link>

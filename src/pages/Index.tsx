@@ -1,22 +1,53 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Star, Shield, Users, TrendingUp, MessageSquare, Award, ChevronRight, Globe } from "lucide-react";
+import { Star, Shield, Users, TrendingUp, MessageSquare, Award, ChevronRight, Globe, User, LogOut, Home } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Link } from "react-router-dom";
 import logoWoorkins from "@/assets/woorkins.png";
 import { SafeImage } from "@/components/ui/safe-image";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { SearchBar } from "@/components/SearchBar";
 import { SectionDivider } from "@/components/SectionDivider";
 import { Footer } from "@/components/Footer";
+import { useAuth } from "@/contexts/AuthContext";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 const Index = () => {
   const {
     language,
     setLanguage,
     t
   } = useLanguage();
+  const { user, signOut } = useAuth();
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [profile, setProfile] = useState<any>(null);
+
+  useEffect(() => {
+    const loadUserData = async () => {
+      if (!user) return;
+
+      // Carregar perfil
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+      
+      if (profileData) setProfile(profileData);
+
+      // Verificar se é admin
+      const { data: roleData } = await supabase.rpc('has_role', {
+        _user_id: user.id,
+        _role: 'admin'
+      });
+      
+      setIsAdmin(Boolean(roleData));
+    };
+
+    loadUserData();
+  }, [user]);
   return <div className="min-h-screen bg-background">
-      {/* Top Bar - Only Language Selector */}
+      {/* Top Bar - Language Selector and User Menu */}
       <div className="absolute top-6 right-6 z-50 flex items-center gap-3">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -37,9 +68,41 @@ const Index = () => {
           </DropdownMenuContent>
         </DropdownMenu>
         
-        <Button variant="ghost" asChild className="bg-white/10 backdrop-blur-sm hover:bg-white/20">
-          <Link to="/auth?mode=signin">Entrar</Link>
-        </Button>
+        {user ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="bg-white/10 backdrop-blur-sm hover:bg-white/20 gap-2">
+                <User className="w-5 h-5" />
+                <span className="hidden sm:inline">{profile?.full_name || profile?.username}</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem asChild>
+                <Link to="/dashboard" className="cursor-pointer">
+                  <Home className="w-4 h-4 mr-2" />
+                  Dashboard
+                </Link>
+              </DropdownMenuItem>
+              {isAdmin && (
+                <DropdownMenuItem asChild>
+                  <Link to="/admin" className="cursor-pointer text-primary">
+                    <Shield className="w-4 h-4 mr-2" />
+                    Admin Panel
+                  </Link>
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={signOut} className="cursor-pointer">
+                <LogOut className="w-4 h-4 mr-2" />
+                Sair
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : (
+          <Button variant="ghost" asChild className="bg-white/10 backdrop-blur-sm hover:bg-white/20">
+            <Link to="/auth?mode=signin">Entrar</Link>
+          </Button>
+        )}
       </div>
 
        {/* Hero Section with Large Logo */}

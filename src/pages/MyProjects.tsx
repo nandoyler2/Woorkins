@@ -259,19 +259,40 @@ const MyProjects = () => {
                               variant="default"
                               size="sm"
                               onClick={() => updateProposalStatus(proposal.id, 'accepted')}
+                              disabled={loadingPayment}
                             >
-                              <CheckCircle className="h-4 w-4 mr-2" />
-                              Aceitar
+                              {loadingPayment ? (
+                                <>
+                                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                  Processando...
+                                </>
+                              ) : (
+                                <>
+                                  <CreditCard className="h-4 w-4 mr-2" />
+                                  Aceitar e Pagar
+                                </>
+                              )}
                             </Button>
                             <Button
                               variant="destructive"
                               size="sm"
                               onClick={() => updateProposalStatus(proposal.id, 'rejected')}
+                              disabled={loadingPayment}
                             >
                               <XCircle className="h-4 w-4 mr-2" />
                               Recusar
                             </Button>
                           </>
+                        )}
+                        {proposal.status === 'accepted' && proposal.payment_status === 'paid_escrow' && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-green-600 border-green-600 hover:bg-green-50"
+                          >
+                            <CheckCircle className="h-4 w-4 mr-2" />
+                            Pagamento Retido (Escrow)
+                          </Button>
                         )}
                       </div>
                     </div>
@@ -298,6 +319,31 @@ const MyProjects = () => {
             <ProposalChat
               proposalId={selectedProposal.id}
               currentUserId={currentProfileId}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={paymentDialogOpen} onOpenChange={setPaymentDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Finalizar Contratação</DialogTitle>
+            <DialogDescription>
+              Complete o pagamento para aceitar a proposta
+            </DialogDescription>
+          </DialogHeader>
+          {paymentData && (
+            <StripeCheckout
+              clientSecret={paymentData.clientSecret}
+              amount={paymentData.amount}
+              platformFee={paymentData.platformFee}
+              stripeFee={paymentData.stripeFee}
+              netAmount={paymentData.netAmount}
+              onSuccess={handlePaymentSuccess}
+              onCancel={() => {
+                setPaymentDialogOpen(false);
+                setPaymentData(null);
+              }}
             />
           )}
         </DialogContent>

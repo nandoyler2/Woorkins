@@ -287,11 +287,19 @@ export type Database = {
           completed_at: string | null
           created_at: string
           current_amount: number | null
+          escrow_released: boolean | null
+          escrow_released_at: string | null
           final_amount: number | null
           id: string
+          net_amount_to_business: number | null
           paid_at: string | null
+          payment_captured_at: string | null
+          payment_status: string | null
+          platform_fee_amount: number | null
           service_description: string | null
           status: string
+          stripe_fee_amount: number | null
+          stripe_payment_intent_id: string | null
           updated_at: string
           user_id: string
         }
@@ -301,11 +309,19 @@ export type Database = {
           completed_at?: string | null
           created_at?: string
           current_amount?: number | null
+          escrow_released?: boolean | null
+          escrow_released_at?: string | null
           final_amount?: number | null
           id?: string
+          net_amount_to_business?: number | null
           paid_at?: string | null
+          payment_captured_at?: string | null
+          payment_status?: string | null
+          platform_fee_amount?: number | null
           service_description?: string | null
           status?: string
+          stripe_fee_amount?: number | null
+          stripe_payment_intent_id?: string | null
           updated_at?: string
           user_id: string
         }
@@ -315,11 +331,19 @@ export type Database = {
           completed_at?: string | null
           created_at?: string
           current_amount?: number | null
+          escrow_released?: boolean | null
+          escrow_released_at?: string | null
           final_amount?: number | null
           id?: string
+          net_amount_to_business?: number | null
           paid_at?: string | null
+          payment_captured_at?: string | null
+          payment_status?: string | null
+          platform_fee_amount?: number | null
           service_description?: string | null
           status?: string
+          stripe_fee_amount?: number | null
+          stripe_payment_intent_id?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -363,6 +387,33 @@ export type Database = {
           title?: string
           type?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      platform_settings: {
+        Row: {
+          created_at: string | null
+          id: string
+          setting_key: string
+          setting_value: Json
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          setting_key: string
+          setting_value: Json
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          setting_key?: string
+          setting_value?: Json
+          updated_at?: string | null
+          updated_by?: string | null
         }
         Relationships: []
       }
@@ -589,39 +640,63 @@ export type Database = {
       }
       proposals: {
         Row: {
+          accepted_amount: number | null
           budget: number
           business_id: string | null
           created_at: string
           delivery_days: number
+          escrow_released_at: string | null
           freelancer_id: string
           id: string
           message: string
+          net_amount: number | null
+          payment_captured_at: string | null
+          payment_status: string | null
+          platform_fee_amount: number | null
           project_id: string
           status: string
+          stripe_fee_amount: number | null
+          stripe_payment_intent_id: string | null
           updated_at: string
         }
         Insert: {
+          accepted_amount?: number | null
           budget: number
           business_id?: string | null
           created_at?: string
           delivery_days: number
+          escrow_released_at?: string | null
           freelancer_id: string
           id?: string
           message: string
+          net_amount?: number | null
+          payment_captured_at?: string | null
+          payment_status?: string | null
+          platform_fee_amount?: number | null
           project_id: string
           status?: string
+          stripe_fee_amount?: number | null
+          stripe_payment_intent_id?: string | null
           updated_at?: string
         }
         Update: {
+          accepted_amount?: number | null
           budget?: number
           business_id?: string | null
           created_at?: string
           delivery_days?: number
+          escrow_released_at?: string | null
           freelancer_id?: string
           id?: string
           message?: string
+          net_amount?: number | null
+          payment_captured_at?: string | null
+          payment_status?: string | null
+          platform_fee_amount?: number | null
           project_id?: string
           status?: string
+          stripe_fee_amount?: number | null
+          stripe_payment_intent_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -690,15 +765,87 @@ export type Database = {
         }
         Relationships: []
       }
+      stripe_connected_accounts: {
+        Row: {
+          account_status: string | null
+          bank_account_last4: string | null
+          business_profile_id: string | null
+          charges_enabled: boolean | null
+          created_at: string | null
+          details_submitted: boolean | null
+          id: string
+          onboarding_completed: boolean | null
+          payout_method: string | null
+          payouts_enabled: boolean | null
+          pix_enabled: boolean | null
+          profile_id: string
+          stripe_account_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          account_status?: string | null
+          bank_account_last4?: string | null
+          business_profile_id?: string | null
+          charges_enabled?: boolean | null
+          created_at?: string | null
+          details_submitted?: boolean | null
+          id?: string
+          onboarding_completed?: boolean | null
+          payout_method?: string | null
+          payouts_enabled?: boolean | null
+          pix_enabled?: boolean | null
+          profile_id: string
+          stripe_account_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          account_status?: string | null
+          bank_account_last4?: string | null
+          business_profile_id?: string | null
+          charges_enabled?: boolean | null
+          created_at?: string | null
+          details_submitted?: boolean | null
+          id?: string
+          onboarding_completed?: boolean | null
+          payout_method?: string | null
+          payouts_enabled?: boolean | null
+          pix_enabled?: boolean | null
+          profile_id?: string
+          stripe_account_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stripe_connected_accounts_business_profile_id_fkey"
+            columns: ["business_profile_id"]
+            isOneToOne: false
+            referencedRelation: "business_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stripe_connected_accounts_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       transactions: {
         Row: {
           amount: number
           business_id: string
           created_at: string
+          gross_amount: number | null
           id: string
           negotiation_id: string
+          platform_fee: number | null
           released_at: string | null
           status: string
+          stripe_charge_id: string | null
+          stripe_fee: number | null
+          stripe_payout_id: string | null
+          stripe_transfer_id: string | null
           type: string
           user_id: string
         }
@@ -706,10 +853,16 @@ export type Database = {
           amount: number
           business_id: string
           created_at?: string
+          gross_amount?: number | null
           id?: string
           negotiation_id: string
+          platform_fee?: number | null
           released_at?: string | null
           status?: string
+          stripe_charge_id?: string | null
+          stripe_fee?: number | null
+          stripe_payout_id?: string | null
+          stripe_transfer_id?: string | null
           type: string
           user_id: string
         }
@@ -717,10 +870,16 @@ export type Database = {
           amount?: number
           business_id?: string
           created_at?: string
+          gross_amount?: number | null
           id?: string
           negotiation_id?: string
+          platform_fee?: number | null
           released_at?: string | null
           status?: string
+          stripe_charge_id?: string | null
+          stripe_fee?: number | null
+          stripe_payout_id?: string | null
+          stripe_transfer_id?: string | null
           type?: string
           user_id?: string
         }
@@ -758,6 +917,39 @@ export type Database = {
           created_at?: string
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_subscription_plans: {
+        Row: {
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          plan_type: string
+          started_at: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          plan_type: string
+          started_at?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          plan_type?: string
+          started_at?: string | null
+          updated_at?: string | null
           user_id?: string
         }
         Relationships: []
@@ -805,6 +997,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      calculate_platform_fees: {
+        Args: { _amount: number; _plan_type: string }
+        Returns: {
+          net_amount: number
+          platform_fee: number
+          stripe_fee: number
+          total_fees: number
+        }[]
+      }
       get_business_balance: {
         Args: { business_uuid: string }
         Returns: {
@@ -813,11 +1014,19 @@ export type Database = {
           total: number
         }[]
       }
+      get_user_plan: {
+        Args: { _user_id: string }
+        Returns: string
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      user_has_stripe_account: {
+        Args: { _user_id: string }
         Returns: boolean
       }
     }

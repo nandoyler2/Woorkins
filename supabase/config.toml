@@ -5,3 +5,18 @@ verify_jwt = false
 
 [functions.moderate-content]
 verify_jwt = true
+
+[functions.create-stripe-connected-account]
+verify_jwt = true
+
+[functions.create-project-payment]
+verify_jwt = true
+
+[functions.create-negotiation-payment]
+verify_jwt = true
+
+[functions.release-payment]
+verify_jwt = true
+
+[functions.stripe-webhook-handler]
+verify_jwt = false

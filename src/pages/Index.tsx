@@ -73,7 +73,7 @@ const Index = () => {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,hsl(var(--primary)/0.1),transparent_50%),radial-gradient(circle_at_70%_80%,hsl(var(--secondary)/0.1),transparent_50%)]"></div>
         
         <div className="container mx-auto px-4 relative z-10 max-w-7xl">
-          <div className="max-w-5xl mx-auto text-center space-y-10 md:space-y-12 animate-fade-in py-20">
+          <div className="text-center space-y-10 md:space-y-12 animate-fade-in py-20">
             {/* Large Logo */}
             <div className="flex justify-center mb-8">
               <SafeImage src={logoWoorkins} alt="Woorkins" className="h-20 md:h-24 w-auto drop-shadow-2xl hover:scale-105 transition-transform duration-500" />
@@ -114,13 +114,13 @@ const Index = () => {
       {/* Como Funciona */}
       <section id="como-funciona" className="py-24 bg-muted/30 relative">
         <div className="container mx-auto px-4 max-w-7xl">
-          <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
+          <div className="text-center mb-16 space-y-4">
             <h2 className="text-4xl md:text-5xl font-bold">Como Funciona</h2>
             <p className="text-lg md:text-xl text-muted-foreground">
               Simples, seguro e transparente. Conecte-se em 3 passos.
             </p>
           </div>
-          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          <div className="grid md:grid-cols-3 gap-8">
             <Card className="p-10 text-center hover:shadow-elegant transition-all duration-300 hover:-translate-y-2 border-2 hover:border-primary/50">
               <div className="w-20 h-20 mx-auto mb-8 bg-gradient-primary rounded-2xl flex items-center justify-center shadow-glow">
                 <Users className="w-10 h-10 text-white" />
@@ -162,7 +162,7 @@ const Index = () => {
       <section id="para-empresas" className="py-24 relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_50%,hsl(var(--secondary)/0.1),transparent_70%)]"></div>
         <div className="container mx-auto px-4 relative z-10 max-w-7xl">
-          <div className="grid md:grid-cols-2 gap-16 items-center max-w-7xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-16 items-center">
             <div className="space-y-8">
               <div className="inline-flex items-center gap-2 px-6 py-3 bg-secondary/10 rounded-full text-secondary text-sm font-medium">
                 <TrendingUp className="w-4 h-4" />
@@ -225,7 +225,7 @@ const Index = () => {
       <section className="py-24 bg-gradient-hero relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.1),transparent_70%)]"></div>
         <div className="container mx-auto px-4 relative z-10 max-w-7xl">
-          <div className="max-w-4xl mx-auto text-center text-white space-y-8">
+          <div className="text-center text-white space-y-8">
             <h2 className="text-4xl md:text-6xl font-bold leading-tight">
               Pronto para começar?
             </h2>

@@ -15,11 +15,13 @@ import {
 import { MessageSquare, Clock, CheckCircle, XCircle } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { useToast } from '@/hooks/use-toast';
 
 export default function UserOrders() {
   const [negotiations, setNegotiations] = useState<any[]>([]);
   const [selectedNegotiation, setSelectedNegotiation] = useState<string | null>(null);
   const { user } = useAuth();
+  const { toast } = useToast();
 
   useEffect(() => {
     if (user) {
@@ -131,12 +133,37 @@ export default function UserOrders() {
                   </div>
 
                   {negotiation.status === 'paid' && (
-                    <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg flex items-center justify-between">
                       <p className="text-sm text-yellow-800">
                         <Clock className="w-4 h-4 inline mr-1" />
-                        O pagamento está retido. Confirme quando o serviço for concluído para
-                        liberar o valor para a empresa.
+                        Pagamento retido em escrow. Confirme quando o serviço for concluído.
                       </p>
+                      <Button
+                        size="sm"
+                        className="bg-green-600 hover:bg-green-700 ml-4"
+                        onClick={async () => {
+                          try {
+                            const { error } = await supabase.functions.invoke('release-payment', {
+                              body: { negotiation_id: negotiation.id }
+                            });
+                            if (error) throw error;
+                            toast({
+                              title: 'Serviço confirmado!',
+                              description: 'O pagamento foi liberado para a empresa.',
+                            });
+                            fetchNegotiations();
+                          } catch (error: any) {
+                            toast({
+                              title: 'Erro',
+                              description: error.message,
+                              variant: 'destructive',
+                            });
+                          }
+                        }}
+                      >
+                        <CheckCircle className="w-4 h-4 mr-1" />
+                        Confirmar Conclusão
+                      </Button>
                     </div>
                   )}
 

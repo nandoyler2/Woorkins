@@ -296,7 +296,9 @@ const MyProjects = () => {
                             : 'secondary'
                         }
                       >
-                        {proposal.status === 'accepted'
+                        {proposal.status === 'accepted' && proposal.payment_status === 'paid_escrow'
+                          ? '💰 Retido em Escrow'
+                          : proposal.status === 'accepted'
                           ? 'Aceita'
                           : proposal.status === 'rejected'
                           ? 'Recusada'
@@ -352,14 +354,38 @@ const MyProjects = () => {
                           </>
                         )}
                         {proposal.status === 'accepted' && proposal.payment_status === 'paid_escrow' && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="text-green-600 border-green-600 hover:bg-green-50"
-                          >
-                            <CheckCircle className="h-4 w-4 mr-2" />
-                            Pagamento Retido (Escrow)
-                          </Button>
+                          <>
+                            <Badge className="bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-100">
+                              💰 Pagamento Retido
+                            </Badge>
+                            <Button
+                              variant="default"
+                              size="sm"
+                              className="bg-green-600 hover:bg-green-700"
+                              onClick={async () => {
+                                try {
+                                  const { error } = await supabase.functions.invoke('release-payment', {
+                                    body: { proposal_id: proposal.id }
+                                  });
+                                  if (error) throw error;
+                                  toast({
+                                    title: 'Serviço confirmado!',
+                                    description: 'O pagamento foi liberado para o freelancer.',
+                                  });
+                                  loadData();
+                                } catch (error: any) {
+                                  toast({
+                                    title: 'Erro',
+                                    description: error.message,
+                                    variant: 'destructive',
+                                  });
+                                }
+                              }}
+                            >
+                              <CheckCircle className="h-4 w-4 mr-2" />
+                              Confirmar Serviço Concluído
+                            </Button>
+                          </>
                         )}
                       </div>
                     </div>

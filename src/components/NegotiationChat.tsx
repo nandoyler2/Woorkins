@@ -189,27 +189,26 @@ export function NegotiationChat({ negotiationId, isBusinessView = false }: Negot
   const processPayment = async () => {
     if (!negotiation) return;
 
-    // Simular pagamento
-    const { error: txError } = await supabase.from('transactions').insert({
-      negotiation_id: negotiationId,
-      business_id: negotiation.business_id,
-      user_id: negotiation.user_id,
-      amount: negotiation.final_amount,
-      status: 'pending',
-      type: 'payment',
-    });
+    try {
+      const { data, error } = await supabase.functions.invoke('create-negotiation-payment', {
+        body: { negotiation_id: negotiationId }
+      });
 
-    if (!txError) {
-      await supabase
-        .from('negotiations')
-        .update({ status: 'paid', paid_at: new Date().toISOString() })
-        .eq('id', negotiationId);
+      if (error) throw error;
 
-      fetchNegotiation();
-
+      if (data?.clientSecret) {
+        // Show Stripe checkout
+        toast({
+          title: 'Redirecionando para pagamento',
+          description: 'Complete o pagamento para continuar',
+        });
+        // TODO: Integrate Stripe checkout modal here
+      }
+    } catch (error: any) {
       toast({
-        title: 'Pagamento realizado!',
-        description: 'O valor ficará retido até você confirmar o serviço',
+        title: 'Erro ao processar pagamento',
+        description: error.message,
+        variant: 'destructive',
       });
     }
   };
@@ -217,23 +216,24 @@ export function NegotiationChat({ negotiationId, isBusinessView = false }: Negot
   const confirmService = async () => {
     if (!negotiation) return;
 
-    // Liberar pagamento
-    const { error: txError } = await supabase
-      .from('transactions')
-      .update({ status: 'released', released_at: new Date().toISOString() })
-      .eq('negotiation_id', negotiationId);
+    try {
+      const { error } = await supabase.functions.invoke('release-payment', {
+        body: { negotiation_id: negotiationId }
+      });
 
-    if (!txError) {
-      await supabase
-        .from('negotiations')
-        .update({ status: 'completed', completed_at: new Date().toISOString() })
-        .eq('id', negotiationId);
+      if (error) throw error;
 
       fetchNegotiation();
 
       toast({
         title: 'Serviço confirmado!',
         description: 'O pagamento foi liberado para a empresa',
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Erro ao confirmar serviço',
+        description: error.message,
+        variant: 'destructive',
       });
     }
   };

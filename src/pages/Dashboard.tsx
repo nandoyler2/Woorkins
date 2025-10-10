@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { MyBalance } from '@/components/MyBalance';
 interface Profile {
   id: string;
   username: string;
@@ -171,6 +172,9 @@ export default function Dashboard() {
             </h1>
             <p className="text-lg text-muted-foreground">Gerencie suas marcas e encontre novos projetos</p>
           </div>
+
+          {/* My Balance Component */}
+          <MyBalance />
 
           {/* Stats Cards */}
           <div className="grid md:grid-cols-3 gap-6">

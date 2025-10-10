@@ -104,6 +104,7 @@ serve(async (req) => {
           .from('proposals')
           .update({
             payment_status: 'released',
+            status: 'completed',
             escrow_released_at: new Date().toISOString(),
           })
           .eq('stripe_payment_intent_id', paymentIntentId);
@@ -112,10 +113,81 @@ serve(async (req) => {
           .from('negotiations')
           .update({
             payment_status: 'released',
+            status: 'completed',
             escrow_released: true,
             escrow_released_at: new Date().toISOString(),
           })
           .eq('stripe_payment_intent_id', paymentIntentId);
+
+        // Trigger automatic payout
+        const { data: proposal } = await supabase
+          .from('proposals')
+          .select('*, profiles!freelancer_id(id)')
+          .eq('stripe_payment_intent_id', paymentIntentId)
+          .maybeSingle();
+
+        if (proposal) {
+          const { data: connectedAccount } = await supabase
+            .from('stripe_connected_accounts')
+            .select('stripe_account_id')
+            .eq('profile_id', proposal.freelancer_id)
+            .maybeSingle();
+
+          if (connectedAccount?.stripe_account_id && proposal.net_amount) {
+            // Create automatic transfer
+            const transfer = await stripe.transfers.create({
+              amount: Math.round(proposal.net_amount * 100),
+              currency: 'brl',
+              destination: connectedAccount.stripe_account_id,
+              transfer_group: `proposal_${proposal.id}`,
+              metadata: {
+                proposal_id: proposal.id,
+                user_id: proposal.projects?.profile_id || '',
+                business_id: proposal.freelancer_id,
+                type: 'automatic_payout',
+                gross_amount: proposal.budget.toString(),
+                platform_fee: proposal.platform_fee_amount?.toString() || '0',
+                stripe_fee: proposal.stripe_fee_amount?.toString() || '0',
+              }
+            });
+            
+            console.log('Automatic transfer created:', transfer.id);
+          }
+        }
+
+        const { data: negotiation } = await supabase
+          .from('negotiations')
+          .select('*, business_profiles!business_id(profile_id)')
+          .eq('stripe_payment_intent_id', paymentIntentId)
+          .maybeSingle();
+
+        if (negotiation) {
+          const { data: connectedAccount } = await supabase
+            .from('stripe_connected_accounts')
+            .select('stripe_account_id')
+            .eq('business_profile_id', negotiation.business_id)
+            .maybeSingle();
+
+          if (connectedAccount?.stripe_account_id && negotiation.net_amount_to_business) {
+            const transfer = await stripe.transfers.create({
+              amount: Math.round(negotiation.net_amount_to_business * 100),
+              currency: 'brl',
+              destination: connectedAccount.stripe_account_id,
+              transfer_group: `negotiation_${negotiation.id}`,
+              metadata: {
+                negotiation_id: negotiation.id,
+                user_id: negotiation.user_id,
+                business_id: negotiation.business_id,
+                type: 'automatic_payout',
+                gross_amount: negotiation.final_amount?.toString() || '0',
+                platform_fee: negotiation.platform_fee_amount?.toString() || '0',
+                stripe_fee: negotiation.stripe_fee_amount?.toString() || '0',
+              }
+            });
+            
+            console.log('Automatic transfer created for business:', transfer.id);
+          }
+        }
         break;
       }
 

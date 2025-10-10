@@ -13,8 +13,9 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { ProposalChat } from '@/components/ProposalChat';
+import { StripeCheckout } from '@/components/StripeCheckout';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, MessageSquare, CheckCircle, XCircle } from 'lucide-react';
+import { Loader2, MessageSquare, CheckCircle, XCircle, CreditCard } from 'lucide-react';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 
@@ -35,6 +36,7 @@ interface Proposal {
   budget: number;
   delivery_days: number;
   status: string;
+  payment_status?: string;
   created_at: string;
   project: {
     id: string;
@@ -54,11 +56,21 @@ const MyProjects = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
+  const [loadingPayment, setLoadingPayment] = useState(false);
   const [projects, setProjects] = useState<Project[]>([]);
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(null);
   const [chatOpen, setChatOpen] = useState(false);
+  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [currentProfileId, setCurrentProfileId] = useState<string>('');
+  const [paymentData, setPaymentData] = useState<{
+    clientSecret: string;
+    amount: number;
+    platformFee: number;
+    stripeFee: number;
+    netAmount: number;
+    proposalId: string;
+  } | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -68,7 +80,6 @@ const MyProjects = () => {
 
   const loadData = async () => {
     try {
-      // Get current user's profile
       const { data: profile } = await supabase
         .from('profiles')
         .select('id')
@@ -78,7 +89,6 @@ const MyProjects = () => {
       if (profile) {
         setCurrentProfileId(profile.id);
 
-        // Load projects
         const { data: projectsData } = await supabase
           .from('projects')
           .select('*')
@@ -87,7 +97,6 @@ const MyProjects = () => {
 
         setProjects(projectsData || []);
 
-        // Load proposals for these projects
         if (projectsData && projectsData.length > 0) {
           const projectIds = projectsData.map(p => p.id);
           
@@ -116,27 +125,85 @@ const MyProjects = () => {
     }
   };
 
-  const updateProposalStatus = async (proposalId: string, status: 'accepted' | 'rejected') => {
+  const initiatePayment = async (proposalId: string) => {
+    setLoadingPayment(true);
     try {
-      const { error } = await supabase
-        .from('proposals')
-        .update({ status })
-        .eq('id', proposalId);
+      const { data, error } = await supabase.functions.invoke('create-project-payment', {
+        body: { proposal_id: proposalId },
+      });
 
       if (error) throw error;
 
-      toast({
-        title: 'Sucesso',
-        description: `Proposta ${status === 'accepted' ? 'aceita' : 'recusada'} com sucesso!`,
+      setPaymentData({
+        clientSecret: data.client_secret,
+        amount: data.amount,
+        platformFee: data.platform_fee,
+        stripeFee: data.stripe_fee,
+        netAmount: data.net_amount,
+        proposalId,
       });
 
-      loadData();
+      setPaymentDialogOpen(true);
     } catch (error: any) {
+      console.error('Error initiating payment:', error);
       toast({
-        title: 'Erro',
-        description: 'Erro ao atualizar proposta: ' + error.message,
+        title: 'Erro ao iniciar pagamento',
+        description: error.message || 'Não foi possível iniciar o processo de pagamento.',
         variant: 'destructive',
       });
+    } finally {
+      setLoadingPayment(false);
+    }
+  };
+
+  const handlePaymentSuccess = async () => {
+    if (!paymentData) return;
+
+    const { error } = await supabase
+      .from('proposals')
+      .update({ status: 'accepted' })
+      .eq('id', paymentData.proposalId);
+
+    if (error) {
+      console.error('Error updating proposal:', error);
+    }
+
+    setPaymentDialogOpen(false);
+    setPaymentData(null);
+    
+    toast({
+      title: 'Pagamento realizado!',
+      description: 'O valor está retido em segurança. Confirme a conclusão quando o serviço for entregue.',
+    });
+
+    loadData();
+  };
+
+  const updateProposalStatus = async (proposalId: string, status: 'accepted' | 'rejected') => {
+    if (status === 'accepted') {
+      await initiatePayment(proposalId);
+    } else {
+      try {
+        const { error } = await supabase
+          .from('proposals')
+          .update({ status })
+          .eq('id', proposalId);
+
+        if (error) throw error;
+
+        toast({
+          title: 'Proposta recusada',
+          description: 'A proposta foi recusada com sucesso.',
+        });
+
+        loadData();
+      } catch (error: any) {
+        toast({
+          title: 'Erro',
+          description: 'Erro ao atualizar proposta: ' + error.message,
+          variant: 'destructive',
+        });
+      }
     }
   };
 

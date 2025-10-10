@@ -62,7 +62,7 @@ export default function Admin() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8 max-w-6xl">
+      <div className="container mx-auto px-4 py-8 max-w-woorkins">
         <div className="flex items-center gap-3 mb-8">
           <Shield className="w-8 h-8 text-primary" />
           <div>

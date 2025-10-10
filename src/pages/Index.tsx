@@ -72,7 +72,7 @@ const Index = () => {
        <section className="relative min-h-screen flex items-center justify-center overflow-visible bg-gradient-to-br from-background via-primary/5 to-secondary/10">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,hsl(var(--primary)/0.1),transparent_50%),radial-gradient(circle_at_70%_80%,hsl(var(--secondary)/0.1),transparent_50%)]"></div>
         
-        <div className="container mx-auto px-4 relative z-10 max-w-6xl">
+        <div className="container mx-auto px-4 relative z-10 max-w-woorkins">
           <div className="text-center space-y-10 md:space-y-12 animate-fade-in py-20">
             {/* Large Logo */}
             <div className="flex justify-center mb-8">
@@ -113,7 +113,7 @@ const Index = () => {
 
       {/* Como Funciona */}
       <section id="como-funciona" className="py-24 bg-muted/30 relative">
-        <div className="container mx-auto px-4 max-w-6xl">
+        <div className="container mx-auto px-4 max-w-woorkins">
           <div className="text-center mb-16 space-y-4">
             <h2 className="text-4xl md:text-5xl font-bold">Como Funciona</h2>
             <p className="text-lg md:text-xl text-muted-foreground">
@@ -161,7 +161,7 @@ const Index = () => {
       {/* Para Empresas */}
       <section id="para-empresas" className="py-24 relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_50%,hsl(var(--secondary)/0.1),transparent_70%)]"></div>
-        <div className="container mx-auto px-4 relative z-10 max-w-6xl">
+        <div className="container mx-auto px-4 relative z-10 max-w-woorkins">
           <div className="grid md:grid-cols-2 gap-16 items-center">
             <div className="space-y-8">
               <div className="inline-flex items-center gap-2 px-6 py-3 bg-secondary/10 rounded-full text-secondary text-sm font-medium">
@@ -224,7 +224,7 @@ const Index = () => {
       {/* CTA Final */}
       <section className="py-24 bg-gradient-hero relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.1),transparent_70%)]"></div>
-        <div className="container mx-auto px-4 relative z-10 max-w-6xl">
+        <div className="container mx-auto px-4 relative z-10 max-w-woorkins">
           <div className="text-center text-white space-y-8">
             <h2 className="text-4xl md:text-6xl font-bold leading-tight">
               Pronto para começar?

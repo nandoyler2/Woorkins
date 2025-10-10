@@ -2,8 +2,8 @@ import type { Config } from "tailwindcss";
 
 /**
  * PADRÃO DE LARGURA DO SITE:
- * Use max-w-6xl (1152px) em TODAS as páginas para consistência visual
- * Exemplo: <div className="container mx-auto px-4 max-w-6xl">
+ * Use max-w-woorkins (1169px) em TODAS as páginas para consistência visual
+ * Exemplo: <div className="container mx-auto px-4 max-w-woorkins">
  */
 
 export default {
@@ -19,6 +19,9 @@ export default {
       },
     },
     extend: {
+      maxWidth: {
+        'woorkins': '1169px',
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",

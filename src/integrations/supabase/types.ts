@@ -239,6 +239,47 @@ export type Database = {
           },
         ]
       }
+      freelancer_wallet: {
+        Row: {
+          available_balance: number | null
+          created_at: string | null
+          id: string
+          pending_balance: number | null
+          profile_id: string
+          total_earned: number | null
+          total_withdrawn: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          available_balance?: number | null
+          created_at?: string | null
+          id?: string
+          pending_balance?: number | null
+          profile_id: string
+          total_earned?: number | null
+          total_withdrawn?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          available_balance?: number | null
+          created_at?: string | null
+          id?: string
+          pending_balance?: number | null
+          profile_id?: string
+          total_earned?: number | null
+          total_withdrawn?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "freelancer_wallet_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       negotiation_messages: {
         Row: {
           amount: number | null
@@ -389,6 +430,44 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      payment_settings: {
+        Row: {
+          bank_account_holder: string | null
+          created_at: string | null
+          id: string
+          pix_key: string | null
+          pix_key_type: string | null
+          profile_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          bank_account_holder?: string | null
+          created_at?: string | null
+          id?: string
+          pix_key?: string | null
+          pix_key_type?: string | null
+          profile_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          bank_account_holder?: string | null
+          created_at?: string | null
+          id?: string
+          pix_key?: string | null
+          pix_key_type?: string | null
+          profile_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_settings_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       platform_settings: {
         Row: {
@@ -646,17 +725,18 @@ export type Database = {
           created_at: string
           delivery_days: number
           escrow_released_at: string | null
+          freelancer_amount: number | null
           freelancer_id: string
           id: string
           message: string
           net_amount: number | null
           payment_captured_at: string | null
           payment_status: string | null
-          platform_fee_amount: number | null
+          platform_commission: number | null
           project_id: string
           status: string
-          stripe_fee_amount: number | null
           stripe_payment_intent_id: string | null
+          stripe_processing_fee: number | null
           updated_at: string
         }
         Insert: {
@@ -666,17 +746,18 @@ export type Database = {
           created_at?: string
           delivery_days: number
           escrow_released_at?: string | null
+          freelancer_amount?: number | null
           freelancer_id: string
           id?: string
           message: string
           net_amount?: number | null
           payment_captured_at?: string | null
           payment_status?: string | null
-          platform_fee_amount?: number | null
+          platform_commission?: number | null
           project_id: string
           status?: string
-          stripe_fee_amount?: number | null
           stripe_payment_intent_id?: string | null
+          stripe_processing_fee?: number | null
           updated_at?: string
         }
         Update: {
@@ -686,17 +767,18 @@ export type Database = {
           created_at?: string
           delivery_days?: number
           escrow_released_at?: string | null
+          freelancer_amount?: number | null
           freelancer_id?: string
           id?: string
           message?: string
           net_amount?: number | null
           payment_captured_at?: string | null
           payment_status?: string | null
-          platform_fee_amount?: number | null
+          platform_commission?: number | null
           project_id?: string
           status?: string
-          stripe_fee_amount?: number | null
           stripe_payment_intent_id?: string | null
+          stripe_processing_fee?: number | null
           updated_at?: string
         }
         Relationships: [
@@ -765,81 +847,16 @@ export type Database = {
         }
         Relationships: []
       }
-      stripe_connected_accounts: {
-        Row: {
-          account_status: string | null
-          bank_account_last4: string | null
-          business_profile_id: string | null
-          charges_enabled: boolean | null
-          created_at: string | null
-          details_submitted: boolean | null
-          id: string
-          onboarding_completed: boolean | null
-          payout_method: string | null
-          payouts_enabled: boolean | null
-          pix_enabled: boolean | null
-          profile_id: string
-          stripe_account_id: string
-          updated_at: string | null
-        }
-        Insert: {
-          account_status?: string | null
-          bank_account_last4?: string | null
-          business_profile_id?: string | null
-          charges_enabled?: boolean | null
-          created_at?: string | null
-          details_submitted?: boolean | null
-          id?: string
-          onboarding_completed?: boolean | null
-          payout_method?: string | null
-          payouts_enabled?: boolean | null
-          pix_enabled?: boolean | null
-          profile_id: string
-          stripe_account_id: string
-          updated_at?: string | null
-        }
-        Update: {
-          account_status?: string | null
-          bank_account_last4?: string | null
-          business_profile_id?: string | null
-          charges_enabled?: boolean | null
-          created_at?: string | null
-          details_submitted?: boolean | null
-          id?: string
-          onboarding_completed?: boolean | null
-          payout_method?: string | null
-          payouts_enabled?: boolean | null
-          pix_enabled?: boolean | null
-          profile_id?: string
-          stripe_account_id?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "stripe_connected_accounts_business_profile_id_fkey"
-            columns: ["business_profile_id"]
-            isOneToOne: false
-            referencedRelation: "business_profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "stripe_connected_accounts_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: true
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       transactions: {
         Row: {
           amount: number
-          business_id: string
           created_at: string
+          freelancer_profile_id: string | null
           gross_amount: number | null
           id: string
           negotiation_id: string
           platform_fee: number | null
+          proposal_id: string | null
           released_at: string | null
           status: string
           stripe_charge_id: string | null
@@ -848,15 +865,17 @@ export type Database = {
           stripe_transfer_id: string | null
           type: string
           user_id: string
+          withdrawal_id: string | null
         }
         Insert: {
           amount: number
-          business_id: string
           created_at?: string
+          freelancer_profile_id?: string | null
           gross_amount?: number | null
           id?: string
           negotiation_id: string
           platform_fee?: number | null
+          proposal_id?: string | null
           released_at?: string | null
           status?: string
           stripe_charge_id?: string | null
@@ -865,15 +884,17 @@ export type Database = {
           stripe_transfer_id?: string | null
           type: string
           user_id: string
+          withdrawal_id?: string | null
         }
         Update: {
           amount?: number
-          business_id?: string
           created_at?: string
+          freelancer_profile_id?: string | null
           gross_amount?: number | null
           id?: string
           negotiation_id?: string
           platform_fee?: number | null
+          proposal_id?: string | null
           released_at?: string | null
           status?: string
           stripe_charge_id?: string | null
@@ -882,13 +903,14 @@ export type Database = {
           stripe_transfer_id?: string | null
           type?: string
           user_id?: string
+          withdrawal_id?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "transactions_business_id_fkey"
-            columns: ["business_id"]
+            foreignKeyName: "transactions_freelancer_profile_id_fkey"
+            columns: ["freelancer_profile_id"]
             isOneToOne: false
-            referencedRelation: "business_profiles"
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
@@ -896,6 +918,20 @@ export type Database = {
             columns: ["negotiation_id"]
             isOneToOne: false
             referencedRelation: "negotiations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "proposals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_withdrawal_id_fkey"
+            columns: ["withdrawal_id"]
+            isOneToOne: false
+            referencedRelation: "withdrawal_requests"
             referencedColumns: ["id"]
           },
         ]
@@ -954,6 +990,62 @@ export type Database = {
         }
         Relationships: []
       }
+      withdrawal_requests: {
+        Row: {
+          amount: number
+          completed_at: string | null
+          created_at: string | null
+          error_message: string | null
+          id: string
+          pix_key: string
+          pix_key_type: string
+          processed_at: string | null
+          profile_id: string
+          requested_at: string | null
+          status: string
+          stripe_payout_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          amount: number
+          completed_at?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          pix_key: string
+          pix_key_type: string
+          processed_at?: string | null
+          profile_id: string
+          requested_at?: string | null
+          status?: string
+          stripe_payout_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          amount?: number
+          completed_at?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          pix_key?: string
+          pix_key_type?: string
+          processed_at?: string | null
+          profile_id?: string
+          requested_at?: string | null
+          status?: string
+          stripe_payout_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "withdrawal_requests_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       withdrawals: {
         Row: {
           amount: number
@@ -997,6 +1089,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      calculate_payment_split: {
+        Args: { _amount: number; _platform_commission_percent?: number }
+        Returns: {
+          freelancer_amount: number
+          platform_commission: number
+          stripe_fee: number
+          total_amount: number
+        }[]
+      }
       calculate_platform_fees: {
         Args: { _amount: number; _plan_type: string }
         Returns: {
@@ -1006,20 +1107,13 @@ export type Database = {
           total_fees: number
         }[]
       }
-      get_business_balance: {
-        Args: { business_uuid: string }
-        Returns: {
-          available: number
-          pending: number
-          total: number
-        }[]
-      }
-      get_freelancer_balance: {
+      get_freelancer_wallet_balance: {
         Args: { freelancer_profile_id: string }
         Returns: {
           available: number
           pending: number
           total: number
+          withdrawn: number
         }[]
       }
       get_user_plan: {
@@ -1031,10 +1125,6 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
-        Returns: boolean
-      }
-      user_has_stripe_account: {
-        Args: { _user_id: string }
         Returns: boolean
       }
     }

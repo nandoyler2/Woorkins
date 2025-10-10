@@ -31,23 +31,6 @@ serve(async (req) => {
     );
 
     switch (event.type) {
-      case 'account.updated': {
-        const account = event.data.object as Stripe.Account;
-        console.log('Account updated:', account.id);
-        
-        await supabase
-          .from('stripe_connected_accounts')
-          .update({
-            account_status: account.charges_enabled ? 'active' : 'pending',
-            onboarding_completed: account.details_submitted || false,
-            charges_enabled: account.charges_enabled || false,
-            payouts_enabled: account.payouts_enabled || false,
-            details_submitted: account.details_submitted || false,
-          })
-          .eq('stripe_account_id', account.id);
-        break;
-      }
-
       case 'payment_intent.succeeded': {
         const paymentIntent = event.data.object as Stripe.PaymentIntent;
         console.log('Payment succeeded:', paymentIntent.id);
@@ -59,17 +42,19 @@ serve(async (req) => {
             .from('proposals')
             .update({
               payment_status: 'paid_escrow',
-              payment_captured_at: new Date().toISOString(),
             })
             .eq('id', metadata.proposal_id);
+
+          console.log('Updated proposal payment status to paid_escrow');
         } else if (metadata.negotiation_id) {
           await supabase
             .from('negotiations')
             .update({
               payment_status: 'paid_escrow',
-              payment_captured_at: new Date().toISOString(),
             })
             .eq('id', metadata.negotiation_id);
+
+          console.log('Updated negotiation payment status to paid_escrow');
         }
         break;
       }
@@ -97,134 +82,96 @@ serve(async (req) => {
         const charge = event.data.object as Stripe.Charge;
         console.log('Charge captured (escrow released):', charge.id);
         
-        // Update status to released
+        // This happens when release-payment is called and escrow is released
+        // The money is now in our platform account
         const paymentIntentId = charge.payment_intent as string;
         
-        await supabase
-          .from('proposals')
-          .update({
-            payment_status: 'released',
-            status: 'completed',
-            escrow_released_at: new Date().toISOString(),
-          })
-          .eq('stripe_payment_intent_id', paymentIntentId);
-        
-        await supabase
-          .from('negotiations')
-          .update({
-            payment_status: 'released',
-            status: 'completed',
-            escrow_released: true,
-            escrow_released_at: new Date().toISOString(),
-          })
-          .eq('stripe_payment_intent_id', paymentIntentId);
+        // Get the payment intent to access metadata
+        const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+        const metadata = paymentIntent.metadata;
 
-        // Trigger automatic payout
-        const { data: proposal } = await supabase
-          .from('proposals')
-          .select('*, profiles!freelancer_id(id)')
-          .eq('stripe_payment_intent_id', paymentIntentId)
-          .maybeSingle();
+        if (metadata.proposal_id) {
+          const { data: proposal } = await supabase
+            .from('proposals')
+            .select('freelancer_id, freelancer_amount')
+            .eq('id', metadata.proposal_id)
+            .single();
 
-        if (proposal) {
-          const { data: connectedAccount } = await supabase
-            .from('stripe_connected_accounts')
-            .select('stripe_account_id')
-            .eq('profile_id', proposal.freelancer_id)
-            .maybeSingle();
+          if (proposal && proposal.freelancer_amount) {
+            // Move from pending to available in wallet
+            const { data: wallet } = await supabase
+              .from('freelancer_wallet')
+              .select('*')
+              .eq('profile_id', proposal.freelancer_id)
+              .single();
 
-          if (connectedAccount?.stripe_account_id && proposal.net_amount) {
-            // Create automatic transfer
-            const transfer = await stripe.transfers.create({
-              amount: Math.round(proposal.net_amount * 100),
-              currency: 'brl',
-              destination: connectedAccount.stripe_account_id,
-              transfer_group: `proposal_${proposal.id}`,
-              metadata: {
-                proposal_id: proposal.id,
-                user_id: proposal.projects?.profile_id || '',
-                business_id: proposal.freelancer_id,
-                type: 'automatic_payout',
-                gross_amount: proposal.budget.toString(),
-                platform_fee: proposal.platform_fee_amount?.toString() || '0',
-                stripe_fee: proposal.stripe_fee_amount?.toString() || '0',
-              }
-            });
-            
-            console.log('Automatic transfer created:', transfer.id);
+            if (wallet) {
+              await supabase
+                .from('freelancer_wallet')
+                .update({
+                  available_balance: (wallet.available_balance || 0) + proposal.freelancer_amount,
+                  pending_balance: Math.max(0, (wallet.pending_balance || 0) - proposal.freelancer_amount),
+                  total_earned: (wallet.total_earned || 0) + proposal.freelancer_amount,
+                })
+                .eq('profile_id', proposal.freelancer_id);
+
+              console.log('Updated freelancer wallet - funds now available for withdrawal');
+            }
           }
-        }
+        } else if (metadata.negotiation_id) {
+          const { data: negotiation } = await supabase
+            .from('negotiations')
+            .select('business_id')
+            .eq('id', metadata.negotiation_id)
+            .single();
 
-        const { data: negotiation } = await supabase
-          .from('negotiations')
-          .select('*, business_profiles!business_id(profile_id)')
-          .eq('stripe_payment_intent_id', paymentIntentId)
-          .maybeSingle();
+          if (negotiation && metadata.freelancer_amount) {
+            const freelancerAmount = parseFloat(metadata.freelancer_amount);
 
-        if (negotiation) {
-          const { data: connectedAccount } = await supabase
-            .from('stripe_connected_accounts')
-            .select('stripe_account_id')
-            .eq('business_profile_id', negotiation.business_id)
-            .maybeSingle();
+            // Get business profile_id
+            const { data: businessProfile } = await supabase
+              .from('business_profiles')
+              .select('profile_id')
+              .eq('id', negotiation.business_id)
+              .single();
 
-          if (connectedAccount?.stripe_account_id && negotiation.net_amount_to_business) {
-            const transfer = await stripe.transfers.create({
-              amount: Math.round(negotiation.net_amount_to_business * 100),
-              currency: 'brl',
-              destination: connectedAccount.stripe_account_id,
-              transfer_group: `negotiation_${negotiation.id}`,
-              metadata: {
-                negotiation_id: negotiation.id,
-                user_id: negotiation.user_id,
-                business_id: negotiation.business_id,
-                type: 'automatic_payout',
-                gross_amount: negotiation.final_amount?.toString() || '0',
-                platform_fee: negotiation.platform_fee_amount?.toString() || '0',
-                stripe_fee: negotiation.stripe_fee_amount?.toString() || '0',
+            if (businessProfile) {
+              const { data: wallet } = await supabase
+                .from('freelancer_wallet')
+                .select('*')
+                .eq('profile_id', businessProfile.profile_id)
+                .single();
+
+              if (wallet) {
+                await supabase
+                  .from('freelancer_wallet')
+                  .update({
+                    available_balance: (wallet.available_balance || 0) + freelancerAmount,
+                    pending_balance: Math.max(0, (wallet.pending_balance || 0) - freelancerAmount),
+                    total_earned: (wallet.total_earned || 0) + freelancerAmount,
+                  })
+                  .eq('profile_id', businessProfile.profile_id);
+
+                console.log('Updated business wallet - funds now available for withdrawal');
               }
-            });
-            
-            console.log('Automatic transfer created for business:', transfer.id);
+            }
           }
-        }
-        break;
-      }
-
-      case 'transfer.created': {
-        const transfer = event.data.object as Stripe.Transfer;
-        console.log('Transfer created:', transfer.id);
-        
-        // Record transaction
-        const metadata = transfer.metadata;
-        if (metadata.proposal_id || metadata.negotiation_id) {
-          await supabase.from('transactions').insert({
-            user_id: metadata.user_id,
-            business_id: metadata.business_id,
-            negotiation_id: metadata.negotiation_id || null,
-            type: 'payment',
-            amount: transfer.amount / 100,
-            status: 'released',
-            stripe_transfer_id: transfer.id,
-            stripe_charge_id: transfer.source_transaction as string,
-            gross_amount: parseFloat(metadata.gross_amount || '0'),
-            platform_fee: parseFloat(metadata.platform_fee || '0'),
-            stripe_fee: parseFloat(metadata.stripe_fee || '0'),
-          });
         }
         break;
       }
 
       case 'payout.paid': {
         const payout = event.data.object as Stripe.Payout;
-        console.log('Payout paid:', payout.id);
+        console.log('Payout paid (withdrawal processed):', payout.id);
         
-        // Update transactions with payout info
+        // Update withdrawal request status
         await supabase
-          .from('transactions')
-          .update({ stripe_payout_id: payout.id })
-          .is('stripe_payout_id', null)
-          .eq('status', 'released');
+          .from('withdrawal_requests')
+          .update({
+            status: 'completed',
+            completed_at: new Date().toISOString(),
+          })
+          .eq('stripe_payout_id', payout.id);
         break;
       }
 
@@ -232,7 +179,48 @@ serve(async (req) => {
         const payout = event.data.object as Stripe.Payout;
         console.log('Payout failed:', payout.id);
         
-        // Could implement retry logic or notifications here
+        // Update withdrawal request and refund wallet
+        const { data: withdrawal } = await supabase
+          .from('withdrawal_requests')
+          .select('profile_id, amount')
+          .eq('stripe_payout_id', payout.id)
+          .single();
+
+        if (withdrawal) {
+          await supabase
+            .from('withdrawal_requests')
+            .update({
+              status: 'failed',
+              error_message: 'Payout failed - please contact support',
+            })
+            .eq('stripe_payout_id', payout.id);
+
+          // Refund to available balance
+          const { data: wallet } = await supabase
+            .from('freelancer_wallet')
+            .select('*')
+            .eq('profile_id', withdrawal.profile_id)
+            .single();
+
+          if (wallet) {
+            await supabase
+              .from('freelancer_wallet')
+              .update({
+                available_balance: (wallet.available_balance || 0) + withdrawal.amount,
+                total_withdrawn: Math.max(0, (wallet.total_withdrawn || 0) - withdrawal.amount),
+              })
+              .eq('profile_id', withdrawal.profile_id);
+          }
+
+          // Notify user
+          await supabase.from('notifications').insert({
+            user_id: withdrawal.profile_id,
+            type: 'payment',
+            title: 'Erro no Saque',
+            message: 'Houve um problema ao processar seu saque. O valor foi devolvido para sua carteira.',
+            link: '/payment-settings',
+          });
+        }
         break;
       }
 

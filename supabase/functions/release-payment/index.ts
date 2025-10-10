@@ -40,11 +40,14 @@ serve(async (req) => {
 
     console.log('Releasing payment:', payment_intent_id, 'Type:', type);
 
-    // Verify authorization
+    let freelancerProfileId: string | null = null;
+    let freelancerAmount: number = 0;
+
+    // Verify authorization and get freelancer info
     if (type === 'proposal') {
       const { data: proposal } = await supabaseClient
         .from('proposals')
-        .select('project:projects!inner(profile_id)')
+        .select('*, project:projects!inner(profile_id), freelancer:profiles!proposals_freelancer_id_fkey(id)')
         .eq('stripe_payment_intent_id', payment_intent_id)
         .single();
 
@@ -62,19 +65,32 @@ serve(async (req) => {
       if (!owner || owner.user_id !== user.id) {
         throw new Error('Unauthorized');
       }
+
+      freelancerProfileId = proposal.freelancer.id;
+      freelancerAmount = proposal.freelancer_amount || 0;
     } else {
       const { data: negotiation } = await supabaseClient
         .from('negotiations')
-        .select('user_id')
+        .select('user_id, business_id, final_amount')
         .eq('stripe_payment_intent_id', payment_intent_id)
         .single();
 
       if (!negotiation || negotiation.user_id !== user.id) {
         throw new Error('Unauthorized');
       }
+
+      // Get business profile_id
+      const { data: businessProfile } = await supabaseClient
+        .from('business_profiles')
+        .select('profile_id')
+        .eq('id', negotiation.business_id)
+        .single();
+
+      freelancerProfileId = businessProfile?.profile_id || null;
+      freelancerAmount = negotiation.final_amount || 0;
     }
 
-    // Capture the payment (release from escrow)
+    // Capture the payment (release from escrow) na NOSSA conta Stripe
     const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
       apiVersion: '2023-10-16',
     });
@@ -89,8 +105,7 @@ serve(async (req) => {
       .from(table)
       .update({
         payment_status: 'released',
-        escrow_released: true,
-        escrow_released_at: new Date().toISOString(),
+        payment_captured_at: new Date().toISOString(),
         ...(type === 'proposal' && { status: 'completed' }),
         ...(type === 'negotiation' && { status: 'completed', completed_at: new Date().toISOString() }),
       })
@@ -101,45 +116,31 @@ serve(async (req) => {
       throw updateError;
     }
 
-    // Send notification
-    const message = type === 'proposal' 
-      ? 'O pagamento do projeto foi liberado e está sendo transferido para sua conta.'
-      : 'O pagamento da negociação foi liberado e está sendo transferido para sua conta.';
-
-    // Get recipient user_id
-    let recipientId: string | undefined;
-    if (type === 'proposal') {
-      const { data: proposal } = await supabaseClient
-        .from('proposals')
-        .select('freelancer:profiles!proposals_freelancer_id_fkey(user_id)')
-        .eq('stripe_payment_intent_id', payment_intent_id)
-        .single();
-      const freelancerData = proposal?.freelancer as { user_id: string } | undefined;
-      recipientId = freelancerData?.user_id;
-    } else {
-      const { data: negotiation } = await supabaseClient
-        .from('negotiations')
-        .select('business:business_profiles!inner(profile:profiles!inner(user_id))')
-        .eq('stripe_payment_intent_id', payment_intent_id)
-        .single();
-      const businessData = negotiation?.business as { profile: { user_id: string } } | undefined;
-      recipientId = businessData?.profile?.user_id;
-    }
-
-    if (recipientId) {
-      const { data: recipientProfile } = await supabaseClient
-        .from('profiles')
-        .select('id')
-        .eq('user_id', recipientId)
+    // Move funds from pending to available in freelancer wallet
+    if (freelancerProfileId && freelancerAmount > 0) {
+      const { data: wallet } = await supabaseClient
+        .from('freelancer_wallet')
+        .select('*')
+        .eq('profile_id', freelancerProfileId)
         .single();
 
-      if (recipientProfile) {
+      if (wallet) {
+        await supabaseClient
+          .from('freelancer_wallet')
+          .update({
+            available_balance: (wallet.available_balance || 0) + freelancerAmount,
+            pending_balance: Math.max(0, (wallet.pending_balance || 0) - freelancerAmount),
+            total_earned: (wallet.total_earned || 0) + freelancerAmount,
+          })
+          .eq('profile_id', freelancerProfileId);
+
+        // Send notification
         await supabaseClient.from('notifications').insert({
-          user_id: recipientProfile.id,
+          user_id: freelancerProfileId,
           type: 'payment',
-          title: 'Pagamento Liberado',
-          message,
-          link: type === 'proposal' ? '/my-projects' : '/user/orders',
+          title: 'Pagamento Disponível',
+          message: `Você tem R$ ${freelancerAmount.toFixed(2)} disponível para saque!`,
+          link: '/payment-settings',
         });
       }
     }
@@ -149,6 +150,7 @@ serve(async (req) => {
         success: true,
         payment_intent_id,
         status: 'released',
+        available_for_withdrawal: freelancerAmount,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

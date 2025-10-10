@@ -74,10 +74,10 @@ export default function BusinessFinances() {
   };
 
   const fetchBalance = async () => {
-    if (!businessId) return;
+    if (!profileId) return;
 
-    const { data } = await supabase.rpc('get_business_balance', {
-      business_uuid: businessId,
+    const { data } = await supabase.rpc('get_freelancer_wallet_balance', {
+      freelancer_profile_id: profileId,
     });
 
     if (data && data.length > 0) {
@@ -90,12 +90,12 @@ export default function BusinessFinances() {
   };
 
   const fetchTransactions = async () => {
-    if (!businessId) return;
+    if (!profileId) return;
 
     const { data } = await supabase
       .from('transactions')
-      .select('*, negotiations(service_description)')
-      .eq('business_id', businessId)
+      .select('*')
+      .eq('freelancer_profile_id', profileId)
       .order('created_at', { ascending: false });
 
     if (data) {
@@ -104,13 +104,13 @@ export default function BusinessFinances() {
   };
 
   const fetchWithdrawals = async () => {
-    if (!businessId) return;
+    if (!profileId) return;
 
     const { data } = await supabase
-      .from('withdrawals')
+      .from('withdrawal_requests')
       .select('*')
-      .eq('business_id', businessId)
-      .order('requested_at', { ascending: false });
+      .eq('profile_id', profileId)
+      .order('requested_at', { ascending: false});
 
     if (data) {
       setWithdrawals(data);
@@ -118,7 +118,7 @@ export default function BusinessFinances() {
   };
 
   const requestWithdrawal = async () => {
-    if (!businessId) return;
+    if (!profileId) return;
 
     const amount = parseFloat(withdrawAmount);
 
@@ -140,11 +140,28 @@ export default function BusinessFinances() {
       return;
     }
 
-    const { error } = await supabase.from('withdrawals').insert({
-      business_id: businessId,
+    // Check if user has PIX configured
+    const { data: pixSettings } = await supabase
+      .from('payment_settings')
+      .select('pix_key, pix_key_type')
+      .eq('profile_id', profileId)
+      .single();
+
+    if (!pixSettings || !pixSettings.pix_key) {
+      toast({
+        title: 'Configure sua chave PIX',
+        description: 'Você precisa configurar uma chave PIX antes de solicitar saques.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const { error } = await supabase.from('withdrawal_requests').insert({
+      profile_id: profileId,
       amount,
+      pix_key: pixSettings.pix_key,
+      pix_key_type: pixSettings.pix_key_type,
       status: 'pending',
-      bank_details: bankDetails ? JSON.parse(bankDetails) : null,
     });
 
     if (error) {

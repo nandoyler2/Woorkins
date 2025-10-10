@@ -117,6 +117,7 @@ serve(async (req) => {
         destination: stripeAccount.stripe_account_id,
       },
       capture_method: 'manual', // ESCROW: Don't capture immediately
+      payment_method_types: ['card', 'pix'], // Enable Card and PIX
       metadata: {
         proposal_id,
         project_id: proposal.project.id,

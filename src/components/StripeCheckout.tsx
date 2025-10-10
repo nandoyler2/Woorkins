@@ -143,7 +143,30 @@ export function StripeCheckout(props: StripeCheckoutProps) {
   const options = {
     clientSecret: props.clientSecret,
     appearance: {
-      theme: 'stripe' as const,
+      theme: 'flat' as const,
+      variables: {
+        colorPrimary: 'hsl(var(--primary))',
+        colorBackground: 'hsl(var(--background))',
+        colorText: 'hsl(var(--foreground))',
+        colorDanger: 'hsl(var(--destructive))',
+        fontFamily: 'system-ui, sans-serif',
+        spacingUnit: '4px',
+        borderRadius: '8px',
+      },
+      rules: {
+        '.Input': {
+          border: '1px solid hsl(var(--border))',
+          boxShadow: 'none',
+        },
+        '.Input:focus': {
+          border: '1px solid hsl(var(--primary))',
+          boxShadow: '0 0 0 2px hsl(var(--primary) / 0.2)',
+        },
+        '.Label': {
+          color: 'hsl(var(--foreground))',
+          fontWeight: '500',
+        },
+      },
     },
   };
 

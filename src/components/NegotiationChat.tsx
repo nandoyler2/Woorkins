@@ -4,11 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Send, DollarSign, Check, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { StripeCheckout } from '@/components/StripeCheckout';
 
 interface NegotiationChatProps {
   negotiationId: string;
@@ -22,6 +24,14 @@ export function NegotiationChat({ negotiationId, isBusinessView = false }: Negot
   const [proposalDescription, setProposalDescription] = useState('');
   const [showProposalForm, setShowProposalForm] = useState(false);
   const [negotiation, setNegotiation] = useState<any>(null);
+  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
+  const [paymentData, setPaymentData] = useState<{
+    clientSecret: string;
+    amount: number;
+    platformFee: number;
+    stripeFee: number;
+    netAmount: number;
+  } | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -196,13 +206,15 @@ export function NegotiationChat({ negotiationId, isBusinessView = false }: Negot
 
       if (error) throw error;
 
-      if (data?.clientSecret) {
-        // Show Stripe checkout
-        toast({
-          title: 'Redirecionando para pagamento',
-          description: 'Complete o pagamento para continuar',
+      if (data?.client_secret) {
+        setPaymentData({
+          clientSecret: data.client_secret,
+          amount: data.amount,
+          platformFee: data.platform_fee,
+          stripeFee: data.stripe_fee,
+          netAmount: data.net_amount,
         });
-        // TODO: Integrate Stripe checkout modal here
+        setPaymentDialogOpen(true);
       }
     } catch (error: any) {
       toast({
@@ -211,6 +223,23 @@ export function NegotiationChat({ negotiationId, isBusinessView = false }: Negot
         variant: 'destructive',
       });
     }
+  };
+
+  const handlePaymentSuccess = async () => {
+    setPaymentDialogOpen(false);
+    setPaymentData(null);
+    
+    await supabase
+      .from('negotiations')
+      .update({ status: 'paid', paid_at: new Date().toISOString() })
+      .eq('id', negotiationId);
+
+    fetchNegotiation();
+
+    toast({
+      title: 'Pagamento realizado!',
+      description: 'O valor está retido em segurança até você confirmar a conclusão.',
+    });
   };
 
   const confirmService = async () => {
@@ -306,88 +335,113 @@ export function NegotiationChat({ negotiationId, isBusinessView = false }: Negot
   };
 
   return (
-    <div className="flex flex-col h-[600px]">
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {negotiation?.status === 'accepted' && !isBusinessView && (
-          <Card className="p-4 bg-primary/10 border-primary">
-            <h3 className="font-semibold mb-2">Proposta Aceita!</h3>
-            <p className="text-sm mb-3">Valor final: R$ {negotiation.final_amount?.toFixed(2)}</p>
-            <Button onClick={processPayment} className="w-full">
-              <DollarSign className="w-4 h-4 mr-2" />
-              Pagar Agora
-            </Button>
-          </Card>
-        )}
+    <>
+      <div className="flex flex-col h-[600px]">
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          {negotiation?.status === 'accepted' && !isBusinessView && (
+            <Card className="p-4 bg-primary/10 border-primary">
+              <h3 className="font-semibold mb-2">Proposta Aceita!</h3>
+              <p className="text-sm mb-3">Valor final: R$ {negotiation.final_amount?.toFixed(2)}</p>
+              <Button onClick={processPayment} className="w-full">
+                <DollarSign className="w-4 h-4 mr-2" />
+                Pagar Agora
+              </Button>
+            </Card>
+          )}
 
-        {negotiation?.status === 'paid' && !isBusinessView && (
-          <Card className="p-4 bg-yellow-50 border-yellow-200">
-            <h3 className="font-semibold mb-2">Pagamento Realizado</h3>
-            <p className="text-sm mb-3">
-              O valor está retido. Confirme quando o serviço for concluído.
-            </p>
-            <Button onClick={confirmService} className="w-full" variant="outline">
-              <Check className="w-4 h-4 mr-2" />
-              Confirmar Serviço Concluído
-            </Button>
-          </Card>
-        )}
+          {negotiation?.status === 'paid' && !isBusinessView && (
+            <Card className="p-4 bg-yellow-50 border-yellow-200">
+              <h3 className="font-semibold mb-2">Pagamento Realizado</h3>
+              <p className="text-sm mb-3">
+                O valor está retido. Confirme quando o serviço for concluído.
+              </p>
+              <Button onClick={confirmService} className="w-full" variant="outline">
+                <Check className="w-4 h-4 mr-2" />
+                Confirmar Serviço Concluído
+              </Button>
+            </Card>
+          )}
 
-        {messages.map((message) => (
-          <div key={message.id}>{renderMessage(message)}</div>
-        ))}
-        <div ref={messagesEndRef} />
+          {messages.map((message) => (
+            <div key={message.id}>{renderMessage(message)}</div>
+          ))}
+          <div ref={messagesEndRef} />
+        </div>
+
+        {negotiation?.status === 'open' && (
+          <div className="border-t p-4 space-y-2">
+            {showProposalForm ? (
+              <div className="space-y-2">
+                <Input
+                  type="number"
+                  placeholder="Valor R$"
+                  value={proposalAmount}
+                  onChange={(e) => setProposalAmount(e.target.value)}
+                />
+                <Textarea
+                  placeholder="Descrição do serviço"
+                  value={proposalDescription}
+                  onChange={(e) => setProposalDescription(e.target.value)}
+                  rows={3}
+                />
+                <div className="flex gap-2">
+                  <Button onClick={sendProposal} className="flex-1">
+                    Enviar Proposta
+                  </Button>
+                  <Button variant="outline" onClick={() => setShowProposalForm(false)}>
+                    Cancelar
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Digite sua mensagem..."
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+                  />
+                  <Button onClick={sendMessage}>
+                    <Send className="w-4 h-4" />
+                  </Button>
+                </div>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowProposalForm(true)}
+                  className="w-full"
+                >
+                  <DollarSign className="w-4 h-4 mr-2" />
+                  {isBusinessView ? 'Enviar Proposta' : 'Fazer Contraproposta'}
+                </Button>
+              </>
+            )}
+          </div>
+        )}
       </div>
 
-      {negotiation?.status === 'open' && (
-        <div className="border-t p-4 space-y-2">
-          {showProposalForm ? (
-            <div className="space-y-2">
-              <Input
-                type="number"
-                placeholder="Valor R$"
-                value={proposalAmount}
-                onChange={(e) => setProposalAmount(e.target.value)}
-              />
-              <Textarea
-                placeholder="Descrição do serviço"
-                value={proposalDescription}
-                onChange={(e) => setProposalDescription(e.target.value)}
-                rows={3}
-              />
-              <div className="flex gap-2">
-                <Button onClick={sendProposal} className="flex-1">
-                  Enviar Proposta
-                </Button>
-                <Button variant="outline" onClick={() => setShowProposalForm(false)}>
-                  Cancelar
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <>
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Digite sua mensagem..."
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-                />
-                <Button onClick={sendMessage}>
-                  <Send className="w-4 h-4" />
-                </Button>
-              </div>
-              <Button
-                variant="outline"
-                onClick={() => setShowProposalForm(true)}
-                className="w-full"
-              >
-                <DollarSign className="w-4 h-4 mr-2" />
-                {isBusinessView ? 'Enviar Proposta' : 'Fazer Contraproposta'}
-              </Button>
-            </>
+      {/* Stripe Payment Dialog */}
+      <Dialog open={paymentDialogOpen} onOpenChange={setPaymentDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Finalizar Pagamento</DialogTitle>
+          </DialogHeader>
+          {paymentData && (
+            <StripeCheckout
+              clientSecret={paymentData.clientSecret}
+              amount={paymentData.amount}
+              platformFee={paymentData.platformFee}
+              stripeFee={paymentData.stripeFee}
+              netAmount={paymentData.netAmount}
+              onSuccess={handlePaymentSuccess}
+              onCancel={() => {
+                setPaymentDialogOpen(false);
+                setPaymentData(null);
+              }}
+            />
           )}
-        </div>
-      )}
-    </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

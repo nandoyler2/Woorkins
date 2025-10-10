@@ -47,7 +47,7 @@ export function MyBalance() {
 
   const loadBalance = async () => {
     try {
-      // Get user's business profile
+      // Get user's profile
       const { data: profile } = await supabase
         .from('profiles')
         .select('id')
@@ -62,36 +62,71 @@ export function MyBalance() {
         .eq('profile_id', profile.id)
         .maybeSingle();
 
-      if (!businessProfile) {
-        setLoading(false);
-        return;
+      if (businessProfile) {
+        // User is a business owner
+        const { data: balanceData, error: balanceError } = await supabase
+          .rpc('get_business_balance', { business_uuid: businessProfile.id });
+
+        if (balanceError) throw balanceError;
+
+        if (balanceData && balanceData.length > 0) {
+          setBalance({
+            available: Number(balanceData[0].available) || 0,
+            pending: Number(balanceData[0].pending) || 0,
+            total: Number(balanceData[0].total) || 0,
+          });
+        }
+
+        // Get business transactions
+        const { data: transactionsData, error: transactionsError } = await supabase
+          .from('transactions')
+          .select('*')
+          .eq('business_id', businessProfile.id)
+          .order('created_at', { ascending: false })
+          .limit(10);
+
+        if (transactionsError) throw transactionsError;
+        setTransactions(transactionsData || []);
+      } else {
+        // User is an individual freelancer
+        const { data: balanceData, error: balanceError } = await supabase
+          .rpc('get_freelancer_balance', { freelancer_profile_id: profile.id });
+
+        if (balanceError) throw balanceError;
+
+        if (balanceData && balanceData.length > 0) {
+          setBalance({
+            available: Number(balanceData[0].available) || 0,
+            pending: Number(balanceData[0].pending) || 0,
+            total: Number(balanceData[0].total) || 0,
+          });
+        }
+
+        // Get freelancer proposals as transactions
+        const { data: proposals, error: proposalsError } = await supabase
+          .from('proposals')
+          .select('*, project:project_id(title)')
+          .eq('freelancer_id', profile.id)
+          .in('payment_status', ['paid_escrow', 'released'])
+          .order('created_at', { ascending: false })
+          .limit(10);
+
+        if (proposalsError) throw proposalsError;
+
+        // Convert proposals to transaction format
+        const proposalTransactions = (proposals || []).map((p: any) => ({
+          id: p.id,
+          amount: p.net_amount || 0,
+          status: p.payment_status === 'released' ? 'released' : 'pending',
+          type: 'payment',
+          created_at: p.created_at,
+          negotiation_id: null,
+          platform_fee: p.platform_fee_amount || 0,
+          stripe_fee: p.stripe_fee_amount || 0,
+          gross_amount: p.budget || 0,
+        }));
+        setTransactions(proposalTransactions);
       }
-
-      // Get balance
-      const { data: balanceData, error: balanceError } = await supabase
-        .rpc('get_business_balance', { business_uuid: businessProfile.id });
-
-      if (balanceError) throw balanceError;
-
-      if (balanceData && balanceData.length > 0) {
-        setBalance({
-          available: Number(balanceData[0].available) || 0,
-          pending: Number(balanceData[0].pending) || 0,
-          total: Number(balanceData[0].total) || 0,
-        });
-      }
-
-      // Get transactions
-      const { data: transactionsData, error: transactionsError } = await supabase
-        .from('transactions')
-        .select('*')
-        .eq('business_id', businessProfile.id)
-        .order('created_at', { ascending: false })
-        .limit(10);
-
-      if (transactionsError) throw transactionsError;
-
-      setTransactions(transactionsData || []);
     } catch (error) {
       console.error('Error loading balance:', error);
       toast({

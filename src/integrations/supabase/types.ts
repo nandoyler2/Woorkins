@@ -1014,6 +1014,14 @@ export type Database = {
           total: number
         }[]
       }
+      get_freelancer_balance: {
+        Args: { freelancer_profile_id: string }
+        Returns: {
+          available: number
+          pending: number
+          total: number
+        }[]
+      }
       get_user_plan: {
         Args: { _user_id: string }
         Returns: string

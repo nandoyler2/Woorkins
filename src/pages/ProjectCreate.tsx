@@ -84,7 +84,7 @@ export default function ProjectCreate() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background">
         <Header />
-        <div className="container mx-auto px-4 py-16 text-center">
+        <div className="container mx-auto px-4 py-16 text-center max-w-7xl">
           <h1 className="text-4xl font-bold mb-4">Acesso negado</h1>
           <p className="text-muted-foreground mb-8">
             Você precisa estar logado para criar um projeto

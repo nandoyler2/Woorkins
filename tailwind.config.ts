@@ -1,5 +1,11 @@
 import type { Config } from "tailwindcss";
 
+/**
+ * PADRÃO DE LARGURA DO SITE:
+ * Use max-w-6xl (1152px) em TODAS as páginas para consistência visual
+ * Exemplo: <div className="container mx-auto px-4 max-w-6xl">
+ */
+
 export default {
   darkMode: ["class"],
   content: ["./pages/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}", "./app/**/*.{ts,tsx}", "./src/**/*.{ts,tsx}"],

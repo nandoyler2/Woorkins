@@ -259,7 +259,7 @@ export default function ProjectDetails() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-secondary/10">
         <Header />
-        <div className="container mx-auto px-4 py-16 text-center max-w-7xl">
+        <div className="container mx-auto px-4 py-16 text-center max-w-6xl">
           <h1 className="text-4xl font-bold mb-4">Projeto não encontrado</h1>
           <Button asChild className="bg-gradient-primary">
             <Link to="/projects">Voltar</Link>
@@ -275,7 +275,7 @@ export default function ProjectDetails() {
     <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-secondary/10">
       <Header />
       
-      <div className="container mx-auto px-4 py-6 max-w-7xl">
+      <div className="container mx-auto px-4 py-6 max-w-6xl">
         {/* Breadcrumbs */}
         <nav className="mb-4 text-sm text-muted-foreground">
           <Link to="/" className="hover:text-primary">Woorkins</Link>

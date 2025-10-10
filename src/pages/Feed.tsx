@@ -22,7 +22,7 @@ export default function Feed() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main className="container mx-auto px-4 py-8 max-w-7xl">
+      <main className="container mx-auto px-4 py-8 max-w-6xl">
         <h1 className="text-3xl font-bold mb-6">{t('feed')}</h1>
         <p className="text-muted-foreground">Feed em desenvolvimento...</p>
       </main>

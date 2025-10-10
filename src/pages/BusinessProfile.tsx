@@ -224,7 +224,7 @@ export default function BusinessProfile() {
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <div className="container mx-auto px-4 py-16 text-center max-w-7xl">
+        <div className="container mx-auto px-4 py-16 text-center max-w-6xl">
           <h1 className="text-4xl font-bold mb-4">Marca não encontrada</h1>
           <p className="text-muted-foreground">Esta marca não existe ou foi removida.</p>
         </div>
@@ -250,7 +250,7 @@ export default function BusinessProfile() {
       </div>
 
       {/* Main Content Container */}
-      <div className="container mx-auto px-4 -mt-16 relative z-10 max-w-7xl">
+      <div className="container mx-auto px-4 -mt-16 relative z-10 max-w-6xl">
         <div>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Left Column - Main Content */}

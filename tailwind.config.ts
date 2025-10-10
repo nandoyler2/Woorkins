@@ -2,7 +2,7 @@ import type { Config } from "tailwindcss";
 
 /**
  * PADRÃO DE LARGURA DO SITE:
- * Use max-w-woorkins (1173px) em TODAS as páginas para consistência visual
+ * Use max-w-woorkins (1177px) em TODAS as páginas para consistência visual
  * Exemplo: <div className="container mx-auto px-4 max-w-woorkins">
  */
 
@@ -20,7 +20,7 @@ export default {
     },
     extend: {
       maxWidth: {
-        'woorkins': '1173px',
+        'woorkins': '1177px',
       },
       colors: {
         border: "hsl(var(--border))",

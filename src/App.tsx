@@ -29,6 +29,7 @@ import AdminBusinesses from "./pages/admin/Businesses";
 import AdminAnalytics from "./pages/admin/Analytics";
 import AdminSettings from "./pages/admin/Settings";
 import PaymentSettings from "./pages/PaymentSettings";
+import Messages from "./pages/Messages";
 
 const queryClient = new QueryClient();
 
@@ -52,6 +53,7 @@ const App = () => (
               <Route path="/projects/new" element={<ProtectedRoute><ProjectCreate /></ProtectedRoute>} />
               <Route path="/projects/:id" element={<ProjectDetails />} />
               <Route path="/my-projects" element={<ProtectedRoute><MyProjects /></ProtectedRoute>} />
+              <Route path="/messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
               <Route path="/:slug" element={<BusinessProfile />} />
               <Route path="/feed" element={<ProtectedRoute><Feed /></ProtectedRoute>} />
               <Route path="/admin" element={<ProtectedRoute requireAdmin><AdminLayout /></ProtectedRoute>}>

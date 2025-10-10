@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { Globe, LogOut, User, Home, Search, MessageSquare, Shield, Briefcase } from 'lucide-react';
+import { Globe, LogOut, User, Home, Search, MessageSquare, Shield, Briefcase, ChevronDown } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import {
   DropdownMenu,
@@ -21,6 +21,7 @@ export const Header = () => {
   const { user, signOut } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
   const [profileId, setProfileId] = useState<string>('');
+  const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
   const [searchOpen, setSearchOpen] = useState(false);
 
   useEffect(() => {
@@ -59,7 +60,39 @@ export const Header = () => {
 
     checkAdminStatus();
     loadProfile();
+    loadUnreadMessages();
   }, [user]);
+
+  const loadUnreadMessages = async () => {
+    if (!user) {
+      setUnreadMessagesCount(0);
+      return;
+    }
+
+    try {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (!profile) return;
+
+      const { count: proposalCount } = await supabase
+        .from('proposal_messages')
+        .select('*', { count: 'exact', head: true })
+        .neq('sender_id', profile.id);
+
+      const { count: negotiationCount } = await supabase
+        .from('negotiation_messages')
+        .select('*', { count: 'exact', head: true })
+        .neq('sender_id', user.id);
+
+      setUnreadMessagesCount((proposalCount || 0) + (negotiationCount || 0));
+    } catch (error) {
+      console.error('Error loading unread messages:', error);
+    }
+  };
 
   return (
     <header className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-50">
@@ -74,15 +107,36 @@ export const Header = () => {
               <Home className="w-5 h-5" />
               <span>Dashboard</span>
             </Link>
-            <Link to="/projects" className="flex items-center gap-2 text-foreground/80 hover:text-foreground transition-colors">
-              <Briefcase className="w-5 h-5" />
-              <span>Projetos</span>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center gap-2 text-foreground/80 hover:text-foreground transition-colors">
+                  <Briefcase className="w-5 h-5" />
+                  <span>Projetos</span>
+                  <ChevronDown className="w-4 h-4" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                <DropdownMenuItem asChild>
+                  <Link to="/projects">Projetos Disponíveis</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/my-projects">Meus Projetos</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/projects/new">Criar Novo Projeto</Link>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <Link to="/messages" className="flex items-center gap-2 text-foreground/80 hover:text-foreground transition-colors relative">
+              <MessageSquare className="w-5 h-5" />
+              <span>Mensagens</span>
+              {unreadMessagesCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center font-semibold">
+                  {unreadMessagesCount > 9 ? '9+' : unreadMessagesCount}
+                </span>
+              )}
             </Link>
-            <Link to="/my-projects" className="flex items-center gap-2 text-foreground/80 hover:text-foreground transition-colors">
-              <Briefcase className="w-5 h-5" />
-              <span>Meus Projetos</span>
-            </Link>
-            <button 
+            <button
               onClick={() => setSearchOpen(true)}
               className="flex items-center gap-2 text-foreground/80 hover:text-foreground transition-colors"
             >

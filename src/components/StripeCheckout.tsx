@@ -6,7 +6,7 @@ import { Card } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || '');
+const stripePromise = loadStripe('pk_live_51O1f4uJe3Q1gl7R9Lwo7G85I4rwMoj0zjzjTKLnv7Mr42JIOLvm3TktR9DW470KVq2Za0gaHkbeQIrwqGP2z58zg00ekNM7Ov4');
 
 interface CheckoutFormProps {
   clientSecret: string;

@@ -6,7 +6,8 @@ import { Card } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 
-const stripePromise = loadStripe('pk_live_51O1f4uJe3Q1gl7R9Lwo7G85I4rwMoj0zjzjTKLnv7Mr42JIOLvm3TktR9DW470KVq2Za0gaHkbeQIrwqGP2z58zg00ekNM7Ov4');
+const STRIPE_PUBLISHABLE_KEY = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY as string | undefined;
+const stripePromise = STRIPE_PUBLISHABLE_KEY ? loadStripe(STRIPE_PUBLISHABLE_KEY) : null;
 
 interface CheckoutFormProps {
   clientSecret: string;
@@ -169,6 +170,17 @@ export function StripeCheckout(props: StripeCheckoutProps) {
       },
     },
   };
+
+  if (!stripePromise) {
+    return (
+      <Card className="p-6">
+        <h3 className="text-xl font-semibold mb-4">Pagamento do Serviço</h3>
+        <div className="text-sm text-muted-foreground">
+          Erro de configuração: defina VITE_STRIPE_PUBLISHABLE_KEY com sua chave pública da Stripe.
+        </div>
+      </Card>
+    );
+  }
 
   return (
     <Card className="p-6">

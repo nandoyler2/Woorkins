@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { Globe, LogOut, User, Home, Search, MessageSquare, Shield, Briefcase, MessageCircle } from 'lucide-react';
+import { Globe, LogOut, User, Home, Search, MessageSquare, Shield, Briefcase, MessageCircle, Plus, FolderOpen } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import {
   DropdownMenu,
@@ -10,6 +10,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+} from '@/components/ui/navigation-menu';
 import logoWoorkins from '@/assets/logo-woorkins.png';
 import { SafeImage } from '@/components/ui/safe-image';
 import { supabase } from '@/integrations/supabase/client';
@@ -78,14 +86,61 @@ export const Header = () => {
               <MessageCircle className="w-5 h-5" />
               <span>Mensagens</span>
             </Link>
-            <Link to="/projects" className="flex items-center gap-2 text-foreground/80 hover:text-foreground transition-colors">
-              <Briefcase className="w-5 h-5" />
-              <span>Projetos</span>
-            </Link>
-            <Link to="/my-projects" className="flex items-center gap-2 text-foreground/80 hover:text-foreground transition-colors">
-              <Briefcase className="w-5 h-5" />
-              <span>Meus Projetos</span>
-            </Link>
+            
+            <NavigationMenu>
+              <NavigationMenuList>
+                <NavigationMenuItem>
+                  <NavigationMenuTrigger className="flex items-center gap-2 bg-transparent">
+                    <Briefcase className="w-5 h-5" />
+                    <span>Projetos</span>
+                  </NavigationMenuTrigger>
+                  <NavigationMenuContent>
+                    <ul className="w-[200px] p-2">
+                      <li>
+                        <NavigationMenuLink asChild>
+                          <Link 
+                            to="/projects"
+                            className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                          >
+                            <div className="flex items-center gap-2">
+                              <FolderOpen className="w-4 h-4" />
+                              <span className="text-sm font-medium">Projetos Disponíveis</span>
+                            </div>
+                          </Link>
+                        </NavigationMenuLink>
+                      </li>
+                      <li>
+                        <NavigationMenuLink asChild>
+                          <Link 
+                            to="/my-projects"
+                            className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                          >
+                            <div className="flex items-center gap-2">
+                              <Briefcase className="w-4 h-4" />
+                              <span className="text-sm font-medium">Meus Projetos</span>
+                            </div>
+                          </Link>
+                        </NavigationMenuLink>
+                      </li>
+                      <li>
+                        <NavigationMenuLink asChild>
+                          <Link 
+                            to="/project-create"
+                            className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                          >
+                            <div className="flex items-center gap-2">
+                              <Plus className="w-4 h-4" />
+                              <span className="text-sm font-medium">Criar Projeto</span>
+                            </div>
+                          </Link>
+                        </NavigationMenuLink>
+                      </li>
+                    </ul>
+                  </NavigationMenuContent>
+                </NavigationMenuItem>
+              </NavigationMenuList>
+            </NavigationMenu>
+            
             <button 
               onClick={() => setSearchOpen(true)}
               className="flex items-center gap-2 text-foreground/80 hover:text-foreground transition-colors"

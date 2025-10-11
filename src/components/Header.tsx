@@ -90,7 +90,7 @@ export const Header = () => {
             <NavigationMenu>
               <NavigationMenuList>
                 <NavigationMenuItem>
-                  <NavigationMenuTrigger className="flex items-center gap-2 bg-transparent">
+                  <NavigationMenuTrigger className="flex items-center gap-2 bg-transparent hover:bg-transparent data-[state=open]:bg-transparent data-[active]:bg-transparent h-auto p-0 text-foreground/80 hover:text-foreground transition-colors font-normal">
                     <Briefcase className="w-5 h-5" />
                     <span>Projetos</span>
                   </NavigationMenuTrigger>

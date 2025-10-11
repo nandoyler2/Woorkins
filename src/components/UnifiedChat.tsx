@@ -5,8 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Send, Loader2 } from 'lucide-react';
+import { Send, Loader2, Check, CheckCheck, Paperclip, Smile } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -225,18 +226,27 @@ export function UnifiedChat({ conversationId, conversationType, otherUser, profi
   }
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col bg-gradient-to-b from-background to-muted/20">
       {/* Header */}
-      <div className="border-b p-4 flex items-center gap-3">
-        <Avatar>
-          <AvatarImage src={otherUser.avatar} />
-          <AvatarFallback>{otherUser.name.charAt(0).toUpperCase()}</AvatarFallback>
-        </Avatar>
-        <div>
+      <div className="border-b p-4 flex items-center gap-3 bg-card/80 backdrop-blur-sm">
+        <div className="relative">
+          <Avatar className="h-10 w-10 ring-2 ring-background">
+            <AvatarImage src={otherUser.avatar} />
+            <AvatarFallback className="bg-primary/10 text-primary">
+              {otherUser.name.charAt(0).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+          <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 bg-green-500 rounded-full border-2 border-background" />
+        </div>
+        <div className="flex-1">
           <h3 className="font-semibold">{otherUser.name}</h3>
-          <p className="text-sm text-muted-foreground">
-            {conversationType === 'negotiation' ? 'Negociação' : 'Proposta'}
-          </p>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-green-600 dark:text-green-400 font-medium">Online</span>
+            <span className="text-xs text-muted-foreground">•</span>
+            <Badge variant="secondary" className="text-xs">
+              {conversationType === 'negotiation' ? 'Negociação' : 'Proposta'}
+            </Badge>
+          </div>
         </div>
       </div>
 
@@ -244,8 +254,12 @@ export function UnifiedChat({ conversationId, conversationType, otherUser, profi
       <ScrollArea className="flex-1 p-4">
         <div className="space-y-4">
           {messages.length === 0 ? (
-            <div className="text-center text-muted-foreground py-8">
-              Nenhuma mensagem ainda. Envie a primeira!
+            <div className="text-center py-12">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-3">
+                <Send className="h-8 w-8 text-primary/50" />
+              </div>
+              <p className="text-muted-foreground font-medium">Nenhuma mensagem ainda</p>
+              <p className="text-sm text-muted-foreground mt-1">Envie a primeira mensagem!</p>
             </div>
           ) : (
             messages.map((message) => {
@@ -253,36 +267,40 @@ export function UnifiedChat({ conversationId, conversationType, otherUser, profi
               return (
                 <div
                   key={message.id}
-                  className={`flex gap-2 ${isMine ? 'flex-row-reverse' : 'flex-row'}`}
+                  className={`flex gap-2 animate-in slide-in-from-bottom-2 ${
+                    isMine ? 'flex-row-reverse' : 'flex-row'
+                  }`}
                 >
-                  <Avatar className="h-8 w-8 flex-shrink-0">
-                    <AvatarImage 
-                      src={isMine ? undefined : otherUser.avatar} 
-                    />
-                    <AvatarFallback>
-                      {isMine 
-                        ? 'Você'.charAt(0)
-                        : otherUser.name.charAt(0).toUpperCase()
-                      }
-                    </AvatarFallback>
-                  </Avatar>
+                  {!isMine && (
+                    <Avatar className="h-8 w-8 flex-shrink-0">
+                      <AvatarImage src={otherUser.avatar} />
+                      <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                        {otherUser.name.charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                  )}
                   
-                  <div className={`flex flex-col ${isMine ? 'items-end' : 'items-start'}`}>
+                  <div className={`flex flex-col max-w-[75%] ${isMine ? 'items-end' : 'items-start'}`}>
                     <div
-                      className={`rounded-lg px-4 py-2 max-w-[70%] ${
+                      className={`rounded-2xl px-4 py-2.5 shadow-sm ${
                         isMine
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-muted'
+                          ? 'bg-primary text-primary-foreground rounded-tr-sm'
+                          : 'bg-card border rounded-tl-sm'
                       }`}
                     >
-                      <p className="text-sm break-words">{message.content}</p>
+                      <p className="text-sm leading-relaxed break-words">{message.content}</p>
                     </div>
-                    <span className="text-xs text-muted-foreground mt-1">
-                      {formatDistanceToNow(new Date(message.created_at), {
-                        addSuffix: true,
-                        locale: ptBR,
-                      })}
-                    </span>
+                    <div className={`flex items-center gap-1 mt-1 ${isMine ? 'flex-row-reverse' : 'flex-row'}`}>
+                      <span className="text-xs text-muted-foreground">
+                        {formatDistanceToNow(new Date(message.created_at), {
+                          addSuffix: true,
+                          locale: ptBR,
+                        })}
+                      </span>
+                      {isMine && (
+                        <CheckCheck className="h-3 w-3 text-primary" />
+                      )}
+                    </div>
                   </div>
                 </div>
               );
@@ -293,16 +311,43 @@ export function UnifiedChat({ conversationId, conversationType, otherUser, profi
       </ScrollArea>
 
       {/* Input */}
-      <form onSubmit={sendMessage} className="border-t p-4">
+      <form onSubmit={sendMessage} className="border-t p-4 bg-card/80 backdrop-blur-sm">
         <div className="flex gap-2">
+          <Button 
+            type="button" 
+            variant="ghost" 
+            size="icon"
+            className="flex-shrink-0"
+          >
+            <Paperclip className="h-5 w-5" />
+          </Button>
           <Input
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             placeholder="Digite sua mensagem..."
             disabled={sending}
-            className="flex-1"
+            className="flex-1 bg-background/50"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage(e);
+              }
+            }}
           />
-          <Button type="submit" disabled={sending || !newMessage.trim()}>
+          <Button 
+            type="button" 
+            variant="ghost" 
+            size="icon"
+            className="flex-shrink-0"
+          >
+            <Smile className="h-5 w-5" />
+          </Button>
+          <Button 
+            type="submit" 
+            disabled={sending || !newMessage.trim()}
+            size="icon"
+            className="flex-shrink-0"
+          >
             {sending ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (

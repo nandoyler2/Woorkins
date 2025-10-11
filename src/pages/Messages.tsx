@@ -6,9 +6,13 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { MessageCircle, Briefcase, Loader2 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { MessageCircle, Briefcase, Loader2, Search, Check, CheckCheck } from 'lucide-react';
 import { UnifiedChat } from '@/components/UnifiedChat';
+import { Header } from '@/components/Header';
+import { Footer } from '@/components/Footer';
+import { formatDistanceToNow } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 interface Conversation {
   id: string;
@@ -31,6 +35,7 @@ export default function Messages() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [profileId, setProfileId] = useState<string>('');
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     if (!user) {
@@ -150,16 +155,33 @@ export default function Messages() {
     switch (status) {
       case 'accepted':
       case 'completed':
-        return 'bg-green-500';
+        return 'bg-green-500/10 text-green-600 dark:text-green-400';
       case 'rejected':
       case 'cancelled':
-        return 'bg-red-500';
+        return 'bg-red-500/10 text-red-600 dark:text-red-400';
       case 'pending':
-        return 'bg-yellow-500';
+        return 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-400';
       default:
-        return 'bg-blue-500';
+        return 'bg-blue-500/10 text-blue-600 dark:text-blue-400';
     }
   };
+
+  const getStatusText = (status: string) => {
+    const statusMap: Record<string, string> = {
+      accepted: 'Aceito',
+      completed: 'Concluído',
+      rejected: 'Rejeitado',
+      cancelled: 'Cancelado',
+      pending: 'Pendente',
+      open: 'Aberto',
+    };
+    return statusMap[status] || status;
+  };
+
+  const filteredConversations = conversations.filter(conv =>
+    conv.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    conv.otherUser.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   if (loading) {
     return (
@@ -170,82 +192,124 @@ export default function Messages() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto p-4 max-w-7xl">
-        <div className="flex items-center gap-2 mb-6">
-          <MessageCircle className="h-8 w-8 text-primary" />
-          <h1 className="text-3xl font-bold">Mensagens</h1>
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-background to-primary/5">
+      <Header />
+      
+      <main className="flex-1 container mx-auto p-4 max-w-7xl">
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+            Mensagens
+          </h1>
+          <p className="text-muted-foreground">
+            Gerencie suas conversas de propostas e negociações
+          </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 h-[calc(100vh-200px)]">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 h-[calc(100vh-280px)]">
           {/* Lista de Conversas */}
-          <Card className="lg:col-span-1 p-4 overflow-y-auto">
-            <h2 className="text-lg font-semibold mb-4">Conversas</h2>
-            
-            {conversations.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <MessageCircle className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                <p>Nenhuma conversa ainda</p>
+          <Card className="lg:col-span-1 overflow-hidden border-0 shadow-lg bg-card/50 backdrop-blur-sm">
+            <div className="p-4 border-b bg-card/80">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar conversas..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 bg-background/50"
+                />
               </div>
-            ) : (
-              <div className="space-y-2">
-                {conversations.map((conv) => (
-                  <Button
-                    key={`${conv.type}-${conv.id}`}
-                    variant={selectedConversation?.id === conv.id ? "secondary" : "ghost"}
-                    className="w-full justify-start p-3 h-auto"
-                    onClick={() => setSelectedConversation(conv)}
-                  >
-                    <div className="flex items-start gap-3 w-full">
-                      <Avatar className="h-10 w-10 flex-shrink-0">
-                        <AvatarImage src={conv.otherUser.avatar} />
-                        <AvatarFallback>
-                          {conv.otherUser.name.charAt(0).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      
-                      <div className="flex-1 min-w-0 text-left">
-                        <div className="flex items-center gap-2 mb-1">
-                          {conv.type === 'negotiation' ? (
-                            <Briefcase className="h-4 w-4 flex-shrink-0" />
-                          ) : (
-                            <MessageCircle className="h-4 w-4 flex-shrink-0" />
-                          )}
-                          <span className="font-medium truncate text-sm">
-                            {conv.title}
-                          </span>
+            </div>
+            
+            <div className="overflow-y-auto h-[calc(100%-73px)]">
+              {filteredConversations.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground px-4">
+                  <MessageCircle className="h-12 w-12 mx-auto mb-3 opacity-30" />
+                  <p className="font-medium">
+                    {searchQuery ? 'Nenhuma conversa encontrada' : 'Nenhuma conversa ainda'}
+                  </p>
+                  <p className="text-sm mt-1">
+                    {searchQuery ? 'Tente outro termo' : 'Suas mensagens aparecerão aqui'}
+                  </p>
+                </div>
+              ) : (
+                <div className="p-2">
+                  {filteredConversations.map((conv) => (
+                    <button
+                      key={`${conv.type}-${conv.id}`}
+                      onClick={() => setSelectedConversation(conv)}
+                      className={`w-full p-3 rounded-lg mb-2 transition-all hover:scale-[1.02] ${
+                        selectedConversation?.id === conv.id
+                          ? 'bg-primary/10 border-2 border-primary/20'
+                          : 'hover:bg-muted/50 border-2 border-transparent'
+                      }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="relative">
+                          <Avatar className="h-12 w-12 ring-2 ring-background">
+                            <AvatarImage src={conv.otherUser.avatar} />
+                            <AvatarFallback className="bg-primary/10 text-primary">
+                              {conv.otherUser.name.charAt(0).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="absolute -bottom-1 -right-1 h-4 w-4 bg-green-500 rounded-full border-2 border-background" />
                         </div>
-                        <p className="text-xs text-muted-foreground truncate">
-                          {conv.otherUser.name}
-                        </p>
-                        {conv.lastMessage && (
-                          <p className="text-xs text-muted-foreground truncate mt-1">
-                            {conv.lastMessage}
-                          </p>
-                        )}
-                        <div className="flex items-center gap-2 mt-2">
-                          <Badge 
-                            variant="outline" 
-                            className={`text-xs ${getStatusColor(conv.status)}`}
-                          >
-                            {conv.status}
-                          </Badge>
-                          {conv.unreadCount > 0 && (
-                            <Badge variant="destructive" className="text-xs">
-                              {conv.unreadCount}
-                            </Badge>
+                        
+                        <div className="flex-1 min-w-0 text-left">
+                          <div className="flex items-center justify-between gap-2 mb-1">
+                            <span className="font-semibold truncate text-sm">
+                              {conv.otherUser.name}
+                            </span>
+                            {conv.lastMessageAt && (
+                              <span className="text-xs text-muted-foreground flex-shrink-0">
+                                {formatDistanceToNow(new Date(conv.lastMessageAt), {
+                                  addSuffix: false,
+                                  locale: ptBR,
+                                })}
+                              </span>
+                            )}
+                          </div>
+                          
+                          <div className="flex items-center gap-1 mb-1">
+                            {conv.type === 'negotiation' ? (
+                              <Briefcase className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                            ) : (
+                              <MessageCircle className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                            )}
+                            <p className="text-xs text-muted-foreground truncate">
+                              {conv.title}
+                            </p>
+                          </div>
+
+                          {conv.lastMessage && (
+                            <p className="text-xs text-muted-foreground truncate mb-2">
+                              {conv.lastMessage}
+                            </p>
                           )}
+
+                          <div className="flex items-center gap-2">
+                            <Badge 
+                              variant="secondary" 
+                              className={`text-xs px-2 py-0 ${getStatusColor(conv.status)}`}
+                            >
+                              {getStatusText(conv.status)}
+                            </Badge>
+                            {conv.unreadCount > 0 && (
+                              <Badge className="text-xs h-5 min-w-5 flex items-center justify-center p-1 bg-primary">
+                                {conv.unreadCount}
+                              </Badge>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </Button>
-                ))}
-              </div>
-            )}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </Card>
 
           {/* Área de Chat */}
-          <Card className="lg:col-span-2 p-0 overflow-hidden">
+          <Card className="lg:col-span-2 overflow-hidden border-0 shadow-lg bg-card/50 backdrop-blur-sm">
             {selectedConversation ? (
               <UnifiedChat
                 conversationId={selectedConversation.id}
@@ -254,16 +318,24 @@ export default function Messages() {
                 profileId={profileId}
               />
             ) : (
-              <div className="h-full flex items-center justify-center text-muted-foreground">
-                <div className="text-center">
-                  <MessageCircle className="h-16 w-16 mx-auto mb-4 opacity-50" />
-                  <p className="text-lg">Selecione uma conversa para começar</p>
+              <div className="h-full flex items-center justify-center">
+                <div className="text-center p-8">
+                  <div className="relative inline-block mb-6">
+                    <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full" />
+                    <MessageCircle className="relative h-20 w-20 text-primary/40" />
+                  </div>
+                  <h3 className="text-xl font-semibold mb-2">Selecione uma conversa</h3>
+                  <p className="text-muted-foreground">
+                    Escolha uma conversa da lista para começar
+                  </p>
                 </div>
               </div>
             )}
           </Card>
         </div>
-      </div>
+      </main>
+
+      <Footer />
     </div>
   );
 }

@@ -195,7 +195,7 @@ export default function Messages() {
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-background to-primary/5">
       <Header />
       
-      <main className="flex-1 container mx-auto p-4 max-w-7xl">
+      <main className="flex-1 container mx-auto p-4 max-w-woorkins">
         <div className="mb-6">
           <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
             Mensagens

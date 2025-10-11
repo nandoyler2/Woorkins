@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { Globe, LogOut, User, Home, Search, MessageSquare, Shield, Briefcase } from 'lucide-react';
+import { Globe, LogOut, User, Home, Search, MessageSquare, Shield, Briefcase, MessageCircle } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import {
   DropdownMenu,
@@ -74,6 +74,10 @@ export const Header = () => {
               <Home className="w-5 h-5" />
               <span>Dashboard</span>
             </Link>
+            <Link to="/messages" className="flex items-center gap-2 text-foreground/80 hover:text-foreground transition-colors">
+              <MessageCircle className="w-5 h-5" />
+              <span>Mensagens</span>
+            </Link>
             <Link to="/projects" className="flex items-center gap-2 text-foreground/80 hover:text-foreground transition-colors">
               <Briefcase className="w-5 h-5" />
               <span>Projetos</span>
@@ -113,6 +117,12 @@ export const Header = () => {
               <DropdownMenuContent align="end">
                 <DropdownMenuItem asChild>
                   <Link to="/dashboard">Dashboard</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/messages">
+                    <MessageCircle className="w-4 h-4 mr-2" />
+                    Mensagens
+                  </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link to="/profile">{t('profile')}</Link>

@@ -29,6 +29,7 @@ import AdminBusinesses from "./pages/admin/Businesses";
 import AdminAnalytics from "./pages/admin/Analytics";
 import AdminSettings from "./pages/admin/Settings";
 import PaymentSettings from "./pages/PaymentSettings";
+import Messages from "./pages/Messages";
 
 const queryClient = new QueryClient();
 
@@ -48,6 +49,7 @@ const App = () => (
               <Route path="/business/finances" element={<ProtectedRoute><BusinessFinances /></ProtectedRoute>} />
               <Route path="/user/orders" element={<ProtectedRoute><UserOrders /></ProtectedRoute>} />
               <Route path="/payment-settings" element={<ProtectedRoute><PaymentSettings /></ProtectedRoute>} />
+              <Route path="/messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
               <Route path="/projects" element={<Projects />} />
               <Route path="/projects/new" element={<ProtectedRoute><ProjectCreate /></ProtectedRoute>} />
               <Route path="/projects/:id" element={<ProjectDetails />} />

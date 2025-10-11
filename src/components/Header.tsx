@@ -77,78 +77,117 @@ export const Header = () => {
           </Link>
 
         {user && (
-          <nav className="hidden md:flex items-center gap-6">
-            <Link to="/dashboard" className="flex items-center gap-2 text-foreground/80 hover:text-foreground transition-colors">
-              <Home className="w-5 h-5" />
-              <span>Dashboard</span>
-            </Link>
-            <Link to="/messages" className="flex items-center gap-2 text-foreground/80 hover:text-foreground transition-colors">
-              <MessageCircle className="w-5 h-5" />
-              <span>Mensagens</span>
-            </Link>
-            
-            <NavigationMenu>
-              <NavigationMenuList>
-                <NavigationMenuItem>
-                  <NavigationMenuTrigger className="flex items-center gap-2 bg-transparent">
-                    <Briefcase className="w-5 h-5" />
-                    <span>Projetos</span>
-                  </NavigationMenuTrigger>
-                  <NavigationMenuContent>
-                    <ul className="w-[200px] p-2">
-                      <li>
-                        <NavigationMenuLink asChild>
-                          <Link 
-                            to="/projects"
-                            className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
-                          >
-                            <div className="flex items-center gap-2">
-                              <FolderOpen className="w-4 h-4" />
-                              <span className="text-sm font-medium">Projetos Disponíveis</span>
-                            </div>
-                          </Link>
-                        </NavigationMenuLink>
-                      </li>
-                      <li>
-                        <NavigationMenuLink asChild>
-                          <Link 
-                            to="/my-projects"
-                            className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
-                          >
-                            <div className="flex items-center gap-2">
-                              <Briefcase className="w-4 h-4" />
-                              <span className="text-sm font-medium">Meus Projetos</span>
-                            </div>
-                          </Link>
-                        </NavigationMenuLink>
-                      </li>
-                      <li>
-                        <NavigationMenuLink asChild>
-                          <Link 
-                            to="/project-create"
-                            className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
-                          >
-                            <div className="flex items-center gap-2">
-                              <Plus className="w-4 h-4" />
-                              <span className="text-sm font-medium">Criar Projeto</span>
-                            </div>
-                          </Link>
-                        </NavigationMenuLink>
-                      </li>
-                    </ul>
-                  </NavigationMenuContent>
-                </NavigationMenuItem>
-              </NavigationMenuList>
-            </NavigationMenu>
-            
-            <button 
-              onClick={() => setSearchOpen(true)}
-              className="flex items-center gap-2 text-foreground/80 hover:text-foreground transition-colors"
-            >
-              <Search className="w-5 h-5" />
-              <span>{t('discover')}</span>
-            </button>
-          </nav>
+          <NavigationMenu className="hidden md:flex">
+            <NavigationMenuList className="flex items-center gap-2">
+              <NavigationMenuItem>
+                <NavigationMenuTrigger className="flex items-center gap-2 bg-transparent">
+                  <Home className="w-5 h-5" />
+                  <span>Painel</span>
+                </NavigationMenuTrigger>
+                <NavigationMenuContent>
+                  <ul className="w-[200px] p-2">
+                    <li>
+                      <NavigationMenuLink asChild>
+                        <Link 
+                          to="/dashboard"
+                          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                        >
+                          <div className="flex items-center gap-2">
+                            <Home className="w-4 h-4" />
+                            <span className="text-sm font-medium">Painel Principal</span>
+                          </div>
+                        </Link>
+                      </NavigationMenuLink>
+                    </li>
+                  </ul>
+                </NavigationMenuContent>
+              </NavigationMenuItem>
+
+              <NavigationMenuItem>
+                <NavigationMenuTrigger className="flex items-center gap-2 bg-transparent">
+                  <MessageCircle className="w-5 h-5" />
+                  <span>Mensagens</span>
+                </NavigationMenuTrigger>
+                <NavigationMenuContent>
+                  <ul className="w-[200px] p-2">
+                    <li>
+                      <NavigationMenuLink asChild>
+                        <Link 
+                          to="/messages"
+                          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                        >
+                          <div className="flex items-center gap-2">
+                            <MessageCircle className="w-4 h-4" />
+                            <span className="text-sm font-medium">Todas as Mensagens</span>
+                          </div>
+                        </Link>
+                      </NavigationMenuLink>
+                    </li>
+                  </ul>
+                </NavigationMenuContent>
+              </NavigationMenuItem>
+              
+              <NavigationMenuItem>
+                <NavigationMenuTrigger className="flex items-center gap-2 bg-transparent">
+                  <Briefcase className="w-5 h-5" />
+                  <span>Projetos</span>
+                </NavigationMenuTrigger>
+                <NavigationMenuContent>
+                  <ul className="w-[200px] p-2">
+                    <li>
+                      <NavigationMenuLink asChild>
+                        <Link 
+                          to="/projects"
+                          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                        >
+                          <div className="flex items-center gap-2">
+                            <FolderOpen className="w-4 h-4" />
+                            <span className="text-sm font-medium">Projetos Disponíveis</span>
+                          </div>
+                        </Link>
+                      </NavigationMenuLink>
+                    </li>
+                    <li>
+                      <NavigationMenuLink asChild>
+                        <Link 
+                          to="/my-projects"
+                          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                        >
+                          <div className="flex items-center gap-2">
+                            <Briefcase className="w-4 h-4" />
+                            <span className="text-sm font-medium">Meus Projetos</span>
+                          </div>
+                        </Link>
+                      </NavigationMenuLink>
+                    </li>
+                    <li>
+                      <NavigationMenuLink asChild>
+                        <Link 
+                          to="/project-create"
+                          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                        >
+                          <div className="flex items-center gap-2">
+                            <Plus className="w-4 h-4" />
+                            <span className="text-sm font-medium">Criar Projeto</span>
+                          </div>
+                        </Link>
+                      </NavigationMenuLink>
+                    </li>
+                  </ul>
+                </NavigationMenuContent>
+              </NavigationMenuItem>
+
+              <NavigationMenuItem>
+                <NavigationMenuTrigger 
+                  className="flex items-center gap-2 bg-transparent"
+                  onClick={() => setSearchOpen(true)}
+                >
+                  <Search className="w-5 h-5" />
+                  <span>{t('discover')}</span>
+                </NavigationMenuTrigger>
+              </NavigationMenuItem>
+            </NavigationMenuList>
+          </NavigationMenu>
         )}
 
         <div className="flex items-center gap-3">
@@ -171,7 +210,7 @@ export const Header = () => {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem asChild>
-                  <Link to="/dashboard">Dashboard</Link>
+                  <Link to="/dashboard">Painel</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link to="/messages">

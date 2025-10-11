@@ -72,19 +72,20 @@ export const SearchSlideIn = ({ isOpen, onClose }: SearchSlideInProps) => {
     <>
       {/* Backdrop with blur */}
       <div 
-        className="fixed inset-0 bg-black/40 backdrop-blur-md z-50 animate-in fade-in duration-300"
+        className="fixed inset-0 bg-black/40 backdrop-blur-md z-[100] animate-in fade-in duration-300"
         onClick={onClose}
       />
       
       {/* Modal centered */}
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div 
-          className={cn(
-            "w-full max-w-3xl bg-background/80 backdrop-blur-xl rounded-3xl shadow-2xl border-2 border-foreground/10",
-            "animate-in zoom-in-95 fade-in duration-300"
-          )}
-          onClick={(e) => e.stopPropagation()}
-        >
+      <div className="fixed inset-0 z-[101] flex items-center justify-center p-4 pointer-events-none">
+        <div className="pointer-events-auto">
+          <div 
+            className={cn(
+              "w-full max-w-3xl bg-background/80 backdrop-blur-xl rounded-3xl shadow-2xl border-2 border-foreground/10",
+              "animate-in zoom-in-95 fade-in duration-300"
+            )}
+            onClick={(e) => e.stopPropagation()}
+          >
           <div className="flex flex-col max-h-[85vh]">
             {/* Header */}
             <div className="px-6 py-4 border-b border-foreground/10 flex items-center justify-between">
@@ -218,6 +219,7 @@ export const SearchSlideIn = ({ isOpen, onClose }: SearchSlideInProps) => {
             </div>
           </div>
         </div>
+      </div>
       </div>
     </>
   );

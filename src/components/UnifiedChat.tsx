@@ -159,10 +159,10 @@ export function UnifiedChat({
     messages.length === 0;
 
   return (
-    <div className="h-full flex flex-col bg-gradient-to-b from-background to-muted/20">
+    <div className="h-full flex flex-col bg-white">
       {/* Proposal Negotiation Panel */}
       {conversationType === 'proposal' && proposalData && (
-        <div className="border-b p-4 bg-card/80 backdrop-blur-sm">
+        <div className="border-b p-3 bg-slate-50">
           <ProposalNegotiationPanel
             proposalId={conversationId}
             proposalData={proposalData}
@@ -176,7 +176,7 @@ export function UnifiedChat({
 
       {/* Info Header */}
       {(projectId || businessId) && (
-        <div className="border-b p-3 bg-primary/5 backdrop-blur-sm">
+        <div className="border-b p-3 bg-slate-50">
           <div className="flex items-center justify-between">
             <div className="flex-1">
               <p className="text-xs text-muted-foreground mb-1">
@@ -221,7 +221,7 @@ export function UnifiedChat({
       )}
       
       {/* Header */}
-      <div className="border-b p-4 flex items-center gap-3 bg-card/80 backdrop-blur-sm">
+      <div className="border-b p-3 flex items-center gap-3 bg-white">
         <div className="relative">
           <Avatar className="h-10 w-10 ring-2 ring-background">
             <AvatarImage src={otherUser.avatar} />
@@ -360,7 +360,7 @@ export function UnifiedChat({
       </ScrollArea>
 
       {/* Input */}
-      <form onSubmit={handleSendMessage} className="border-t p-4 bg-card/80 backdrop-blur-sm">
+      <form onSubmit={handleSendMessage} className="border-t p-3 bg-white">
         {isChatLocked ? (
           <div className="text-center py-2">
             <p className="text-sm text-muted-foreground flex items-center justify-center gap-2">

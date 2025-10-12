@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { MessageCircle, Loader2, Search, Check, CheckCheck } from 'lucide-react';
+import { MessageCircle, Loader2, Search, Inbox, Mail, Star, Archive, AlertCircle, Tag } from 'lucide-react';
 import { UnifiedChat } from '@/components/UnifiedChat';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
@@ -40,6 +40,7 @@ export default function Messages() {
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [profileId, setProfileId] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeFilter, setActiveFilter] = useState<'all' | 'unread' | 'starred' | 'archived'>('all');
   const location = useLocation();
 
   useEffect(() => {
@@ -258,35 +259,96 @@ export default function Messages() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-background to-primary/5">
+    <div className="min-h-screen flex flex-col bg-background">
       <Header />
       
-      <main className="flex-1 container mx-auto p-4 max-w-woorkins">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-            Mensagens
-          </h1>
-          <p className="text-muted-foreground">
-            Gerencie suas conversas de propostas e negociações
-          </p>
+      <main className="flex-1 flex overflow-hidden">
+        {/* Sidebar de Navegação */}
+        <div className="w-64 bg-slate-900 text-white p-4 flex flex-col">
+          <div className="mb-6">
+            <h2 className="text-lg font-semibold mb-4">Mensagens</h2>
+          </div>
+          
+          <nav className="space-y-1 flex-1">
+            <button
+              onClick={() => setActiveFilter('all')}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
+                activeFilter === 'all' 
+                  ? 'bg-cyan-500 text-white' 
+                  : 'hover:bg-slate-800 text-slate-300'
+              }`}
+            >
+              <Inbox className="h-5 w-5" />
+              <span>Caixa de Entrada</span>
+            </button>
+            
+            <button
+              onClick={() => setActiveFilter('unread')}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
+                activeFilter === 'unread' 
+                  ? 'bg-cyan-500 text-white' 
+                  : 'hover:bg-slate-800 text-slate-300'
+              }`}
+            >
+              <Mail className="h-5 w-5" />
+              <span>Não Lidas</span>
+            </button>
+            
+            <button
+              onClick={() => setActiveFilter('starred')}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
+                activeFilter === 'starred' 
+                  ? 'bg-cyan-500 text-white' 
+                  : 'hover:bg-slate-800 text-slate-300'
+              }`}
+            >
+              <Star className="h-5 w-5" />
+              <span>Destacadas</span>
+            </button>
+            
+            <button
+              onClick={() => setActiveFilter('archived')}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
+                activeFilter === 'archived' 
+                  ? 'bg-cyan-500 text-white' 
+                  : 'hover:bg-slate-800 text-slate-300'
+              }`}
+            >
+              <Archive className="h-5 w-5" />
+              <span>Arquivadas</span>
+            </button>
+            
+            <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-800 text-slate-300">
+              <AlertCircle className="h-5 w-5" />
+              <span>Disputa</span>
+            </button>
+          </nav>
+          
+          <div className="border-t border-slate-700 pt-4 mt-4">
+            <h3 className="text-sm font-medium text-slate-400 mb-2">Etiquetas</h3>
+            <button className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-300 hover:bg-slate-800 rounded-lg">
+              <Tag className="h-4 w-4" />
+              <span>+ Adicionar etiqueta...</span>
+            </button>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 h-[calc(100vh-280px)]">
+        <div className="flex-1 flex overflow-hidden">
           {/* Lista de Conversas */}
-          <Card className="lg:col-span-1 overflow-hidden border-0 shadow-lg bg-card/50 backdrop-blur-sm">
-            <div className="p-4 border-b bg-card/80">
+          <div className="w-96 border-r bg-white overflow-hidden flex flex-col">
+            <div className="p-3 border-b">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Buscar conversas..."
+                  placeholder="Buscar por projeto ou cliente"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 bg-background/50"
+                  className="pl-10"
                 />
               </div>
             </div>
             
-            <div className="overflow-y-auto h-[calc(100%-73px)]">
+            <div className="flex-1 overflow-y-auto">
               {filteredConversations.length === 0 ? (
                 <div className="text-center py-12 text-muted-foreground px-4">
                   <MessageCircle className="h-12 w-12 mx-auto mb-3 opacity-30" />
@@ -298,35 +360,37 @@ export default function Messages() {
                   </p>
                 </div>
               ) : (
-                <div className="p-2">
+                <div>
                   {filteredConversations.map((conv) => (
                     <button
                       key={`${conv.type}-${conv.id}`}
                       onClick={() => setSelectedConversation(conv)}
-                      className={`w-full p-3 rounded-lg mb-2 transition-all hover:scale-[1.02] ${
+                      className={`w-full p-3 border-b transition-colors text-left ${
                         selectedConversation?.id === conv.id
-                          ? 'bg-primary/10 border-2 border-primary/20'
-                          : 'hover:bg-muted/50 border-2 border-transparent'
+                          ? 'bg-cyan-50 border-l-4 border-l-cyan-500'
+                          : 'hover:bg-slate-50'
                       }`}
                     >
                       <div className="flex items-start gap-3">
-                        <div className="relative">
-                          <Avatar className="h-12 w-12 ring-2 ring-background">
-                            <AvatarImage src={conv.otherUser.avatar} />
-                            <AvatarFallback className="bg-primary/10 text-primary">
-                              {conv.otherUser.name.charAt(0).toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="absolute -bottom-1 -right-1 h-4 w-4 bg-green-500 rounded-full border-2 border-background" />
-                        </div>
+                        <Avatar className="h-12 w-12">
+                          <AvatarImage src={conv.otherUser.avatar} />
+                          <AvatarFallback className="bg-slate-200 text-slate-700">
+                            {conv.otherUser.name.charAt(0).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
                         
-                        <div className="flex-1 min-w-0 text-left">
-                          <div className="flex items-center justify-between gap-2 mb-1">
-                            <span className="font-semibold truncate text-sm">
-                              {conv.otherUser.name}
-                            </span>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-2 mb-1">
+                            <div className="flex-1">
+                              <p className="font-semibold text-sm truncate">
+                                {conv.title}
+                              </p>
+                              <p className="text-xs text-slate-600 truncate">
+                                {conv.otherUser.name}
+                              </p>
+                            </div>
                             {conv.lastMessageAt && (
-                              <span className="text-xs text-muted-foreground flex-shrink-0">
+                              <span className="text-xs text-slate-500 flex-shrink-0">
                                 {formatDistanceToNow(new Date(conv.lastMessageAt), {
                                   addSuffix: false,
                                   locale: ptBR,
@@ -335,38 +399,19 @@ export default function Messages() {
                             )}
                           </div>
                           
-                          <div className="flex items-center gap-2 mb-1">
-                            <Badge variant="secondary" className="text-xs px-2 py-0.5">
-                              {conv.type === 'negotiation' 
-                                ? `Negociação ${conv.businessName}` 
-                                : 'Proposta de Projetos'
-                              }
-                            </Badge>
-                          </div>
-                          
-                          <p className="text-xs text-muted-foreground truncate">
-                            {conv.title}
-                          </p>
+                          {conv.type === 'proposal' && (
+                            <div className="flex items-center gap-1 mb-1">
+                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-800">
+                                Enviada pelo sistema
+                              </span>
+                            </div>
+                          )}
 
                           {conv.lastMessage && (
-                            <p className="text-xs text-muted-foreground truncate mb-2">
+                            <p className="text-xs text-slate-600 truncate">
                               {conv.lastMessage}
                             </p>
                           )}
-
-                          <div className="flex items-center gap-2">
-                            <Badge 
-                              variant="secondary" 
-                              className={`text-xs px-2 py-0 ${getStatusColor(conv.status)}`}
-                            >
-                              {getStatusText(conv.status)}
-                            </Badge>
-                            {conv.unreadCount > 0 && (
-                              <Badge className="text-xs h-5 min-w-5 flex items-center justify-center p-1 bg-primary">
-                                {conv.unreadCount}
-                              </Badge>
-                            )}
-                          </div>
                         </div>
                       </div>
                     </button>
@@ -374,10 +419,10 @@ export default function Messages() {
                 </div>
               )}
             </div>
-          </Card>
+          </div>
 
           {/* Área de Chat */}
-          <Card className="lg:col-span-2 overflow-hidden border-0 shadow-lg bg-card/50 backdrop-blur-sm">
+          <div className="flex-1 bg-white overflow-hidden">
             {selectedConversation ? (
               <UnifiedChat
                 conversationId={selectedConversation.id}
@@ -392,22 +437,17 @@ export default function Messages() {
             ) : (
               <div className="h-full flex items-center justify-center">
                 <div className="text-center p-8">
-                  <div className="relative inline-block mb-6">
-                    <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full" />
-                    <MessageCircle className="relative h-20 w-20 text-primary/40" />
-                  </div>
+                  <MessageCircle className="h-20 w-20 mx-auto mb-4 text-slate-300" />
                   <h3 className="text-xl font-semibold mb-2">Selecione uma conversa</h3>
-                  <p className="text-muted-foreground">
+                  <p className="text-slate-600">
                     Escolha uma conversa da lista para começar
                   </p>
                 </div>
               </div>
             )}
-          </Card>
+          </div>
         </div>
       </main>
-
-      <Footer />
     </div>
   );
 }

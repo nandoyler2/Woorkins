@@ -71,6 +71,13 @@ export function UnifiedChat({
     }
   }, [conversationId, conversationType]);
 
+  useEffect(() => {
+    // Reload proposal data when messages change to update unlock status
+    if (conversationType === 'proposal' && messages.length > 0) {
+      loadProposalData();
+    }
+  }, [messages.length, conversationType]);
+
   const loadProposalData = async () => {
     try {
       const { data, error } = await supabase
@@ -88,17 +95,6 @@ export function UnifiedChat({
 
       setProposalData(data);
       setIsOwner(data.project.profile_id === profileId);
-
-      // If owner sends a message, unlock the chat for freelancer
-      if (data.project.profile_id === profileId && !data.owner_has_messaged && messages.length > 0) {
-        await supabase
-          .from('proposals')
-          .update({
-            is_unlocked: true,
-            owner_has_messaged: true,
-          })
-          .eq('id', conversationId);
-      }
     } catch (error) {
       console.error('Error loading proposal data:', error);
     } finally {
@@ -111,7 +107,7 @@ export function UnifiedChat({
     if (!messageInput.trim() || isSending) return;
 
     // If it's a proposal and owner sends first message, unlock it
-    if (conversationType === 'proposal' && isOwner && !proposalData?.owner_has_messaged) {
+    if (conversationType === 'proposal' && isOwner && !proposalData?.is_unlocked) {
       await supabase
         .from('proposals')
         .update({
@@ -119,8 +115,6 @@ export function UnifiedChat({
           owner_has_messaged: true,
         })
         .eq('id', conversationId);
-      
-      loadProposalData();
     }
 
     await sendMessageHook(messageInput);
@@ -157,16 +151,17 @@ export function UnifiedChat({
     );
   }
 
-  // Check if chat should be locked (proposal not unlocked and user is freelancer)
+  // Check if chat should be locked (proposal not unlocked, user is freelancer, and no messages yet)
   const isChatLocked = conversationType === 'proposal' && 
     !isOwner && 
     !proposalData?.is_unlocked &&
-    proposalData?.status === 'pending';
+    proposalData?.status === 'pending' &&
+    messages.length === 0;
 
   return (
     <div className="h-full flex flex-col bg-gradient-to-b from-background to-muted/20">
       {/* Proposal Negotiation Panel */}
-      {conversationType === 'proposal' && proposalData && isOwner && (
+      {conversationType === 'proposal' && proposalData && (
         <div className="border-b p-4 bg-card/80 backdrop-blur-sm">
           <ProposalNegotiationPanel
             proposalId={conversationId}
@@ -264,62 +259,101 @@ export function UnifiedChat({
               </div>
               <h3 className="text-lg font-semibold mb-2">Proposta Aguardando Análise</h3>
               <p className="text-muted-foreground max-w-md mx-auto">
-                Você conseguirá visualizar e participar desta conversa apenas se o criador do projeto aceitar sua proposta.
+                Você conseguirá visualizar e participar desta conversa apenas se o criador do projeto aceitar sua proposta ou responder sua mensagem.
               </p>
               <p className="text-sm text-muted-foreground mt-2">
                 Aguarde a resposta do criador do projeto.
               </p>
             </div>
-          ) : messages.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-3">
-                <Send className="h-8 w-8 text-primary/50" />
-              </div>
-              <p className="text-muted-foreground font-medium">Nenhuma mensagem ainda</p>
-              <p className="text-sm text-muted-foreground mt-1">Envie a primeira mensagem!</p>
-            </div>
           ) : (
-            messages.map((message) => {
-              const isMine = isMyMessage(message.sender_id);
-              return (
-                <div
-                  key={message.id}
-                  className={`flex gap-2 animate-in slide-in-from-bottom-2 ${
-                    isMine ? 'flex-row-reverse' : 'flex-row'
-                  }`}
-                >
-                  {!isMine && (
-                    <Avatar className="h-8 w-8 flex-shrink-0">
-                      <AvatarImage src={message.sender_avatar} />
-                      <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                        {message.sender_name.charAt(0).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                  )}
+            <>
+              {/* Show proposal message as first message if it's a proposal chat */}
+              {conversationType === 'proposal' && proposalData && (
+                <div className="flex gap-2 animate-in slide-in-from-bottom-2">
+                  <Avatar className="h-8 w-8 flex-shrink-0">
+                    <AvatarImage src={isOwner ? otherUser.avatar : undefined} />
+                    <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                      {isOwner ? otherUser.name.charAt(0).toUpperCase() : 'V'}
+                    </AvatarFallback>
+                  </Avatar>
                   
-                  <div className={`flex flex-col max-w-[75%] ${isMine ? 'items-end' : 'items-start'}`}>
-                    <div
-                      className={`rounded-2xl px-4 py-2.5 shadow-sm ${
-                        isMine
-                          ? 'bg-primary text-primary-foreground rounded-tr-sm'
-                          : 'bg-card border rounded-tl-sm'
-                      }`}
-                    >
-                      <p className="text-sm leading-relaxed break-words">{message.content}</p>
+                  <div className="flex flex-col max-w-[75%]">
+                    <div className="rounded-2xl px-4 py-2.5 shadow-sm bg-card border rounded-tl-sm">
+                      <p className="text-xs text-muted-foreground mb-2 font-semibold">Proposta Inicial</p>
+                      <p className="text-sm leading-relaxed break-words">{proposalData.message}</p>
+                      <div className="mt-2 pt-2 border-t space-y-1">
+                        <p className="text-xs text-muted-foreground">
+                          <span className="font-semibold">Valor:</span> R$ {proposalData.budget.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          <span className="font-semibold">Prazo:</span> {proposalData.delivery_days} dias
+                        </p>
+                      </div>
                     </div>
-                    <div className={`flex items-center gap-1.5 mt-1 ${isMine ? 'flex-row-reverse' : 'flex-row'}`}>
+                    <div className="flex items-center gap-1.5 mt-1">
                       <span className="text-xs text-muted-foreground">
-                        {formatDistanceToNow(new Date(message.created_at), {
+                        {formatDistanceToNow(new Date(proposalData.created_at), {
                           addSuffix: true,
                           locale: ptBR,
                         })}
                       </span>
-                      {isMine && getMessageStatusIcon(message.status)}
                     </div>
                   </div>
                 </div>
-              );
-            })
+              )}
+              
+              {messages.length === 0 && conversationType !== 'proposal' && (
+                <div className="text-center py-12">
+                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-3">
+                    <Send className="h-8 w-8 text-primary/50" />
+                  </div>
+                  <p className="text-muted-foreground font-medium">Nenhuma mensagem ainda</p>
+                  <p className="text-sm text-muted-foreground mt-1">Envie a primeira mensagem!</p>
+                </div>
+              )}
+              
+              {messages.map((message) => {
+                const isMine = isMyMessage(message.sender_id);
+                return (
+                  <div
+                    key={message.id}
+                    className={`flex gap-2 animate-in slide-in-from-bottom-2 ${
+                      isMine ? 'flex-row-reverse' : 'flex-row'
+                    }`}
+                  >
+                    {!isMine && (
+                      <Avatar className="h-8 w-8 flex-shrink-0">
+                        <AvatarImage src={message.sender_avatar} />
+                        <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                          {message.sender_name.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                    )}
+                    
+                    <div className={`flex flex-col max-w-[75%] ${isMine ? 'items-end' : 'items-start'}`}>
+                      <div
+                        className={`rounded-2xl px-4 py-2.5 shadow-sm ${
+                          isMine
+                            ? 'bg-primary text-primary-foreground rounded-tr-sm'
+                            : 'bg-card border rounded-tl-sm'
+                        }`}
+                      >
+                        <p className="text-sm leading-relaxed break-words">{message.content}</p>
+                      </div>
+                      <div className={`flex items-center gap-1.5 mt-1 ${isMine ? 'flex-row-reverse' : 'flex-row'}`}>
+                        <span className="text-xs text-muted-foreground">
+                          {formatDistanceToNow(new Date(message.created_at), {
+                            addSuffix: true,
+                            locale: ptBR,
+                          })}
+                        </span>
+                        {isMine && getMessageStatusIcon(message.status)}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </>
           )}
           <div ref={messagesEndRef} />
         </div>

@@ -19,6 +19,7 @@ interface Conversation {
   type: 'negotiation' | 'proposal';
   title: string;
   otherUser: {
+    id: string;
     name: string;
     avatar?: string;
   };
@@ -117,6 +118,7 @@ export default function Messages() {
         type: 'negotiation' as const,
         title: neg.service_description || 'Negociação',
         otherUser: {
+          id: neg.business_profiles.profile_id,
           name: neg.business_profiles.company_name,
           avatar: neg.business_profiles.logo_url,
         },
@@ -130,6 +132,7 @@ export default function Messages() {
         type: 'proposal' as const,
         title: prop.project.title,
         otherUser: {
+          id: prop.project.profile_id,
           name: prop.project.profiles.full_name,
           avatar: prop.project.profiles.avatar_url,
         },

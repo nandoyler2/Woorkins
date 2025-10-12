@@ -1,32 +1,20 @@
-import { useState, useEffect, useRef } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { useToast } from '@/hooks/use-toast';
 import { Send, Loader2, Check, CheckCheck, Paperclip, Smile } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-
-interface Message {
-  id: string;
-  content: string;
-  sender_id: string;
-  sender_type?: string;
-  created_at: string;
-  sender?: {
-    full_name: string;
-    avatar_url?: string;
-  };
-}
+import { useRealtimeMessaging } from '@/hooks/useRealtimeMessaging';
 
 interface UnifiedChatProps {
   conversationId: string;
   conversationType: 'negotiation' | 'proposal';
   otherUser: {
+    id: string;
     name: string;
     avatar?: string;
   };
@@ -35,189 +23,58 @@ interface UnifiedChatProps {
 
 export function UnifiedChat({ conversationId, conversationType, otherUser, profileId }: UnifiedChatProps) {
   const { user } = useAuth();
-  const { toast } = useToast();
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [newMessage, setNewMessage] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [sending, setSending] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const [messageInput, setMessageInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    loadMessages();
-    setupRealtimeSubscription();
-  }, [conversationId, conversationType]);
+  const {
+    messages,
+    isLoading,
+    isSending,
+    otherUserTyping,
+    sendMessage: sendMessageHook,
+    handleTyping,
+  } = useRealtimeMessaging({
+    conversationId,
+    conversationType,
+    currentUserId: profileId,
+    otherUserId: otherUser.id,
+  });
 
   useEffect(() => {
-    scrollToBottom();
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  const loadMessages = async () => {
-    setLoading(true);
-    try {
-      if (conversationType === 'negotiation') {
-        const { data, error } = await supabase
-          .from('negotiation_messages')
-          .select('*')
-          .eq('negotiation_id', conversationId)
-          .order('created_at', { ascending: true });
-
-        if (error) throw error;
-        setMessages(data || []);
-      } else {
-        const { data, error } = await supabase
-          .from('proposal_messages')
-          .select('*')
-          .eq('proposal_id', conversationId)
-          .order('created_at', { ascending: true });
-
-        if (error) throw error;
-
-        // Buscar dados dos senders
-        const messagesWithSender = await Promise.all(
-          (data || []).map(async (msg) => {
-            const { data: sender } = await supabase
-              .from('profiles')
-              .select('full_name, avatar_url')
-              .eq('id', msg.sender_id)
-              .single();
-            
-            return {
-              ...msg,
-              sender,
-            };
-          })
-        );
-
-        setMessages(messagesWithSender);
-      }
-    } catch (error) {
-      console.error('Error loading messages:', error);
-      toast({
-        title: 'Erro',
-        description: 'Não foi possível carregar as mensagens',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const setupRealtimeSubscription = () => {
-    const tableName = conversationType === 'negotiation' 
-      ? 'negotiation_messages' 
-      : 'proposal_messages';
-    
-    const column = conversationType === 'negotiation'
-      ? 'negotiation_id'
-      : 'proposal_id';
-
-    const channel = supabase
-      .channel(`${conversationType}-${conversationId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: tableName,
-          filter: `${column}=eq.${conversationId}`,
-        },
-        async (payload) => {
-          console.log('Nova mensagem recebida:', payload);
-          
-          // Se for proposal, buscar dados do sender
-          if (conversationType === 'proposal') {
-            const { data: sender } = await supabase
-              .from('profiles')
-              .select('full_name, avatar_url')
-              .eq('id', payload.new.sender_id)
-              .single();
-
-            const messageWithSender = {
-              ...(payload.new as Message),
-              sender: sender || undefined,
-            };
-
-            setMessages((prev) => [...prev, messageWithSender]);
-          } else {
-            setMessages((prev) => [...prev, payload.new as Message]);
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  };
-
-  const sendMessage = async (e: React.FormEvent) => {
+  const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!newMessage.trim() || sending) return;
+    if (!messageInput.trim() || isSending) return;
 
-    setSending(true);
-    try {
-      if (conversationType === 'negotiation') {
-        // Determinar sender_type
-        const { data: negotiation } = await supabase
-          .from('negotiations')
-          .select('user_id, business_id, business_profiles!inner(profile_id)')
-          .eq('id', conversationId)
-          .single();
+    await sendMessageHook(messageInput);
+    setMessageInput('');
+  };
 
-        const isUser = negotiation?.user_id === user?.id;
-        const senderType = isUser ? 'user' : 'business';
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setMessageInput(e.target.value);
+    handleTyping();
+  };
 
-        const { error } = await supabase
-          .from('negotiation_messages')
-          .insert({
-            negotiation_id: conversationId,
-            sender_id: user?.id || '',
-            sender_type: senderType,
-            content: newMessage.trim(),
-            message_type: 'text',
-          });
-
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from('proposal_messages')
-          .insert({
-            proposal_id: conversationId,
-            sender_id: profileId,
-            content: newMessage.trim(),
-          });
-
-        if (error) throw error;
-      }
-
-      setNewMessage('');
-    } catch (error) {
-      console.error('Error sending message:', error);
-      toast({
-        title: 'Erro',
-        description: 'Não foi possível enviar a mensagem',
-        variant: 'destructive',
-      });
-    } finally {
-      setSending(false);
+  const getMessageStatusIcon = (status?: string) => {
+    switch (status) {
+      case 'read':
+        return <CheckCheck className="w-3 h-3 text-blue-500" />;
+      case 'delivered':
+        return <CheckCheck className="w-3 h-3 text-muted-foreground" />;
+      case 'sent':
+        return <Check className="w-3 h-3 text-muted-foreground" />;
+      case 'sending':
+        return <Loader2 className="w-3 h-3 animate-spin text-muted-foreground" />;
+      default:
+        return null;
     }
   };
 
-  const isMyMessage = (message: Message) => {
-    if (conversationType === 'negotiation') {
-      return message.sender_id === user?.id;
-    } else {
-      return message.sender_id === profileId;
-    }
-  };
+  const isMyMessage = (senderId: string) => senderId === profileId;
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="h-full flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -241,11 +98,17 @@ export function UnifiedChat({ conversationId, conversationType, otherUser, profi
         <div className="flex-1">
           <h3 className="font-semibold">{otherUser.name}</h3>
           <div className="flex items-center gap-2">
-            <span className="text-xs text-green-600 dark:text-green-400 font-medium">Online</span>
-            <span className="text-xs text-muted-foreground">•</span>
-            <Badge variant="secondary" className="text-xs">
-              {conversationType === 'negotiation' ? 'Negociação' : 'Proposta'}
-            </Badge>
+            {otherUserTyping ? (
+              <span className="text-xs text-primary animate-pulse font-medium">Digitando...</span>
+            ) : (
+              <>
+                <span className="text-xs text-green-600 dark:text-green-400 font-medium">Online</span>
+                <span className="text-xs text-muted-foreground">•</span>
+                <Badge variant="secondary" className="text-xs">
+                  {conversationType === 'negotiation' ? 'Negociação' : 'Proposta'}
+                </Badge>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -263,7 +126,7 @@ export function UnifiedChat({ conversationId, conversationType, otherUser, profi
             </div>
           ) : (
             messages.map((message) => {
-              const isMine = isMyMessage(message);
+              const isMine = isMyMessage(message.sender_id);
               return (
                 <div
                   key={message.id}
@@ -273,9 +136,9 @@ export function UnifiedChat({ conversationId, conversationType, otherUser, profi
                 >
                   {!isMine && (
                     <Avatar className="h-8 w-8 flex-shrink-0">
-                      <AvatarImage src={otherUser.avatar} />
+                      <AvatarImage src={message.sender_avatar} />
                       <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                        {otherUser.name.charAt(0).toUpperCase()}
+                        {message.sender_name.charAt(0).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                   )}
@@ -290,16 +153,14 @@ export function UnifiedChat({ conversationId, conversationType, otherUser, profi
                     >
                       <p className="text-sm leading-relaxed break-words">{message.content}</p>
                     </div>
-                    <div className={`flex items-center gap-1 mt-1 ${isMine ? 'flex-row-reverse' : 'flex-row'}`}>
+                    <div className={`flex items-center gap-1.5 mt-1 ${isMine ? 'flex-row-reverse' : 'flex-row'}`}>
                       <span className="text-xs text-muted-foreground">
                         {formatDistanceToNow(new Date(message.created_at), {
                           addSuffix: true,
                           locale: ptBR,
                         })}
                       </span>
-                      {isMine && (
-                        <CheckCheck className="h-3 w-3 text-primary" />
-                      )}
+                      {isMine && getMessageStatusIcon(message.status)}
                     </div>
                   </div>
                 </div>
@@ -311,7 +172,7 @@ export function UnifiedChat({ conversationId, conversationType, otherUser, profi
       </ScrollArea>
 
       {/* Input */}
-      <form onSubmit={sendMessage} className="border-t p-4 bg-card/80 backdrop-blur-sm">
+      <form onSubmit={handleSendMessage} className="border-t p-4 bg-card/80 backdrop-blur-sm">
         <div className="flex gap-2">
           <Button 
             type="button" 
@@ -322,15 +183,16 @@ export function UnifiedChat({ conversationId, conversationType, otherUser, profi
             <Paperclip className="h-5 w-5" />
           </Button>
           <Input
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
+            value={messageInput}
+            onChange={handleInputChange}
             placeholder="Digite sua mensagem..."
-            disabled={sending}
+            disabled={isSending}
             className="flex-1 bg-background/50"
+            autoComplete="off"
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
-                sendMessage(e);
+                handleSendMessage(e);
               }
             }}
           />
@@ -340,15 +202,15 @@ export function UnifiedChat({ conversationId, conversationType, otherUser, profi
             size="icon"
             className="flex-shrink-0"
           >
-            <Smile className="h-5 w-5" />
+            <Smile className="h-5 h-5" />
           </Button>
           <Button 
             type="submit" 
-            disabled={sending || !newMessage.trim()}
+            disabled={isSending || !messageInput.trim()}
             size="icon"
             className="flex-shrink-0"
           >
-            {sending ? (
+            {isSending ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
               <Send className="h-4 w-4" />

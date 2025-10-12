@@ -1,14 +1,16 @@
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { Send, Loader2, Check, CheckCheck, Paperclip, Smile, ExternalLink } from 'lucide-react';
+import { Send, Loader2, Check, CheckCheck, Paperclip, Smile, ExternalLink, Lock } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useRealtimeMessaging } from '@/hooks/useRealtimeMessaging';
+import { ProposalNegotiationPanel } from './ProposalNegotiationPanel';
 
 interface UnifiedChatProps {
   conversationId: string;
@@ -38,6 +40,9 @@ export function UnifiedChat({
   const { user } = useAuth();
   const [messageInput, setMessageInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [proposalData, setProposalData] = useState<any>(null);
+  const [isOwner, setIsOwner] = useState(false);
+  const [isLoadingProposal, setIsLoadingProposal] = useState(true);
 
   const {
     messages,
@@ -57,9 +62,66 @@ export function UnifiedChat({
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  // Load proposal data if it's a proposal conversation
+  useEffect(() => {
+    if (conversationType === 'proposal') {
+      loadProposalData();
+    } else {
+      setIsLoadingProposal(false);
+    }
+  }, [conversationId, conversationType]);
+
+  const loadProposalData = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('proposals')
+        .select(`
+          *,
+          project:projects!inner(
+            profile_id
+          )
+        `)
+        .eq('id', conversationId)
+        .single();
+
+      if (error) throw error;
+
+      setProposalData(data);
+      setIsOwner(data.project.profile_id === profileId);
+
+      // If owner sends a message, unlock the chat for freelancer
+      if (data.project.profile_id === profileId && !data.owner_has_messaged && messages.length > 0) {
+        await supabase
+          .from('proposals')
+          .update({
+            is_unlocked: true,
+            owner_has_messaged: true,
+          })
+          .eq('id', conversationId);
+      }
+    } catch (error) {
+      console.error('Error loading proposal data:', error);
+    } finally {
+      setIsLoadingProposal(false);
+    }
+  };
+
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!messageInput.trim() || isSending) return;
+
+    // If it's a proposal and owner sends first message, unlock it
+    if (conversationType === 'proposal' && isOwner && !proposalData?.owner_has_messaged) {
+      await supabase
+        .from('proposals')
+        .update({
+          is_unlocked: true,
+          owner_has_messaged: true,
+        })
+        .eq('id', conversationId);
+      
+      loadProposalData();
+    }
 
     await sendMessageHook(messageInput);
     setMessageInput('');
@@ -87,7 +149,7 @@ export function UnifiedChat({
 
   const isMyMessage = (senderId: string) => senderId === profileId;
 
-  if (isLoading) {
+  if (isLoading || isLoadingProposal) {
     return (
       <div className="h-full flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -95,8 +157,28 @@ export function UnifiedChat({
     );
   }
 
+  // Check if chat should be locked (proposal not unlocked and user is freelancer)
+  const isChatLocked = conversationType === 'proposal' && 
+    !isOwner && 
+    !proposalData?.is_unlocked &&
+    proposalData?.status === 'pending';
+
   return (
     <div className="h-full flex flex-col bg-gradient-to-b from-background to-muted/20">
+      {/* Proposal Negotiation Panel */}
+      {conversationType === 'proposal' && proposalData && isOwner && (
+        <div className="border-b p-4 bg-card/80 backdrop-blur-sm">
+          <ProposalNegotiationPanel
+            proposalId={conversationId}
+            proposalData={proposalData}
+            isOwner={isOwner}
+            currentProfileId={profileId}
+            freelancerId={proposalData.freelancer_id}
+            onStatusChange={loadProposalData}
+          />
+        </div>
+      )}
+
       {/* Info Header */}
       {(projectId || businessId) && (
         <div className="border-b p-3 bg-primary/5 backdrop-blur-sm">
@@ -175,7 +257,20 @@ export function UnifiedChat({
       {/* Messages */}
       <ScrollArea className="flex-1 p-4">
         <div className="space-y-4">
-          {messages.length === 0 ? (
+          {isChatLocked ? (
+            <div className="text-center py-12">
+              <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-yellow-500/10 mb-4">
+                <Lock className="h-10 w-10 text-yellow-600" />
+              </div>
+              <h3 className="text-lg font-semibold mb-2">Proposta Aguardando Análise</h3>
+              <p className="text-muted-foreground max-w-md mx-auto">
+                Você conseguirá visualizar e participar desta conversa apenas se o criador do projeto aceitar sua proposta.
+              </p>
+              <p className="text-sm text-muted-foreground mt-2">
+                Aguarde a resposta do criador do projeto.
+              </p>
+            </div>
+          ) : messages.length === 0 ? (
             <div className="text-center py-12">
               <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-3">
                 <Send className="h-8 w-8 text-primary/50" />
@@ -232,50 +327,59 @@ export function UnifiedChat({
 
       {/* Input */}
       <form onSubmit={handleSendMessage} className="border-t p-4 bg-card/80 backdrop-blur-sm">
-        <div className="flex gap-2">
-          <Button 
-            type="button" 
-            variant="ghost" 
-            size="icon"
-            className="flex-shrink-0"
-          >
-            <Paperclip className="h-5 w-5" />
-          </Button>
-          <Input
-            value={messageInput}
-            onChange={handleInputChange}
-            placeholder="Digite sua mensagem..."
-            disabled={isSending}
-            className="flex-1 bg-background/50"
-            autoComplete="off"
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleSendMessage(e);
-              }
-            }}
-          />
-          <Button 
-            type="button" 
-            variant="ghost" 
-            size="icon"
-            className="flex-shrink-0"
-          >
-            <Smile className="h-5 h-5" />
-          </Button>
-          <Button 
-            type="submit" 
-            disabled={isSending || !messageInput.trim()}
-            size="icon"
-            className="flex-shrink-0"
-          >
-            {isSending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Send className="h-4 w-4" />
-            )}
-          </Button>
-        </div>
+        {isChatLocked ? (
+          <div className="text-center py-2">
+            <p className="text-sm text-muted-foreground flex items-center justify-center gap-2">
+              <Lock className="h-4 w-4" />
+              Chat bloqueado até o criador aceitar sua proposta
+            </p>
+          </div>
+        ) : (
+          <div className="flex gap-2">
+            <Button 
+              type="button" 
+              variant="ghost" 
+              size="icon"
+              className="flex-shrink-0"
+            >
+              <Paperclip className="h-5 w-5" />
+            </Button>
+            <Input
+              value={messageInput}
+              onChange={handleInputChange}
+              placeholder="Digite sua mensagem..."
+              disabled={isSending}
+              className="flex-1 bg-background/50"
+              autoComplete="off"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSendMessage(e);
+                }
+              }}
+            />
+            <Button 
+              type="button" 
+              variant="ghost" 
+              size="icon"
+              className="flex-shrink-0"
+            >
+              <Smile className="h-5 h-5" />
+            </Button>
+            <Button 
+              type="submit" 
+              disabled={isSending || !messageInput.trim()}
+              size="icon"
+              className="flex-shrink-0"
+            >
+              {isSending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Send className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
+        )}
       </form>
     </div>
   );

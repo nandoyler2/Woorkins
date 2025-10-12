@@ -147,6 +147,64 @@ export type Database = {
           },
         ]
       }
+      counter_proposals: {
+        Row: {
+          amount: number
+          created_at: string
+          from_profile_id: string
+          id: string
+          message: string | null
+          proposal_id: string
+          responded_at: string | null
+          status: string
+          to_profile_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          from_profile_id: string
+          id?: string
+          message?: string | null
+          proposal_id: string
+          responded_at?: string | null
+          status?: string
+          to_profile_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          from_profile_id?: string
+          id?: string
+          message?: string | null
+          proposal_id?: string
+          responded_at?: string | null
+          status?: string
+          to_profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "counter_proposals_from_profile_id_fkey"
+            columns: ["from_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "counter_proposals_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "proposals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "counter_proposals_to_profile_id_fkey"
+            columns: ["to_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       evaluations: {
         Row: {
           business_id: string
@@ -321,6 +379,8 @@ export type Database = {
           delivered_at: string | null
           id: string
           message_type: string
+          moderation_reason: string | null
+          moderation_status: string | null
           negotiation_id: string
           read_at: string | null
           sender_id: string
@@ -334,6 +394,8 @@ export type Database = {
           delivered_at?: string | null
           id?: string
           message_type?: string
+          moderation_reason?: string | null
+          moderation_status?: string | null
           negotiation_id: string
           read_at?: string | null
           sender_id: string
@@ -347,6 +409,8 @@ export type Database = {
           delivered_at?: string | null
           id?: string
           message_type?: string
+          moderation_reason?: string | null
+          moderation_status?: string | null
           negotiation_id?: string
           read_at?: string | null
           sender_id?: string
@@ -733,6 +797,8 @@ export type Database = {
           created_at: string
           delivered_at: string | null
           id: string
+          moderation_reason: string | null
+          moderation_status: string | null
           proposal_id: string
           read_at: string | null
           sender_id: string
@@ -743,6 +809,8 @@ export type Database = {
           created_at?: string
           delivered_at?: string | null
           id?: string
+          moderation_reason?: string | null
+          moderation_status?: string | null
           proposal_id: string
           read_at?: string | null
           sender_id: string
@@ -753,6 +821,8 @@ export type Database = {
           created_at?: string
           delivered_at?: string | null
           id?: string
+          moderation_reason?: string | null
+          moderation_status?: string | null
           proposal_id?: string
           read_at?: string | null
           sender_id?: string
@@ -771,16 +841,21 @@ export type Database = {
       proposals: {
         Row: {
           accepted_amount: number | null
+          awaiting_acceptance_from: string | null
           budget: number
           business_id: string | null
           created_at: string
+          current_proposal_amount: number | null
+          current_proposal_by: string | null
           delivery_days: number
           escrow_released_at: string | null
           freelancer_amount: number | null
           freelancer_id: string
           id: string
+          is_unlocked: boolean | null
           message: string
           net_amount: number | null
+          owner_has_messaged: boolean | null
           payment_captured_at: string | null
           payment_status: string | null
           platform_commission: number | null
@@ -792,16 +867,21 @@ export type Database = {
         }
         Insert: {
           accepted_amount?: number | null
+          awaiting_acceptance_from?: string | null
           budget: number
           business_id?: string | null
           created_at?: string
+          current_proposal_amount?: number | null
+          current_proposal_by?: string | null
           delivery_days: number
           escrow_released_at?: string | null
           freelancer_amount?: number | null
           freelancer_id: string
           id?: string
+          is_unlocked?: boolean | null
           message: string
           net_amount?: number | null
+          owner_has_messaged?: boolean | null
           payment_captured_at?: string | null
           payment_status?: string | null
           platform_commission?: number | null
@@ -813,16 +893,21 @@ export type Database = {
         }
         Update: {
           accepted_amount?: number | null
+          awaiting_acceptance_from?: string | null
           budget?: number
           business_id?: string | null
           created_at?: string
+          current_proposal_amount?: number | null
+          current_proposal_by?: string | null
           delivery_days?: number
           escrow_released_at?: string | null
           freelancer_amount?: number | null
           freelancer_id?: string
           id?: string
+          is_unlocked?: boolean | null
           message?: string
           net_amount?: number | null
+          owner_has_messaged?: boolean | null
           payment_captured_at?: string | null
           payment_status?: string | null
           platform_commission?: number | null
@@ -834,10 +919,24 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "proposals_awaiting_acceptance_from_fkey"
+            columns: ["awaiting_acceptance_from"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "proposals_business_id_fkey"
             columns: ["business_id"]
             isOneToOne: false
             referencedRelation: "business_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proposals_current_proposal_by_fkey"
+            columns: ["current_proposal_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {

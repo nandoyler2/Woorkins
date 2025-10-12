@@ -121,24 +121,47 @@ export const useRealtimeMessaging = ({
     }
   }, [conversationId, conversationType, currentUserId]);
 
-  // Send message with optimistic UI
+  // Send message with optimistic UI and content moderation
   const sendMessage = useCallback(async (content: string) => {
     if (!content.trim() || isSending) return;
 
-    const optimisticMessage: Message = {
-      id: `temp-${Date.now()}`,
-      sender_id: currentUserId,
-      sender_name: 'Você',
-      content: content.trim(),
-      created_at: new Date().toISOString(),
-      status: 'sending',
-    };
-
-    // Optimistic UI update
-    setMessages(prev => [...prev, optimisticMessage]);
+    const tempId = `temp-${Date.now()}`;
     setIsSending(true);
 
     try {
+      // Call moderation function
+      const { data: moderationResult, error: moderationError } = await supabase.functions.invoke(
+        'moderate-message',
+        {
+          body: { content: content.trim() }
+        }
+      );
+
+      console.log('Moderation result:', moderationResult);
+
+      // Check if message was rejected
+      if (moderationResult && !moderationResult.approved) {
+        toast({
+          variant: 'destructive',
+          title: 'Mensagem bloqueada',
+          description: (moderationResult.reason || 'Esta mensagem viola nossa política de uso.') + ' Clique aqui para ver a política.',
+        });
+        setIsSending(false);
+        return;
+      }
+
+      const optimisticMessage: Message = {
+        id: tempId,
+        sender_id: currentUserId,
+        sender_name: 'Você',
+        content: content.trim(),
+        created_at: new Date().toISOString(),
+        status: 'sending',
+      };
+
+      // Optimistic UI update
+      setMessages(prev => [...prev, optimisticMessage]);
+
       const table = conversationType === 'negotiation' ? 'negotiation_messages' : 'proposal_messages';
       
       // Build insert data based on conversation type
@@ -146,11 +169,12 @@ export const useRealtimeMessaging = ({
         sender_id: currentUserId,
         content: content.trim(),
         status: 'sent',
+        moderation_status: 'approved',
       };
 
       if (conversationType === 'negotiation') {
         insertData.negotiation_id = conversationId;
-        insertData.sender_type = 'user'; // Default to user, adjust if needed
+        insertData.sender_type = 'user';
         insertData.message_type = 'text';
       } else {
         insertData.proposal_id = conversationId;
@@ -173,7 +197,7 @@ export const useRealtimeMessaging = ({
 
       // Replace optimistic message with real one
       setMessages(prev => prev.map(msg => 
-        msg.id === optimisticMessage.id
+        msg.id === tempId
           ? {
               id: data.id,
               sender_id: data.sender_id,
@@ -192,7 +216,7 @@ export const useRealtimeMessaging = ({
       console.error('Error sending message:', error);
       
       // Remove optimistic message on error
-      setMessages(prev => prev.filter(msg => msg.id !== optimisticMessage.id));
+      setMessages(prev => prev.filter(msg => msg.id !== tempId));
       
       toast({
         variant: 'destructive',
@@ -202,7 +226,7 @@ export const useRealtimeMessaging = ({
     } finally {
       setIsSending(false);
     }
-  }, [conversationId, conversationType, currentUserId, isSending]);
+  }, [conversationId, conversationType, currentUserId, isSending, toast]);
 
   // Update typing indicator
   const updateTypingIndicator = useCallback(async (typing: boolean) => {

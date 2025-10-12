@@ -6,7 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { Send, Loader2, Check, CheckCheck, Paperclip, Smile, ExternalLink, Lock } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Send, Loader2, Check, CheckCheck, Paperclip, Smile, ExternalLink, Lock, Shield, AlertTriangle } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useRealtimeMessaging } from '@/hooks/useRealtimeMessaging';
@@ -178,6 +179,16 @@ export function UnifiedChat({
 
   return (
     <div className="h-full flex flex-col bg-white">
+      {/* Security Warning Banner */}
+      <Alert className="rounded-none border-x-0 border-t-0 bg-blue-50 border-blue-200">
+        <Shield className="h-4 w-4 text-blue-600" />
+        <AlertDescription className="text-xs text-blue-900">
+          <strong>Aviso de Segurança:</strong> Todas as conversas são monitoradas para garantir transações seguras. 
+          É proibido compartilhar informações de contato (telefone, email, redes sociais). 
+          Violações podem resultar em bloqueio permanente da conta.
+        </AlertDescription>
+      </Alert>
+
       {/* Proposal Negotiation Panel */}
       {conversationType === 'proposal' && proposalData && (
         <div className="border-b p-3 bg-slate-50">
@@ -278,9 +289,9 @@ export function UnifiedChat({
         )}
       </div>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4">
-        <div className="space-y-4">
+      {/* Messages - Scrollable Area with proper height */}
+      <ScrollArea className="flex-1">
+        <div className="p-4 space-y-4 min-h-full">
           {isChatLocked ? (
             <div className="text-center py-12">
               <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-yellow-500/10 mb-4">
@@ -292,6 +303,13 @@ export function UnifiedChat({
               </p>
               <p className="text-sm text-muted-foreground mt-2">
                 Aguarde a resposta do criador do projeto.
+              </p>
+            </div>
+          ) : messages.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">Nenhuma mensagem ainda</p>
+              <p className="text-xs text-muted-foreground mt-2">
+                Envie a primeira mensagem para iniciar a conversa
               </p>
             </div>
           ) : (
@@ -386,10 +404,11 @@ export function UnifiedChat({
           )}
           <div ref={messagesEndRef} />
         </div>
-      </div>
+      </ScrollArea>
 
       {/* Input - Fixed at Bottom */}
-      <form onSubmit={handleSendMessage} className="border-t p-3 bg-white sticky bottom-0">
+      <div className="border-t bg-white">
+        <form onSubmit={handleSendMessage} className="p-3">
         {isChatLocked ? (
           <div className="text-center py-2">
             <p className="text-sm text-muted-foreground flex items-center justify-center gap-2">
@@ -443,7 +462,8 @@ export function UnifiedChat({
             </Button>
           </div>
         )}
-      </form>
+        </form>
+      </div>
     </div>
   );
 }

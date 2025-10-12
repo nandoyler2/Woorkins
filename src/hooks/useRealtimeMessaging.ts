@@ -129,22 +129,42 @@ export const useRealtimeMessaging = ({
     setIsSending(true);
 
     try {
-      // Call moderation function
+      // Get recent messages from this user for context (last 5 messages)
+      const recentUserMessages = messages
+        .filter(m => m.sender_id === currentUserId)
+        .slice(-5)
+        .map(m => m.content);
+
+      // Call moderation function with context
       const { data: moderationResult, error: moderationError } = await supabase.functions.invoke(
         'moderate-message',
         {
-          body: { content: content.trim() }
+          body: { 
+            content: content.trim(),
+            recentMessages: recentUserMessages 
+          }
         }
       );
 
       console.log('Moderation result:', moderationResult);
 
+      // Check if message was flagged for bad conduct
+      if (moderationResult?.flagged) {
+        toast({
+          variant: 'destructive',
+          title: '⚠️ Conversa Sinalizada',
+          description: 'Detectamos uma possível tentativa de compartilhar informações de contato. Seu perfil está sendo sinalizado e você pode ser bloqueado por má conduta. Continuando com este comportamento, sua conta será suspensa permanentemente.',
+          duration: 10000,
+        });
+      }
+
       // Check if message was rejected
       if (moderationResult && !moderationResult.approved) {
         toast({
           variant: 'destructive',
-          title: 'Mensagem bloqueada',
-          description: (moderationResult.reason || 'Esta mensagem viola nossa política de uso.') + ' Clique aqui para ver a política.',
+          title: '🚫 Mensagem Bloqueada',
+          description: (moderationResult.reason || 'Esta mensagem viola nossa política de uso.') + ' Tentativas repetidas resultarão no bloqueio permanente da sua conta.',
+          duration: 8000,
         });
         setIsSending(false);
         return;

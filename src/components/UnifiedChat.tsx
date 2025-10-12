@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { Send, Loader2, Check, CheckCheck, Paperclip, Smile } from 'lucide-react';
+import { Send, Loader2, Check, CheckCheck, Paperclip, Smile, ExternalLink } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useRealtimeMessaging } from '@/hooks/useRealtimeMessaging';
@@ -19,9 +19,22 @@ interface UnifiedChatProps {
     avatar?: string;
   };
   profileId: string;
+  projectId?: string;
+  projectTitle?: string;
+  businessName?: string;
+  businessId?: string;
 }
 
-export function UnifiedChat({ conversationId, conversationType, otherUser, profileId }: UnifiedChatProps) {
+export function UnifiedChat({ 
+  conversationId, 
+  conversationType, 
+  otherUser, 
+  profileId,
+  projectId,
+  projectTitle,
+  businessName,
+  businessId 
+}: UnifiedChatProps) {
   const { user } = useAuth();
   const [messageInput, setMessageInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -84,6 +97,52 @@ export function UnifiedChat({ conversationId, conversationType, otherUser, profi
 
   return (
     <div className="h-full flex flex-col bg-gradient-to-b from-background to-muted/20">
+      {/* Info Header */}
+      {(projectId || businessId) && (
+        <div className="border-b p-3 bg-primary/5 backdrop-blur-sm">
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              <p className="text-xs text-muted-foreground mb-1">
+                {conversationType === 'proposal' ? 'Projeto' : 'Negociação com'}
+              </p>
+              <p className="text-sm font-semibold">
+                {conversationType === 'proposal' ? projectTitle : businessName}
+              </p>
+            </div>
+            {projectId && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => window.open(`/projects/${projectId}`, '_blank')}
+                className="text-xs flex items-center gap-1"
+              >
+                <ExternalLink className="h-3 w-3" />
+                Ver Projeto
+              </Button>
+            )}
+            {businessId && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const slug = businessName?.toLowerCase().normalize('NFD')
+                    .replace(/[\u0300-\u036f]/g, '')
+                    .replace(/[^a-z0-9\s-]/g, '')
+                    .trim()
+                    .replace(/\s+/g, '-')
+                    .replace(/-+/g, '-');
+                  window.open(`/${slug}`, '_blank');
+                }}
+                className="text-xs flex items-center gap-1"
+              >
+                <ExternalLink className="h-3 w-3" />
+                Ver Perfil
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
+      
       {/* Header */}
       <div className="border-b p-4 flex items-center gap-3 bg-card/80 backdrop-blur-sm">
         <div className="relative">

@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { MessageCircle, Briefcase, Loader2, Search, Check, CheckCheck } from 'lucide-react';
+import { MessageCircle, Loader2, Search, Check, CheckCheck } from 'lucide-react';
 import { UnifiedChat } from '@/components/UnifiedChat';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
@@ -27,6 +27,9 @@ interface Conversation {
   lastMessageAt?: string;
   unreadCount: number;
   status: string;
+  businessName?: string;
+  projectId?: string;
+  businessId?: string;
 }
 
 export default function Messages() {
@@ -125,6 +128,8 @@ export default function Messages() {
         lastMessageAt: neg.updated_at,
         unreadCount: 0,
         status: neg.status,
+        businessName: neg.business_profiles.company_name,
+        businessId: neg.business_id,
       }));
 
       const proposalConvos: Conversation[] = (proposals || []).map(prop => ({
@@ -140,6 +145,7 @@ export default function Messages() {
         lastMessageAt: prop.updated_at,
         unreadCount: 0,
         status: prop.status,
+        projectId: prop.project.id,
       }));
 
       const allConvos = [...negotiationConvos, ...proposalConvos].sort(
@@ -272,16 +278,18 @@ export default function Messages() {
                             )}
                           </div>
                           
-                          <div className="flex items-center gap-1 mb-1">
-                            {conv.type === 'negotiation' ? (
-                              <Briefcase className="h-3 w-3 text-muted-foreground flex-shrink-0" />
-                            ) : (
-                              <MessageCircle className="h-3 w-3 text-muted-foreground flex-shrink-0" />
-                            )}
-                            <p className="text-xs text-muted-foreground truncate">
-                              {conv.title}
-                            </p>
+                          <div className="flex items-center gap-2 mb-1">
+                            <Badge variant="secondary" className="text-xs px-2 py-0.5">
+                              {conv.type === 'negotiation' 
+                                ? `Negociação ${conv.businessName}` 
+                                : 'Proposta de Projetos'
+                              }
+                            </Badge>
                           </div>
+                          
+                          <p className="text-xs text-muted-foreground truncate">
+                            {conv.title}
+                          </p>
 
                           {conv.lastMessage && (
                             <p className="text-xs text-muted-foreground truncate mb-2">
@@ -319,6 +327,10 @@ export default function Messages() {
                 conversationType={selectedConversation.type}
                 otherUser={selectedConversation.otherUser}
                 profileId={profileId}
+                projectId={selectedConversation.projectId}
+                projectTitle={selectedConversation.type === 'proposal' ? selectedConversation.title : undefined}
+                businessName={selectedConversation.businessName}
+                businessId={selectedConversation.businessId}
               />
             ) : (
               <div className="h-full flex items-center justify-center">

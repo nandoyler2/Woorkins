@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Header } from '@/components/Header';
 import { Card, CardContent } from '@/components/ui/card';
@@ -18,7 +18,6 @@ import { Star, MapPin, Phone, Mail, Globe, Image as ImageIcon, MessageCircle, Fa
 import { Footer } from '@/components/Footer';
 import { SafeImage } from '@/components/ui/safe-image';
 import { useToast } from '@/hooks/use-toast';
-import { NegotiationChat } from '@/components/NegotiationChat';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface BusinessData {
@@ -69,6 +68,7 @@ interface Evaluation {
 
 export default function BusinessProfile() {
   const { slug } = useParams();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
   const [business, setBusiness] = useState<BusinessData | null>(null);
@@ -76,8 +76,6 @@ export default function BusinessProfile() {
   const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('inicio');
-  const [currentNegotiation, setCurrentNegotiation] = useState<string | null>(null);
-  const [showNegotiationDialog, setShowNegotiationDialog] = useState(false);
 
   useEffect(() => {
     loadBusinessData();
@@ -105,8 +103,7 @@ export default function BusinessProfile() {
       .maybeSingle();
 
     if (existing) {
-      setCurrentNegotiation(existing.id);
-      setShowNegotiationDialog(true);
+      navigate(`/messages?type=negotiation&id=${existing.id}`);
       return;
     }
 
@@ -128,8 +125,7 @@ export default function BusinessProfile() {
         variant: 'destructive',
       });
     } else {
-      setCurrentNegotiation(data.id);
-      setShowNegotiationDialog(true);
+      navigate(`/messages?type=negotiation&id=${data.id}`);
       toast({
         title: 'Negociação iniciada!',
         description: 'Comece a conversar com a empresa',
@@ -621,30 +617,13 @@ export default function BusinessProfile() {
                     <p className="text-sm text-muted-foreground mb-4">
                       Esta empresa aceita negociações diretas na plataforma
                     </p>
-                    <Dialog open={showNegotiationDialog} onOpenChange={setShowNegotiationDialog}>
-                      <DialogTrigger asChild>
-                        <Button 
-                          className="w-full bg-green-600 hover:bg-green-700"
-                          onClick={startNegotiation}
-                        >
-                          <MessageCircle className="w-4 h-4 mr-2" />
-                          Iniciar Conversa
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="max-w-3xl">
-                        <DialogHeader>
-                          <DialogTitle>
-                            Negociação com {business.company_name}
-                          </DialogTitle>
-                          <DialogDescription>
-                            Converse diretamente e negocie serviços e valores
-                          </DialogDescription>
-                        </DialogHeader>
-                        {currentNegotiation && (
-                          <NegotiationChat negotiationId={currentNegotiation} />
-                        )}
-                      </DialogContent>
-                    </Dialog>
+                    <Button 
+                      className="w-full bg-green-600 hover:bg-green-700"
+                      onClick={startNegotiation}
+                    >
+                      <MessageCircle className="w-4 h-4 mr-2" />
+                      Iniciar Conversa
+                    </Button>
                   </CardContent>
                 </Card>
               )}

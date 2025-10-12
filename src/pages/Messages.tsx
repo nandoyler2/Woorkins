@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card } from '@/components/ui/card';
@@ -40,6 +40,7 @@ export default function Messages() {
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [profileId, setProfileId] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState('');
+  const location = useLocation();
 
   useEffect(() => {
     if (!user) {
@@ -54,6 +55,17 @@ export default function Messages() {
       loadConversations();
     }
   }, [profileId]);
+
+  // Auto-select conversation from query params
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const type = params.get('type') as 'negotiation' | 'proposal' | null;
+    const id = params.get('id');
+    if (type && id && conversations.length > 0) {
+      const match = conversations.find(c => c.id === id && c.type === type);
+      if (match) setSelectedConversation(match);
+    }
+  }, [location.search, conversations]);
 
   const loadProfile = async () => {
     try {

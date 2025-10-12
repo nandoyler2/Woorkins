@@ -32,6 +32,7 @@ interface ProposalNegotiationPanelProps {
   currentProfileId: string;
   freelancerId: string;
   onStatusChange: () => void;
+  onDelete?: () => void;
 }
 
 export function ProposalNegotiationPanel({
@@ -41,6 +42,7 @@ export function ProposalNegotiationPanel({
   currentProfileId,
   freelancerId,
   onStatusChange,
+  onDelete,
 }: ProposalNegotiationPanelProps) {
   const [counterAmount, setCounterAmount] = useState('');
   const [counterMessage, setCounterMessage] = useState('');
@@ -258,6 +260,18 @@ export function ProposalNegotiationPanel({
             <div className="flex-1 text-center py-2 px-4 bg-yellow-500/10 text-yellow-600 rounded-md text-xs">
               Aguardando a outra parte aceitar sua contra-proposta
             </div>
+          )}
+
+          {/* Delete button */}
+          {onDelete && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onDelete}
+              className="text-destructive hover:text-destructive"
+            >
+              Excluir Conversa
+            </Button>
           )}
         </div>
       )}

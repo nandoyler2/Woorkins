@@ -160,17 +160,17 @@ export default function Dashboard() {
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
       </div>;
   }
-  return <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background">
+  return <div className="min-h-screen bg-background">
       <Header />
       
       <div className="container mx-auto px-4 py-8 max-w-woorkins">
         <div className="space-y-8">
           {/* Welcome Section */}
           <div className="space-y-2">
-            <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+            <h1 className="text-3xl font-bold text-foreground">
               Olá, {profile?.full_name || profile?.username}!
             </h1>
-            <p className="text-lg text-muted-foreground">Gerencie suas marcas e encontre novoss projetos</p>
+            <p className="text-base text-muted-foreground">Gerencie suas marcas e encontre novos projetos</p>
           </div>
 
           {/* My Balance Component */}
@@ -178,41 +178,41 @@ export default function Dashboard() {
 
           {/* Stats Cards */}
           <div className="grid md:grid-cols-3 gap-6">
-            <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-2 hover:shadow-glow transition-all">
+            <Card className="bg-card shadow-md hover:shadow-lg transition-all border">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">
+                <CardTitle className="text-sm font-semibold text-muted-foreground">
                   Marcas Ativas
                 </CardTitle>
                 <Building2 className="w-5 h-5 text-primary" />
               </CardHeader>
               <CardContent>
-                <div className="text-4xl font-bold text-primary">{businesses.length}</div>
+                <div className="text-3xl font-bold text-foreground">{businesses.length}</div>
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-to-br from-secondary/10 to-secondary/5 border-2 hover:shadow-glow transition-all">
+            <Card className="bg-card shadow-md hover:shadow-lg transition-all border">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">
+                <CardTitle className="text-sm font-semibold text-muted-foreground">
                   Avaliações Totais
                 </CardTitle>
                 <Star className="w-5 h-5 text-secondary" />
               </CardHeader>
               <CardContent>
-                <div className="text-4xl font-bold text-secondary">
+                <div className="text-3xl font-bold text-foreground">
                   {businesses.reduce((sum, b) => sum + b.total_reviews, 0)}
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-to-br from-accent/10 to-accent/5 border-2 hover:shadow-glow transition-all">
+            <Card className="bg-card shadow-md hover:shadow-lg transition-all border">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">
+                <CardTitle className="text-sm font-semibold text-muted-foreground">
                   Avaliação Média
                 </CardTitle>
                 <Star className="w-5 h-5 text-accent fill-accent" />
               </CardHeader>
               <CardContent>
-                <div className="text-4xl font-bold text-accent">
+                <div className="text-3xl font-bold text-foreground">
                   {businesses.length > 0 ? (businesses.reduce((sum, b) => sum + Number(b.average_rating), 0) / businesses.length).toFixed(1) : '0.0'}
                 </div>
               </CardContent>
@@ -220,16 +220,16 @@ export default function Dashboard() {
           </div>
 
           {/* Quick Actions */}
-          <Card className="bg-card/50 backdrop-blur-sm border-2">
+          <Card className="bg-card shadow-md border">
             <CardContent className="pt-6">
               <div className="flex flex-col md:flex-row gap-4">
-                <Button asChild className="flex-1 bg-gradient-primary hover:shadow-glow transition-all" size="lg">
+                <Button asChild className="flex-1" size="lg" variant="secondary">
                   <Link to="/projects">
                     <Briefcase className="w-5 h-5 mr-2" />
                     Ver Projetos Disponíveis
                   </Link>
                 </Button>
-                <Button asChild className="flex-1 bg-gradient-secondary hover:shadow-glow transition-all" size="lg">
+                <Button asChild className="flex-1" size="lg">
                   <Link to="/projects/new">
                     <Plus className="w-5 h-5 mr-2" />
                     Criar Novo Projeto
@@ -245,7 +245,7 @@ export default function Dashboard() {
               <h2 className="text-2xl font-bold">Minhas Marcas</h2>
               <Dialog open={openDialog} onOpenChange={setOpenDialog}>
                 <DialogTrigger asChild>
-                  <Button className="bg-gradient-primary hover:shadow-glow transition-all">
+                  <Button>
                     <Plus className="w-4 h-4 mr-2" />
                     Nova Marca
                   </Button>
@@ -292,7 +292,7 @@ export default function Dashboard() {
               </Dialog>
             </div>
 
-            {businesses.length === 0 ? <Card className="p-12 bg-card/50 backdrop-blur-sm border-2">
+            {businesses.length === 0 ? <Card className="p-12 bg-card shadow-md border">
                 <div className="text-center space-y-4">
                   <Building2 className="w-16 h-16 mx-auto text-muted-foreground" />
                   <div>
@@ -303,7 +303,7 @@ export default function Dashboard() {
                   </div>
                 </div>
               </Card> : <div className="grid md:grid-cols-2 gap-6">
-                {businesses.map(business => <Card key={business.id} className="hover:shadow-elegant transition-all bg-card/50 backdrop-blur-sm border-2 hover:border-primary/50">
+                {businesses.map(business => <Card key={business.id} className="hover:shadow-lg transition-all bg-card shadow-md border">
                     <CardHeader>
                       <div className="flex items-start justify-between">
                         <div className="space-y-1 flex-1">
@@ -334,10 +334,10 @@ export default function Dashboard() {
                         </div>
                       </div>
                       <div className="flex gap-2">
-                        <Button variant="outline" className="flex-1 hover:border-primary" asChild>
+                        <Button variant="outline" className="flex-1" asChild>
                           <Link to={`/${business.slug}`}>Ver Perfil</Link>
                         </Button>
-                        <Button className="flex-1 bg-gradient-primary hover:shadow-glow transition-all" asChild>
+                        <Button className="flex-1" asChild>
                           <Link to={`/business/${business.slug}/edit`}>Gerenciar</Link>
                         </Button>
                       </div>

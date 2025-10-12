@@ -233,10 +233,10 @@ const Index = () => {
               Junte-se a milhares de profissionais e empresas que já confiam na Woorkins.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-              <Button size="lg" className="bg-white text-primary hover:bg-white/90 text-base h-14 px-10 shadow-elegant" asChild>
+              <Button size="lg" className="bg-white text-primary hover:bg-white/90 text-base h-14 px-10 shadow-lg" asChild>
                 <Link to="/auth?mode=signup">Criar Conta Gratuita</Link>
               </Button>
-              <Button size="lg" variant="hero" className="text-base h-14 px-10">
+              <Button size="lg" variant="outline" className="text-base h-14 px-10 border-white text-white hover:bg-white hover:text-primary">
                 Falar com Vendas
               </Button>
             </div>

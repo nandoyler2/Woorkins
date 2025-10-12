@@ -158,6 +158,24 @@ export function UnifiedChat({
     proposalData?.status === 'pending' &&
     messages.length === 0;
 
+  const handleDeleteConversation = async () => {
+    if (!confirm('Tem certeza que deseja excluir esta conversa? Esta ação será irreversível e a conversa será excluída para ambas as partes.')) {
+      return;
+    }
+
+    try {
+      if (conversationType === 'proposal') {
+        await supabase.from('proposals').delete().eq('id', conversationId);
+      } else {
+        await supabase.from('negotiations').delete().eq('id', conversationId);
+      }
+      
+      window.location.href = '/messages';
+    } catch (error) {
+      console.error('Error deleting conversation:', error);
+    }
+  };
+
   return (
     <div className="h-full flex flex-col bg-white">
       {/* Proposal Negotiation Panel */}
@@ -170,6 +188,7 @@ export function UnifiedChat({
             currentProfileId={profileId}
             freelancerId={proposalData.freelancer_id}
             onStatusChange={loadProposalData}
+            onDelete={handleDeleteConversation}
           />
         </div>
       )}
@@ -241,16 +260,26 @@ export function UnifiedChat({
                 <span className="text-xs text-green-600 dark:text-green-400 font-medium">Online</span>
                 <span className="text-xs text-muted-foreground">•</span>
                 <Badge variant="secondary" className="text-xs">
-                  {conversationType === 'negotiation' ? 'Negociação' : 'Proposta'}
+                  {conversationType === 'negotiation' ? 'Negociação' : 'Proposta de Projeto'}
                 </Badge>
               </>
             )}
           </div>
         </div>
+        {conversationType === 'negotiation' && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleDeleteConversation}
+            className="text-destructive hover:text-destructive"
+          >
+            Excluir
+          </Button>
+        )}
       </div>
 
       {/* Messages */}
-      <ScrollArea className="flex-1 p-4">
+      <div className="flex-1 overflow-y-auto p-4">
         <div className="space-y-4">
           {isChatLocked ? (
             <div className="text-center py-12">
@@ -357,10 +386,10 @@ export function UnifiedChat({
           )}
           <div ref={messagesEndRef} />
         </div>
-      </ScrollArea>
+      </div>
 
-      {/* Input */}
-      <form onSubmit={handleSendMessage} className="border-t p-3 bg-white">
+      {/* Input - Fixed at Bottom */}
+      <form onSubmit={handleSendMessage} className="border-t p-3 bg-white sticky bottom-0">
         {isChatLocked ? (
           <div className="text-center py-2">
             <p className="text-sm text-muted-foreground flex items-center justify-center gap-2">

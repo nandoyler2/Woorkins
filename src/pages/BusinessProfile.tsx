@@ -20,7 +20,6 @@ import { SafeImage } from '@/components/ui/safe-image';
 import { useToast } from '@/hooks/use-toast';
 import { NegotiationChat } from '@/components/NegotiationChat';
 import { useAuth } from '@/contexts/AuthContext';
-import { MyBalance } from '@/components/MyBalance';
 
 interface BusinessData {
   id: string;
@@ -465,9 +464,6 @@ export default function BusinessProfile() {
 
             {/* Right Column - Sidebar */}
             <div className="space-y-4">
-              {/* My Balance Component for Business Owner */}
-              <MyBalance />
-
               {/* Rating Highlight Card - DESTAQUE */}
               <Card className="bg-gradient-to-br from-primary/10 to-secondary/10 border-2 border-primary/20 shadow-glow">
                 <CardContent className="p-6">

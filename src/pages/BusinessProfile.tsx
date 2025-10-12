@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Header } from '@/components/Header';
 import { Card, CardContent } from '@/components/ui/card';
@@ -19,6 +19,7 @@ import { Footer } from '@/components/Footer';
 import { SafeImage } from '@/components/ui/safe-image';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { NegotiationChat } from '@/components/NegotiationChat';
 
 interface BusinessData {
   id: string;
@@ -68,7 +69,6 @@ interface Evaluation {
 
 export default function BusinessProfile() {
   const { slug } = useParams();
-  const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
   const [business, setBusiness] = useState<BusinessData | null>(null);
@@ -76,6 +76,8 @@ export default function BusinessProfile() {
   const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('inicio');
+  const [showNegotiationDialog, setShowNegotiationDialog] = useState(false);
+  const [currentNegotiation, setCurrentNegotiation] = useState<string | null>(null);
 
   useEffect(() => {
     loadBusinessData();
@@ -103,7 +105,8 @@ export default function BusinessProfile() {
       .maybeSingle();
 
     if (existing) {
-      navigate(`/messages?type=negotiation&id=${existing.id}`);
+      setCurrentNegotiation(existing.id);
+      setShowNegotiationDialog(true);
       return;
     }
 
@@ -125,7 +128,8 @@ export default function BusinessProfile() {
         variant: 'destructive',
       });
     } else {
-      navigate(`/messages?type=negotiation&id=${data.id}`);
+      setCurrentNegotiation(data.id);
+      setShowNegotiationDialog(true);
       toast({
         title: 'Negociação iniciada!',
         description: 'Comece a conversar com a empresa',
@@ -648,6 +652,20 @@ export default function BusinessProfile() {
       <div className="mt-12">
         <Footer />
       </div>
+
+      {/* Negotiation Dialog */}
+      <Dialog open={showNegotiationDialog} onOpenChange={setShowNegotiationDialog}>
+        <DialogContent className="max-w-4xl h-[600px] p-0">
+          <DialogHeader className="p-6 pb-0">
+            <DialogTitle>Negociação com {business?.company_name}</DialogTitle>
+          </DialogHeader>
+          {currentNegotiation && (
+            <div className="flex-1 overflow-hidden">
+              <NegotiationChat negotiationId={currentNegotiation} isBusinessView={false} />
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

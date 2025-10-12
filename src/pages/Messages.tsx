@@ -86,8 +86,8 @@ export default function Messages() {
   const loadConversations = async () => {
     setLoading(true);
     try {
-      // Load negotiations
-      const { data: negotiations } = await supabase
+      // Load negotiations where user is the client
+      const { data: userNegotiations } = await supabase
         .from('negotiations')
         .select(`
           id,
@@ -102,11 +102,30 @@ export default function Messages() {
             profile_id
           )
         `)
-        .or(`user_id.eq.${user?.id},business_profiles.profile_id.eq.${profileId}`)
+        .eq('user_id', user?.id)
         .order('updated_at', { ascending: false });
 
-      // Load proposals
-      const { data: proposals } = await supabase
+      // Load negotiations where user is the business
+      const { data: businessNegotiations } = await supabase
+        .from('negotiations')
+        .select(`
+          id,
+          status,
+          service_description,
+          user_id,
+          business_id,
+          updated_at,
+          business_profiles!inner(
+            company_name,
+            logo_url,
+            profile_id
+          )
+        `)
+        .eq('business_profiles.profile_id', profileId)
+        .order('updated_at', { ascending: false });
+
+      // Load proposals where user is the freelancer
+      const { data: freelancerProposals } = await supabase
         .from('proposals')
         .select(`
           id,
@@ -125,8 +144,34 @@ export default function Messages() {
             )
           )
         `)
-        .or(`freelancer_id.eq.${profileId},project.profile_id.eq.${profileId}`)
+        .eq('freelancer_id', profileId)
         .order('updated_at', { ascending: false });
+
+      // Load proposals where user is the project owner
+      const { data: ownerProposals } = await supabase
+        .from('proposals')
+        .select(`
+          id,
+          status,
+          message,
+          updated_at,
+          freelancer_id,
+          project:projects!inner(
+            id,
+            title,
+            profile_id,
+            profiles!inner(
+              full_name,
+              avatar_url,
+              user_id
+            )
+          )
+        `)
+        .eq('project.profile_id', profileId)
+        .order('updated_at', { ascending: false });
+
+      const negotiations = [...(userNegotiations || []), ...(businessNegotiations || [])];
+      const proposals = [...(freelancerProposals || []), ...(ownerProposals || [])];
 
       const negotiationConvos: Conversation[] = (negotiations || []).map(neg => ({
         id: neg.id,

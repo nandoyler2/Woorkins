@@ -280,36 +280,78 @@ export type Database = {
           },
         ]
       }
+      message_unread_counts: {
+        Row: {
+          conversation_id: string
+          conversation_type: string
+          created_at: string | null
+          id: string
+          last_read_at: string | null
+          unread_count: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          conversation_id: string
+          conversation_type: string
+          created_at?: string | null
+          id?: string
+          last_read_at?: string | null
+          unread_count?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          conversation_id?: string
+          conversation_type?: string
+          created_at?: string | null
+          id?: string
+          last_read_at?: string | null
+          unread_count?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       negotiation_messages: {
         Row: {
           amount: number | null
           content: string | null
           created_at: string
+          delivered_at: string | null
           id: string
           message_type: string
           negotiation_id: string
+          read_at: string | null
           sender_id: string
           sender_type: string
+          status: string | null
         }
         Insert: {
           amount?: number | null
           content?: string | null
           created_at?: string
+          delivered_at?: string | null
           id?: string
           message_type?: string
           negotiation_id: string
+          read_at?: string | null
           sender_id: string
           sender_type: string
+          status?: string | null
         }
         Update: {
           amount?: number | null
           content?: string | null
           created_at?: string
+          delivered_at?: string | null
           id?: string
           message_type?: string
           negotiation_id?: string
+          read_at?: string | null
           sender_id?: string
           sender_type?: string
+          status?: string | null
         }
         Relationships: [
           {
@@ -689,23 +731,32 @@ export type Database = {
         Row: {
           content: string
           created_at: string
+          delivered_at: string | null
           id: string
           proposal_id: string
+          read_at: string | null
           sender_id: string
+          status: string | null
         }
         Insert: {
           content: string
           created_at?: string
+          delivered_at?: string | null
           id?: string
           proposal_id: string
+          read_at?: string | null
           sender_id: string
+          status?: string | null
         }
         Update: {
           content?: string
           created_at?: string
+          delivered_at?: string | null
           id?: string
           proposal_id?: string
+          read_at?: string | null
           sender_id?: string
+          status?: string | null
         }
         Relationships: [
           {
@@ -936,6 +987,33 @@ export type Database = {
           },
         ]
       }
+      typing_indicators: {
+        Row: {
+          conversation_id: string
+          conversation_type: string
+          id: string
+          is_typing: boolean | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          conversation_id: string
+          conversation_type: string
+          id?: string
+          is_typing?: boolean | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          conversation_id?: string
+          conversation_type?: string
+          id?: string
+          is_typing?: boolean | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -1106,6 +1184,10 @@ export type Database = {
           stripe_fee: number
           total_fees: number
         }[]
+      }
+      cleanup_typing_indicators: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       get_freelancer_wallet_balance: {
         Args: { freelancer_profile_id: string }

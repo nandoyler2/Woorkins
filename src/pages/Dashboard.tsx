@@ -3,349 +3,310 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, Building2, Edit, Star, MessageSquare, CheckCircle, XCircle, Briefcase } from 'lucide-react';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Star, Search, Briefcase, MessageSquare, CheckCircle2, Phone, Building2, Users, UserPlus, ThumbsUp, MessageCircle, Award } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { useToast } from '@/hooks/use-toast';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { MyBalance } from '@/components/MyBalance';
+import { Progress } from '@/components/ui/progress';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 interface Profile {
   id: string;
   username: string;
   full_name: string | null;
   avatar_url: string | null;
 }
-interface BusinessProfile {
+
+interface FeedPost {
   id: string;
-  company_name: string;
-  slug: string;
-  logo_url: string | null;
-  description: string | null;
-  average_rating: number;
-  total_reviews: number;
+  author_name: string;
+  author_role: string;
+  author_avatar: string;
+  time_ago: string;
+  content: string;
+  image_url?: string;
+  likes: number;
 }
 export default function Dashboard() {
-  const {
-    user
-  } = useAuth();
-  const {
-    toast
-  } = useToast();
+  const { user } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [businesses, setBusinesses] = useState<BusinessProfile[]>([]);
   const [loading, setLoading] = useState(true);
-  const [creating, setCreating] = useState(false);
-  const [openDialog, setOpenDialog] = useState(false);
-  const [slugAvailable, setSlugAvailable] = useState<boolean | null>(null);
-  const [checkingSlug, setCheckingSlug] = useState(false);
-
-  // Form state
-  const [companyName, setCompanyName] = useState('');
-  const [slug, setSlug] = useState('');
-  const [description, setDescription] = useState('');
+  const [unreadMessages, setUnreadMessages] = useState(5);
+  
+  // Mock data for feed posts
+  const feedPosts: FeedPost[] = [
+    {
+      id: '1',
+      author_name: 'Woorkins Team',
+      author_role: 'Equipe Woorkins',
+      author_avatar: '',
+      time_ago: '2h atrás',
+      content: 'Nova funcionalidade! Agora você pode negociar diretamente com empresas através da plataforma. Acesse a página de negociações e comece a fechar negócios de forma segura e transparente. 🚀',
+      image_url: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&h=300&fit=crop',
+      likes: 248
+    },
+    {
+      id: '2',
+      author_name: 'Woorkins Team',
+      author_role: 'Equipe Woorkins',
+      author_avatar: '',
+      time_ago: '1d atrás',
+      content: 'Dica da semana: Complete seu perfil empresarial para aumentar suas chances de receber propostas. Empresas com perfis completos recebem 3x mais visualizações! 💼',
+      likes: 189
+    }
+  ];
   useEffect(() => {
     if (user) {
       loadProfile();
-      loadBusinesses();
     }
   }, [user]);
+  
   const loadProfile = async () => {
     if (!user) return;
-    const {
-      data,
-      error
-    } = await supabase.from('profiles' as any).select('*').eq('user_id', user.id).maybeSingle();
+    const { data, error } = await supabase
+      .from('profiles' as any)
+      .select('*')
+      .eq('user_id', user.id)
+      .maybeSingle();
+    
     if (!error && data) {
       setProfile(data as unknown as Profile);
     }
     setLoading(false);
   };
-  const loadBusinesses = async () => {
-    if (!user) return;
-    const {
-      data: profileData
-    } = await supabase.from('profiles' as any).select('id').eq('user_id', user.id).maybeSingle();
-    const profileId = (profileData as any)?.id;
-    if (!profileId) return;
-    const {
-      data,
-      error
-    } = await supabase.from('business_profiles' as any).select('*').eq('profile_id', profileId);
-    if (!error && data) {
-      setBusinesses(data as unknown as BusinessProfile[]);
-    }
-  };
-  const checkSlugAvailability = async (slugToCheck: string) => {
-    if (!slugToCheck || slugToCheck.length < 3) {
-      setSlugAvailable(null);
-      return;
-    }
-    setCheckingSlug(true);
-    try {
-      const {
-        data,
-        error
-      } = await supabase.from('business_profiles' as any).select('id').eq('slug', slugToCheck).maybeSingle();
-      setSlugAvailable(!data);
-    } catch (error) {
-      console.error('Error checking slug:', error);
-      setSlugAvailable(null);
-    } finally {
-      setCheckingSlug(false);
-    }
-  };
-  const handleCompanyNameChange = (name: string) => {
-    setCompanyName(name);
-
-    // Auto-generate slug from company name
-    const generatedSlug = name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '') // Remove accents
-    .replace(/[^a-z0-9\s-]/g, '') // Remove special chars
-    .trim().replace(/\s+/g, '-') // Replace spaces with hyphens
-    .replace(/-+/g, '-'); // Remove duplicate hyphens
-
-    setSlug(generatedSlug);
-
-    // Check availability with debounce
-    if (generatedSlug.length >= 3) {
-      setTimeout(() => checkSlugAvailability(generatedSlug), 500);
-    }
-  };
-  const handleSlugChange = (newSlug: string) => {
-    const cleanSlug = newSlug.toLowerCase().replace(/[^a-z0-9-]/g, '');
-    setSlug(cleanSlug);
-    if (cleanSlug.length >= 3) {
-      setTimeout(() => checkSlugAvailability(cleanSlug), 500);
-    } else {
-      setSlugAvailable(null);
-    }
-  };
-  const handleCreateBusiness = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!profile) return;
-    setCreating(true);
-    try {
-      const {
-        error
-      } = await supabase.from('business_profiles' as any).insert({
-        profile_id: profile.id,
-        company_name: companyName,
-        slug: slug.toLowerCase().replace(/[^a-z0-9-]/g, ''),
-        description
-      });
-      if (error) throw error;
-      toast({
-        title: 'Marca criada com sucesso!',
-        description: `Sua marca foi criada em woorkins.com/${slug}`
-      });
-      setOpenDialog(false);
-      setCompanyName('');
-      setSlug('');
-      setDescription('');
-      loadBusinesses();
-    } catch (error: any) {
-      toast({
-        title: 'Erro ao criar marca',
-        description: error.message,
-        variant: 'destructive'
-      });
-    } finally {
-      setCreating(false);
-    }
-  };
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center">
+    return (
+      <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>;
+      </div>
+    );
   }
-  return <div className="min-h-screen bg-background">
+
+  const profileCompletion = 75; // Mock data
+  const memberLevel = 'Membro Prata';
+  const points = 1250;
+  const maxPoints = 2000;
+
+  return (
+    <div className="min-h-screen bg-slate-50">
       <Header />
       
-      <div className="container mx-auto px-4 py-8 max-w-woorkins">
-        <div className="space-y-8">
-          {/* Welcome Section */}
-          <div className="space-y-2">
-            <h1 className="text-3xl font-bold text-foreground">
-              Olá, {profile?.full_name || profile?.username}!
-            </h1>
-            <p className="text-base text-muted-foreground">Gerencie suas marcas e encontre novos projetos</p>
-          </div>
-
-          {/* My Balance Component */}
-          <MyBalance />
-
-          {/* Stats Cards */}
-          <div className="grid md:grid-cols-3 gap-6">
-            <Card className="bg-card shadow-md hover:shadow-lg transition-all border">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-semibold text-muted-foreground">
-                  Marcas Ativas
-                </CardTitle>
-                <Building2 className="w-5 h-5 text-primary" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold text-foreground">{businesses.length}</div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-card shadow-md hover:shadow-lg transition-all border">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-semibold text-muted-foreground">
-                  Avaliações Totais
-                </CardTitle>
-                <Star className="w-5 h-5 text-secondary" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold text-foreground">
-                  {businesses.reduce((sum, b) => sum + b.total_reviews, 0)}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-card shadow-md hover:shadow-lg transition-all border">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-semibold text-muted-foreground">
-                  Avaliação Média
-                </CardTitle>
-                <Star className="w-5 h-5 text-accent fill-accent" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold text-foreground">
-                  {businesses.length > 0 ? (businesses.reduce((sum, b) => sum + Number(b.average_rating), 0) / businesses.length).toFixed(1) : '0.0'}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Quick Actions */}
-          <Card className="bg-card shadow-md border">
-            <CardContent className="pt-6">
-              <div className="flex flex-col md:flex-row gap-4">
-                <Button asChild className="flex-1" size="lg" variant="secondary">
-                  <Link to="/projects">
-                    <Briefcase className="w-5 h-5 mr-2" />
-                    Ver Projetos Disponíveis
-                  </Link>
-                </Button>
-                <Button asChild className="flex-1" size="lg">
-                  <Link to="/projects/new">
-                    <Plus className="w-5 h-5 mr-2" />
-                    Criar Novo Projeto
-                  </Link>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Businesses Section */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold">Minhas Marcas</h2>
-              <Dialog open={openDialog} onOpenChange={setOpenDialog}>
-                <DialogTrigger asChild>
-                  <Button>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Nova Marca
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Criar Nova Marca</DialogTitle>
-                    <DialogDescription>
-                      Crie um perfil empresarial com um @username único
-                    </DialogDescription>
-                  </DialogHeader>
-                  <form onSubmit={handleCreateBusiness} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="company-name">Nome da Empresa</Label>
-                      <Input id="company-name" value={companyName} onChange={e => handleCompanyNameChange(e.target.value)} placeholder="Nome da sua empresa" required />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="slug">Username (Slug)</Label>
-                      <Input id="slug" value={slug} onChange={e => handleSlugChange(e.target.value)} placeholder="minha-empresa" required minLength={3} />
-                      <div className="flex items-center justify-between">
-                        <p className="text-xs text-muted-foreground">
-                          Será usado como: woorkins.com/{slug || 'minha-empresa'}
-                        </p>
-                        {checkingSlug && <span className="text-xs text-muted-foreground">Verificando...</span>}
-                        {!checkingSlug && slugAvailable === true && slug.length >= 3 && <span className="text-xs text-accent flex items-center gap-1">
-                            <CheckCircle className="w-3 h-3" />
-                            Disponível
-                          </span>}
-                        {!checkingSlug && slugAvailable === false && <span className="text-xs text-destructive flex items-center gap-1">
-                            <XCircle className="w-3 h-3" />
-                            Indisponível
-                          </span>}
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="description">Descrição</Label>
-                      <Textarea id="description" value={description} onChange={e => setDescription(e.target.value)} placeholder="Descreva sua empresa..." rows={4} />
-                    </div>
-                    <Button type="submit" className="w-full" disabled={creating || slugAvailable === false || checkingSlug}>
-                      {creating ? 'Criando...' : 'Criar Marca'}
-                    </Button>
-                  </form>
-                </DialogContent>
-              </Dialog>
-            </div>
-
-            {businesses.length === 0 ? <Card className="p-12 bg-card shadow-md border">
-                <div className="text-center space-y-4">
-                  <Building2 className="w-16 h-16 mx-auto text-muted-foreground" />
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
+        <div className="grid lg:grid-cols-12 gap-6">
+          {/* Main Content */}
+          <div className="lg:col-span-8 space-y-6">
+            {/* Welcome Section */}
+            <Card className="bg-white shadow-sm border border-slate-200">
+              <CardContent className="p-8">
+                <div className="flex items-start justify-between mb-6">
                   <div>
-                    <h3 className="text-xl font-bold mb-2">Nenhuma marca ainda</h3>
-                    <p className="text-muted-foreground">
-                      Crie sua primeira marca para começar a receber avaliações
-                    </p>
+                    <h1 className="text-3xl font-bold text-slate-900 mb-2">
+                      Bem-vindo de volta, {profile?.full_name || profile?.username}! 👋
+                    </h1>
+                    <div className="flex items-center gap-3 mt-3">
+                      <Badge variant="secondary" className="text-sm px-3 py-1">
+                        <Award className="w-3 h-3 mr-1" />
+                        {memberLevel}
+                      </Badge>
+                      <span className="text-sm text-slate-600">{points} / {maxPoints} pontos</span>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-sm text-slate-600 mb-1">Conclusão do Perfil</div>
+                    <div className="text-2xl font-bold text-primary">{profileCompletion}%</div>
                   </div>
                 </div>
-              </Card> : <div className="grid md:grid-cols-2 gap-6">
-                {businesses.map(business => <Card key={business.id} className="hover:shadow-lg transition-all bg-card shadow-md border">
-                    <CardHeader>
-                      <div className="flex items-start justify-between">
-                        <div className="space-y-1 flex-1">
-                          <CardTitle className="text-xl">{business.company_name}</CardTitle>
-                          <CardDescription className="text-base">
-                            woorkins.com/{business.slug}
-                          </CardDescription>
-                        </div>
-                        <Button variant="ghost" size="icon" asChild className="hover:text-primary">
-                          <Link to={`/business/${business.slug}/edit`}>
-                            <Edit className="w-4 h-4" />
-                          </Link>
-                        </Button>
+                
+                <Progress value={profileCompletion} className="h-2 mb-6" />
+
+                {/* Profile Completion Tasks */}
+                <div className="bg-blue-50 border border-blue-100 rounded-lg p-4">
+                  <div className="flex items-start gap-3 mb-3">
+                    <CheckCircle2 className="w-5 h-5 text-primary mt-0.5" />
+                    <p className="text-sm font-medium text-slate-900">
+                      Complete seu perfil para desbloquear mais recursos
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-2 ml-8">
+                    <Button variant="outline" size="sm" className="text-xs">
+                      <Building2 className="w-3 h-3 mr-1" />
+                      Adicionar Itens do Portfólio
+                    </Button>
+                    <Button variant="outline" size="sm" className="text-xs">
+                      <Phone className="w-3 h-3 mr-1" />
+                      Verificar Número de Telefone
+                    </Button>
+                    <Button variant="outline" size="sm" className="text-xs">
+                      <Briefcase className="w-3 h-3 mr-1" />
+                      Completar Perfil Empresarial
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Action Cards Grid */}
+            <div className="grid md:grid-cols-2 gap-4">
+              <Card className="bg-gradient-to-br from-blue-500 to-blue-600 border-0 shadow-lg hover:shadow-xl transition-all cursor-pointer group">
+                <CardContent className="p-6">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <Star className="w-6 h-6 text-white" />
+                    </div>
+                  </div>
+                  <h3 className="text-xl font-bold text-white mb-1">Escrever Avaliação</h3>
+                  <p className="text-blue-100 text-sm">Compartilhe sua experiência</p>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gradient-to-br from-teal-500 to-teal-600 border-0 shadow-lg hover:shadow-xl transition-all cursor-pointer group">
+                <CardContent className="p-6">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <Search className="w-6 h-6 text-white" />
+                    </div>
+                  </div>
+                  <h3 className="text-xl font-bold text-white mb-1">Encontrar Serviços</h3>
+                  <p className="text-teal-100 text-sm">Descubra negócios</p>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gradient-to-br from-orange-500 to-orange-600 border-0 shadow-lg hover:shadow-xl transition-all cursor-pointer group">
+                <CardContent className="p-6">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <Briefcase className="w-6 h-6 text-white" />
+                    </div>
+                  </div>
+                  <h3 className="text-xl font-bold text-white mb-1">Atualizar Portfólio</h3>
+                  <p className="text-orange-100 text-sm">Mostre seu trabalho</p>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gradient-to-br from-green-500 to-green-600 border-0 shadow-lg hover:shadow-xl transition-all cursor-pointer group">
+                <Link to="/messages">
+                  <CardContent className="p-6">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <MessageSquare className="w-6 h-6 text-white" />
                       </div>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      {business.description && <p className="text-sm text-muted-foreground line-clamp-2">
-                          {business.description}
-                        </p>}
-                      <div className="flex items-center gap-4 text-sm">
-                        <div className="flex items-center gap-1">
-                          <Star className="w-4 h-4 text-accent fill-accent" />
-                          <span className="font-medium">{Number(business.average_rating).toFixed(1)}</span>
+                      {unreadMessages > 0 && (
+                        <Badge className="bg-red-500 text-white border-0">{unreadMessages}</Badge>
+                      )}
+                    </div>
+                    <h3 className="text-xl font-bold text-white mb-1">Ver Mensagens</h3>
+                    <p className="text-green-100 text-sm">Verificar conversas</p>
+                  </CardContent>
+                </Link>
+              </Card>
+            </div>
+
+            {/* Social Feed */}
+            <Card className="bg-white shadow-sm border border-slate-200">
+              <CardHeader className="border-b border-slate-100 pb-4">
+                <div className="flex items-center gap-2">
+                  <MessageCircle className="w-5 h-5 text-slate-700" />
+                  <h2 className="text-xl font-bold text-slate-900">Artigos e Novidades</h2>
+                </div>
+              </CardHeader>
+              <CardContent className="p-0">
+                {feedPosts.map((post) => (
+                  <div key={post.id} className="p-6 border-b border-slate-100 last:border-0">
+                    <div className="flex items-start gap-4">
+                      <Avatar className="w-12 h-12">
+                        <AvatarImage src={post.author_avatar} />
+                        <AvatarFallback className="bg-primary text-white">W</AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <div className="flex items-start justify-between mb-2">
+                          <div>
+                            <h4 className="font-semibold text-slate-900">{post.author_name}</h4>
+                            <p className="text-sm text-slate-600">{post.author_role} • {post.time_ago}</p>
+                          </div>
+                          <Button variant="outline" size="sm">Seguir</Button>
                         </div>
-                        <div className="flex items-center gap-1">
-                          <MessageSquare className="w-4 h-4 text-muted-foreground" />
-                          <span>{business.total_reviews} avaliações</span>
+                        <p className="text-slate-700 mb-3 leading-relaxed">{post.content}</p>
+                        {post.image_url && (
+                          <img 
+                            src={post.image_url} 
+                            alt="Post content" 
+                            className="w-full h-64 object-cover rounded-lg mb-3"
+                          />
+                        )}
+                        <div className="flex items-center gap-4 text-sm text-slate-600">
+                          <button className="flex items-center gap-1 hover:text-primary transition-colors">
+                            <ThumbsUp className="w-4 h-4" />
+                            <span>{post.likes}</span>
+                          </button>
+                          <button className="flex items-center gap-1 hover:text-primary transition-colors">
+                            <MessageCircle className="w-4 h-4" />
+                            <span>Compartilhar</span>
+                          </button>
                         </div>
                       </div>
-                      <div className="flex gap-2">
-                        <Button variant="outline" className="flex-1" asChild>
-                          <Link to={`/${business.slug}`}>Ver Perfil</Link>
-                        </Button>
-                        <Button className="flex-1" asChild>
-                          <Link to={`/business/${business.slug}/edit`}>Gerenciar</Link>
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>)}
-              </div>}
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Sidebar */}
+          <div className="lg:col-span-4 space-y-6">
+            {/* Statistics Card */}
+            <Card className="bg-white shadow-sm border border-slate-200">
+              <CardHeader className="border-b border-slate-100 pb-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
+                    <Award className="w-4 h-4 text-primary" />
+                  </div>
+                  <h3 className="text-lg font-bold text-slate-900">Suas Estatísticas</h3>
+                </div>
+              </CardHeader>
+              <CardContent className="p-6 space-y-4">
+                <div className="flex items-center justify-between py-3 border-b border-slate-100">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
+                      <Star className="w-5 h-5 text-yellow-600" />
+                    </div>
+                    <span className="text-slate-700 font-medium">Avaliações Dadas</span>
+                  </div>
+                  <span className="text-2xl font-bold text-slate-900">23</span>
+                </div>
+                
+                <div className="flex items-center justify-between py-3 border-b border-slate-100">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                      <MessageCircle className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <span className="text-slate-700 font-medium">Avaliações Recebidas</span>
+                  </div>
+                  <span className="text-2xl font-bold text-slate-900">18</span>
+                </div>
+                
+                <div className="flex items-center justify-between py-3 border-b border-slate-100">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                      <Users className="w-5 h-5 text-purple-600" />
+                    </div>
+                    <span className="text-slate-700 font-medium">Seguidores</span>
+                  </div>
+                  <span className="text-2xl font-bold text-slate-900">156</span>
+                </div>
+                
+                <div className="flex items-center justify-between py-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                      <UserPlus className="w-5 h-5 text-green-600" />
+                    </div>
+                    <span className="text-slate-700 font-medium">Seguindo</span>
+                  </div>
+                  <span className="text-2xl font-bold text-slate-900">89</span>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>
-    </div>;
+    </div>
+  );
 }

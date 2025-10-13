@@ -10,6 +10,7 @@ import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import woorkoinsIcon from '@/assets/woorkoins-icon.png';
+import { WoorkoinsCheckout } from '@/components/WoorkoinsCheckout';
 
 interface WoorkoinProduct {
   id: string;
@@ -25,6 +26,9 @@ export default function Woorkoins() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [balance, setBalance] = useState(0);
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [clientSecret, setClientSecret] = useState('');
+  const [selectedPackage, setSelectedPackage] = useState<{ amount: number; price: number } | null>(null);
 
   const products: WoorkoinProduct[] = [
     {
@@ -99,8 +103,14 @@ export default function Woorkoins() {
 
     if (!profileData) return;
 
-    // Por enquanto usando um valor mock, depois criar tabela de woorkoins
-    setBalance(250);
+    // Get woorkoins balance
+    const { data: balanceData } = await supabase
+      .from('woorkoins_balance')
+      .select('balance')
+      .eq('profile_id', profileData.id)
+      .single();
+
+    setBalance(balanceData?.balance || 0);
   };
 
   const handlePurchaseProduct = async (product: WoorkoinProduct) => {
@@ -137,9 +147,45 @@ export default function Woorkoins() {
   };
 
   const handleBuyCoins = async (amount: number, price: number) => {
+    if (!user) return;
+
+    setLoading(true);
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        throw new Error('No active session');
+      }
+
+      const response = await supabase.functions.invoke('buy-woorkoins', {
+        body: { amount, price },
+      });
+
+      if (response.error) {
+        throw response.error;
+      }
+
+      setClientSecret(response.data.clientSecret);
+      setSelectedPackage({ amount, price });
+      setCheckoutOpen(true);
+    } catch (error: any) {
+      console.error('Error initiating purchase:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível iniciar a compra. Tente novamente.',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePaymentSuccess = () => {
+    loadBalance();
     toast({
-      title: 'Em breve!',
-      description: 'A compra de Woorkoins estará disponível em breve.',
+      title: 'Compra realizada!',
+      description: 'Seus Woorkoins foram creditados com sucesso!',
     });
   };
 
@@ -277,6 +323,7 @@ export default function Woorkoins() {
                         <Button
                           onClick={() => handleBuyCoins(pkg.amount + pkg.bonus, pkg.price)}
                           className="w-full bg-gradient-primary hover:shadow-glow"
+                          disabled={loading}
                         >
                           R$ {pkg.price.toFixed(2)}
                         </Button>
@@ -289,6 +336,17 @@ export default function Woorkoins() {
           </Tabs>
         </div>
       </div>
+
+      {clientSecret && selectedPackage && (
+        <WoorkoinsCheckout
+          open={checkoutOpen}
+          onOpenChange={setCheckoutOpen}
+          clientSecret={clientSecret}
+          amount={selectedPackage.amount}
+          price={selectedPackage.price}
+          onSuccess={handlePaymentSuccess}
+        />
+      )}
     </div>
   );
 }

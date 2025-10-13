@@ -20,3 +20,6 @@ verify_jwt = true
 
 [functions.stripe-webhook-handler]
 verify_jwt = false
+
+[functions.buy-woorkoins]
+verify_jwt = true

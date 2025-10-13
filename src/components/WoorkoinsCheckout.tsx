@@ -8,9 +8,9 @@ import { Loader2, X } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import woorkoinsIcon from '@/assets/woorkoins-icon-final.png';
 
-const STRIPE_PUBLISHABLE_KEY = 'pk_live_51Q1f4uJe3QLgIR99LWo76B5I4rwMoj0zjTKLnv7MP421OLvmaTKtR9DM470KVqZZa9gaHkbeQInwqGP2z58zg00eKMM7Ov4';
+const STRIPE_PUBLISHABLE_KEY = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY as string | undefined;
 
-const stripePromise = loadStripe(STRIPE_PUBLISHABLE_KEY);
+const stripePromise = STRIPE_PUBLISHABLE_KEY ? loadStripe(STRIPE_PUBLISHABLE_KEY) : null;
 
 interface CheckoutFormProps {
   clientSecret: string;

@@ -75,6 +75,8 @@ export default function Auth() {
         description: error.message,
         variant: 'destructive',
       });
+    } else {
+      navigate('/painel');
     }
     setLoading(false);
   };

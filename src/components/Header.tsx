@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -22,11 +22,17 @@ import { useUnreadMessages } from '@/hooks/useUnreadMessages';
 export const Header = () => {
   const { language, setLanguage, t } = useLanguage();
   const { user, signOut } = useAuth();
+  const navigate = useNavigate();
   const [isAdmin, setIsAdmin] = useState(false);
   const [profileId, setProfileId] = useState<string>('');
   const [searchOpen, setSearchOpen] = useState(false);
   const [projectsOpen, setProjectsOpen] = useState(false);
   const unreadCount = useUnreadMessages(profileId);
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+  };
 
   useEffect(() => {
     const checkAdminStatus = async () => {
@@ -178,7 +184,7 @@ export const Header = () => {
                     Woorkoins
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={signOut}>
+                <DropdownMenuItem onClick={handleSignOut}>
                   <LogOut className="w-4 h-4 mr-2" />
                   {t('logout')}
                 </DropdownMenuItem>

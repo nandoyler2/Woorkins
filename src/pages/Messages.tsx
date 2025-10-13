@@ -537,6 +537,10 @@ export default function Messages() {
                 projectTitle={selectedConversation.type === 'proposal' ? selectedConversation.title : undefined}
                 businessName={selectedConversation.businessName}
                 businessId={selectedConversation.businessId}
+                onConversationDeleted={() => {
+                  setSelectedConversation(null);
+                  loadConversations();
+                }}
               />
             ) : (
               <div className="h-full flex items-center justify-center">

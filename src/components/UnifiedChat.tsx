@@ -37,6 +37,7 @@ interface UnifiedChatProps {
   projectTitle?: string;
   businessName?: string;
   businessId?: string;
+  onConversationDeleted?: () => void;
 }
 
 export function UnifiedChat({ 
@@ -47,7 +48,8 @@ export function UnifiedChat({
   projectId,
   projectTitle,
   businessName,
-  businessId 
+  businessId,
+  onConversationDeleted
 }: UnifiedChatProps) {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -274,9 +276,10 @@ export function UnifiedChat({
         description: 'A conversa foi excluída com sucesso para ambas as partes.',
       });
       
-      setTimeout(() => {
-        window.location.href = '/messages';
-      }, 1000);
+      // Call parent callback to refresh conversations list
+      if (onConversationDeleted) {
+        onConversationDeleted();
+      }
     } catch (error: any) {
       console.error('Error deleting conversation:', error);
       toast({

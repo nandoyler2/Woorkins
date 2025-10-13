@@ -467,19 +467,18 @@ export default function Dashboard() {
                 ) : (
                   <div className="space-y-3">
                     {businessProfiles.map((business) => (
-                      <Link 
+                      <div 
                         key={business.id} 
-                        to={`/negocio/${business.slug || business.id}`}
-                        className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 transition-colors border border-slate-100"
+                        className="flex items-center gap-3 p-3 rounded-lg border border-slate-100 bg-white hover:shadow-sm transition-all"
                       >
                         {business.logo_url ? (
                           <img 
                             src={business.logo_url} 
                             alt={business.company_name}
-                            className="w-10 h-10 rounded-lg object-cover"
+                            className="w-10 h-10 rounded-lg object-cover flex-shrink-0"
                           />
                         ) : (
-                          <div className="w-10 h-10 bg-slate-200 rounded-lg flex items-center justify-center">
+                          <div className="w-10 h-10 bg-slate-200 rounded-lg flex items-center justify-center flex-shrink-0">
                             <Building2 className="w-5 h-5 text-slate-500" />
                           </div>
                         )}
@@ -491,7 +490,19 @@ export default function Dashboard() {
                             <p className="text-xs text-slate-600 truncate">{business.category}</p>
                           )}
                         </div>
-                      </Link>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <Link to={`/negocio/${business.slug || business.id}`}>
+                            <Button variant="outline" size="sm" className="text-xs h-7 px-2">
+                              Ver perfil
+                            </Button>
+                          </Link>
+                          <Link to="/negocio/editar">
+                            <Button variant="default" size="sm" className="text-xs h-7 px-2">
+                              Editar
+                            </Button>
+                          </Link>
+                        </div>
+                      </div>
                     ))}
                   </div>
                 )}

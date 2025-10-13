@@ -10,11 +10,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Badge } from '@/components/ui/badge';
 import logoWoorkins from '@/assets/logo-woorkins.png';
 import { SafeImage } from '@/components/ui/safe-image';
 import { supabase } from '@/integrations/supabase/client';
 import { NotificationBell } from '@/components/NotificationBell';
 import { SearchSlideIn } from '@/components/SearchSlideIn';
+import { useUnreadMessages } from '@/hooks/useUnreadMessages';
 
 export const Header = () => {
   const { language, setLanguage, t } = useLanguage();
@@ -22,6 +24,8 @@ export const Header = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [profileId, setProfileId] = useState<string>('');
   const [searchOpen, setSearchOpen] = useState(false);
+  const [projectsOpen, setProjectsOpen] = useState(false);
+  const unreadCount = useUnreadMessages(profileId);
 
   useEffect(() => {
     const checkAdminStatus = async () => {
@@ -74,17 +78,22 @@ export const Header = () => {
               <Home className="w-5 h-5" />
               <span>Painel</span>
             </Link>
-            <Link to="/messages" className="flex items-center gap-2 text-foreground/80 hover:text-foreground transition-colors">
-              <MessageCircle className="w-5 h-5" />
-              <span>Mensagens</span>
-            </Link>
             
-            <DropdownMenu>
-              <DropdownMenuTrigger className="flex items-center gap-2 text-foreground/80 hover:text-foreground transition-colors bg-transparent border-0 shadow-none p-0 h-auto font-normal cursor-pointer">
+            <DropdownMenu open={projectsOpen} onOpenChange={setProjectsOpen}>
+              <DropdownMenuTrigger 
+                className="flex items-center gap-2 text-foreground/80 hover:text-foreground transition-colors bg-transparent border-0 shadow-none p-0 h-auto font-normal cursor-pointer data-[state=open]:text-foreground"
+                onMouseEnter={() => setProjectsOpen(true)}
+                onMouseLeave={() => setProjectsOpen(false)}
+              >
                 <Briefcase className="w-5 h-5" />
                 <span>Projetos</span>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-[220px]">
+              <DropdownMenuContent 
+                align="start" 
+                className="w-[220px]"
+                onMouseEnter={() => setProjectsOpen(true)}
+                onMouseLeave={() => setProjectsOpen(false)}
+              >
                 <DropdownMenuItem asChild>
                   <Link to="/projects" className="flex items-center gap-2">
                     <FolderOpen className="w-4 h-4" />
@@ -105,6 +114,16 @@ export const Header = () => {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+            
+            <Link to="/messages" className="flex items-center gap-2 text-foreground/80 hover:text-foreground transition-colors relative">
+              <MessageCircle className="w-5 h-5" />
+              <span>Mensagens</span>
+              {unreadCount > 0 && (
+                <Badge className="absolute -top-2 -right-2 h-5 min-w-5 flex items-center justify-center p-0 px-1.5 bg-red-500 hover:bg-red-500 text-white text-xs">
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </Badge>
+              )}
+            </Link>
             
             <button 
               onClick={() => setSearchOpen(true)}

@@ -54,6 +54,33 @@ export default function Messages() {
   useEffect(() => {
     if (profileId) {
       loadConversations();
+      
+      // Subscribe to realtime updates for new messages
+      const channel = supabase
+        .channel('conversations-updates')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'negotiation_messages'
+          },
+          () => loadConversations()
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'proposal_messages'
+          },
+          () => loadConversations()
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
     }
   }, [profileId]);
 
@@ -174,36 +201,56 @@ export default function Messages() {
       const negotiations = [...(userNegotiations || []), ...(businessNegotiations || [])];
       const proposals = [...(freelancerProposals || []), ...(ownerProposals || [])];
 
-      const negotiationConvos: Conversation[] = (negotiations || []).map(neg => ({
-        id: neg.id,
-        type: 'negotiation' as const,
-        title: neg.service_description || 'Negociação',
-        otherUser: {
-          id: neg.business_profiles.profile_id,
-          name: neg.business_profiles.company_name,
-          avatar: neg.business_profiles.logo_url,
-        },
-        lastMessageAt: neg.updated_at,
-        unreadCount: 0,
-        status: neg.status,
-        businessName: neg.business_profiles.company_name,
-        businessId: neg.business_id,
+      // Count unread messages for each negotiation
+      const negotiationConvos: Conversation[] = await Promise.all((negotiations || []).map(async (neg) => {
+        const { count } = await supabase
+          .from('negotiation_messages')
+          .select('*', { count: 'exact', head: true })
+          .eq('negotiation_id', neg.id)
+          .neq('sender_id', profileId)
+          .in('status', ['sent', 'delivered']);
+
+        return {
+          id: neg.id,
+          type: 'negotiation' as const,
+          title: neg.service_description || 'Negociação',
+          otherUser: {
+            id: neg.business_profiles.profile_id,
+            name: neg.business_profiles.company_name,
+            avatar: neg.business_profiles.logo_url,
+          },
+          lastMessageAt: neg.updated_at,
+          unreadCount: count || 0,
+          status: neg.status,
+          businessName: neg.business_profiles.company_name,
+          businessId: neg.business_id,
+        };
       }));
 
-      const proposalConvos: Conversation[] = (proposals || []).map(prop => ({
-        id: prop.id,
-        type: 'proposal' as const,
-        title: prop.project.title,
-        otherUser: {
-          id: prop.project.profile_id,
-          name: prop.project.profiles.full_name,
-          avatar: prop.project.profiles.avatar_url,
-        },
-        lastMessage: prop.message.substring(0, 60) + '...',
-        lastMessageAt: prop.updated_at,
-        unreadCount: 0,
-        status: prop.status,
-        projectId: prop.project.id,
+      // Count unread messages for each proposal
+      const proposalConvos: Conversation[] = await Promise.all((proposals || []).map(async (prop) => {
+        const { count } = await supabase
+          .from('proposal_messages')
+          .select('*', { count: 'exact', head: true })
+          .eq('proposal_id', prop.id)
+          .neq('sender_id', profileId)
+          .in('status', ['sent', 'delivered']);
+
+        return {
+          id: prop.id,
+          type: 'proposal' as const,
+          title: prop.project.title,
+          otherUser: {
+            id: prop.project.profile_id,
+            name: prop.project.profiles.full_name,
+            avatar: prop.project.profiles.avatar_url,
+          },
+          lastMessage: prop.message.substring(0, 60) + '...',
+          lastMessageAt: prop.updated_at,
+          unreadCount: count || 0,
+          status: prop.status,
+          projectId: prop.project.id,
+        };
       }));
 
       const allConvos = [...negotiationConvos, ...proposalConvos].sort(
@@ -372,17 +419,24 @@ export default function Messages() {
                       }`}
                     >
                       <div className="flex items-start gap-3">
-                        <Avatar className="h-12 w-12">
-                          <AvatarImage src={conv.otherUser.avatar} />
-                          <AvatarFallback className="bg-slate-200 text-slate-700">
-                            {conv.otherUser.name.charAt(0).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
+                        <div className="relative">
+                          <Avatar className="h-12 w-12">
+                            <AvatarImage src={conv.otherUser.avatar} />
+                            <AvatarFallback className="bg-slate-200 text-slate-700">
+                              {conv.otherUser.name.charAt(0).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          {conv.unreadCount > 0 && (
+                            <Badge className="absolute -top-1 -right-1 h-5 min-w-5 flex items-center justify-center p-0 px-1.5 bg-red-500 hover:bg-red-500 text-white text-xs">
+                              {conv.unreadCount > 99 ? '99+' : conv.unreadCount}
+                            </Badge>
+                          )}
+                        </div>
                         
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-2 mb-1">
                             <div className="flex-1">
-                              <p className="font-semibold text-sm truncate">
+                              <p className={`text-sm truncate ${conv.unreadCount > 0 ? 'font-bold' : 'font-semibold'}`}>
                                 {conv.title}
                               </p>
                               <p className="text-xs text-slate-600 truncate">

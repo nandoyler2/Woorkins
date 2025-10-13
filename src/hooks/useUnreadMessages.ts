@@ -20,7 +20,7 @@ export const useUnreadMessages = (profileId: string) => {
         let total = data?.reduce((sum, item) => sum + (item.unread_count || 0), 0) || 0;
 
         // 2) Fallback for legacy messages (no aggregated rows yet)
-        if (total === 0) {
+        if (total === 0 && (!data || data.length === 0)) {
           // Negotiations where user is customer
           const { data: negAsUser } = await supabase
             .from('negotiations')

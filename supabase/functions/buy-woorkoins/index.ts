@@ -9,6 +9,7 @@ const corsHeaders = {
 
 // Mapeamento dos pacotes para os price_ids do Stripe
 const WOORKOINS_PACKAGES: Record<number, string> = {
+  10: 'price_test_50_cents', // Pacote de teste
   100: 'price_1SHtUnJe3Q1gl7R9JAlIIcu6',
   550: 'price_1SHtVMJe3Q1gl7R9ZNOEGA6r',
   1150: 'price_1SHtXQJe3Q1gl7R9AUqS9na9',

@@ -85,6 +85,7 @@ export default function Woorkoins() {
   ];
 
   const coinPackages = [
+    { amount: 10, price: 0.50, bonus: 0 },
     { amount: 100, price: 9.90, bonus: 0 },
     { amount: 500, price: 45.00, bonus: 50 },
     { amount: 1000, price: 85.00, bonus: 150 },

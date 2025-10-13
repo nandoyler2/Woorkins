@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
 import logoWoorkins from '@/assets/logo-woorkins.png';
+import woorkoinsIcon from '@/assets/woorkoins-icon.png';
 import { SafeImage } from '@/components/ui/safe-image';
 import { supabase } from '@/integrations/supabase/client';
 import { NotificationBell } from '@/components/NotificationBell';
@@ -158,25 +159,25 @@ export const Header = () => {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem asChild>
-                  <Link to="/painel">Painel</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/mensagens">
-                    <MessageCircle className="w-4 h-4 mr-2" />
-                    Mensagens
+                  <Link to="/conta" className="flex items-center gap-2">
+                    <User className="w-4 h-4" />
+                    Conta
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link to="/profile">{t('profile')}</Link>
+                  <Link to="/financeiro" className="flex items-center gap-2">
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Financeiro
+                  </Link>
                 </DropdownMenuItem>
-                {isAdmin && (
-                  <DropdownMenuItem asChild>
-                    <Link to="/admin" className="text-primary">
-                      <Shield className="w-4 h-4 mr-2" />
-                      Admin
-                    </Link>
-                  </DropdownMenuItem>
-                )}
+                <DropdownMenuItem asChild>
+                  <Link to="/woorkoins" className="flex items-center gap-2">
+                    <img src={woorkoinsIcon} alt="" className="w-4 h-4" />
+                    Woorkoins
+                  </Link>
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={signOut}>
                   <LogOut className="w-4 h-4 mr-2" />
                   {t('logout')}

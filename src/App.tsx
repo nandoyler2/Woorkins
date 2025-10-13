@@ -27,7 +27,9 @@ import AdminReports from "./pages/admin/Reports";
 import AdminBusinesses from "./pages/admin/Businesses";
 import AdminAnalytics from "./pages/admin/Analytics";
 import AdminSettings from "./pages/admin/Settings";
-import PaymentSettings from "./pages/PaymentSettings";
+import Account from "./pages/Account";
+import Financeiro from "./pages/Financeiro";
+import Woorkoins from "./pages/Woorkoins";
 import Messages from "./pages/Messages";
 
 const queryClient = new QueryClient();
@@ -44,9 +46,11 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/autenticacao" element={<Auth />} />
               <Route path="/painel" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+              <Route path="/conta" element={<ProtectedRoute><Account /></ProtectedRoute>} />
+              <Route path="/financeiro" element={<ProtectedRoute><Financeiro /></ProtectedRoute>} />
+              <Route path="/woorkoins" element={<ProtectedRoute><Woorkoins /></ProtectedRoute>} />
               <Route path="/empresa/:slug/editar" element={<ProtectedRoute><BusinessEdit /></ProtectedRoute>} />
               <Route path="/empresa/financas" element={<ProtectedRoute><BusinessFinances /></ProtectedRoute>} />
-              <Route path="/configuracoes-pagamento" element={<ProtectedRoute><PaymentSettings /></ProtectedRoute>} />
               <Route path="/mensagens" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
               <Route path="/projetos" element={<Projects />} />
               <Route path="/projetos/novo" element={<ProtectedRoute><ProjectCreate /></ProtectedRoute>} />

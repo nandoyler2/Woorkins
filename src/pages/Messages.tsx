@@ -114,6 +114,15 @@ export default function Messages() {
   const loadConversations = async () => {
     setLoading(true);
     try {
+      // Load aggregated unread counts for this user once
+      const { data: unreadRows } = await supabase
+        .from('message_unread_counts')
+        .select('conversation_id, conversation_type, unread_count')
+        .eq('user_id', profileId);
+      const unreadMap = new Map<string, number>(
+        (unreadRows || []).map((r: any) => [`${r.conversation_type}-${r.conversation_id}`, r.unread_count ?? 0])
+      );
+
       // Load negotiations where user is the client
       const { data: userNegotiations } = await supabase
         .from('negotiations')
@@ -220,7 +229,7 @@ export default function Messages() {
             avatar: neg.business_profiles.logo_url,
           },
           lastMessageAt: neg.updated_at,
-          unreadCount: count || 0,
+          unreadCount: unreadMap.get(`negotiation-${neg.id}`) ?? (count || 0),
           status: neg.status,
           businessName: neg.business_profiles.company_name,
           businessId: neg.business_id,
@@ -247,7 +256,7 @@ export default function Messages() {
           },
           lastMessage: prop.message.substring(0, 60) + '...',
           lastMessageAt: prop.updated_at,
-          unreadCount: count || 0,
+          unreadCount: unreadMap.get(`proposal-${prop.id}`) ?? (count || 0),
           status: prop.status,
           projectId: prop.project.id,
         };
@@ -415,7 +424,17 @@ export default function Messages() {
                         setSelectedConversation(conv);
                         // Zero local badge immediately
                         setConversations(prev => prev.map(c => c.id === conv.id && c.type === conv.type ? { ...c, unreadCount: 0 } : c));
-                        // Persist read state
+
+                        // Mark messages as read in DB for this conversation
+                        const table = conv.type === 'negotiation' ? 'negotiation_messages' : 'proposal_messages';
+                        const idColumn = conv.type === 'negotiation' ? 'negotiation_id' : 'proposal_id';
+                        await (supabase.from(table) as any)
+                          .update({ status: 'read', read_at: new Date().toISOString() })
+                          .eq(idColumn, conv.id)
+                          .neq('sender_id', profileId)
+                          .is('read_at', null);
+
+                        // Persist read state (aggregated)
                         await supabase
                           .from('message_unread_counts')
                           .upsert(

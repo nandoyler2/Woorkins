@@ -35,9 +35,55 @@ serve(async (req) => {
         const paymentIntent = event.data.object as Stripe.PaymentIntent;
         console.log('Payment succeeded:', paymentIntent.id);
         
-        // Update proposal or negotiation payment status
         const metadata = paymentIntent.metadata;
-        if (metadata.proposal_id) {
+        
+        // Check if it's a woorkoins purchase
+        if (metadata?.type === 'woorkoins_purchase') {
+          console.log('Woorkoins purchase succeeded:', paymentIntent.id);
+          
+          const profileId = metadata.profile_id;
+          const woorkoinsAmount = parseInt(metadata.woorkoins_amount);
+          
+          // Get or create woorkoins balance
+          const { data: existingBalance } = await supabase
+            .from('woorkoins_balance')
+            .select('*')
+            .eq('profile_id', profileId)
+            .maybeSingle();
+          
+          if (existingBalance) {
+            // Update existing balance
+            await supabase
+              .from('woorkoins_balance')
+              .update({ 
+                balance: existingBalance.balance + woorkoinsAmount,
+                updated_at: new Date().toISOString()
+              })
+              .eq('profile_id', profileId);
+          } else {
+            // Create new balance
+            await supabase
+              .from('woorkoins_balance')
+              .insert({
+                profile_id: profileId,
+                balance: woorkoinsAmount
+              });
+          }
+          
+          // Record transaction
+          await supabase
+            .from('woorkoins_transactions')
+            .insert({
+              profile_id: profileId,
+              amount: woorkoinsAmount,
+              type: 'purchase',
+              description: `Compra de ${woorkoinsAmount} Woorkoins`,
+              stripe_payment_intent_id: paymentIntent.id
+            });
+          
+          console.log(`Added ${woorkoinsAmount} woorkoins to profile ${profileId}`);
+        } else if (metadata.proposal_id) {
+          // Update proposal payment status
           await supabase
             .from('proposals')
             .update({
@@ -47,6 +93,7 @@ serve(async (req) => {
 
           console.log('Updated proposal payment status to paid_escrow');
         } else if (metadata.negotiation_id) {
+          // Update negotiation payment status
           await supabase
             .from('negotiations')
             .update({
@@ -160,57 +207,6 @@ serve(async (req) => {
         break;
       }
 
-      case 'payment_intent.succeeded': {
-        const paymentIntent = event.data.object as Stripe.PaymentIntent;
-        
-        // Check if it's a woorkoins purchase
-        if (paymentIntent.metadata?.type === 'woorkoins_purchase') {
-          console.log('Woorkoins purchase succeeded:', paymentIntent.id);
-          
-          const profileId = paymentIntent.metadata.profile_id;
-          const woorkoinsAmount = parseInt(paymentIntent.metadata.woorkoins_amount);
-          
-          // Get or create woorkoins balance
-          const { data: existingBalance } = await supabase
-            .from('woorkoins_balance')
-            .select('*')
-            .eq('profile_id', profileId)
-            .single();
-          
-          if (existingBalance) {
-            // Update existing balance
-            await supabase
-              .from('woorkoins_balance')
-              .update({ 
-                balance: existingBalance.balance + woorkoinsAmount,
-                updated_at: new Date().toISOString()
-              })
-              .eq('profile_id', profileId);
-          } else {
-            // Create new balance
-            await supabase
-              .from('woorkoins_balance')
-              .insert({
-                profile_id: profileId,
-                balance: woorkoinsAmount
-              });
-          }
-          
-          // Record transaction
-          await supabase
-            .from('woorkoins_transactions')
-            .insert({
-              profile_id: profileId,
-              amount: woorkoinsAmount,
-              type: 'purchase',
-              description: `Compra de ${woorkoinsAmount} Woorkoins`,
-              stripe_payment_intent_id: paymentIntent.id
-            });
-          
-          console.log(`Added ${woorkoinsAmount} woorkoins to profile ${profileId}`);
-        }
-        break;
-      }
 
       case 'payout.paid': {
         const payout = event.data.object as Stripe.Payout;

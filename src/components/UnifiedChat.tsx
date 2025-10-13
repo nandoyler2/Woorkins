@@ -23,6 +23,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useRealtimeMessaging } from '@/hooks/useRealtimeMessaging';
 import { ProposalNegotiationPanel } from './ProposalNegotiationPanel';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface UnifiedChatProps {
   conversationId: string;
@@ -54,6 +55,10 @@ export function UnifiedChat({
   const { user } = useAuth();
   const { toast } = useToast();
   const [messageInput, setMessageInput] = useState('');
+  const [sendOnEnter, setSendOnEnter] = useState<boolean>(() => {
+    const saved = localStorage.getItem('chat_send_on_enter');
+    return saved === null ? true : saved === 'true';
+  });
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [proposalData, setProposalData] = useState<any>(null);
   const [isOwner, setIsOwner] = useState(false);

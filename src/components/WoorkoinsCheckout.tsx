@@ -40,7 +40,19 @@ function CheckoutForm({ clientSecret, amount, price, onSuccess, onCancel }: Chec
 
     try {
       // Ensure the Payment Element is mounted and valid before confirming
-      const paymentElement = elements.getElement(PaymentElement);
+      const getPaymentElement = async () => {
+        let el = elements.getElement(PaymentElement);
+        if (el) return el;
+        // wait up to 2s for mount
+        for (let i = 0; i < 10; i++) {
+          await new Promise((r) => setTimeout(r, 200));
+          el = elements.getElement(PaymentElement);
+          if (el) return el;
+        }
+        return null;
+      };
+
+      const paymentElement = await getPaymentElement();
       if (!paymentElement) {
         toast({
           title: 'Carregando formulário de pagamento',
@@ -116,13 +128,15 @@ function CheckoutForm({ clientSecret, amount, price, onSuccess, onCancel }: Chec
         </p>
       </div>
 
-      <PaymentElement 
-        onReady={() => {
-          console.log('PaymentElement ready');
-          setElementReady(true);
-        }} 
-        options={{ layout: 'tabs' }} 
-      />
+      <div className="min-h-[140px]">
+        <PaymentElement 
+          onReady={() => {
+            console.log('PaymentElement ready');
+            setElementReady(true);
+          }} 
+          options={{ layout: 'tabs' }} 
+        />
+      </div>
 
       <div className="flex gap-3">
         <Button
@@ -136,7 +150,7 @@ function CheckoutForm({ clientSecret, amount, price, onSuccess, onCancel }: Chec
         </Button>
         <Button
           type="submit"
-          disabled={!stripe || !elements || loading}
+          disabled={!stripe || !elements || !elementReady || loading}
           className="flex-1 bg-gradient-primary hover:shadow-glow"
         >
           {loading ? (
@@ -144,6 +158,8 @@ function CheckoutForm({ clientSecret, amount, price, onSuccess, onCancel }: Chec
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               Processando...
             </>
+          ) : !elementReady ? (
+            'Carregando...'
           ) : (
             `Pagar R$ ${price.toFixed(2)}`
           )}
@@ -170,25 +186,25 @@ export function WoorkoinsCheckout({ open, onOpenChange, clientSecret, amount, pr
     appearance: {
       theme: 'flat' as const,
       variables: {
-        colorPrimary: 'hsl(var(--primary))',
-        colorBackground: 'hsl(var(--background))',
-        colorText: 'hsl(var(--foreground))',
-        colorDanger: 'hsl(var(--destructive))',
+        colorPrimary: '#2563eb',
+        colorBackground: '#ffffff',
+        colorText: '#0f172a',
+        colorDanger: '#ef4444',
         fontFamily: 'system-ui, sans-serif',
         spacingUnit: '4px',
         borderRadius: '8px',
       },
       rules: {
         '.Input': {
-          border: '1px solid hsl(var(--border))',
+          border: '1px solid #e5e7eb',
           boxShadow: 'none',
         },
         '.Input:focus': {
-          border: '1px solid hsl(var(--primary))',
-          boxShadow: '0 0 0 2px hsl(var(--primary) / 0.2)',
+          border: '1px solid #2563eb',
+          boxShadow: '0 0 0 2px rgba(37, 99, 235, 0.2)',
         },
         '.Label': {
-          color: 'hsl(var(--foreground))',
+          color: '#0f172a',
           fontWeight: '500',
         },
       },

@@ -10,13 +10,6 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 
 // Verificar se a chave publicável está configurada
 const stripePublishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
-
-console.log('Stripe Key Status:', {
-  exists: !!stripePublishableKey,
-  prefix: stripePublishableKey?.substring(0, 10),
-  env: import.meta.env
-});
-
 const stripePromise = stripePublishableKey ? loadStripe(stripePublishableKey) : null;
 
 interface CheckoutFormProps {

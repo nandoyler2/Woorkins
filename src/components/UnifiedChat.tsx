@@ -81,34 +81,19 @@ export function UnifiedChat({
         .neq('sender_id', profileId)
         .in('status', ['sent', 'delivered']);
       
-      // Update or create unread count record
-      const { data: existing } = await supabase
+      // Persist unread count = 0 using upsert on composite key
+      await supabase
         .from('message_unread_counts')
-        .select('id')
-        .eq('user_id', profileId)
-        .eq('conversation_id', conversationId)
-        .eq('conversation_type', conversationType)
-        .maybeSingle();
-      
-      if (existing) {
-        await supabase
-          .from('message_unread_counts')
-          .update({ 
-            unread_count: 0, 
-            last_read_at: new Date().toISOString() 
-          })
-          .eq('id', existing.id);
-      } else {
-        await supabase
-          .from('message_unread_counts')
-          .insert({
+        .upsert(
+          {
             user_id: profileId,
             conversation_id: conversationId,
             conversation_type: conversationType,
             unread_count: 0,
-            last_read_at: new Date().toISOString()
-          });
-      }
+            last_read_at: new Date().toISOString(),
+          },
+          { onConflict: 'user_id,conversation_id,conversation_type' }
+        );
     } catch (error) {
       console.error('Error marking messages as read:', error);
     }

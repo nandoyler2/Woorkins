@@ -418,13 +418,16 @@ export default function Messages() {
                         // Persist read state
                         await supabase
                           .from('message_unread_counts')
-                          .upsert({
-                            user_id: profileId,
-                            conversation_id: conv.id,
-                            conversation_type: conv.type,
-                            unread_count: 0,
-                            last_read_at: new Date().toISOString(),
-                          });
+                          .upsert(
+                            {
+                              user_id: profileId,
+                              conversation_id: conv.id,
+                              conversation_type: conv.type,
+                              unread_count: 0,
+                              last_read_at: new Date().toISOString(),
+                            },
+                            { onConflict: 'user_id,conversation_id,conversation_type' }
+                          );
                       }}
                       className={`w-full p-3 border-b transition-all text-left ${
                         selectedConversation?.id === conv.id

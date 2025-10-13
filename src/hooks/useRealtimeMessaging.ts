@@ -107,13 +107,16 @@ export const useRealtimeMessaging = ({
       // Update unread count
       await supabase
         .from('message_unread_counts')
-        .upsert({
-          user_id: currentUserId,
-          conversation_id: conversationId,
-          conversation_type: conversationType,
-          unread_count: 0,
-          last_read_at: new Date().toISOString(),
-        });
+        .upsert(
+          {
+            user_id: currentUserId,
+            conversation_id: conversationId,
+            conversation_type: conversationType,
+            unread_count: 0,
+            last_read_at: new Date().toISOString(),
+          },
+          { onConflict: 'user_id,conversation_id,conversation_type' }
+        );
 
       setUnreadCount(0);
     } catch (error) {

@@ -6,7 +6,7 @@ import { Card } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, X } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import woorkoinsIcon from '@/assets/woorkoins-icon-new.png';
+import woorkoinsIcon from '@/assets/woorkoins-icon-final.png';
 
 const STRIPE_PUBLISHABLE_KEY = 'pk_live_51Q1f4uJe3QLgIR99LWo76B5I4rwMoj0zjTKLnv7MP421OLvmaTKtR9DM470KVqZZa9gaHkbeQInwqGP2z58zg00eKMM7Ov4';
 
@@ -26,6 +26,9 @@ function CheckoutForm({ clientSecret, amount, price, onSuccess, onCancel }: Chec
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [elementReady, setElementReady] = useState(false);
+  
+  console.log('CheckoutForm state:', { stripe: !!stripe, elements: !!elements, loading, elementReady });
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -113,7 +116,13 @@ function CheckoutForm({ clientSecret, amount, price, onSuccess, onCancel }: Chec
         </p>
       </div>
 
-      <PaymentElement onReady={() => setElementReady(true)} options={{ layout: 'tabs' }} />
+      <PaymentElement 
+        onReady={() => {
+          console.log('PaymentElement ready');
+          setElementReady(true);
+        }} 
+        options={{ layout: 'tabs' }} 
+      />
 
       <div className="flex gap-3">
         <Button

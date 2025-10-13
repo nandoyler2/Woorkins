@@ -25,6 +25,7 @@ export default function Woorkoins() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [loadingPayment, setLoadingPayment] = useState(false);
   const [balance, setBalance] = useState(0);
   const [previousBalance, setPreviousBalance] = useState(0);
   const [animatingBalance, setAnimatingBalance] = useState(false);
@@ -170,6 +171,7 @@ export default function Woorkoins() {
     }
 
     console.log('Starting purchase:', { amount, price });
+    setLoadingPayment(true);
     setLoading(true);
 
     try {
@@ -196,6 +198,7 @@ export default function Woorkoins() {
         setClientSecret(response.data.clientSecret);
         setSelectedPackage({ amount, price });
         setCheckoutOpen(true);
+        setLoadingPayment(false);
       } else {
         throw new Error('No client secret received');
       }
@@ -207,6 +210,7 @@ export default function Woorkoins() {
         variant: 'destructive',
       });
       setLoading(false);
+      setLoadingPayment(false);
     }
   };
 
@@ -424,6 +428,7 @@ export default function Woorkoins() {
             if (!open) {
               // Resetar loading quando fechar
               setLoading(false);
+              setLoadingPayment(false);
             }
           }}
           clientSecret={clientSecret}
@@ -434,8 +439,19 @@ export default function Woorkoins() {
             handlePaymentSuccess();
             setClientSecret('');
             setSelectedPackage(null);
+            setLoadingPayment(false);
           }}
         />
+      )}
+
+      {/* Loading Overlay */}
+      {loadingPayment && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 flex flex-col items-center gap-4">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+            <p className="text-lg font-medium">Carregando pagamento...</p>
+          </div>
+        </div>
       )}
     </div>
   );

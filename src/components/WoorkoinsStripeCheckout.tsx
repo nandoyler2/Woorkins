@@ -143,15 +143,23 @@ export function WoorkoinsStripeCheckout({
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <img src={woorkoinsIcon} alt="Woorkoins" className="h-6 w-auto object-contain" />
-              Erro de Configuração
+              Configuração Necessária
             </DialogTitle>
           </DialogHeader>
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              A chave publicável do Stripe não está configurada. Entre em contato com o suporte.
+              <p className="font-semibold mb-2">A chave publicável do Stripe precisa ser configurada.</p>
+              <p className="text-sm">
+                Para configurar:
+                <br />1. Acesse o Dashboard do Stripe
+                <br />2. Vá em Developers → API keys
+                <br />3. Copie a chave publicável (começa com pk_)
+                <br />4. Configure nas variáveis de ambiente do projeto
+              </p>
             </AlertDescription>
           </Alert>
+          <Button onClick={() => onOpenChange(false)}>Fechar</Button>
         </DialogContent>
       </Dialog>
     );

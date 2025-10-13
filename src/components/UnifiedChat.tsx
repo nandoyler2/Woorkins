@@ -198,7 +198,7 @@ export function UnifiedChat({
   const handleDeleteConversation = async () => {
     // Verificar se há proposta aceita
     if (conversationType === 'proposal' && proposalData?.status === 'accepted') {
-      alert('Não é possível excluir conversas com propostas aceitas. Entre em contato com o suporte se necessário.');
+      alert('❌ Não é possível excluir conversas com propostas aceitas. Entre em contato com o suporte se necessário.');
       return;
     }
     
@@ -210,12 +210,20 @@ export function UnifiedChat({
         .single();
       
       if (negotiation?.status === 'accepted' || negotiation?.status === 'paid') {
-        alert('Não é possível excluir negociações aceitas ou pagas. Entre em contato com o suporte se necessário.');
+        alert('❌ Não é possível excluir negociações aceitas ou pagas. Entre em contato com o suporte se necessário.');
         return;
       }
     }
 
-    if (!confirm('Tem certeza que deseja excluir esta conversa? Esta ação será irreversível e a conversa será excluída para ambas as partes.')) {
+    const confirmMessage = `⚠️ ATENÇÃO: Esta ação NÃO pode ser desfeita!
+
+🗑️ Ao confirmar, esta conversa será PERMANENTEMENTE EXCLUÍDA para AMBAS as partes.
+
+${conversationType === 'proposal' ? '📋 A proposta também será excluída.' : '💼 A negociação também será excluída.'}
+
+Tem certeza que deseja continuar?`;
+
+    if (!confirm(confirmMessage)) {
       return;
     }
 
@@ -224,16 +232,20 @@ export function UnifiedChat({
       const tableName = conversationType === 'negotiation' ? 'negotiation_messages' : 'proposal_messages';
       const idColumn = conversationType === 'negotiation' ? 'negotiation_id' : 'proposal_id';
       
-      await supabase
+      const { error: messagesError } = await supabase
         .from(tableName as any)
         .delete()
         .eq(idColumn, conversationId);
+
+      if (messagesError) throw messagesError;
       
       // Delete the conversation
       if (conversationType === 'proposal') {
-        await supabase.from('proposals').delete().eq('id', conversationId);
+        const { error: propError } = await supabase.from('proposals').delete().eq('id', conversationId);
+        if (propError) throw propError;
       } else {
-        await supabase.from('negotiations').delete().eq('id', conversationId);
+        const { error: negError } = await supabase.from('negotiations').delete().eq('id', conversationId);
+        if (negError) throw negError;
       }
       
       // Clean up unread counts
@@ -242,10 +254,12 @@ export function UnifiedChat({
         .delete()
         .eq('conversation_id', conversationId);
       
+      // Redirect using navigate instead of window.location
+      alert('✅ Conversa excluída com sucesso para ambas as partes!');
       window.location.href = '/messages';
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting conversation:', error);
-      alert('Erro ao excluir conversa. Tente novamente.');
+      alert(`❌ Erro ao excluir conversa: ${error.message || 'Tente novamente.'}`);
     }
   };
 

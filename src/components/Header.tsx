@@ -24,7 +24,6 @@ export const Header = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [profileId, setProfileId] = useState<string>('');
   const [searchOpen, setSearchOpen] = useState(false);
-  const [projectsOpen, setProjectsOpen] = useState(false);
   const unreadCount = useUnreadMessages(profileId);
 
   useEffect(() => {
@@ -79,41 +78,10 @@ export const Header = () => {
               <span>Painel</span>
             </Link>
             
-            <DropdownMenu open={projectsOpen} onOpenChange={setProjectsOpen}>
-              <DropdownMenuTrigger 
-                className="flex items-center gap-2 text-foreground/80 hover:text-foreground transition-colors bg-transparent border-0 shadow-none p-0 h-auto font-normal cursor-pointer data-[state=open]:text-foreground"
-                onMouseEnter={() => setProjectsOpen(true)}
-                onMouseLeave={() => setProjectsOpen(false)}
-              >
-                <Briefcase className="w-5 h-5" />
-                <span>Projetos</span>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent 
-                align="start" 
-                className="w-[220px]"
-                onMouseEnter={() => setProjectsOpen(true)}
-                onMouseLeave={() => setProjectsOpen(false)}
-              >
-                <DropdownMenuItem asChild>
-                  <Link to="/projetos" className="flex items-center gap-2">
-                    <FolderOpen className="w-4 h-4" />
-                    Projetos Disponíveis
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/meus-projetos" className="flex items-center gap-2">
-                    <Briefcase className="w-4 h-4" />
-                    Meus Projetos
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/projetos/novo" className="flex items-center gap-2">
-                    <Plus className="w-4 h-4" />
-                    Criar Projeto
-                  </Link>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <Link to="/projetos" className="flex items-center gap-2 text-foreground/80 hover:text-foreground transition-colors">
+              <Briefcase className="w-5 h-5" />
+              <span>Projetos</span>
+            </Link>
             
             <Link to="/mensagens" className="flex items-center gap-2 text-foreground/80 hover:text-foreground transition-colors relative">
               <MessageCircle className="w-5 h-5" />

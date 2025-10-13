@@ -89,6 +89,12 @@ serve(async (req) => {
         },
       ],
       mode: 'payment',
+      payment_method_types: ['card', 'boleto'],
+      payment_method_options: {
+        boleto: {
+          expires_after_days: 3,
+        },
+      },
       success_url: `${req.headers.get('origin')}/woorkoins?payment=success`,
       cancel_url: `${req.headers.get('origin')}/woorkoins?payment=canceled`,
       metadata: {

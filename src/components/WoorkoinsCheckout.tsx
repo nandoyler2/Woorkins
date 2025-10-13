@@ -6,7 +6,7 @@ import { Card } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, X } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import woorkoinsIcon from '@/assets/woorkoins-icon.png';
+import woorkoinsIcon from '@/assets/woorkoins-icon-new.png';
 
 const STRIPE_PUBLISHABLE_KEY = 'pk_live_51Q1f4uJe3QLgIR99LWo76B5I4rwMoj0zjTKLnv7MP421OLvmaTKtR9DM470KVqZZa9gaHkbeQInwqGP2z58zg00eKMM7Ov4';
 

@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
 import logoWoorkins from '@/assets/logo-woorkins.png';
-import woorkoinsIcon from '@/assets/woorkoins-icon.png';
+import woorkoinsIcon from '@/assets/woorkoins-icon-new.png';
 import { SafeImage } from '@/components/ui/safe-image';
 import { supabase } from '@/integrations/supabase/client';
 import { NotificationBell } from '@/components/NotificationBell';

@@ -259,7 +259,7 @@ export default function Dashboard() {
   }
 
   const profileCompletion = 75; // Mock data
-  const memberLevel = 'Membro Prata';
+  const accountType = 'Conta Grátis';
   const points = 1250;
   const maxPoints = 2000;
 
@@ -282,7 +282,7 @@ export default function Dashboard() {
                     <div className="flex items-center gap-3 mt-2">
                       <Badge variant="secondary" className="text-xs px-2 py-0.5 bg-slate-100">
                         <Award className="w-3 h-3 mr-1" />
-                        {memberLevel}
+                        {accountType}
                       </Badge>
                       <Link 
                         to="/woorkoins" 

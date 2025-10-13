@@ -9,8 +9,8 @@ import woorkoinsIcon from '@/assets/woorkoins-icon-final.png';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 // Verificar se a chave publicável está configurada
-const stripePublishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
-const stripePromise = stripePublishableKey ? loadStripe(stripePublishableKey) : null;
+const stripePublishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || 'pk_live_51O1f4uJe3Q1gl7R9Lwo7G85I4rwMoj0zjzjTKLnv7Mr42JIOLvm3TktR9DW470KVq2Za0gaHkbeQIrwqGP2z58zg00ekNM7Ov4';
+const stripePromise = loadStripe(stripePublishableKey);
 
 interface CheckoutFormProps {
   amount: number;
@@ -175,7 +175,8 @@ export function WoorkoinsStripeCheckout({
   const options = {
     clientSecret,
     appearance,
-  };
+    paymentMethodOrder: ['pix', 'card', 'boleto'] as any,
+  } as any;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

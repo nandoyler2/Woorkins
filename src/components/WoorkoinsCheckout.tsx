@@ -25,7 +25,7 @@ function CheckoutForm({ clientSecret, amount, price, onSuccess, onCancel }: Chec
   const elements = useElements();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-
+  const [elementReady, setElementReady] = useState(false);
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -36,6 +36,29 @@ function CheckoutForm({ clientSecret, amount, price, onSuccess, onCancel }: Chec
     setLoading(true);
 
     try {
+      // Ensure the Payment Element is mounted and valid before confirming
+      const paymentElement = elements.getElement(PaymentElement);
+      if (!paymentElement) {
+        toast({
+          title: 'Carregando formulário de pagamento',
+          description: 'Aguarde 1-2 segundos e tente novamente.',
+          variant: 'destructive',
+        });
+        setLoading(false);
+        return;
+      }
+
+      const { error: submitError } = await elements.submit();
+      if (submitError) {
+        toast({
+          title: 'Dados de pagamento incompletos',
+          description: submitError.message,
+          variant: 'destructive',
+        });
+        setLoading(false);
+        return;
+      }
+
       const { error } = await stripe.confirmPayment({
         elements,
         confirmParams: {
@@ -90,7 +113,7 @@ function CheckoutForm({ clientSecret, amount, price, onSuccess, onCancel }: Chec
         </p>
       </div>
 
-      <PaymentElement />
+      <PaymentElement onReady={() => setElementReady(true)} options={{ layout: 'tabs' }} />
 
       <div className="flex gap-3">
         <Button
@@ -104,7 +127,7 @@ function CheckoutForm({ clientSecret, amount, price, onSuccess, onCancel }: Chec
         </Button>
         <Button
           type="submit"
-          disabled={!stripe || loading}
+          disabled={!stripe || loading || !elementReady}
           className="flex-1 bg-gradient-primary hover:shadow-glow"
         >
           {loading ? (

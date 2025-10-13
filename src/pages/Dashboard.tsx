@@ -446,7 +446,7 @@ export default function Dashboard() {
                     </div>
                     <h3 className="text-base font-bold text-slate-900">Perfis Profissionais</h3>
                   </div>
-                  <Link to="/negocio/editar">
+                  <Link to="/empresa/novo/editar">
                     <Button variant="outline" size="sm" className="text-xs h-7">
                       + Criar Perfil
                     </Button>
@@ -458,7 +458,7 @@ export default function Dashboard() {
                   <div className="text-center py-6">
                     <Building2 className="w-12 h-12 text-slate-300 mx-auto mb-2" />
                     <p className="text-sm text-slate-600 mb-3">Você ainda não criou nenhum perfil profissional</p>
-                    <Link to="/negocio/editar">
+                    <Link to="/empresa/novo/editar">
                       <Button variant="default" size="sm">
                         Criar Primeiro Perfil
                       </Button>
@@ -491,12 +491,12 @@ export default function Dashboard() {
                           )}
                         </div>
                         <div className="flex items-center gap-2 flex-shrink-0">
-                          <Link to={`/negocio/${business.slug || business.id}`}>
+                          <Link to={`/${business.slug || business.id}`}>
                             <Button variant="outline" size="sm" className="text-xs h-7 px-2">
                               Ver perfil
                             </Button>
                           </Link>
-                          <Link to="/negocio/editar">
+                          <Link to={`/empresa/${business.slug || business.id}/editar`}>
                             <Button variant="default" size="sm" className="text-xs h-7 px-2">
                               Editar
                             </Button>

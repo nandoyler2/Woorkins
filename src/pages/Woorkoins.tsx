@@ -217,9 +217,6 @@ export default function Woorkoins() {
   const handlePaymentSuccess = async () => {
     if (!user || !selectedPackage) return;
 
-    // Guardar saldo anterior
-    setPreviousBalance(balance);
-    
     // Carregar novo saldo
     const { data: profileData } = await supabase
       .from('profiles')
@@ -235,6 +232,7 @@ export default function Woorkoins() {
         .single();
 
       const newBalance = balanceData?.balance || 0;
+      const startBalance = balance;
       const addedAmount = selectedPackage.amount;
 
       // Animar o saldo subindo
@@ -250,14 +248,14 @@ export default function Woorkoins() {
           setAnimatingBalance(false);
           clearInterval(interval);
         } else {
-          setBalance(balance + (increment * currentStep));
+          setBalance(startBalance + (increment * currentStep));
         }
       }, 30);
 
       // Mostrar notificação
       toast({
         title: 'Pagamento confirmado!',
-        description: `Foi adicionado ${addedAmount} Woorkoins ao seu saldo!`,
+        description: `${addedAmount} Woorkoins adicionados ao seu saldo!`,
       });
     }
 

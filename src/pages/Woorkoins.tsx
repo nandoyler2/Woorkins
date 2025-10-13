@@ -26,6 +26,8 @@ export default function Woorkoins() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [balance, setBalance] = useState(0);
+  const [previousBalance, setPreviousBalance] = useState(0);
+  const [animatingBalance, setAnimatingBalance] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [clientSecret, setClientSecret] = useState('');
   const [selectedPackage, setSelectedPackage] = useState<{ amount: number; price: number } | null>(null);
@@ -199,12 +201,54 @@ export default function Woorkoins() {
     }
   };
 
-  const handlePaymentSuccess = () => {
-    loadBalance();
-    toast({
-      title: 'Compra realizada!',
-      description: 'Seus Woorkoins foram creditados com sucesso!',
-    });
+  const handlePaymentSuccess = async () => {
+    if (!user || !selectedPackage) return;
+
+    // Guardar saldo anterior
+    setPreviousBalance(balance);
+    
+    // Carregar novo saldo
+    const { data: profileData } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('user_id', user.id)
+      .single();
+
+    if (profileData) {
+      const { data: balanceData } = await supabase
+        .from('woorkoins_balance')
+        .select('balance')
+        .eq('profile_id', profileData.id)
+        .single();
+
+      const newBalance = balanceData?.balance || 0;
+      const addedAmount = selectedPackage.amount;
+
+      // Animar o saldo subindo
+      setAnimatingBalance(true);
+      const steps = 30;
+      const increment = addedAmount / steps;
+      let currentStep = 0;
+
+      const interval = setInterval(() => {
+        currentStep++;
+        if (currentStep >= steps) {
+          setBalance(newBalance);
+          setAnimatingBalance(false);
+          clearInterval(interval);
+        } else {
+          setBalance(balance + (increment * currentStep));
+        }
+      }, 30);
+
+      // Mostrar notificação
+      toast({
+        title: 'Pagamento confirmado!',
+        description: `Foi adicionado ${addedAmount} Woorkoins ao seu saldo!`,
+      });
+    }
+
+    setLoading(false);
   };
 
   // Verificar se o pagamento foi bem-sucedido (success na URL)
@@ -246,7 +290,9 @@ export default function Woorkoins() {
                     <p className="text-sm text-muted-foreground mb-2">Seu Saldo</p>
                     <div className="flex items-center gap-3">
                       <img src={woorkoinsIcon} alt="Woorkoins" className="h-10 w-auto object-contain" />
-                      <p className="text-4xl font-bold">{balance.toLocaleString()}</p>
+                      <p className={`text-4xl font-bold transition-all duration-300 ${animatingBalance ? 'scale-110 text-primary' : ''}`}>
+                        {Math.floor(balance).toLocaleString()}
+                      </p>
                       <span className="text-2xl font-medium text-muted-foreground">Woorkoins</span>
                     </div>
                   </div>
@@ -364,15 +410,21 @@ export default function Woorkoins() {
       {clientSecret && selectedPackage && (
         <WoorkoinsStripeCheckout
           open={checkoutOpen}
-          onOpenChange={setCheckoutOpen}
+          onOpenChange={(open) => {
+            setCheckoutOpen(open);
+            if (!open) {
+              // Resetar loading quando fechar
+              setLoading(false);
+            }
+          }}
           clientSecret={clientSecret}
           amount={selectedPackage.amount}
           price={selectedPackage.price}
           onSuccess={() => {
             setCheckoutOpen(false);
+            handlePaymentSuccess();
             setClientSecret('');
             setSelectedPackage(null);
-            loadBalance();
           }}
         />
       )}

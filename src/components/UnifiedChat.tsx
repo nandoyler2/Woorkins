@@ -407,8 +407,8 @@ export function UnifiedChat({
       </div>
 
       {/* Messages - Scrollable Area with proper height */}
-      <ScrollArea className="flex-1">
-        <div className="p-4 space-y-4 min-h-full">
+      <div className="flex-1 overflow-y-auto">
+        <div className="p-4 space-y-4">
           {isChatLocked ? (
             <div className="text-center py-12">
               <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-yellow-500/10 mb-4">
@@ -534,7 +534,7 @@ export function UnifiedChat({
           )}
           <div ref={messagesEndRef} />
         </div>
-      </ScrollArea>
+      </div>
 
       {/* Input - Fixed at Bottom */}
       <div className="border-t bg-white">

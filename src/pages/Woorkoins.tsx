@@ -27,7 +27,7 @@ export default function Woorkoins() {
   const [loading, setLoading] = useState(false);
   const [balance, setBalance] = useState(0);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
-  const [clientSecret, setClientSecret] = useState('');
+  const [checkoutUrl, setCheckoutUrl] = useState('');
   const [selectedPackage, setSelectedPackage] = useState<{ amount: number; price: number } | null>(null);
   const [activeTab, setActiveTab] = useState<'produtos' | 'comprar'>('produtos');
 
@@ -170,7 +170,7 @@ export default function Woorkoins() {
 
       console.log('Calling buy-woorkoins function...');
       const response = await supabase.functions.invoke('buy-woorkoins', {
-        body: { amount, price },
+        body: { amount },
       });
 
       console.log('Function response:', response);
@@ -180,10 +180,13 @@ export default function Woorkoins() {
         throw response.error;
       }
 
-      console.log('Setting client secret and opening checkout...');
-      setClientSecret(response.data.clientSecret);
-      setSelectedPackage({ amount, price });
-      setCheckoutOpen(true);
+      if (response.data?.url) {
+        console.log('Redirecting to Stripe Checkout...');
+        // Redirecionar para o checkout do Stripe
+        window.location.href = response.data.url;
+      } else {
+        throw new Error('No checkout URL received');
+      }
     } catch (error: any) {
       console.error('Error initiating purchase:', error);
       toast({
@@ -191,7 +194,6 @@ export default function Woorkoins() {
         description: error.message || 'Não foi possível iniciar a compra. Tente novamente.',
         variant: 'destructive',
       });
-    } finally {
       setLoading(false);
     }
   };
@@ -203,6 +205,16 @@ export default function Woorkoins() {
       description: 'Seus Woorkoins foram creditados com sucesso!',
     });
   };
+
+  // Verificar se o pagamento foi bem-sucedido (success na URL)
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('payment') === 'success') {
+      handlePaymentSuccess();
+      // Limpar a URL
+      window.history.replaceState({}, '', '/woorkoins');
+    }
+  }, []);
 
   const getIcon = (iconName: string) => {
     switch (iconName) {
@@ -347,17 +359,6 @@ export default function Woorkoins() {
           </Tabs>
         </div>
       </div>
-
-      {clientSecret && selectedPackage && (
-        <WoorkoinsCheckout
-          open={checkoutOpen}
-          onOpenChange={setCheckoutOpen}
-          clientSecret={clientSecret}
-          amount={selectedPackage.amount}
-          price={selectedPackage.price}
-          onSuccess={handlePaymentSuccess}
-        />
-      )}
     </div>
   );
 }

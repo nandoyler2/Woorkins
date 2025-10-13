@@ -7,6 +7,14 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Mapeamento dos pacotes para os price_ids do Stripe
+const WOORKOINS_PACKAGES: Record<number, string> = {
+  100: 'price_1SHtUnJe3Q1gl7R9JAlIIcu6',
+  550: 'price_1SHtVMJe3Q1gl7R9ZNOEGA6r',
+  1150: 'price_1SHtXQJe3Q1gl7R9AUqS9na9',
+  3000: 'price_1SHtXeJe3Q1gl7R9cQ9f7TUQ',
+};
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -32,12 +40,18 @@ serve(async (req) => {
       throw new Error('Unauthorized');
     }
 
-    const { amount, price } = await req.json();
+    const { amount } = await req.json();
 
-    console.log('Buy Woorkoins request:', { userId: user.id, amount, price });
+    console.log('Buy Woorkoins request:', { userId: user.id, amount });
 
-    if (!amount || !price) {
-      throw new Error('Missing required parameters');
+    if (!amount) {
+      throw new Error('Missing amount parameter');
+    }
+
+    // Verificar se existe price_id para este pacote
+    const priceId = WOORKOINS_PACKAGES[amount];
+    if (!priceId) {
+      throw new Error(`Invalid woorkoins package amount: ${amount}`);
     }
 
     // Get user profile
@@ -57,24 +71,38 @@ serve(async (req) => {
       apiVersion: '2023-10-16',
     });
 
-    // Create Stripe payment intent
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: Math.round(price * 100), // Convert to cents
-      currency: 'brl',
+    // Verificar se o cliente já existe no Stripe
+    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+    let customerId;
+    if (customers.data.length > 0) {
+      customerId = customers.data[0].id;
+    }
+
+    // Criar sessão de checkout
+    const session = await stripe.checkout.sessions.create({
+      customer: customerId,
+      customer_email: customerId ? undefined : user.email,
+      line_items: [
+        {
+          price: priceId,
+          quantity: 1,
+        },
+      ],
+      mode: 'payment',
+      success_url: `${req.headers.get('origin')}/woorkoins?payment=success`,
+      cancel_url: `${req.headers.get('origin')}/woorkoins?payment=canceled`,
       metadata: {
-        type: 'woorkoins_purchase',
         profile_id: profile.id,
         woorkoins_amount: amount.toString(),
       },
-      description: `Compra de ${amount} Woorkoins`,
     });
 
-    console.log('Payment intent created:', paymentIntent.id);
+    console.log('Checkout session created:', session.id);
 
     return new Response(
       JSON.stringify({
-        clientSecret: paymentIntent.client_secret,
-        paymentIntentId: paymentIntent.id,
+        url: session.url,
+        sessionId: session.id,
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

@@ -226,7 +226,7 @@ export default function Woorkoins() {
             </Button>
             <div>
               <h1 className="text-4xl font-bold flex items-center gap-3">
-                <img src={woorkoinsIcon} alt="Woorkoins" className="w-12 h-12" />
+                <img src={woorkoinsIcon} alt="Woorkoins" className="h-12 w-auto object-contain" />
                 Woorkoins
               </h1>
               <p className="text-muted-foreground">A moeda oficial do Woorkins</p>
@@ -240,7 +240,7 @@ export default function Woorkoins() {
                 <div>
                   <p className="text-sm text-muted-foreground mb-2">Seu Saldo</p>
                   <div className="flex items-center gap-3">
-                    <img src={woorkoinsIcon} alt="Woorkoins" className="w-10 h-10" />
+                    <img src={woorkoinsIcon} alt="Woorkoins" className="h-10 w-auto object-contain" />
                     <p className="text-4xl font-bold">{balance.toLocaleString()}</p>
                     <span className="text-2xl font-medium text-muted-foreground">Woorkoins</span>
                   </div>
@@ -295,7 +295,7 @@ export default function Woorkoins() {
                       <CardContent>
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <img src={woorkoinsIcon} alt="Woorkoins" className="w-6 h-6" />
+                            <img src={woorkoinsIcon} alt="Woorkoins" className="h-6 w-auto object-contain" />
                             <span className="text-2xl font-bold">{product.price}</span>
                           </div>
                           <Button
@@ -334,7 +334,7 @@ export default function Woorkoins() {
                         </div>
                       )}
                       <CardHeader className="text-center">
-                        <img src={woorkoinsIcon} alt="Woorkoins" className="w-16 h-16 mx-auto mb-3" />
+                        <img src={woorkoinsIcon} alt="Woorkoins" className="h-16 w-auto object-contain mx-auto mb-3" />
                         <CardTitle className="text-3xl">{pkg.amount}</CardTitle>
                         {pkg.bonus > 0 && (
                           <p className="text-sm text-muted-foreground">+ {pkg.bonus} de bônus</p>

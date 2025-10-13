@@ -288,7 +288,7 @@ export default function Dashboard() {
                         to="/woorkoins" 
                         className="flex items-center gap-1.5 text-sm text-slate-600 hover:text-primary transition-colors cursor-pointer group"
                       >
-                        <img src={woorkoinsIcon} alt="Woorkoins" className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                        <img src={woorkoinsIcon} alt="Woorkoins" className="h-5 w-auto object-contain group-hover:scale-110 transition-transform" />
                         <span className="font-semibold">{woorkoinsBalance.toLocaleString()}</span>
                         <span>Woorkoins</span>
                       </Link>

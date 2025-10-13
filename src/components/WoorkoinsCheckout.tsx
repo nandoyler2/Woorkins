@@ -96,7 +96,7 @@ function CheckoutForm({ clientSecret, amount, price, onSuccess, onCancel }: Chec
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="bg-muted p-4 rounded-lg space-y-3">
         <div className="flex items-center justify-center gap-3">
-          <img src={woorkoinsIcon} alt="Woorkoins" className="w-12 h-12" />
+          <img src={woorkoinsIcon} alt="Woorkoins" className="h-12 w-auto object-contain" />
           <div>
             <p className="text-2xl font-bold">{amount} Woorkoins</p>
             <p className="text-sm text-muted-foreground">Total: R$ {price.toFixed(2)}</p>
@@ -207,7 +207,7 @@ export function WoorkoinsCheckout({ open, onOpenChange, clientSecret, amount, pr
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <img src={woorkoinsIcon} alt="Woorkoins" className="w-6 h-6" />
+            <img src={woorkoinsIcon} alt="Woorkoins" className="h-6 w-auto object-contain" />
             Comprar Woorkoins
           </DialogTitle>
         </DialogHeader>

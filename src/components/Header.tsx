@@ -174,7 +174,7 @@ export const Header = () => {
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link to="/woorkoins" className="flex items-center gap-2">
-                    <img src={woorkoinsIcon} alt="" className="w-4 h-4" />
+                    <img src={woorkoinsIcon} alt="" className="h-4 w-auto object-contain" />
                     Woorkoins
                   </Link>
                 </DropdownMenuItem>

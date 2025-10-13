@@ -18,6 +18,14 @@ interface Profile {
   avatar_url: string | null;
 }
 
+interface BusinessProfile {
+  id: string;
+  company_name: string;
+  category: string | null;
+  logo_url: string | null;
+  slug: string | null;
+}
+
 interface FeedPost {
   id: string;
   author_name: string;
@@ -60,6 +68,7 @@ interface Notification {
 export default function Dashboard() {
   const { user } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [businessProfiles, setBusinessProfiles] = useState<BusinessProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [unreadMessages, setUnreadMessages] = useState(5);
   
@@ -222,9 +231,22 @@ export default function Dashboard() {
       .maybeSingle();
     
     if (!error && data) {
-      setProfile(data as unknown as Profile);
+      const profileData = data as unknown as Profile;
+      setProfile(profileData);
+      await loadBusinessProfiles(profileData.id);
     }
     setLoading(false);
+  };
+
+  const loadBusinessProfiles = async (profileId: string) => {
+    const { data, error } = await supabase
+      .from('business_profiles' as any)
+      .select('id, company_name, category, logo_url, slug')
+      .eq('profile_id', profileId);
+    
+    if (!error && data) {
+      setBusinessProfiles(data as unknown as BusinessProfile[]);
+    }
   };
   if (loading) {
     return (
@@ -246,7 +268,7 @@ export default function Dashboard() {
       <div className="container mx-auto px-4 py-6 max-w-7xl">
         <div className="grid lg:grid-cols-12 gap-6">
           {/* Main Content */}
-          <div className="lg:col-span-7 space-y-6">
+          <div className="lg:col-span-8 space-y-6">
             {/* Welcome Section */}
             <Card className="bg-white shadow-sm border border-slate-200">
               <CardContent className="p-6">
@@ -413,7 +435,68 @@ export default function Dashboard() {
           </div>
 
           {/* Sidebar */}
-          <div className="lg:col-span-5 space-y-4">
+          <div className="lg:col-span-4 space-y-4">
+            {/* Professional Profiles Card */}
+            <Card className="bg-white shadow-sm border border-slate-200">
+              <CardHeader className="border-b border-slate-100 p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 bg-primary/10 rounded-lg flex items-center justify-center">
+                      <Building2 className="w-4 h-4 text-primary" />
+                    </div>
+                    <h3 className="text-base font-bold text-slate-900">Perfis Profissionais</h3>
+                  </div>
+                  <Link to="/negocio/editar">
+                    <Button variant="outline" size="sm" className="text-xs h-7">
+                      + Criar Perfil
+                    </Button>
+                  </Link>
+                </div>
+              </CardHeader>
+              <CardContent className="p-4">
+                {businessProfiles.length === 0 ? (
+                  <div className="text-center py-6">
+                    <Building2 className="w-12 h-12 text-slate-300 mx-auto mb-2" />
+                    <p className="text-sm text-slate-600 mb-3">Você ainda não criou nenhum perfil profissional</p>
+                    <Link to="/negocio/editar">
+                      <Button variant="default" size="sm">
+                        Criar Primeiro Perfil
+                      </Button>
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {businessProfiles.map((business) => (
+                      <Link 
+                        key={business.id} 
+                        to={`/negocio/${business.slug || business.id}`}
+                        className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 transition-colors border border-slate-100"
+                      >
+                        {business.logo_url ? (
+                          <img 
+                            src={business.logo_url} 
+                            alt={business.company_name}
+                            className="w-10 h-10 rounded-lg object-cover"
+                          />
+                        ) : (
+                          <div className="w-10 h-10 bg-slate-200 rounded-lg flex items-center justify-center">
+                            <Building2 className="w-5 h-5 text-slate-500" />
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <h4 className="text-sm font-semibold text-slate-900 truncate">
+                            {business.company_name}
+                          </h4>
+                          {business.category && (
+                            <p className="text-xs text-slate-600 truncate">{business.category}</p>
+                          )}
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
             {/* Statistics Card */}
             <Card className="bg-white shadow-sm border border-slate-200">
               <CardHeader className="border-b border-slate-100 p-4">

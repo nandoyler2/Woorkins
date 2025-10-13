@@ -113,7 +113,7 @@ export default function Woorkoins() {
       .from('woorkoins_balance')
       .select('balance')
       .eq('profile_id', profileData.id)
-      .single();
+      .maybeSingle();
 
     setBalance(balanceData?.balance || 0);
   };
@@ -217,6 +217,18 @@ export default function Woorkoins() {
   const handlePaymentSuccess = async () => {
     if (!user || !selectedPackage) return;
 
+    try {
+      // Confirma e credita no backend (caso o webhook demore)
+      const piId = clientSecret?.split('_secret_')[0];
+      if (piId) {
+        await supabase.functions.invoke('confirm-woorkoins-payment', {
+          body: { payment_intent_id: piId },
+        });
+      }
+    } catch (e: any) {
+      console.error('Confirm woorkoins error:', e);
+    }
+
     // Carregar novo saldo
     const { data: profileData } = await supabase
       .from('profiles')
@@ -229,7 +241,7 @@ export default function Woorkoins() {
         .from('woorkoins_balance')
         .select('balance')
         .eq('profile_id', profileData.id)
-        .single();
+        .maybeSingle();
 
       const newBalance = balanceData?.balance || 0;
       const startBalance = balance;

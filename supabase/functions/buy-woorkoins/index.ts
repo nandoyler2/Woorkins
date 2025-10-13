@@ -78,37 +78,30 @@ serve(async (req) => {
       customerId = customers.data[0].id;
     }
 
-    // Criar sessão de checkout
-    const session = await stripe.checkout.sessions.create({
+    // Criar Payment Intent ao invés de Checkout Session
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: Math.round(amount * 10), // Convertendo para centavos (cada woorkoin = R$0.10)
+      currency: 'brl',
       customer: customerId,
-      customer_email: customerId ? undefined : user.email,
-      line_items: [
-        {
-          price: priceId,
-          quantity: 1,
-        },
-      ],
-      mode: 'payment',
       payment_method_types: ['card', 'boleto'],
       payment_method_options: {
         boleto: {
           expires_after_days: 3,
         },
       },
-      success_url: `${req.headers.get('origin')}/woorkoins?payment=success`,
-      cancel_url: `${req.headers.get('origin')}/woorkoins?payment=canceled`,
       metadata: {
         profile_id: profile.id,
         woorkoins_amount: amount.toString(),
+        type: 'woorkoins_purchase',
       },
     });
 
-    console.log('Checkout session created:', session.id);
+    console.log('Payment Intent created:', paymentIntent.id);
 
     return new Response(
       JSON.stringify({
-        url: session.url,
-        sessionId: session.id,
+        clientSecret: paymentIntent.client_secret,
+        amount: amount,
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

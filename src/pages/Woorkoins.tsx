@@ -10,7 +10,7 @@ import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import woorkoinsIcon from '@/assets/woorkoins-icon-final.png';
-import { WoorkoinsCheckout } from '@/components/WoorkoinsCheckout';
+import { WoorkoinsStripeCheckout } from '@/components/WoorkoinsStripeCheckout';
 
 interface WoorkoinProduct {
   id: string;
@@ -27,7 +27,7 @@ export default function Woorkoins() {
   const [loading, setLoading] = useState(false);
   const [balance, setBalance] = useState(0);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
-  const [checkoutUrl, setCheckoutUrl] = useState('');
+  const [clientSecret, setClientSecret] = useState('');
   const [selectedPackage, setSelectedPackage] = useState<{ amount: number; price: number } | null>(null);
   const [activeTab, setActiveTab] = useState<'produtos' | 'comprar'>('produtos');
 
@@ -180,12 +180,13 @@ export default function Woorkoins() {
         throw response.error;
       }
 
-      if (response.data?.url) {
-        console.log('Redirecting to Stripe Checkout...');
-        // Redirecionar para o checkout do Stripe
-        window.location.href = response.data.url;
+      if (response.data?.clientSecret) {
+        console.log('Opening checkout with clientSecret...');
+        setClientSecret(response.data.clientSecret);
+        setSelectedPackage({ amount, price });
+        setCheckoutOpen(true);
       } else {
-        throw new Error('No checkout URL received');
+        throw new Error('No client secret received');
       }
     } catch (error: any) {
       console.error('Error initiating purchase:', error);
@@ -359,6 +360,22 @@ export default function Woorkoins() {
           </Tabs>
         </div>
       </div>
+
+      {clientSecret && selectedPackage && (
+        <WoorkoinsStripeCheckout
+          open={checkoutOpen}
+          onOpenChange={setCheckoutOpen}
+          clientSecret={clientSecret}
+          amount={selectedPackage.amount}
+          price={selectedPackage.price}
+          onSuccess={() => {
+            setCheckoutOpen(false);
+            setClientSecret('');
+            setSelectedPackage(null);
+            loadBalance();
+          }}
+        />
+      )}
     </div>
   );
 }

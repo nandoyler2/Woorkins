@@ -28,7 +28,7 @@ export default function Auth() {
 
   useEffect(() => {
     if (user) {
-      navigate('/dashboard');
+      navigate('/painel');
     }
   }, [user, navigate]);
 
@@ -161,7 +161,7 @@ export default function Auth() {
               </Button>
               <p className="text-center text-sm text-muted-foreground">
                 Já tem uma conta?{' '}
-                <Link to="/auth?mode=signin" className="text-primary hover:underline font-medium">
+                <Link to="/autenticacao?mode=signin" className="text-primary hover:underline font-medium">
                   Entrar
                 </Link>
               </p>
@@ -197,7 +197,7 @@ export default function Auth() {
               </Button>
               <p className="text-center text-sm text-muted-foreground">
                 Não tem uma conta?{' '}
-                <Link to="/auth?mode=signup" className="text-primary hover:underline font-medium">
+                <Link to="/autenticacao?mode=signup" className="text-primary hover:underline font-medium">
                   Criar Conta
                 </Link>
               </p>

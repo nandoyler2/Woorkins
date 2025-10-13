@@ -329,7 +329,7 @@ export default function Dashboard() {
               </Card>
 
               <Card className="bg-gradient-to-br from-green-500 to-green-600 border-0 shadow-md hover:shadow-lg transition-all cursor-pointer group relative">
-                <Link to="/messages">
+                <Link to="/mensagens">
                   <CardContent className="p-5">
                     {unreadMessages > 0 && (
                       <Badge className="absolute top-3 right-3 bg-red-500 text-white border-0 w-5 h-5 flex items-center justify-center p-0 text-xs">

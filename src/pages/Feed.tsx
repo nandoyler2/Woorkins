@@ -11,7 +11,7 @@ export default function Feed() {
 
   useEffect(() => {
     if (!loading && !user) {
-      navigate('/auth');
+      navigate('/autenticacao');
     }
   }, [user, loading, navigate]);
 

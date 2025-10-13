@@ -42,16 +42,16 @@ const App = () => (
           <AuthProvider>
             <Routes>
               <Route path="/" element={<Index />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-              <Route path="/business/:slug/edit" element={<ProtectedRoute><BusinessEdit /></ProtectedRoute>} />
-              <Route path="/business/finances" element={<ProtectedRoute><BusinessFinances /></ProtectedRoute>} />
-              <Route path="/payment-settings" element={<ProtectedRoute><PaymentSettings /></ProtectedRoute>} />
-              <Route path="/messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
-              <Route path="/projects" element={<Projects />} />
-              <Route path="/projects/new" element={<ProtectedRoute><ProjectCreate /></ProtectedRoute>} />
-              <Route path="/projects/:id" element={<ProjectDetails />} />
-              <Route path="/my-projects" element={<ProtectedRoute><MyProjects /></ProtectedRoute>} />
+              <Route path="/autenticacao" element={<Auth />} />
+              <Route path="/painel" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+              <Route path="/empresa/:slug/editar" element={<ProtectedRoute><BusinessEdit /></ProtectedRoute>} />
+              <Route path="/empresa/financas" element={<ProtectedRoute><BusinessFinances /></ProtectedRoute>} />
+              <Route path="/configuracoes-pagamento" element={<ProtectedRoute><PaymentSettings /></ProtectedRoute>} />
+              <Route path="/mensagens" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
+              <Route path="/projetos" element={<Projects />} />
+              <Route path="/projetos/novo" element={<ProtectedRoute><ProjectCreate /></ProtectedRoute>} />
+              <Route path="/projetos/:id" element={<ProjectDetails />} />
+              <Route path="/meus-projetos" element={<ProtectedRoute><MyProjects /></ProtectedRoute>} />
               <Route path="/:slug" element={<BusinessProfile />} />
               <Route path="/feed" element={<ProtectedRoute><Feed /></ProtectedRoute>} />
               <Route path="/admin" element={<ProtectedRoute requireAdmin><AdminLayout /></ProtectedRoute>}>

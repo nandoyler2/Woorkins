@@ -297,7 +297,7 @@ export default function Projects() {
           </div>
           {user && (
             <Button asChild className="bg-gradient-primary hover:opacity-90 shadow-glow">
-              <Link to="/projects/new">
+              <Link to="/projetos/novo">
                 <Plus className="w-4 h-4 mr-2" />
                 Criar Projeto
               </Link>
@@ -466,7 +466,7 @@ export default function Projects() {
                       <div className="flex items-start justify-between gap-4 mb-4">
                         <div className="flex-1">
                           <Link 
-                            to={`/projects/${project.id}`}
+                            to={`/projetos/${project.id}`}
                             className="text-xl font-bold hover:text-primary transition-colors block mb-2"
                           >
                             {project.title}
@@ -478,7 +478,7 @@ export default function Projects() {
                           variant="outline"
                           className="border-primary text-primary hover:bg-primary hover:text-white flex-shrink-0"
                         >
-                          <Link to={`/projects/${project.id}`}>
+                          <Link to={`/projetos/${project.id}`}>
                             Fazer uma proposta
                           </Link>
                         </Button>

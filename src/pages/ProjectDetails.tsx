@@ -262,7 +262,7 @@ export default function ProjectDetails() {
         <div className="container mx-auto px-4 py-16 text-center max-w-woorkins">
           <h1 className="text-4xl font-bold mb-4">Projeto não encontrado</h1>
           <Button asChild className="bg-gradient-primary">
-            <Link to="/projects">Voltar</Link>
+            <Link to="/projetos">Voltar</Link>
           </Button>
         </div>
       </div>
@@ -280,7 +280,7 @@ export default function ProjectDetails() {
         <nav className="mb-4 text-sm text-muted-foreground">
           <Link to="/" className="hover:text-primary">Woorkins</Link>
           <ChevronRight className="inline w-3 h-3 mx-1" />
-          <Link to="/projects" className="hover:text-primary">Projetos</Link>
+          <Link to="/projetos" className="hover:text-primary">Projetos</Link>
           <ChevronRight className="inline w-3 h-3 mx-1" />
           <span className="text-foreground">{project.category || 'Projeto'}</span>
         </nav>
@@ -484,7 +484,7 @@ export default function ProjectDetails() {
 
                 {!user && project.status === 'open' && (
                   <Button asChild className="w-full bg-gradient-primary">
-                    <Link to="/auth">Fazer Login para Propor</Link>
+                    <Link to="/autenticacao">Fazer Login para Propor</Link>
                   </Button>
                 )}
 

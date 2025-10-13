@@ -38,7 +38,7 @@ function CheckoutForm({ clientSecret, amount, platformFee, stripeFee, netAmount,
       const { error } = await stripe.confirmPayment({
         elements,
         confirmParams: {
-          return_url: `${window.location.origin}/my-projects?payment=success`,
+          return_url: `${window.location.origin}/meus-projetos?payment=success`,
         },
         redirect: 'if_required',
       });

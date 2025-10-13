@@ -25,7 +25,7 @@ const Index = () => {
 
   useEffect(() => {
     if (user) {
-      navigate('/dashboard');
+      navigate('/painel');
     }
   }, [user, navigate]);
   return <div className="min-h-screen bg-background">
@@ -41,7 +41,7 @@ const Index = () => {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
               <DropdownMenuItem asChild>
-                <Link to="/dashboard" className="cursor-pointer">
+                <Link to="/painel" className="cursor-pointer">
                   <Home className="w-4 h-4 mr-2" />
                   Dashboard
                 </Link>
@@ -63,7 +63,7 @@ const Index = () => {
           </DropdownMenu>
         ) : (
           <Button variant="ghost" asChild className="bg-white/10 backdrop-blur-sm hover:bg-white/20">
-            <Link to="/auth?mode=signin">Entrar</Link>
+            <Link to="/autenticacao?mode=signin">Entrar</Link>
           </Button>
         )}
       </div>
@@ -95,13 +95,13 @@ const Index = () => {
             {/* CTAs */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-8">
               <Button size="lg" className="bg-gradient-primary hover:opacity-90 transition-all shadow-glow hover:shadow-elegant text-base h-14 px-10" asChild>
-                <Link to="/auth?mode=signup">
+                <Link to="/autenticacao?mode=signup">
                   Comece Agora
                   <ChevronRight className="ml-2 w-5 h-5" />
                 </Link>
               </Button>
               <Button size="lg" variant="outline" className="text-base h-14 px-10 border-2 border-foreground text-foreground hover:bg-foreground hover:text-background" asChild>
-                <Link to="/auth?mode=signup">Sou Empresa</Link>
+                <Link to="/autenticacao?mode=signup">Sou Empresa</Link>
               </Button>
             </div>
           </div>
@@ -183,7 +183,7 @@ const Index = () => {
                   </li>)}
               </ul>
               <Button className="bg-gradient-primary hover:opacity-90 transition-opacity text-base h-12 px-8 shadow-glow" asChild>
-                <Link to="/auth?mode=signup">Criar Perfil Empresarial</Link>
+                <Link to="/autenticacao?mode=signup">Criar Perfil Empresarial</Link>
               </Button>
             </div>
             <Card className="p-10 bg-gradient-to-br from-primary/5 to-secondary/5 border-2">
@@ -234,7 +234,7 @@ const Index = () => {
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
               <Button size="lg" className="bg-white text-primary hover:bg-white/90 text-base h-14 px-10 shadow-lg" asChild>
-                <Link to="/auth?mode=signup">Criar Conta Gratuita</Link>
+                <Link to="/autenticacao?mode=signup">Criar Conta Gratuita</Link>
               </Button>
               <Button size="lg" variant="outline" className="text-base h-14 px-10 border-white text-white hover:bg-white hover:text-primary">
                 Falar com Vendas

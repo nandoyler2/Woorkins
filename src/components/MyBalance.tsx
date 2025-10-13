@@ -172,7 +172,7 @@ export function MyBalance() {
         {balance.available > 0 && (
           <Button 
             className="w-full"
-            onClick={() => window.location.href = '/payment-settings'}
+            onClick={() => window.location.href = '/configuracoes-pagamento'}
           >
             Solicitar Saque (R$ {balance.available.toFixed(2)})
           </Button>

@@ -122,7 +122,7 @@ export default function BusinessEdit() {
         description: 'Marca não encontrada',
         variant: 'destructive',
       });
-      navigate('/dashboard');
+      navigate('/painel');
       return;
     }
 
@@ -392,7 +392,7 @@ export default function BusinessEdit() {
         <div className="space-y-8">
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="icon" asChild>
-              <Link to="/dashboard">
+              <Link to="/painel">
                 <ArrowLeft className="w-5 h-5" />
               </Link>
             </Button>

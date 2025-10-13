@@ -333,7 +333,7 @@ export function UnifiedChat({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => window.open(`/projects/${projectId}`, '_blank')}
+                onClick={() => window.open(`/projetos/${projectId}`, '_blank')}
                 className="text-xs flex items-center gap-1"
               >
                 <ExternalLink className="h-3 w-3" />

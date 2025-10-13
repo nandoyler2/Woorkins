@@ -68,7 +68,7 @@ export default function ProjectCreate() {
         description: 'Seu projeto foi publicado com sucesso.',
       });
 
-      navigate(`/projects/${(data as any).id}`);
+      navigate(`/projetos/${(data as any).id}`);
     } catch (error: any) {
       toast({
         title: 'Erro ao criar projeto',
@@ -90,7 +90,7 @@ export default function ProjectCreate() {
             Você precisa estar logado para criar um projeto
           </p>
           <Button asChild className="bg-gradient-primary">
-            <Link to="/auth">Fazer Login</Link>
+            <Link to="/autenticacao">Fazer Login</Link>
           </Button>
         </div>
       </div>
@@ -105,7 +105,7 @@ export default function ProjectCreate() {
         <div className="space-y-6">
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="icon" asChild>
-              <Link to="/projects">
+              <Link to="/projetos">
                 <ArrowLeft className="w-5 h-5" />
               </Link>
             </Button>

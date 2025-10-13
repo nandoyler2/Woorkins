@@ -74,7 +74,7 @@ export const Header = () => {
 
         {user && (
           <nav className="hidden md:flex items-center gap-6">
-            <Link to="/dashboard" className="flex items-center gap-2 text-foreground/80 hover:text-foreground transition-colors">
+            <Link to="/painel" className="flex items-center gap-2 text-foreground/80 hover:text-foreground transition-colors">
               <Home className="w-5 h-5" />
               <span>Painel</span>
             </Link>
@@ -95,19 +95,19 @@ export const Header = () => {
                 onMouseLeave={() => setProjectsOpen(false)}
               >
                 <DropdownMenuItem asChild>
-                  <Link to="/projects" className="flex items-center gap-2">
+                  <Link to="/projetos" className="flex items-center gap-2">
                     <FolderOpen className="w-4 h-4" />
                     Projetos Disponíveis
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link to="/my-projects" className="flex items-center gap-2">
+                  <Link to="/meus-projetos" className="flex items-center gap-2">
                     <Briefcase className="w-4 h-4" />
                     Meus Projetos
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link to="/project-create" className="flex items-center gap-2">
+                  <Link to="/projetos/novo" className="flex items-center gap-2">
                     <Plus className="w-4 h-4" />
                     Criar Projeto
                   </Link>
@@ -115,7 +115,7 @@ export const Header = () => {
               </DropdownMenuContent>
             </DropdownMenu>
             
-            <Link to="/messages" className="flex items-center gap-2 text-foreground/80 hover:text-foreground transition-colors relative">
+            <Link to="/mensagens" className="flex items-center gap-2 text-foreground/80 hover:text-foreground transition-colors relative">
               <MessageCircle className="w-5 h-5" />
               <span>Mensagens</span>
               {unreadCount > 0 && (
@@ -155,10 +155,10 @@ export const Header = () => {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem asChild>
-                  <Link to="/dashboard">Painel</Link>
+                  <Link to="/painel">Painel</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link to="/messages">
+                  <Link to="/mensagens">
                     <MessageCircle className="w-4 h-4 mr-2" />
                     Mensagens
                   </Link>
@@ -183,10 +183,10 @@ export const Header = () => {
           ) : (
             <>
               <Button variant="ghost" asChild>
-                <Link to="/auth?mode=signin">{t('login')}</Link>
+                <Link to="/autenticacao?mode=signin">{t('login')}</Link>
               </Button>
               <Button asChild>
-                <Link to="/auth?mode=signup">{t('signup')}</Link>
+                <Link to="/autenticacao?mode=signup">{t('signup')}</Link>
               </Button>
             </>
           )}

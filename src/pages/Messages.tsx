@@ -45,7 +45,7 @@ export default function Messages() {
 
   useEffect(() => {
     if (!user) {
-      navigate('/auth?mode=signin');
+      navigate('/autenticacao?mode=signin');
       return;
     }
     loadProfile();

@@ -47,7 +47,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
     
     if (!error) {
-      navigate('/dashboard');
+      navigate('/painel');
     }
     
     return { error };

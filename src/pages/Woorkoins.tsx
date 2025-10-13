@@ -85,7 +85,7 @@ export default function Woorkoins() {
   ];
 
   const coinPackages = [
-    { amount: 10, price: 0.50, bonus: 0 },
+    { amount: 10, price: 5.00, bonus: 0 },
     { amount: 100, price: 9.90, bonus: 0 },
     { amount: 500, price: 45.00, bonus: 50 },
     { amount: 1000, price: 85.00, bonus: 150 },
@@ -157,6 +157,14 @@ export default function Woorkoins() {
         title: 'Erro',
         description: 'Você precisa estar logado para comprar Woorkoins.',
         variant: 'destructive',
+      });
+      return;
+    }
+
+    if (price < 5) {
+      toast({
+        title: 'Valor mínimo de compra',
+        description: 'O valor mínimo permitido pelo provedor de pagamento é R$ 5,00.',
       });
       return;
     }

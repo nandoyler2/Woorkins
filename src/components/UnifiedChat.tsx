@@ -7,7 +7,18 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Send, Loader2, Check, CheckCheck, Paperclip, Smile, ExternalLink, Lock, Shield, AlertTriangle } from 'lucide-react';
+import { Send, Loader2, Check, CheckCheck, Paperclip, Smile, ExternalLink, Lock, Shield, AlertTriangle, Trash2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useRealtimeMessaging } from '@/hooks/useRealtimeMessaging';
@@ -39,11 +50,13 @@ export function UnifiedChat({
   businessId 
 }: UnifiedChatProps) {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [messageInput, setMessageInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [proposalData, setProposalData] = useState<any>(null);
   const [isOwner, setIsOwner] = useState(false);
   const [isLoadingProposal, setIsLoadingProposal] = useState(true);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const {
     messages,
@@ -195,11 +208,15 @@ export function UnifiedChat({
     proposalData?.status === 'pending' &&
     messages.length === 0;
 
-  const handleDeleteConversation = async () => {
+  const checkCanDelete = async () => {
     // Verificar se há proposta aceita
     if (conversationType === 'proposal' && proposalData?.status === 'accepted') {
-      alert('❌ Não é possível excluir conversas com propostas aceitas. Entre em contato com o suporte se necessário.');
-      return;
+      toast({
+        variant: 'destructive',
+        title: 'Não é possível excluir',
+        description: 'Conversas com propostas aceitas não podem ser excluídas. Entre em contato com o suporte se necessário.',
+      });
+      return false;
     }
     
     if (conversationType === 'negotiation') {
@@ -210,23 +227,21 @@ export function UnifiedChat({
         .single();
       
       if (negotiation?.status === 'accepted' || negotiation?.status === 'paid') {
-        alert('❌ Não é possível excluir negociações aceitas ou pagas. Entre em contato com o suporte se necessário.');
-        return;
+        toast({
+          variant: 'destructive',
+          title: 'Não é possível excluir',
+          description: 'Negociações aceitas ou pagas não podem ser excluídas. Entre em contato com o suporte se necessário.',
+        });
+        return false;
       }
     }
+    
+    return true;
+  };
 
-    const confirmMessage = `⚠️ ATENÇÃO: Esta ação NÃO pode ser desfeita!
-
-🗑️ Ao confirmar, esta conversa será PERMANENTEMENTE EXCLUÍDA para AMBAS as partes.
-
-${conversationType === 'proposal' ? '📋 A proposta também será excluída.' : '💼 A negociação também será excluída.'}
-
-Tem certeza que deseja continuar?`;
-
-    if (!confirm(confirmMessage)) {
-      return;
-    }
-
+  const handleDeleteConversation = async () => {
+    setShowDeleteDialog(false);
+    
     try {
       // Delete messages first
       const tableName = conversationType === 'negotiation' ? 'negotiation_messages' : 'proposal_messages';
@@ -254,12 +269,21 @@ Tem certeza que deseja continuar?`;
         .delete()
         .eq('conversation_id', conversationId);
       
-      // Redirect using navigate instead of window.location
-      alert('✅ Conversa excluída com sucesso para ambas as partes!');
-      window.location.href = '/messages';
+      toast({
+        title: 'Conversa excluída',
+        description: 'A conversa foi excluída com sucesso para ambas as partes.',
+      });
+      
+      setTimeout(() => {
+        window.location.href = '/messages';
+      }, 1000);
     } catch (error: any) {
       console.error('Error deleting conversation:', error);
-      alert(`❌ Erro ao excluir conversa: ${error.message || 'Tente novamente.'}`);
+      toast({
+        variant: 'destructive',
+        title: 'Erro ao excluir',
+        description: error.message || 'Não foi possível excluir a conversa. Tente novamente.',
+      });
     }
   };
 
@@ -367,9 +391,13 @@ Tem certeza que deseja continuar?`;
           <Button
             variant="ghost"
             size="sm"
-            onClick={handleDeleteConversation}
-            className="text-destructive hover:text-destructive"
+            onClick={async () => {
+              const canDelete = await checkCanDelete();
+              if (canDelete) setShowDeleteDialog(true);
+            }}
+            className="text-destructive hover:text-destructive hover:bg-destructive/10"
           >
+            <Trash2 className="w-4 h-4 mr-2" />
             Excluir
           </Button>
         )}
@@ -563,6 +591,44 @@ Tem certeza que deseja continuar?`;
         )}
         </form>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertTriangle className="w-5 h-5" />
+              Confirmar Exclusão
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-3 pt-2">
+              <p className="font-semibold text-foreground">
+                ⚠️ Esta ação NÃO pode ser desfeita!
+              </p>
+              <p>
+                Ao confirmar, esta conversa será <strong>PERMANENTEMENTE EXCLUÍDA para AMBAS as partes</strong>.
+              </p>
+              <p>
+                {conversationType === 'proposal' 
+                  ? '📋 A proposta também será excluída.' 
+                  : '💼 A negociação também será excluída.'}
+              </p>
+              <p className="text-muted-foreground text-sm">
+                Tem certeza que deseja continuar?
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConversation}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              Excluir Permanentemente
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

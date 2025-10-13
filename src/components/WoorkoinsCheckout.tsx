@@ -219,7 +219,7 @@ export function WoorkoinsCheckout({ open, onOpenChange, clientSecret, amount, pr
           <DialogHeader>
             <DialogTitle>Erro de Configuração</DialogTitle>
           </DialogHeader>
-          <p>Stripe não está configurado corretamente. Por favor, contate o suporte.</p>
+          <p>Stripe não está configurado corretamente. Configure VITE_STRIPE_PUBLISHABLE_KEY.</p>
         </DialogContent>
       </Dialog>
     );

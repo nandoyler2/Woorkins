@@ -293,7 +293,7 @@ export function UnifiedChat({
   return (
     <div className="h-full flex flex-col bg-white">
       {/* Security Warning Banner */}
-      <Alert className="rounded-none border-x-0 border-t-0 bg-blue-50 border-blue-200">
+      <Alert className="rounded-none border-x-0 border-t-0 bg-blue-50 border-blue-200 flex-shrink-0">
         <Shield className="h-4 w-4 text-blue-600" />
         <AlertDescription className="text-xs text-blue-900">
           <strong>Aviso de Segurança:</strong> Todas as conversas são monitoradas para garantir transações seguras. 
@@ -304,7 +304,7 @@ export function UnifiedChat({
 
       {/* Proposal Negotiation Panel */}
       {conversationType === 'proposal' && proposalData && (
-        <div className="border-b p-3 bg-slate-50">
+        <div className="border-b p-3 bg-slate-50 flex-shrink-0">
           <ProposalNegotiationPanel
             proposalId={conversationId}
             proposalData={proposalData}
@@ -319,7 +319,7 @@ export function UnifiedChat({
 
       {/* Info Header */}
       {(projectId || businessId) && (
-        <div className="border-b p-3 bg-slate-50">
+        <div className="border-b p-3 bg-slate-50 flex-shrink-0">
           <div className="flex items-center justify-between">
             <div className="flex-1">
               <p className="text-xs text-muted-foreground mb-1">
@@ -364,7 +364,7 @@ export function UnifiedChat({
       )}
       
       {/* Header */}
-      <div className="border-b p-3 flex items-center gap-3 bg-white">
+      <div className="border-b p-3 flex items-center gap-3 bg-white flex-shrink-0">
         <div className="relative">
           <Avatar className="h-10 w-10 ring-2 ring-background">
             <AvatarImage src={otherUser.avatar} />
@@ -406,8 +406,8 @@ export function UnifiedChat({
         )}
       </div>
 
-      {/* Messages - Scrollable Area with proper height */}
-      <div className="flex-1 overflow-y-auto">
+      {/* Messages - Scrollable Area */}
+      <div className="flex-1 overflow-y-auto min-h-0">
         <div className="p-4 space-y-4">
           {isChatLocked ? (
             <div className="text-center py-12">
@@ -537,7 +537,7 @@ export function UnifiedChat({
       </div>
 
       {/* Input - Fixed at Bottom */}
-      <div className="border-t bg-white">
+      <div className="border-t bg-white flex-shrink-0">
         <form onSubmit={handleSendMessage} className="p-3">
         {isChatLocked ? (
           <div className="text-center py-2">

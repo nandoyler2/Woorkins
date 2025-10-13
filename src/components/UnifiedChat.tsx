@@ -466,13 +466,26 @@ export function UnifiedChat({
                     
                     <div className={`flex flex-col max-w-[75%] ${isMine ? 'items-end' : 'items-start'}`}>
                       <div
-                        className={`rounded-2xl px-4 py-2.5 shadow-sm ${
+                        className={`group rounded-2xl px-4 py-2.5 shadow-sm relative ${
                           isMine
                             ? 'bg-primary text-primary-foreground rounded-tr-sm'
                             : 'bg-card border rounded-tl-sm'
                         }`}
                       >
                         <p className="text-sm leading-relaxed break-words">{message.content}</p>
+                        {isMine && (! (conversationType === 'proposal' && proposalData?.status === 'accepted')) && (
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              const table = conversationType === 'negotiation' ? 'negotiation_messages' : 'proposal_messages';
+                              await supabase.from(table).delete().eq('id', message.id);
+                            }}
+                            className={`absolute -top-2 ${isMine ? '-left-2' : '-right-2'} opacity-0 group-hover:opacity-100 transition-opacity text-xs px-1 py-0.5 rounded bg-destructive text-destructive-foreground`}
+                            title="Apagar mensagem"
+                          >
+                            Excluir
+                          </button>
+                        )}
                       </div>
                       <div className={`flex items-center gap-1.5 mt-1 ${isMine ? 'flex-row-reverse' : 'flex-row'}`}>
                         <span className="text-xs text-muted-foreground">

@@ -369,6 +369,19 @@ export const useRealtimeMessaging = ({
           ));
         }
       )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: table,
+          filter: `${conversationType === 'negotiation' ? 'negotiation_id' : 'proposal_id'}=eq.${conversationId}`,
+        },
+        (payload) => {
+          const deleted = payload.old as any;
+          setMessages(prev => prev.filter(m => m.id !== deleted.id));
+        }
+      )
       .subscribe();
 
     // Subscribe to typing indicators

@@ -411,7 +411,21 @@ export default function Messages() {
                   {filteredConversations.map((conv) => (
                     <button
                       key={`${conv.type}-${conv.id}`}
-                      onClick={() => setSelectedConversation(conv)}
+                      onClick={async () => {
+                        setSelectedConversation(conv);
+                        // Zero local badge immediately
+                        setConversations(prev => prev.map(c => c.id === conv.id && c.type === conv.type ? { ...c, unreadCount: 0 } : c));
+                        // Persist read state
+                        await supabase
+                          .from('message_unread_counts')
+                          .upsert({
+                            user_id: profileId,
+                            conversation_id: conv.id,
+                            conversation_type: conv.type,
+                            unread_count: 0,
+                            last_read_at: new Date().toISOString(),
+                          });
+                      }}
                       className={`w-full p-3 border-b transition-all text-left ${
                         selectedConversation?.id === conv.id
                           ? 'bg-primary/10 border-l-4 border-l-primary shadow-sm'

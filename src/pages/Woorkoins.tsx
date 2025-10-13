@@ -9,7 +9,7 @@ import { ArrowLeft, ShoppingBag, Coins, Sparkles, Gift, Zap } from 'lucide-react
 import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import woorkoinsIcon from '@/assets/woorkoins-icon-final.png';
+import woorkoinsIcon from '@/assets/woorkoins-icon-latest.png';
 import { WoorkoinsStripeCheckout } from '@/components/WoorkoinsStripeCheckout';
 
 interface WoorkoinProduct {

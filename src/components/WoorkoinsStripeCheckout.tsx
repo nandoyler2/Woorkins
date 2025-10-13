@@ -5,7 +5,7 @@ import { Loader2, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
-import woorkoinsIcon from '@/assets/woorkoins-icon-final.png';
+import woorkoinsIcon from '@/assets/woorkoins-icon-latest.png';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 // Verificar se a chave publicável está configurada

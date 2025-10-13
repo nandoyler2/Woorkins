@@ -5,7 +5,7 @@ import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Star, Search, Briefcase, MessageSquare, CheckCircle2, Phone, Building2, Users, UserPlus, ThumbsUp, MessageCircle, Award, Activity, TrendingUp, Bell, Clock, Trophy, Share2, Heart, Bookmark } from 'lucide-react';
-import woorkoinsIcon from '@/assets/woorkoins-icon-final.png';
+import woorkoinsIcon from '@/assets/woorkoins-icon-new-2.png';
 import { Link } from 'react-router-dom';
 import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -72,7 +72,7 @@ export default function Dashboard() {
   const [businessProfiles, setBusinessProfiles] = useState<BusinessProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [unreadMessages, setUnreadMessages] = useState(5);
-  const [woorkoinsBalance, setWoorkoinsBalance] = useState(250); // Mock balance, depois criar tabela real
+  const [woorkoinsBalance, setWoorkoinsBalance] = useState(0);
   
   // Mock data for feed posts
   const feedPosts: FeedPost[] = [
@@ -236,8 +236,21 @@ export default function Dashboard() {
       const profileData = data as unknown as Profile;
       setProfile(profileData);
       await loadBusinessProfiles(profileData.id);
+      await loadWoorkoinsBalance(profileData.id);
     }
     setLoading(false);
+  };
+
+  const loadWoorkoinsBalance = async (profileId: string) => {
+    const { data, error } = await supabase
+      .from('woorkoins_balance')
+      .select('balance')
+      .eq('profile_id', profileId)
+      .maybeSingle();
+    
+    if (!error && data) {
+      setWoorkoinsBalance(data.balance || 0);
+    }
   };
 
   const loadBusinessProfiles = async (profileId: string) => {

@@ -266,6 +266,20 @@ export default function Messages() {
         (a, b) => new Date(b.lastMessageAt || 0).getTime() - new Date(a.lastMessageAt || 0).getTime()
       );
 
+      // Reconcile aggregated unread counts to ensure header badge updates immediately
+      const aggregateRows = allConvos.map((c) => ({
+        user_id: profileId,
+        conversation_id: c.id,
+        conversation_type: c.type,
+        unread_count: c.unreadCount,
+        last_read_at: c.unreadCount === 0 ? new Date().toISOString() : null,
+      }));
+      if (aggregateRows.length) {
+        await supabase
+          .from('message_unread_counts')
+          .upsert(aggregateRows, { onConflict: 'user_id,conversation_id,conversation_type' });
+      }
+
       setConversations(allConvos);
     } catch (error) {
       console.error('Error loading conversations:', error);

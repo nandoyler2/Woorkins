@@ -207,10 +207,10 @@ export default function BusinessFinances() {
 
   return (
     <div className="container mx-auto p-6 max-w-woorkins">
-      <h1 className="text-3xl font-bold mb-6">Financeiro</h1>
+      <h1 className="text-3xl font-bold mb-6 bg-gradient-primary bg-clip-text text-transparent">Financeiro</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <Card className="p-6">
+        <Card className="p-6 bg-card/50 backdrop-blur-sm shadow-lg border-2">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">Saldo Disponível</p>
@@ -222,7 +222,7 @@ export default function BusinessFinances() {
           </div>
         </Card>
 
-        <Card className="p-6">
+        <Card className="p-6 bg-card/50 backdrop-blur-sm shadow-lg border-2">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">Saldo Pendente</p>
@@ -234,7 +234,7 @@ export default function BusinessFinances() {
           </div>
         </Card>
 
-        <Card className="p-6">
+        <Card className="p-6 bg-card/50 backdrop-blur-sm shadow-lg border-2">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">Total Recebido</p>
@@ -248,7 +248,7 @@ export default function BusinessFinances() {
       <div className="flex justify-end mb-6">
         <Dialog>
           <DialogTrigger asChild>
-            <Button disabled={balance.available <= 0}>
+            <Button disabled={balance.available <= 0} className="bg-gradient-primary hover:opacity-90 shadow-glow">
               <Download className="w-4 h-4 mr-2" />
               Solicitar Saque
             </Button>
@@ -289,7 +289,7 @@ export default function BusinessFinances() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="p-6">
+        <Card className="p-6 bg-card/50 backdrop-blur-sm shadow-lg border-2">
           <h2 className="text-xl font-semibold mb-4">Transações</h2>
           <div className="space-y-3">
             {transactions.map((tx) => (
@@ -326,7 +326,7 @@ export default function BusinessFinances() {
           </div>
         </Card>
 
-        <Card className="p-6">
+        <Card className="p-6 bg-card/50 backdrop-blur-sm shadow-lg border-2">
           <h2 className="text-xl font-semibold mb-4">Saques</h2>
           <div className="space-y-3">
             {withdrawals.map((withdrawal) => (

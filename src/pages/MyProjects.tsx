@@ -221,10 +221,10 @@ const MyProjects = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-primary/5 to-secondary/10">
       <Header />
       <main className="flex-1 container mx-auto px-4 py-8 max-w-woorkins">
-        <h1 className="text-3xl font-bold mb-8">Meus Projetos</h1>
+        <h1 className="text-3xl font-bold mb-8 bg-gradient-primary bg-clip-text text-transparent">Meus Projetos</h1>
 
         <Tabs defaultValue="projects" className="space-y-6">
           <TabsList>
@@ -234,14 +234,14 @@ const MyProjects = () => {
 
           <TabsContent value="projects" className="space-y-4">
             {projects.length === 0 ? (
-              <Card>
+              <Card className="bg-card/50 backdrop-blur-sm shadow-lg border-2">
                 <CardContent className="pt-6 text-center text-muted-foreground">
                   Você ainda não criou nenhum projeto.
                 </CardContent>
               </Card>
             ) : (
               projects.map((project) => (
-                <Card key={project.id}>
+                <Card key={project.id} className="bg-card/50 backdrop-blur-sm shadow-lg border-2 hover:shadow-xl transition-all">
                   <CardHeader>
                     <div className="flex items-start justify-between">
                       <div>
@@ -268,14 +268,14 @@ const MyProjects = () => {
 
           <TabsContent value="proposals" className="space-y-4">
             {proposals.length === 0 ? (
-              <Card>
+              <Card className="bg-card/50 backdrop-blur-sm shadow-lg border-2">
                 <CardContent className="pt-6 text-center text-muted-foreground">
                   Você ainda não recebeu propostas.
                 </CardContent>
               </Card>
             ) : (
               proposals.map((proposal) => (
-                <Card key={proposal.id}>
+                <Card key={proposal.id} className="bg-card/50 backdrop-blur-sm shadow-lg border-2 hover:shadow-xl transition-all">
                   <CardHeader>
                     <div className="flex items-start justify-between">
                       <div>
@@ -329,6 +329,7 @@ const MyProjects = () => {
                               size="sm"
                               onClick={() => updateProposalStatus(proposal.id, 'accepted')}
                               disabled={loadingPayment}
+                              className="bg-gradient-primary hover:opacity-90"
                             >
                               {loadingPayment ? (
                                 <>

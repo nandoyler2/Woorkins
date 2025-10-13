@@ -236,19 +236,19 @@ export default function PaymentSettings() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-secondary/10">
       <Header />
       <main className="container mx-auto px-4 py-8 max-w-woorkins">
         <div className="space-y-6">
           <div>
-            <h1 className="text-3xl font-bold">Configurações de Pagamento</h1>
+            <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">Configurações de Pagamento</h1>
             <p className="text-muted-foreground">
               Configure sua chave PIX para receber pagamentos
             </p>
           </div>
 
           {/* Wallet Balance */}
-          <Card className="p-6">
+          <Card className="p-6 bg-card/50 backdrop-blur-sm shadow-lg border-2">
             <h3 className="text-lg font-semibold mb-4">Saldo na Carteira</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div className="bg-yellow-50 dark:bg-yellow-950 p-4 rounded-lg">
@@ -280,7 +280,7 @@ export default function PaymentSettings() {
           </Card>
 
           {/* PIX Configuration */}
-          <Card className="p-6 space-y-6">
+          <Card className="p-6 space-y-6 bg-card/50 backdrop-blur-sm shadow-lg border-2">
             <div className="flex items-center gap-2">
               <CreditCard className="h-5 w-5" />
               <h3 className="text-lg font-semibold">Chave PIX</h3>
@@ -326,7 +326,7 @@ export default function PaymentSettings() {
               <Button 
                 onClick={handleSave} 
                 disabled={saving}
-                className="w-full"
+                className="w-full bg-gradient-primary hover:opacity-90 shadow-glow"
               >
                 {saving ? (
                   <>
@@ -357,7 +357,7 @@ export default function PaymentSettings() {
           </Card>
 
           {/* How it works */}
-          <Card className="p-6 space-y-4">
+          <Card className="p-6 space-y-4 bg-card/50 backdrop-blur-sm shadow-lg border-2">
             <h3 className="text-lg font-semibold">Como funciona?</h3>
             <div className="space-y-3 text-sm text-muted-foreground">
               <div className="flex items-start gap-2">

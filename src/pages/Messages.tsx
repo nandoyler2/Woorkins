@@ -259,23 +259,23 @@ export default function Messages() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-primary/5 to-secondary/10">
       <Header />
       
       <main className="flex-1 flex overflow-hidden">
         {/* Sidebar de Navegação */}
-        <div className="w-64 bg-slate-900 text-white p-4 flex flex-col">
+        <div className="w-64 bg-card shadow-lg border-r p-4 flex flex-col">
           <div className="mb-6">
-            <h2 className="text-lg font-semibold mb-4">Mensagens</h2>
+            <h2 className="text-lg font-semibold mb-4 text-foreground">Mensagens</h2>
           </div>
           
           <nav className="space-y-1 flex-1">
             <button
               onClick={() => setActiveFilter('all')}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${
                 activeFilter === 'all' 
-                  ? 'bg-cyan-500 text-white' 
-                  : 'hover:bg-slate-800 text-slate-300'
+                  ? 'bg-gradient-primary text-primary-foreground shadow-md' 
+                  : 'hover:bg-muted text-muted-foreground'
               }`}
             >
               <Inbox className="h-5 w-5" />
@@ -284,10 +284,10 @@ export default function Messages() {
             
             <button
               onClick={() => setActiveFilter('unread')}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${
                 activeFilter === 'unread' 
-                  ? 'bg-cyan-500 text-white' 
-                  : 'hover:bg-slate-800 text-slate-300'
+                  ? 'bg-gradient-primary text-primary-foreground shadow-md' 
+                  : 'hover:bg-muted text-muted-foreground'
               }`}
             >
               <Mail className="h-5 w-5" />
@@ -296,10 +296,10 @@ export default function Messages() {
             
             <button
               onClick={() => setActiveFilter('starred')}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${
                 activeFilter === 'starred' 
-                  ? 'bg-cyan-500 text-white' 
-                  : 'hover:bg-slate-800 text-slate-300'
+                  ? 'bg-gradient-primary text-primary-foreground shadow-md' 
+                  : 'hover:bg-muted text-muted-foreground'
               }`}
             >
               <Star className="h-5 w-5" />
@@ -308,25 +308,25 @@ export default function Messages() {
             
             <button
               onClick={() => setActiveFilter('archived')}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${
                 activeFilter === 'archived' 
-                  ? 'bg-cyan-500 text-white' 
-                  : 'hover:bg-slate-800 text-slate-300'
+                  ? 'bg-gradient-primary text-primary-foreground shadow-md' 
+                  : 'hover:bg-muted text-muted-foreground'
               }`}
             >
               <Archive className="h-5 w-5" />
               <span>Arquivadas</span>
             </button>
             
-            <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-800 text-slate-300">
+            <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-muted text-muted-foreground">
               <AlertCircle className="h-5 w-5" />
               <span>Disputa</span>
             </button>
           </nav>
           
-          <div className="border-t border-slate-700 pt-4 mt-4">
-            <h3 className="text-sm font-medium text-slate-400 mb-2">Etiquetas</h3>
-            <button className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-300 hover:bg-slate-800 rounded-lg">
+          <div className="border-t pt-4 mt-4">
+            <h3 className="text-sm font-medium text-muted-foreground mb-2">Etiquetas</h3>
+            <button className="w-full flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground hover:bg-muted rounded-lg">
               <Tag className="h-4 w-4" />
               <span>+ Adicionar etiqueta...</span>
             </button>
@@ -335,7 +335,7 @@ export default function Messages() {
 
         <div className="flex-1 flex overflow-hidden">
           {/* Lista de Conversas */}
-          <div className="w-96 border-r bg-white overflow-hidden flex flex-col">
+          <div className="w-96 border-r bg-card shadow-md overflow-hidden flex flex-col">
             <div className="p-3 border-b">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -365,10 +365,10 @@ export default function Messages() {
                     <button
                       key={`${conv.type}-${conv.id}`}
                       onClick={() => setSelectedConversation(conv)}
-                      className={`w-full p-3 border-b transition-colors text-left ${
+                      className={`w-full p-3 border-b transition-all text-left ${
                         selectedConversation?.id === conv.id
-                          ? 'bg-cyan-50 border-l-4 border-l-cyan-500'
-                          : 'hover:bg-slate-50'
+                          ? 'bg-primary/10 border-l-4 border-l-primary shadow-sm'
+                          : 'hover:bg-muted'
                       }`}
                     >
                       <div className="flex items-start gap-3">
@@ -422,7 +422,7 @@ export default function Messages() {
           </div>
 
           {/* Área de Chat */}
-          <div className="flex-1 bg-white overflow-hidden">
+          <div className="flex-1 bg-card overflow-hidden">
             {selectedConversation ? (
               <UnifiedChat
                 conversationId={selectedConversation.id}

@@ -232,7 +232,7 @@ export default function BusinessProfile() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-secondary/10">
       <Header />
 
       {/* Cover Image - LinkedIn style */}
@@ -255,7 +255,7 @@ export default function BusinessProfile() {
             {/* Left Column - Main Content */}
             <div className="lg:col-span-2 space-y-4">
               {/* Profile Header Card */}
-              <Card className="bg-card border shadow-sm">
+              <Card className="bg-card/50 backdrop-blur-sm border-2 shadow-lg">
                 <CardContent className="p-6">
                   <div className="flex flex-col md:flex-row gap-6">
                     {/* Logo */}
@@ -303,7 +303,7 @@ export default function BusinessProfile() {
               </Card>
 
               {/* Tabs Navigation */}
-              <Card className="bg-card border shadow-sm">
+              <Card className="bg-card/50 backdrop-blur-sm border-2 shadow-lg">
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                   <TabsList className="w-full justify-start rounded-none border-b bg-transparent h-auto p-0">
                     <TabsTrigger 

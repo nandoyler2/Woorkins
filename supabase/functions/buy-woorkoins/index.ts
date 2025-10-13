@@ -83,7 +83,7 @@ serve(async (req) => {
       amount: Math.round(price * 100), // Converter reais para centavos
       currency: 'brl',
       customer: customerId,
-      payment_method_types: ['card', 'boleto', 'link'],
+      payment_method_types: ['card', 'boleto'],
       payment_method_options: {
         boleto: {
           expires_after_days: 3,

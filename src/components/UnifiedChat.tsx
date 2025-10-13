@@ -61,7 +61,58 @@ export function UnifiedChat({
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+    
+    // Mark messages as read when opening the chat
+    if (messages.length > 0 && profileId) {
+      markMessagesAsRead();
+    }
+  }, [messages, conversationId, profileId]);
+
+  const markMessagesAsRead = async () => {
+    try {
+      const tableName = conversationType === 'negotiation' ? 'negotiation_messages' : 'proposal_messages';
+      const idColumn = conversationType === 'negotiation' ? 'negotiation_id' : 'proposal_id';
+      
+      // Update message status to 'read'
+      await supabase
+        .from(tableName as any)
+        .update({ status: 'read', read_at: new Date().toISOString() })
+        .eq(idColumn, conversationId)
+        .neq('sender_id', profileId)
+        .in('status', ['sent', 'delivered']);
+      
+      // Update or create unread count record
+      const { data: existing } = await supabase
+        .from('message_unread_counts')
+        .select('id')
+        .eq('user_id', profileId)
+        .eq('conversation_id', conversationId)
+        .eq('conversation_type', conversationType)
+        .maybeSingle();
+      
+      if (existing) {
+        await supabase
+          .from('message_unread_counts')
+          .update({ 
+            unread_count: 0, 
+            last_read_at: new Date().toISOString() 
+          })
+          .eq('id', existing.id);
+      } else {
+        await supabase
+          .from('message_unread_counts')
+          .insert({
+            user_id: profileId,
+            conversation_id: conversationId,
+            conversation_type: conversationType,
+            unread_count: 0,
+            last_read_at: new Date().toISOString()
+          });
+      }
+    } catch (error) {
+      console.error('Error marking messages as read:', error);
+    }
+  };
 
   // Load proposal data if it's a proposal conversation
   useEffect(() => {
@@ -160,20 +211,56 @@ export function UnifiedChat({
     messages.length === 0;
 
   const handleDeleteConversation = async () => {
+    // Verificar se há proposta aceita
+    if (conversationType === 'proposal' && proposalData?.status === 'accepted') {
+      alert('Não é possível excluir conversas com propostas aceitas. Entre em contato com o suporte se necessário.');
+      return;
+    }
+    
+    if (conversationType === 'negotiation') {
+      const { data: negotiation } = await supabase
+        .from('negotiations')
+        .select('status')
+        .eq('id', conversationId)
+        .single();
+      
+      if (negotiation?.status === 'accepted' || negotiation?.status === 'paid') {
+        alert('Não é possível excluir negociações aceitas ou pagas. Entre em contato com o suporte se necessário.');
+        return;
+      }
+    }
+
     if (!confirm('Tem certeza que deseja excluir esta conversa? Esta ação será irreversível e a conversa será excluída para ambas as partes.')) {
       return;
     }
 
     try {
+      // Delete messages first
+      const tableName = conversationType === 'negotiation' ? 'negotiation_messages' : 'proposal_messages';
+      const idColumn = conversationType === 'negotiation' ? 'negotiation_id' : 'proposal_id';
+      
+      await supabase
+        .from(tableName as any)
+        .delete()
+        .eq(idColumn, conversationId);
+      
+      // Delete the conversation
       if (conversationType === 'proposal') {
         await supabase.from('proposals').delete().eq('id', conversationId);
       } else {
         await supabase.from('negotiations').delete().eq('id', conversationId);
       }
       
+      // Clean up unread counts
+      await supabase
+        .from('message_unread_counts')
+        .delete()
+        .eq('conversation_id', conversationId);
+      
       window.location.href = '/messages';
     } catch (error) {
       console.error('Error deleting conversation:', error);
+      alert('Erro ao excluir conversa. Tente novamente.');
     }
   };
 

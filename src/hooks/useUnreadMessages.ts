@@ -9,72 +9,34 @@ export const useUnreadMessages = (profileId: string) => {
 
     const loadUnreadCount = async () => {
       try {
-        // Get all negotiations where user is involved
-        const { data: negotiations } = await supabase
-          .from('negotiations')
-          .select('id')
-          .or(`user_id.eq.${profileId},business_id.in.(select id from business_profiles where profile_id = '${profileId}')`);
+        // Sum all unread counts for this user from message_unread_counts table
+        const { data, error } = await supabase
+          .from('message_unread_counts')
+          .select('unread_count')
+          .eq('user_id', profileId);
 
-        const negotiationIds = negotiations?.map(n => n.id) || [];
+        if (error) throw error;
 
-        // Count unread negotiation messages
-        let negCount = 0;
-        if (negotiationIds.length > 0) {
-          const { count } = await supabase
-            .from('negotiation_messages')
-            .select('*', { count: 'exact', head: true })
-            .in('negotiation_id', negotiationIds)
-            .neq('sender_id', profileId)
-            .in('status', ['sent', 'delivered']);
-          negCount = count || 0;
-        }
-
-        // Get all proposals where user is involved
-        const { data: proposals } = await supabase
-          .from('proposals')
-          .select('id')
-          .or(`freelancer_id.eq.${profileId},project_id.in.(select id from projects where profile_id = '${profileId}')`);
-
-        const proposalIds = proposals?.map(p => p.id) || [];
-
-        // Count unread proposal messages
-        let propCount = 0;
-        if (proposalIds.length > 0) {
-          const { count } = await supabase
-            .from('proposal_messages')
-            .select('*', { count: 'exact', head: true })
-            .in('proposal_id', proposalIds)
-            .neq('sender_id', profileId)
-            .in('status', ['sent', 'delivered']);
-          propCount = count || 0;
-        }
-
-        setUnreadCount(negCount + propCount);
+        const total = data?.reduce((sum, item) => sum + (item.unread_count || 0), 0) || 0;
+        setUnreadCount(total);
       } catch (error) {
         console.error('Error loading unread count:', error);
+        setUnreadCount(0);
       }
     };
 
     loadUnreadCount();
 
-    // Subscribe to realtime updates
+    // Subscribe to realtime updates on message_unread_counts
     const channel = supabase
-      .channel('unread-messages')
+      .channel('unread-messages-count')
       .on(
         'postgres_changes',
         {
           event: '*',
           schema: 'public',
-          table: 'negotiation_messages'
-        },
-        () => loadUnreadCount()
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'proposal_messages'
+          table: 'message_unread_counts',
+          filter: `user_id=eq.${profileId}`
         },
         () => loadUnreadCount()
       )
@@ -87,3 +49,4 @@ export const useUnreadMessages = (profileId: string) => {
 
   return unreadCount;
 };
+

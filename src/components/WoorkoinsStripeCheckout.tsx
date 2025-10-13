@@ -175,7 +175,7 @@ export function WoorkoinsStripeCheckout({
   const options = {
     clientSecret,
     appearance,
-    paymentMethodOrder: ['card', 'boleto'] as any,
+    paymentMethodOrder: ['link', 'card', 'boleto'] as any,
   } as any;
 
   return (

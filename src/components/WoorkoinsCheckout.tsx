@@ -136,7 +136,7 @@ function CheckoutForm({ clientSecret, amount, price, onSuccess, onCancel }: Chec
         </Button>
         <Button
           type="submit"
-          disabled={!stripe || loading || !elementReady}
+          disabled={!stripe || !elements || loading}
           className="flex-1 bg-gradient-primary hover:shadow-glow"
         >
           {loading ? (
@@ -220,7 +220,7 @@ export function WoorkoinsCheckout({ open, onOpenChange, clientSecret, amount, pr
             Comprar Woorkoins
           </DialogTitle>
         </DialogHeader>
-        <Elements stripe={stripePromise} options={options}>
+        <Elements key={clientSecret} stripe={stripePromise} options={options}>
           <CheckoutForm
             clientSecret={clientSecret}
             amount={amount}

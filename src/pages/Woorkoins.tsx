@@ -218,31 +218,23 @@ export default function Woorkoins() {
       
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         <div className="space-y-8">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" asChild>
-              <Link to="/painel">
-                <ArrowLeft className="w-5 h-5" />
-              </Link>
-            </Button>
-            <div>
-              <h1 className="text-4xl font-bold flex items-center gap-3">
-                <img src={woorkoinsIcon} alt="Woorkoins" className="h-12 w-auto object-contain" />
-                Woorkoins
-              </h1>
-              <p className="text-muted-foreground">A moeda oficial do Woorkins</p>
-            </div>
-          </div>
-
           {/* Saldo */}
           <Card className="bg-gradient-to-br from-primary/20 via-primary/10 to-transparent border-2 border-primary/30">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground mb-2">Seu Saldo</p>
-                  <div className="flex items-center gap-3">
-                    <img src={woorkoinsIcon} alt="Woorkoins" className="h-10 w-auto object-contain" />
-                    <p className="text-4xl font-bold">{balance.toLocaleString()}</p>
-                    <span className="text-2xl font-medium text-muted-foreground">Woorkoins</span>
+                <div className="flex items-center gap-4">
+                  <Button variant="ghost" size="icon" asChild>
+                    <Link to="/painel">
+                      <ArrowLeft className="w-5 h-5" />
+                    </Link>
+                  </Button>
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-2">Seu Saldo</p>
+                    <div className="flex items-center gap-3">
+                      <img src={woorkoinsIcon} alt="Woorkoins" className="h-10 w-auto object-contain" />
+                      <p className="text-4xl font-bold">{balance.toLocaleString()}</p>
+                      <span className="text-2xl font-medium text-muted-foreground">Woorkoins</span>
+                    </div>
                   </div>
                 </div>
                 <Button 

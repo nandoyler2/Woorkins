@@ -55,26 +55,61 @@ export default function Messages() {
     if (profileId) {
       loadConversations();
       
-      // Subscribe to realtime updates for new messages
+      // Subscribe to lightweight realtime updates for conversation list (avoid full reload)
       const channel = supabase
         .channel('conversations-updates')
         .on(
           'postgres_changes',
           {
-            event: '*',
+            event: 'INSERT',
             schema: 'public',
             table: 'negotiation_messages'
           },
-          () => loadConversations()
+          (payload) => {
+            const m: any = payload.new;
+            setConversations(prev => {
+              const updated = prev.map(c => {
+                if (c.type === 'negotiation' && c.id === m.negotiation_id) {
+                  const isActive = selectedConversation?.type === 'negotiation' && selectedConversation?.id === c.id;
+                  const inc = !isActive && m.sender_id !== profileId ? 1 : 0;
+                  return {
+                    ...c,
+                    lastMessageAt: m.created_at,
+                    unreadCount: (c.unreadCount || 0) + inc,
+                  };
+                }
+                return c;
+              });
+              // Sort by last activity desc
+              return [...updated].sort((a, b) => new Date(b.lastMessageAt || 0).getTime() - new Date(a.lastMessageAt || 0).getTime());
+            });
+          }
         )
         .on(
           'postgres_changes',
           {
-            event: '*',
+            event: 'INSERT',
             schema: 'public',
             table: 'proposal_messages'
           },
-          () => loadConversations()
+          (payload) => {
+            const m: any = payload.new;
+            setConversations(prev => {
+              const updated = prev.map(c => {
+                if (c.type === 'proposal' && c.id === m.proposal_id) {
+                  const isActive = selectedConversation?.type === 'proposal' && selectedConversation?.id === c.id;
+                  const inc = !isActive && m.sender_id !== profileId ? 1 : 0;
+                  return {
+                    ...c,
+                    lastMessageAt: m.created_at,
+                    unreadCount: (c.unreadCount || 0) + inc,
+                  };
+                }
+                return c;
+              });
+              return [...updated].sort((a, b) => new Date(b.lastMessageAt || 0).getTime() - new Date(a.lastMessageAt || 0).getTime());
+            });
+          }
         )
         .subscribe();
 
@@ -82,7 +117,7 @@ export default function Messages() {
         supabase.removeChannel(channel);
       };
     }
-  }, [profileId]);
+  }, [profileId, selectedConversation]);
 
   // Auto-select conversation from query params
   useEffect(() => {

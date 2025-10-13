@@ -408,7 +408,7 @@ export function UnifiedChat({
 
       {/* Messages - Scrollable Area */}
       <div className="flex-1 overflow-y-auto min-h-0">
-        <div className="p-4 space-y-4">
+        <div className="p-4 space-y-4 pb-24">
           {isChatLocked ? (
             <div className="text-center py-12">
               <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-yellow-500/10 mb-4">
@@ -536,8 +536,8 @@ export function UnifiedChat({
         </div>
       </div>
 
-      {/* Input - Fixed at Bottom */}
-      <div className="border-t bg-white flex-shrink-0">
+      {/* Input - Floating Sticky Bottom */}
+      <div className="sticky bottom-0 z-20 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 flex-shrink-0">
         <form onSubmit={handleSendMessage} className="p-3">
         {isChatLocked ? (
           <div className="text-center py-2">

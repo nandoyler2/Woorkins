@@ -5,6 +5,7 @@ import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Star, Search, Briefcase, MessageSquare, CheckCircle2, Phone, Building2, Users, UserPlus, ThumbsUp, MessageCircle, Award, Activity, TrendingUp, Bell, Clock, Trophy, Share2, Heart, Bookmark } from 'lucide-react';
+import woorkoinsIcon from '@/assets/woorkoins-icon.png';
 import { Link } from 'react-router-dom';
 import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -71,6 +72,7 @@ export default function Dashboard() {
   const [businessProfiles, setBusinessProfiles] = useState<BusinessProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [unreadMessages, setUnreadMessages] = useState(5);
+  const [woorkoinsBalance, setWoorkoinsBalance] = useState(250); // Mock balance, depois criar tabela real
   
   // Mock data for feed posts
   const feedPosts: FeedPost[] = [
@@ -282,7 +284,14 @@ export default function Dashboard() {
                         <Award className="w-3 h-3 mr-1" />
                         {memberLevel}
                       </Badge>
-                      <span className="text-sm text-slate-600">{points} / {maxPoints} pontos</span>
+                      <Link 
+                        to="/woorkoins" 
+                        className="flex items-center gap-1.5 text-sm text-slate-600 hover:text-primary transition-colors cursor-pointer group"
+                      >
+                        <img src={woorkoinsIcon} alt="Woorkoins" className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                        <span className="font-semibold">{woorkoinsBalance.toLocaleString()}</span>
+                        <span>Woorkoins</span>
+                      </Link>
                     </div>
                   </div>
                   <div className="text-right">

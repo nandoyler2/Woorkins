@@ -29,6 +29,7 @@ export default function Woorkoins() {
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [clientSecret, setClientSecret] = useState('');
   const [selectedPackage, setSelectedPackage] = useState<{ amount: number; price: number } | null>(null);
+  const [activeTab, setActiveTab] = useState<'produtos' | 'comprar'>('produtos');
 
   const products: WoorkoinProduct[] = [
     {
@@ -240,10 +241,7 @@ export default function Woorkoins() {
                 <Button 
                   size="lg" 
                   className="bg-gradient-primary hover:shadow-glow"
-                  onClick={() => {
-                    const tab = document.querySelector('[data-value="comprar"]') as HTMLElement;
-                    if (tab) tab.click();
-                  }}
+                  onClick={() => setActiveTab('comprar')}
                 >
                   <Coins className="w-5 h-5 mr-2" />
                   Comprar Mais
@@ -252,7 +250,7 @@ export default function Woorkoins() {
             </CardContent>
           </Card>
 
-          <Tabs defaultValue="produtos" className="w-full">
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'produtos' | 'comprar')} className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="produtos">Produtos</TabsTrigger>
               <TabsTrigger value="comprar">Comprar Woorkoins</TabsTrigger>

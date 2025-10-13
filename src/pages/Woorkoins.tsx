@@ -170,7 +170,7 @@ export default function Woorkoins() {
 
       console.log('Calling buy-woorkoins function...');
       const response = await supabase.functions.invoke('buy-woorkoins', {
-        body: { amount },
+        body: { amount, price },
       });
 
       console.log('Function response:', response);

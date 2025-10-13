@@ -1,13 +1,23 @@
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Loader2 } from 'lucide-react';
+import { Loader2, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 import woorkoinsIcon from '@/assets/woorkoins-icon-final.png';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
+// Verificar se a chave publicável está configurada
+const stripePublishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
+
+console.log('Stripe Key Status:', {
+  exists: !!stripePublishableKey,
+  prefix: stripePublishableKey?.substring(0, 10),
+  env: import.meta.env
+});
+
+const stripePromise = stripePublishableKey ? loadStripe(stripePublishableKey) : null;
 
 interface CheckoutFormProps {
   amount: number;
@@ -133,6 +143,27 @@ export function WoorkoinsStripeCheckout({
   price,
   onSuccess,
 }: WoorkoinsStripeCheckoutProps) {
+  if (!stripePublishableKey) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <img src={woorkoinsIcon} alt="Woorkoins" className="h-6 w-auto object-contain" />
+              Erro de Configuração
+            </DialogTitle>
+          </DialogHeader>
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              A chave publicável do Stripe não está configurada. Entre em contato com o suporte.
+            </AlertDescription>
+          </Alert>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
   const appearance = {
     theme: 'stripe' as const,
     variables: {
@@ -155,7 +186,7 @@ export function WoorkoinsStripeCheckout({
           </DialogTitle>
         </DialogHeader>
 
-        {clientSecret && (
+        {clientSecret && stripePromise && (
           <Elements stripe={stripePromise} options={options}>
             <CheckoutForm
               amount={amount}

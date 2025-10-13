@@ -40,12 +40,12 @@ serve(async (req) => {
       throw new Error('Unauthorized');
     }
 
-    const { amount } = await req.json();
+    const { amount, price } = await req.json();
 
-    console.log('Buy Woorkoins request:', { userId: user.id, amount });
+    console.log('Buy Woorkoins request:', { userId: user.id, amount, price });
 
-    if (!amount) {
-      throw new Error('Missing amount parameter');
+    if (!amount || !price) {
+      throw new Error('Missing amount or price parameter');
     }
 
     // Verificar se existe price_id para este pacote
@@ -80,7 +80,7 @@ serve(async (req) => {
 
     // Criar Payment Intent ao invés de Checkout Session
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: Math.round(amount * 10), // Convertendo para centavos (cada woorkoin = R$0.10)
+      amount: Math.round(price * 100), // Converter reais para centavos
       currency: 'brl',
       customer: customerId,
       payment_method_types: ['card', 'boleto'],

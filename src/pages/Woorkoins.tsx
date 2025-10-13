@@ -147,8 +147,17 @@ export default function Woorkoins() {
   };
 
   const handleBuyCoins = async (amount: number, price: number) => {
-    if (!user) return;
+    if (!user) {
+      console.log('No user logged in');
+      toast({
+        title: 'Erro',
+        description: 'Você precisa estar logado para comprar Woorkoins.',
+        variant: 'destructive',
+      });
+      return;
+    }
 
+    console.log('Starting purchase:', { amount, price });
     setLoading(true);
 
     try {
@@ -158,14 +167,19 @@ export default function Woorkoins() {
         throw new Error('No active session');
       }
 
+      console.log('Calling buy-woorkoins function...');
       const response = await supabase.functions.invoke('buy-woorkoins', {
         body: { amount, price },
       });
 
+      console.log('Function response:', response);
+
       if (response.error) {
+        console.error('Function error:', response.error);
         throw response.error;
       }
 
+      console.log('Setting client secret and opening checkout...');
       setClientSecret(response.data.clientSecret);
       setSelectedPackage({ amount, price });
       setCheckoutOpen(true);
@@ -173,7 +187,7 @@ export default function Woorkoins() {
       console.error('Error initiating purchase:', error);
       toast({
         title: 'Erro',
-        description: 'Não foi possível iniciar a compra. Tente novamente.',
+        description: error.message || 'Não foi possível iniciar a compra. Tente novamente.',
         variant: 'destructive',
       });
     } finally {
@@ -231,7 +245,14 @@ export default function Woorkoins() {
                     <span className="text-2xl font-medium text-muted-foreground">Woorkoins</span>
                   </div>
                 </div>
-                <Button size="lg" className="bg-gradient-primary hover:shadow-glow">
+                <Button 
+                  size="lg" 
+                  className="bg-gradient-primary hover:shadow-glow"
+                  onClick={() => {
+                    const tab = document.querySelector('[data-value="comprar"]') as HTMLElement;
+                    if (tab) tab.click();
+                  }}
+                >
                   <Coins className="w-5 h-5 mr-2" />
                   Comprar Mais
                 </Button>

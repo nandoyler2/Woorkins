@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import woorkoinsIcon from '@/assets/woorkoins-icon.png';
 
 const STRIPE_PUBLISHABLE_KEY = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY as string | undefined;
+
+console.log('Stripe Key exists:', !!STRIPE_PUBLISHABLE_KEY);
+
 const stripePromise = STRIPE_PUBLISHABLE_KEY ? loadStripe(STRIPE_PUBLISHABLE_KEY) : null;
 
 interface CheckoutFormProps {
@@ -130,6 +133,8 @@ interface WoorkoinsCheckoutProps {
 }
 
 export function WoorkoinsCheckout({ open, onOpenChange, clientSecret, amount, price, onSuccess }: WoorkoinsCheckoutProps) {
+  console.log('WoorkoinsCheckout render:', { open, hasClientSecret: !!clientSecret, amount, price });
+
   const options = {
     clientSecret,
     appearance: {
@@ -161,8 +166,20 @@ export function WoorkoinsCheckout({ open, onOpenChange, clientSecret, amount, pr
   };
 
   if (!stripePromise) {
-    return null;
+    console.error('Stripe not initialized - missing publishable key');
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Erro de Configuração</DialogTitle>
+          </DialogHeader>
+          <p>Stripe não está configurado corretamente. Por favor, contate o suporte.</p>
+        </DialogContent>
+      </Dialog>
+    );
   }
+
+  console.log('Rendering Stripe Elements');
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

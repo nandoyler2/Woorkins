@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, QrCode, CreditCard } from "lucide-react";
+import { initMercadoPago, CardPayment } from '@mercadopago/sdk-react';
 
 interface MercadoPagoCheckoutProps {
   amount: number;
@@ -25,11 +26,36 @@ export default function MercadoPagoCheckout({
   const [paymentMethod, setPaymentMethod] = useState<"pix" | "card">("pix");
   const [loading, setLoading] = useState(false);
   const [pixData, setPixData] = useState<any>(null);
+  const [mpInitialized, setMpInitialized] = useState(false);
   
   // Dados do cliente
   const [customerName, setCustomerName] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
   const [customerDocument, setCustomerDocument] = useState("");
+
+  useEffect(() => {
+    const loadMercadoPagoKey = async () => {
+      try {
+        const { data: config } = await supabase
+          .from("payment_gateway_config")
+          .select("*")
+          .single();
+        
+        // Precisamos da public key do MP (diferente do access token)
+        // Por enquanto vamos deixar o usuário configurar via secret
+        const mpPublicKey = import.meta.env.VITE_MERCADOPAGO_PUBLIC_KEY;
+        
+        if (mpPublicKey) {
+          initMercadoPago(mpPublicKey);
+          setMpInitialized(true);
+        }
+      } catch (error) {
+        console.error("Erro ao carregar MP:", error);
+      }
+    };
+    
+    loadMercadoPagoKey();
+  }, []);
 
   const isValidEmail = (email: string) => /[^\s@]+@[^\s@]+\.[^\s@]+/.test(email);
   const isValidFullName = (name: string) => name.trim().split(/\s+/).length >= 2;
@@ -90,11 +116,61 @@ export default function MercadoPagoCheckout({
     }
   };
 
-  const handleCardPayment = async () => {
-    toast({
-      title: "Pagamento com cartão em desenvolvimento",
-      description: "Use PIX por enquanto",
-    });
+  const handleCardPayment = async (formData: any) => {
+    const nameTrimmed = customerName.trim().replace(/\s+/g, ' ');
+    const emailTrimmed = customerEmail.trim();
+    const docDigits = (customerDocument || '').replace(/\D/g, '');
+
+    if (!isValidFullName(nameTrimmed)) {
+      toast({ title: 'Nome inválido', description: 'Informe nome e sobrenome.', variant: 'destructive' });
+      return;
+    }
+    if (!isValidEmail(emailTrimmed)) {
+      toast({ title: 'E-mail inválido', description: 'Informe um e-mail válido.', variant: 'destructive' });
+      return;
+    }
+    if (!isValidDocument(docDigits)) {
+      toast({ title: 'Documento inválido', description: 'Informe um CPF/CNPJ válido.', variant: 'destructive' });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("mercadopago-create-payment", {
+        body: {
+          paymentMethod: "card",
+          amount: amount,
+          description: description,
+          token: formData.token,
+          customer: {
+            name: nameTrimmed,
+            email: emailTrimmed.toLowerCase(),
+            document: docDigits,
+          },
+          card: {
+            cardholder_name: formData.payer.name,
+          },
+        },
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Pagamento processado!",
+        description: "Seu pagamento foi aprovado com sucesso",
+      });
+      
+      onSuccess();
+    } catch (error: any) {
+      console.error("Erro ao processar cartão:", error);
+      toast({
+        title: "Erro ao processar pagamento",
+        description: error.message || "Tente novamente",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -182,15 +258,62 @@ export default function MercadoPagoCheckout({
               </div>
             </TabsContent>
 
-            <TabsContent value="card">
-              <div className="text-center py-8 space-y-4">
-                <p className="text-muted-foreground">
-                  Pagamento com cartão via Mercado Pago em breve.
-                </p>
-                <Button variant="outline" onClick={onCancel} className="w-full">
-                  Cancelar
-                </Button>
-              </div>
+            <TabsContent value="card" className="space-y-4">
+              {!mpInitialized ? (
+                <div className="text-center py-8">
+                  <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+                  <p className="text-muted-foreground">Carregando Mercado Pago...</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="card-name">Nome Completo</Label>
+                    <Input
+                      id="card-name"
+                      value={customerName}
+                      onChange={(e) => setCustomerName(e.target.value)}
+                      placeholder="Seu nome completo"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="card-email">E-mail</Label>
+                    <Input
+                      id="card-email"
+                      type="email"
+                      value={customerEmail}
+                      onChange={(e) => setCustomerEmail(e.target.value)}
+                      placeholder="seu@email.com"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="card-document">CPF/CNPJ</Label>
+                    <Input
+                      id="card-document"
+                      value={customerDocument}
+                      onChange={(e) => setCustomerDocument(e.target.value)}
+                      placeholder="000.000.000-00"
+                    />
+                  </div>
+
+                  <CardPayment
+                    initialization={{ amount: amount }}
+                    onSubmit={handleCardPayment}
+                    customization={{
+                      visual: {
+                        style: {
+                          theme: 'default',
+                        },
+                      },
+                    }}
+                  />
+
+                  <Button variant="outline" onClick={onCancel} className="w-full">
+                    Cancelar
+                  </Button>
+                </div>
+              )}
             </TabsContent>
           </Tabs>
         ) : (

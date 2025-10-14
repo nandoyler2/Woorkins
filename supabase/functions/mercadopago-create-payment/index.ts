@@ -27,16 +27,16 @@ serve(async (req) => {
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) throw new Error("Authorization header missing");
 
-    const token = authHeader.replace("Bearer ", "");
-    const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
+    const authToken = authHeader.replace("Bearer ", "");
+    const { data: userData, error: userError } = await supabaseClient.auth.getUser(authToken);
     if (userError) throw userError;
 
     const user = userData.user;
     if (!user?.email) throw new Error("User not authenticated");
     logStep("Usuário autenticado", { userId: user.id });
 
-    const { paymentMethod, amount, description, customer, woorkoins_amount, woorkoins_price } = await req.json();
-    logStep("Dados recebidos", { paymentMethod, amount });
+    const { paymentMethod, amount, description, customer, woorkoins_amount, woorkoins_price, token, card } = await req.json();
+    logStep("Dados recebidos", { paymentMethod, amount, hasToken: !!token });
 
     // Buscar configurações do Mercado Pago
     const { data: config, error: configError } = await supabaseClient
@@ -95,6 +95,14 @@ serve(async (req) => {
       },
       notification_url: `${Deno.env.get("SUPABASE_URL")}/functions/v1/mercadopago-webhook`,
     };
+
+    // Se for cartão, adicionar token e dados do cartão
+    if (paymentMethod === "card" && token) {
+      paymentData.token = token;
+      if (card?.cardholder_name) {
+        paymentData.payer.name = card.cardholder_name;
+      }
+    }
 
     logStep("Criando pagamento", { paymentData });
 

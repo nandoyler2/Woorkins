@@ -155,7 +155,6 @@ serve(async (req) => {
     const payBody = {
       payment: {
         pix: {
-          expires_in: expirationSeconds,
           ...(customerPayload ? { customer: customerPayload } : {}),
         },
       },

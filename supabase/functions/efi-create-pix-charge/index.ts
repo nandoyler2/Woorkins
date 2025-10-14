@@ -141,19 +141,32 @@ serve(async (req) => {
     const chargeId = chargeData.data.charge_id;
     const payUrl = `https://cobrancas.api.efipay.com.br/v1/charge/${chargeId}/pay`;
 
+    const docDigits = customer?.document ? String(customer.document).replace(/\D/g, "") : "";
+    const customerPayload = customer ? {
+      name: customer.name,
+      email: customer.email,
+      ...(docDigits.length === 11 ? { cpf: docDigits } : {}),
+      ...(docDigits.length === 14 ? { cnpj: docDigits } : {}),
+    } : undefined;
+
+    const payBody = {
+      payment: {
+        pix: {
+          expires_in: expirationSeconds,
+          ...(customerPayload ? { customer: customerPayload } : {}),
+        },
+      },
+    };
+
+    logStep("Enviando pay PIX", { body: payBody });
+
     const payResponse = await fetch(payUrl, {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${accessToken}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        payment: {
-          pix: {
-            expires_in: expirationSeconds,
-          },
-        },
-      }),
+      body: JSON.stringify(payBody),
     });
 
     if (!payResponse.ok) {

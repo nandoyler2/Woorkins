@@ -149,6 +149,9 @@ export function WoorkoinsCheckout({
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Carregando checkout</DialogTitle>
+          </DialogHeader>
           <div className="flex items-center justify-center min-h-[400px]">
             <Loader2 className="h-8 w-8 animate-spin" />
           </div>
@@ -180,6 +183,7 @@ export function WoorkoinsCheckout({
             <img src={woorkoinsIcon} alt="Woorkoins" className="h-6 w-auto object-contain" />
             Comprar Woorkoins
           </DialogTitle>
+          <p className="sr-only">Escolha o método de pagamento e gere o QR Code PIX</p>
         </DialogHeader>
 
         <div className="bg-muted p-4 rounded-lg space-y-3">

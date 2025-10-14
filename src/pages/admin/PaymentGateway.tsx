@@ -15,6 +15,7 @@ interface PaymentGatewayConfig {
   mercadopago_enabled: boolean;
   mercadopago_pix_discount_percent: number;
   mercadopago_card_discount_percent: number;
+  mercadopago_public_key: string;
 }
 
 export default function PaymentGateway() {
@@ -26,6 +27,7 @@ export default function PaymentGateway() {
     mercadopago_enabled: false,
     mercadopago_pix_discount_percent: 0,
     mercadopago_card_discount_percent: 0,
+    mercadopago_public_key: "",
   });
 
   useEffect(() => {
@@ -46,6 +48,7 @@ export default function PaymentGateway() {
           mercadopago_enabled: data.mercadopago_enabled || false,
           mercadopago_pix_discount_percent: data.mercadopago_pix_discount_percent || 0,
           mercadopago_card_discount_percent: data.mercadopago_card_discount_percent || 0,
+          mercadopago_public_key: data.mercadopago_public_key || "",
         });
       }
     } catch (error) {
@@ -140,7 +143,7 @@ export default function PaymentGateway() {
             <CardHeader>
               <CardTitle>Credenciais Mercado Pago</CardTitle>
               <CardDescription>
-                Configure o Access Token da API Mercado Pago (deve ser configurado como secret: MERCADOPAGO_ACCESS_TOKEN)
+                Configure as credenciais da API Mercado Pago
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -157,6 +160,27 @@ export default function PaymentGateway() {
                     {config.mercadopago_enabled ? "Ativado" : "Desativado"}
                   </span>
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="mp-public-key">Public Key</Label>
+                <Input
+                  id="mp-public-key"
+                  value={config.mercadopago_public_key}
+                  onChange={(e) =>
+                    setConfig({ ...config, mercadopago_public_key: e.target.value })
+                  }
+                  placeholder="APP_USR-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Chave pública para o checkout (inicia com APP_USR)
+                </p>
+              </div>
+
+              <div className="p-3 bg-muted rounded-md">
+                <p className="text-sm text-muted-foreground">
+                  <strong>Access Token (Backend):</strong> Configure como secret: MERCADOPAGO_ACCESS_TOKEN
+                </p>
               </div>
             </CardContent>
           </Card>

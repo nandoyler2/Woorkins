@@ -545,6 +545,7 @@ export type Database = {
           mercadopago_card_discount_percent: number | null
           mercadopago_enabled: boolean | null
           mercadopago_pix_discount_percent: number | null
+          mercadopago_public_key: string | null
           updated_at: string | null
         }
         Insert: {
@@ -554,6 +555,7 @@ export type Database = {
           mercadopago_card_discount_percent?: number | null
           mercadopago_enabled?: boolean | null
           mercadopago_pix_discount_percent?: number | null
+          mercadopago_public_key?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -563,6 +565,7 @@ export type Database = {
           mercadopago_card_discount_percent?: number | null
           mercadopago_enabled?: boolean | null
           mercadopago_pix_discount_percent?: number | null
+          mercadopago_public_key?: string | null
           updated_at?: string | null
         }
         Relationships: []

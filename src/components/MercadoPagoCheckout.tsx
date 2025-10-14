@@ -38,15 +38,11 @@ export default function MercadoPagoCheckout({
       try {
         const { data: config } = await supabase
           .from("payment_gateway_config")
-          .select("*")
+          .select("mercadopago_public_key")
           .single();
         
-        // Precisamos da public key do MP (diferente do access token)
-        // Por enquanto vamos deixar o usuário configurar via secret
-        const mpPublicKey = import.meta.env.VITE_MERCADOPAGO_PUBLIC_KEY;
-        
-        if (mpPublicKey) {
-          initMercadoPago(mpPublicKey);
+        if (config?.mercadopago_public_key) {
+          initMercadoPago(config.mercadopago_public_key);
           setMpInitialized(true);
         }
       } catch (error) {

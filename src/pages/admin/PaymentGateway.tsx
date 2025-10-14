@@ -27,6 +27,7 @@ export default function PaymentGateway() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [registeringWebhooks, setRegisteringWebhooks] = useState(false);
   const [config, setConfig] = useState<PaymentGatewayConfig>({
     active_gateway: "stripe",
     efi_enabled: false,
@@ -187,6 +188,29 @@ export default function PaymentGateway() {
       active_gateway: gateway,
       efi_enabled: gateway === "efi",
     });
+  };
+
+  const handleRegisterWebhooks = async () => {
+    setRegisteringWebhooks(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('efi-register-webhooks');
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Sucesso",
+        description: "Webhooks registrados via API com sucesso!",
+      });
+    } catch (error) {
+      console.error("Erro ao registrar webhooks:", error);
+      toast({
+        title: "Erro",
+        description: error instanceof Error ? error.message : "Não foi possível registrar os webhooks",
+        variant: "destructive",
+      });
+    } finally {
+      setRegisteringWebhooks(false);
+    }
   };
 
   if (loading) {
@@ -380,6 +404,21 @@ export default function PaymentGateway() {
                 </div>
                 <p className="text-sm text-muted-foreground">
                   Requerido pelo Banco Central para webhooks PIX
+                </p>
+              </div>
+
+              <div className="pt-4 border-t">
+                <Button 
+                  onClick={handleRegisterWebhooks} 
+                  disabled={registeringWebhooks}
+                  variant="outline"
+                  className="w-full"
+                >
+                  {registeringWebhooks && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Registrar Webhooks via API
+                </Button>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Clique para registrar os webhooks PIX e Cobranças automaticamente via API da Efí
                 </p>
               </div>
             </CardContent>

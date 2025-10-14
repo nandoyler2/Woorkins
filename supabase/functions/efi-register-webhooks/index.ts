@@ -48,10 +48,10 @@ serve(async (req) => {
       throw new Error('Credenciais Efí não configuradas');
     }
 
-    // Obter token de acesso
+    // Obter token de acesso (OAuth sempre usa api.sejaefi.com.br)
     logStep("Obtendo token de acesso");
     const authString = btoa(`${clientId}:${clientSecret}`);
-    const tokenResponse = await fetch('https://api-pix.sejaefi.com.br/oauth/token', {
+    const tokenResponse = await fetch('https://api.sejaefi.com.br/oauth/token', {
       method: 'POST',
       headers: {
         'Authorization': `Basic ${authString}`,

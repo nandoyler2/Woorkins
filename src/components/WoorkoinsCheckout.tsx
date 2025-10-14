@@ -89,7 +89,12 @@ export function WoorkoinsCheckout({
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <img src={woorkoinsIcon} alt="Woorkoins" className="h-6 w-auto object-contain" />
-              Comprar Woorkoins
+              <div>
+                <div>Comprar Woorkoins</div>
+                <div className="text-sm font-normal text-muted-foreground">
+                  {amount} Woorkoins • R$ {price.toFixed(2)}
+                </div>
+              </div>
             </DialogTitle>
           </DialogHeader>
 

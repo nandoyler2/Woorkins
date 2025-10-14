@@ -7,6 +7,9 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, CreditCard } from "lucide-react";
+import visaLogo from "@/assets/visa-logo.png";
+import mastercardLogo from "@/assets/mastercard-logo.png";
+import amexLogo from "@/assets/amex-logo.png";
 
 // Ícone oficial do PIX
 const PixIcon = ({ className }: { className?: string }) => (
@@ -283,29 +286,19 @@ export default function MercadoPagoCheckout({
               </Button>
               <Button
                 onClick={() => setPaymentMethod("card")}
-                className="h-24 flex flex-col items-center justify-center gap-2"
+                className="h-24 flex flex-col items-center justify-center gap-3"
                 variant="outline"
               >
-                <div className="flex items-center gap-1">
-                  <svg className="h-6 w-auto" viewBox="0 0 48 32" fill="none">
-                    <rect width="48" height="32" rx="4" fill="#1A1F71"/>
-                    <path d="M18 16L22 12L26 16L22 20L18 16Z" fill="#EB001B"/>
-                    <path d="M22 12L26 16L22 20L18 16L22 12Z" fill="#FF5F00"/>
+                <div className="flex items-center gap-2">
+                  <img src={visaLogo} alt="Visa" className="h-5 object-contain" />
+                  <img src={mastercardLogo} alt="Mastercard" className="h-5 object-contain" />
+                  <svg className="h-5 w-auto" viewBox="0 0 120 40" fill="none">
+                    <rect width="120" height="40" rx="4" fill="#FFCC00"/>
+                    <path d="M30 20C30 14.5 34.5 10 40 10H50C50 15.5 45.5 20 40 20H30Z" fill="#00A3DF"/>
+                    <path d="M40 20H50C55.5 20 60 24.5 60 30H40C34.5 30 30 25.5 30 20H40Z" fill="#EE4023"/>
+                    <path d="M60 10C60 15.5 64.5 20 70 20H80C80 14.5 75.5 10 70 10H60Z" fill="#221E1F"/>
                   </svg>
-                  <svg className="h-6 w-auto" viewBox="0 0 48 32" fill="none">
-                    <rect width="48" height="32" rx="4" fill="#00579F"/>
-                    <path d="M20 10H28V22H20V10Z" fill="#EB001B"/>
-                    <path d="M21 16C21 13.5 22.5 11.5 24.5 11C23.5 10.5 22.5 10 21 10C17.5 10 15 12.5 15 16C15 19.5 17.5 22 21 22C22.5 22 23.5 21.5 24.5 21C22.5 20.5 21 18.5 21 16Z" fill="#F79E1B"/>
-                    <path d="M27 16C27 18.5 25.5 20.5 23.5 21C24.5 21.5 25.5 22 27 22C30.5 22 33 19.5 33 16C33 12.5 30.5 10 27 10C25.5 10 24.5 10.5 23.5 11C25.5 11.5 27 13.5 27 16Z" fill="#F79E1B"/>
-                  </svg>
-                  <svg className="h-6 w-auto" viewBox="0 0 48 32" fill="none">
-                    <rect width="48" height="32" rx="4" fill="#FFCC00"/>
-                    <path d="M15 16C15 19.5 17.5 22 21 22H27C30.5 22 33 19.5 33 16C33 12.5 30.5 10 27 10H21C17.5 10 15 12.5 15 16Z" fill="#000"/>
-                  </svg>
-                  <svg className="h-6 w-auto" viewBox="0 0 48 32" fill="none">
-                    <rect width="48" height="32" rx="4" fill="#006FCF"/>
-                    <path d="M24 22C28.4183 22 32 18.4183 32 14C32 9.58172 28.4183 6 24 6C19.5817 6 16 9.58172 16 14C16 18.4183 19.5817 22 24 22Z" fill="white"/>
-                  </svg>
+                  <img src={amexLogo} alt="American Express" className="h-5 object-contain" />
                 </div>
                 <span className="text-lg font-semibold">Pagar com Cartão</span>
               </Button>

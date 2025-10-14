@@ -20,6 +20,7 @@ export default function Account() {
     email: '',
     cpf: ''
   });
+  const [newEmail, setNewEmail] = useState('');
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
     newPassword: '',
@@ -46,6 +47,7 @@ export default function Account() {
         email: user.email || '',
         cpf: data.cpf || ''
       });
+      setNewEmail(user.email || '');
     }
   };
 
@@ -75,29 +77,62 @@ export default function Account() {
         updateData.cpf = cpfDigits;
       }
 
-      const { error } = await supabase
+      // Update profile data
+      const { error: profileError } = await supabase
         .from('profiles')
         .update(updateData)
         .eq('user_id', user?.id);
 
-      if (error) {
-        if (error.message.includes('duplicate key') || error.message.includes('cpf')) {
+      if (profileError) {
+        if (profileError.message.includes('duplicate key') || profileError.message.includes('cpf')) {
           toast({
             title: 'CPF já cadastrado',
             description: 'Este CPF já está em uso por outra conta',
             variant: 'destructive',
           });
+          setLoading(false);
+          return;
         } else {
-          throw error;
+          throw profileError;
         }
+      }
+
+      // Check if email changed
+      if (newEmail !== profile.email && newEmail.trim() !== '') {
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(newEmail)) {
+          toast({
+            title: 'Email inválido',
+            description: 'Por favor, insira um email válido',
+            variant: 'destructive',
+          });
+          setLoading(false);
+          return;
+        }
+
+        // Update email using Supabase Auth (will send confirmation email)
+        const { error: emailError } = await supabase.auth.updateUser({
+          email: newEmail,
+        });
+
+        if (emailError) {
+          throw emailError;
+        }
+
+        toast({
+          title: 'Confirmação enviada!',
+          description: 'Um email de confirmação foi enviado para o novo endereço. Por favor, confirme para concluir a alteração.',
+        });
       } else {
         toast({
           title: 'Perfil atualizado!',
           description: 'Suas informações foram salvas com sucesso.',
         });
-        // Reload profile to get the updated CPF
-        loadProfile();
       }
+
+      // Reload profile to get the updated CPF
+      loadProfile();
     } catch (error: any) {
       toast({
         title: 'Erro ao salvar',
@@ -212,12 +247,14 @@ export default function Account() {
                   </Label>
                   <Input
                     type="email"
-                    value={profile.email}
-                    disabled
-                    className="bg-muted"
+                    value={newEmail}
+                    onChange={(e) => setNewEmail(e.target.value)}
+                    placeholder="seu@email.com"
                   />
                   <p className="text-xs text-muted-foreground">
-                    O email não pode ser alterado por questões de segurança
+                    {newEmail !== profile.email 
+                      ? '⚠️ Um email de confirmação será enviado para o novo endereço'
+                      : 'Email atual da conta'}
                   </p>
                 </div>
                 <div className="space-y-2">

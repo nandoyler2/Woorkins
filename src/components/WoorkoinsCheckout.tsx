@@ -42,12 +42,20 @@ export function WoorkoinsCheckout({
   const [customerDocument, setCustomerDocument] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
 
+
   useEffect(() => {
     loadGatewayConfig();
     if (user?.email) {
       setCustomerEmail(user.email);
     }
   }, [user]);
+
+  const isValidEmail = (email: string) => /[^\s@]+@[^\s@]+\.[^\s@]+/.test(email);
+  const isValidFullName = (name: string) => name.trim().split(/\s+/).length >= 2;
+  const isValidDocument = (doc: string) => {
+    const d = (doc || '').replace(/\D/g, '');
+    return d.length === 11 || d.length === 14;
+  };
 
   // Escutar mudanças na tabela de pagamentos Efí via Realtime
   useEffect(() => {
@@ -103,6 +111,24 @@ export function WoorkoinsCheckout({
   };
 
   const handleEfiPixPayment = async () => {
+    // Validações básicas antes de chamar a função
+    const nameTrimmed = customerName.trim().replace(/\s+/g, ' ');
+    const emailTrimmed = customerEmail.trim();
+    const docDigits = (customerDocument || '').replace(/\D/g, '');
+
+    if (!isValidFullName(nameTrimmed)) {
+      toast({ title: 'Nome inválido', description: 'Informe nome e sobrenome.', variant: 'destructive' });
+      return;
+    }
+    if (!isValidEmail(emailTrimmed)) {
+      toast({ title: 'E-mail inválido', description: 'Informe um e-mail válido.', variant: 'destructive' });
+      return;
+    }
+    if (!isValidDocument(docDigits)) {
+      toast({ title: 'Documento inválido', description: 'Informe um CPF/CNPJ válido.', variant: 'destructive' });
+      return;
+    }
+
     setProcessingPayment(true);
     try {
       const { data, error } = await supabase.functions.invoke("efi-create-pix-charge", {
@@ -110,9 +136,9 @@ export function WoorkoinsCheckout({
           amount: price,
           description: `Compra de ${amount} Woorkoins`,
           customer: {
-            name: customerName,
-            email: customerEmail,
-            document: customerDocument,
+            name: nameTrimmed,
+            email: emailTrimmed.toLowerCase(),
+            document: docDigits,
           },
           woorkoins_amount: amount,
           woorkoins_price: price,
@@ -245,7 +271,12 @@ export function WoorkoinsCheckout({
 
                   <Button
                     onClick={handleEfiPixPayment}
-                    disabled={processingPayment || !customerName || !customerEmail || !customerDocument}
+                    disabled={
+                      processingPayment ||
+                      !isValidFullName(customerName) ||
+                      !isValidEmail(customerEmail) ||
+                      !isValidDocument(customerDocument)
+                    }
                     className="w-full"
                   >
                     {processingPayment ? (

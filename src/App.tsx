@@ -27,6 +27,7 @@ import AdminReports from "./pages/admin/Reports";
 import AdminBusinesses from "./pages/admin/Businesses";
 import AdminAnalytics from "./pages/admin/Analytics";
 import AdminSettings from "./pages/admin/Settings";
+import AdminPaymentGateway from "./pages/admin/PaymentGateway";
 import Account from "./pages/Account";
 import Financeiro from "./pages/Financeiro";
 import Woorkoins from "./pages/Woorkoins";
@@ -66,6 +67,7 @@ const App = () => (
                 <Route path="businesses" element={<AdminBusinesses />} />
                 <Route path="analytics" element={<AdminAnalytics />} />
                 <Route path="settings" element={<AdminSettings />} />
+                <Route path="payment-gateway" element={<AdminPaymentGateway />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>

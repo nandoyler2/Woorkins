@@ -23,3 +23,12 @@ verify_jwt = false
 
 [functions.buy-woorkoins]
 verify_jwt = true
+
+[functions.efi-create-pix-charge]
+verify_jwt = true
+
+[functions.efi-create-card-charge]
+verify_jwt = true
+
+[functions.efi-webhook]
+verify_jwt = false

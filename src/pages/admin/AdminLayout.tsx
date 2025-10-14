@@ -6,7 +6,8 @@ import {
   BarChart3, 
   Settings, 
   Shield,
-  Home
+  Home,
+  CreditCard
 } from 'lucide-react';
 import {
   Sidebar,
@@ -29,6 +30,7 @@ const adminMenuItems = [
   { title: "Denúncias", url: "/admin/reports", icon: Flag },
   { title: "Negócios", url: "/admin/businesses", icon: Briefcase },
   { title: "Analytics", url: "/admin/analytics", icon: BarChart3 },
+  { title: "Gateway de Pagamento", url: "/admin/payment-gateway", icon: CreditCard },
   { title: "Configurações", url: "/admin/settings", icon: Settings },
 ];
 

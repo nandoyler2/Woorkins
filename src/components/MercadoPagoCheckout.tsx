@@ -14,6 +14,8 @@ interface MercadoPagoCheckoutProps {
   description: string;
   onSuccess: () => void;
   onCancel: () => void;
+  woorkoinsAmount?: number;
+  woorkoinsPrice?: number;
 }
 
 export default function MercadoPagoCheckout({
@@ -21,6 +23,8 @@ export default function MercadoPagoCheckout({
   description,
   onSuccess,
   onCancel,
+  woorkoinsAmount,
+  woorkoinsPrice,
 }: MercadoPagoCheckoutProps) {
   const { toast } = useToast();
   const [paymentMethod, setPaymentMethod] = useState<"pix" | "card">("pix");
@@ -32,6 +36,38 @@ export default function MercadoPagoCheckout({
   const [customerName, setCustomerName] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
   const [customerDocument, setCustomerDocument] = useState("");
+
+  // Realtime para detectar confirmação de pagamento (apenas para Woorkoins)
+  useEffect(() => {
+    if (!pixData || !woorkoinsAmount) return;
+
+    const channel = supabase
+      .channel('woorkoins-mercadopago-payments')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'woorkoins_mercadopago_payments',
+          filter: `payment_id=eq.${pixData.payment_id}`,
+        },
+        (payload: any) => {
+          console.log('Pagamento atualizado:', payload);
+          if (payload.new.status === 'paid') {
+            toast({
+              title: "Pagamento confirmado!",
+              description: `${woorkoinsAmount} Woorkoins creditados!`,
+            });
+            onSuccess();
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [pixData, woorkoinsAmount, toast, onSuccess]);
 
   useEffect(() => {
     const loadMercadoPagoKey = async () => {
@@ -90,6 +126,8 @@ export default function MercadoPagoCheckout({
             email: emailTrimmed.toLowerCase(),
             document: docDigits,
           },
+          ...(woorkoinsAmount && { woorkoins_amount: woorkoinsAmount }),
+          ...(woorkoinsPrice && { woorkoins_price: woorkoinsPrice }),
         },
       });
 
@@ -146,6 +184,8 @@ export default function MercadoPagoCheckout({
           card: {
             cardholder_name: formData.payer.name,
           },
+          ...(woorkoinsAmount && { woorkoins_amount: woorkoinsAmount }),
+          ...(woorkoinsPrice && { woorkoins_price: woorkoinsPrice }),
         },
       });
 

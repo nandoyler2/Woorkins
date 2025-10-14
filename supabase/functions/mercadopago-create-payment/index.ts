@@ -124,21 +124,67 @@ serve(async (req) => {
     const paymentResponse = await response.json();
     logStep("Pagamento criado", { paymentId: paymentResponse.id });
 
-    // Salvar na tabela de pagamentos para Woorkoins
-    const { error: insertError } = await supabaseClient
-      .from("woorkoins_mercadopago_payments")
-      .insert({
-        profile_id: profile.id,
-        payment_id: paymentResponse.id.toString(),
-        payment_method: paymentMethod,
-        amount: woorkoins_amount,
-        price: finalAmount,
-        payment_data: paymentResponse,
-        status: 'pending',
-      });
+    // Salvar na tabela de pagamentos se for para Woorkoins
+    if (woorkoins_amount && woorkoins_price) {
+      const paymentStatus = paymentResponse.status === 'approved' ? 'paid' : 'pending';
+      
+      const { error: insertError } = await supabaseClient
+        .from("woorkoins_mercadopago_payments")
+        .insert({
+          profile_id: profile.id,
+          payment_id: paymentResponse.id.toString(),
+          payment_method: paymentMethod,
+          amount: woorkoins_amount,
+          price: finalAmount,
+          payment_data: paymentResponse,
+          status: paymentStatus,
+          paid_at: paymentStatus === 'paid' ? new Date().toISOString() : null,
+        });
 
-    if (insertError) {
-      logStep("Erro ao salvar pagamento", insertError);
+      if (insertError) {
+        logStep("Erro ao salvar pagamento", insertError);
+      }
+
+      // Se cartão aprovado imediatamente, creditar Woorkoins agora
+      if (paymentStatus === 'paid') {
+        logStep("Pagamento aprovado, creditando Woorkoins", {
+          profileId: profile.id,
+          amount: woorkoins_amount,
+        });
+
+        const { data: balance } = await supabaseClient
+          .from("woorkoins_balance")
+          .select("balance")
+          .eq("profile_id", profile.id)
+          .single();
+
+        if (balance) {
+          await supabaseClient
+            .from("woorkoins_balance")
+            .update({
+              balance: balance.balance + woorkoins_amount,
+            })
+            .eq("profile_id", profile.id);
+        } else {
+          await supabaseClient
+            .from("woorkoins_balance")
+            .insert({
+              profile_id: profile.id,
+              balance: woorkoins_amount,
+            });
+        }
+
+        await supabaseClient
+          .from("woorkoins_transactions")
+          .insert({
+            profile_id: profile.id,
+            type: "purchase",
+            amount: woorkoins_amount,
+            description: `Compra de ${woorkoins_amount} Woorkoins via Mercado Pago`,
+          });
+
+        logStep("Woorkoins creditados com sucesso");
+      }
     }
 
     // Retornar dados de acordo com o método de pagamento

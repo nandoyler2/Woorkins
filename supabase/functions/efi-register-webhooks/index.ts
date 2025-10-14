@@ -111,15 +111,39 @@ serve(async (req) => {
     // Registrar webhook de Cobranças (Cartão) - este deve funcionar
     try {
       logStep("Obtendo token para Cobranças");
+
       const chargeAuthString = btoa(`${clientId}:${clientSecret}`);
-      const chargeTokenResp = await fetch('https://cobrancas.api.efipay.com.br/v1/authorize', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Basic ${chargeAuthString}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ grant_type: 'client_credentials' })
-      });
+
+      const tryAuthorize = async (baseUrl: string) => {
+        const resp = await fetch(`${baseUrl}/v1/authorize`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Basic ${chargeAuthString}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ grant_type: 'client_credentials' })
+        });
+        return resp;
+      };
+
+      // 1) Tenta produção
+      const prodBase = 'https://cobrancas.api.efipay.com.br';
+      let envUsed = 'production';
+      let chargeTokenResp = await tryAuthorize(prodBase);
+
+      // 2) Se 401, tenta homologação automaticamente
+      if (chargeTokenResp.status === 401) {
+        logStep('Token Cobranças 401 em produção, tentando homologação...');
+        const homologBase = 'https://cobrancas-h.api.efipay.com.br';
+        const tryResp = await tryAuthorize(homologBase);
+        if (!tryResp.ok) {
+          const errText = await tryResp.text();
+          logStep('ERRO ao obter token de Cobranças (homologação)', { status: tryResp.status, error: errText });
+          throw new Error(`Erro ao obter token de Cobranças (homologação): ${tryResp.status} - ${errText}`);
+        }
+        chargeTokenResp = tryResp;
+        envUsed = 'homolog';
+      }
 
       if (!chargeTokenResp.ok) {
         const errText = await chargeTokenResp.text();
@@ -127,26 +151,26 @@ serve(async (req) => {
       }
 
       const { access_token } = await chargeTokenResp.json();
-      logStep("Token de Cobranças obtido");
+      logStep(`Token de Cobranças obtido (${envUsed})`);
 
+      // Registrar webhook usando a mesma base utilizada na autorização
       logStep("Registrando webhook de Cobranças");
-      const chargeWebhookResp = await fetch('https://cobrancas.api.efipay.com.br/v1/notification', {
+      const baseForWebhook = envUsed === 'homolog' ? 'https://cobrancas-h.api.efipay.com.br' : 'https://cobrancas.api.efipay.com.br';
+      const chargeWebhookResp = await fetch(`${baseForWebhook}/v1/notification`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${access_token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          notification_url: webhookUrl
-        })
+        body: JSON.stringify({ notification_url: webhookUrl })
       });
 
       if (!chargeWebhookResp.ok) {
         const errText = await chargeWebhookResp.text();
-        throw new Error(`Erro ao registrar webhook de Cobranças: ${errText}`);
+        throw new Error(`Erro ao registrar webhook de Cobranças (${envUsed}): ${errText}`);
       }
 
-      logStep("Webhook de Cobranças registrado com sucesso");
+      logStep("Webhook de Cobranças registrado com sucesso", { env: envUsed });
       chargeRegistered = true;
     } catch (e) {
       const errMsg = e instanceof Error ? e.message : String(e);

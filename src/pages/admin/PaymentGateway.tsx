@@ -16,6 +16,7 @@ interface PaymentGatewayConfig {
   efi_pix_key: string;
   efi_pix_key_type: string;
   efi_pix_certificate_path: string;
+  efi_mtls_cert_path: string;
   efi_pix_discount_percent: number;
   efi_pix_expiration_hours: number;
   efi_validate_mtls: boolean;
@@ -32,12 +33,14 @@ export default function PaymentGateway() {
     efi_pix_key: "",
     efi_pix_key_type: "cpf",
     efi_pix_certificate_path: "",
+    efi_mtls_cert_path: "",
     efi_pix_discount_percent: 0,
     efi_pix_expiration_hours: 24,
     efi_validate_mtls: false,
     efi_card_discount_percent: 0,
   });
   const [certificateFile, setCertificateFile] = useState<File | null>(null);
+  const [mtlsCertFile, setMtlsCertFile] = useState<File | null>(null);
 
   useEffect(() => {
     loadConfig();
@@ -58,6 +61,7 @@ export default function PaymentGateway() {
           efi_pix_key: data.efi_pix_key || "",
           efi_pix_key_type: data.efi_pix_key_type || "cpf",
           efi_pix_certificate_path: data.efi_pix_certificate_path || "",
+          efi_mtls_cert_path: data.efi_mtls_cert_path || "",
           efi_pix_discount_percent: data.efi_pix_discount_percent || 0,
           efi_pix_expiration_hours: data.efi_pix_expiration_hours || 24,
           efi_validate_mtls: data.efi_validate_mtls || false,
@@ -103,10 +107,38 @@ export default function PaymentGateway() {
     }
   };
 
+  const handleMtlsCertUpload = async () => {
+    if (!mtlsCertFile) return null;
+
+    try {
+      const fileName = `efi-mtls-cert-${Date.now()}.crt`;
+      const { data, error } = await supabase.storage
+        .from("efi-certificates")
+        .upload(fileName, mtlsCertFile);
+
+      if (error) throw error;
+
+      const { data: urlData } = supabase.storage
+        .from("efi-certificates")
+        .getPublicUrl(fileName);
+
+      return urlData.publicUrl;
+    } catch (error) {
+      console.error("Erro ao fazer upload do certificado mTLS:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível fazer upload do certificado mTLS",
+        variant: "destructive",
+      });
+      return null;
+    }
+  };
+
   const handleSave = async () => {
     setSaving(true);
     try {
       let certificatePath = config.efi_pix_certificate_path;
+      let mtlsCertPath = config.efi_mtls_cert_path;
 
       if (certificateFile) {
         const uploadedPath = await handleCertificateUpload();
@@ -115,11 +147,19 @@ export default function PaymentGateway() {
         }
       }
 
+      if (mtlsCertFile) {
+        const uploadedPath = await handleMtlsCertUpload();
+        if (uploadedPath) {
+          mtlsCertPath = uploadedPath;
+        }
+      }
+
       const { error } = await supabase
         .from("payment_gateway_config")
         .update({
           ...config,
           efi_pix_certificate_path: certificatePath,
+          efi_mtls_cert_path: mtlsCertPath,
         })
         .eq("id", (await supabase.from("payment_gateway_config").select("id").single()).data?.id);
 
@@ -270,6 +310,24 @@ export default function PaymentGateway() {
                     Certificado atual configurado
                   </p>
                 )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="mtls-cert">Certificado Público mTLS (.crt)</Label>
+                <Input
+                  id="mtls-cert"
+                  type="file"
+                  accept=".crt,.pem"
+                  onChange={(e) => setMtlsCertFile(e.target.files?.[0] || null)}
+                />
+                {config.efi_mtls_cert_path && (
+                  <p className="text-sm text-muted-foreground">
+                    Certificado mTLS configurado
+                  </p>
+                )}
+                <p className="text-sm text-muted-foreground">
+                  Baixe em: https://certificados.efipay.com.br/webhooks/certificate-chain-prod.crt
+                </p>
               </div>
 
               <div className="space-y-2">

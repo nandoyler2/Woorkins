@@ -543,6 +543,7 @@ export type Database = {
           created_at: string | null
           efi_card_discount_percent: number | null
           efi_enabled: boolean | null
+          efi_mtls_cert_path: string | null
           efi_pix_certificate_path: string | null
           efi_pix_discount_percent: number | null
           efi_pix_expiration_hours: number | null
@@ -557,6 +558,7 @@ export type Database = {
           created_at?: string | null
           efi_card_discount_percent?: number | null
           efi_enabled?: boolean | null
+          efi_mtls_cert_path?: string | null
           efi_pix_certificate_path?: string | null
           efi_pix_discount_percent?: number | null
           efi_pix_expiration_hours?: number | null
@@ -571,6 +573,7 @@ export type Database = {
           created_at?: string | null
           efi_card_discount_percent?: number | null
           efi_enabled?: boolean | null
+          efi_mtls_cert_path?: string | null
           efi_pix_certificate_path?: string | null
           efi_pix_discount_percent?: number | null
           efi_pix_expiration_hours?: number | null

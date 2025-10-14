@@ -447,7 +447,7 @@ export default function Woorkoins() {
         </div>
       </div>
 
-      {clientSecret && selectedPackage && (
+      {selectedPackage && (
         <WoorkoinsCheckout
           open={checkoutOpen}
           onOpenChange={(open) => {

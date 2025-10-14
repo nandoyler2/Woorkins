@@ -87,14 +87,12 @@ export function WoorkoinsCheckout({
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="w-[95vw] max-w-4xl">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
+            <DialogTitle className="flex items-center gap-3">
               <img src={woorkoinsIcon} alt="Woorkoins" className="h-6 w-auto object-contain" />
-              <div>
-                <div>Comprar Woorkoins</div>
-                <div className="text-sm font-normal text-muted-foreground">
-                  {amount} Woorkoins • R$ {price.toFixed(2)}
-                </div>
-              </div>
+              <span>Comprar Woorkoins</span>
+              <span className="text-base font-semibold">
+                {amount} Woorkoins • R$ {price.toFixed(2)}
+              </span>
             </DialogTitle>
           </DialogHeader>
 

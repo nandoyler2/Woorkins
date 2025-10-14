@@ -149,10 +149,11 @@ serve(async (req) => {
       }
 
       // Se cartão aprovado imediatamente, creditar Woorkoins agora
-      if (paymentStatus === 'paid') {
-        logStep("Pagamento aprovado, creditando Woorkoins", {
+      if (paymentResponse.status === 'approved' || paymentStatus === 'paid') {
+        logStep("Pagamento aprovado/pago, creditando Woorkoins", {
           profileId: profile.id,
           amount: woorkoins_amount,
+          status: paymentResponse.status,
         });
 
         const { data: balance } = await supabaseClient

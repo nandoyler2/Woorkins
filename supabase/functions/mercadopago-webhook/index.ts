@@ -66,11 +66,13 @@ serve(async (req) => {
         });
       }
 
-      // Se pagamento foi aprovado
-      if (payment.status === "approved" && paymentRecord.status !== "paid") {
-        logStep("Pagamento aprovado, creditando Woorkoins", {
+      // Se pagamento foi aprovado (approved ou paid)
+      const isPaid = (payment.status === "approved" || payment.status === "paid");
+      if (isPaid && paymentRecord.status !== "paid") {
+        logStep("Pagamento aprovado/pago, creditando Woorkoins", {
           profileId: paymentRecord.profile_id,
           amount: paymentRecord.amount,
+          status: payment.status,
         });
 
         // Atualizar status do pagamento

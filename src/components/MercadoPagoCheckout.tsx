@@ -37,6 +37,45 @@ export default function MercadoPagoCheckout({
   const [customerEmail, setCustomerEmail] = useState("");
   const [customerDocument, setCustomerDocument] = useState("");
 
+  // Polling para verificar status do pagamento PIX a cada 3 segundos (consulta o Mercado Pago)
+  useEffect(() => {
+    if (!pixData?.payment_id || !woorkoinsAmount) return;
+
+    console.log('Iniciando polling de verificação de pagamento:', pixData.payment_id);
+    
+    const checkPaymentStatus = async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke('check-mercadopago-payment', {
+          body: { payment_id: pixData.payment_id }
+        });
+
+        if (!error && data) {
+          console.log('Status do pagamento:', data);
+          if (data.status === 'paid' && data.credited) {
+            console.log('Pagamento confirmado via polling!');
+            toast({
+              title: "Pagamento PIX confirmado! 🎉",
+              description: `${woorkoinsAmount} Woorkoins creditados com sucesso!`,
+            });
+            onSuccess();
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao verificar status:', error);
+      }
+    };
+
+    // Verificar após 3 segundos e depois a cada 3 segundos
+    const timeout = setTimeout(checkPaymentStatus, 3000);
+    const interval = setInterval(checkPaymentStatus, 3000);
+
+    return () => {
+      console.log('Parando polling de pagamento');
+      clearTimeout(timeout);
+      clearInterval(interval);
+    };
+  }, [pixData, woorkoinsAmount, toast, onSuccess]);
+
   // Realtime para detectar confirmação de pagamento PIX
   useEffect(() => {
     if (!pixData?.payment_id || !woorkoinsAmount) return;
@@ -357,56 +396,96 @@ export default function MercadoPagoCheckout({
           </Tabs>
         ) : (
           <div className="space-y-4">
-            <div className="bg-background border rounded-lg p-4 space-y-4">
-              {pixData.qrcode_base64 && (
-                <div className="flex justify-center">
-                  <img
-                    src={`data:image/png;base64,${pixData.qrcode_base64}`}
-                    alt="QR Code PIX"
-                    className="w-64 h-64"
-                  />
+          <div className="bg-background border rounded-lg p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Coluna esquerda - QR Code */}
+                <div className="flex flex-col items-center justify-center space-y-4">
+                  {pixData.qrcode_base64 && (
+                    <div className="bg-white p-4 rounded-lg">
+                      <img
+                        src={`data:image/png;base64,${pixData.qrcode_base64}`}
+                        alt="QR Code PIX"
+                        className="w-56 h-56"
+                      />
+                    </div>
+                  )}
+                  <div className="text-center space-y-1">
+                    <p className="text-2xl font-bold">R$ {pixData.amount?.toFixed(2)}</p>
+                    {pixData.expires_at && (
+                      <p className="text-sm text-muted-foreground">
+                        Expira: {new Date(pixData.expires_at).toLocaleString("pt-BR", {
+                          day: '2-digit',
+                          month: '2-digit',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </p>
+                    )}
+                  </div>
                 </div>
-              )}
 
-              {pixData.qrcode && (
-                <div className="space-y-2">
-                  <Label>Código PIX Copia e Cola</Label>
-                  <div className="flex gap-2">
-                    <Input value={pixData.qrcode} readOnly className="font-mono text-xs" />
-                    <Button
-                      size="sm"
-                      onClick={() => {
-                        navigator.clipboard.writeText(pixData.qrcode);
-                        toast({
-                          title: "Copiado!",
-                          description: "Código PIX copiado para a área de transferência",
-                        });
-                      }}
-                    >
-                      Copiar
+                {/* Coluna direita - Informações e código */}
+                <div className="flex flex-col justify-between space-y-4">
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <h3 className="font-semibold text-lg">Como pagar:</h3>
+                      <ol className="text-sm space-y-2 text-muted-foreground">
+                        <li className="flex gap-2">
+                          <span className="font-semibold">1.</span>
+                          <span>Abra o app do seu banco</span>
+                        </li>
+                        <li className="flex gap-2">
+                          <span className="font-semibold">2.</span>
+                          <span>Escolha pagar com PIX QR Code</span>
+                        </li>
+                        <li className="flex gap-2">
+                          <span className="font-semibold">3.</span>
+                          <span>Escaneie o código ao lado</span>
+                        </li>
+                        <li className="flex gap-2">
+                          <span className="font-semibold">4.</span>
+                          <span>Confirme o pagamento</span>
+                        </li>
+                      </ol>
+                    </div>
+
+                    {pixData.qrcode && (
+                      <div className="space-y-2">
+                        <Label className="text-sm font-semibold">Ou use o código PIX Copia e Cola:</Label>
+                        <div className="flex gap-2">
+                          <Input 
+                            value={pixData.qrcode} 
+                            readOnly 
+                            className="font-mono text-xs"
+                          />
+                          <Button
+                            size="sm"
+                            onClick={() => {
+                              navigator.clipboard.writeText(pixData.qrcode);
+                              toast({
+                                title: "Copiado!",
+                                description: "Código PIX copiado",
+                              });
+                            }}
+                          >
+                            Copiar
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-3 pt-4 border-t">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>Aguardando confirmação do pagamento...</span>
+                    </div>
+                    <Button variant="outline" onClick={onCancel} className="w-full">
+                      Fechar
                     </Button>
                   </div>
                 </div>
-              )}
-
-              <div className="text-sm text-muted-foreground text-center">
-                <p>Valor: R$ {pixData.amount?.toFixed(2)}</p>
-                {pixData.expires_at && (
-                  <p className="mt-1">
-                    Expira em: {new Date(pixData.expires_at).toLocaleString("pt-BR")}
-                  </p>
-                )}
               </div>
-            </div>
-
-            <div className="space-y-2">
-              <div className="text-center text-sm text-muted-foreground">
-                <p>Aguardando confirmação do pagamento...</p>
-                <p className="mt-1">Feche esta janela após efetuar o pagamento.</p>
-              </div>
-              <Button variant="outline" onClick={onCancel} className="w-full">
-                Fechar
-              </Button>
             </div>
           </div>
         )}

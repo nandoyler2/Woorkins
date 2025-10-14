@@ -45,8 +45,9 @@ export default function MercadoPagoCheckout({
   const [pixData, setPixData] = useState<any>(null);
   const [mpInitialized, setMpInitialized] = useState(false);
   const [profileData, setProfileData] = useState<any>(null);
-const [cardError, setCardError] = useState<string | null>(null);
-const [loadingMessage, setLoadingMessage] = useState<string>('Carregando...');
+  const [cardError, setCardError] = useState<string | null>(null);
+  const [loadingMessage, setLoadingMessage] = useState<string>('Carregando...');
+  const [paymentRejected, setPaymentRejected] = useState<{message: string, detail: string} | null>(null);
   // Load user profile data on mount
   useEffect(() => {
     const loadProfile = async () => {
@@ -287,10 +288,9 @@ setLoadingMessage('Processando pagamento via cartão...');
           ? errorMessages[data.status_detail] || 'Pagamento recusado'
           : 'Pagamento recusado';
 
-        toast({
-          title: "Pagamento recusado",
-          description: errorMessage,
-          variant: "destructive",
+        setPaymentRejected({
+          message: 'Pagamento recusado',
+          detail: errorMessage
         });
       } else {
         // Para outros status (pending, in_process, etc)
@@ -341,6 +341,7 @@ setLoadingMessage('Processando pagamento via cartão...');
               <Button
 onClick={() => {
   setCardError(null);
+  setPaymentRejected(null);
   // Verifica valor mínimo para pagamento via cartão
   if (amount < CARD_MIN_AMOUNT) {
     toast({
@@ -429,6 +430,40 @@ onClick={() => {
               </Button>
             </div>
           )
+        ) : paymentRejected ? (
+          <div className="flex flex-col items-center justify-center py-12 space-y-6">
+            <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center">
+              <svg className="w-8 h-8 text-destructive" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </div>
+            <div className="text-center space-y-2">
+              <h3 className="text-xl font-semibold">{paymentRejected.message}</h3>
+              <p className="text-muted-foreground">{paymentRejected.detail}</p>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-3 w-full max-w-md">
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setPaymentRejected(null);
+                  setPaymentMethod(null);
+                }} 
+                className="flex-1"
+              >
+                Voltar
+              </Button>
+              <Button
+                onClick={() => {
+                  setPaymentRejected(null);
+                  setPaymentMethod(null);
+                  handlePixPayment();
+                }}
+                className="flex-1 bg-[#32BCAD] hover:bg-[#2aa89a] text-white"
+              >
+                Pagar com PIX
+              </Button>
+            </div>
+          </div>
         ) : pixData ? (
           <div className="space-y-4">
             <div className="bg-background border rounded-lg p-6">

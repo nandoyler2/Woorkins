@@ -57,19 +57,19 @@ export function WoorkoinsCheckout({
     return d.length === 11 || d.length === 14;
   };
 
-  // Escutar mudanças na tabela de pagamentos Efí via Realtime
+  // Escutar mudanças na tabela de pagamentos Mercado Pago via Realtime
   useEffect(() => {
     if (!user || !open || !pixData) return;
 
     const channel = supabase
-      .channel('woorkoins-efi-payments')
+      .channel('woorkoins-mercadopago-payments')
       .on(
         'postgres_changes',
         {
           event: 'UPDATE',
           schema: 'public',
-          table: 'woorkoins_efi_payments',
-          filter: `charge_id=eq.${pixData.charge_id}`,
+          table: 'woorkoins_mercadopago_payments',
+          filter: `payment_id=eq.${pixData.payment_id}`,
         },
         (payload: any) => {
           console.log('Mudança detectada no pagamento:', payload);
@@ -131,8 +131,9 @@ export function WoorkoinsCheckout({
 
     setProcessingPayment(true);
     try {
-      const { data, error } = await supabase.functions.invoke("efi-create-pix-charge", {
+      const { data, error } = await supabase.functions.invoke("mercadopago-create-payment", {
         body: {
+          paymentMethod: "pix",
           amount: price,
           description: `Compra de ${amount} Woorkoins`,
           customer: {
@@ -200,7 +201,7 @@ export function WoorkoinsCheckout({
     );
   }
 
-  // Se for Efí, renderizar o checkout da Efí
+  // Se for Mercado Pago, renderizar o checkout do Mercado Pago
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
@@ -297,7 +298,7 @@ export function WoorkoinsCheckout({
               <TabsContent value="card">
                 <div className="text-center py-8">
                   <p className="text-muted-foreground">
-                    Pagamento com cartão via Efí Pay em breve.
+                    Pagamento com cartão via Mercado Pago em breve.
                   </p>
                   <p className="text-sm text-muted-foreground mt-2">
                     Use PIX por enquanto.
@@ -313,10 +314,10 @@ export function WoorkoinsCheckout({
         ) : (
           <div className="space-y-4">
             <div className="bg-background border rounded-lg p-4 space-y-4">
-              {pixData.qrcode_image && (
+              {pixData.qrcode_base64 && (
                 <div className="flex justify-center">
                   <img
-                    src={`data:image/png;base64,${pixData.qrcode_image}`}
+                    src={`data:image/png;base64,${pixData.qrcode_base64}`}
                     alt="QR Code PIX"
                     className="w-64 h-64"
                   />

@@ -11,37 +11,22 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 
 interface PaymentGatewayConfig {
-  active_gateway: "stripe" | "efi";
-  efi_enabled: boolean;
-  efi_pix_key: string;
-  efi_pix_key_type: string;
-  efi_pix_certificate_path: string;
-  efi_mtls_cert_path: string;
-  efi_pix_discount_percent: number;
-  efi_pix_expiration_hours: number;
-  efi_validate_mtls: boolean;
-  efi_card_discount_percent: number;
+  active_gateway: "stripe" | "mercadopago";
+  mercadopago_enabled: boolean;
+  mercadopago_pix_discount_percent: number;
+  mercadopago_card_discount_percent: number;
 }
 
 export default function PaymentGateway() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [registeringWebhooks, setRegisteringWebhooks] = useState(false);
   const [config, setConfig] = useState<PaymentGatewayConfig>({
     active_gateway: "stripe",
-    efi_enabled: false,
-    efi_pix_key: "",
-    efi_pix_key_type: "cpf",
-    efi_pix_certificate_path: "",
-    efi_mtls_cert_path: "",
-    efi_pix_discount_percent: 0,
-    efi_pix_expiration_hours: 24,
-    efi_validate_mtls: false,
-    efi_card_discount_percent: 0,
+    mercadopago_enabled: false,
+    mercadopago_pix_discount_percent: 0,
+    mercadopago_card_discount_percent: 0,
   });
-  const [certificateFile, setCertificateFile] = useState<File | null>(null);
-  const [mtlsCertFile, setMtlsCertFile] = useState<File | null>(null);
 
   useEffect(() => {
     loadConfig();
@@ -57,16 +42,10 @@ export default function PaymentGateway() {
       if (error) throw error;
       if (data) {
         setConfig({
-          active_gateway: data.active_gateway as "stripe" | "efi",
-          efi_enabled: data.efi_enabled || false,
-          efi_pix_key: data.efi_pix_key || "",
-          efi_pix_key_type: data.efi_pix_key_type || "cpf",
-          efi_pix_certificate_path: data.efi_pix_certificate_path || "",
-          efi_mtls_cert_path: data.efi_mtls_cert_path || "",
-          efi_pix_discount_percent: data.efi_pix_discount_percent || 0,
-          efi_pix_expiration_hours: data.efi_pix_expiration_hours || 24,
-          efi_validate_mtls: data.efi_validate_mtls || false,
-          efi_card_discount_percent: data.efi_card_discount_percent || 0,
+          active_gateway: data.active_gateway as "stripe" | "mercadopago",
+          mercadopago_enabled: data.mercadopago_enabled || false,
+          mercadopago_pix_discount_percent: data.mercadopago_pix_discount_percent || 0,
+          mercadopago_card_discount_percent: data.mercadopago_card_discount_percent || 0,
         });
       }
     } catch (error) {
@@ -81,87 +60,12 @@ export default function PaymentGateway() {
     }
   };
 
-  const handleCertificateUpload = async () => {
-    if (!certificateFile) return null;
-
-    try {
-      const fileName = `efi-certificate-${Date.now()}.p12`;
-      const { data, error } = await supabase.storage
-        .from("business-media")
-        .upload(fileName, certificateFile);
-
-      if (error) throw error;
-
-      const { data: urlData } = supabase.storage
-        .from("business-media")
-        .getPublicUrl(fileName);
-
-      return urlData.publicUrl;
-    } catch (error) {
-      console.error("Erro ao fazer upload do certificado:", error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível fazer upload do certificado",
-        variant: "destructive",
-      });
-      return null;
-    }
-  };
-
-  const handleMtlsCertUpload = async () => {
-    if (!mtlsCertFile) return null;
-
-    try {
-      const fileName = `efi-mtls-cert-${Date.now()}.crt`;
-      const { data, error } = await supabase.storage
-        .from("efi-certificates")
-        .upload(fileName, mtlsCertFile);
-
-      if (error) throw error;
-
-      const { data: urlData } = supabase.storage
-        .from("efi-certificates")
-        .getPublicUrl(fileName);
-
-      return urlData.publicUrl;
-    } catch (error) {
-      console.error("Erro ao fazer upload do certificado mTLS:", error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível fazer upload do certificado mTLS",
-        variant: "destructive",
-      });
-      return null;
-    }
-  };
-
   const handleSave = async () => {
     setSaving(true);
     try {
-      let certificatePath = config.efi_pix_certificate_path;
-      let mtlsCertPath = config.efi_mtls_cert_path;
-
-      if (certificateFile) {
-        const uploadedPath = await handleCertificateUpload();
-        if (uploadedPath) {
-          certificatePath = uploadedPath;
-        }
-      }
-
-      if (mtlsCertFile) {
-        const uploadedPath = await handleMtlsCertUpload();
-        if (uploadedPath) {
-          mtlsCertPath = uploadedPath;
-        }
-      }
-
       const { error } = await supabase
         .from("payment_gateway_config")
-        .update({
-          ...config,
-          efi_pix_certificate_path: certificatePath,
-          efi_mtls_cert_path: mtlsCertPath,
-        })
+        .update(config)
         .eq("id", (await supabase.from("payment_gateway_config").select("id").single()).data?.id);
 
       if (error) throw error;
@@ -182,35 +86,12 @@ export default function PaymentGateway() {
     }
   };
 
-  const handleActiveGatewayChange = (gateway: "stripe" | "efi") => {
+  const handleActiveGatewayChange = (gateway: "stripe" | "mercadopago") => {
     setConfig({
       ...config,
       active_gateway: gateway,
-      efi_enabled: gateway === "efi",
+      mercadopago_enabled: gateway === "mercadopago",
     });
-  };
-
-  const handleRegisterWebhooks = async () => {
-    setRegisteringWebhooks(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('efi-register-webhooks');
-      
-      if (error) throw error;
-      
-      toast({
-        title: "Sucesso",
-        description: "Webhooks registrados via API com sucesso!",
-      });
-    } catch (error) {
-      console.error("Erro ao registrar webhooks:", error);
-      toast({
-        title: "Erro",
-        description: error instanceof Error ? error.message : "Não foi possível registrar os webhooks",
-        variant: "destructive",
-      });
-    } finally {
-      setRegisteringWebhooks(false);
-    }
   };
 
   if (loading) {
@@ -240,26 +121,26 @@ export default function PaymentGateway() {
         <CardContent>
           <Select
             value={config.active_gateway}
-            onValueChange={(value) => handleActiveGatewayChange(value as "stripe" | "efi")}
+            onValueChange={(value) => handleActiveGatewayChange(value as "stripe" | "mercadopago")}
           >
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="stripe">Stripe</SelectItem>
-              <SelectItem value="efi">Efí Pay</SelectItem>
+              <SelectItem value="mercadopago">Mercado Pago</SelectItem>
             </SelectContent>
           </Select>
         </CardContent>
       </Card>
 
-      {config.active_gateway === "efi" && (
+      {config.active_gateway === "mercadopago" && (
         <>
           <Card>
             <CardHeader>
-              <CardTitle>Credenciais Efí Pay</CardTitle>
+              <CardTitle>Credenciais Mercado Pago</CardTitle>
               <CardDescription>
-                Configure as credenciais da API Efí Pay (Client ID e Client Secret devem ser configurados como secrets)
+                Configure o Access Token da API Mercado Pago (deve ser configurado como secret: MERCADOPAGO_ACCESS_TOKEN)
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -267,13 +148,13 @@ export default function PaymentGateway() {
                 <Label>Status</Label>
                 <div className="flex items-center space-x-2">
                   <Switch
-                    checked={config.efi_enabled}
+                    checked={config.mercadopago_enabled}
                     onCheckedChange={(checked) =>
-                      setConfig({ ...config, efi_enabled: checked })
+                      setConfig({ ...config, mercadopago_enabled: checked })
                     }
                   />
                   <span className="text-sm">
-                    {config.efi_enabled ? "Ativado" : "Desativado"}
+                    {config.mercadopago_enabled ? "Ativado" : "Desativado"}
                   </span>
                 </div>
               </div>
@@ -289,72 +170,6 @@ export default function PaymentGateway() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="pix-key">Chave PIX</Label>
-                <Input
-                  id="pix-key"
-                  value={config.efi_pix_key}
-                  onChange={(e) =>
-                    setConfig({ ...config, efi_pix_key: e.target.value })
-                  }
-                  placeholder="Digite sua chave PIX cadastrada no Efí"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="pix-key-type">Tipo de Chave PIX</Label>
-                <Select
-                  value={config.efi_pix_key_type}
-                  onValueChange={(value) =>
-                    setConfig({ ...config, efi_pix_key_type: value })
-                  }
-                >
-                  <SelectTrigger id="pix-key-type">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="cpf">CPF</SelectItem>
-                    <SelectItem value="cnpj">CNPJ</SelectItem>
-                    <SelectItem value="email">E-mail</SelectItem>
-                    <SelectItem value="phone">Telefone</SelectItem>
-                    <SelectItem value="random">Chave Aleatória</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="certificate">Certificado PIX (.p12)</Label>
-                <Input
-                  id="certificate"
-                  type="file"
-                  accept=".p12"
-                  onChange={(e) => setCertificateFile(e.target.files?.[0] || null)}
-                />
-                {config.efi_pix_certificate_path && (
-                  <p className="text-sm text-muted-foreground">
-                    Certificado atual configurado
-                  </p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="mtls-cert">Certificado Público mTLS (.crt)</Label>
-                <Input
-                  id="mtls-cert"
-                  type="file"
-                  accept=".crt,.pem"
-                  onChange={(e) => setMtlsCertFile(e.target.files?.[0] || null)}
-                />
-                {config.efi_mtls_cert_path && (
-                  <p className="text-sm text-muted-foreground">
-                    Certificado mTLS configurado
-                  </p>
-                )}
-                <p className="text-sm text-muted-foreground">
-                  Baixe em: https://certificados.efipay.com.br/webhooks/certificate-chain-prod.crt
-                </p>
-              </div>
-
-              <div className="space-y-2">
                 <Label htmlFor="pix-discount">Desconto PIX (%)</Label>
                 <Input
                   id="pix-discount"
@@ -362,64 +177,14 @@ export default function PaymentGateway() {
                   min="0"
                   max="100"
                   step="0.01"
-                  value={config.efi_pix_discount_percent}
+                  value={config.mercadopago_pix_discount_percent}
                   onChange={(e) =>
                     setConfig({
                       ...config,
-                      efi_pix_discount_percent: parseFloat(e.target.value) || 0,
+                      mercadopago_pix_discount_percent: parseFloat(e.target.value) || 0,
                     })
                   }
                 />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="pix-expiration">Tempo de Vencimento (horas)</Label>
-                <Input
-                  id="pix-expiration"
-                  type="number"
-                  min="1"
-                  max="720"
-                  value={config.efi_pix_expiration_hours}
-                  onChange={(e) =>
-                    setConfig({
-                      ...config,
-                      efi_pix_expiration_hours: parseInt(e.target.value) || 24,
-                    })
-                  }
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Validar mTLS</Label>
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    checked={config.efi_validate_mtls}
-                    onCheckedChange={(checked) =>
-                      setConfig({ ...config, efi_validate_mtls: checked })
-                    }
-                  />
-                  <span className="text-sm">
-                    {config.efi_validate_mtls ? "Ativado" : "Desativado"}
-                  </span>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  Requerido pelo Banco Central para webhooks PIX
-                </p>
-              </div>
-
-              <div className="pt-4 border-t">
-                <Button 
-                  onClick={handleRegisterWebhooks} 
-                  disabled={registeringWebhooks}
-                  variant="outline"
-                  className="w-full"
-                >
-                  {registeringWebhooks && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Registrar Webhooks via API
-                </Button>
-                <p className="text-sm text-muted-foreground mt-2">
-                  Clique para registrar os webhooks PIX e Cobranças automaticamente via API da Efí
-                </p>
               </div>
             </CardContent>
           </Card>
@@ -440,11 +205,11 @@ export default function PaymentGateway() {
                   min="0"
                   max="100"
                   step="0.01"
-                  value={config.efi_card_discount_percent}
+                  value={config.mercadopago_card_discount_percent}
                   onChange={(e) =>
                     setConfig({
                       ...config,
-                      efi_card_discount_percent: parseFloat(e.target.value) || 0,
+                      mercadopago_card_discount_percent: parseFloat(e.target.value) || 0,
                     })
                   }
                 />

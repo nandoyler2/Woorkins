@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { StripeCheckout } from "./StripeCheckout";
-import EfiPayCheckout from "./EfiPayCheckout";
+import MercadoPagoCheckout from "./MercadoPagoCheckout";
 import { Loader2 } from "lucide-react";
 
 interface PaymentCheckoutProps {
@@ -26,7 +26,7 @@ export default function PaymentCheckout({
   netAmount = 0,
 }: PaymentCheckoutProps) {
   const [loading, setLoading] = useState(true);
-  const [activeGateway, setActiveGateway] = useState<"stripe" | "efi">("stripe");
+  const [activeGateway, setActiveGateway] = useState<"stripe" | "mercadopago">("stripe");
 
   useEffect(() => {
     loadGatewayConfig();
@@ -41,7 +41,7 @@ export default function PaymentCheckout({
 
       if (error) throw error;
       if (data) {
-        setActiveGateway(data.active_gateway as "stripe" | "efi");
+        setActiveGateway(data.active_gateway as "stripe" | "mercadopago");
       }
     } catch (error) {
       console.error("Erro ao carregar configuração do gateway:", error);
@@ -58,9 +58,9 @@ export default function PaymentCheckout({
     );
   }
 
-  if (activeGateway === "efi") {
+  if (activeGateway === "mercadopago") {
     return (
-      <EfiPayCheckout
+      <MercadoPagoCheckout
         amount={amount}
         description={description}
         onSuccess={onSuccess}

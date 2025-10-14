@@ -541,46 +541,28 @@ export type Database = {
         Row: {
           active_gateway: string
           created_at: string | null
-          efi_card_discount_percent: number | null
-          efi_enabled: boolean | null
-          efi_mtls_cert_path: string | null
-          efi_pix_certificate_path: string | null
-          efi_pix_discount_percent: number | null
-          efi_pix_expiration_hours: number | null
-          efi_pix_key: string | null
-          efi_pix_key_type: string | null
-          efi_validate_mtls: boolean | null
           id: string
+          mercadopago_card_discount_percent: number | null
+          mercadopago_enabled: boolean | null
+          mercadopago_pix_discount_percent: number | null
           updated_at: string | null
         }
         Insert: {
           active_gateway?: string
           created_at?: string | null
-          efi_card_discount_percent?: number | null
-          efi_enabled?: boolean | null
-          efi_mtls_cert_path?: string | null
-          efi_pix_certificate_path?: string | null
-          efi_pix_discount_percent?: number | null
-          efi_pix_expiration_hours?: number | null
-          efi_pix_key?: string | null
-          efi_pix_key_type?: string | null
-          efi_validate_mtls?: boolean | null
           id?: string
+          mercadopago_card_discount_percent?: number | null
+          mercadopago_enabled?: boolean | null
+          mercadopago_pix_discount_percent?: number | null
           updated_at?: string | null
         }
         Update: {
           active_gateway?: string
           created_at?: string | null
-          efi_card_discount_percent?: number | null
-          efi_enabled?: boolean | null
-          efi_mtls_cert_path?: string | null
-          efi_pix_certificate_path?: string | null
-          efi_pix_discount_percent?: number | null
-          efi_pix_expiration_hours?: number | null
-          efi_pix_key?: string | null
-          efi_pix_key_type?: string | null
-          efi_validate_mtls?: boolean | null
           id?: string
+          mercadopago_card_discount_percent?: number | null
+          mercadopago_enabled?: boolean | null
+          mercadopago_pix_discount_percent?: number | null
           updated_at?: string | null
         }
         Relationships: []
@@ -1341,14 +1323,14 @@ export type Database = {
           },
         ]
       }
-      woorkoins_efi_payments: {
+      woorkoins_mercadopago_payments: {
         Row: {
           amount: number
-          charge_id: string
           created_at: string | null
-          efi_charge_data: Json | null
           id: string
           paid_at: string | null
+          payment_data: Json | null
+          payment_id: string
           payment_method: string
           price: number
           profile_id: string
@@ -1357,11 +1339,11 @@ export type Database = {
         }
         Insert: {
           amount: number
-          charge_id: string
           created_at?: string | null
-          efi_charge_data?: Json | null
           id?: string
           paid_at?: string | null
+          payment_data?: Json | null
+          payment_id: string
           payment_method: string
           price: number
           profile_id: string
@@ -1370,11 +1352,11 @@ export type Database = {
         }
         Update: {
           amount?: number
-          charge_id?: string
           created_at?: string | null
-          efi_charge_data?: Json | null
           id?: string
           paid_at?: string | null
+          payment_data?: Json | null
+          payment_id?: string
           payment_method?: string
           price?: number
           profile_id?: string

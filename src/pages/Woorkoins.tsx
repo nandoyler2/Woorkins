@@ -95,7 +95,52 @@ export default function Woorkoins() {
 
   useEffect(() => {
     loadBalance();
+    setupRealtimeListener();
   }, [user]);
+
+  const setupRealtimeListener = async () => {
+    if (!user) return;
+
+    const { data: profileData } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('user_id', user.id)
+      .single();
+
+    if (!profileData) return;
+
+    // Configurar listener de realtime para mudanças no saldo
+    const channel = supabase
+      .channel('woorkoins-balance-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'woorkoins_balance',
+          filter: `profile_id=eq.${profileData.id}`,
+        },
+        (payload: any) => {
+          console.log('Saldo atualizado em tempo real:', payload);
+          if (payload.new && payload.new.balance !== undefined) {
+            setPreviousBalance(balance);
+            setBalance(payload.new.balance);
+            setAnimatingBalance(true);
+            setTimeout(() => setAnimatingBalance(false), 1000);
+            
+            toast({
+              title: "Saldo atualizado!",
+              description: `Seu novo saldo é ${payload.new.balance} Woorkoins`,
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  };
 
   const loadBalance = async () => {
     if (!user) return;

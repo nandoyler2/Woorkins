@@ -19,6 +19,9 @@ const PixIcon = ({ className }: { className?: string }) => (
 );
 import { initMercadoPago, CardPayment } from '@mercadopago/sdk-react';
 
+// Valor mínimo permitido pelo Mercado Pago para pagamentos com cartão (BRL)
+const CARD_MIN_AMOUNT = 1.0;
+
 interface MercadoPagoCheckoutProps {
   amount: number;
   description: string;
@@ -42,7 +45,8 @@ export default function MercadoPagoCheckout({
   const [pixData, setPixData] = useState<any>(null);
   const [mpInitialized, setMpInitialized] = useState(false);
   const [profileData, setProfileData] = useState<any>(null);
-  const [cardError, setCardError] = useState<string | null>(null);
+const [cardError, setCardError] = useState<string | null>(null);
+const [loadingMessage, setLoadingMessage] = useState<string>('Carregando...');
   // Load user profile data on mount
   useEffect(() => {
     const loadProfile = async () => {
@@ -220,6 +224,7 @@ export default function MercadoPagoCheckout({
 
     console.log('Dados do formulário Mercado Pago:', formData);
 
+setLoadingMessage('Processando pagamento via cartão...');
     setLoading(true);
     try {
       const paymentBody = {
@@ -301,11 +306,21 @@ export default function MercadoPagoCheckout({
                 )}
               </Button>
               <Button
-                onClick={() => {
-                  setCardError(null);
-                  setPaymentMethod("card");
-                  setLoading(true);
-                }}
+onClick={() => {
+  setCardError(null);
+  // Verifica valor mínimo para pagamento via cartão
+  if (amount < CARD_MIN_AMOUNT) {
+    toast({
+      title: "Valor mínimo para cartão",
+      description: `O valor mínimo para pagamentos com cartão é R$ ${CARD_MIN_AMOUNT.toFixed(2)}. Escolha PIX ou aumente o valor.`,
+      variant: 'destructive',
+    });
+    return;
+  }
+  setPaymentMethod("card");
+  setLoadingMessage('Carregando...');
+  setLoading(true);
+}}
                 className="h-24 flex flex-col items-center justify-center gap-3"
                 variant="outline"
               >
@@ -337,9 +352,9 @@ export default function MercadoPagoCheckout({
         ) : paymentMethod === "card" ? (
           !mpInitialized || loading ? (
             <div className="flex flex-col items-center justify-center py-12 space-y-4">
-              <Loader2 className="h-12 w-12 animate-spin text-primary" />
-              <p className="text-lg font-semibold">Carregando...</p>
-              <p className="text-sm text-muted-foreground">Preparando formulário de pagamento</p>
+<Loader2 className="h-12 w-12 animate-spin text-primary" />
+<p className="text-lg font-semibold">{loadingMessage}</p>
+<p className="text-sm text-muted-foreground">{loadingMessage.includes('Processando') ? 'Isso pode levar alguns segundos' : 'Preparando formulário de pagamento'}</p>
             </div>
           ) : (
             <div className="space-y-4">

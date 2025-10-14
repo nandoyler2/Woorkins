@@ -252,7 +252,7 @@ export default function MercadoPagoCheckout({
   };
 
   return (
-    <Card>
+    <Card className="max-w-4xl mx-auto">
       <CardHeader>
         <CardTitle>Pagamento via Mercado Pago</CardTitle>
         <CardDescription>
@@ -343,53 +343,59 @@ export default function MercadoPagoCheckout({
                   <p className="text-muted-foreground">Carregando Mercado Pago...</p>
                 </div>
               ) : (
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="card-name">Nome Completo</Label>
-                    <Input
-                      id="card-name"
-                      value={customerName}
-                      onChange={(e) => setCustomerName(e.target.value)}
-                      placeholder="Seu nome completo"
-                    />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Coluna esquerda - Dados do cliente */}
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="card-name">Nome Completo</Label>
+                      <Input
+                        id="card-name"
+                        value={customerName}
+                        onChange={(e) => setCustomerName(e.target.value)}
+                        placeholder="Seu nome completo"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="card-email">E-mail</Label>
+                      <Input
+                        id="card-email"
+                        type="email"
+                        value={customerEmail}
+                        onChange={(e) => setCustomerEmail(e.target.value)}
+                        placeholder="seu@email.com"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="card-document">CPF/CNPJ</Label>
+                      <Input
+                        id="card-document"
+                        value={customerDocument}
+                        onChange={(e) => setCustomerDocument(e.target.value)}
+                        placeholder="000.000.000-00"
+                      />
+                    </div>
+
+                    <Button variant="outline" onClick={onCancel} className="w-full">
+                      Cancelar
+                    </Button>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="card-email">E-mail</Label>
-                    <Input
-                      id="card-email"
-                      type="email"
-                      value={customerEmail}
-                      onChange={(e) => setCustomerEmail(e.target.value)}
-                      placeholder="seu@email.com"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="card-document">CPF/CNPJ</Label>
-                    <Input
-                      id="card-document"
-                      value={customerDocument}
-                      onChange={(e) => setCustomerDocument(e.target.value)}
-                      placeholder="000.000.000-00"
-                    />
-                  </div>
-
-                  <CardPayment
-                    initialization={{ amount: amount }}
-                    onSubmit={handleCardPayment}
-                    customization={{
-                      visual: {
-                        style: {
-                          theme: 'default',
+                  {/* Coluna direita - Dados do cartão */}
+                  <div>
+                    <CardPayment
+                      initialization={{ amount: amount }}
+                      onSubmit={handleCardPayment}
+                      customization={{
+                        visual: {
+                          style: {
+                            theme: 'default',
+                          },
                         },
-                      },
-                    }}
-                  />
-
-                  <Button variant="outline" onClick={onCancel} className="w-full">
-                    Cancelar
-                  </Button>
+                      }}
+                    />
+                  </div>
                 </div>
               )}
             </TabsContent>
@@ -405,7 +411,7 @@ export default function MercadoPagoCheckout({
                       <img
                         src={`data:image/png;base64,${pixData.qrcode_base64}`}
                         alt="QR Code PIX"
-                        className="w-56 h-56"
+                        className="w-64 h-64"
                       />
                     </div>
                   )}

@@ -117,7 +117,53 @@ serve(async (req) => {
         logStep("Processando cobrança", { chargeId, status });
 
         if (status === "paid" || status === "settled") {
-          // Buscar negociação ou proposta relacionada
+          // 1) Pagamento de Woorkoins via Cobranças
+          const { data: woorkoinsPayments } = await supabaseClient
+            .from("woorkoins_efi_payments")
+            .select("*")
+            .eq("charge_id", chargeId)
+            .eq("status", "pending");
+
+          if (woorkoinsPayments && woorkoinsPayments.length > 0) {
+            const payment = woorkoinsPayments[0];
+            logStep("Pagamento Woorkoins confirmado (Cobranças)", { id: payment.id });
+
+            await supabaseClient
+              .from("woorkoins_efi_payments")
+              .update({ status: "paid", paid_at: new Date().toISOString() })
+              .eq("id", payment.id);
+
+            // Creditar Woorkoins
+            const { data: currentBalance } = await supabaseClient
+              .from("woorkoins_balance")
+              .select("balance")
+              .eq("profile_id", payment.profile_id)
+              .maybeSingle();
+
+            if (currentBalance) {
+              await supabaseClient
+                .from("woorkoins_balance")
+                .update({ balance: currentBalance.balance + payment.amount })
+                .eq("profile_id", payment.profile_id);
+            } else {
+              await supabaseClient
+                .from("woorkoins_balance")
+                .insert({ profile_id: payment.profile_id, balance: payment.amount });
+            }
+
+            await supabaseClient
+              .from("woorkoins_transactions")
+              .insert({
+                profile_id: payment.profile_id,
+                amount: payment.amount,
+                type: "purchase",
+                description: `Compra via PIX Efí - ${payment.amount} Woorkoins`,
+              });
+
+            logStep("Woorkoins creditados (Cobranças)", { profile_id: payment.profile_id, amount: payment.amount });
+          }
+
+          // 2) Fluxo existente: Negociações/Propostas
           const { data: negotiations } = await supabaseClient
             .from("negotiations")
             .select("*")
@@ -142,9 +188,7 @@ serve(async (req) => {
 
             await supabaseClient
               .from("freelancer_wallet")
-              .update({
-                pending_balance: negotiation.net_amount_to_business,
-              })
+              .update({ pending_balance: negotiation.net_amount_to_business })
               .eq("profile_id", negotiation.business_id);
 
             logStep("Negociação atualizada via Cobranças");
@@ -155,17 +199,12 @@ serve(async (req) => {
             
             await supabaseClient
               .from("proposals")
-              .update({
-                payment_status: "paid",
-                status: "accepted",
-              })
+              .update({ payment_status: "paid", status: "accepted" })
               .eq("id", proposal.id);
 
             await supabaseClient
               .from("freelancer_wallet")
-              .update({
-                pending_balance: proposal.freelancer_amount,
-              })
+              .update({ pending_balance: proposal.freelancer_amount })
               .eq("profile_id", proposal.freelancer_id);
 
             logStep("Proposta atualizada via Cobranças");

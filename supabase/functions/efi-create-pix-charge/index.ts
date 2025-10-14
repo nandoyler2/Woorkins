@@ -115,15 +115,10 @@ serve(async (req) => {
     const chargePayload = {
       items,
       metadata,
-      payment: {
-        banking_billet: {
-          expire_at: new Date(Date.now() + expirationSeconds * 1000).toISOString().split('T')[0],
-          customer: {
-            name: customer.name,
-            cpf: customer.document?.replace(/\D/g, ''),
-            email: customer.email,
-          },
-        },
+      customer: {
+        name: customer.name,
+        cpf: customer.document?.replace(/\D/g, ''),
+        email: customer.email,
       },
     };
 
@@ -147,29 +142,34 @@ serve(async (req) => {
     const chargeData = await chargeResponse.json();
     logStep("Cobrança criada", { charge_id: chargeData.data.charge_id });
 
-    // Gerar QR Code PIX
+    // Gerar QR Code PIX via endpoint de pagamento
     const chargeId = chargeData.data.charge_id;
-    const pixUrl = `https://cobrancas.api.efipay.com.br/v1/charge/${chargeId}/billet`;
-    
-    const pixResponse = await fetch(pixUrl, {
+    const payUrl = `https://cobrancas.api.efipay.com.br/v1/charge/${chargeId}/pay`;
+
+    const payResponse = await fetch(payUrl, {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${accessToken}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        type: "pix",
+        payment: {
+          pix: {
+            expires_in: expirationSeconds,
+          },
+        },
       }),
     });
 
-    if (!pixResponse.ok) {
-      const errorText = await pixResponse.text();
-      logStep("Erro ao gerar PIX", { status: pixResponse.status, error: errorText });
+    if (!payResponse.ok) {
+      const errorText = await payResponse.text();
+      logStep("Erro ao gerar PIX", { status: payResponse.status, error: errorText });
       throw new Error("Falha ao gerar QR Code PIX");
     }
 
-    const pixData = await pixResponse.json();
-    logStep("QR Code gerado");
+    const payData = await payResponse.json();
+    const pixInfo = payData.data?.pix || payData.pix || payData.data;
+    logStep("PIX gerado", { ok: Boolean(pixInfo) });
 
     // Se for compra de Woorkoins, salvar na tabela de pagamentos
     if (woorkoins_amount && woorkoins_price) {
@@ -182,7 +182,7 @@ serve(async (req) => {
           amount: woorkoins_amount,
           price: woorkoins_price,
           status: 'pending',
-          efi_charge_data: { ...chargeData, pixData },
+          efi_charge_data: { chargeData, payData },
         });
 
       if (insertError) {
@@ -195,12 +195,12 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         charge_id: chargeId,
-        qrcode: pixData.data.pix.qrcode,
-        qrcode_image: pixData.data.pix.qrcode_image,
+        qrcode: pixInfo?.qrcode || pixInfo?.qrcode_text || pixInfo?.qr_code,
+        qrcode_image: pixInfo?.qrcode_image || pixInfo?.qrcode_base64,
         amount: finalAmount,
         original_amount: amount,
         discount_applied: discount,
-        expires_at: chargeData.data.expire_at,
+        expires_at: new Date(Date.now() + expirationSeconds * 1000).toISOString(),
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },

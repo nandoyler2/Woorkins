@@ -286,7 +286,27 @@ export default function MercadoPagoCheckout({
                 className="h-24 flex flex-col items-center justify-center gap-2"
                 variant="outline"
               >
-                <CreditCard className="h-8 w-8" />
+                <div className="flex items-center gap-1">
+                  <svg className="h-6 w-auto" viewBox="0 0 48 32" fill="none">
+                    <rect width="48" height="32" rx="4" fill="#1A1F71"/>
+                    <path d="M18 16L22 12L26 16L22 20L18 16Z" fill="#EB001B"/>
+                    <path d="M22 12L26 16L22 20L18 16L22 12Z" fill="#FF5F00"/>
+                  </svg>
+                  <svg className="h-6 w-auto" viewBox="0 0 48 32" fill="none">
+                    <rect width="48" height="32" rx="4" fill="#00579F"/>
+                    <path d="M20 10H28V22H20V10Z" fill="#EB001B"/>
+                    <path d="M21 16C21 13.5 22.5 11.5 24.5 11C23.5 10.5 22.5 10 21 10C17.5 10 15 12.5 15 16C15 19.5 17.5 22 21 22C22.5 22 23.5 21.5 24.5 21C22.5 20.5 21 18.5 21 16Z" fill="#F79E1B"/>
+                    <path d="M27 16C27 18.5 25.5 20.5 23.5 21C24.5 21.5 25.5 22 27 22C30.5 22 33 19.5 33 16C33 12.5 30.5 10 27 10C25.5 10 24.5 10.5 23.5 11C25.5 11.5 27 13.5 27 16Z" fill="#F79E1B"/>
+                  </svg>
+                  <svg className="h-6 w-auto" viewBox="0 0 48 32" fill="none">
+                    <rect width="48" height="32" rx="4" fill="#FFCC00"/>
+                    <path d="M15 16C15 19.5 17.5 22 21 22H27C30.5 22 33 19.5 33 16C33 12.5 30.5 10 27 10H21C17.5 10 15 12.5 15 16Z" fill="#000"/>
+                  </svg>
+                  <svg className="h-6 w-auto" viewBox="0 0 48 32" fill="none">
+                    <rect width="48" height="32" rx="4" fill="#006FCF"/>
+                    <path d="M24 22C28.4183 22 32 18.4183 32 14C32 9.58172 28.4183 6 24 6C19.5817 6 16 9.58172 16 14C16 18.4183 19.5817 22 24 22Z" fill="white"/>
+                  </svg>
+                </div>
                 <span className="text-lg font-semibold">Pagar com Cartão</span>
               </Button>
             </div>

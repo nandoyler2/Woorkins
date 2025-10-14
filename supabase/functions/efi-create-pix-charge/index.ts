@@ -115,11 +115,6 @@ serve(async (req) => {
     const chargePayload = {
       items,
       metadata,
-      customer: {
-        name: customer.name,
-        cpf: customer.document?.replace(/\D/g, ''),
-        email: customer.email,
-      },
     };
 
     logStep("Criando cobrança", { payload: chargePayload });

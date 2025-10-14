@@ -49,6 +49,38 @@ export function WoorkoinsCheckout({
     }
   }, [user]);
 
+  // Escutar mudanças na tabela de pagamentos Efí via Realtime
+  useEffect(() => {
+    if (!user || !open || !pixData) return;
+
+    const channel = supabase
+      .channel('woorkoins-efi-payments')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'woorkoins_efi_payments',
+          filter: `charge_id=eq.${pixData.txid}`,
+        },
+        (payload: any) => {
+          console.log('Mudança detectada no pagamento:', payload);
+          if (payload.new.status === 'paid') {
+            toast({
+              title: "Pagamento confirmado!",
+              description: `${amount} Woorkoins foram creditados na sua conta!`,
+            });
+            onSuccess();
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, open, pixData, amount, toast, onSuccess]);
+
   const loadGatewayConfig = async () => {
     try {
       const { data, error } = await supabase
@@ -82,6 +114,8 @@ export function WoorkoinsCheckout({
             email: customerEmail,
             document: customerDocument,
           },
+          woorkoins_amount: amount,
+          woorkoins_price: price,
         },
       });
 
@@ -90,7 +124,7 @@ export function WoorkoinsCheckout({
       setPixData(data);
       toast({
         title: "QR Code PIX gerado!",
-        description: "Escaneie o código para realizar o pagamento",
+        description: "Aguardando confirmação do pagamento...",
       });
     } catch (error: any) {
       console.error("Erro ao gerar PIX:", error);
@@ -286,9 +320,10 @@ export function WoorkoinsCheckout({
             </div>
 
             <div className="space-y-2">
-              <Button onClick={onSuccess} className="w-full">
-                Já Paguei
-              </Button>
+              <div className="text-center text-sm text-muted-foreground">
+                <p>Aguardando confirmação do pagamento...</p>
+                <p className="mt-1">Seu saldo será creditado automaticamente após a confirmação.</p>
+              </div>
               <Button
                 variant="outline"
                 onClick={() => {
@@ -297,7 +332,7 @@ export function WoorkoinsCheckout({
                 }}
                 className="w-full"
               >
-                Cancelar
+                Fechar
               </Button>
             </div>
           </div>

@@ -35,8 +35,19 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated");
     logStep("Usuário autenticado", { userId: user.id, email: user.email });
 
-    const { amount, description, customer } = await req.json();
-    logStep("Dados recebidos", { amount, description, customer });
+    const { amount, description, customer, woorkoins_amount, woorkoins_price } = await req.json();
+    logStep("Dados recebidos", { amount, description, customer, woorkoins_amount, woorkoins_price });
+
+    // Buscar profile_id do usuário
+    const { data: profileData, error: profileError } = await supabaseClient
+      .from("profiles")
+      .select("id")
+      .eq("user_id", user.id)
+      .single();
+    
+    if (profileError || !profileData) {
+      throw new Error("Perfil do usuário não encontrado");
+    }
 
     // Buscar configurações do Efí
     const { data: config, error: configError } = await supabaseClient
@@ -143,6 +154,27 @@ serve(async (req) => {
 
     const qrCodeData = await qrCodeResponse.json();
     logStep("QR Code gerado");
+
+    // Se for compra de Woorkoins, salvar na tabela de pagamentos
+    if (woorkoins_amount && woorkoins_price) {
+      const { error: insertError } = await supabaseClient
+        .from("woorkoins_efi_payments")
+        .insert({
+          profile_id: profileData.id,
+          charge_id: txid,
+          payment_method: 'pix',
+          amount: woorkoins_amount,
+          price: woorkoins_price,
+          status: 'pending',
+          efi_charge_data: { ...pixData, qrCodeData },
+        });
+
+      if (insertError) {
+        logStep("ERRO ao salvar pagamento Woorkoins", insertError);
+        throw new Error("Falha ao registrar pagamento de Woorkoins");
+      }
+      logStep("Pagamento Woorkoins registrado", { txid, profile_id: profileData.id });
+    }
 
     return new Response(
       JSON.stringify({

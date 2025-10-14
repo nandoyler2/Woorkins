@@ -1341,6 +1341,56 @@ export type Database = {
           },
         ]
       }
+      woorkoins_efi_payments: {
+        Row: {
+          amount: number
+          charge_id: string
+          created_at: string | null
+          efi_charge_data: Json | null
+          id: string
+          paid_at: string | null
+          payment_method: string
+          price: number
+          profile_id: string
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          amount: number
+          charge_id: string
+          created_at?: string | null
+          efi_charge_data?: Json | null
+          id?: string
+          paid_at?: string | null
+          payment_method: string
+          price: number
+          profile_id: string
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          amount?: number
+          charge_id?: string
+          created_at?: string | null
+          efi_charge_data?: Json | null
+          id?: string
+          paid_at?: string | null
+          payment_method?: string
+          price?: number
+          profile_id?: string
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "woorkoins_efi_payments_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       woorkoins_transactions: {
         Row: {
           amount: number

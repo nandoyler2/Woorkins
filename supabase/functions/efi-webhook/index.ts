@@ -182,6 +182,63 @@ serve(async (req) => {
         logStep("Processando PIX", { txid: pix.txid, status: pix.status });
 
         if (pix.status === "CONCLUIDA") {
+          // Verificar se é pagamento de Woorkoins
+          const { data: woorkoinsPayments } = await supabaseClient
+            .from("woorkoins_efi_payments")
+            .select("*")
+            .eq("charge_id", pix.txid)
+            .eq("status", "pending");
+
+          if (woorkoinsPayments && woorkoinsPayments.length > 0) {
+            const payment = woorkoinsPayments[0];
+            logStep("Pagamento Woorkoins encontrado", { id: payment.id });
+
+            // Atualizar status do pagamento
+            await supabaseClient
+              .from("woorkoins_efi_payments")
+              .update({
+                status: "paid",
+                paid_at: new Date().toISOString(),
+              })
+              .eq("id", payment.id);
+
+            // Creditar Woorkoins
+            const { data: currentBalance } = await supabaseClient
+              .from("woorkoins_balance")
+              .select("balance")
+              .eq("profile_id", payment.profile_id)
+              .maybeSingle();
+
+            if (currentBalance) {
+              await supabaseClient
+                .from("woorkoins_balance")
+                .update({
+                  balance: currentBalance.balance + payment.amount,
+                })
+                .eq("profile_id", payment.profile_id);
+            } else {
+              await supabaseClient
+                .from("woorkoins_balance")
+                .insert({
+                  profile_id: payment.profile_id,
+                  balance: payment.amount,
+                });
+            }
+
+            // Registrar transação
+            await supabaseClient
+              .from("woorkoins_transactions")
+              .insert({
+                profile_id: payment.profile_id,
+                amount: payment.amount,
+                type: "purchase",
+                description: `Compra via PIX Efí - ${payment.amount} Woorkoins`,
+              });
+
+            logStep("Woorkoins creditados", { profile_id: payment.profile_id, amount: payment.amount });
+            continue;
+          }
+
           // Buscar negociação ou proposta relacionada ao txid
           const { data: negotiations } = await supabaseClient
             .from("negotiations")

@@ -108,61 +108,24 @@ serve(async (req) => {
       logStep("Erro ao tentar registrar PIX (esperado)", { error: String(e) });
     }
 
-    // Registrar webhook de Cobranças (Cartão) - produção apenas
+    // Cobranças (Cartão) não possui registro global de webhook: usar notification_url por cobrança
     try {
-      logStep("Obtendo token para Cobranças (produção)");
-      const chargeAuthString = btoa(`${clientId}:${clientSecret}`);
-      const chargeTokenResp = await fetch('https://cobrancas.api.efipay.com.br/v1/authorize', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Basic ${chargeAuthString}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ grant_type: 'client_credentials' })
-      });
-
-      if (!chargeTokenResp.ok) {
-        const errText = await chargeTokenResp.text();
-        logStep('ERRO ao obter token de Cobranças', { status: chargeTokenResp.status, error: errText });
-        throw new Error(`Erro ao obter token de Cobranças (produção): ${chargeTokenResp.status} - ${errText}`);
-      }
-
-      const { access_token } = await chargeTokenResp.json();
-      logStep("Token de Cobranças obtido (produção)");
-
-      logStep("Registrando webhook de Cobranças");
-      const chargeWebhookResp = await fetch('https://cobrancas.api.efipay.com.br/v1/notification', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${access_token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ notification_url: webhookUrl })
-      });
-
-      if (!chargeWebhookResp.ok) {
-        const errText = await chargeWebhookResp.text();
-        logStep('ERRO ao registrar webhook de Cobranças', { status: chargeWebhookResp.status, error: errText });
-        throw new Error(`Erro ao registrar webhook de Cobranças (produção): ${chargeWebhookResp.status} - ${errText}`);
-      }
-
-      logStep("Webhook de Cobranças registrado com sucesso (produção)");
-      chargeRegistered = true;
+      logStep("Cobranças não possui registro global de webhook; usar notification_url por transação", { webhookUrl });
+      // Não falhar nem tentar endpoint inexistente
+      chargeRegistered = false;
     } catch (e) {
-      const errMsg = e instanceof Error ? e.message : String(e);
-      logStep("ERRO ao registrar Cobranças", { error: errMsg });
-      throw new Error(`Falha no registro de webhook de Cobranças: ${errMsg}`);
+      // Por segurança, não propagar erro aqui
+      logStep("Aviso: Cobranças não requer registro global de webhook");
     }
 
     return new Response(
       JSON.stringify({ 
         success: true,
-        message: chargeRegistered 
-          ? 'Webhook de Cobranças registrado com sucesso!' + (pixRegistered ? ' Webhook PIX também registrado.' : ' ATENÇÃO: Webhook PIX deve ser registrado manualmente (veja documentação).')
-          : 'Erro ao registrar webhooks',
+        message: `Cobranças: o webhook é definido por cobrança (notification_url).` + (pixRegistered ? ' Webhook PIX registrado com sucesso.' : ' ATENÇÃO: Webhook PIX pode exigir registro manual devido ao mTLS.'),
         webhookUrl,
         pixRegistered,
-        chargeRegistered
+        chargeRegistered,
+        chargeWebhookMode: 'per_charge'
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

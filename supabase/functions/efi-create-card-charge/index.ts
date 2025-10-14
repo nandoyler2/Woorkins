@@ -84,6 +84,9 @@ serve(async (req) => {
     const discount = config.efi_card_discount_percent || 0;
     const finalAmount = discount > 0 ? amount * (1 - discount / 100) : amount;
 
+    // URL do webhook (para receber o token de notificação de Cobranças)
+    const webhookUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/efi-webhook`;
+
     // Criar cobrança com cartão (API de Cobranças)
     const chargeUrl = "https://cobrancas.api.efipay.com.br/v1/charge";
     
@@ -95,6 +98,9 @@ serve(async (req) => {
           amount: 1,
         },
       ],
+      metadata: {
+        notification_url: webhookUrl,
+      },
       payment: {
         credit_card: {
           installments,

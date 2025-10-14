@@ -273,7 +273,6 @@ export default function Account() {
                     disabled={!!profile.cpf}
                     className={profile.cpf ? 'bg-muted' : ''}
                     placeholder="000.000.000-00"
-                    maxLength={14}
                   />
                   <p className="text-xs text-muted-foreground">
                     {profile.cpf 

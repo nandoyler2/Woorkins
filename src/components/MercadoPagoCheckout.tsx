@@ -48,7 +48,7 @@ export default function MercadoPagoCheckout({
   const [cardError, setCardError] = useState<string | null>(null);
   const [loadingMessage, setLoadingMessage] = useState<string>('Carregando...');
   const [paymentRejected, setPaymentRejected] = useState<{message: string, detail: string} | null>(null);
-  // Load user profile data on mount
+
   useEffect(() => {
     const loadProfile = async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -71,7 +71,6 @@ export default function MercadoPagoCheckout({
     loadProfile();
   }, []);
 
-  // Polling para verificar status do pagamento PIX a cada 3 segundos (consulta o Mercado Pago)
   useEffect(() => {
     if (!pixData?.payment_id || !woorkoinsAmount) return;
 
@@ -99,7 +98,6 @@ export default function MercadoPagoCheckout({
       }
     };
 
-    // Verificar após 3 segundos e depois a cada 3 segundos
     const timeout = setTimeout(checkPaymentStatus, 3000);
     const interval = setInterval(checkPaymentStatus, 3000);
 
@@ -110,7 +108,6 @@ export default function MercadoPagoCheckout({
     };
   }, [pixData, woorkoinsAmount, toast, onSuccess]);
 
-  // Realtime para detectar confirmação de pagamento PIX
   useEffect(() => {
     if (!pixData?.payment_id || !woorkoinsAmount) return;
 
@@ -225,7 +222,7 @@ export default function MercadoPagoCheckout({
 
     console.log('Dados do formulário Mercado Pago:', formData);
 
-setLoadingMessage('Processando pagamento via cartão...');
+    setLoadingMessage('Processando pagamento via cartão...');
     setLoading(true);
     try {
       const paymentBody = {
@@ -298,7 +295,7 @@ setLoadingMessage('Processando pagamento via cartão...');
           title: "Pagamento em processamento",
           description: "Seu pagamento está sendo processado. Você será notificado quando for aprovado.",
         });
-        onSuccess(); // Ainda fecha o modal mas não mostra sucesso
+        onSuccess();
       }
     } catch (error: any) {
       console.error("Erro ao processar cartão:", error);
@@ -339,22 +336,21 @@ setLoadingMessage('Processando pagamento via cartão...');
                 )}
               </Button>
               <Button
-onClick={() => {
-  setCardError(null);
-  setPaymentRejected(null);
-  // Verifica valor mínimo para pagamento via cartão
-  if (amount < CARD_MIN_AMOUNT) {
-    toast({
-      title: "Valor mínimo para cartão",
-      description: `O valor mínimo para pagamentos com cartão é R$ ${CARD_MIN_AMOUNT.toFixed(2)}. Escolha PIX ou aumente o valor.`,
-      variant: 'destructive',
-    });
-    return;
-  }
-  setPaymentMethod("card");
-  setLoadingMessage('Carregando...');
-  setLoading(true);
-}}
+                onClick={() => {
+                  setCardError(null);
+                  setPaymentRejected(null);
+                  if (amount < CARD_MIN_AMOUNT) {
+                    toast({
+                      title: "Valor mínimo para cartão",
+                      description: `O valor mínimo para pagamentos com cartão é R$ ${CARD_MIN_AMOUNT.toFixed(2)}. Escolha PIX ou aumente o valor.`,
+                      variant: 'destructive',
+                    });
+                    return;
+                  }
+                  setPaymentMethod("card");
+                  setLoadingMessage('Carregando...');
+                  setLoading(true);
+                }}
                 className="h-24 flex flex-col items-center justify-center gap-3"
                 variant="outline"
               >
@@ -383,12 +379,46 @@ onClick={() => {
             <p className="text-lg font-semibold">Gerando PIX...</p>
             <p className="text-sm text-muted-foreground">Aguarde um momento</p>
           </div>
+        ) : paymentRejected ? (
+          <div className="flex flex-col items-center justify-center py-12 space-y-6">
+            <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center">
+              <svg className="w-8 h-8 text-destructive" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </div>
+            <div className="text-center space-y-2">
+              <h3 className="text-xl font-semibold">{paymentRejected.message}</h3>
+              <p className="text-muted-foreground">{paymentRejected.detail}</p>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-3 w-full max-w-md">
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setPaymentRejected(null);
+                  setPaymentMethod(null);
+                }} 
+                className="flex-1"
+              >
+                Voltar
+              </Button>
+              <Button
+                onClick={() => {
+                  setPaymentRejected(null);
+                  setPaymentMethod(null);
+                  handlePixPayment();
+                }}
+                className="flex-1 bg-[#32BCAD] hover:bg-[#2aa89a] text-white"
+              >
+                Pagar com PIX
+              </Button>
+            </div>
+          </div>
         ) : paymentMethod === "card" ? (
           !mpInitialized || loading ? (
             <div className="flex flex-col items-center justify-center py-12 space-y-4">
-<Loader2 className="h-12 w-12 animate-spin text-primary" />
-<p className="text-lg font-semibold">{loadingMessage}</p>
-<p className="text-sm text-muted-foreground">{loadingMessage.includes('Processando') ? 'Isso pode levar alguns segundos' : 'Preparando formulário de pagamento'}</p>
+              <Loader2 className="h-12 w-12 animate-spin text-primary" />
+              <p className="text-lg font-semibold">{loadingMessage}</p>
+              <p className="text-sm text-muted-foreground">{loadingMessage.includes('Processando') ? 'Isso pode levar alguns segundos' : 'Preparando formulário de pagamento'}</p>
             </div>
           ) : (
             <div className="space-y-4">
@@ -430,40 +460,6 @@ onClick={() => {
               </Button>
             </div>
           )
-        ) : paymentRejected ? (
-          <div className="flex flex-col items-center justify-center py-12 space-y-6">
-            <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center">
-              <svg className="w-8 h-8 text-destructive" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </div>
-            <div className="text-center space-y-2">
-              <h3 className="text-xl font-semibold">{paymentRejected.message}</h3>
-              <p className="text-muted-foreground">{paymentRejected.detail}</p>
-            </div>
-            <div className="flex flex-col sm:flex-row gap-3 w-full max-w-md">
-              <Button 
-                variant="outline" 
-                onClick={() => {
-                  setPaymentRejected(null);
-                  setPaymentMethod(null);
-                }} 
-                className="flex-1"
-              >
-                Voltar
-              </Button>
-              <Button
-                onClick={() => {
-                  setPaymentRejected(null);
-                  setPaymentMethod(null);
-                  handlePixPayment();
-                }}
-                className="flex-1 bg-[#32BCAD] hover:bg-[#2aa89a] text-white"
-              >
-                Pagar com PIX
-              </Button>
-            </div>
-          </div>
         ) : pixData ? (
           <div className="space-y-4">
             <div className="bg-background border rounded-lg p-6">

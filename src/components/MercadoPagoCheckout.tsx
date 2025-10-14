@@ -252,7 +252,7 @@ export default function MercadoPagoCheckout({
   };
 
   return (
-    <Card className="max-w-4xl mx-auto">
+    <Card className="max-w-6xl mx-auto w-full">
       <CardHeader>
         <CardTitle>Pagamento via Mercado Pago</CardTitle>
         <CardDescription>

@@ -48,7 +48,7 @@ serve(async (req) => {
       throw new Error('Credenciais Efí não configuradas');
     }
 
-    // Obter token de acesso (OAuth sempre usa api.sejaefi.com.br)
+    // Obter token de acesso (OAuth Cobranças - mesmo host usado em /v1/charge)
     logStep("Obtendo token de acesso");
     const authString = btoa(`${clientId}:${clientSecret}`);
     const tokenResponse = await fetch('https://api.sejaefi.com.br/oauth/token', {
@@ -71,26 +71,56 @@ serve(async (req) => {
     const webhookUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/efi-webhook`;
     logStep("URL do webhook", { url: webhookUrl });
 
-    // Registrar webhook PIX
-    logStep("Registrando webhook PIX");
-    const pixWebhookResponse = await fetch('https://api-pix.sejaefi.com.br/v2/webhook', {
-      method: 'PUT',
-      headers: {
-        'Authorization': `Bearer ${access_token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        webhookUrl: webhookUrl
-      })
-    });
+    // Buscar config para Pix Key e mTLS
+    const { data: cfg } = await supabaseClient
+      .from('payment_gateway_config')
+      .select('*')
+      .single();
 
-    if (!pixWebhookResponse.ok) {
-      const errorText = await pixWebhookResponse.text();
-      logStep("Erro ao registrar webhook PIX", { error: errorText });
-      throw new Error(`Erro ao registrar webhook PIX: ${errorText}`);
+    // Registrar webhook PIX (best-effort)
+    try {
+      if (!cfg?.efi_pix_key) {
+        logStep("PIX: chave não configurada, pulando registro");
+      } else {
+        logStep("Registrando webhook PIX", { pixKey: cfg.efi_pix_key });
+        // Tenta obter token da API PIX (requer mTLS; pode falhar neste ambiente)
+        const pixTokenResp = await fetch('https://pix.api.efipay.com.br/oauth/token', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Basic ${authString}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ grant_type: 'client_credentials' })
+        });
+
+        if (!pixTokenResp.ok) {
+          const err = await pixTokenResp.text();
+          logStep("PIX OAuth falhou (provável mTLS)", { status: pixTokenResp.status, err });
+        } else {
+          const { access_token: pix_access_token } = await pixTokenResp.json();
+          const skipMtls = cfg?.efi_validate_mtls ? 'false' : 'true';
+          const pixRegisterUrl = `https://pix.api.efipay.com.br/v2/webhook/${encodeURIComponent(cfg.efi_pix_key)}`;
+          const pixWebhookResponse = await fetch(pixRegisterUrl, {
+            method: 'PUT',
+            headers: {
+              'Authorization': `Bearer ${pix_access_token}`,
+              'Content-Type': 'application/json',
+              'x-skip-mtls-checking': skipMtls,
+            },
+            body: JSON.stringify({ webhookUrl })
+          });
+
+          if (!pixWebhookResponse.ok) {
+            const errorText = await pixWebhookResponse.text();
+            logStep("Erro ao registrar webhook PIX", { error: errorText });
+          } else {
+            logStep("Webhook PIX registrado com sucesso");
+          }
+        }
+      }
+    } catch (e) {
+      logStep("Falha não crítica ao registrar PIX", { message: String(e) });
     }
-
-    logStep("Webhook PIX registrado com sucesso");
 
     // Registrar webhook de Cobranças (Cartão)
     logStep("Registrando webhook de Cobranças");

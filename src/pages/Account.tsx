@@ -18,6 +18,7 @@ export default function Account() {
     full_name: '',
     username: '',
     email: '',
+    cpf: ''
   });
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
@@ -34,7 +35,7 @@ export default function Account() {
 
     const { data } = await supabase
       .from('profiles')
-      .select('full_name, username')
+      .select('full_name, username, cpf')
       .eq('user_id', user.id)
       .single();
 
@@ -43,6 +44,7 @@ export default function Account() {
         full_name: data.full_name || '',
         username: data.username || '',
         email: user.email || '',
+        cpf: data.cpf || ''
       });
     }
   };
@@ -52,20 +54,50 @@ export default function Account() {
     setLoading(true);
 
     try {
+      // Validate CPF if being added for the first time
+      let updateData: any = {
+        full_name: profile.full_name,
+        username: profile.username,
+      };
+
+      // If CPF is being set for the first time, validate and add it
+      if (profile.cpf && !profile.cpf.match(/\d{3}\.\d{3}\.\d{3}-\d{2}/)) {
+        const cpfDigits = profile.cpf.replace(/\D/g, '');
+        if (cpfDigits.length !== 11) {
+          toast({
+            title: 'CPF inválido',
+            description: 'O CPF deve ter 11 dígitos',
+            variant: 'destructive',
+          });
+          setLoading(false);
+          return;
+        }
+        updateData.cpf = cpfDigits;
+      }
+
       const { error } = await supabase
         .from('profiles')
-        .update({
-          full_name: profile.full_name,
-          username: profile.username,
-        })
+        .update(updateData)
         .eq('user_id', user?.id);
 
-      if (error) throw error;
-
-      toast({
-        title: 'Perfil atualizado!',
-        description: 'Suas informações foram salvas com sucesso.',
-      });
+      if (error) {
+        if (error.message.includes('duplicate key') || error.message.includes('cpf')) {
+          toast({
+            title: 'CPF já cadastrado',
+            description: 'Este CPF já está em uso por outra conta',
+            variant: 'destructive',
+          });
+        } else {
+          throw error;
+        }
+      } else {
+        toast({
+          title: 'Perfil atualizado!',
+          description: 'Suas informações foram salvas com sucesso.',
+        });
+        // Reload profile to get the updated CPF
+        loadProfile();
+      }
     } catch (error: any) {
       toast({
         title: 'Erro ao salvar',
@@ -186,6 +218,30 @@ export default function Account() {
                   />
                   <p className="text-xs text-muted-foreground">
                     O email não pode ser alterado por questões de segurança
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <Label>CPF</Label>
+                  <Input
+                    type="text"
+                    value={profile.cpf ? profile.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4') : ''}
+                    onChange={(e) => {
+                      if (!profile.cpf) {
+                        const value = e.target.value.replace(/\D/g, '');
+                        if (value.length <= 11) {
+                          setProfile({ ...profile, cpf: value });
+                        }
+                      }
+                    }}
+                    disabled={!!profile.cpf}
+                    className={profile.cpf ? 'bg-muted' : ''}
+                    placeholder="000.000.000-00"
+                    maxLength={14}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    {profile.cpf 
+                      ? 'O CPF não pode ser alterado após definido'
+                      : 'Obrigatório para realizar pagamentos'}
                   </p>
                 </div>
                 <Button 

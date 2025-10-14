@@ -27,15 +27,34 @@ export default function MercadoPagoCheckout({
   woorkoinsPrice,
 }: MercadoPagoCheckoutProps) {
   const { toast } = useToast();
-  const [paymentMethod, setPaymentMethod] = useState<"pix" | "card">("pix");
+  const [paymentMethod, setPaymentMethod] = useState<"pix" | "card" | null>(null);
   const [loading, setLoading] = useState(false);
   const [pixData, setPixData] = useState<any>(null);
   const [mpInitialized, setMpInitialized] = useState(false);
+  const [profileData, setProfileData] = useState<any>(null);
   
-  // Dados do cliente
-  const [customerName, setCustomerName] = useState("");
-  const [customerEmail, setCustomerEmail] = useState("");
-  const [customerDocument, setCustomerDocument] = useState("");
+  // Load user profile data on mount
+  useEffect(() => {
+    const loadProfile = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data } = await supabase
+          .from('profiles')
+          .select('full_name, cpf, user_id')
+          .eq('user_id', user.id)
+          .single();
+        
+        if (data) {
+          setProfileData({
+            name: data.full_name,
+            email: user.email,
+            document: data.cpf,
+          });
+        }
+      }
+    };
+    loadProfile();
+  }, []);
 
   // Polling para verificar status do pagamento PIX a cada 3 segundos (consulta o Mercado Pago)
   useEffect(() => {
@@ -131,30 +150,25 @@ export default function MercadoPagoCheckout({
     loadMercadoPagoKey();
   }, []);
 
-  const isValidEmail = (email: string) => /[^\s@]+@[^\s@]+\.[^\s@]+/.test(email);
-  const isValidFullName = (name: string) => name.trim().split(/\s+/).length >= 2;
-  const isValidDocument = (doc: string) => {
-    const d = (doc || '').replace(/\D/g, '');
-    return d.length === 11 || d.length === 14;
+  const validateProfileData = () => {
+    if (!profileData?.name || !profileData?.email || !profileData?.document) {
+      const missing = [];
+      if (!profileData?.name) missing.push('Nome completo');
+      if (!profileData?.email) missing.push('Email');
+      if (!profileData?.document) missing.push('CPF');
+      
+      toast({
+        title: 'Dados incompletos',
+        description: `Para realizar o pagamento, você precisa completar: ${missing.join(', ')}. Acesse sua conta para adicionar essas informações.`,
+        variant: 'destructive',
+      });
+      return false;
+    }
+    return true;
   };
 
   const handlePixPayment = async () => {
-    const nameTrimmed = customerName.trim().replace(/\s+/g, ' ');
-    const emailTrimmed = customerEmail.trim();
-    const docDigits = (customerDocument || '').replace(/\D/g, '');
-
-    if (!isValidFullName(nameTrimmed)) {
-      toast({ title: 'Nome inválido', description: 'Informe nome e sobrenome.', variant: 'destructive' });
-      return;
-    }
-    if (!isValidEmail(emailTrimmed)) {
-      toast({ title: 'E-mail inválido', description: 'Informe um e-mail válido.', variant: 'destructive' });
-      return;
-    }
-    if (!isValidDocument(docDigits)) {
-      toast({ title: 'Documento inválido', description: 'Informe um CPF/CNPJ válido.', variant: 'destructive' });
-      return;
-    }
+    if (!validateProfileData()) return;
 
     setLoading(true);
     try {
@@ -163,11 +177,7 @@ export default function MercadoPagoCheckout({
           paymentMethod: "pix",
           amount: amount,
           description: description,
-          customer: {
-            name: nameTrimmed,
-            email: emailTrimmed.toLowerCase(),
-            document: docDigits,
-          },
+          customer: profileData,
           ...(woorkoinsAmount && { woorkoins_amount: woorkoinsAmount }),
           ...(woorkoinsPrice && { woorkoins_price: woorkoinsPrice }),
         },
@@ -193,22 +203,7 @@ export default function MercadoPagoCheckout({
   };
 
   const handleCardPayment = async (formData: any) => {
-    const nameTrimmed = customerName.trim().replace(/\s+/g, ' ');
-    const emailTrimmed = customerEmail.trim();
-    const docDigits = (customerDocument || '').replace(/\D/g, '');
-
-    if (!isValidFullName(nameTrimmed)) {
-      toast({ title: 'Nome inválido', description: 'Informe nome e sobrenome.', variant: 'destructive' });
-      return;
-    }
-    if (!isValidEmail(emailTrimmed)) {
-      toast({ title: 'E-mail inválido', description: 'Informe um e-mail válido.', variant: 'destructive' });
-      return;
-    }
-    if (!isValidDocument(docDigits)) {
-      toast({ title: 'Documento inválido', description: 'Informe um CPF/CNPJ válido.', variant: 'destructive' });
-      return;
-    }
+    if (!validateProfileData()) return;
 
     setLoading(true);
     try {
@@ -218,11 +213,7 @@ export default function MercadoPagoCheckout({
           amount: amount,
           description: description,
           token: formData.token,
-          customer: {
-            name: nameTrimmed,
-            email: emailTrimmed.toLowerCase(),
-            document: docDigits,
-          },
+          customer: profileData,
           card: {
             cardholder_name: formData.payer.name,
           },
@@ -260,146 +251,88 @@ export default function MercadoPagoCheckout({
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {!pixData ? (
-          <Tabs value={paymentMethod} onValueChange={(v) => setPaymentMethod(v as "pix" | "card")}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="pix" className="flex items-center gap-2">
-                <QrCode className="h-4 w-4" />
-                PIX
-              </TabsTrigger>
-              <TabsTrigger value="card" className="flex items-center gap-2">
-                <CreditCard className="h-4 w-4" />
-                Cartão
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="pix" className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Nome Completo</Label>
-                  <Input
-                    id="name"
-                    value={customerName}
-                    onChange={(e) => setCustomerName(e.target.value)}
-                    placeholder="Seu nome completo"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="email">E-mail</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={customerEmail}
-                    onChange={(e) => setCustomerEmail(e.target.value)}
-                    placeholder="seu@email.com"
-                  />
-                </div>
-
-                <div className="space-y-2 md:col-span-2">
-                  <Label htmlFor="document">CPF/CNPJ</Label>
-                  <Input
-                    id="document"
-                    value={customerDocument}
-                    onChange={(e) => setCustomerDocument(e.target.value)}
-                    placeholder="000.000.000-00"
-                  />
-                </div>
-
-                <div className="flex gap-2 md:col-span-2">
-                  <Button
-                    onClick={handlePixPayment}
-                    disabled={
-                      loading ||
-                      !isValidFullName(customerName) ||
-                      !isValidEmail(customerEmail) ||
-                      !isValidDocument(customerDocument)
-                    }
-                    className="flex-1"
-                  >
-                    {loading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Gerando QR Code...
-                      </>
-                    ) : (
-                      <>
-                        <QrCode className="mr-2 h-4 w-4" />
-                        Gerar QR Code PIX
-                      </>
-                    )}
-                  </Button>
-                  <Button variant="outline" onClick={onCancel}>
-                    Cancelar
-                  </Button>
-                </div>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="card" className="space-y-4">
-              {!mpInitialized ? (
-                <div className="text-center py-8">
-                  <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-                  <p className="text-muted-foreground">Carregando Mercado Pago...</p>
-                </div>
+        {!paymentMethod ? (
+          <div className="space-y-4">
+            <p className="text-center text-muted-foreground mb-6">
+              Escolha a forma de pagamento:
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Button
+                onClick={() => setPaymentMethod("pix")}
+                className="h-24 flex flex-col items-center justify-center gap-2"
+                variant="outline"
+              >
+                <QrCode className="h-8 w-8" />
+                <span className="text-lg font-semibold">Pagar com PIX</span>
+              </Button>
+              <Button
+                onClick={() => setPaymentMethod("card")}
+                className="h-24 flex flex-col items-center justify-center gap-2"
+                variant="outline"
+              >
+                <CreditCard className="h-8 w-8" />
+                <span className="text-lg font-semibold">Pagar com Cartão</span>
+              </Button>
+            </div>
+            <Button variant="ghost" onClick={onCancel} className="w-full">
+              Cancelar
+            </Button>
+          </div>
+        ) : paymentMethod === "pix" && !pixData ? (
+          <div className="space-y-4">
+            <Button
+              onClick={handlePixPayment}
+              disabled={loading}
+              className="w-full h-12"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Gerando QR Code PIX...
+                </>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Coluna esquerda - Dados do cliente */}
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="card-name">Nome Completo</Label>
-                      <Input
-                        id="card-name"
-                        value={customerName}
-                        onChange={(e) => setCustomerName(e.target.value)}
-                        placeholder="Seu nome completo"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="card-email">E-mail</Label>
-                      <Input
-                        id="card-email"
-                        type="email"
-                        value={customerEmail}
-                        onChange={(e) => setCustomerEmail(e.target.value)}
-                        placeholder="seu@email.com"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="card-document">CPF/CNPJ</Label>
-                      <Input
-                        id="card-document"
-                        value={customerDocument}
-                        onChange={(e) => setCustomerDocument(e.target.value)}
-                        placeholder="000.000.000-00"
-                      />
-                    </div>
-
-                    <Button variant="outline" onClick={onCancel} className="w-full">
-                      Cancelar
-                    </Button>
-                  </div>
-
-                  {/* Coluna direita - Dados do cartão */}
-                  <div>
-                    <CardPayment
-                      initialization={{ amount: amount }}
-                      onSubmit={handleCardPayment}
-                      customization={{
-                        visual: {
-                          style: {
-                            theme: 'default',
-                          },
-                        },
-                      }}
-                    />
-                  </div>
-                </div>
+                <>
+                  <QrCode className="mr-2 h-4 w-4" />
+                  Gerar QR Code PIX
+                </>
               )}
-            </TabsContent>
-          </Tabs>
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => setPaymentMethod(null)} 
+              className="w-full"
+            >
+              Voltar
+            </Button>
+          </div>
+        ) : paymentMethod === "card" ? (
+          !mpInitialized ? (
+            <div className="text-center py-8">
+              <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+              <p className="text-muted-foreground">Carregando Mercado Pago...</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <CardPayment
+                initialization={{ amount: amount }}
+                onSubmit={handleCardPayment}
+                customization={{
+                  visual: {
+                    style: {
+                      theme: 'default',
+                    },
+                  },
+                }}
+              />
+              <Button 
+                variant="outline" 
+                onClick={() => setPaymentMethod(null)} 
+                className="w-full"
+              >
+                Voltar
+              </Button>
+            </div>
+          )
         ) : (
           <div className="space-y-4">
           <div className="bg-background border rounded-lg p-6">

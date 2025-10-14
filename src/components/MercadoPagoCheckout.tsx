@@ -42,7 +42,7 @@ export default function MercadoPagoCheckout({
   const [pixData, setPixData] = useState<any>(null);
   const [mpInitialized, setMpInitialized] = useState(false);
   const [profileData, setProfileData] = useState<any>(null);
-  
+  const [cardError, setCardError] = useState<string | null>(null);
   // Load user profile data on mount
   useEffect(() => {
     const loadProfile = async () => {
@@ -149,8 +149,9 @@ export default function MercadoPagoCheckout({
           .single();
         
         if (config?.mercadopago_public_key) {
-          initMercadoPago(config.mercadopago_public_key);
+          initMercadoPago(config.mercadopago_public_key, { locale: 'pt-BR' });
           setMpInitialized(true);
+          setCardError(null);
           setLoading(false);
         }
       } catch (error) {
@@ -301,6 +302,7 @@ export default function MercadoPagoCheckout({
               </Button>
               <Button
                 onClick={() => {
+                  setCardError(null);
                   setPaymentMethod("card");
                   setLoading(true);
                 }}
@@ -347,6 +349,14 @@ export default function MercadoPagoCheckout({
                   payer: {
                     email: profileData?.email,
                   }
+                }}
+                onReady={() => {
+                  setLoading(false);
+                }}
+                onError={(error: any) => {
+                  console.error('CardPayment Brick error', error);
+                  setCardError('Ocorreu um erro ao carregar o formulário de cartão.');
+                  setLoading(false);
                 }}
                 onSubmit={handleCardPayment}
                 customization={{

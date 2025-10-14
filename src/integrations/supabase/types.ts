@@ -537,6 +537,51 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_gateway_config: {
+        Row: {
+          active_gateway: string
+          created_at: string | null
+          efi_card_discount_percent: number | null
+          efi_enabled: boolean | null
+          efi_pix_certificate_path: string | null
+          efi_pix_discount_percent: number | null
+          efi_pix_expiration_hours: number | null
+          efi_pix_key: string | null
+          efi_pix_key_type: string | null
+          efi_validate_mtls: boolean | null
+          id: string
+          updated_at: string | null
+        }
+        Insert: {
+          active_gateway?: string
+          created_at?: string | null
+          efi_card_discount_percent?: number | null
+          efi_enabled?: boolean | null
+          efi_pix_certificate_path?: string | null
+          efi_pix_discount_percent?: number | null
+          efi_pix_expiration_hours?: number | null
+          efi_pix_key?: string | null
+          efi_pix_key_type?: string | null
+          efi_validate_mtls?: boolean | null
+          id?: string
+          updated_at?: string | null
+        }
+        Update: {
+          active_gateway?: string
+          created_at?: string | null
+          efi_card_discount_percent?: number | null
+          efi_enabled?: boolean | null
+          efi_pix_certificate_path?: string | null
+          efi_pix_discount_percent?: number | null
+          efi_pix_expiration_hours?: number | null
+          efi_pix_key?: string | null
+          efi_pix_key_type?: string | null
+          efi_validate_mtls?: boolean | null
+          id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       payment_settings: {
         Row: {
           bank_account_holder: string | null

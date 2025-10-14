@@ -6,7 +6,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, QrCode, CreditCard } from "lucide-react";
+import { Loader2, CreditCard } from "lucide-react";
+
+// Ícone oficial do PIX
+const PixIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 512 512" className={className} fill="currentColor">
+    <path d="M242.4 292.5C247.8 287.1 257.1 287.1 262.5 292.5L339.5 369.5C353.7 383.7 372.6 391.5 392.6 391.5H407.7L310.6 488.6C280.3 518.1 231.1 518.1 200.8 488.6L103.3 391.5H112.6C132.6 391.5 151.5 383.7 165.7 369.5L242.4 292.5zM262.5 218.9C257.1 224.3 247.8 224.3 242.4 218.9L165.7 142.1C151.5 127.9 132.6 120.1 112.6 120.1H103.3L200.7 22.76C231.1-7.586 280.3-7.586 310.6 22.76L407.8 120.1H392.6C372.6 120.1 353.7 127.9 339.5 142.1L262.5 218.9zM112.6 142.1C126.4 142.1 139.1 148.3 149.7 158.1L226.4 236.8C233.6 243.1 243 246.7 252.5 246.7C261.9 246.7 271.3 243.1 278.5 236.8L355.5 158.1C365.3 148.3 378.8 142.1 392.6 142.1H407.7L488.6 222.9C518.9 253.2 518.9 302.4 488.6 332.7L407.8 413.5H392.6C378.8 413.5 365.3 407.3 355.5 397.5L278.5 320.8C264.6 306.1 240.3 306.1 226.4 320.8L149.7 397.5C139.1 407.3 126.4 413.5 112.6 413.5H103.3L22.76 332.7C-7.586 302.4-7.586 253.2 22.76 222.9L103.3 142.1H112.6z"/>
+  </svg>
+);
 import { initMercadoPago, CardPayment } from '@mercadopago/sdk-react';
 
 interface MercadoPagoCheckoutProps {
@@ -171,6 +178,7 @@ export default function MercadoPagoCheckout({
     if (!validateProfileData()) return;
 
     setLoading(true);
+    setPaymentMethod("pix");
     try {
       const { data, error } = await supabase.functions.invoke("mercadopago-create-payment", {
         body: {
@@ -197,6 +205,7 @@ export default function MercadoPagoCheckout({
         description: error.message || "Tente novamente",
         variant: "destructive",
       });
+      setPaymentMethod(null);
     } finally {
       setLoading(false);
     }
@@ -205,22 +214,26 @@ export default function MercadoPagoCheckout({
   const handleCardPayment = async (formData: any) => {
     if (!validateProfileData()) return;
 
+    console.log('Dados do cartão recebidos:', formData);
+
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("mercadopago-create-payment", {
         body: {
-          paymentMethod: "card",
+          paymentMethod: "credit_card",
           amount: amount,
           description: description,
           token: formData.token,
           customer: profileData,
           card: {
-            cardholder_name: formData.payer.name,
+            cardholder_name: formData.payer?.name || profileData.name,
           },
           ...(woorkoinsAmount && { woorkoins_amount: woorkoinsAmount }),
           ...(woorkoinsPrice && { woorkoins_price: woorkoinsPrice }),
         },
       });
+
+      console.log('Resposta da edge function:', { data, error });
 
       if (error) throw error;
 
@@ -252,12 +265,21 @@ export default function MercadoPagoCheckout({
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Button
-                onClick={() => setPaymentMethod("pix")}
-                className="h-24 flex flex-col items-center justify-center gap-2"
-                variant="outline"
+                onClick={handlePixPayment}
+                disabled={loading}
+                className="h-24 flex flex-col items-center justify-center gap-2 bg-[#32BCAD] hover:bg-[#2aa89a] text-white border-0"
               >
-                <QrCode className="h-8 w-8" />
-                <span className="text-lg font-semibold">Pagar com PIX</span>
+                {loading ? (
+                  <>
+                    <Loader2 className="h-8 w-8 animate-spin" />
+                    <span className="text-lg font-semibold">Gerando PIX...</span>
+                  </>
+                ) : (
+                  <>
+                    <PixIcon className="h-8 w-8" />
+                    <span className="text-lg font-semibold">Pagar com PIX</span>
+                  </>
+                )}
               </Button>
               <Button
                 onClick={() => setPaymentMethod("card")}
@@ -270,33 +292,6 @@ export default function MercadoPagoCheckout({
             </div>
             <Button variant="ghost" onClick={onCancel} className="w-full">
               Cancelar
-            </Button>
-          </div>
-        ) : paymentMethod === "pix" && !pixData ? (
-          <div className="space-y-4">
-            <Button
-              onClick={handlePixPayment}
-              disabled={loading}
-              className="w-full h-12"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Gerando QR Code PIX...
-                </>
-              ) : (
-                <>
-                  <QrCode className="mr-2 h-4 w-4" />
-                  Gerar QR Code PIX
-                </>
-              )}
-            </Button>
-            <Button 
-              variant="outline" 
-              onClick={() => setPaymentMethod(null)} 
-              className="w-full"
-            >
-              Voltar
             </Button>
           </div>
         ) : paymentMethod === "card" ? (
@@ -337,7 +332,7 @@ export default function MercadoPagoCheckout({
               </Button>
             </div>
           )
-        ) : (
+        ) : pixData ? (
           <div className="space-y-4">
             <div className="bg-background border rounded-lg p-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -431,7 +426,7 @@ export default function MercadoPagoCheckout({
               </div>
             </div>
           </div>
-        )}
+        ) : null}
       </CardContent>
     </Card>
   );

@@ -21,7 +21,8 @@ serve(async (req) => {
 
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_ANON_KEY") ?? ""
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      { auth: { persistSession: false } }
     );
 
     const authHeader = req.headers.get("Authorization");
@@ -68,7 +69,7 @@ serve(async (req) => {
     logStep("Profile encontrado", { profileId: profile.id });
 
     // Calcular desconto se aplicável
-    const discount = paymentMethod === "pix" 
+    const discount = (paymentMethod === "pix" || paymentMethod === "pix_qr_code")
       ? (config.mercadopago_pix_discount_percent || 0)
       : (config.mercadopago_card_discount_percent || 0);
     const finalAmount = discount > 0 ? amount * (1 - discount / 100) : amount;
@@ -79,7 +80,7 @@ serve(async (req) => {
     const paymentData: any = {
       transaction_amount: finalAmount,
       description: description,
-      payment_method_id: paymentMethod,
+      payment_method_id: paymentMethod === "credit_card" ? "credit_card" : paymentMethod,
       payer: {
         email: customer.email,
         ...(customer.name && {
@@ -97,11 +98,13 @@ serve(async (req) => {
     };
 
     // Se for cartão, adicionar token e dados do cartão
-    if (paymentMethod === "card" && token) {
+    if ((paymentMethod === "card" || paymentMethod === "credit_card") && token) {
       paymentData.token = token;
       if (card?.cardholder_name) {
         paymentData.payer.name = card.cardholder_name;
       }
+      // Remover payment_method_id quando usar token, o Mercado Pago detecta automaticamente
+      delete paymentData.payment_method_id;
     }
 
     logStep("Criando pagamento", { paymentData });
@@ -192,7 +195,7 @@ serve(async (req) => {
     }
 
     // Retornar dados de acordo com o método de pagamento
-    if (paymentMethod === "pix") {
+    if (paymentMethod === "pix" || paymentMethod === "pix_qr_code") {
       return new Response(
         JSON.stringify({
           payment_id: paymentResponse.id,

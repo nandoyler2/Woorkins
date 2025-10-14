@@ -151,14 +151,18 @@ export default function MercadoPagoCheckout({
         if (config?.mercadopago_public_key) {
           initMercadoPago(config.mercadopago_public_key);
           setMpInitialized(true);
+          setLoading(false);
         }
       } catch (error) {
         console.error("Erro ao carregar MP:", error);
+        setLoading(false);
       }
     };
     
-    loadMercadoPagoKey();
-  }, []);
+    if (paymentMethod === "card") {
+      loadMercadoPagoKey();
+    }
+  }, [paymentMethod]);
 
   const validateProfileData = () => {
     if (!profileData?.name || !profileData?.email || !profileData?.document) {
@@ -197,10 +201,6 @@ export default function MercadoPagoCheckout({
       if (error) throw error;
 
       setPixData(data);
-      toast({
-        title: "QR Code PIX gerado!",
-        description: "Aguardando confirmação do pagamento...",
-      });
     } catch (error: any) {
       console.error("Erro ao gerar PIX:", error);
       toast({
@@ -285,7 +285,10 @@ export default function MercadoPagoCheckout({
                 )}
               </Button>
               <Button
-                onClick={() => setPaymentMethod("card")}
+                onClick={() => {
+                  setPaymentMethod("card");
+                  setLoading(true);
+                }}
                 className="h-24 flex flex-col items-center justify-center gap-3"
                 variant="outline"
               >

@@ -86,7 +86,7 @@ export default function Woorkoins() {
   ];
 
   const coinPackages = [
-    { amount: 10, price: 5.00, bonus: 0 },
+    { amount: 1, price: 0.05, bonus: 0 },
     { amount: 100, price: 9.90, bonus: 0 },
     { amount: 500, price: 45.00, bonus: 50 },
     { amount: 1000, price: 85.00, bonus: 150 },
@@ -162,13 +162,7 @@ export default function Woorkoins() {
       return;
     }
 
-    if (price < 5) {
-      toast({
-        title: 'Valor mínimo de compra',
-        description: 'O valor mínimo permitido pelo provedor de pagamento é R$ 5,00.',
-      });
-      return;
-    }
+    // Valor mínimo validado por gateway movido para após a detecção do provedor
 
     console.log('Starting purchase:', { amount, price });
     setLoadingPayment(true);
@@ -183,12 +177,31 @@ export default function Woorkoins() {
 
       const activeGateway = gatewayConfig?.active_gateway || "stripe";
 
-      if (activeGateway === "efi") {
+      // Validar valor mínimo por gateway (Mercado Pago permite valores baixos para testes)
+      const minByGateway = activeGateway === "mercadopago" ? 0.05 : 5;
+      if (price < minByGateway) {
+        toast({
+          title: 'Valor mínimo de compra',
+          description: `O valor mínimo permitido é R$ ${minByGateway.toFixed(2)}.`,
+        });
+        setLoading(false);
+        setLoadingPayment(false);
+        return;
+      }
+
+      if (activeGateway === "mercadopago") {
+        console.log('Using Mercado Pago gateway...');
+        setSelectedPackage({ amount, price });
+        setCheckoutOpen(true);
+        setLoadingPayment(false);
+        return;
+      } else if (activeGateway === "efi") {
         // Para Efí, abrir o diálogo diretamente
         console.log('Using Efí Pay gateway...');
         setSelectedPackage({ amount, price });
         setCheckoutOpen(true);
         setLoadingPayment(false);
+        return;
       } else {
         // Para Stripe, criar payment intent
         const { data: { session } } = await supabase.auth.getSession();

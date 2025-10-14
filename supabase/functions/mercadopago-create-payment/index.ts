@@ -106,11 +106,14 @@ serve(async (req) => {
 
     logStep("Criando pagamento", { paymentData });
 
+    const idempotencyKey = `pix-${user.id}-${Date.now()}-${crypto.randomUUID?.() || Math.random().toString(36).slice(2)}`;
+
     const response = await fetch("https://api.mercadopago.com/v1/payments", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${accessToken}`,
         "Content-Type": "application/json",
+        "X-Idempotency-Key": idempotencyKey,
       },
       body: JSON.stringify(paymentData),
     });

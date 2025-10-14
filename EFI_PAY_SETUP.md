@@ -40,29 +40,80 @@ Acesse o painel administrativo em `/admin/payment-gateway` e configure:
 ### Configurações Cartão de Crédito
 1. **Desconto Cartão**: Configure um desconto opcional para pagamentos via cartão (%)
 
-## 🔗 Passo 3: Configurar Webhooks no Efí Pay
+## 🔗 Passo 3: Configurar Webhooks
 
-Para receber notificações de pagamentos, você precisa configurar o webhook no painel do Efí Pay:
+### Webhook de Cobranças (Cartão) - Automático ✅
 
-### URL do Webhook PIX
-```
-https://bvjulkcmzfzyfwobwlnx.supabase.co/functions/v1/efi-webhook
+1. No painel admin em `/admin/payment-gateway`, clique em **"Registrar Webhooks via API"**
+2. O sistema registrará automaticamente o webhook de Cobranças (cartão de crédito)
+3. Você verá uma mensagem de sucesso quando o registro for concluído
+
+### Webhook PIX - Registro Manual Necessário ⚠️
+
+**IMPORTANTE**: O registro do webhook PIX requer um certificado client-side (.p12) e não pode ser feito automaticamente pelo backend. Você deve registrá-lo manualmente usando uma ferramenta local como Postman, cURL ou Insomnia.
+
+#### Método 1: Usando Postman (Recomendado)
+
+1. **Configure o certificado no Postman**:
+   - Vá em Settings > Certificates
+   - Clique em "Add Certificate"
+   - Host: `pix.api.efipay.com.br`
+   - PFX File: Selecione seu arquivo `.p12` baixado do Efí
+   - Clique em "Add"
+
+2. **Obtenha o Access Token**:
+   ```
+   POST https://pix.api.efipay.com.br/oauth/token
+   Authorization: Basic [base64(CLIENT_ID:CLIENT_SECRET)]
+   Content-Type: application/json
+   Body: {"grant_type": "client_credentials"}
+   ```
+
+3. **Registre o Webhook PIX**:
+   ```
+   PUT https://pix.api.efipay.com.br/v2/webhook/[SUA_CHAVE_PIX]
+   Authorization: Bearer [ACCESS_TOKEN_DO_PASSO_2]
+   Content-Type: application/json
+   x-skip-mtls-checking: false
+   
+   Body:
+   {
+     "webhookUrl": "https://bvjulkcmzfzyfwobwlnx.supabase.co/functions/v1/efi-webhook"
+   }
+   ```
+
+   **Substitua** `[SUA_CHAVE_PIX]` pela chave PIX configurada no painel admin.
+
+#### Método 2: Usando cURL (Linux/Mac)
+
+```bash
+# 1. Obter Access Token
+curl -X POST https://pix.api.efipay.com.br/oauth/token \
+  --cert certificado.p12 \
+  -u "CLIENT_ID:CLIENT_SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{"grant_type":"client_credentials"}'
+
+# 2. Registrar Webhook (substitua ACCESS_TOKEN e SUA_CHAVE_PIX)
+curl -X PUT https://pix.api.efipay.com.br/v2/webhook/SUA_CHAVE_PIX \
+  --cert certificado.p12 \
+  -H "Authorization: Bearer ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -H "x-skip-mtls-checking: false" \
+  -d '{"webhookUrl":"https://bvjulkcmzfzyfwobwlnx.supabase.co/functions/v1/efi-webhook"}'
 ```
 
-### URL do Webhook Cobranças (Cartão)
-```
-https://bvjulkcmzfzyfwobwlnx.supabase.co/functions/v1/efi-webhook
-```
+### URLs dos Webhooks
+
+- **Webhook Cobranças**: `https://bvjulkcmzfzyfwobwlnx.supabase.co/functions/v1/efi-webhook`
+- **Webhook PIX**: `https://bvjulkcmzfzyfwobwlnx.supabase.co/functions/v1/efi-webhook`
 
 ### Configuração mTLS (PIX)
 
-Para configurar o mTLS no seu servidor (requerido pelo Banco Central):
+O Banco Central exige validação mTLS para webhooks PIX. O certificado público da Efí já foi configurado no painel admin. Para referência:
 
-1. Baixe o certificado público do Efí Pay:
-   - **Produção**: https://certificados.efipay.com.br/webhooks/certificate-chain-prod.crt
-   - **Sandbox**: https://certificados.efipay.com.br/webhooks/certificate-chain-homolog.crt
-
-2. Configure seu servidor para aceitar conexões com este certificado
+- **Produção**: https://certificados.efipay.com.br/webhooks/certificate-chain-prod.crt
+- **Sandbox**: https://certificados.efipay.com.br/webhooks/certificate-chain-homolog.crt
 
 ## 📡 Endpoints Disponíveis
 
@@ -136,9 +187,10 @@ Para dúvidas ou problemas:
 
 - [ ] Credenciais EFI_CLIENT_ID e EFI_CLIENT_SECRET adicionadas
 - [ ] Chave PIX inserida no painel admin
-- [ ] Certificado .p12 enviado
-- [ ] Webhook configurado no painel Efí Pay
-- [ ] mTLS configurado (se aplicável)
+- [ ] Certificado PIX (.p12) enviado
+- [ ] Certificado mTLS público (.crt) enviado
 - [ ] Gateway Efí Pay ativado no painel admin
+- [ ] Webhook de Cobranças registrado via botão no painel admin ✅
+- [ ] Webhook PIX registrado manualmente via Postman/cURL ⚠️
 - [ ] Testes realizados com PIX
 - [ ] Testes realizados com Cartão

@@ -57,8 +57,9 @@ serve(async (req) => {
       throw new Error("Credenciais Efí não configuradas");
     }
 
-    // Autenticar com Efí (OAuth sempre usa a URL base)
-    const authUrl = "https://api.sejaefi.com.br/oauth/token";
+    // Autenticar com Efí (API PIX - requer certificado mTLS)
+    // NOTA: Em ambiente Supabase Edge, pode falhar sem certificado client-side
+    const authUrl = "https://pix.api.efipay.com.br/oauth/token";
     const authResponse = await fetch(authUrl, {
       method: "POST",
       headers: {
@@ -87,9 +88,9 @@ serve(async (req) => {
     // Calcular expiracao
     const expirationSeconds = (config.efi_pix_expiration_hours || 24) * 3600;
 
-    // Criar cobrança PIX (API PIX usa subdomínio específico)
+    // Criar cobrança PIX (API PIX)
     const txid = crypto.randomUUID().replace(/-/g, '');
-    const pixUrl = `https://api-pix.sejaefi.com.br/v2/cob/${txid}`;
+    const pixUrl = `https://pix.api.efipay.com.br/v2/cob/${txid}`;
     
     const pixPayload = {
       calendario: {
@@ -126,8 +127,8 @@ serve(async (req) => {
     const pixData = await pixResponse.json();
     logStep("Cobrança PIX criada", { txid, location: pixData.location });
 
-    // Gerar QR Code (API PIX usa subdomínio específico)
-    const qrCodeUrl = `https://api-pix.sejaefi.com.br/v2/loc/${pixData.loc}/qrcode`;
+    // Gerar QR Code (API PIX)
+    const qrCodeUrl = `https://pix.api.efipay.com.br/v2/loc/${pixData.loc}/qrcode`;
     const qrCodeResponse = await fetch(qrCodeUrl, {
       method: "GET",
       headers: {

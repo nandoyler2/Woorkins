@@ -57,8 +57,8 @@ serve(async (req) => {
       throw new Error("Credenciais Efí não configuradas");
     }
 
-    // Autenticar com Efí
-    const authUrl = "https://api.sejaefi.com.br/oauth/token";
+    // Autenticar com Efí (API de Cobranças)
+    const authUrl = "https://cobrancas.api.efipay.com.br/v1/authorize";
     const authResponse = await fetch(authUrl, {
       method: "POST",
       headers: {
@@ -84,8 +84,8 @@ serve(async (req) => {
     const discount = config.efi_card_discount_percent || 0;
     const finalAmount = discount > 0 ? amount * (1 - discount / 100) : amount;
 
-    // Criar cobrança com cartão
-    const chargeUrl = "https://api.sejaefi.com.br/v1/charge";
+    // Criar cobrança com cartão (API de Cobranças)
+    const chargeUrl = "https://cobrancas.api.efipay.com.br/v1/charge";
     
     const chargePayload = {
       items: [

@@ -55,7 +55,7 @@ export function WoorkoinsCheckout({
   if (loading) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="w-[95vw] max-w-5xl">
           <DialogHeader>
             <DialogTitle>Carregando checkout</DialogTitle>
           </DialogHeader>
@@ -85,7 +85,7 @@ export function WoorkoinsCheckout({
   if (activeGateway === "mercadopago") {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="w-[95vw] max-w-5xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <img src={woorkoinsIcon} alt="Woorkoins" className="h-6 w-auto object-contain" />

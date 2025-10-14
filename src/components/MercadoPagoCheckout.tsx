@@ -274,7 +274,7 @@ export default function MercadoPagoCheckout({
             </TabsList>
 
             <TabsContent value="pix" className="space-y-4">
-              <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="name">Nome Completo</Label>
                   <Input
@@ -296,7 +296,7 @@ export default function MercadoPagoCheckout({
                   />
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-2 md:col-span-2">
                   <Label htmlFor="document">CPF/CNPJ</Label>
                   <Input
                     id="document"
@@ -306,7 +306,7 @@ export default function MercadoPagoCheckout({
                   />
                 </div>
 
-                <div className="flex gap-2">
+                <div className="flex gap-2 md:col-span-2">
                   <Button
                     onClick={handlePixPayment}
                     disabled={

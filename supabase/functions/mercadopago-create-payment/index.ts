@@ -242,6 +242,7 @@ serve(async (req) => {
         JSON.stringify({
           payment_id: paymentResponse.id,
           status: paymentResponse.status,
+          status_detail: paymentResponse.status_detail,
           amount: finalAmount,
           original_amount: amount,
           discount_applied: discount,

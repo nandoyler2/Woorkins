@@ -261,12 +261,45 @@ setLoadingMessage('Processando pagamento via cartão...');
         throw new Error(data.error);
       }
 
-      toast({
-        title: "Pagamento processado!",
-        description: "Seu pagamento foi aprovado com sucesso",
-      });
-      
-      onSuccess();
+      // Verificar status do pagamento
+      if (data?.status === 'approved') {
+        toast({
+          title: "Pagamento aprovado!",
+          description: "Seu pagamento foi aprovado com sucesso",
+        });
+        onSuccess();
+      } else if (data?.status === 'rejected') {
+        // Mapear mensagens de erro baseadas no status_detail
+        const errorMessages: Record<string, string> = {
+          'cc_rejected_insufficient_amount': 'Cartão sem saldo suficiente',
+          'cc_rejected_bad_filled_security_code': 'Código de segurança inválido',
+          'cc_rejected_bad_filled_date': 'Data de validade inválida',
+          'cc_rejected_bad_filled_other': 'Verifique os dados do cartão',
+          'cc_rejected_high_risk': 'Pagamento recusado por questões de segurança',
+          'cc_rejected_call_for_authorize': 'Entre em contato com seu banco',
+          'cc_rejected_card_disabled': 'Cartão desabilitado',
+          'cc_rejected_duplicated_payment': 'Pagamento duplicado',
+          'cc_rejected_blacklist': 'Cartão não autorizado',
+          'cc_rejected_other_reason': 'Pagamento recusado pelo banco',
+        };
+
+        const errorMessage = data?.status_detail 
+          ? errorMessages[data.status_detail] || 'Pagamento recusado'
+          : 'Pagamento recusado';
+
+        toast({
+          title: "Pagamento recusado",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      } else {
+        // Para outros status (pending, in_process, etc)
+        toast({
+          title: "Pagamento em processamento",
+          description: "Seu pagamento está sendo processado. Você será notificado quando for aprovado.",
+        });
+        onSuccess(); // Ainda fecha o modal mas não mostra sucesso
+      }
     } catch (error: any) {
       console.error("Erro ao processar cartão:", error);
       toast({

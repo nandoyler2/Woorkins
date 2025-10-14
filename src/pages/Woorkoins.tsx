@@ -10,7 +10,7 @@ import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import woorkoinsIcon from '@/assets/woorkoins-icon-latest.png';
-import { WoorkoinsStripeCheckout } from '@/components/WoorkoinsStripeCheckout';
+import { WoorkoinsCheckout } from '@/components/WoorkoinsCheckout';
 
 interface WoorkoinProduct {
   id: string;
@@ -175,32 +175,49 @@ export default function Woorkoins() {
     setLoading(true);
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        throw new Error('No active session');
-      }
+      // Verificar qual gateway está ativo
+      const { data: gatewayConfig } = await supabase
+        .from("payment_gateway_config")
+        .select("active_gateway")
+        .single();
 
-      console.log('Calling buy-woorkoins function...');
-      const response = await supabase.functions.invoke('buy-woorkoins', {
-        body: { amount, price },
-      });
+      const activeGateway = gatewayConfig?.active_gateway || "stripe";
 
-      console.log('Function response:', response);
-
-      if (response.error) {
-        console.error('Function error:', response.error);
-        throw response.error;
-      }
-
-      if (response.data?.clientSecret) {
-        console.log('Opening checkout with clientSecret...');
-        setClientSecret(response.data.clientSecret);
+      if (activeGateway === "efi") {
+        // Para Efí, abrir o diálogo diretamente
+        console.log('Using Efí Pay gateway...');
         setSelectedPackage({ amount, price });
         setCheckoutOpen(true);
         setLoadingPayment(false);
       } else {
-        throw new Error('No client secret received');
+        // Para Stripe, criar payment intent
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session) {
+          throw new Error('No active session');
+        }
+
+        console.log('Calling buy-woorkoins function...');
+        const response = await supabase.functions.invoke('buy-woorkoins', {
+          body: { amount, price },
+        });
+
+        console.log('Function response:', response);
+
+        if (response.error) {
+          console.error('Function error:', response.error);
+          throw response.error;
+        }
+
+        if (response.data?.clientSecret) {
+          console.log('Opening checkout with clientSecret...');
+          setClientSecret(response.data.clientSecret);
+          setSelectedPackage({ amount, price });
+          setCheckoutOpen(true);
+          setLoadingPayment(false);
+        } else {
+          throw new Error('No client secret received');
+        }
       }
     } catch (error: any) {
       console.error('Error initiating purchase:', error);
@@ -431,7 +448,7 @@ export default function Woorkoins() {
       </div>
 
       {clientSecret && selectedPackage && (
-        <WoorkoinsStripeCheckout
+        <WoorkoinsCheckout
           open={checkoutOpen}
           onOpenChange={(open) => {
             setCheckoutOpen(open);
@@ -439,6 +456,8 @@ export default function Woorkoins() {
               // Resetar loading quando fechar
               setLoading(false);
               setLoadingPayment(false);
+              setClientSecret('');
+              setSelectedPackage(null);
             }
           }}
           clientSecret={clientSecret}

@@ -37,7 +37,13 @@ serve(async (req) => {
     logStep("Usuário autenticado", { userId: user.id });
 
     const { paymentMethod, amount, description, customer, woorkoins_amount, woorkoins_price, token, card } = await req.json();
-    logStep("Dados recebidos", { paymentMethod, amount, hasToken: !!token });
+    logStep("Dados recebidos", { 
+      paymentMethod, 
+      amount, 
+      hasToken: !!token,
+      hasCard: !!card,
+      customer: customer ? { name: customer.name, email: customer.email, hasDocument: !!customer.document } : null
+    });
 
     // Buscar configurações do Mercado Pago
     const { data: config, error: configError } = await supabaseClient
@@ -99,12 +105,27 @@ serve(async (req) => {
 
     // Se for cartão, adicionar token e dados do cartão
     if ((paymentMethod === "card" || paymentMethod === "credit_card") && token) {
+      logStep("Processando pagamento com cartão", { hasToken: !!token, hasCard: !!card });
+      
       paymentData.token = token;
+      paymentData.installments = 1; // Padrão 1 parcela
+      paymentData.issuer_id = null; // Mercado Pago detecta automaticamente
+      
       if (card?.cardholder_name) {
-        paymentData.payer.name = card.cardholder_name;
+        // Separar nome do titular
+        const nameParts = card.cardholder_name.trim().split(' ');
+        paymentData.payer.first_name = nameParts[0];
+        paymentData.payer.last_name = nameParts.slice(1).join(' ') || nameParts[0];
       }
+      
       // Remover payment_method_id quando usar token, o Mercado Pago detecta automaticamente
       delete paymentData.payment_method_id;
+      
+      logStep("Dados do cartão preparados", { 
+        hasToken: !!paymentData.token,
+        payerName: `${paymentData.payer.first_name} ${paymentData.payer.last_name}`,
+        installments: paymentData.installments
+      });
     }
 
     logStep("Criando pagamento", { paymentData });
@@ -123,8 +144,12 @@ serve(async (req) => {
 
     if (!response.ok) {
       const errorText = await response.text();
-      logStep("Erro ao criar pagamento", { status: response.status, error: errorText });
-      throw new Error(`Erro ao processar pagamento: ${errorText}`);
+      logStep("Erro ao criar pagamento no Mercado Pago", { 
+        status: response.status, 
+        statusText: response.statusText,
+        error: errorText 
+      });
+      throw new Error(`Erro Mercado Pago (${response.status}): ${errorText}`);
     }
 
     const paymentResponse = await response.json();
@@ -229,12 +254,15 @@ serve(async (req) => {
     }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    logStep("ERRO", { message: errorMessage });
+    logStep("ERRO GERAL", { 
+      message: errorMessage,
+      stack: error instanceof Error ? error.stack : undefined
+    });
     return new Response(
       JSON.stringify({ error: errorMessage }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 500,
+        status: 400,
       }
     );
   }

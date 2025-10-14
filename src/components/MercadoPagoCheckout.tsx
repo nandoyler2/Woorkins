@@ -217,28 +217,43 @@ export default function MercadoPagoCheckout({
   const handleCardPayment = async (formData: any) => {
     if (!validateProfileData()) return;
 
-    console.log('Dados do cartão recebidos:', formData);
+    console.log('Dados do formulário Mercado Pago:', formData);
 
     setLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke("mercadopago-create-payment", {
-        body: {
-          paymentMethod: "credit_card",
-          amount: amount,
-          description: description,
-          token: formData.token,
-          customer: profileData,
-          card: {
-            cardholder_name: formData.payer?.name || profileData.name,
-          },
-          ...(woorkoinsAmount && { woorkoins_amount: woorkoinsAmount }),
-          ...(woorkoinsPrice && { woorkoins_price: woorkoinsPrice }),
+      const paymentBody = {
+        paymentMethod: "credit_card",
+        amount: amount,
+        description: description,
+        token: formData.token,
+        customer: {
+          name: profileData.name,
+          email: profileData.email,
+          document: profileData.document,
         },
+        card: {
+          cardholder_name: formData.payer?.name || profileData.name,
+        },
+        ...(woorkoinsAmount && { woorkoins_amount: woorkoinsAmount }),
+        ...(woorkoinsPrice && { woorkoins_price: woorkoinsPrice }),
+      };
+
+      console.log('Enviando para edge function:', paymentBody);
+
+      const { data, error } = await supabase.functions.invoke("mercadopago-create-payment", {
+        body: paymentBody,
       });
 
       console.log('Resposta da edge function:', { data, error });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro detalhado:', error);
+        throw new Error(error.message || 'Erro ao processar pagamento');
+      }
+
+      if (data?.error) {
+        throw new Error(data.error);
+      }
 
       toast({
         title: "Pagamento processado!",

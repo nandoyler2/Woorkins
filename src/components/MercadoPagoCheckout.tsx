@@ -299,6 +299,7 @@ export default function MercadoPagoCheckout({
                     <path d="M60 10C60 15.5 64.5 20 70 20H80C80 14.5 75.5 10 70 10H60Z" fill="#221E1F"/>
                   </svg>
                   <img src={amexLogo} alt="American Express" className="h-5 object-contain" />
+                  <span className="text-sm font-medium text-muted-foreground">+6</span>
                 </div>
                 <span className="text-lg font-semibold">Pagar com Cartão</span>
               </Button>

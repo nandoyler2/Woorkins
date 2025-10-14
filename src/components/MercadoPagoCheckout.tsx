@@ -335,7 +335,7 @@ export default function MercadoPagoCheckout({
           )
         ) : (
           <div className="space-y-4">
-          <div className="bg-background border rounded-lg p-6">
+            <div className="bg-background border rounded-lg p-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Coluna esquerda - QR Code */}
                 <div className="flex flex-col items-center justify-center space-y-4">

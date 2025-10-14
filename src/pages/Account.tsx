@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Save, User, Mail, Lock, Shield } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { validateCPF } from '@/lib/utils';
 
 export default function Account() {
   const { user } = useAuth();
@@ -64,17 +65,16 @@ export default function Account() {
 
       // If CPF is being set for the first time, validate and add it
       if (profile.cpf && !profile.cpf.match(/\d{3}\.\d{3}\.\d{3}-\d{2}/)) {
-        const cpfDigits = profile.cpf.replace(/\D/g, '');
-        if (cpfDigits.length !== 11) {
+        if (!validateCPF(profile.cpf)) {
           toast({
             title: 'CPF inválido',
-            description: 'O CPF deve ter 11 dígitos',
+            description: 'Por favor, verifique o CPF digitado',
             variant: 'destructive',
           });
           setLoading(false);
           return;
         }
-        updateData.cpf = cpfDigits;
+        updateData.cpf = profile.cpf.replace(/\D/g, '');
       }
 
       // Update profile data

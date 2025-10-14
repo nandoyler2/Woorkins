@@ -54,7 +54,7 @@ serve(async (req) => {
     if (!accessToken) {
       throw new Error("Token de acesso Mercado Pago não configurado");
     }
-
+    logStep("Token Mercado Pago configurado");
     // Buscar profile_id do usuário
     const { data: profile, error: profileError } = await supabaseClient
       .from("profiles")

@@ -141,12 +141,15 @@ serve(async (req) => {
     const chargeId = chargeData.data.charge_id;
     const payUrl = `https://cobrancas.api.efipay.com.br/v1/charge/${chargeId}/pay`;
 
+    const rawName = (customer?.name || '').toString().trim().replace(/\s+/g, ' ');
+    const sanitizedName = rawName.split(' ').length >= 2 ? rawName : (rawName ? `${rawName} Cliente` : 'Cliente Woorkoins');
     const docDigits = customer?.document ? String(customer.document).replace(/\D/g, "") : "";
     const customerPayload = customer ? {
-      name: customer.name,
-      email: customer.email,
+      name: sanitizedName,
+      email: (customer.email || '').toString().trim().toLowerCase(),
       ...(docDigits.length === 11 ? { cpf: docDigits } : {}),
       ...(docDigits.length === 14 ? { cnpj: docDigits } : {}),
+      ...(customer.phone ? { phone_number: String(customer.phone).replace(/\D/g, '') } : {}),
     } : undefined;
 
     const payBody = {

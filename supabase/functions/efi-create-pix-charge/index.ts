@@ -131,7 +131,7 @@ serve(async (req) => {
     if (!chargeResponse.ok) {
       const errorText = await chargeResponse.text();
       logStep("Erro ao criar cobrança", { status: chargeResponse.status, error: errorText });
-      throw new Error("Falha ao criar cobrança");
+      throw new Error(`Falha ao criar cobrança: ${errorText}`);
     }
 
     const chargeData = await chargeResponse.json();
@@ -175,7 +175,7 @@ serve(async (req) => {
     if (!payResponse.ok) {
       const errorText = await payResponse.text();
       logStep("Erro ao gerar PIX", { status: payResponse.status, error: errorText });
-      throw new Error("Falha ao gerar QR Code PIX");
+      throw new Error(`Falha ao gerar QR Code PIX: ${errorText}`);
     }
 
     const payData = await payResponse.json();

@@ -243,14 +243,8 @@ export default function MercadoPagoCheckout({
   };
 
   return (
-    <Card className="max-w-6xl mx-auto w-full">
-      <CardHeader>
-        <CardTitle>Pagamento via Mercado Pago</CardTitle>
-        <CardDescription>
-          Total: R$ {amount.toFixed(2)}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
+    <Card className="max-w-4xl mx-auto w-full">
+      <CardContent className="pt-6">
         {!paymentMethod ? (
           <div className="space-y-4">
             <p className="text-center text-muted-foreground mb-6">
@@ -314,20 +308,30 @@ export default function MercadoPagoCheckout({
           ) : (
             <div className="space-y-4">
               <CardPayment
-                initialization={{ amount: amount }}
+                initialization={{ 
+                  amount: amount,
+                  payer: {
+                    email: profileData?.email,
+                  }
+                }}
                 onSubmit={handleCardPayment}
                 customization={{
                   visual: {
                     style: {
                       theme: 'default',
                     },
+                    hideFormTitle: true,
+                  },
+                  paymentMethods: {
+                    maxInstallments: 12,
                   },
                 }}
+                locale="pt-BR"
               />
               <Button 
                 variant="outline" 
                 onClick={() => setPaymentMethod(null)} 
-                className="w-full"
+                className="w-full mt-4"
               >
                 Voltar
               </Button>

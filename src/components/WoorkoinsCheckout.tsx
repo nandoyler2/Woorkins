@@ -61,7 +61,7 @@ export function WoorkoinsCheckout({
           event: 'UPDATE',
           schema: 'public',
           table: 'woorkoins_efi_payments',
-          filter: `charge_id=eq.${pixData.txid}`,
+          filter: `charge_id=eq.${pixData.charge_id}`,
         },
         (payload: any) => {
           console.log('Mudança detectada no pagamento:', payload);

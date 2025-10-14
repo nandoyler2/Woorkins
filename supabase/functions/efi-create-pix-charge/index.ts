@@ -68,9 +68,8 @@ serve(async (req) => {
       throw new Error("Credenciais Efí não configuradas");
     }
 
-    // Autenticar com Efí (API PIX - requer certificado mTLS)
-    // NOTA: Em ambiente Supabase Edge, pode falhar sem certificado client-side
-    const authUrl = "https://pix.api.efipay.com.br/oauth/token";
+    // Autenticar com Efí (API Cobranças - não requer mTLS)
+    const authUrl = "https://cobrancas.api.efipay.com.br/v1/authorize";
     const authResponse = await fetch(authUrl, {
       method: "POST",
       headers: {
@@ -99,60 +98,77 @@ serve(async (req) => {
     // Calcular expiracao
     const expirationSeconds = (config.efi_pix_expiration_hours || 24) * 3600;
 
-    // Criar cobrança PIX (API PIX)
-    const txid = crypto.randomUUID().replace(/-/g, '');
-    const pixUrl = `https://pix.api.efipay.com.br/v2/cob/${txid}`;
+    // Criar cobrança via API Cobranças
+    const chargeUrl = "https://cobrancas.api.efipay.com.br/v1/charge";
     
-    const pixPayload = {
-      calendario: {
-        expiracao: expirationSeconds,
-      },
-      devedor: {
-        nome: customer.name,
-        cpf: customer.document?.replace(/\D/g, ''),
-      },
-      valor: {
-        original: finalAmount.toFixed(2),
-      },
-      chave: config.efi_pix_key,
-      solicitacaoPagador: description,
+    const items = [{
+      name: description || `Compra de ${woorkoins_amount} Woorkoins`,
+      value: Math.round(finalAmount * 100), // valor em centavos
+      amount: 1,
+    }];
+
+    const metadata = {
+      notification_url: `${Deno.env.get("SUPABASE_URL")}/functions/v1/efi-webhook`,
+      custom_id: crypto.randomUUID(),
     };
 
-    logStep("Criando cobrança PIX", { txid, payload: pixPayload });
+    const chargePayload = {
+      items,
+      metadata,
+      payment: {
+        banking_billet: {
+          expire_at: new Date(Date.now() + expirationSeconds * 1000).toISOString().split('T')[0],
+          customer: {
+            name: customer.name,
+            cpf: customer.document?.replace(/\D/g, ''),
+            email: customer.email,
+          },
+        },
+      },
+    };
 
-    const pixResponse = await fetch(pixUrl, {
-      method: "PUT",
+    logStep("Criando cobrança", { payload: chargePayload });
+
+    const chargeResponse = await fetch(chargeUrl, {
+      method: "POST",
       headers: {
         "Authorization": `Bearer ${accessToken}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(pixPayload),
+      body: JSON.stringify(chargePayload),
+    });
+
+    if (!chargeResponse.ok) {
+      const errorText = await chargeResponse.text();
+      logStep("Erro ao criar cobrança", { status: chargeResponse.status, error: errorText });
+      throw new Error("Falha ao criar cobrança");
+    }
+
+    const chargeData = await chargeResponse.json();
+    logStep("Cobrança criada", { charge_id: chargeData.data.charge_id });
+
+    // Gerar QR Code PIX
+    const chargeId = chargeData.data.charge_id;
+    const pixUrl = `https://cobrancas.api.efipay.com.br/v1/charge/${chargeId}/billet`;
+    
+    const pixResponse = await fetch(pixUrl, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        type: "pix",
+      }),
     });
 
     if (!pixResponse.ok) {
       const errorText = await pixResponse.text();
-      logStep("Erro ao criar cobrança PIX", { status: pixResponse.status, error: errorText });
-      throw new Error("Falha ao criar cobrança PIX");
+      logStep("Erro ao gerar PIX", { status: pixResponse.status, error: errorText });
+      throw new Error("Falha ao gerar QR Code PIX");
     }
 
     const pixData = await pixResponse.json();
-    logStep("Cobrança PIX criada", { txid, location: pixData.location });
-
-    // Gerar QR Code (API PIX)
-    const qrCodeUrl = `https://pix.api.efipay.com.br/v2/loc/${pixData.loc}/qrcode`;
-    const qrCodeResponse = await fetch(qrCodeUrl, {
-      method: "GET",
-      headers: {
-        "Authorization": `Bearer ${accessToken}`,
-      },
-    });
-
-    if (!qrCodeResponse.ok) {
-      logStep("Erro ao gerar QR Code", { status: qrCodeResponse.status });
-      throw new Error("Falha ao gerar QR Code");
-    }
-
-    const qrCodeData = await qrCodeResponse.json();
     logStep("QR Code gerado");
 
     // Se for compra de Woorkoins, salvar na tabela de pagamentos
@@ -161,30 +177,30 @@ serve(async (req) => {
         .from("woorkoins_efi_payments")
         .insert({
           profile_id: profileData.id,
-          charge_id: txid,
+          charge_id: String(chargeId),
           payment_method: 'pix',
           amount: woorkoins_amount,
           price: woorkoins_price,
           status: 'pending',
-          efi_charge_data: { ...pixData, qrCodeData },
+          efi_charge_data: { ...chargeData, pixData },
         });
 
       if (insertError) {
         logStep("ERRO ao salvar pagamento Woorkoins", insertError);
         throw new Error("Falha ao registrar pagamento de Woorkoins");
       }
-      logStep("Pagamento Woorkoins registrado", { txid, profile_id: profileData.id });
+      logStep("Pagamento Woorkoins registrado", { charge_id: chargeId, profile_id: profileData.id });
     }
 
     return new Response(
       JSON.stringify({
-        txid,
-        qrcode: qrCodeData.qrcode,
-        qrcode_image: qrCodeData.imagemQrcode,
+        charge_id: chargeId,
+        qrcode: pixData.data.pix.qrcode,
+        qrcode_image: pixData.data.pix.qrcode_image,
         amount: finalAmount,
         original_amount: amount,
         discount_applied: discount,
-        expires_at: new Date(Date.now() + expirationSeconds * 1000).toISOString(),
+        expires_at: chargeData.data.expire_at,
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },

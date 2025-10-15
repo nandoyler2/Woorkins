@@ -248,7 +248,7 @@ export type Database = {
           extracted_name: string | null
           id: string
           profile_id: string
-          selfie_url: string
+          selfie_url: string | null
           updated_at: string | null
           verification_result: Json | null
           verification_status: string
@@ -264,7 +264,7 @@ export type Database = {
           extracted_name?: string | null
           id?: string
           profile_id: string
-          selfie_url: string
+          selfie_url?: string | null
           updated_at?: string | null
           verification_result?: Json | null
           verification_status?: string
@@ -280,7 +280,7 @@ export type Database = {
           extracted_name?: string | null
           id?: string
           profile_id?: string
-          selfie_url?: string
+          selfie_url?: string | null
           updated_at?: string | null
           verification_result?: Json | null
           verification_status?: string

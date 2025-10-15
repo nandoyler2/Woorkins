@@ -13,22 +13,38 @@ serve(async (req) => {
 
   try {
     const { 
-      documentFrontBase64, 
-      documentBackBase64, 
-      selfieBase64,
+      frontImageUrl, 
+      backImageUrl, 
       profileId,
       registeredName,
-      registeredCPF,
-      currentProfilePhotoUrl
+      registeredCPF
     } = await req.json();
+
+    if (!frontImageUrl || !backImageUrl) {
+      throw new Error('frontImageUrl e backImageUrl são obrigatórios');
+    }
 
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) {
       throw new Error('LOVABLE_API_KEY not configured');
     }
 
+    // Buscar as imagens e converter para base64
+    const [frontResponse, backResponse] = await Promise.all([
+      fetch(frontImageUrl),
+      fetch(backImageUrl)
+    ]);
+
+    const [frontBlob, backBlob] = await Promise.all([
+      frontResponse.blob(),
+      backResponse.blob()
+    ]);
+
+    const frontBase64 = await blobToBase64(frontBlob);
+    const backBase64 = await blobToBase64(backBlob);
+
     // Análise inteligente do documento (frente)
-    console.log('Analyzing front document with lenient approach...');
+    console.log('Analyzing front document...');
     const frontAnalysis = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -43,45 +59,25 @@ serve(async (req) => {
             content: [
               {
                 type: 'text',
-                text: `ANÁLISE SUPER LENIENTE DE DOCUMENTO BRASILEIRO - FRENTE
+                text: `ANÁLISE DETALHADA DE DOCUMENTO BRASILEIRO - FRENTE
 
-REGRA DE OURO: SEJA EXTREMAMENTE LENIENTE E PRÁTICO!
-
-IMPORTANTE:
-- SE você consegue LER as informações, marque como "clear" 
-- SÓ marque "illegible" se for REALMENTE impossível ver
-- Brilho, sombra, documento antigo - TUDO OK se dá pra ler
-- Documentos podem ter 30+ ANOS - isso é NORMAL
-- Desgaste, desbotamento leve - ACEITÁVEL
+Analise este documento de identidade brasileiro (RG ou CNH) e extraia TODAS as informações visíveis.
 
 INSTRUÇÕES DE LEITURA:
 1. Identifique: RG ou CNH
-2. EXTRAIA OS DADOS (faça força, mesmo com brilho/sombra):
+2. EXTRAIA OS DADOS com precisão:
    - Nome completo
    - CPF (11 dígitos, apenas números)
    - Data de nascimento (DD/MM/AAAA)
    - Número do documento
+   - RG (se houver)
+   - Órgão emissor e UF
 
-CRITÉRIOS DE LEGIBILIDADE (seja generoso):
-Para cada campo, marque como:
-- "clear": consegue ler (MESMO com algum brilho/sombra)
-- "partially_visible": dificulta mas consegue ver a maioria
-- "illegible": IMPOSSÍVEL de ver (quase nunca use isso)
-
-EXEMPLOS DE "clear":
-- Texto com leve brilho mas números/letras visíveis
-- Documento velho mas informação legível
-- Sombra parcial mas dados visíveis
-
-EXEMPLOS DE "illegible":
-- Completamente apagado/cortado
-- Área totalmente coberta
-- Texto totalmente borrado (muito raro)
-
-VALIDAÇÃO:
-- isReadable: true se QUALQUER campo crítico estiver visível
-- isPhysicalDocument: false apenas se for CLARAMENTE screenshot
-- hasClearFraud: true apenas se ver edição ÓBVIA
+3. AVALIE A QUALIDADE:
+   - Legibilidade geral
+   - Presença de brilho ou sombras
+   - Idade aparente do documento
+   - Se é documento físico ou screenshot
 
 RESPONDA EM JSON:
 {
@@ -90,30 +86,26 @@ RESPONDA EM JSON:
     "fullName": "NOME COMPLETO EXTRAÍDO",
     "cpf": "12345678901",
     "birthDate": "28/03/1996",
-    "documentNumber": "número"
+    "documentNumber": "número do doc",
+    "rg": "RG se houver",
+    "issuer": "SSP-XX"
   },
-  "quality": "excellent" | "good" | "acceptable",
-  "readability": {
-    "name": "clear",
-    "cpf": "clear",
-    "birthDate": "clear",
-    "photo": "clear"
+  "quality": {
+    "isReadable": true/false,
+    "hasGlare": true/false,
+    "hasShadows": true/false,
+    "isOldDocument": true/false
   },
   "validation": {
-    "isReadable": true,
-    "reason": "",
-    "isPhysicalDocument": true
-  },
-  "authenticity": {
-    "isAuthentic": true,
-    "hasClearFraud": false,
-    "details": "Documento parece autêntico"
+    "isPhysicalDocument": true/false,
+    "hasAlteration": false,
+    "details": "explicação"
   }
 }`
               },
               {
                 type: 'image_url',
-                image_url: { url: documentFrontBase64 }
+                image_url: { url: frontBase64 }
               }
             ]
           }
@@ -146,7 +138,12 @@ RESPONDA EM JSON:
             content: [
               {
                 type: 'text',
-                text: `ANÁLISE DO VERSO - Seja leniente, apenas verifique se é legível e parece autêntico.
+                text: `ANÁLISE DO VERSO DO DOCUMENTO
+
+Analise o verso do documento e verifique:
+1. Se está legível
+2. Se parece autêntico
+3. Se há informações adicionais relevantes
 
 RESPONDA EM JSON:
 {
@@ -157,12 +154,13 @@ RESPONDA EM JSON:
   "authenticity": {
     "isAuthentic": true/false,
     "details": "explicação"
-  }
+  },
+  "additionalInfo": "qualquer informação extra relevante"
 }`
               },
               {
                 type: 'image_url',
-                image_url: { url: documentBackBase64 }
+                image_url: { url: backBase64 }
               }
             ]
           }
@@ -179,151 +177,7 @@ RESPONDA EM JSON:
     const backResult = await backAnalysis.json();
     const backData = JSON.parse(backResult.choices[0].message.content);
 
-    // Comparação facial INTELIGENTE
-    console.log('Comparing faces with age-aware analysis...');
-    const faceComparison = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          {
-            role: 'user',
-            content: [
-              {
-                type: 'text',
-                text: `COMPARAÇÃO FACIAL INTELIGENTE
-
-CONTEXTO CRÍTICO:
-- Foto do documento pode ter 5-20 ANOS
-- CRIANÇAS crescem para ADULTOS - isso é NORMAL
-- Peso, cabelo, barba, óculos - MUDAM (ignore isso)
-- Foque APENAS em ESTRUTURA ÓSSEA permanente
-
-CARACTERÍSTICAS PERMANENTES:
-1. Formato do rosto (oval, redondo, quadrado)
-2. Espaçamento entre os olhos
-3. Estrutura do nariz
-4. Estrutura óssea das bochechas/mandíbula
-
-IGNORE:
-- Idade/diferença de idade
-- Cabelo, barba, maquiagem
-- Peso corporal
-- Qualidade das fotos
-
-SÓ rejeite se ESTRUTURA FACIAL for CLARAMENTE diferente (pessoas totalmente diferentes).
-
-IMAGENS:
-1. Documento (pode ser MUITO antiga, até criança)
-2. Selfie atual
-
-RESPONDA EM JSON:
-{
-  "faceMatch": {
-    "isSamePerson": true/false,
-    "confidence": 0-100,
-    "ageContext": "descrição da diferença de idade",
-    "details": "explicação focando em características permanentes"
-  },
-  "selfieQuality": {
-    "isLivePhoto": true/false,
-    "isClear": true/false,
-    "hasSpoofing": true/false
-  }
-}`
-              },
-              {
-                type: 'image_url',
-                image_url: { url: documentFrontBase64 }
-              },
-              {
-                type: 'image_url',
-                image_url: { url: selfieBase64 }
-              }
-            ]
-          }
-        ],
-        temperature: 0.1,
-        response_format: { type: "json_object" }
-      })
-    });
-
-    if (!faceComparison.ok) {
-      throw new Error(`Face comparison failed: ${faceComparison.status}`);
-    }
-
-    const faceResult = await faceComparison.json();
-    const faceData = JSON.parse(faceResult.choices[0].message.content);
-
-    // Validação de foto de perfil (se fornecida)
-    let profilePhotoValidation: any = null;
-    
-    if (currentProfilePhotoUrl) {
-      console.log('Validating profile photo...');
-      const profilePhotoComparison = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'google/gemini-2.5-flash',
-          messages: [
-            {
-              role: 'user',
-              content: [
-                {
-                  type: 'text',
-                  text: `VALIDAÇÃO DE FOTO DE PERFIL
-
-Compare foto de perfil com selfie verificada.
-
-VERIFICAR:
-1. É a mesma pessoa? (confiança 0-100%)
-2. Foto de perfil é real ou fake?
-   - Celebridade/modelo?
-   - Gerada por IA?
-   - Muito editada?
-
-RESPONDA EM JSON:
-{
-  "faceMatch": {
-    "confidence": 0-100
-  },
-  "authenticity": {
-    "isRealPhoto": true/false,
-    "isCelebrityOrModel": true/false,
-    "isAIGenerated": true/false
-  }
-}`
-                },
-                {
-                  type: 'image_url',
-                  image_url: { url: currentProfilePhotoUrl }
-                },
-                {
-                  type: 'image_url',
-                  image_url: { url: selfieBase64 }
-                }
-              ]
-            }
-          ],
-          temperature: 0.2,
-          response_format: { type: "json_object" }
-        })
-      });
-
-      if (profilePhotoComparison.ok) {
-        const profilePhotoResult = await profilePhotoComparison.json();
-        profilePhotoValidation = JSON.parse(profilePhotoResult.choices[0].message.content);
-      }
-    }
-
-    // Validação final inteligente
+    // Validação final
     const extractedName = frontData.extractedData?.fullName || '';
     const extractedCPF = frontData.extractedData?.cpf || '';
     const extractedBirthDate = frontData.extractedData?.birthDate || '';
@@ -340,58 +194,46 @@ RESPONDA EM JSON:
     let verificationStatus = 'rejected';
     let rejectionReasons = [];
 
-    // Validações ULTRA LENIENTES - só rejeite se REALMENTE necessário
-    // SÓ rejeite por legibilidade se campos críticos NÃO foram extraídos
+    // Validações
     if (!extractedName || extractedName.length < 3) {
-      rejectionReasons.push('Nome não foi extraído. Melhore a iluminação na área do nome.');
+      rejectionReasons.push('Nome não foi extraído. Envie uma imagem mais nítida.');
     }
     if (!normalizedExtractedCPF || normalizedExtractedCPF.length !== 11) {
-      rejectionReasons.push('CPF não foi identificado. Tire foto mais nítida da área do CPF.');
+      rejectionReasons.push('CPF não foi identificado. Verifique a qualidade da imagem.');
     }
     if (!extractedBirthDate || !extractedBirthDate.match(/\d{2}\/\d{2}\/\d{4}/)) {
-      rejectionReasons.push('Data de nascimento não foi identificada. Foque melhor essa área.');
+      rejectionReasons.push('Data de nascimento não foi identificada.');
+    }
+    
+    if (frontData.quality?.isReadable === false) {
+      rejectionReasons.push('Documento ilegível. Tire foto com melhor iluminação.');
     }
     
     if (frontData.validation?.isPhysicalDocument === false) {
-      rejectionReasons.push('Use o documento físico original, não screenshot ou foto de tela.');
+      rejectionReasons.push('Use o documento físico original, não screenshot.');
     }
     
-    if (frontData.authenticity?.hasClearFraud) {
-      rejectionReasons.push('Documento parece fraudulento. Use seu documento original.');
+    if (frontData.validation?.hasAlteration) {
+      rejectionReasons.push('Documento parece ter sido alterado.');
     }
     
     if (backData.validation?.isReadable === false) {
-      rejectionReasons.push('Verso do documento ilegível. Tire nova foto com melhor luz.');
+      rejectionReasons.push('Verso do documento ilegível.');
     }
     
-    // Comparação facial - MUITO leniente com idade
-    if (!faceData.faceMatch?.isSamePerson && faceData.faceMatch?.confidence < 50) {
-      rejectionReasons.push('Características faciais não correspondem. Tire selfie clara, bem iluminada, olhando para câmera.');
-    }
-    
-    if (faceData.selfieQuality?.hasSpoofing) {
-      rejectionReasons.push('Selfie parece não ser ao vivo. Tire uma selfie real olhando para a câmera.');
+    if (backData.authenticity?.isAuthentic === false) {
+      rejectionReasons.push('Documento não parece autêntico.');
     }
     
     if (!cpfMatches && normalizedExtractedCPF.length === 11) {
-      rejectionReasons.push('CPF do documento não corresponde. Verifique se é o documento correto.');
+      rejectionReasons.push('CPF do documento não corresponde ao cadastro.');
     }
     
     if (!nameMatches && normalizedExtractedName && normalizedRegisteredName) {
-      rejectionReasons.push(`Nome não corresponde. Verifique se é o documento correto.`);
-    }
-    
-    if (profilePhotoValidation?.faceMatch?.confidence < 60) {
-      rejectionReasons.push('Foto de perfil parece ser de outra pessoa. Use uma foto real sua.');
-    }
-    if (profilePhotoValidation?.authenticity?.isCelebrityOrModel) {
-      rejectionReasons.push('Foto de perfil não é sua (parece celebridade/modelo). Use foto real.');
-    }
-    if (profilePhotoValidation?.authenticity?.isAIGenerated) {
-      rejectionReasons.push('Foto de perfil parece ser gerada por IA. Use foto real.');
+      rejectionReasons.push('Nome do documento não corresponde ao cadastro.');
     }
 
-    // Aprovar se não houver motivos sérios para rejeitar
+    // Aprovar se não houver motivos para rejeitar
     if (rejectionReasons.length === 0) {
       verificationStatus = 'approved';
     }
@@ -403,24 +245,23 @@ RESPONDA EM JSON:
     const result = {
       status: verificationStatus,
       extractedData: {
-        fullName: extractedName,
+        name: extractedName,
         cpf: normalizedExtractedCPF,
         birthDate: extractedBirthDate,
-        documentType: frontData.documentType
+        documentType: frontData.documentType,
+        documentNumber: frontData.extractedData?.documentNumber,
+        rg: frontData.extractedData?.rg,
+        issuer: frontData.extractedData?.issuer
       },
       validation: {
         cpfMatches,
-        nameMatches,
-        nameWasPartial: nameMatches && normalizedExtractedName.length > normalizedRegisteredName.length
+        nameMatches
       },
-      analysis: {
+      aiAnalysis: {
         front: frontData,
-        back: backData,
-        face: faceData,
-        profilePhoto: profilePhotoValidation
+        back: backData
       },
-      rejectionReasons: rejectionReasons.length > 0 ? rejectionReasons : null,
-      requiresProfilePhotoChange: profilePhotoValidation && profilePhotoValidation.faceMatch?.confidence < 60
+      rejectionReasons: rejectionReasons.length > 0 ? rejectionReasons : null
     };
 
     // Se aprovado, atualizar perfil
@@ -430,7 +271,7 @@ RESPONDA EM JSON:
         document_verification_status: 'approved'
       };
 
-      if (result.validation.nameWasPartial && extractedName) {
+      if (extractedName) {
         updates.full_name = extractedName;
       }
 
@@ -439,6 +280,10 @@ RESPONDA EM JSON:
         if (day && month && year) {
           updates.birth_date = `${year}-${month}-${day}`;
         }
+      }
+
+      if (normalizedExtractedCPF) {
+        updates.cpf = normalizedExtractedCPF;
       }
 
       await supabase
@@ -466,3 +311,10 @@ RESPONDA EM JSON:
     );
   }
 });
+
+// Helper function to convert Blob to base64
+async function blobToBase64(blob: Blob): Promise<string> {
+  const arrayBuffer = await blob.arrayBuffer();
+  const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+  return `data:${blob.type};base64,${base64}`;
+}

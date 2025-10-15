@@ -158,41 +158,83 @@ export function UnifiedChat({
   const finalBlockReason = systemMessagingBlock?.reason || blockReason;
 
   useEffect(() => {
-    // Sempre rolar para o final ao carregar mensagens ou trocar de conversa
-    const scrollToBottom = (smooth: boolean) => {
-      const el = messagesContainerRef.current;
-      if (el) {
-        el.scrollTop = el.scrollHeight;
-      } else {
-        messagesEndRef.current?.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'end' });
-      }
+    // Função de scroll otimizada
+    const scrollToBottom = () => {
+      // Tentar múltiplas estratégias para garantir scroll
+      requestAnimationFrame(() => {
+        const container = messagesContainerRef.current;
+        if (container) {
+          // Método 1: scrollTop direto
+          container.scrollTop = container.scrollHeight;
+          
+          // Método 2: scrollIntoView como fallback
+          const lastMessage = container.lastElementChild;
+          if (lastMessage) {
+            lastMessage.scrollIntoView({ block: 'end', behavior: 'auto' });
+          }
+        }
+        
+        // Método 3: ref como último recurso
+        messagesEndRef.current?.scrollIntoView({ block: 'end', behavior: 'auto' });
+      });
     };
 
-    // Scroll imediato ao carregar
-    scrollToBottom(false);
+    // Scroll imediato
+    scrollToBottom();
 
-    // Garantir rolagem após carregamento de imagens e próximo tick
-    const el = messagesContainerRef.current;
-    const handleImgLoad = () => scrollToBottom(false);
-    const timeoutId = window.setTimeout(() => scrollToBottom(false), 150);
-    const timeoutId2 = window.setTimeout(() => scrollToBottom(false), 300);
+    // Múltiplos timeouts para garantir após renderização
+    const timeouts = [
+      setTimeout(scrollToBottom, 50),
+      setTimeout(scrollToBottom, 100),
+      setTimeout(scrollToBottom, 200),
+      setTimeout(scrollToBottom, 400),
+    ];
 
-    const imgs = el ? Array.from(el.querySelectorAll('img')) : [];
-    imgs.forEach(img => {
-      if (!img.complete) img.addEventListener('load', handleImgLoad);
-    });
+    // Scroll após imagens carregarem
+    const container = messagesContainerRef.current;
+    const handleImageLoad = () => scrollToBottom();
+    
+    if (container) {
+      const images = Array.from(container.querySelectorAll('img'));
+      images.forEach(img => {
+        if (!img.complete) {
+          img.addEventListener('load', handleImageLoad);
+        }
+      });
 
-    // Marcar mensagens como lidas ao abrir o chat
-    if (messages.length > 0 && profileId) {
-      markMessagesAsRead();
+      // Cleanup
+      return () => {
+        timeouts.forEach(clearTimeout);
+        images.forEach(img => img.removeEventListener('load', handleImageLoad));
+      };
     }
 
     return () => {
-      imgs.forEach(img => img.removeEventListener('load', handleImgLoad));
-      window.clearTimeout(timeoutId);
-      window.clearTimeout(timeoutId2);
+      timeouts.forEach(clearTimeout);
     };
-  }, [messages, conversationId, profileId]);
+  }, [messages, conversationId]);
+
+  // Scroll adicional quando a conversa muda
+  useEffect(() => {
+    const scrollToBottom = () => {
+      requestAnimationFrame(() => {
+        const container = messagesContainerRef.current;
+        if (container) {
+          container.scrollTop = container.scrollHeight;
+        }
+        messagesEndRef.current?.scrollIntoView({ block: 'end', behavior: 'auto' });
+      });
+    };
+
+    scrollToBottom();
+    setTimeout(scrollToBottom, 100);
+    setTimeout(scrollToBottom, 300);
+
+    // Marcar mensagens como lidas
+    if (messages.length > 0 && profileId) {
+      markMessagesAsRead();
+    }
+  }, [conversationId]);
 
   const markMessagesAsRead = async () => {
     try {
@@ -241,17 +283,28 @@ export function UnifiedChat({
     }
 }, [messages.length, conversationType]);
 
-// Also ensure scroll at bottom when conversation changes
+// Scroll quando conversa muda (sem dependência de messages para evitar loops)
 useEffect(() => {
-  // Usar timeout para garantir que o DOM esteja pronto
-  setTimeout(() => {
-    const el = messagesContainerRef.current;
-    if (el) {
-      el.scrollTop = el.scrollHeight;
-    } else {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'auto', block: 'end' });
-    }
-  }, 100);
+  const scrollToBottom = () => {
+    requestAnimationFrame(() => {
+      const container = messagesContainerRef.current;
+      if (container) {
+        container.scrollTop = container.scrollHeight;
+      }
+      messagesEndRef.current?.scrollIntoView({ block: 'end', behavior: 'auto' });
+    });
+  };
+
+  scrollToBottom();
+  const timeout1 = setTimeout(scrollToBottom, 100);
+  const timeout2 = setTimeout(scrollToBottom, 300);
+  const timeout3 = setTimeout(scrollToBottom, 500);
+
+  return () => {
+    clearTimeout(timeout1);
+    clearTimeout(timeout2);
+    clearTimeout(timeout3);
+  };
 }, [conversationId]);
 
   const loadProposalData = async () => {

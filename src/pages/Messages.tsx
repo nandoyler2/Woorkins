@@ -475,33 +475,43 @@ export default function Messages() {
                     <button
                       key={`${conv.type}-${conv.id}`}
                       type="button"
-                      onClick={async () => {
+                      onClick={() => {
+                        // Atualização instantânea sem reload
                         setSelectedConversation(conv);
 
-                        // Zero local badge immediately
-                        setConversations(prev => prev.map(c => c.id === conv.id && c.type === conv.type ? { ...c, unreadCount: 0 } : c));
+                        // Zero local badge imediatamente para feedback visual
+                        setConversations(prev => prev.map(c => 
+                          c.id === conv.id && c.type === conv.type 
+                            ? { ...c, unreadCount: 0 } 
+                            : c
+                        ));
 
-                        // Mark messages as read in DB for this conversation
-                        const table = conv.type === 'negotiation' ? 'negotiation_messages' : 'proposal_messages';
-                        const idColumn = conv.type === 'negotiation' ? 'negotiation_id' : 'proposal_id';
-                        await (supabase.from(table) as any)
-                          .update({ status: 'read', read_at: new Date().toISOString() })
-                          .eq(idColumn, conv.id)
-                          .neq('sender_id', profileId)
-                          .in('status', ['sent','delivered']);
+                        // Marcar como lido em background (sem await para não travar UI)
+                        const markAsRead = async () => {
+                          const table = conv.type === 'negotiation' ? 'negotiation_messages' : 'proposal_messages';
+                          const idColumn = conv.type === 'negotiation' ? 'negotiation_id' : 'proposal_id';
+                          
+                          await (supabase.from(table) as any)
+                            .update({ status: 'read', read_at: new Date().toISOString() })
+                            .eq(idColumn, conv.id)
+                            .neq('sender_id', profileId)
+                            .in('status', ['sent','delivered']);
 
-                        await supabase
-                          .from('message_unread_counts')
-                          .upsert(
-                            {
-                              user_id: profileId,
-                              conversation_id: conv.id,
-                              conversation_type: conv.type,
-                              unread_count: 0,
-                              last_read_at: new Date().toISOString(),
-                            },
-                            { onConflict: 'user_id,conversation_id,conversation_type' }
-                          );
+                          await supabase
+                            .from('message_unread_counts')
+                            .upsert(
+                              {
+                                user_id: profileId,
+                                conversation_id: conv.id,
+                                conversation_type: conv.type,
+                                unread_count: 0,
+                                last_read_at: new Date().toISOString(),
+                              },
+                              { onConflict: 'user_id,conversation_id,conversation_type' }
+                            );
+                        };
+                        
+                        markAsRead();
                       }}
                       className={`w-full p-3 border-b transition-all text-left ${
                         selectedConversation?.id === conv.id

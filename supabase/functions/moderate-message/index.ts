@@ -156,18 +156,22 @@ SE DETECTAR ESTE PADRÃO = BLOQUEAR IMEDIATAMENTE E SINALIZAR
    - dominio.com, .com.br
 
 8. **IMAGENS com informações de contato - ANÁLISE ULTRA RIGOROSA**:
-   - 🚨 PRIORIDADE MÁXIMA: Números de telefone em QUALQUER parte da imagem
+   - 🚨🚨🚨 PRIORIDADE MÁXIMA: NÚMEROS DE TELEFONE EM IMAGENS 🚨🚨🚨
+   - **TEXTO SOBREPOSTO**: Qualquer texto com números sobrepostos na imagem (ex: "11 993912083", "11993912083")
+   - **NÚMEROS GRANDES E VISÍVEIS**: Especialmente se os números estão em destaque ou centralizados
    - Números visíveis em fotos de pessoas, objetos, telas, documentos
-   - Números em textos sobrepostos (como: "11 99612083" ou "11992612083")
+   - Números em banners, cartões, anúncios dentro da imagem
+   - Números escritos à mão ou digitados em qualquer parte da imagem
    - Mesmo se o número estiver discretamente posicionado
-   - Mesmo se o número aparecer em contexto aparentemente inocente (ex: em uma foto de aperto de mãos)
+   - Mesmo se o número aparecer em contexto aparentemente inocente
    - Capturas de tela de conversas ou perfis
    - QR codes do WhatsApp ou outras redes
    - Cards de visita ou informações de contato
    - Qualquer imagem que contenha @ (arroba) ou links
    - Informações de contato em cartões, documentos, telas de celular
    - **ESCANEAR TODA A IMAGEM**: Procure atentamente por sequências de 8-11 dígitos em TODAS as áreas da imagem
-   - **FORMATOS VARIADOS**: (11) 99999-9999, 11 99999-9999, 11999999999, etc.
+   - **FORMATOS VARIADOS**: (11) 99999-9999, 11 99999-9999, 11999999999, 11 9 9999 9999, etc.
+   - **🔥 CRÍTICO**: Se você ver QUALQUER sequência de 10-11 dígitos na imagem = BLOQUEAR IMEDIATAMENTE
 
 🚨 CRITÉRIOS DE BLOQUEIO E SINALIZAÇÃO:
 - Seja EXTREMAMENTE RIGOROSO com @handles, emails e imagens com contatos.
@@ -209,8 +213,8 @@ Responda APENAS em JSON:
           {
             type: 'text',
             text: content 
-              ? `Analise esta imagem e mensagem: "${content}"${contextMessages}\n\n🔍 ANÁLISE CRÍTICA DE IMAGEM - PROCURE ATENTAMENTE:\n- ESCANEAR TODA A IMAGEM procurando números de telefone (8-11 dígitos)\n- Números com DDD brasileiro: (11) 9XXXX-XXXX, 11 9XXXXXXXX, etc.\n- Números em qualquer formato ou localização na imagem\n- Mesmo em fotos que parecem normais (pessoas, objetos, documentos)\n- @usernames, emails, QR codes, links visíveis\n- Qualquer tentativa de compartilhar contatos`
-              : `Analise esta imagem:${contextMessages}\n\n🔍 ANÁLISE CRÍTICA DE IMAGEM - PROCURE ATENTAMENTE:\n- ESCANEAR TODA A IMAGEM procurando números de telefone (8-11 dígitos)\n- Números com DDD brasileiro: (11) 9XXXX-XXXX, 11 9XXXXXXXX, etc.\n- Números em qualquer formato ou localização na imagem\n- Mesmo em fotos que parecem normais (pessoas, objetos, documentos)\n- @usernames, emails, QR codes, links visíveis\n- Qualquer tentativa de compartilhar contatos`
+              ? `Analise esta imagem e mensagem: "${content}"${contextMessages}\n\n🔍🔍🔍 ANÁLISE CRÍTICA DE IMAGEM - ATENÇÃO MÁXIMA 🔍🔍🔍:\n\n⚠️ PRIORIDADE ABSOLUTA:\n1. PROCURE ATENTAMENTE POR NÚMEROS DE TELEFONE NA IMAGEM\n2. Verifique se há TEXTO SOBREPOSTO com números (ex: "11 993912083")\n3. Procure números GRANDES, centralizados ou em destaque\n4. Qualquer sequência de 10-11 dígitos = BLOQUEAR IMEDIATAMENTE\n\nOutras verificações:\n- ESCANEAR TODA A IMAGEM procurando números de telefone (8-11 dígitos)\n- Números com DDD brasileiro: (11) 9XXXX-XXXX, 11 9XXXXXXXX, etc.\n- Números em qualquer formato ou localização na imagem\n- Mesmo em fotos que parecem normais (pessoas, objetos, documentos)\n- @usernames, emails, QR codes, links visíveis\n- Qualquer tentativa de compartilhar contatos`
+              : `Analise esta imagem:${contextMessages}\n\n🔍🔍🔍 ANÁLISE CRÍTICA DE IMAGEM - ATENÇÃO MÁXIMA 🔍🔍🔍:\n\n⚠️ PRIORIDADE ABSOLUTA:\n1. PROCURE ATENTAMENTE POR NÚMEROS DE TELEFONE NA IMAGEM\n2. Verifique se há TEXTO SOBREPOSTO com números (ex: "11 993912083")\n3. Procure números GRANDES, centralizados ou em destaque\n4. Qualquer sequência de 10-11 dígitos = BLOQUEAR IMEDIATAMENTE\n\nOutras verificações:\n- ESCANEAR TODA A IMAGEM procurando números de telefone (8-11 dígitos)\n- Números com DDD brasileiro: (11) 9XXXX-XXXX, 11 9XXXXXXXX, etc.\n- Números em qualquer formato ou localização na imagem\n- Mesmo em fotos que parecem normais (pessoas, objetos, documentos)\n- @usernames, emails, QR codes, links visíveis\n- Qualquer tentativa de compartilhar contatos`
           },
           {
             type: 'image_url',
@@ -240,7 +244,7 @@ Responda APENAS em JSON:
           { role: 'system', content: systemPrompt },
           userMessage
         ],
-        temperature: 0.2, // Lower temperature for more consistent detection
+        temperature: 0.1, // Temperatura muito baixa para detecção mais consistente e rigorosa
       }),
     });
 

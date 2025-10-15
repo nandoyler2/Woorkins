@@ -9,8 +9,10 @@ import {
   Home,
   CreditCard,
   FileCheck,
-  MessageCircle
+  MessageCircle,
+  ArrowLeft
 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import {
   Sidebar,
   SidebarContent,
@@ -54,9 +56,20 @@ function AdminSidebar() {
     <Sidebar className={collapsed ? "w-14" : "w-60"}>
       <SidebarContent>
         <SidebarGroup>
-          <div className="flex items-center gap-2 px-4 py-3">
+          <div className="flex items-center gap-2 px-4 py-3 border-b">
             <Shield className="h-6 w-6 text-primary" />
             {!collapsed && <SidebarGroupLabel className="text-lg font-bold">Admin Panel</SidebarGroupLabel>}
+          </div>
+
+          <div className="px-2 py-3">
+            <Button 
+              variant="outline" 
+              className="w-full justify-start gap-2"
+              onClick={() => window.location.href = '/feed'}
+            >
+              <ArrowLeft className="h-4 w-4" />
+              {!collapsed && <span>Voltar ao Woorkins</span>}
+            </Button>
           </div>
           
           <SidebarGroupContent>

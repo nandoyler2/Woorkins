@@ -23,6 +23,7 @@ interface UseRealtimeMessagingProps {
   conversationType: 'negotiation' | 'proposal';
   currentUserId: string;
   otherUserId: string;
+  proposalStatus?: string;
 }
 
 export const useRealtimeMessaging = ({
@@ -30,6 +31,7 @@ export const useRealtimeMessaging = ({
   conversationType,
   currentUserId,
   otherUserId,
+  proposalStatus,
 }: UseRealtimeMessagingProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -250,65 +252,68 @@ export const useRealtimeMessaging = ({
     setIsSending(true);
 
     try {
-      // Get recent messages from this user for context (last 5 messages)
-      const recentUserMessages = messages
-        .filter(m => m.sender_id === currentUserId)
-        .slice(-5)
-        .map(m => m.content);
+      // Only moderate if conversation is for a pending proposal
+      const shouldModerate = conversationType === 'proposal' && proposalStatus === 'pending';
 
-      // Call moderation function with context (including image if present)
-      const moderationBody: any = { 
-        content: content.trim(),
-        recentMessages: recentUserMessages
-      };
+      if (shouldModerate) {
+        // Get recent messages from this user for context (last 5 messages)
+        const recentUserMessages = messages
+          .filter(m => m.sender_id === currentUserId)
+          .slice(-5)
+          .map(m => m.content);
 
-      // If there's an attachment and it's an image, include it in moderation
-      if (attachment && attachment.file.type.startsWith('image/')) {
-        moderationBody.imageUrl = attachment.url;
-      }
+        // Call moderation function with context (including image if present)
+        const moderationBody: any = { 
+          content: content.trim(),
+          recentMessages: recentUserMessages
+        };
 
-      const { data: moderationResult, error: moderationError } = await supabase.functions.invoke(
-        'moderate-message',
-        { body: moderationBody }
-      );
-
-      console.log('Moderation result:', moderationResult);
-
-      // Check if message was rejected
-      if (moderationResult && !moderationResult.approved) {
-        const violationResult = await trackViolation(moderationResult.reason || 'Violação das regras de moderação');
-        
-        let description = `❌ Motivo: ${moderationResult.reason || 'Esta mensagem viola nossa política de uso.'}\n\n`;
-        
-        if (violationResult) {
-          if (violationResult.newCount < 5) {
-            description += `⚠️ Atenção: Esta é sua ${violationResult.newCount}ª violação. Após 5 violações, você será bloqueado temporariamente.`;
-          } else if (violationResult.blockedUntil) {
-            const blockMinutes = Math.ceil((violationResult.blockedUntil.getTime() - Date.now()) / (1000 * 60));
-            description += `🚫 Você foi bloqueado por ${blockMinutes} minutos. Bloqueios aumentam progressivamente com violações repetidas (até 24h).`;
-          }
+        // If there's an attachment and it's an image, include it in moderation
+        if (attachment && attachment.file.type.startsWith('image/')) {
+          moderationBody.imageUrl = attachment.url;
         }
 
-        // Always show moderation toasts - these are important
-        toast({
-          variant: 'destructive',
-          title: '🚫 Mensagem Bloqueada',
-          description,
-          duration: 10000,
-        });
-        setIsSending(false);
-        return;
-      }
+        const { data: moderationResult, error: moderationError } = await supabase.functions.invoke(
+          'moderate-message',
+          { body: moderationBody }
+        );
 
-      // Check if message was flagged for bad conduct (warning only)
-      if (moderationResult?.flagged) {
-        // Always show flagged warnings - these are important
-        toast({
-          variant: 'destructive',
-          title: '⚠️ Aviso de Conduta',
-          description: 'Detectamos um padrão suspeito em suas mensagens. Por favor, mantenha a comunicação dentro da plataforma. Violações repetidas resultarão em bloqueio.',
-          duration: 8000,
-        });
+        console.log('Moderation result:', moderationResult);
+
+        // Check if message was rejected
+        if (moderationResult && !moderationResult.approved) {
+          const violationResult = await trackViolation(moderationResult.reason || 'Violação das regras de moderação');
+          
+          let description = 'Você está tentando enviar uma forma de contato. Informações de contato só poderão ser passadas após o pagamento ser feito dentro do Woorkins.\n\n';
+          
+          if (violationResult) {
+            if (violationResult.newCount < 5) {
+              description += `⚠️ Atenção: Esta é sua ${violationResult.newCount}ª violação. Após 5 violações, você será bloqueado temporariamente.`;
+            } else if (violationResult.blockedUntil) {
+              const blockMinutes = Math.ceil((violationResult.blockedUntil.getTime() - Date.now()) / (1000 * 60));
+              description += `🚫 Você foi bloqueado por ${blockMinutes} minutos. Bloqueios aumentam progressivamente com violações repetidas (até 24h).`;
+            }
+          }
+
+          toast({
+            variant: 'destructive',
+            title: '🚫 Mensagem Bloqueada',
+            description,
+            duration: 10000,
+          });
+          setIsSending(false);
+          return;
+        }
+
+        // Check if message was flagged for bad conduct (warning only)
+        if (moderationResult?.flagged) {
+          toast({
+            variant: 'destructive',
+            title: '⚠️ Aviso de Conduta',
+            description: 'Detectamos um padrão suspeito em suas mensagens. Por favor, mantenha a comunicação dentro da plataforma. Violações repetidas resultarão em bloqueio.',
+            duration: 8000,
+          });
+        }
       }
 
       // Upload attachment if present

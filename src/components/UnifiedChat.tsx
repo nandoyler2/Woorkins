@@ -92,6 +92,7 @@ export function UnifiedChat({
     conversationType,
     currentUserId: profileId,
     otherUserId: otherUser.id,
+    proposalStatus: proposalData?.status,
   });
 
   // Check for system-level messaging blocks
@@ -578,6 +579,16 @@ export function UnifiedChat({
             </div>
           ) : (
             <>
+              {/* Security warning as first message for proposals */}
+              {conversationType === 'proposal' && (
+                <Alert className="mb-4 bg-blue-50 border-blue-200">
+                  <Shield className="h-4 w-4 text-blue-600" />
+                  <AlertDescription className="text-sm text-blue-900">
+                    <strong>Aviso de Segurança:</strong> Todas as conversas são monitoradas para garantir transações seguras. É proibido compartilhar informações de contato (telefone, email, redes sociais). Violações podem resultar em bloqueio permanente da conta.
+                  </AlertDescription>
+                </Alert>
+              )}
+
               {/* Show proposal message as first message if it's a proposal chat */}
               {conversationType === 'proposal' && proposalData && (
                 <div className="flex gap-2 animate-in slide-in-from-bottom-2">

@@ -30,6 +30,7 @@ interface Conversation {
   businessName?: string;
   projectId?: string;
   businessId?: string;
+  freelancerId?: string;
 }
 
 export default function Messages() {
@@ -292,6 +293,7 @@ export default function Messages() {
           unreadCount: unreadMap.get(`proposal-${prop.id}`) ?? (count || 0),
           status: prop.status,
           projectId: prop.project.id,
+          freelancerId: prop.freelancer_id,
         };
       }));
 
@@ -545,7 +547,7 @@ export default function Messages() {
                           {conv.type === 'proposal' && (
                             <div className="flex items-center gap-1 mb-1">
                               <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-800">
-                                Enviada pelo sistema
+                                {conv.freelancerId === profileId ? 'Proposta enviada' : 'Proposta recebida'}
                               </span>
                             </div>
                           )}

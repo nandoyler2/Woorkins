@@ -152,17 +152,20 @@ export function IdentityVerificationDialog({
       if (!profile) throw new Error('Perfil não encontrado');
       
       const uploadFile = async (file: File, fileName: string) => {
-        const { data, error } = await supabase.storage
+        const { data: uploadData, error: uploadError } = await supabase.storage
           .from('identity-documents')
           .upload(`${profile.id}/${fileName}_${timestamp}.jpg`, file);
         
-        if (error) throw error;
+        if (uploadError) throw uploadError;
         
-        const { data: { publicUrl } } = supabase.storage
+        // Bucket é privado: gerar URL assinada para a Edge Function conseguir baixar
+        const { data: signedData, error: signedError } = await supabase.storage
           .from('identity-documents')
-          .getPublicUrl(data.path);
+          .createSignedUrl(uploadData.path, 60 * 10); // 10 minutos
         
-        return publicUrl;
+        if (signedError) throw signedError;
+        
+        return signedData.signedUrl;
       };
 
       let frontUrl = '';

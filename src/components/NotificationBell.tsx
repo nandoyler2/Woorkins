@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Bell } from 'lucide-react';
+import { Bell, MessageSquare, FileText, UserPlus, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -12,6 +12,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
+import { formatDistanceToNow } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 interface Notification {
   id: string;
@@ -115,6 +117,43 @@ export const NotificationBell = ({ profileId }: { profileId: string }) => {
     });
   };
 
+  const getNotificationIcon = (type: string) => {
+    switch (type) {
+      case 'message':
+        return <MessageSquare className="h-5 w-5" />;
+      case 'proposal':
+        return <FileText className="h-5 w-5" />;
+      case 'negotiation':
+        return <MessageSquare className="h-5 w-5" />;
+      case 'follow':
+        return <UserPlus className="h-5 w-5" />;
+      default:
+        return <AlertCircle className="h-5 w-5" />;
+    }
+  };
+
+  const getNotificationIconColor = (type: string) => {
+    switch (type) {
+      case 'message':
+        return 'bg-blue-500';
+      case 'proposal':
+        return 'bg-yellow-500';
+      case 'negotiation':
+        return 'bg-blue-500';
+      case 'follow':
+        return 'bg-teal-500';
+      default:
+        return 'bg-gray-500';
+    }
+  };
+
+  const formatTimeAgo = (date: string) => {
+    return formatDistanceToNow(new Date(date), { 
+      addSuffix: true, 
+      locale: ptBR 
+    });
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -155,24 +194,24 @@ export const NotificationBell = ({ profileId }: { profileId: string }) => {
                 <DropdownMenuItem
                   key={notification.id}
                   onClick={() => handleNotificationClick(notification)}
-                  className={`p-4 cursor-pointer ${!notification.read ? 'bg-muted/50' : ''}`}
+                  className={`p-4 cursor-pointer border-b last:border-b-0 ${!notification.read ? 'bg-muted/30' : ''} hover:bg-muted/50`}
                 >
-                  <div className="flex flex-col gap-1 w-full">
-                    <div className="flex items-start justify-between gap-2">
-                      <span className="font-semibold text-sm">{notification.title}</span>
-                      {!notification.read && (
-                        <div className="h-2 w-2 rounded-full bg-primary flex-shrink-0 mt-1" />
-                      )}
+                  <div className="flex gap-3 w-full">
+                    <div className={`${getNotificationIconColor(notification.type)} rounded-lg p-2 h-10 w-10 flex items-center justify-center text-white flex-shrink-0`}>
+                      {getNotificationIcon(notification.type)}
                     </div>
-                    <p className="text-xs text-muted-foreground">{notification.message}</p>
-                    <span className="text-xs text-muted-foreground">
-                      {new Date(notification.created_at).toLocaleDateString('pt-BR', {
-                        day: '2-digit',
-                        month: '2-digit',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                    </span>
+                    <div className="flex flex-col gap-1 flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2">
+                        <span className="font-semibold text-sm leading-tight">{notification.title}</span>
+                        {!notification.read && (
+                          <div className="h-2 w-2 rounded-full bg-primary flex-shrink-0 mt-1" />
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground line-clamp-2">{notification.message}</p>
+                      <span className="text-xs text-primary font-medium">
+                        {formatTimeAgo(notification.created_at)}
+                      </span>
+                    </div>
                   </div>
                 </DropdownMenuItem>
               ))}

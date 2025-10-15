@@ -29,10 +29,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useToast } from '@/hooks/use-toast';
-import { Search, Shield, User, Ban, MoreVertical, Coins, ShieldOff, Info } from 'lucide-react';
+import { Search, Shield, User, Ban, MoreVertical, Coins, ShieldOff, Info, History } from 'lucide-react';
 import { ManageWoorkoinsDialog } from '@/components/admin/ManageWoorkoinsDialog';
 import { BlockUserDialog } from '@/components/admin/BlockUserDialog';
 import { BlockDetailsDialog } from '@/components/admin/BlockDetailsDialog';
+import { UserHistoryDialog } from '@/components/admin/UserHistoryDialog';
 
 export default function AdminUsers() {
   const { user } = useAuth();
@@ -46,6 +47,7 @@ export default function AdminUsers() {
   const [blockDetailsDialogOpen, setBlockDetailsDialogOpen] = useState(false);
   const [selectedBlock, setSelectedBlock] = useState<any>(null);
   const [unblockLoading, setUnblockLoading] = useState(false);
+  const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -357,6 +359,15 @@ export default function AdminUsers() {
                         <DropdownMenuItem
                           onClick={() => {
                             setSelectedUser(usr);
+                            setHistoryDialogOpen(true);
+                          }}
+                        >
+                          <History className="mr-2 h-4 w-4" />
+                          Ver Histórico Completo
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setSelectedUser(usr);
                             setWoorkoinsDialogOpen(true);
                           }}
                         >
@@ -405,6 +416,11 @@ export default function AdminUsers() {
 
         {selectedUser && (
           <>
+            <UserHistoryDialog
+              open={historyDialogOpen}
+              onOpenChange={setHistoryDialogOpen}
+              user={selectedUser}
+            />
             <ManageWoorkoinsDialog
               open={woorkoinsDialogOpen}
               onOpenChange={setWoorkoinsDialogOpen}

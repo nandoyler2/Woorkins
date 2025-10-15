@@ -89,23 +89,25 @@ export const AIAssistant = () => {
           .maybeSingle();
 
         if (conversation?.messages && Array.isArray(conversation.messages) && conversation.messages.length > 0) {
-          setMessages(conversation.messages as unknown as Message[]);
-          setShowTopics(false);
-          setShowBlockQuestion(false);
+          const existing = conversation.messages as unknown as Message[];
+          if (hasBlock) {
+            const blockMsg = { role: 'assistant' as const, content: `Olá, ${firstName}! 👋\n\nPercebi que você foi bloqueado recentemente. Gostaria de falar sobre isso?` };
+            setMessages([blockMsg, ...existing]);
+            setShowBlockQuestion(true);
+            setShowTopics(false);
+            setIsTyping(false);
+          } else {
+            setMessages(existing);
+            setShowTopics(false);
+            setShowBlockQuestion(false);
+          }
         } else {
-          // Se tem bloqueio recente, mostrar pergunta sobre bloqueio com animação
           if (hasBlock) {
             const blockMsg = `Olá, ${firstName}! 👋\n\nPercebi que você foi bloqueado recentemente. Gostaria de falar sobre isso?`;
             setMessages([{ role: 'assistant', content: blockMsg }]);
-            setIsTyping(true);
-            setShowBlockQuestion(false);
+            setShowBlockQuestion(true);
             setShowTopics(false);
-            
-            // Após 1.5s de animação, mostrar os botões
-            setTimeout(() => {
-              setIsTyping(false);
-              setShowBlockQuestion(true);
-            }, 1500);
+            setIsTyping(false);
           } else {
             // Primeira vez - mostrar mensagem de boas-vindas
             const welcomeMsg = firstName 

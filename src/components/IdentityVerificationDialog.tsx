@@ -297,16 +297,6 @@ export function IdentityVerificationDialog({
               </div>
             </Button>
           </div>
-          
-          {/* Hidden inputs */}
-          <input
-            ref={combinedInputRef}
-            type="file"
-            accept="image/*"
-            capture="environment"
-            onChange={(e) => handleFileChange(e, 'combined')}
-            className="hidden"
-          />
         </div>
       );
     }
@@ -438,24 +428,6 @@ export function IdentityVerificationDialog({
           </div>
         )}
 
-        {/* Hidden inputs */}
-        <input
-          ref={frontInputRef}
-          type="file"
-          accept="image/*"
-          capture="environment"
-          onChange={(e) => handleFileChange(e, 'front')}
-          className="hidden"
-        />
-        <input
-          ref={backInputRef}
-          type="file"
-          accept="image/*"
-          capture="environment"
-          onChange={(e) => handleFileChange(e, 'back')}
-          className="hidden"
-        />
-
         <Button
           variant="outline"
           onClick={() => {
@@ -484,6 +456,32 @@ export function IdentityVerificationDialog({
           </DialogDescription>
         </DialogHeader>
         {renderContent()}
+        
+        {/* Hidden inputs - sempre no DOM */}
+        <input
+          ref={combinedInputRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          onChange={(e) => handleFileChange(e, 'combined')}
+          className="hidden"
+        />
+        <input
+          ref={frontInputRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          onChange={(e) => handleFileChange(e, 'front')}
+          className="hidden"
+        />
+        <input
+          ref={backInputRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          onChange={(e) => handleFileChange(e, 'back')}
+          className="hidden"
+        />
       </DialogContent>
     </Dialog>
   );

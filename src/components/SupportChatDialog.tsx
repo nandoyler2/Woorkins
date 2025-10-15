@@ -477,6 +477,19 @@ export function SupportChatDialog({ open, onOpenChange, documentRejected, profil
               <div ref={messagesEndRef} />
             </div>
 
+            {conversationId && (
+              <div className="px-4 pb-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleCloseConversation}
+                  className="w-full"
+                >
+                  Encerrar conversa e voltar ao início
+                </Button>
+              </div>
+            )}
+
             {showDocumentUpload && (
               <div className="border rounded-lg p-4 space-y-3 bg-blue-50">
                 <div className="flex justify-between items-center">

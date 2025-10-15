@@ -527,7 +527,7 @@ export function UnifiedChat({
 
       {/* Messages - Scrollable Area */}
       <div className="flex-1 overflow-y-auto min-h-0">
-        <div className="p-4 space-y-4 pb-4">
+        <div className="p-4 space-y-4 pb-28">
           {isChatLocked ? (
             <div className="text-center py-12">
               <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-yellow-500/10 mb-4">
@@ -693,8 +693,8 @@ export function UnifiedChat({
         </div>
       </div>
 
-      {/* Input - Fixed Bottom, always visible */}
-      <div className="sticky bottom-0 left-0 right-0 z-20 border-t bg-background">
+      {/* Input - Fixed, anchored to bottom of chat pane */}
+      <div className="absolute bottom-0 left-0 right-0 z-20 border-t bg-background">
         {finalIsBlocked && finalBlockedUntil ? (
           <div className="p-3">
             <BlockedMessageCountdown blockedUntil={finalBlockedUntil} reason={finalBlockReason} />
@@ -727,60 +727,51 @@ export function UnifiedChat({
                   </Button>
                 </div>
               )}
-          {isChatLocked ? (
-            <div className="text-center py-2">
-              <p className="text-sm text-muted-foreground flex items-center justify-center gap-2">
-                <Lock className="h-4 w-4" />
-                Chat bloqueado até o criador aceitar sua proposta
-              </p>
-            </div>
-          ) : (
-            <div className="flex gap-2">
-              <input
-                ref={fileInputRef}
-                type="file"
-                onChange={handleFileSelect}
-                className="hidden"
-                accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.zip"
-              />
-              <Button 
-                type="button" 
-                variant="ghost" 
-                size="icon"
-                className="flex-shrink-0"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <Paperclip className="h-5 w-5" />
-              </Button>
-              <Input
-                value={messageInput}
-                onChange={handleInputChange}
-                placeholder="Digite sua mensagem..."
-                disabled={isSending}
-                className="flex-1 bg-background/50"
-                autoComplete="off"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSendMessage(e);
-                  }
-                }}
-              />
-              <Button 
-                type="submit" 
-                disabled={isSending || (!messageInput.trim() && !selectedFile)}
-                size="icon"
-                className="flex-shrink-0"
-              >
-                {isSending ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Send className="h-4 w-4" />
-                )}
-              </Button>
-            </div>
-          )}
-          </form>
+              <div className="flex gap-2">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  onChange={handleFileSelect}
+                  className="hidden"
+                  accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.zip"
+                />
+                <Button 
+                  type="button" 
+                  variant="ghost" 
+                  size="icon"
+                  className="flex-shrink-0"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <Paperclip className="h-5 w-5" />
+                </Button>
+                <Input
+                  value={messageInput}
+                  onChange={handleInputChange}
+                  placeholder="Digite sua mensagem..."
+                  disabled={isSending}
+                  className="flex-1 bg-background/50"
+                  autoComplete="off"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSendMessage(e);
+                    }
+                  }}
+                />
+                <Button 
+                  type="submit" 
+                  disabled={isSending || (!messageInput.trim() && !selectedFile)}
+                  size="icon"
+                  className="flex-shrink-0"
+                >
+                  {isSending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Send className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+            </form>
         )}
       </div>
 

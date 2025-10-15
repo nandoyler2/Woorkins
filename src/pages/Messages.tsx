@@ -364,7 +364,7 @@ export default function Messages() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-primary/5 to-secondary/10">
+    <div className="h-screen flex flex-col bg-gradient-to-br from-background via-primary/5 to-secondary/10">
       <Header />
       
       <main className="flex-1 flex overflow-hidden">

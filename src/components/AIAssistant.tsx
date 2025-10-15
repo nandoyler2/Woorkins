@@ -5,6 +5,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSystemBlock } from '@/hooks/useSystemBlock';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -42,9 +43,12 @@ export const AIAssistant = () => {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [profileId, setProfileId] = useState<string | null>(null);
+  const [hasRecentBlock, setHasRecentBlock] = useState(false);
+  const [showBlockQuestion, setShowBlockQuestion] = useState(false);
   const { toast } = useToast();
   const { session } = useAuth();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { systemBlock, messagingBlock } = useSystemBlock(profileId || '');
 
   // Carregar perfil e conversas persistidas
   useEffect(() => {
@@ -62,6 +66,20 @@ export const AIAssistant = () => {
         const firstName = profile.full_name?.split(' ')[0] || '';
         setUserName(firstName);
 
+        // Verificar bloqueios recentes (últimas 24 horas)
+        const oneDayAgo = new Date();
+        oneDayAgo.setDate(oneDayAgo.getDate() - 1);
+
+        const { data: recentBlocks } = await supabase
+          .from('system_blocks')
+          .select('*')
+          .eq('profile_id', profile.id)
+          .gte('created_at', oneDayAgo.toISOString())
+          .limit(1);
+
+        const hasBlock = !!(recentBlocks && recentBlocks.length > 0) || !!systemBlock || !!messagingBlock;
+        setHasRecentBlock(hasBlock);
+
         // Carregar conversas anteriores
         const { data: conversation } = await supabase
           .from('ai_assistant_conversations')
@@ -72,13 +90,22 @@ export const AIAssistant = () => {
         if (conversation?.messages && Array.isArray(conversation.messages) && conversation.messages.length > 0) {
           setMessages(conversation.messages as unknown as Message[]);
           setShowTopics(false);
+          setShowBlockQuestion(false);
         } else {
-          // Primeira vez - mostrar mensagem de boas-vindas
-          const welcomeMsg = firstName 
-            ? `Olá, ${firstName}! 👋\n\nSou o assistente virtual da Woorkins e estou aqui para ajudá-lo(a) no que precisar.\n\nSelecione um dos tópicos abaixo ou digite sua dúvida diretamente:`
-            : 'Olá! 👋\n\nSou o assistente virtual da Woorkins e estou aqui para ajudá-lo(a) no que precisar.\n\nSelecione um dos tópicos abaixo ou digite sua dúvida diretamente:';
-          
-          setMessages([{ role: 'assistant', content: welcomeMsg }]);
+          // Se tem bloqueio recente, mostrar pergunta sobre bloqueio
+          if (hasBlock) {
+            const blockMsg = `Olá, ${firstName}! 👋\n\nPercebi que você foi bloqueado recentemente. Gostaria de falar sobre isso?`;
+            setMessages([{ role: 'assistant', content: blockMsg }]);
+            setShowBlockQuestion(true);
+            setShowTopics(false);
+          } else {
+            // Primeira vez - mostrar mensagem de boas-vindas
+            const welcomeMsg = firstName 
+              ? `Olá, ${firstName}! 👋\n\nSou o assistente virtual da Woorkins e estou aqui para ajudá-lo(a) no que precisar.\n\nSelecione um dos tópicos abaixo ou digite sua dúvida diretamente:`
+              : 'Olá! 👋\n\nSou o assistente virtual da Woorkins e estou aqui para ajudá-lo(a) no que precisar.\n\nSelecione um dos tópicos abaixo ou digite sua dúvida diretamente:';
+            
+            setMessages([{ role: 'assistant', content: welcomeMsg }]);
+          }
         }
       }
     };
@@ -86,7 +113,7 @@ export const AIAssistant = () => {
     if (isOpen) {
       loadUserData();
     }
-  }, [session, isOpen]);
+  }, [session, isOpen, systemBlock, messagingBlock]);
 
   // Scroll para última mensagem
   useEffect(() => {
@@ -95,12 +122,24 @@ export const AIAssistant = () => {
 
   const handleTopicSelect = (topic: typeof helpTopics[0]) => {
     setShowTopics(false);
+    setShowBlockQuestion(false);
     sendMessageInternal(topic.message);
+  };
+
+  const handleBlockAnswer = (answer: 'yes' | 'no') => {
+    setShowBlockQuestion(false);
+    if (answer === 'yes') {
+      sendMessageInternal('Sim, gostaria de entender melhor o motivo do meu bloqueio e ver se é possível resolver isso.');
+    } else {
+      sendMessageInternal('Não, obrigado. Tenho outra dúvida.');
+      setShowTopics(true);
+    }
   };
 
   const sendMessage = async () => {
     if (!input.trim() || loading) return;
     setShowTopics(false);
+    setShowBlockQuestion(false);
     const userMessage = input.trim();
     setInput('');
     sendMessageInternal(userMessage);
@@ -158,17 +197,17 @@ export const AIAssistant = () => {
 
   return (
     <>
-      {/* Botão flutuante */}
+      {/* Botão flutuante - menor */}
       <Button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 left-6 h-14 px-6 rounded-full shadow-2xl z-50 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-white flex items-center gap-2 animate-fade-in hover-scale border border-white/20"
+        className="fixed bottom-6 left-6 h-12 px-5 rounded-full shadow-2xl z-50 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-white flex items-center gap-2 animate-fade-in hover-scale border border-white/20"
       >
         {isOpen ? (
-          <X className="h-5 w-5" />
+          <X className="h-4 w-4" />
         ) : (
           <>
-            <MessageCircle className="h-5 w-5" />
-            <span className="font-medium">Precisa de Ajuda?</span>
+            <MessageCircle className="h-4 w-4" />
+            <span className="font-medium text-sm">Precisa de Ajuda?</span>
           </>
         )}
       </Button>
@@ -216,6 +255,25 @@ export const AIAssistant = () => {
                         <p className="text-xs font-medium">{topic.title}</p>
                       </button>
                     ))}
+                  </div>
+                )}
+
+                {/* Show Yes/No buttons for block question */}
+                {msg.role === 'assistant' && idx === 0 && showBlockQuestion && (
+                  <div className="mt-4 flex gap-3 animate-fade-in">
+                    <Button
+                      onClick={() => handleBlockAnswer('yes')}
+                      className="flex-1 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
+                    >
+                      Sim
+                    </Button>
+                    <Button
+                      onClick={() => handleBlockAnswer('no')}
+                      variant="outline"
+                      className="flex-1 border-primary/30 hover:bg-primary/5"
+                    >
+                      Não
+                    </Button>
                   </div>
                 )}
               </div>

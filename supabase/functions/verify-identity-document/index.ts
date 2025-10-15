@@ -334,6 +334,17 @@ RESPONDA EM JSON:
 // Helper function to convert Blob to base64
 async function blobToBase64(blob: Blob): Promise<string> {
   const arrayBuffer = await blob.arrayBuffer();
-  const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+  const bytes = new Uint8Array(arrayBuffer);
+  
+  // Process in chunks to avoid stack overflow
+  const chunkSize = 8192;
+  let binary = '';
+  
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    const chunk = bytes.subarray(i, Math.min(i + chunkSize, bytes.length));
+    binary += String.fromCharCode.apply(null, Array.from(chunk));
+  }
+  
+  const base64 = btoa(binary);
   return `data:${blob.type};base64,${base64}`;
 }

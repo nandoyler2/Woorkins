@@ -155,7 +155,7 @@ export const NotificationBell = ({ profileId }: { profileId: string }) => {
                 <DropdownMenuItem
                   key={notification.id}
                   onClick={() => handleNotificationClick(notification)}
-                  className={`p-4 cursor-pointer ${!notification.read ? 'bg-accent' : ''}`}
+                  className={`p-4 cursor-pointer ${!notification.read ? 'bg-muted/50' : ''}`}
                 >
                   <div className="flex flex-col gap-1 w-full">
                     <div className="flex items-start justify-between gap-2">

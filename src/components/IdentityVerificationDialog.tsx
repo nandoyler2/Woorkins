@@ -33,6 +33,7 @@ export function IdentityVerificationDialog({
   const [preValidationFront, setPreValidationFront] = useState<any>(null);
   const [preValidationBack, setPreValidationBack] = useState<any>(null);
   const [isPreValidating, setIsPreValidating] = useState(false);
+  const [loadingStep, setLoadingStep] = useState<'checking' | 'validating' | null>(null);
   const combinedInputRef = useRef<HTMLInputElement>(null);
   const frontInputRef = useRef<HTMLInputElement>(null);
   const backInputRef = useRef<HTMLInputElement>(null);
@@ -65,6 +66,7 @@ export function IdentityVerificationDialog({
 
   const preValidateDocument = async (file: File, type: 'front' | 'back' | 'combined') => {
     setIsPreValidating(true);
+    setLoadingStep('checking');
 
     try {
       const base64 = await fileToBase64(file);
@@ -101,6 +103,7 @@ export function IdentityVerificationDialog({
       toast.error('Erro ao validar documento');
     } finally {
       setIsPreValidating(false);
+      setLoadingStep(null);
     }
   };
 
@@ -117,6 +120,7 @@ export function IdentityVerificationDialog({
     if (isProcessing) return;
     
     setIsProcessing(true);
+    setLoadingStep('validating');
     
     try {
       const timestamp = Date.now();
@@ -182,16 +186,28 @@ export function IdentityVerificationDialog({
       toast.error('Erro ao processar verificação: ' + error.message);
     } finally {
       setIsProcessing(false);
+      setLoadingStep(null);
     }
   };
 
   const renderContent = () => {
-    if (isProcessing) {
+    if (isPreValidating || isProcessing) {
       return (
         <div className="flex flex-col items-center justify-center p-8 space-y-4">
           <Loader2 className="h-12 w-12 animate-spin text-primary" />
-          <p className="text-center">Processando documentos e validando informações...</p>
-          <p className="text-sm text-muted-foreground text-center">Isso pode levar alguns segundos</p>
+          {loadingStep === 'checking' && (
+            <>
+              <p className="text-center font-semibold">Estamos verificando se o documento está correto</p>
+              <p className="text-sm text-muted-foreground text-center">Aguarde enquanto validamos seu documento</p>
+              <p className="text-sm text-muted-foreground text-center">Verificação iniciará automaticamente...</p>
+            </>
+          )}
+          {loadingStep === 'validating' && (
+            <>
+              <p className="text-center font-semibold">Validando as informações...</p>
+              <p className="text-sm text-muted-foreground text-center">Isso pode levar alguns segundos</p>
+            </>
+          )}
         </div>
       );
     }

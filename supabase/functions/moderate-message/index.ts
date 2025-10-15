@@ -33,47 +33,47 @@ Deno.serve(async (req) => {
     const textContent: string = typeof content === 'string' ? content : '';
 
     const hasContactIndicators = (t: string): boolean => {
-      const tLow = (t || '').toLowerCase();
-      
+      if (!t) return false;
+      const tOrig = String(t);
+      const tLow = tOrig.toLowerCase();
+      const tNoAccents = tLow.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+      // De-leet speak to catch disguised app names and @handles
+      const leetMap: Record<string, string> = { '0': 'o', '1': 'i', '2': 'z', '3': 'e', '4': 'a', '5': 's', '6': 'g', '7': 't', '8': 'b', '9': 'g' };
+      const tDeLeet = tNoAccents.replace(/[0123456789]/g, (d) => leetMap[d] || d);
+
+      const haystacks = [tLow, tNoAccents, tDeLeet];
+
       // URLs
-      if (/(https?:\/\/|www\.)/i.test(tLow)) return true;
-      
+      if (haystacks.some(h => /(https?:\/\/|www\.)/i.test(h))) return true;
+
       // Emails
-      if (/\b[\w.+-]+@[\w.-]+\.[a-z]{2,}\b/i.test(tLow)) return true;
-      
-      // @handles
-      if (/@[a-z0-9._]{3,}/i.test(tLow)) return true;
-      
-      // Messaging/social app keywords
-      if (/\b(whats(app)?|zap|wpp|telegram|tg|signal|discord|messenger|skype|instagram|insta|ig|facebook|fb|tiktok|linkedin|tt|twitter|x)\b/i.test(tLow)) return true;
-      
-      // PIX keywords - CRÍTICO para plataforma brasileira
-      if (/\b(pix|chave\s*pix|meu\s*pix|chave|código\s*pix)\b/i.test(tLow)) return true;
-      
-      // Detecção de números de telefone disfarçados
-      // Extrair TODOS os números da mensagem (incluindo separados por palavras)
-      const allNumbers = t.match(/\d+/g);
-      if (allNumbers) {
-        // Juntar todos os números encontrados
-        const joinedNumbers = allNumbers.join('');
-        
-        // Se juntando os números formar 8-11 dígitos, é suspeito
-        if (joinedNumbers.length >= 8 && joinedNumbers.length <= 11) {
-          // Verificar se parece com número brasileiro (começa com DDD válido)
-          const firstTwoDigits = parseInt(joinedNumbers.substring(0, 2));
-          if (firstTwoDigits >= 11 && firstTwoDigits <= 99) {
-            return true; // Provável número de telefone disfarçado
-          }
-        }
-        
-        // Também verificar números consecutivos de 8-11 dígitos
-        if (/\d{8,11}/.test(t)) return true;
-      }
-      
-      // Phone-like digit sequences (8-12 digits when removing ALL non-digits)
-      const onlyDigits = t.replace(/\D/g, '');
-      if (onlyDigits.length >= 8 && onlyDigits.length <= 12) return true;
-      
+      if (haystacks.some(h => /\b[\w.+-]+@[\w.-]+\.[a-z]{2,}\b/i.test(h))) return true;
+
+      // @handles (after de-leet too)
+      if (haystacks.some(h => /@[a-z0-9._]{3,}/i.test(h))) return true;
+
+      // Messaging/social app keywords (after de-leet too)
+      const appRegex = /\b(whats(app)?|zap|wpp|telegram|tg|signal|discord|messenger|skype|instagram|insta|ig|facebook|fb|tiktok|linkedin|tt|twitter|x)\b/i;
+      if (haystacks.some(h => appRegex.test(h))) return true;
+
+      // PIX keywords
+      const pixRegex = /\b(pix|chave\s*pix|meu\s*pix|chave|codigo\s*pix)\b/i;
+      if (haystacks.some(h => pixRegex.test(h))) return true;
+
+      // Digits embedded in words: if ANY digits exist, we should NOT early-approve (let AI analyze)
+      if (/\d/.test(tOrig)) return true;
+
+      // Phone-like digit sequences when collapsing non-digits
+      const onlyDigits = tOrig.replace(/\D/g, '');
+      if (/\d{8,12}/.test(onlyDigits)) return true; // any 8-12 window
+
+      // Detect spelled-out numbers (pt-BR) joined to form phone-like sequences
+      const numWords: Record<string, string> = { zero: '0', um: '1', uma: '1', dois: '2', duas: '2', tres: '3', quatro: '4', cinco: '5', seis: '6', sete: '7', oito: '8', nove: '9' };
+      const tokens = tNoAccents.split(/[^a-z0-9]+/);
+      const mapped = tokens.map(tok => (numWords[tok] ?? '')).join('');
+      if (/\d{8,12}/.test(mapped)) return true;
+
       return false;
     };
 

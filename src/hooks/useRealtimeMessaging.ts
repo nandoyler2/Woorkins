@@ -256,21 +256,10 @@ export const useRealtimeMessaging = ({
         .slice(-5)
         .map(m => m.content);
 
-      // Create temp message to get ID for moderation
-      const tempMessage: Message = {
-        id: tempId,
-        sender_id: currentUserId,
-        sender_name: 'Você',
-        content: content.trim(),
-        created_at: new Date().toISOString(),
-        status: 'sending',
-      };
-
       // Call moderation function with context (including image if present)
       const moderationBody: any = { 
         content: content.trim(),
-        recentMessages: recentUserMessages,
-        messageId: tempId
+        recentMessages: recentUserMessages
       };
 
       // If there's an attachment and it's an image, include it in moderation

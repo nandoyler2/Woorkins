@@ -11,11 +11,12 @@ import { ArrowLeft, Save, User, Mail, Lock, Shield, Camera, LockKeyhole } from '
 import { Link } from 'react-router-dom';
 import { validateCPF } from '@/lib/utils';
 import { ProfilePhotoUpload } from '@/components/ProfilePhotoUpload';
-import { SupportChatDialog } from '@/components/SupportChatDialog';
+import { useAIAssistant } from '@/contexts/AIAssistantContext';
 
 export default function Account() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { openWithMessage } = useAIAssistant();
   const [loading, setLoading] = useState(false);
   const [profile, setProfile] = useState({
     id: '',
@@ -31,8 +32,6 @@ export default function Account() {
     newPassword: '',
     confirmPassword: '',
   });
-  const [supportChatOpen, setSupportChatOpen] = useState(false);
-  const [supportInitialMessage, setSupportInitialMessage] = useState('');
 
   useEffect(() => {
     loadProfile();
@@ -267,8 +266,7 @@ export default function Account() {
                     }}
                     onClick={() => {
                       if (profile.cpf) {
-                        setSupportInitialMessage('Preciso alterar meu nome no cadastro');
-                        setSupportChatOpen(true);
+                        openWithMessage('Preciso alterar meu nome no cadastro');
                       }
                     }}
                     readOnly={!!profile.cpf}
@@ -324,8 +322,7 @@ export default function Account() {
                     }}
                     onClick={() => {
                       if (profile.cpf) {
-                        setSupportInitialMessage('Meu CPF está errado, preciso trocar');
-                        setSupportChatOpen(true);
+                        openWithMessage('Meu CPF está errado, preciso trocar');
                       }
                     }}
                     readOnly={!!profile.cpf}
@@ -392,13 +389,6 @@ export default function Account() {
           </Card>
         </div>
       </div>
-
-      <SupportChatDialog 
-        open={supportChatOpen} 
-        onOpenChange={setSupportChatOpen}
-        profileId={profile.id}
-        initialMessage={supportInitialMessage}
-      />
     </div>
   );
 }

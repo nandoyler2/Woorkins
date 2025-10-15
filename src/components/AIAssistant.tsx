@@ -6,6 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSystemBlock } from '@/hooks/useSystemBlock';
+import { useAIAssistant } from '@/contexts/AIAssistantContext';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -36,7 +37,8 @@ const helpTopics = [
 ];
 
 export const AIAssistant = () => {
-  const [isOpen, setIsOpen] = useState(false);
+  const { isOpen: contextIsOpen, close, initialMessage } = useAIAssistant();
+  const [internalOpen, setInternalOpen] = useState(false);
   const [showTopics, setShowTopics] = useState(true);
   const [userName, setUserName] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
@@ -50,6 +52,9 @@ export const AIAssistant = () => {
   const { session } = useAuth();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { systemBlock, messagingBlock } = useSystemBlock(profileId || '');
+
+  // Sincronizar isOpen do contexto com o estado interno
+  const isOpen = contextIsOpen || internalOpen;
 
   // Carregar perfil e conversas persistidas
   useEffect(() => {
@@ -134,6 +139,28 @@ export const AIAssistant = () => {
       loadUserData();
     }
   }, [session, isOpen, systemBlock, messagingBlock]);
+
+  // Enviar mensagem inicial quando fornecida
+  const initialMessageSentRef = useRef(false);
+  
+  useEffect(() => {
+    if (isOpen && initialMessage && profileId && !initialMessageSentRef.current) {
+      // Limpar tópicos e enviar mensagem inicial
+      setShowTopics(false);
+      setShowBlockQuestion(false);
+      
+      // Aguardar um pouco para garantir que o perfil foi carregado
+      setTimeout(() => {
+        sendMessageInternal(initialMessage);
+        initialMessageSentRef.current = true;
+      }, 500);
+    }
+    
+    // Reset quando fechar
+    if (!isOpen) {
+      initialMessageSentRef.current = false;
+    }
+  }, [isOpen, initialMessage, profileId]);
 
   // Scroll para última mensagem
   useEffect(() => {
@@ -240,41 +267,52 @@ export const AIAssistant = () => {
   return (
     <>
       {/* Botão flutuante - menor */}
-      <Button
-        onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 left-6 h-12 px-5 rounded-full shadow-2xl z-50 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-white flex items-center gap-2 animate-fade-in hover-scale border border-white/20"
-      >
-        {isOpen ? (
-          <X className="h-4 w-4" />
-        ) : (
-          <>
-            <MessageCircle className="h-4 w-4" />
-            <span className="font-medium text-sm">Precisa de Ajuda?</span>
-          </>
-        )}
-      </Button>
+      {!isOpen && (
+        <Button
+          onClick={() => setInternalOpen(true)}
+          className="fixed bottom-6 left-6 h-12 px-5 rounded-full shadow-2xl z-50 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-white flex items-center gap-2 animate-fade-in hover-scale border border-white/20"
+        >
+          <MessageCircle className="h-4 w-4" />
+          <span className="font-medium text-sm">Precisa de Ajuda?</span>
+        </Button>
+      )}
 
       {/* Chat window */}
       {isOpen && (
         <div className="fixed bottom-24 left-6 w-96 h-[600px] bg-gradient-to-br from-background via-background to-background/95 border-2 border-primary/20 rounded-3xl shadow-2xl z-50 flex flex-col backdrop-blur-sm animate-scale-in">
           <div className="p-6 border-b border-primary/10 bg-gradient-to-r from-primary/5 to-transparent rounded-t-3xl">
             <div className="flex items-center justify-between">
-              <h3 className="font-bold text-lg flex items-center gap-2">
-                <MessageCircle className="h-5 w-5 text-primary" />
-                Assistente Virtual Woorkins
-              </h3>
-              {messages.length > 0 && (
+              <div className="flex-1">
+                <h3 className="font-bold text-lg flex items-center gap-2">
+                  <MessageCircle className="h-5 w-5 text-primary" />
+                  Assistente Virtual Woorkins
+                </h3>
+                <p className="text-sm text-muted-foreground mt-1">Estou aqui para ajudar você{userName && `, ${userName}`}!</p>
+              </div>
+              <div className="flex items-center gap-2">
+                {messages.length > 0 && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={endConversation}
+                    className="h-8"
+                  >
+                    Encerrar conversa
+                  </Button>
+                )}
                 <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={endConversation}
-                  className="h-8"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => {
+                    close();
+                    setInternalOpen(false);
+                  }}
+                  className="h-8 w-8"
                 >
-                  Encerrar conversa
+                  <X className="h-4 w-4" />
                 </Button>
-              )}
+              </div>
             </div>
-            <p className="text-sm text-muted-foreground mt-1">Estou aqui para ajudar você{userName && `, ${userName}`}!</p>
           </div>
 
           {/* Messages */}

@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { AIAssistantProvider } from "@/contexts/AIAssistantContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AIAssistant } from "@/components/AIAssistant";
 import { SystemBlockAlert } from "@/components/SystemBlockAlert";
@@ -119,7 +120,9 @@ const App = () => (
       <BrowserRouter>
         <LanguageProvider>
           <AuthProvider>
-            <AppContent />
+            <AIAssistantProvider>
+              <AppContent />
+            </AIAssistantProvider>
           </AuthProvider>
         </LanguageProvider>
       </BrowserRouter>

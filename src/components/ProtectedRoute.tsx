@@ -56,7 +56,7 @@ export const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRout
     return <Navigate to="/autenticacao?mode=signin" replace />;
   }
 
-  if (requireAdmin && !isAdmin) {
+  if (requireAdmin && isAdmin === false) {
     return <Navigate to="/feed" replace />;
   }
 

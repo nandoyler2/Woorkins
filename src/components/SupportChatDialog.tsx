@@ -19,6 +19,7 @@ interface SupportChatDialogProps {
   onOpenChange: (open: boolean) => void;
   documentRejected?: boolean;
   profileId?: string;
+  initialMessage?: string;
 }
 
 interface Message {
@@ -29,7 +30,7 @@ interface Message {
   attachments?: any;
 }
 
-export function SupportChatDialog({ open, onOpenChange, documentRejected, profileId }: SupportChatDialogProps) {
+export function SupportChatDialog({ open, onOpenChange, documentRejected, profileId, initialMessage }: SupportChatDialogProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [message, setMessage] = useState('');
   const [conversationId, setConversationId] = useState<string | null>(null);
@@ -79,8 +80,14 @@ export function SupportChatDialog({ open, onOpenChange, documentRejected, profil
       setMessages([initialMsg]);
       setAskedForHelp(true);
       setShowWelcome(false);
+    } else if (open && initialMessage && messages.length === 0 && !conversationId) {
+      // Enviar mensagem inicial automaticamente
+      const timer = setTimeout(() => {
+        handleSendMessage(initialMessage);
+      }, 500);
+      return () => clearTimeout(timer);
     }
-  }, [open, documentRejected, askedForHelp]);
+  }, [open, documentRejected, askedForHelp, initialMessage]);
 
   // Timer de inatividade e countdown
   useEffect(() => {

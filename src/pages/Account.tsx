@@ -11,12 +11,14 @@ import { ArrowLeft, Save, User, Mail, Lock, Shield, Camera } from 'lucide-react'
 import { Link } from 'react-router-dom';
 import { validateCPF } from '@/lib/utils';
 import { ProfilePhotoUpload } from '@/components/ProfilePhotoUpload';
+import { SupportChatDialog } from '@/components/SupportChatDialog';
 
 export default function Account() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [profile, setProfile] = useState({
+    id: '',
     full_name: '',
     username: '',
     email: '',
@@ -29,6 +31,8 @@ export default function Account() {
     newPassword: '',
     confirmPassword: '',
   });
+  const [supportChatOpen, setSupportChatOpen] = useState(false);
+  const [supportInitialMessage, setSupportInitialMessage] = useState('');
 
   useEffect(() => {
     loadProfile();
@@ -39,12 +43,13 @@ export default function Account() {
 
     const { data } = await supabase
       .from('profiles')
-      .select('full_name, username, cpf, avatar_url')
+      .select('id, full_name, username, cpf, avatar_url')
       .eq('user_id', user.id)
       .single();
 
     if (data) {
       setProfile({
+        id: data.id || '',
         full_name: data.full_name || '',
         username: data.username || '',
         email: user.email || '',
@@ -296,15 +301,12 @@ export default function Account() {
                     }}
                     onClick={() => {
                       if (profile.cpf) {
-                        toast({
-                          title: 'CPF não pode ser alterado',
-                          description: 'O CPF está incorreto? Entre em contato com nossa central de ajuda.',
-                          variant: 'destructive',
-                        });
+                        setSupportInitialMessage('Meu CPF está errado, preciso trocar');
+                        setSupportChatOpen(true);
                       }
                     }}
                     disabled={!!profile.cpf}
-                    className={profile.cpf ? 'bg-muted cursor-not-allowed' : ''}
+                    className={profile.cpf ? 'bg-muted cursor-pointer' : ''}
                     placeholder="000.000.000-00"
                   />
                   <p className="text-xs text-muted-foreground">
@@ -367,6 +369,13 @@ export default function Account() {
           </Card>
         </div>
       </div>
+
+      <SupportChatDialog 
+        open={supportChatOpen} 
+        onOpenChange={setSupportChatOpen}
+        profileId={profile.id}
+        initialMessage={supportInitialMessage}
+      />
     </div>
   );
 }

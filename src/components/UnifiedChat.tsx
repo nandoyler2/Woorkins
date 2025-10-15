@@ -428,37 +428,40 @@ export function UnifiedChat({
         </AlertDescription>
       </Alert>
 
-      {/* Proposal Negotiation Panel - Compact */}
+      {/* Proposal Negotiation Panel - Compact & Beautiful */}
       {conversationType === 'proposal' && proposalData && (
-        <div className="border-b p-2.5 bg-slate-50/80 flex-shrink-0">
-          <div className="flex items-center justify-between gap-3">
-            {/* Left: Proposal Value */}
-            <div className="flex-shrink-0">
-              <p className="text-xs text-muted-foreground mb-0.5">Valor da Proposta</p>
-              <p className="text-lg font-bold text-primary">
-                R$ {proposalData.budget.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-              </p>
-              <p className="text-xs text-muted-foreground">Prazo: {proposalData.delivery_days} dias</p>
+        <div className="border-b px-4 py-3 bg-gradient-to-r from-slate-50 to-slate-100 flex-shrink-0">
+          <div className="flex items-center justify-between gap-4">
+            {/* Left: Project Name + Proposal Details in Rounded Box */}
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-foreground mb-2 truncate">{projectTitle}</p>
+                <div className="inline-flex items-center gap-3 bg-white rounded-full px-4 py-1.5 shadow-sm border">
+                  <div className="flex items-center gap-1.5">
+                    <DollarSign className="h-3.5 w-3.5 text-primary" />
+                    <span className="text-sm font-bold text-primary">
+                      R$ {proposalData.budget.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                  <div className="h-3 w-px bg-border" />
+                  <span className="text-xs text-muted-foreground">
+                    Prazo: {proposalData.delivery_days} dia{proposalData.delivery_days > 1 ? 's' : ''}
+                  </span>
+                </div>
+              </div>
             </div>
 
-            {/* Center: Project Name + Refazer Button */}
-            <div className="flex-1 min-w-0 flex items-center gap-2">
-              <div className="flex-1 min-w-0">
-                <p className="text-xs text-muted-foreground mb-0.5">Projeto</p>
-                <p className="text-sm font-semibold truncate">{projectTitle}</p>
-              </div>
+            {/* Right: Refazer Button + Status + Menu */}
+            <div className="flex items-center gap-2 flex-shrink-0">
               <Button
                 variant="outline"
                 size="sm"
-                className="flex-shrink-0 h-8 text-xs"
+                className="h-8 text-xs"
               >
                 <DollarSign className="h-3 w-3 mr-1" />
                 Refazer Proposta
               </Button>
-            </div>
-
-            {/* Right: Status + Menu */}
-            <div className="flex items-center gap-2 flex-shrink-0">
+              
               <Badge variant={proposalData.status === 'accepted' ? 'default' : 'secondary'} className="text-xs">
                 {proposalData.status === 'pending' ? 'Pendente' : 
                  proposalData.status === 'accepted' ? 'Aceito' : 
@@ -503,52 +506,6 @@ export function UnifiedChat({
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* Info Header */}
-      {(projectId || businessId) && (
-        <div className="border-b p-3 bg-slate-50 flex-shrink-0">
-          <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <p className="text-xs text-muted-foreground mb-1">
-                {conversationType === 'proposal' ? 'Projeto' : 'Negociação com'}
-              </p>
-              <p className="text-sm font-semibold">
-                {conversationType === 'proposal' ? projectTitle : businessName}
-              </p>
-            </div>
-            {projectId && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => window.open(`/projetos/${projectId}`, '_blank')}
-                className="text-xs flex items-center gap-1"
-              >
-                <ExternalLink className="h-3 w-3" />
-                Ver Projeto
-              </Button>
-            )}
-            {businessId && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  const slug = businessName?.toLowerCase().normalize('NFD')
-                    .replace(/[\u0300-\u036f]/g, '')
-                    .replace(/[^a-z0-9\s-]/g, '')
-                    .trim()
-                    .replace(/\s+/g, '-')
-                    .replace(/-+/g, '-');
-                  window.open(`/${slug}`, '_blank');
-                }}
-                className="text-xs flex items-center gap-1"
-              >
-                <ExternalLink className="h-3 w-3" />
-                Ver Perfil
-              </Button>
-            )}
           </div>
         </div>
       )}

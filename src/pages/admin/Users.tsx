@@ -85,16 +85,47 @@ export default function AdminUsers() {
             .eq('profile_id', profile.id)
             .maybeSingle();
 
-          const { data: blocks } = await supabase
+          const { data: systemBlocks } = await supabase
             .from('system_blocks')
             .select('*')
             .eq('profile_id', profile.id);
+
+          // Buscar bloqueios temporários de moderação
+          const { data: violations } = await supabase
+            .from('moderation_violations')
+            .select('*')
+            .eq('profile_id', profile.id)
+            .maybeSingle();
+
+          // Criar bloqueio sintético se há violação ativa
+          const blocks = [...(systemBlocks || [])];
+          
+          if (violations?.blocked_until) {
+            const blockedUntil = new Date(violations.blocked_until);
+            const now = new Date();
+            
+            // Só adicionar se o bloqueio ainda está ativo
+            if (blockedUntil > now) {
+              blocks.push({
+                id: violations.id,
+                profile_id: profile.id,
+                block_type: 'messaging',
+                reason: `Bloqueio automático por ${violations.violation_count} violações de moderação`,
+                blocked_until: violations.blocked_until,
+                is_permanent: false,
+                created_at: violations.last_violation_at || violations.created_at,
+                blocked_by: null,
+                updated_at: violations.updated_at
+              });
+            }
+          }
           
           return {
             ...profile,
             user_roles: roles || [],
             woorkoins_balance: woorkoins?.balance || 0,
-            blocks: blocks || []
+            blocks: blocks,
+            violations: violations
           };
         })
       );
@@ -111,15 +142,29 @@ export default function AdminUsers() {
     }
   };
 
-  const handleUnblockUser = async (profileId: string, blockId: string) => {
+  const handleUnblockUser = async (profileId: string, blockId: string, isViolation: boolean = false) => {
     setUnblockLoading(true);
     try {
-      const { error } = await supabase
-        .from('system_blocks')
-        .delete()
-        .eq('id', blockId);
+      if (isViolation) {
+        // Se for um bloqueio de violação, resetar a contagem
+        const { error } = await supabase
+          .from('moderation_violations')
+          .update({ 
+            violation_count: 0, 
+            blocked_until: null 
+          })
+          .eq('id', blockId);
 
-      if (error) throw error;
+        if (error) throw error;
+      } else {
+        // Se for um bloqueio manual do sistema
+        const { error } = await supabase
+          .from('system_blocks')
+          .delete()
+          .eq('id', blockId);
+
+        if (error) throw error;
+      }
 
       toast({
         title: 'Usuário desbloqueado',
@@ -381,7 +426,11 @@ export default function AdminUsers() {
             open={blockDetailsDialogOpen}
             onOpenChange={setBlockDetailsDialogOpen}
             block={selectedBlock}
-            onUnblock={() => handleUnblockUser(selectedBlock.profile_id, selectedBlock.id)}
+            onUnblock={() => {
+              const user = users.find(u => u.id === selectedBlock.profile_id);
+              const isViolation = user?.violations?.id === selectedBlock.id;
+              handleUnblockUser(selectedBlock.profile_id, selectedBlock.id, isViolation);
+            }}
             loading={unblockLoading}
           />
         )}

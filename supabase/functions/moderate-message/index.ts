@@ -34,21 +34,46 @@ Deno.serve(async (req) => {
 
     const hasContactIndicators = (t: string): boolean => {
       const tLow = (t || '').toLowerCase();
+      
       // URLs
       if (/(https?:\/\/|www\.)/i.test(tLow)) return true;
+      
       // Emails
       if (/\b[\w.+-]+@[\w.-]+\.[a-z]{2,}\b/i.test(tLow)) return true;
+      
       // @handles
       if (/@[a-z0-9._]{3,}/i.test(tLow)) return true;
+      
       // Messaging/social app keywords
       if (/\b(whats(app)?|zap|wpp|telegram|tg|signal|discord|messenger|skype|instagram|insta|ig|facebook|fb|tiktok|linkedin|tt|twitter|x)\b/i.test(tLow)) return true;
+      
       // PIX keywords - CRÍTICO para plataforma brasileira
       if (/\b(pix|chave\s*pix|meu\s*pix|chave|código\s*pix)\b/i.test(tLow)) return true;
-      // Phone-like digit sequences (8-12 digits when removing separators)
-      const onlyDigits = tLow.replace(/\D/g, '');
+      
+      // Detecção de números de telefone disfarçados
+      // Extrair TODOS os números da mensagem (incluindo separados por palavras)
+      const allNumbers = t.match(/\d+/g);
+      if (allNumbers) {
+        // Juntar todos os números encontrados
+        const joinedNumbers = allNumbers.join('');
+        
+        // Se juntando os números formar 8-11 dígitos, é suspeito
+        if (joinedNumbers.length >= 8 && joinedNumbers.length <= 11) {
+          // Verificar se parece com número brasileiro (começa com DDD válido)
+          const firstTwoDigits = parseInt(joinedNumbers.substring(0, 2));
+          if (firstTwoDigits >= 11 && firstTwoDigits <= 99) {
+            return true; // Provável número de telefone disfarçado
+          }
+        }
+        
+        // Também verificar números consecutivos de 8-11 dígitos
+        if (/\d{8,11}/.test(t)) return true;
+      }
+      
+      // Phone-like digit sequences (8-12 digits when removing ALL non-digits)
+      const onlyDigits = t.replace(/\D/g, '');
       if (onlyDigits.length >= 8 && onlyDigits.length <= 12) return true;
-      // Brazilian phone patterns - números com 8-9 dígitos sequenciais
-      if (/\d{8,11}/.test(t)) return true;
+      
       return false;
     };
 
@@ -91,9 +116,11 @@ SE DETECTAR ESTE PADRÃO = BLOQUEAR IMEDIATAMENTE E SINALIZAR
    - Por extenso: "um um nove oito sete", "onze nove oito"
    - Disfarçado: "nove.oito.sete.seis.cinco"
    - **NÚMEROS DISFARÇADOS EM FRASES**: "993912083 motivos", "11999887766 razões", "21987654321 formas"
+   - **🚨 CRÍTICO - NÚMEROS CAMUFLADOS**: "tem 993 cavalos e anda a 912 km/h e a 083 segundos" = 993912083
+   - **EXTRAIR TODOS OS NÚMEROS**: Se ao juntar TODOS os números da frase formar 8-11 dígitos = TELEFONE
    - Qualquer sequência de 8-11 dígitos MESMO QUE disfarçada em texto normal
    - Código de área + número: "11 9", "21 9", "DDD 9"
-   - **CRÍTICO**: Detectar números brasileiros com 8-11 dígitos consecutivos INDEPENDENTE do contexto
+   - **DETECTAR**: Números separados por palavras que ao juntar formem telefone brasileiro
    - MÚLTIPLAS MENSAGENS COM NÚMEROS CURTOS: se houver username + números em sequência = TELEFONE
 
 3. **Apps de mensagem** (incluindo disfarces):

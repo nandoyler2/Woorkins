@@ -8,6 +8,12 @@ import { MessageCircle, Send, Loader2, Paperclip, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
+// Função para formatar markdown simples (negrito)
+const formatMarkdown = (text: string) => {
+  // Substitui **texto** por <strong>texto</strong>
+  return text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+};
+
 interface SupportChatDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -456,7 +462,10 @@ export function SupportChatDialog({ open, onOpenChange, documentRejected, profil
                     {msg.sender_type === 'agent' && (
                       <div className="text-xs font-semibold mb-1">Atendente</div>
                     )}
-                    <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                    <p 
+                      className="text-sm whitespace-pre-wrap"
+                      dangerouslySetInnerHTML={{ __html: formatMarkdown(msg.content) }}
+                    />
                     {msg.attachments && (
                       <div className="text-xs mt-2 opacity-80">
                         📎 Documentos anexados

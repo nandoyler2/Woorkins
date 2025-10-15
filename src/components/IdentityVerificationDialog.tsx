@@ -645,12 +645,9 @@ export function IdentityVerificationDialog({
         open={showManualSubmission}
         onOpenChange={setShowManualSubmission}
         profileId={profileId}
-        onSuccess={() => {
+        onSubmitSuccess={() => {
           setShowManualSubmission(false);
-          toast({
-            title: 'Documentos enviados!',
-            description: 'Você receberá um contato em até 48 horas úteis.',
-          });
+          onOpenChange(false);
         }}
       />
 

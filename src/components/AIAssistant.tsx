@@ -48,6 +48,8 @@ export const AIAssistant = () => {
   const [hasRecentBlock, setHasRecentBlock] = useState(false);
   const [showBlockQuestion, setShowBlockQuestion] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
+  const [streamingMessage, setStreamingMessage] = useState('');
+  const [isStreaming, setIsStreaming] = useState(false);
   const { toast } = useToast();
   const { session } = useAuth();
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -192,6 +194,94 @@ export const AIAssistant = () => {
     sendMessageInternal(userMessage);
   };
 
+  // Função auxiliar para converter **texto** em negrito
+  const formatMessageContent = (content: string) => {
+    const parts = content.split(/(\*\*.*?\*\*)/g);
+    return parts.map((part, index) => {
+      if (part.startsWith('**') && part.endsWith('**')) {
+        return <strong key={index}>{part.slice(2, -2)}</strong>;
+      }
+      return part;
+    });
+  };
+
+  // Função para dividir mensagens longas em chunks
+  const streamLongMessage = async (fullContent: string, updatedMessages: Message[]) => {
+    const CHUNK_SIZE = 200;
+    const TYPING_DELAY = 5000;
+
+    // Se a mensagem for curta, mostrar tudo de uma vez
+    if (fullContent.length <= CHUNK_SIZE) {
+      const assistantMessage = { role: 'assistant' as const, content: fullContent };
+      const finalMessages = [...updatedMessages, assistantMessage];
+      setMessages(finalMessages);
+      
+      if (profileId) {
+        await supabase
+          .from('ai_assistant_conversations')
+          .upsert({
+            profile_id: profileId,
+            messages: finalMessages as any
+          });
+      }
+      return finalMessages;
+    }
+
+    // Dividir em chunks por sentenças ou parágrafos
+    const chunks: string[] = [];
+    let currentChunk = '';
+    const sentences = fullContent.split(/([.!?]\s+|\n\n)/);
+    
+    for (const sentence of sentences) {
+      if ((currentChunk + sentence).length > CHUNK_SIZE && currentChunk.length > 0) {
+        chunks.push(currentChunk.trim());
+        currentChunk = sentence;
+      } else {
+        currentChunk += sentence;
+      }
+    }
+    if (currentChunk.trim()) {
+      chunks.push(currentChunk.trim());
+    }
+
+    // Mostrar primeiro chunk
+    setIsStreaming(true);
+    let accumulatedContent = chunks[0];
+    const assistantMessage = { role: 'assistant' as const, content: accumulatedContent };
+    let currentMessages = [...updatedMessages, assistantMessage];
+    setMessages(currentMessages);
+
+    // Mostrar chunks restantes com delay
+    for (let i = 1; i < chunks.length; i++) {
+      setStreamingMessage(chunks[i]);
+      setIsTyping(true);
+      await new Promise(resolve => setTimeout(resolve, TYPING_DELAY));
+      setIsTyping(false);
+      
+      accumulatedContent += '\n\n' + chunks[i];
+      currentMessages = [
+        ...updatedMessages,
+        { role: 'assistant' as const, content: accumulatedContent }
+      ];
+      setMessages(currentMessages);
+    }
+
+    setIsStreaming(false);
+    setStreamingMessage('');
+
+    // Persistir conversa completa
+    if (profileId) {
+      await supabase
+        .from('ai_assistant_conversations')
+        .upsert({
+          profile_id: profileId,
+          messages: currentMessages as any
+        });
+    }
+
+    return currentMessages;
+  };
+
   const sendMessageInternal = async (messageText: string) => {
     const newUserMessage = { role: 'user' as const, content: messageText };
     const updatedMessages = [...messages, newUserMessage];
@@ -208,19 +298,8 @@ export const AIAssistant = () => {
 
       if (error) throw error;
 
-      const assistantMessage = { role: 'assistant' as const, content: data.response };
-      const finalMessages = [...updatedMessages, assistantMessage];
-      setMessages(finalMessages);
-
-      // Persistir conversa
-      if (profileId) {
-        await supabase
-          .from('ai_assistant_conversations')
-          .upsert({
-            profile_id: profileId,
-            messages: finalMessages as any
-          });
-      }
+      // Usar streaming para mensagens longas
+      const finalMessages = await streamLongMessage(data.response, updatedMessages);
 
       // Se foi desbloqueado, recarregar a página após 2 segundos
       if (data.actionExecuted) {
@@ -329,15 +408,7 @@ export const AIAssistant = () => {
                         : 'bg-gradient-to-br from-muted to-muted/50 border border-primary/10'
                     }`}
                   >
-                    <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.content}</p>
-                    {/* Animação de digitação para a primeira mensagem se estiver carregando */}
-                    {msg.role === 'assistant' && idx === 0 && isTyping && (
-                      <div className="flex space-x-1 mt-2">
-                        <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" />
-                        <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
-                        <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
-                      </div>
-                    )}
+                    <p className="text-sm whitespace-pre-wrap leading-relaxed">{formatMessageContent(msg.content)}</p>
                   </div>
                 </div>
                 
@@ -377,7 +448,7 @@ export const AIAssistant = () => {
                 )}
               </div>
             ))}
-            {loading && (
+            {(loading || isTyping) && (
               <div className="flex justify-start animate-fade-in">
                 <div className="bg-gradient-to-br from-muted to-muted/50 rounded-2xl px-4 py-3 border border-primary/10">
                   <div className="flex space-x-2">

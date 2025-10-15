@@ -43,12 +43,15 @@ export function IdentityVerificationDialog({
     if (!file) return;
 
     if (type === 'front') {
+      setUploadOption('separate');
       setFrontImage(file);
       await preValidateDocument(file, 'front');
     } else if (type === 'back') {
+      setUploadOption('separate');
       setBackImage(file);
       await preValidateDocument(file, 'back');
     } else {
+      setUploadOption('combined');
       setCombinedImage(file);
       await preValidateDocument(file, 'combined');
       // Para documento combinado, verificar automaticamente após pré-validação
@@ -289,10 +292,7 @@ export function IdentityVerificationDialog({
             <Button
               variant="outline"
               className="w-full h-auto py-4 flex flex-col items-center gap-2"
-              onClick={() => {
-                setUploadOption('combined');
-                setTimeout(() => combinedInputRef.current?.click(), 100);
-              }}
+              onClick={() => combinedInputRef.current?.click()}
             >
               <Upload className="h-6 w-6" />
               <div>
@@ -304,7 +304,9 @@ export function IdentityVerificationDialog({
             <Button
               variant="outline"
               className="w-full h-auto py-4 flex flex-col items-center gap-2"
-              onClick={() => setUploadOption('separate')}
+              onClick={() => {
+                setUploadOption('separate');
+              }}
             >
               <Upload className="h-6 w-6" />
               <div>

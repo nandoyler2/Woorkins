@@ -8,6 +8,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -94,6 +95,26 @@ export const NotificationBell = ({ profileId }: { profileId: string }) => {
     }
   };
 
+  const markAllAsRead = async () => {
+    const unreadIds = notifications.filter(n => !n.read).map(n => n.id);
+    if (unreadIds.length === 0) return;
+
+    await supabase
+      .from('notifications')
+      .update({ read: true })
+      .in('id', unreadIds);
+    
+    setNotifications(prev =>
+      prev.map(n => ({ ...n, read: true }))
+    );
+    setUnreadCount(0);
+    
+    toast({
+      title: "Notificações marcadas",
+      description: "Todas as notificações foram marcadas como lidas",
+    });
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -109,37 +130,54 @@ export const NotificationBell = ({ profileId }: { profileId: string }) => {
           )}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-80">
+      <DropdownMenuContent align="end" className="w-80 p-0">
         {notifications.length === 0 ? (
           <div className="p-4 text-center text-muted-foreground">
             Nenhuma notificação
           </div>
         ) : (
-          notifications.map((notification) => (
-            <DropdownMenuItem
-              key={notification.id}
-              onClick={() => handleNotificationClick(notification)}
-              className={`p-4 cursor-pointer ${!notification.read ? 'bg-accent' : ''}`}
-            >
-              <div className="flex flex-col gap-1 w-full">
-                <div className="flex items-start justify-between gap-2">
-                  <span className="font-semibold text-sm">{notification.title}</span>
-                  {!notification.read && (
-                    <div className="h-2 w-2 rounded-full bg-primary flex-shrink-0 mt-1" />
-                  )}
-                </div>
-                <p className="text-xs text-muted-foreground">{notification.message}</p>
-                <span className="text-xs text-muted-foreground">
-                  {new Date(notification.created_at).toLocaleDateString('pt-BR', {
-                    day: '2-digit',
-                    month: '2-digit',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
-                </span>
-              </div>
-            </DropdownMenuItem>
-          ))
+          <>
+            <div className="p-2 border-b flex justify-between items-center">
+              <span className="text-sm font-semibold">Notificações</span>
+              {unreadCount > 0 && (
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={markAllAsRead}
+                  className="h-8 text-xs"
+                >
+                  Marcar todas como lidas
+                </Button>
+              )}
+            </div>
+            <ScrollArea className="h-[400px]">
+              {notifications.map((notification) => (
+                <DropdownMenuItem
+                  key={notification.id}
+                  onClick={() => handleNotificationClick(notification)}
+                  className={`p-4 cursor-pointer ${!notification.read ? 'bg-accent' : ''}`}
+                >
+                  <div className="flex flex-col gap-1 w-full">
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="font-semibold text-sm">{notification.title}</span>
+                      {!notification.read && (
+                        <div className="h-2 w-2 rounded-full bg-primary flex-shrink-0 mt-1" />
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">{notification.message}</p>
+                    <span className="text-xs text-muted-foreground">
+                      {new Date(notification.created_at).toLocaleDateString('pt-BR', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </span>
+                  </div>
+                </DropdownMenuItem>
+              ))}
+            </ScrollArea>
+          </>
         )}
       </DropdownMenuContent>
     </DropdownMenu>

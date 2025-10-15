@@ -277,10 +277,29 @@ export const useRealtimeMessaging = ({
           .slice(-5)
           .map(m => m.content);
 
+        // Check payment status for moderation
+        let isPaid = false;
+        if (conversationType === 'proposal') {
+          const { data: proposal } = await supabase
+            .from('proposals')
+            .select('payment_status')
+            .eq('id', conversationId)
+            .single();
+          isPaid = proposal?.payment_status === 'paid';
+        } else if (conversationType === 'negotiation') {
+          const { data: negotiation } = await supabase
+            .from('negotiations')
+            .select('payment_status')
+            .eq('id', conversationId)
+            .single();
+          isPaid = negotiation?.payment_status === 'paid';
+        }
+
         // Call moderation function with context (including image if present)
         const moderationBody: any = { 
           content: content.trim(),
-          recentMessages: recentUserMessages
+          recentMessages: recentUserMessages,
+          isPaid
         };
 
         // If there's an attachment and it's an image, include it in moderation

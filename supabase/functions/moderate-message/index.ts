@@ -9,7 +9,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { content, recentMessages = [], imageUrl } = await req.json();
+    const { content, recentMessages = [], imageUrl, isPaid = false } = await req.json();
     
     if (!content && !imageUrl) {
       return new Response(
@@ -44,8 +44,8 @@ Deno.serve(async (req) => {
 
       const haystacks = [tLow, tNoAccents, tDeLeet];
 
-      // URLs
-      if (haystacks.some(h => /(https?:\/\/|www\.)/i.test(h))) return true;
+      // URLs and links - block only if project is not paid
+      if (!isPaid && haystacks.some(h => /(https?:\/\/|www\.|\.com|\.br|\.net|\.org)/i.test(h))) return true;
 
       // Emails - improved detection including split attempts
       if (haystacks.some(h => /\b[\w.+-]+@[\w.-]+\.[a-z]{2,}\b/i.test(h))) return true;

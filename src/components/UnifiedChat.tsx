@@ -232,12 +232,12 @@ export function UnifiedChat({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Check file size (10MB limit)
-    if (file.size > 10 * 1024 * 1024) {
+    // Check file size (49MB limit)
+    if (file.size > 49 * 1024 * 1024) {
       toast({
         variant: 'destructive',
         title: 'Arquivo muito grande',
-        description: 'O arquivo deve ter no máximo 10MB',
+        description: 'O arquivo deve ter no máximo 49MB',
       });
       return;
     }

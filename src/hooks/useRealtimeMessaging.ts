@@ -334,10 +334,21 @@ export const useRealtimeMessaging = ({
           mediaName = attachment.file.name;
         } catch (uploadError) {
           console.error('Error uploading attachment:', uploadError);
+          
+          // More detailed error message
+          let errorDescription = 'Não foi possível fazer upload do arquivo. ';
+          if (uploadError instanceof Error) {
+            if (uploadError.message.includes('size')) {
+              errorDescription += 'O arquivo excede o limite de 49MB.';
+            } else {
+              errorDescription += uploadError.message;
+            }
+          }
+          
           toast({
             variant: 'destructive',
             title: 'Erro ao enviar anexo',
-            description: 'Não foi possível fazer upload do arquivo',
+            description: errorDescription,
           });
           setIsSending(false);
           return;

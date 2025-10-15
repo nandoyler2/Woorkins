@@ -429,6 +429,62 @@ export type Database = {
           },
         ]
       }
+      manual_document_submissions: {
+        Row: {
+          admin_notes: string | null
+          created_at: string
+          document_back_url: string
+          document_front_url: string
+          id: string
+          profile_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          selfie_url: string
+          social_media_link: string | null
+          status: string
+          updated_at: string
+          whatsapp_number: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string
+          document_back_url: string
+          document_front_url: string
+          id?: string
+          profile_id: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          selfie_url: string
+          social_media_link?: string | null
+          status?: string
+          updated_at?: string
+          whatsapp_number: string
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string
+          document_back_url?: string
+          document_front_url?: string
+          id?: string
+          profile_id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          selfie_url?: string
+          social_media_link?: string | null
+          status?: string
+          updated_at?: string
+          whatsapp_number?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "manual_document_submissions_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       message_unread_counts: {
         Row: {
           conversation_id: string

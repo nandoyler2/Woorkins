@@ -1,9 +1,11 @@
 import { useState, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Camera, Upload, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { Camera, Upload, CheckCircle, XCircle, AlertCircle, FileText, MessageCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { ManualDocumentSubmission } from './ManualDocumentSubmission';
+import { SupportChatDialog } from './SupportChatDialog';
 
 interface IdentityVerificationDialogProps {
   open: boolean;
@@ -40,6 +42,8 @@ export function IdentityVerificationDialog({
   const [realtimeValidation, setRealtimeValidation] = useState<ValidationFeedback | null>(null);
   const [isValidating, setIsValidating] = useState(false);
   const [canCapture, setCanCapture] = useState(false);
+  const [showManualSubmission, setShowManualSubmission] = useState(false);
+  const [showSupportChat, setShowSupportChat] = useState(false);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -531,7 +535,7 @@ export function IdentityVerificationDialog({
                 )}
               </div>
             ) : (
-              <div className="bg-red-50 border border-red-200 p-4 rounded-lg space-y-2">
+              <div className="bg-red-50 border border-red-200 p-4 rounded-lg space-y-3">
                 <p className="text-sm font-semibold text-red-800">Motivos da rejeição:</p>
                 <ul className="list-disc list-inside text-sm text-red-700 space-y-1">
                   {verificationResult.rejectionReasons?.map((reason: string, i: number) => (
@@ -549,19 +553,49 @@ export function IdentityVerificationDialog({
                   </div>
                 )}
 
-                <Button 
-                  onClick={() => {
-                    setStep('intro');
-                    setFrontImage(null);
-                    setBackImage(null);
-                    setSelfieImage(null);
-                    setVerificationResult(null);
-                  }}
-                  variant="destructive"
-                  className="w-full mt-4"
-                >
-                  Tentar Novamente
-                </Button>
+                {/* Opções de ação */}
+                <div className="space-y-2 mt-4">
+                  <Button 
+                    onClick={() => {
+                      setStep('intro');
+                      setFrontImage(null);
+                      setBackImage(null);
+                      setSelfieImage(null);
+                      setVerificationResult(null);
+                    }}
+                    className="w-full"
+                    size="lg"
+                  >
+                    <Camera className="mr-2 h-4 w-4" />
+                    Tentar Novamente
+                  </Button>
+
+                  <Button 
+                    onClick={() => {
+                      setShowManualSubmission(true);
+                      onOpenChange(false);
+                    }}
+                    variant="outline"
+                    className="w-full"
+                    size="lg"
+                  >
+                    <FileText className="mr-2 h-4 w-4" />
+                    Enviar Documentos via Anexo
+                  </Button>
+
+                  <Button 
+                    onClick={() => {
+                      setShowSupportChat(true);
+                      onOpenChange(false);
+                    }}
+                    variant="outline"
+                    className="w-full"
+                    size="lg"
+                  >
+                    <MessageCircle className="mr-2 h-4 w-4" />
+                    Falar com o Suporte
+                  </Button>
+                </div>
               </div>
             )}
 
@@ -582,25 +616,48 @@ export function IdentityVerificationDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={(newOpen) => {
-      if (!newOpen) {
-        stopCamera();
-      }
-      onOpenChange(newOpen);
-    }}>
-      <DialogContent className="sm:max-w-[600px]">
-        <DialogHeader>
-          <DialogTitle>
-            {step === 'intro' && 'Verificação de Identidade'}
-            {step === 'front' && 'Foto do Documento - Frente'}
-            {step === 'back' && 'Foto do Documento - Verso'}
-            {step === 'selfie' && 'Foto do Rosto (Selfie)'}
-            {step === 'processing' && 'Processando...'}
-            {step === 'result' && 'Resultado da Verificação'}
-          </DialogTitle>
-        </DialogHeader>
-        {renderStepContent()}
-      </DialogContent>
-    </Dialog>
+    <>
+      <Dialog open={open} onOpenChange={(newOpen) => {
+        if (!newOpen) {
+          stopCamera();
+        }
+        onOpenChange(newOpen);
+      }}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>
+              {step === 'intro' && 'Verificação de Identidade'}
+              {step === 'front' && 'Foto do Documento - Frente'}
+              {step === 'front-preview' && 'Conferir Frente do Documento'}
+              {step === 'back' && 'Foto do Documento - Verso'}
+              {step === 'back-preview' && 'Conferir Verso do Documento'}
+              {step === 'selfie' && 'Foto do Rosto (Selfie)'}
+              {step === 'selfie-preview' && 'Conferir Selfie'}
+              {step === 'processing' && 'Processando...'}
+              {step === 'result' && 'Resultado da Verificação'}
+            </DialogTitle>
+          </DialogHeader>
+          {renderStepContent()}
+        </DialogContent>
+      </Dialog>
+
+      <ManualDocumentSubmission
+        open={showManualSubmission}
+        onOpenChange={setShowManualSubmission}
+        profileId={profileId}
+        onSuccess={() => {
+          setShowManualSubmission(false);
+          toast({
+            title: 'Documentos enviados!',
+            description: 'Você receberá um contato em até 48 horas úteis.',
+          });
+        }}
+      />
+
+      <SupportChatDialog
+        open={showSupportChat}
+        onOpenChange={setShowSupportChat}
+      />
+    </>
   );
 }

@@ -68,6 +68,7 @@ export function UnifiedChat({
     return saved === null ? true : saved === 'true';
   });
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [proposalData, setProposalData] = useState<any>(null);
   const [isOwner, setIsOwner] = useState(false);
   const [isLoadingProposal, setIsLoadingProposal] = useState(true);
@@ -134,9 +135,14 @@ export function UnifiedChat({
   useEffect(() => {
     // Always scroll to bottom on new messages or when switching convo
     const scrollToBottom = (smooth: boolean) => {
-      setTimeout(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'end' });
-      }, 0);
+      requestAnimationFrame(() => {
+        const el = messagesContainerRef.current;
+        if (el) {
+          el.scrollTop = el.scrollHeight;
+        } else {
+          messagesEndRef.current?.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'end' });
+        }
+      });
     };
 
     scrollToBottom(true);
@@ -196,9 +202,11 @@ export function UnifiedChat({
 
 // Also ensure scroll at bottom when conversation changes
 useEffect(() => {
-  setTimeout(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'auto', block: 'end' });
-  }, 0);
+  requestAnimationFrame(() => {
+    const el = messagesContainerRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+    else messagesEndRef.current?.scrollIntoView({ behavior: 'auto', block: 'end' });
+  });
 }, [conversationId]);
 
   const loadProposalData = async () => {
@@ -559,7 +567,7 @@ useEffect(() => {
       </div>
 
       {/* Messages - Scrollable Area */}
-      <div className="flex-1 overflow-y-auto min-h-0">
+      <div ref={messagesContainerRef} className="flex-1 overflow-y-auto min-h-0">
         <div className="p-4 space-y-4 pb-4">
           {isChatLocked ? (
             <div className="text-center py-12">

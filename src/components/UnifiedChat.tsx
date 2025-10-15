@@ -155,22 +155,22 @@ export function UnifiedChat({
   useEffect(() => {
     // Sempre rolar para o final ao carregar mensagens ou trocar de conversa
     const scrollToBottom = (smooth: boolean) => {
-      requestAnimationFrame(() => {
-        const el = messagesContainerRef.current;
-        if (el) {
-          el.scrollTop = el.scrollHeight;
-        } else {
-          messagesEndRef.current?.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'end' });
-        }
-      });
+      const el = messagesContainerRef.current;
+      if (el) {
+        el.scrollTop = el.scrollHeight;
+      } else {
+        messagesEndRef.current?.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'end' });
+      }
     };
 
-    scrollToBottom(true);
+    // Scroll imediato ao carregar
+    scrollToBottom(false);
 
     // Garantir rolagem após carregamento de imagens e próximo tick
     const el = messagesContainerRef.current;
     const handleImgLoad = () => scrollToBottom(false);
-    const timeoutId = window.setTimeout(() => scrollToBottom(false), 120);
+    const timeoutId = window.setTimeout(() => scrollToBottom(false), 150);
+    const timeoutId2 = window.setTimeout(() => scrollToBottom(false), 300);
 
     const imgs = el ? Array.from(el.querySelectorAll('img')) : [];
     imgs.forEach(img => {
@@ -185,6 +185,7 @@ export function UnifiedChat({
     return () => {
       imgs.forEach(img => img.removeEventListener('load', handleImgLoad));
       window.clearTimeout(timeoutId);
+      window.clearTimeout(timeoutId2);
     };
   }, [messages, conversationId, profileId]);
 
@@ -237,11 +238,15 @@ export function UnifiedChat({
 
 // Also ensure scroll at bottom when conversation changes
 useEffect(() => {
-  requestAnimationFrame(() => {
+  // Usar timeout para garantir que o DOM esteja pronto
+  setTimeout(() => {
     const el = messagesContainerRef.current;
-    if (el) el.scrollTop = el.scrollHeight;
-    else messagesEndRef.current?.scrollIntoView({ behavior: 'auto', block: 'end' });
-  });
+    if (el) {
+      el.scrollTop = el.scrollHeight;
+    } else {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'auto', block: 'end' });
+    }
+  }, 100);
 }, [conversationId]);
 
   const loadProposalData = async () => {

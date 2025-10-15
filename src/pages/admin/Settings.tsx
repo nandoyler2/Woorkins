@@ -18,6 +18,7 @@ export default function AdminSettings() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [activeGateway, setActiveGateway] = useState<'stripe' | 'mercadopago'>('stripe');
   const [commissions, setCommissions] = useState<CommissionSettings>({
     free: 5.0,
     pro: 3.0,
@@ -30,6 +31,17 @@ export default function AdminSettings() {
 
   const loadSettings = async () => {
     try {
+      // Load gateway config
+      const { data: gatewayData } = await supabase
+        .from('payment_gateway_config')
+        .select('active_gateway')
+        .single();
+
+      if (gatewayData) {
+        setActiveGateway(gatewayData.active_gateway as 'stripe' | 'mercadopago');
+      }
+
+      // Load commission settings
       const { data, error } = await supabase
         .from('platform_settings')
         .select('setting_key, setting_value')
@@ -136,8 +148,12 @@ export default function AdminSettings() {
         <div>
           <h3 className="text-lg font-semibold mb-4">Comissões por Plano (Woorkins)</h3>
           <p className="text-sm text-muted-foreground mb-4">
-            Defina a porcentagem de comissão que a plataforma cobra de cada plano. 
-            A taxa do Stripe (2.9% + R$0.30) é fixa e será adicionada automaticamente.
+            Defina a porcentagem de comissão que a plataforma cobra de cada plano.{' '}
+            {activeGateway === 'stripe' ? (
+              <>A taxa do Stripe (2.9% + R$0.30) é fixa e será adicionada automaticamente.</>
+            ) : (
+              <>As taxas do Mercado Pago (Cartão: 4,98% | PIX: 0,99%) são fixas e serão adicionadas automaticamente.</>
+            )}
           </p>
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -175,7 +191,9 @@ export default function AdminSettings() {
                   value={commissions.premium}
                   onChange={(e) => setCommissions({ ...commissions, premium: parseFloat(e.target.value) || 0 })}
                 />
-                <p className="text-xs text-muted-foreground">Taxa Stripe: 2.9% + R$0.30 (fixo)</p>
+                <p className="text-xs text-muted-foreground">
+                  {activeGateway === 'stripe' ? 'Taxa Stripe: 2.9% + R$0.30 (fixo)' : 'Taxas Mercado Pago: Cartão 4.98% | PIX 0.99%'}
+                </p>
               </div>
             </div>
           </div>
@@ -187,46 +205,119 @@ export default function AdminSettings() {
           <h3 className="text-lg font-semibold mb-4">Exemplo de Cálculo</h3>
           <div className="bg-muted p-4 rounded-lg space-y-2 text-sm">
             <p><strong>Valor do Serviço:</strong> R$ 1.000,00</p>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
-              <div>
-                <p className="font-medium">Plano Grátis ({commissions.free}%)</p>
-                <p>Comissão Woorkins: R$ {(1000 * commissions.free / 100).toFixed(2)}</p>
-                <p>Taxa Stripe: R$ {(1000 * 0.029 + 0.30).toFixed(2)}</p>
-                <p className="font-semibold">Total taxas: R$ {(1000 * commissions.free / 100 + 1000 * 0.029 + 0.30).toFixed(2)}</p>
-                <p className="text-green-600">Freelancer recebe: R$ {(1000 - (1000 * commissions.free / 100 + 1000 * 0.029 + 0.30)).toFixed(2)}</p>
+            
+            {activeGateway === 'stripe' ? (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+                <div>
+                  <p className="font-medium">Plano Grátis ({commissions.free}%)</p>
+                  <p>Comissão Woorkins: R$ {(1000 * commissions.free / 100).toFixed(2)}</p>
+                  <p>Taxa Stripe: R$ {(1000 * 0.029 + 0.30).toFixed(2)}</p>
+                  <p className="font-semibold">Total taxas: R$ {(1000 * commissions.free / 100 + 1000 * 0.029 + 0.30).toFixed(2)}</p>
+                  <p className="text-green-600">Freelancer recebe: R$ {(1000 - (1000 * commissions.free / 100 + 1000 * 0.029 + 0.30)).toFixed(2)}</p>
+                </div>
+                <div>
+                  <p className="font-medium">Plano Pro ({commissions.pro}%)</p>
+                  <p>Comissão Woorkins: R$ {(1000 * commissions.pro / 100).toFixed(2)}</p>
+                  <p>Taxa Stripe: R$ {(1000 * 0.029 + 0.30).toFixed(2)}</p>
+                  <p className="font-semibold">Total taxas: R$ {(1000 * commissions.pro / 100 + 1000 * 0.029 + 0.30).toFixed(2)}</p>
+                  <p className="text-green-600">Freelancer recebe: R$ {(1000 - (1000 * commissions.pro / 100 + 1000 * 0.029 + 0.30)).toFixed(2)}</p>
+                </div>
+                <div>
+                  <p className="font-medium">Plano Premium ({commissions.premium}%)</p>
+                  <p>Comissão Woorkins: R$ {(1000 * commissions.premium / 100).toFixed(2)}</p>
+                  <p>Taxa Stripe: R$ {(1000 * 0.029 + 0.30).toFixed(2)}</p>
+                  <p className="font-semibold">Total taxas: R$ {(1000 * commissions.premium / 100 + 1000 * 0.029 + 0.30).toFixed(2)}</p>
+                  <p className="text-green-600">Freelancer recebe: R$ {(1000 - (1000 * commissions.premium / 100 + 1000 * 0.029 + 0.30)).toFixed(2)}</p>
+                </div>
               </div>
-              <div>
-                <p className="font-medium">Plano Pro ({commissions.pro}%)</p>
-                <p>Comissão Woorkins: R$ {(1000 * commissions.pro / 100).toFixed(2)}</p>
-                <p>Taxa Stripe: R$ {(1000 * 0.029 + 0.30).toFixed(2)}</p>
-                <p className="font-semibold">Total taxas: R$ {(1000 * commissions.pro / 100 + 1000 * 0.029 + 0.30).toFixed(2)}</p>
-                <p className="text-green-600">Freelancer recebe: R$ {(1000 - (1000 * commissions.pro / 100 + 1000 * 0.029 + 0.30)).toFixed(2)}</p>
-              </div>
-              <div>
-                <p className="font-medium">Plano Premium ({commissions.premium}%)</p>
-                <p>Comissão Woorkins: R$ {(1000 * commissions.premium / 100).toFixed(2)}</p>
-                <p>Taxa Stripe: R$ {(1000 * 0.029 + 0.30).toFixed(2)}</p>
-                <p className="font-semibold">Total taxas: R$ {(1000 * commissions.premium / 100 + 1000 * 0.029 + 0.30).toFixed(2)}</p>
-                <p className="text-green-600">Freelancer recebe: R$ {(1000 - (1000 * commissions.premium / 100 + 1000 * 0.029 + 0.30)).toFixed(2)}</p>
-              </div>
-            </div>
+            ) : (
+              <>
+                <p className="font-medium mt-4 mb-2">Pagamento com Cartão de Crédito (4,98%)</p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <p className="font-medium">Plano Grátis ({commissions.free}%)</p>
+                    <p>Comissão Woorkins: R$ {(1000 * commissions.free / 100).toFixed(2)}</p>
+                    <p>Taxa Mercado Pago: R$ {(1000 * 0.0498).toFixed(2)}</p>
+                    <p className="font-semibold">Total taxas: R$ {(1000 * commissions.free / 100 + 1000 * 0.0498).toFixed(2)}</p>
+                    <p className="text-green-600">Freelancer recebe: R$ {(1000 - (1000 * commissions.free / 100 + 1000 * 0.0498)).toFixed(2)}</p>
+                  </div>
+                  <div>
+                    <p className="font-medium">Plano Pro ({commissions.pro}%)</p>
+                    <p>Comissão Woorkins: R$ {(1000 * commissions.pro / 100).toFixed(2)}</p>
+                    <p>Taxa Mercado Pago: R$ {(1000 * 0.0498).toFixed(2)}</p>
+                    <p className="font-semibold">Total taxas: R$ {(1000 * commissions.pro / 100 + 1000 * 0.0498).toFixed(2)}</p>
+                    <p className="text-green-600">Freelancer recebe: R$ {(1000 - (1000 * commissions.pro / 100 + 1000 * 0.0498)).toFixed(2)}</p>
+                  </div>
+                  <div>
+                    <p className="font-medium">Plano Premium ({commissions.premium}%)</p>
+                    <p>Comissão Woorkins: R$ {(1000 * commissions.premium / 100).toFixed(2)}</p>
+                    <p>Taxa Mercado Pago: R$ {(1000 * 0.0498).toFixed(2)}</p>
+                    <p className="font-semibold">Total taxas: R$ {(1000 * commissions.premium / 100 + 1000 * 0.0498).toFixed(2)}</p>
+                    <p className="text-green-600">Freelancer recebe: R$ {(1000 - (1000 * commissions.premium / 100 + 1000 * 0.0498)).toFixed(2)}</p>
+                  </div>
+                </div>
+
+                <p className="font-medium mt-4 mb-2">Pagamento com PIX (0,99%)</p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <p className="font-medium">Plano Grátis ({commissions.free}%)</p>
+                    <p>Comissão Woorkins: R$ {(1000 * commissions.free / 100).toFixed(2)}</p>
+                    <p>Taxa Mercado Pago: R$ {(1000 * 0.0099).toFixed(2)}</p>
+                    <p className="font-semibold">Total taxas: R$ {(1000 * commissions.free / 100 + 1000 * 0.0099).toFixed(2)}</p>
+                    <p className="text-green-600">Freelancer recebe: R$ {(1000 - (1000 * commissions.free / 100 + 1000 * 0.0099)).toFixed(2)}</p>
+                  </div>
+                  <div>
+                    <p className="font-medium">Plano Pro ({commissions.pro}%)</p>
+                    <p>Comissão Woorkins: R$ {(1000 * commissions.pro / 100).toFixed(2)}</p>
+                    <p>Taxa Mercado Pago: R$ {(1000 * 0.0099).toFixed(2)}</p>
+                    <p className="font-semibold">Total taxas: R$ {(1000 * commissions.pro / 100 + 1000 * 0.0099).toFixed(2)}</p>
+                    <p className="text-green-600">Freelancer recebe: R$ {(1000 - (1000 * commissions.pro / 100 + 1000 * 0.0099)).toFixed(2)}</p>
+                  </div>
+                  <div>
+                    <p className="font-medium">Plano Premium ({commissions.premium}%)</p>
+                    <p>Comissão Woorkins: R$ {(1000 * commissions.premium / 100).toFixed(2)}</p>
+                    <p>Taxa Mercado Pago: R$ {(1000 * 0.0099).toFixed(2)}</p>
+                    <p className="font-semibold">Total taxas: R$ {(1000 * commissions.premium / 100 + 1000 * 0.0099).toFixed(2)}</p>
+                    <p className="text-green-600">Freelancer recebe: R$ {(1000 - (1000 * commissions.premium / 100 + 1000 * 0.0099)).toFixed(2)}</p>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </div>
 
         <Separator />
 
         <div>
-          <h3 className="text-lg font-semibold mb-4">Integração Stripe</h3>
+          <h3 className="text-lg font-semibold mb-4">
+            {activeGateway === 'stripe' ? 'Integração Stripe' : 'Integração Mercado Pago'}
+          </h3>
           <div className="space-y-4">
             <div className="bg-green-50 dark:bg-green-950 p-4 rounded-lg flex items-center justify-between">
               <div>
-                <p className="font-medium text-green-900 dark:text-green-100">✓ Stripe Conectado</p>
-                <p className="text-sm text-green-700 dark:text-green-300">Chaves configuradas e funcionando</p>
+                <p className="font-medium text-green-900 dark:text-green-100">
+                  ✓ {activeGateway === 'stripe' ? 'Stripe' : 'Mercado Pago'} Conectado
+                </p>
+                <p className="text-sm text-green-700 dark:text-green-300">
+                  {activeGateway === 'stripe' 
+                    ? 'Chaves configuradas e funcionando'
+                    : 'Access Token e chaves configuradas e funcionando'
+                  }
+                </p>
               </div>
             </div>
             <p className="text-sm text-muted-foreground">
-              As chaves do Stripe estão configuradas como secrets no backend. Para atualizar, acesse as configurações de secrets do projeto.
+              As chaves do {activeGateway === 'stripe' ? 'Stripe' : 'Mercado Pago'} estão configuradas como secrets no backend. Para atualizar, acesse as configurações de secrets do projeto.
             </p>
+            {activeGateway === 'mercadopago' && (
+              <div className="bg-blue-50 dark:bg-blue-950 p-4 rounded-lg">
+                <p className="font-medium text-blue-900 dark:text-blue-100 mb-2">Taxas do Mercado Pago</p>
+                <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
+                  <li>• Cartão de crédito: 4,98%</li>
+                  <li>• PIX: 0,99%</li>
+                </ul>
+              </div>
+            )}
           </div>
         </div>
 

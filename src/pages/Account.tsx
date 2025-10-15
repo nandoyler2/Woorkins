@@ -7,9 +7,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Save, User, Mail, Lock, Shield } from 'lucide-react';
+import { ArrowLeft, Save, User, Mail, Lock, Shield, Camera } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { validateCPF } from '@/lib/utils';
+import { ProfilePhotoUpload } from '@/components/ProfilePhotoUpload';
 
 export default function Account() {
   const { user } = useAuth();
@@ -19,7 +20,8 @@ export default function Account() {
     full_name: '',
     username: '',
     email: '',
-    cpf: ''
+    cpf: '',
+    avatar_url: ''
   });
   const [newEmail, setNewEmail] = useState('');
   const [passwordData, setPasswordData] = useState({
@@ -37,7 +39,7 @@ export default function Account() {
 
     const { data } = await supabase
       .from('profiles')
-      .select('full_name, username, cpf')
+      .select('full_name, username, cpf, avatar_url')
       .eq('user_id', user.id)
       .single();
 
@@ -46,7 +48,8 @@ export default function Account() {
         full_name: data.full_name || '',
         username: data.username || '',
         email: user.email || '',
-        cpf: data.cpf || ''
+        cpf: data.cpf || '',
+        avatar_url: data.avatar_url || ''
       });
       setNewEmail(user.email || '');
     }
@@ -212,6 +215,27 @@ export default function Account() {
               <p className="text-muted-foreground">Gerencie suas informações pessoais</p>
             </div>
           </div>
+
+          {/* Foto de Perfil */}
+          <Card className="bg-card/50 backdrop-blur-sm border-2">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Camera className="w-5 h-5" />
+                Foto de Perfil
+              </CardTitle>
+              <CardDescription>
+                Obrigatória para enviar mensagens na plataforma
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ProfilePhotoUpload
+                currentPhotoUrl={profile.avatar_url}
+                userName={profile.full_name || profile.username}
+                userId={user?.id || ''}
+                onPhotoUpdated={loadProfile}
+              />
+            </CardContent>
+          </Card>
 
           {/* Informações do Perfil */}
           <Card className="bg-card/50 backdrop-blur-sm border-2">

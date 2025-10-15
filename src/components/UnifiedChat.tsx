@@ -32,6 +32,7 @@ import { useRealtimeMessaging } from '@/hooks/useRealtimeMessaging';
 import { ProposalNegotiationPanel } from './ProposalNegotiationPanel';
 import { BlockedMessageCountdown } from './BlockedMessageCountdown';
 import { ImageViewer } from './ImageViewer';
+import { RequireProfilePhotoDialog } from './RequireProfilePhotoDialog';
 
 interface UnifiedChatProps {
   conversationId: string;
@@ -76,6 +77,8 @@ export function UnifiedChat({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [filePreviewUrl, setFilePreviewUrl] = useState<string | null>(null);
   const [viewingImage, setViewingImage] = useState<{ url: string; name: string } | null>(null);
+  const [currentUserProfile, setCurrentUserProfile] = useState<any>(null);
+  const [showPhotoRequiredDialog, setShowPhotoRequiredDialog] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const {
@@ -98,6 +101,23 @@ export function UnifiedChat({
 
   // Check for system-level messaging blocks
   const [systemMessagingBlock, setSystemMessagingBlock] = useState<any>(null);
+
+  // Load current user profile to check for avatar
+  useEffect(() => {
+    const loadCurrentUserProfile = async () => {
+      if (!user) return;
+      
+      const { data } = await supabase
+        .from('profiles')
+        .select('avatar_url, full_name')
+        .eq('user_id', user.id)
+        .single();
+      
+      setCurrentUserProfile(data);
+    };
+
+    loadCurrentUserProfile();
+  }, [user]);
 
   useEffect(() => {
     const checkSystemBlock = async () => {
@@ -250,6 +270,13 @@ useEffect(() => {
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Check if user has profile photo
+    if (!currentUserProfile?.avatar_url) {
+      setShowPhotoRequiredDialog(true);
+      return;
+    }
+
     if ((!messageInput.trim() && !selectedFile) || isSending) return;
 
     // If it's a proposal and owner sends first message, unlock it
@@ -916,6 +943,25 @@ useEffect(() => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Profile Photo Required Dialog */}
+      <RequireProfilePhotoDialog
+        open={showPhotoRequiredDialog}
+        userName={currentUserProfile?.full_name || 'Usuário'}
+        userId={user?.id || ''}
+        onPhotoUploaded={() => {
+          setShowPhotoRequiredDialog(false);
+          // Reload current user profile
+          if (user) {
+            supabase
+              .from('profiles')
+              .select('avatar_url, full_name')
+              .eq('user_id', user.id)
+              .single()
+              .then(({ data }) => setCurrentUserProfile(data));
+          }
+        }}
+      />
     </div>
   );
 }

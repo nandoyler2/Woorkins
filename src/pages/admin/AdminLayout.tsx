@@ -65,7 +65,7 @@ function AdminSidebar() {
             <Button 
               variant="outline" 
               className="w-full justify-start gap-2"
-              onClick={() => window.location.href = '/feed'}
+              onClick={() => window.location.href = '/painel'}
             >
               <ArrowLeft className="h-4 w-4" />
               {!collapsed && <span>Voltar ao Woorkins</span>}

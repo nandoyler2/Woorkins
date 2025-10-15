@@ -31,21 +31,85 @@ export function IdentityVerificationDialog({
   const [verificationResult, setVerificationResult] = useState<any>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [needsSecondPart, setNeedsSecondPart] = useState(false);
+  const [preValidation, setPreValidation] = useState<any>(null);
+  const [isPreValidating, setIsPreValidating] = useState(false);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'front' | 'back' | 'combined') => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, type: 'front' | 'back' | 'combined') => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     if (type === 'front') setFrontImage(file);
     else if (type === 'back') setBackImage(file);
     else setCombinedImage(file);
+
+    // Fazer pré-validação do documento
+    await preValidateDocument(file, type);
+  };
+
+  const preValidateDocument = async (file: File, type: 'front' | 'back' | 'combined') => {
+    setIsPreValidating(true);
+    setPreValidation(null);
+
+    try {
+      // Converter arquivo para base64
+      const base64 = await fileToBase64(file);
+
+      const documentSide = type === 'combined' ? 'front' : type;
+
+      const { data, error } = await supabase.functions.invoke('validate-document-realtime', {
+        body: { 
+          imageBase64: base64,
+          documentSide 
+        }
+      });
+
+      if (error) throw error;
+
+      setPreValidation({
+        type,
+        result: data,
+        isValid: data.isValid
+      });
+
+      if (!data.isValid) {
+        toast.error(`Documento inválido: ${data.issues.join(', ')}`);
+      } else {
+        toast.success(`✓ ${type === 'front' ? 'Frente' : type === 'back' ? 'Verso' : 'Documento'} validado com sucesso!`);
+      }
+    } catch (error) {
+      console.error('Pre-validation error:', error);
+      toast.error('Erro ao validar documento');
+    } finally {
+      setIsPreValidating(false);
+    }
+  };
+
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
   };
 
   const handleContinueToSecondPart = () => {
-    setNeedsSecondPart(true);
+    if (uploadOption === 'front' && frontImage) {
+      setNeedsSecondPart(true);
+    } else if (uploadOption === 'back' && backImage) {
+      setNeedsSecondPart(true);
+    }
   };
 
   const handleSubmit = async () => {
+    if (!uploadOption) return;
+    
+    // Para opções separadas que ainda precisam da segunda parte
+    if ((uploadOption === 'front' && frontImage && !backImage) || 
+        (uploadOption === 'back' && backImage && !frontImage)) {
+      handleContinueToSecondPart();
+      return;
+    }
     if (!uploadOption) return;
     
     // Validar se os arquivos necessários foram enviados
@@ -284,6 +348,35 @@ export function IdentityVerificationDialog({
         </div>
 
         <div className="space-y-4">
+          {preValidation && (
+            <div className={`p-3 rounded-lg ${preValidation.isValid ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
+              <div className="flex items-center gap-2">
+                {preValidation.isValid ? (
+                  <CheckCircle className="h-5 w-5 text-green-600" />
+                ) : (
+                  <XCircle className="h-5 w-5 text-red-600" />
+                )}
+                <p className={`text-sm font-medium ${preValidation.isValid ? 'text-green-900' : 'text-red-900'}`}>
+                  {preValidation.isValid ? 'Documento válido' : 'Documento inválido'}
+                </p>
+              </div>
+              {preValidation.result?.issues && preValidation.result.issues.length > 0 && (
+                <ul className="mt-2 text-xs text-red-700 list-disc list-inside">
+                  {preValidation.result.issues.map((issue: string, idx: number) => (
+                    <li key={idx}>{issue}</li>
+                  ))}
+                </ul>
+              )}
+              {preValidation.result?.suggestions && preValidation.result.suggestions.length > 0 && (
+                <ul className="mt-2 text-xs text-amber-700 list-disc list-inside">
+                  {preValidation.result.suggestions.map((suggestion: string, idx: number) => (
+                    <li key={idx}>{suggestion}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+
           {uploadOption === 'combined' && (
             <div>
               <label className="block mb-2 text-sm font-medium">Documento Completo (Frente e Verso)</label>
@@ -309,10 +402,24 @@ export function IdentityVerificationDialog({
                 capture="environment"
                 onChange={(e) => handleFileChange(e, 'front')}
                 className="w-full"
-                disabled={!!frontImage}
+                disabled={!!frontImage || isPreValidating}
               />
               {frontImage && (
-                <p className="mt-2 text-sm text-green-600">✓ Arquivo selecionado: {frontImage.name}</p>
+                <div className="mt-2 flex items-center gap-2">
+                  <p className="text-sm text-green-600">✓ Arquivo selecionado: {frontImage.name}</p>
+                  {!needsSecondPart && (
+                    <Button 
+                      size="sm" 
+                      variant="ghost"
+                      onClick={() => {
+                        setFrontImage(null);
+                        setPreValidation(null);
+                      }}
+                    >
+                      Trocar
+                    </Button>
+                  )}
+                </div>
               )}
             </div>
           )}
@@ -326,10 +433,24 @@ export function IdentityVerificationDialog({
                 capture="environment"
                 onChange={(e) => handleFileChange(e, 'back')}
                 className="w-full"
-                disabled={!!backImage}
+                disabled={!!backImage || isPreValidating}
               />
               {backImage && (
-                <p className="mt-2 text-sm text-green-600">✓ Arquivo selecionado: {backImage.name}</p>
+                <div className="mt-2 flex items-center gap-2">
+                  <p className="text-sm text-green-600">✓ Arquivo selecionado: {backImage.name}</p>
+                  {!needsSecondPart && (
+                    <Button 
+                      size="sm" 
+                      variant="ghost"
+                      onClick={() => {
+                        setBackImage(null);
+                        setPreValidation(null);
+                      }}
+                    >
+                      Trocar
+                    </Button>
+                  )}
+                </div>
               )}
             </div>
           )}
@@ -338,11 +459,20 @@ export function IdentityVerificationDialog({
             <Button
               variant="outline"
               onClick={() => {
-                setUploadOption(null);
-                setFrontImage(null);
-                setBackImage(null);
-                setCombinedImage(null);
-                setNeedsSecondPart(false);
+                if (needsSecondPart) {
+                  // Voltar para primeira parte
+                  setNeedsSecondPart(false);
+                  if (uploadOption === 'front') setBackImage(null);
+                  if (uploadOption === 'back') setFrontImage(null);
+                  setPreValidation(null);
+                } else {
+                  // Voltar para seleção de opção
+                  setUploadOption(null);
+                  setFrontImage(null);
+                  setBackImage(null);
+                  setCombinedImage(null);
+                  setPreValidation(null);
+                }
               }}
               className="flex-1"
             >
@@ -351,16 +481,26 @@ export function IdentityVerificationDialog({
             <Button
               onClick={handleSubmit}
               disabled={
+                isPreValidating ||
                 (uploadOption === 'combined' && !combinedImage) ||
-                ((uploadOption === 'front' || uploadOption === 'back') && (!frontImage || !backImage))
+                ((uploadOption === 'front' || uploadOption === 'back') && (!frontImage || !backImage)) ||
+                (preValidation && !preValidation.isValid)
               }
               className="flex-1"
             >
-              {needsSecondPart && frontImage && backImage ? 'Enviar e Verificar' : 
-               uploadOption === 'combined' && combinedImage ? 'Enviar e Verificar' :
-               frontImage && !backImage ? 'Continuar para Verso' :
-               backImage && !frontImage ? 'Continuar para Frente' :
-               'Selecionar Arquivo'}
+              {isPreValidating ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Validando...
+                </>
+              ) : (
+                <>
+                  {(frontImage && backImage) || combinedImage ? 'Enviar e Verificar' : 
+                   frontImage && !needsSecondPart ? 'Continuar para Verso' :
+                   backImage && !needsSecondPart ? 'Continuar para Frente' :
+                   'Selecionar Arquivo'}
+                </>
+              )}
             </Button>
           </div>
         </div>

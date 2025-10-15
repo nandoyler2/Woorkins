@@ -237,6 +237,65 @@ export type Database = {
           },
         ]
       }
+      document_verifications: {
+        Row: {
+          ai_analysis: Json | null
+          created_at: string | null
+          document_back_url: string
+          document_front_url: string
+          extracted_birth_date: string | null
+          extracted_cpf: string | null
+          extracted_name: string | null
+          id: string
+          profile_id: string
+          selfie_url: string
+          updated_at: string | null
+          verification_result: Json | null
+          verification_status: string
+          verified_at: string | null
+        }
+        Insert: {
+          ai_analysis?: Json | null
+          created_at?: string | null
+          document_back_url: string
+          document_front_url: string
+          extracted_birth_date?: string | null
+          extracted_cpf?: string | null
+          extracted_name?: string | null
+          id?: string
+          profile_id: string
+          selfie_url: string
+          updated_at?: string | null
+          verification_result?: Json | null
+          verification_status?: string
+          verified_at?: string | null
+        }
+        Update: {
+          ai_analysis?: Json | null
+          created_at?: string | null
+          document_back_url?: string
+          document_front_url?: string
+          extracted_birth_date?: string | null
+          extracted_cpf?: string | null
+          extracted_name?: string | null
+          id?: string
+          profile_id?: string
+          selfie_url?: string
+          updated_at?: string | null
+          verification_result?: Json | null
+          verification_status?: string
+          verified_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_verifications_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       evaluations: {
         Row: {
           business_id: string
@@ -809,8 +868,11 @@ export type Database = {
         Row: {
           avatar_url: string | null
           bio: string | null
+          birth_date: string | null
           cpf: string | null
           created_at: string
+          document_verification_status: string | null
+          document_verified: boolean | null
           full_name: string | null
           id: string
           location: string | null
@@ -825,8 +887,11 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           bio?: string | null
+          birth_date?: string | null
           cpf?: string | null
           created_at?: string
+          document_verification_status?: string | null
+          document_verified?: boolean | null
           full_name?: string | null
           id?: string
           location?: string | null
@@ -841,8 +906,11 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           bio?: string | null
+          birth_date?: string | null
           cpf?: string | null
           created_at?: string
+          document_verification_status?: string | null
+          document_verified?: boolean | null
           full_name?: string | null
           id?: string
           location?: string | null

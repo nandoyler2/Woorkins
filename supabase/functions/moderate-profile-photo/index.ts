@@ -51,27 +51,25 @@ REGRAS ABSOLUTAS - BLOQUEAR IMEDIATAMENTE:
 🚫 ROUPAS E APRESENTAÇÃO NÃO PROFISSIONAL:
 - Camisas regata, tops, blusas de alça
 - Roupas de praia (biquíni, sunga, maiô)
-- Roupas de academia ou esportivas
-- Roupas muito informais ou desleixadas
+- Roupas íntimas ou muito reveladoras
+- Roupas muito desleixadas, rasgadas ou sujas
 - Sem camisa ou torso nu
 
 🚫 QUALIDADE E CONTEXTO INADEQUADOS:
 - Fotos muito desfocadas ou borradas
-- Resolução muito baixa
-- Fotos em festas, bares, baladas
-- Fotos com bebidas alcoólicas visíveis
-- Fotos em situações recreativas demais (praia, piscina, parque de diversões)
-- Selfies em banheiros ou espelhos sujos
-- Fundos muito bagunçados ou inadequados
+- Resolução muito baixa que impede identificação
+- Fotos claramente em festas, bares, baladas (com bebidas alcoólicas, ambiente de festa)
+- Selfies em banheiros com espelhos sujos
+- Fundos extremamente bagunçados ou inadequados
 
-✅ APROVAR APENAS:
+✅ APROVAR:
 - Foto REAL e CLARA de uma PESSOA
 - Rosto da pessoa VISÍVEL e IDENTIFICÁVEL
 - Boa iluminação e boa resolução
-- Vestimenta PROFISSIONAL ou BUSINESS CASUAL (camisa, blusa formal, blazer)
-- Fundo neutro ou ambiente profissional
-- Postura séria e profissional
-- Foto tipo "foto de perfil LinkedIn" ou "foto corporativa"
+- Vestimenta APRESENTÁVEL: camisetas limpas, polos, camisas, blusas, blazers são aceitos
+- Pessoa está apresentável e com postura adequada
+- Ambiente pode ser interno ou externo, desde que a pessoa esteja bem apresentada
+- Foto profissional ou casual-profissional (tipo LinkedIn, foto corporativa, ou foto apresentável)
 
 🔍 ANÁLISE RIGOROSA:
 Analise CUIDADOSAMENTE a imagem fornecida.

@@ -35,3 +35,9 @@ verify_jwt = true
 
 [functions.efi-webhook]
 verify_jwt = false
+
+[functions.verify-identity-document]
+verify_jwt = true
+
+[functions.moderate-message]
+verify_jwt = true

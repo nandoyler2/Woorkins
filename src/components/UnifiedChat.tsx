@@ -33,6 +33,8 @@ import { ProposalNegotiationPanel } from './ProposalNegotiationPanel';
 import { BlockedMessageCountdown } from './BlockedMessageCountdown';
 import { ImageViewer } from './ImageViewer';
 import { RequireProfilePhotoDialog } from './RequireProfilePhotoDialog';
+import { useDocumentVerification } from '@/hooks/useDocumentVerification';
+import { RequireDocumentVerificationDialog } from './RequireDocumentVerificationDialog';
 
 interface UnifiedChatProps {
   conversationId: string;
@@ -79,7 +81,10 @@ export function UnifiedChat({
   const [viewingImage, setViewingImage] = useState<{ url: string; name: string } | null>(null);
   const [currentUserProfile, setCurrentUserProfile] = useState<any>(null);
   const [showPhotoRequiredDialog, setShowPhotoRequiredDialog] = useState(false);
+  const [showDocVerificationDialog, setShowDocVerificationDialog] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const { isVerified } = useDocumentVerification(profileId);
 
   const {
     messages,
@@ -275,6 +280,12 @@ useEffect(() => {
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Check if user has document verified
+    if (!isVerified) {
+      setShowDocVerificationDialog(true);
+      return;
+    }
     
     // Check if user has profile photo
     if (!currentUserProfile?.avatar_url) {
@@ -966,6 +977,16 @@ useEffect(() => {
               .then(({ data }) => setCurrentUserProfile(data));
           }
         }}
+      />
+
+      {/* Document Verification Required Dialog */}
+      <RequireDocumentVerificationDialog
+        open={showDocVerificationDialog}
+        onOpenChange={setShowDocVerificationDialog}
+        profileId={profileId}
+        registeredName={currentUserProfile?.full_name || ''}
+        registeredCPF={currentUserProfile?.cpf || ''}
+        action="send_message"
       />
     </div>
   );

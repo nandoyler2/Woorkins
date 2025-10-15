@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -16,6 +16,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { useDocumentVerification } from '@/hooks/useDocumentVerification';
+import { RequireDocumentVerificationDialog } from '@/components/RequireDocumentVerificationDialog';
 
 export default function ProjectCreate() {
   const { user } = useAuth();
@@ -29,10 +31,42 @@ export default function ProjectCreate() {
   const [budgetMin, setBudgetMin] = useState('');
   const [budgetMax, setBudgetMax] = useState('');
   const [deadline, setDeadline] = useState<Date>();
+  const [profileId, setProfileId] = useState<string>('');
+  const [registeredName, setRegisteredName] = useState('');
+  const [registeredCPF, setRegisteredCPF] = useState('');
+  const [showVerificationDialog, setShowVerificationDialog] = useState(false);
+
+  const { isVerified, isLoading: isCheckingVerification } = useDocumentVerification(profileId);
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (!user) return;
+      
+      const { data } = await supabase
+        .from('profiles')
+        .select('id, full_name, cpf')
+        .eq('user_id', user.id)
+        .single();
+      
+      if (data) {
+        setProfileId(data.id);
+        setRegisteredName(data.full_name || '');
+        setRegisteredCPF(data.cpf || '');
+      }
+    };
+
+    loadProfile();
+  }, [user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
+
+    // Check verification first
+    if (!isVerified) {
+      setShowVerificationDialog(true);
+      return;
+    }
 
     setCreating(true);
 
@@ -233,6 +267,15 @@ export default function ProjectCreate() {
           </Card>
         </div>
       </div>
+
+      <RequireDocumentVerificationDialog
+        open={showVerificationDialog}
+        onOpenChange={setShowVerificationDialog}
+        profileId={profileId}
+        registeredName={registeredName}
+        registeredCPF={registeredCPF}
+        action="create_project"
+      />
     </div>
   );
 }

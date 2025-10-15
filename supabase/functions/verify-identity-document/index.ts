@@ -27,8 +27,8 @@ serve(async (req) => {
       throw new Error('LOVABLE_API_KEY not configured');
     }
 
-    // Análise do documento (frente)
-    console.log('Analyzing front document...');
+    // Análise inteligente do documento (frente)
+    console.log('Analyzing front document with lenient approach...');
     const frontAnalysis = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -43,89 +43,88 @@ serve(async (req) => {
             content: [
               {
                 type: 'text',
-                text: `ANÁLISE CRÍTICA DE DOCUMENTO DE IDENTIDADE (RG/CNH) - FRENTE
+                text: `ANÁLISE INTELIGENTE DE DOCUMENTO BRASILEIRO - FRENTE
 
-Você é um especialista em validação de documentos brasileiros. Analise esta imagem de documento de identidade e extraia as informações com MÁXIMA PRECISÃO.
+CONTEXTO CRÍTICO - SEJA PRÁTICO E REALISTA:
+- Documentos podem ter 5-20 ANOS - fotos antigas são NORMAIS
+- Crianças crescem, pessoas envelhecem - diferenças de idade são ESPERADAS
+- Algum brilho ou sombra é ACEITÁVEL se informações críticas estiverem legíveis
+- Desgaste natural do documento (desbotamento leve) é NORMAL
+- Foque em UTILIDADE, não perfeição
 
 TAREFA:
-1. Identifique o tipo de documento (RG ou CNH)
-2. Extraia EXATAMENTE as seguintes informações:
-   - Nome completo (todos os nomes, exatamente como escrito)
-   - CPF (somente números)
-   - Data de nascimento (formato DD/MM/AAAA)
+1. Identifique: RG ou CNH
+2. Extraia (faça o melhor esforço mesmo se parcialmente legível):
+   - Nome completo
+   - CPF (apenas números) - CRÍTICO
+   - Data de nascimento (DD/MM/AAAA) - CRÍTICO
    - Número do documento
 
-VALIDAÇÕES OBRIGATÓRIAS:
-1. QUALIDADE DA IMAGEM:
-   - Foto está nítida e legível?
-   - Todas as informações estão visíveis?
-   - Há brilho, sombra ou obstrução?
-   - A foto foi tirada do documento físico ou é screenshot/foto de tela?
+AVALIAÇÃO DE QUALIDADE:
+- excellent: tudo perfeitamente nítido
+- good: maioria legível, pequenos problemas OK
+- acceptable: legível com esforço, mas campos críticos visíveis
+- poor: ilegível, precisa refazer
 
-2. AUTENTICIDADE:
-   - Há sinais de adulteração, edição digital ou montagem?
-   - As fontes e formatação são consistentes com documentos oficiais?
-   - Há hologramas, marcas d'água ou elementos de segurança visíveis?
-   - As cores e qualidade de impressão são consistentes?
+LEGIBILIDADE POR CAMPO:
+Para cada campo: clear | partially_visible | illegible
+- clear: fácil de ler
+- partially_visible: pode ler com esforço
+- illegible: impossível ler
 
-3. FRAUDE:
-   - Detecta sinais de falsificação?
-   - Há inconsistências visuais (cortes, colagens, sobreposição)?
-   - A foto da pessoa parece manipulada?
+SÓ REJEITE SE:
+- Campos CRÍTICOS (nome, CPF, data nasc) completamente ilegíveis
+- Evidência CLARA de fraude (edição digital óbvia, montagem)
+- Screenshot ao invés de documento físico
 
 RESPONDA EM JSON:
 {
   "documentType": "RG" ou "CNH",
   "extractedData": {
-    "fullName": "nome completo exato",
-    "cpf": "apenas números",
-    "birthDate": "DD/MM/AAAA",
-    "documentNumber": "número"
+    "fullName": "nome ou null",
+    "cpf": "apenas números ou null",
+    "birthDate": "DD/MM/AAAA ou null",
+    "documentNumber": "número ou null"
+  },
+  "quality": "excellent" | "good" | "acceptable" | "poor",
+  "readability": {
+    "name": "clear" | "partially_visible" | "illegible",
+    "cpf": "clear" | "partially_visible" | "illegible",
+    "birthDate": "clear" | "partially_visible" | "illegible",
+    "photo": "clear" | "partially_visible" | "illegible"
   },
   "validation": {
     "isReadable": true/false,
-    "reason": "motivo se false",
-    "isClear": true/false,
-    "hasReflections": true/false,
+    "reason": "motivo específico se false",
     "isPhysicalDocument": true/false
   },
   "authenticity": {
     "isAuthentic": true/false,
-    "hasSuspiciousEdits": true/false,
-    "hasSecurityFeatures": true/false,
-    "details": "explicação detalhada"
-  },
-  "fraud": {
-    "isFraudulent": true/false,
-    "confidence": 0-100,
-    "reasons": ["lista de razões se suspeito"]
+    "hasClearFraud": true/false,
+    "details": "explicação"
   }
 }`
               },
               {
                 type: 'image_url',
-                image_url: {
-                  url: documentFrontBase64
-                }
+                image_url: { url: documentFrontBase64 }
               }
             ]
           }
         ],
-        temperature: 0.1,
+        temperature: 0.2,
         response_format: { type: "json_object" }
       })
     });
 
     if (!frontAnalysis.ok) {
-      const errorText = await frontAnalysis.text();
-      console.error('Front analysis error:', frontAnalysis.status, errorText);
-      throw new Error(`AI analysis failed: ${frontAnalysis.status}`);
+      throw new Error(`Front analysis failed: ${frontAnalysis.status}`);
     }
 
     const frontResult = await frontAnalysis.json();
     const frontData = JSON.parse(frontResult.choices[0].message.content);
 
-    // Análise do documento (verso)
+    // Análise do verso
     console.log('Analyzing back document...');
     const backAnalysis = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -141,66 +140,41 @@ RESPONDA EM JSON:
             content: [
               {
                 type: 'text',
-                text: `ANÁLISE CRÍTICA DE DOCUMENTO DE IDENTIDADE (RG/CNH) - VERSO
-
-Analise o VERSO do documento e verifique:
-
-1. QUALIDADE:
-   - Imagem nítida e legível?
-   - Informações visíveis?
-   
-2. AUTENTICIDADE:
-   - Elementos de segurança presentes?
-   - Formatação oficial?
-   - Sinais de adulteração?
-
-3. CONSISTÊNCIA:
-   - O verso parece do mesmo documento da frente?
-   - Tipo de papel, cores e qualidade são consistentes?
+                text: `ANÁLISE DO VERSO - Seja leniente, apenas verifique se é legível e parece autêntico.
 
 RESPONDA EM JSON:
 {
   "validation": {
     "isReadable": true/false,
-    "isClear": true/false,
-    "reason": "motivo se problema"
+    "reason": "motivo se false"
   },
   "authenticity": {
     "isAuthentic": true/false,
-    "hasSecurityFeatures": true/false,
     "details": "explicação"
-  },
-  "consistency": {
-    "matchesFront": true/false,
-    "reason": "explicação"
   }
 }`
               },
               {
                 type: 'image_url',
-                image_url: {
-                  url: documentBackBase64
-                }
+                image_url: { url: documentBackBase64 }
               }
             ]
           }
         ],
-        temperature: 0.1,
+        temperature: 0.2,
         response_format: { type: "json_object" }
       })
     });
 
     if (!backAnalysis.ok) {
-      const errorText = await backAnalysis.text();
-      console.error('Back analysis error:', backAnalysis.status, errorText);
-      throw new Error(`AI back analysis failed: ${backAnalysis.status}`);
+      throw new Error(`Back analysis failed: ${backAnalysis.status}`);
     }
 
     const backResult = await backAnalysis.json();
     const backData = JSON.parse(backResult.choices[0].message.content);
 
-    // Comparação de selfie com foto do documento
-    console.log('Comparing selfie with document photo...');
+    // Comparação facial INTELIGENTE
+    console.log('Comparing faces with age-aware analysis...');
     const faceComparison = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -215,59 +189,54 @@ RESPONDA EM JSON:
             content: [
               {
                 type: 'text',
-                text: `COMPARAÇÃO BIOMÉTRICA FACIAL
+                text: `COMPARAÇÃO FACIAL INTELIGENTE
 
-Compare a selfie com a foto do documento de identidade.
+CONTEXTO CRÍTICO:
+- Foto do documento pode ter 5-20 ANOS
+- CRIANÇAS crescem para ADULTOS - isso é NORMAL
+- Peso, cabelo, barba, óculos - MUDAM (ignore isso)
+- Foque APENAS em ESTRUTURA ÓSSEA permanente
 
-ANÁLISE OBRIGATÓRIA:
-1. CORRESPONDÊNCIA FACIAL:
-   - As duas fotos são da mesma pessoa?
-   - Características faciais principais coincidem?
-   - Idade aparente é compatível?
+CARACTERÍSTICAS PERMANENTES:
+1. Formato do rosto (oval, redondo, quadrado)
+2. Espaçamento entre os olhos
+3. Estrutura do nariz
+4. Estrutura óssea das bochechas/mandíbula
 
-2. QUALIDADE DA SELFIE:
-   - Foto é ao vivo (não screenshot)?
-   - Rosto está visível e nítido?
-   - Há sinais de máscara, foto impressa ou deepfake?
+IGNORE:
+- Idade/diferença de idade
+- Cabelo, barba, maquiagem
+- Peso corporal
+- Qualidade das fotos
 
-3. VALIDAÇÃO:
-   - Confiança na correspondência (0-100%)
-   - É a mesma pessoa?
+SÓ rejeite se ESTRUTURA FACIAL for CLARAMENTE diferente (pessoas totalmente diferentes).
 
 IMAGENS:
-- Primeira imagem: Documento de identidade (com foto)
-- Segunda imagem: Selfie atual
+1. Documento (pode ser MUITO antiga, até criança)
+2. Selfie atual
 
 RESPONDA EM JSON:
 {
   "faceMatch": {
     "isSamePerson": true/false,
     "confidence": 0-100,
-    "details": "explicação detalhada da comparação"
+    "ageContext": "descrição da diferença de idade",
+    "details": "explicação focando em características permanentes"
   },
   "selfieQuality": {
     "isLivePhoto": true/false,
     "isClear": true/false,
-    "hasSpoofing": true/false,
-    "reason": "explicação"
-  },
-  "validation": {
-    "approved": true/false,
-    "reason": "motivo final"
+    "hasSpoofing": true/false
   }
 }`
               },
               {
                 type: 'image_url',
-                image_url: {
-                  url: documentFrontBase64
-                }
+                image_url: { url: documentFrontBase64 }
               },
               {
                 type: 'image_url',
-                image_url: {
-                  url: selfieBase64
-                }
+                image_url: { url: selfieBase64 }
               }
             ]
           }
@@ -278,19 +247,17 @@ RESPONDA EM JSON:
     });
 
     if (!faceComparison.ok) {
-      const errorText = await faceComparison.text();
-      console.error('Face comparison error:', faceComparison.status, errorText);
       throw new Error(`Face comparison failed: ${faceComparison.status}`);
     }
 
     const faceResult = await faceComparison.json();
     const faceData = JSON.parse(faceResult.choices[0].message.content);
 
-    // Validação adicional: comparar foto de perfil com selfie verificada
+    // Validação de foto de perfil (se fornecida)
     let profilePhotoValidation: any = null;
     
     if (currentProfilePhotoUrl) {
-      console.log('Validating profile photo against verified selfie...');
+      console.log('Validating profile photo...');
       const profilePhotoComparison = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -307,65 +274,39 @@ RESPONDA EM JSON:
                   type: 'text',
                   text: `VALIDAÇÃO DE FOTO DE PERFIL
 
-Compare a foto de perfil atual do usuário com a selfie verificada tirada ao vivo durante a verificação de identidade.
+Compare foto de perfil com selfie verificada.
 
-ANÁLISE OBRIGATÓRIA:
-1. CORRESPONDÊNCIA FACIAL:
-   - A foto de perfil é da mesma pessoa da selfie verificada?
-   - Características faciais principais coincidem?
-   - Idade aparente é compatível?
-
-2. AUTENTICIDADE DA FOTO DE PERFIL:
-   - É uma foto real da pessoa ou pode ser de outra pessoa?
-   - Há sinais de que seja uma foto de celebridade, modelo ou pessoa famosa?
-   - Há sinais de manipulação, filtros excessivos ou edição pesada?
-   - É uma foto gerada por IA ou deepfake?
-
-3. VALIDAÇÃO:
-   - Confiança na correspondência (0-100%)
-   - É a mesma pessoa?
-   - A foto de perfil é real e autêntica?
-
-IMAGENS:
-- Primeira imagem: Foto de perfil atual
-- Segunda imagem: Selfie verificada (ao vivo)
+VERIFICAR:
+1. É a mesma pessoa? (confiança 0-100%)
+2. Foto de perfil é real ou fake?
+   - Celebridade/modelo?
+   - Gerada por IA?
+   - Muito editada?
 
 RESPONDA EM JSON:
 {
   "faceMatch": {
-    "isSamePerson": true/false,
-    "confidence": 0-100,
-    "details": "explicação detalhada da comparação"
+    "confidence": 0-100
   },
-  "profilePhotoAuthenticity": {
+  "authenticity": {
     "isRealPhoto": true/false,
     "isCelebrityOrModel": true/false,
-    "isHeavilyEdited": true/false,
-    "isAIGenerated": true/false,
-    "details": "explicação sobre a autenticidade"
-  },
-  "validation": {
-    "approved": true/false,
-    "reason": "motivo da aprovação ou rejeição"
+    "isAIGenerated": true/false
   }
 }`
                 },
                 {
                   type: 'image_url',
-                  image_url: {
-                    url: currentProfilePhotoUrl
-                  }
+                  image_url: { url: currentProfilePhotoUrl }
                 },
                 {
                   type: 'image_url',
-                  image_url: {
-                    url: selfieBase64
-                  }
+                  image_url: { url: selfieBase64 }
                 }
               ]
             }
           ],
-          temperature: 0.1,
+          temperature: 0.2,
           response_format: { type: "json_object" }
         })
       });
@@ -373,80 +314,80 @@ RESPONDA EM JSON:
       if (profilePhotoComparison.ok) {
         const profilePhotoResult = await profilePhotoComparison.json();
         profilePhotoValidation = JSON.parse(profilePhotoResult.choices[0].message.content);
-      } else {
-        console.error('Profile photo validation failed:', await profilePhotoComparison.text());
       }
     }
 
-    // Validações finais
+    // Validação final inteligente
     const extractedName = frontData.extractedData?.fullName || '';
     const extractedCPF = frontData.extractedData?.cpf || '';
     const extractedBirthDate = frontData.extractedData?.birthDate || '';
 
-    // Normalizar CPF (remover pontos e traços)
     const normalizedExtractedCPF = extractedCPF.replace(/[.\-]/g, '');
     const normalizedRegisteredCPF = registeredCPF.replace(/[.\-]/g, '');
-
-    // Verificar se CPF é exatamente igual
     const cpfMatches = normalizedExtractedCPF === normalizedRegisteredCPF;
 
-    // Verificar se nome do documento contém o nome cadastrado (pode ser nome parcial no cadastro)
     const normalizedExtractedName = extractedName.toLowerCase().trim();
     const normalizedRegisteredName = registeredName.toLowerCase().trim();
-    
-    // Nome pode ser parcial no cadastro, mas deve estar contido no nome completo do documento
     const nameMatches = normalizedExtractedName.includes(normalizedRegisteredName) || 
                        normalizedRegisteredName.includes(normalizedExtractedName);
 
-    // Determinar status final
     let verificationStatus = 'rejected';
     let rejectionReasons = [];
 
-    // Validações
-    if (!frontData.validation?.isReadable || !frontData.validation?.isClear) {
-      rejectionReasons.push('Documento ilegível ou com má qualidade na frente');
+    // Validações INTELIGENTES - só rejeite com boas razões
+    if (frontData.readability?.name === 'illegible') {
+      rejectionReasons.push('Nome completamente ilegível. Melhore a iluminação e tire novamente.');
     }
-    if (!frontData.validation?.isPhysicalDocument) {
-      rejectionReasons.push('Não é foto de documento físico (screenshot detectado)');
+    if (frontData.readability?.cpf === 'illegible') {
+      rejectionReasons.push('CPF ilegível. Melhore a iluminação e foque na área do CPF.');
     }
-    if (!frontData.authenticity?.isAuthentic || frontData.authenticity?.hasSuspiciousEdits) {
-      rejectionReasons.push('Sinais de adulteração ou edição no documento');
+    if (frontData.readability?.birthDate === 'illegible') {
+      rejectionReasons.push('Data de nascimento ilegível. Tire foto mais nítida.');
     }
-    if (frontData.fraud?.isFraudulent) {
-      rejectionReasons.push(`Documento possivelmente fraudulento: ${frontData.fraud.reasons?.join(', ')}`);
+    if (frontData.readability?.photo === 'illegible') {
+      rejectionReasons.push('Foto no documento muito escura. Use melhor iluminação.');
     }
-    if (!backData.validation?.isReadable || !backData.validation?.isClear) {
-      rejectionReasons.push('Documento ilegível ou com má qualidade no verso');
+    
+    if (frontData.validation?.isPhysicalDocument === false) {
+      rejectionReasons.push('Use o documento físico original, não screenshot ou foto de tela.');
     }
-    if (!backData.authenticity?.isAuthentic) {
-      rejectionReasons.push('Verso do documento não parece autêntico');
+    
+    if (frontData.authenticity?.hasClearFraud) {
+      rejectionReasons.push('Documento parece fraudulento. Use seu documento original.');
     }
-    if (!backData.consistency?.matchesFront) {
-      rejectionReasons.push('Verso não corresponde à frente do documento');
+    
+    if (backData.validation?.isReadable === false) {
+      rejectionReasons.push('Verso do documento ilegível. Tire nova foto com melhor luz.');
     }
-    if (!faceData.faceMatch?.isSamePerson || faceData.faceMatch?.confidence < 70) {
-      rejectionReasons.push('Selfie não corresponde à foto do documento');
+    
+    // Comparação facial - MUITO leniente com idade
+    if (!faceData.faceMatch?.isSamePerson && faceData.faceMatch?.confidence < 50) {
+      rejectionReasons.push('Características faciais não correspondem. Tire selfie clara, bem iluminada, olhando para câmera.');
     }
-    if (!faceData.selfieQuality?.isLivePhoto || faceData.selfieQuality?.hasSpoofing) {
-      rejectionReasons.push('Selfie não parece ser uma foto ao vivo');
+    
+    if (faceData.selfieQuality?.hasSpoofing) {
+      rejectionReasons.push('Selfie parece não ser ao vivo. Tire uma selfie real olhando para a câmera.');
     }
-    if (!cpfMatches) {
-      rejectionReasons.push(`CPF do documento (${normalizedExtractedCPF}) não corresponde ao CPF cadastrado (${normalizedRegisteredCPF})`);
+    
+    if (!cpfMatches && normalizedExtractedCPF.length === 11) {
+      rejectionReasons.push('CPF do documento não corresponde. Verifique se é o documento correto.');
     }
-    if (!nameMatches) {
-      rejectionReasons.push(`Nome do documento (${extractedName}) não corresponde ao nome cadastrado (${registeredName})`);
+    
+    if (!nameMatches && normalizedExtractedName && normalizedRegisteredName) {
+      rejectionReasons.push(`Nome não corresponde. Verifique se é o documento correto.`);
     }
-    if (profilePhotoValidation && !profilePhotoValidation.validation?.approved) {
-      rejectionReasons.push(`Foto de perfil não corresponde à pessoa verificada: ${profilePhotoValidation.validation?.reason || 'Foto de perfil não é da mesma pessoa'}`);
+    
+    if (profilePhotoValidation?.faceMatch?.confidence < 60) {
+      rejectionReasons.push('Foto de perfil parece ser de outra pessoa. Use uma foto real sua.');
     }
-    if (profilePhotoValidation?.profilePhotoAuthenticity?.isCelebrityOrModel) {
-      rejectionReasons.push('Foto de perfil parece ser de uma celebridade ou modelo, não da pessoa real');
+    if (profilePhotoValidation?.authenticity?.isCelebrityOrModel) {
+      rejectionReasons.push('Foto de perfil não é sua (parece celebridade/modelo). Use foto real.');
     }
-    if (profilePhotoValidation?.profilePhotoAuthenticity?.isAIGenerated) {
-      rejectionReasons.push('Foto de perfil parece ser gerada por IA');
+    if (profilePhotoValidation?.authenticity?.isAIGenerated) {
+      rejectionReasons.push('Foto de perfil parece ser gerada por IA. Use foto real.');
     }
 
-    // Se passou em todas as validações
+    // Aprovar se não houver motivos sérios para rejeitar
     if (rejectionReasons.length === 0) {
       verificationStatus = 'approved';
     }
@@ -461,13 +402,12 @@ RESPONDA EM JSON:
         fullName: extractedName,
         cpf: normalizedExtractedCPF,
         birthDate: extractedBirthDate,
-        documentType: frontData.documentType,
-        documentNumber: frontData.extractedData?.documentNumber
+        documentType: frontData.documentType
       },
       validation: {
         cpfMatches,
         nameMatches,
-        nameWasPartial: !nameMatches && normalizedExtractedName.includes(normalizedRegisteredName)
+        nameWasPartial: nameMatches && normalizedExtractedName.length > normalizedRegisteredName.length
       },
       analysis: {
         front: frontData,
@@ -476,69 +416,48 @@ RESPONDA EM JSON:
         profilePhoto: profilePhotoValidation
       },
       rejectionReasons: rejectionReasons.length > 0 ? rejectionReasons : null,
-      requiresProfilePhotoChange: profilePhotoValidation && !profilePhotoValidation.validation?.approved
+      requiresProfilePhotoChange: profilePhotoValidation && profilePhotoValidation.faceMatch?.confidence < 60
     };
 
-    // Se aprovado e nome era parcial, atualizar perfil com nome completo e data de nascimento
+    // Se aprovado, atualizar perfil
     if (verificationStatus === 'approved') {
-      const shouldUpdateName = result.validation.nameWasPartial;
-      
       const updates: any = {
         document_verified: true,
         document_verification_status: 'approved'
       };
 
-      if (shouldUpdateName) {
+      if (result.validation.nameWasPartial && extractedName) {
         updates.full_name = extractedName;
       }
 
       if (extractedBirthDate) {
-        // Converter DD/MM/AAAA para AAAA-MM-DD
         const [day, month, year] = extractedBirthDate.split('/');
-        updates.birth_date = `${year}-${month}-${day}`;
+        if (day && month && year) {
+          updates.birth_date = `${year}-${month}-${day}`;
+        }
       }
 
-      const { error: updateError } = await supabase
+      await supabase
         .from('profiles')
         .update(updates)
         .eq('id', profileId);
-
-      if (updateError) {
-        console.error('Error updating profile:', updateError);
-      }
-    } else {
-      // Marcar como rejeitado
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({
-          document_verified: false,
-          document_verification_status: 'rejected'
-        })
-        .eq('id', profileId);
-
-      if (updateError) {
-        console.error('Error updating profile status:', updateError);
-      }
     }
 
-    return new Response(
-      JSON.stringify(result),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200 
-      }
-    );
+    return new Response(JSON.stringify(result), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
 
   } catch (error) {
-    console.error('Error in verify-identity-document:', error);
+    console.error('Verification error:', error);
     return new Response(
       JSON.stringify({ 
         error: error instanceof Error ? error.message : 'Unknown error',
-        status: 'error'
-      }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500 
+        status: 'rejected',
+        rejectionReasons: ['Erro ao processar documentos. Tente novamente.']
+      }), 
+      {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );
   }

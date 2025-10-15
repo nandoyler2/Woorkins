@@ -14,7 +14,14 @@ interface IdentityVerificationDialogProps {
   onVerificationComplete?: () => void;
 }
 
-type Step = 'intro' | 'front' | 'back' | 'selfie' | 'processing' | 'result';
+type Step = 'intro' | 'front' | 'front-preview' | 'back' | 'back-preview' | 'selfie' | 'selfie-preview' | 'processing' | 'result';
+
+interface ValidationFeedback {
+  isValid: boolean;
+  quality: 'excellent' | 'good' | 'acceptable' | 'poor';
+  issues: string[];
+  suggestions: string[];
+}
 
 export function IdentityVerificationDialog({
   open,
@@ -26,13 +33,17 @@ export function IdentityVerificationDialog({
 }: IdentityVerificationDialogProps) {
   const [step, setStep] = useState<Step>('intro');
   const [frontImage, setFrontImage] = useState<string | null>(null);
-  const [backImage, setBackImage] = useState<string>(null);
+  const [backImage, setBackImage] = useState<string | null>(null);
   const [selfieImage, setSelfieImage] = useState<string | null>(null);
   const [verificationResult, setVerificationResult] = useState<any>(null);
   const [isCameraActive, setIsCameraActive] = useState(false);
+  const [realtimeValidation, setRealtimeValidation] = useState<ValidationFeedback | null>(null);
+  const [isValidating, setIsValidating] = useState(false);
+  const [canCapture, setCanCapture] = useState(false);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const validationIntervalRef = useRef<number | null>(null);
   const { toast } = useToast();
 
   const startCamera = async () => {
@@ -106,6 +117,45 @@ export function IdentityVerificationDialog({
       streamRef.current = null;
       setIsCameraActive(false);
     }
+    if (validationIntervalRef.current) {
+      clearInterval(validationIntervalRef.current);
+      validationIntervalRef.current = null;
+    }
+    setRealtimeValidation(null);
+    setCanCapture(false);
+  };
+
+  const validateDocumentRealtime = async () => {
+    if (!videoRef.current || !isCameraActive || isValidating) return;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = videoRef.current.videoWidth;
+    canvas.height = videoRef.current.videoHeight;
+    const ctx = canvas.getContext('2d');
+    
+    if (!ctx) return;
+
+    ctx.drawImage(videoRef.current, 0, 0);
+    const imageBase64 = canvas.toDataURL('image/jpeg', 0.8);
+
+    setIsValidating(true);
+
+    try {
+      const documentSide = step === 'front' ? 'front' : step === 'back' ? 'back' : 'selfie';
+      
+      const { data, error } = await supabase.functions.invoke('validate-document-realtime', {
+        body: { imageBase64, documentSide }
+      });
+
+      if (error) throw error;
+
+      setRealtimeValidation(data);
+      setCanCapture(data.isValid && (data.quality === 'excellent' || data.quality === 'good' || data.quality === 'acceptable'));
+    } catch (error) {
+      console.error('Real-time validation error:', error);
+    } finally {
+      setIsValidating(false);
+    }
   };
 
   const capturePhoto = () => {
@@ -128,18 +178,40 @@ export function IdentityVerificationDialog({
     const photo = capturePhoto();
     if (!photo) return;
 
+    stopCamera();
+
     if (step === 'front') {
       setFrontImage(photo);
-      stopCamera();
-      setStep('back');
+      setStep('front-preview');
     } else if (step === 'back') {
       setBackImage(photo);
-      stopCamera();
-      setStep('selfie');
+      setStep('back-preview');
     } else if (step === 'selfie') {
       setSelfieImage(photo);
-      stopCamera();
-      handleSubmit(frontImage!, backImage!, photo);
+      setStep('selfie-preview');
+    }
+  };
+
+  const handleContinueFromPreview = () => {
+    if (step === 'front-preview') {
+      setStep('back');
+    } else if (step === 'back-preview') {
+      setStep('selfie');
+    } else if (step === 'selfie-preview') {
+      handleSubmit(frontImage!, backImage!, selfieImage!);
+    }
+  };
+
+  const handleRetakePhoto = () => {
+    if (step === 'front-preview') {
+      setFrontImage(null);
+      setStep('front');
+    } else if (step === 'back-preview') {
+      setBackImage(null);
+      setStep('back');
+    } else if (step === 'selfie-preview') {
+      setSelfieImage(null);
+      setStep('selfie');
     }
   };
 
@@ -287,18 +359,33 @@ export function IdentityVerificationDialog({
       case 'back':
       case 'selfie':
         const instructions = {
-          front: 'Posicione a FRENTE do seu documento',
-          back: 'Agora posicione o VERSO do documento',
-          selfie: 'Tire uma foto do seu rosto (selfie)'
+          front: {
+            title: 'Foto da FRENTE do Documento',
+            subtitle: 'Mostre o documento para a câmera. Quando tudo estiver verde, você pode capturar.',
+            details: 'Certifique-se de que Nome, CPF e Foto estejam visíveis e legíveis'
+          },
+          back: {
+            title: 'Foto do VERSO do Documento',
+            subtitle: 'Vire o documento e mostre o verso para a câmera.',
+            details: 'Certifique-se de que todas as informações do verso estejam visíveis'
+          },
+          selfie: {
+            title: 'Sua Selfie (Foto ao Vivo)',
+            subtitle: 'Tire uma foto do seu rosto olhando diretamente para a câmera.',
+            details: 'Certifique-se de estar bem iluminado e com o rosto descoberto'
+          }
         };
 
         return (
           <div className="space-y-4">
-            <DialogDescription className="text-center font-medium">
-              {instructions[step]}
-            </DialogDescription>
+            <div className="text-center space-y-2">
+              <h3 className="text-lg font-semibold">{instructions[step].title}</h3>
+              <p className="text-sm text-muted-foreground">{instructions[step].subtitle}</p>
+              <p className="text-xs text-muted-foreground italic">{instructions[step].details}</p>
+            </div>
             
-            <div className="relative bg-black rounded-lg overflow-hidden aspect-video">
+            <div className="relative bg-black rounded-lg overflow-hidden aspect-video border-4 transition-colors duration-300" 
+                 style={{ borderColor: canCapture ? '#22c55e' : realtimeValidation ? '#ef4444' : '#64748b' }}>
               <video
                 ref={videoRef}
                 autoPlay
@@ -309,20 +396,89 @@ export function IdentityVerificationDialog({
               
               {!isCameraActive && (
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <Button onClick={startCamera} size="lg">
+                  <Button onClick={async () => {
+                    await startCamera();
+                    // Iniciar validação em tempo real
+                    const interval = setInterval(() => {
+                      validateDocumentRealtime();
+                    }, 2000); // Validar a cada 2 segundos
+                    validationIntervalRef.current = interval as any;
+                  }} size="lg">
                     <Camera className="mr-2 h-5 w-5" />
                     Ativar Câmera
                   </Button>
                 </div>
               )}
+
+              {/* Feedback em tempo real */}
+              {isCameraActive && realtimeValidation && (
+                <div className="absolute bottom-0 left-0 right-0 p-3 bg-black/80 text-white text-xs space-y-1">
+                  <div className="flex items-center gap-2">
+                    {canCapture ? (
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                    ) : (
+                      <XCircle className="h-4 w-4 text-red-500" />
+                    )}
+                    <span className="font-semibold">
+                      {canCapture ? '✓ Pronto para capturar!' : 'Ajustes necessários:'}
+                    </span>
+                  </div>
+                  {!canCapture && realtimeValidation.suggestions && (
+                    <ul className="list-disc list-inside space-y-0.5 ml-2">
+                      {realtimeValidation.suggestions.map((s, i) => (
+                        <li key={i}>{s}</li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
             </div>
 
             {isCameraActive && (
-              <Button onClick={handleCapture} className="w-full" size="lg">
+              <Button 
+                onClick={handleCapture} 
+                className="w-full" 
+                size="lg"
+                disabled={!canCapture}
+                variant={canCapture ? "default" : "secondary"}
+              >
                 <Camera className="mr-2 h-5 w-5" />
-                Capturar Foto
+                {canCapture ? 'Capturar Foto' : 'Aguarde... Ajustando'}
               </Button>
             )}
+          </div>
+        );
+
+      case 'front-preview':
+      case 'back-preview':
+      case 'selfie-preview':
+        const previewImage = step === 'front-preview' ? frontImage : step === 'back-preview' ? backImage : selfieImage;
+        const previewTitles = {
+          'front-preview': 'Confira a Foto da Frente',
+          'back-preview': 'Confira a Foto do Verso',
+          'selfie-preview': 'Confira sua Selfie'
+        };
+
+        return (
+          <div className="space-y-4">
+            <DialogDescription className="text-center font-medium">
+              {previewTitles[step]}
+            </DialogDescription>
+            
+            <div className="relative bg-black rounded-lg overflow-hidden">
+              <img src={previewImage!} alt="Preview" className="w-full h-auto" />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <Button onClick={handleRetakePhoto} variant="outline" size="lg">
+                <Camera className="mr-2 h-4 w-4" />
+                Tirar Novamente
+              </Button>
+              <Button onClick={handleContinueFromPreview} size="lg">
+                <CheckCircle className="mr-2 h-4 w-4" />
+                Continuar
+              </Button>
+            </div>
           </div>
         );
 

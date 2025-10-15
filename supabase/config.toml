@@ -39,5 +39,8 @@ verify_jwt = false
 [functions.verify-identity-document]
 verify_jwt = true
 
+[functions.validate-document-realtime]
+verify_jwt = false
+
 [functions.moderate-message]
 verify_jwt = true

@@ -7,7 +7,14 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Send, Loader2, Check, CheckCheck, Paperclip, Smile, ExternalLink, Lock, Shield, AlertTriangle, Trash2, X, Download, FileText, File } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Send, Loader2, Check, CheckCheck, Paperclip, Smile, ExternalLink, Lock, Shield, AlertTriangle, Trash2, X, Download, FileText, File, MoreVertical, Archive, Ban, Eye, DollarSign } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import {
   AlertDialog,
@@ -421,18 +428,82 @@ export function UnifiedChat({
         </AlertDescription>
       </Alert>
 
-      {/* Proposal Negotiation Panel */}
+      {/* Proposal Negotiation Panel - Compact */}
       {conversationType === 'proposal' && proposalData && (
-        <div className="border-b p-3 bg-slate-50 flex-shrink-0">
-          <ProposalNegotiationPanel
-            proposalId={conversationId}
-            proposalData={proposalData}
-            isOwner={isOwner}
-            currentProfileId={profileId}
-            freelancerId={proposalData.freelancer_id}
-            onStatusChange={loadProposalData}
-            onDelete={handleDeleteConversation}
-          />
+        <div className="border-b p-2.5 bg-slate-50/80 flex-shrink-0">
+          <div className="flex items-center justify-between gap-3">
+            {/* Left: Proposal Value */}
+            <div className="flex-shrink-0">
+              <p className="text-xs text-muted-foreground mb-0.5">Valor da Proposta</p>
+              <p className="text-lg font-bold text-primary">
+                R$ {proposalData.budget.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              </p>
+              <p className="text-xs text-muted-foreground">Prazo: {proposalData.delivery_days} dias</p>
+            </div>
+
+            {/* Center: Project Name + Refazer Button */}
+            <div className="flex-1 min-w-0 flex items-center gap-2">
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-muted-foreground mb-0.5">Projeto</p>
+                <p className="text-sm font-semibold truncate">{projectTitle}</p>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex-shrink-0 h-8 text-xs"
+              >
+                <DollarSign className="h-3 w-3 mr-1" />
+                Refazer Proposta
+              </Button>
+            </div>
+
+            {/* Right: Status + Menu */}
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <Badge variant={proposalData.status === 'accepted' ? 'default' : 'secondary'} className="text-xs">
+                {proposalData.status === 'pending' ? 'Pendente' : 
+                 proposalData.status === 'accepted' ? 'Aceito' : 
+                 proposalData.status === 'rejected' ? 'Rejeitado' : proposalData.status}
+              </Badge>
+              
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  {projectId && (
+                    <>
+                      <DropdownMenuItem onClick={() => window.open(`/projetos/${projectId}`, '_blank')}>
+                        <Eye className="h-4 w-4 mr-2" />
+                        Visualizar Projeto
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                    </>
+                  )}
+                  <DropdownMenuItem>
+                    <Archive className="h-4 w-4 mr-2" />
+                    Arquivar Conversa
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <Ban className="h-4 w-4 mr-2" />
+                    Bloquear Usuário
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    className="text-destructive focus:text-destructive"
+                    onClick={async () => {
+                      const canDelete = await checkCanDelete();
+                      if (canDelete) setShowDeleteDialog(true);
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Excluir Conversa
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
         </div>
       )}
 

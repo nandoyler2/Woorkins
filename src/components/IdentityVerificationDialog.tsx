@@ -81,6 +81,14 @@ export function IdentityVerificationDialog({
             .then(() => {
               console.log('Video reproduzindo');
               setIsCameraActive(true);
+              
+              // Iniciar validação em tempo real após câmera ativar
+              setTimeout(() => {
+                const interval = setInterval(() => {
+                  validateDocumentRealtime();
+                }, 2000);
+                validationIntervalRef.current = interval as any;
+              }, 500);
             })
             .catch((playError) => {
               console.error('Erro ao reproduzir video:', playError);
@@ -112,6 +120,9 @@ export function IdentityVerificationDialog({
         description: errorMessage,
         variant: 'destructive'
       });
+      
+      // Mostrar opção de upload manual
+      setShowManualSubmission(true);
     }
   };
 
@@ -440,17 +451,18 @@ export function IdentityVerificationDialog({
               />
               
               {!isCameraActive && (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <Button onClick={async () => {
-                    await startCamera();
-                    // Iniciar validação em tempo real
-                    const interval = setInterval(() => {
-                      validateDocumentRealtime();
-                    }, 2000); // Validar a cada 2 segundos
-                    validationIntervalRef.current = interval as any;
-                  }} size="lg">
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
+                  <Button onClick={startCamera} size="lg">
                     <Camera className="mr-2 h-5 w-5" />
                     Ativar Câmera
+                  </Button>
+                  <Button 
+                    onClick={() => setShowManualSubmission(true)} 
+                    variant="outline"
+                    size="sm"
+                  >
+                    <Upload className="mr-2 h-4 w-4" />
+                    Enviar documentos em anexo
                   </Button>
                 </div>
               )}

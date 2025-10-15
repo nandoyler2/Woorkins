@@ -321,11 +321,23 @@ export function SupportChatDialog({ open, onOpenChange, documentRejected, profil
               <MessageCircle className="h-5 w-5" />
               Suporte
             </div>
-            {!showWelcome && conversationId && (
-              <div className="text-xs text-muted-foreground">
-                Encerra em: {formatTime(timeUntilClose)}
-              </div>
-            )}
+            <div className="flex items-center gap-2">
+              {!showWelcome && conversationId && (
+                <>
+                  <div className="text-xs text-muted-foreground">
+                    Encerra em: {formatTime(timeUntilClose)}
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleCloseConversation}
+                    className="h-8 text-xs"
+                  >
+                    Encerrar conversa
+                  </Button>
+                </>
+              )}
+            </div>
           </DialogTitle>
         </DialogHeader>
 

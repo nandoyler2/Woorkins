@@ -19,6 +19,8 @@ export default function UserMessages() {
   const { userId } = useParams();
   const navigate = useNavigate();
   const [user, setUser] = useState<any>(null);
+  const [negotiations, setNegotiations] = useState<any[]>([]);
+  const [proposals, setProposals] = useState<any[]>([]);
   const [aiConversations, setAiConversations] = useState<any[]>([]);
   const [deletedMessages, setDeletedMessages] = useState<any[]>([]);
   const [supportConversations, setSupportConversations] = useState<any[]>([]);
@@ -77,6 +79,58 @@ export default function UserMessages() {
   const loadHistories = async () => {
     setLoading(true);
     try {
+      // Carregar negociações do usuário
+      const { data: negotiationsData, error: negError } = await supabase
+        .from('negotiations')
+        .select(`
+          *,
+          business_profiles (
+            company_name,
+            logo_url
+          ),
+          negotiation_messages (
+            id,
+            content,
+            sender_id,
+            sender_type,
+            created_at,
+            moderation_status,
+            is_deleted
+          )
+        `)
+        .eq('user_id', user?.user_id)
+        .order('updated_at', { ascending: false });
+
+      if (negError) throw negError;
+      setNegotiations(negotiationsData || []);
+
+      // Carregar propostas do usuário (como freelancer)
+      const { data: proposalsData, error: propError } = await supabase
+        .from('proposals')
+        .select(`
+          *,
+          projects (
+            title,
+            profile_id,
+            profiles (
+              full_name,
+              avatar_url
+            )
+          ),
+          proposal_messages (
+            id,
+            content,
+            sender_id,
+            created_at,
+            moderation_status
+          )
+        `)
+        .eq('freelancer_id', userId)
+        .order('updated_at', { ascending: false });
+
+      if (propError) throw propError;
+      setProposals(proposalsData || []);
+
       // Carregar conversas AI
       const { data: aiData, error: aiError } = await supabase
         .from('ai_assistant_conversations')
@@ -111,7 +165,7 @@ export default function UserMessages() {
       setBlocks(allBlocks);
 
       // Carregar mensagens excluídas
-      const { data: deletedNegotiations, error: negError } = await supabase
+      const { data: deletedNegotiations, error: deletedNegError } = await supabase
         .from('negotiation_messages')
         .select(`
           *,
@@ -126,9 +180,9 @@ export default function UserMessages() {
         .eq('is_deleted', true)
         .order('created_at', { ascending: false });
 
-      if (negError) throw negError;
+      if (deletedNegError) throw deletedNegError;
 
-      const { data: deletedProposals, error: propError } = await supabase
+      const { data: deletedProposals, error: deletedPropError } = await supabase
         .from('proposal_messages')
         .select(`
           *,
@@ -143,7 +197,7 @@ export default function UserMessages() {
         .eq('sender_id', userId)
         .order('created_at', { ascending: false });
 
-      if (propError) throw propError;
+      if (deletedPropError) throw deletedPropError;
 
       const allDeletedMessages = [
         ...(deletedNegotiations || []).map(m => ({ ...m, type: 'negotiation' })),
@@ -243,6 +297,20 @@ export default function UserMessages() {
     });
   };
 
+  const filteredNegotiations = negotiations.filter(neg => {
+    if (!searchQuery) return true;
+    const messagesText = neg.negotiation_messages?.map((m: any) => m.content).join(' ').toLowerCase();
+    return messagesText?.includes(searchQuery.toLowerCase()) || 
+           neg.business_profiles?.company_name?.toLowerCase().includes(searchQuery.toLowerCase());
+  });
+
+  const filteredProposals = proposals.filter(prop => {
+    if (!searchQuery) return true;
+    const messagesText = prop.proposal_messages?.map((m: any) => m.content).join(' ').toLowerCase();
+    return messagesText?.includes(searchQuery.toLowerCase()) || 
+           prop.projects?.title?.toLowerCase().includes(searchQuery.toLowerCase());
+  });
+
   const filteredAiConversations = filterConversations(aiConversations, searchQuery);
   const filteredDeletedMessages = deletedMessages.filter(msg =>
     msg.content?.toLowerCase().includes(searchQuery.toLowerCase())
@@ -329,8 +397,12 @@ export default function UserMessages() {
         </div>
 
         {/* Tabs */}
-        <Tabs defaultValue="ai" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+        <Tabs defaultValue="messages" className="w-full">
+          <TabsList className="grid w-full grid-cols-5">
+            <TabsTrigger value="messages" className="flex items-center gap-2">
+              <MessageCircle className="h-4 w-4" />
+              Mensagens ({negotiations.length + proposals.length})
+            </TabsTrigger>
             <TabsTrigger value="ai" className="flex items-center gap-2">
               <MessageCircle className="h-4 w-4" />
               Conversas AI ({aiConversations.length})
@@ -348,6 +420,136 @@ export default function UserMessages() {
               Suporte ({supportConversations.length})
             </TabsTrigger>
           </TabsList>
+
+          {/* Mensagens Normais */}
+          <TabsContent value="messages">
+            <ScrollArea className="h-[calc(100vh-24rem)]">
+              {loading ? (
+                <div className="text-center py-8 text-muted-foreground">Carregando...</div>
+              ) : filteredNegotiations.length === 0 && filteredProposals.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  Nenhuma mensagem encontrada
+                </div>
+              ) : (
+                <div className="space-y-4 pr-4">
+                  {/* Negociações */}
+                  {filteredNegotiations.length > 0 && (
+                    <div>
+                      <h3 className="text-lg font-semibold mb-3">Negociações ({filteredNegotiations.length})</h3>
+                      {filteredNegotiations.map((neg) => (
+                        <Card key={neg.id} className="p-4 mb-3">
+                          <div className="flex items-center gap-3 mb-3">
+                            {neg.business_profiles?.logo_url && (
+                              <img 
+                                src={neg.business_profiles.logo_url} 
+                                alt={neg.business_profiles.company_name}
+                                className="w-10 h-10 rounded-full object-cover"
+                              />
+                            )}
+                            <div className="flex-1">
+                              <h4 className="font-medium">{neg.business_profiles?.company_name}</h4>
+                              {neg.service_description && (
+                                <p className="text-sm text-muted-foreground">{neg.service_description}</p>
+                              )}
+                            </div>
+                            <Badge variant={neg.status === 'open' ? 'default' : 'secondary'}>
+                              {neg.status}
+                            </Badge>
+                          </div>
+                          
+                          <div className="space-y-2 max-h-96 overflow-y-auto">
+                            {neg.negotiation_messages?.map((msg: any) => (
+                              <div
+                                key={msg.id}
+                                ref={(el) => messageRefs.current[msg.id] = el}
+                                className={`flex ${msg.sender_type === 'user' ? 'justify-end' : 'justify-start'}`}
+                              >
+                                <div
+                                  className={`max-w-[80%] rounded-xl px-3 py-2 text-sm ${
+                                    msg.is_deleted 
+                                      ? 'bg-muted/50 opacity-50 line-through'
+                                      : msg.moderation_status !== 'approved'
+                                      ? 'bg-destructive/20 border border-destructive'
+                                      : msg.sender_type === 'user'
+                                      ? 'bg-primary text-primary-foreground'
+                                      : 'bg-muted'
+                                  }`}
+                                >
+                                  <div className="whitespace-pre-wrap break-words">
+                                    {msg.content}
+                                  </div>
+                                  <div className="text-xs opacity-70 mt-1">
+                                    {new Date(msg.created_at).toLocaleString('pt-BR')}
+                                    {msg.is_deleted && ' (Excluída)'}
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Propostas */}
+                  {filteredProposals.length > 0 && (
+                    <div>
+                      <h3 className="text-lg font-semibold mb-3">Propostas ({filteredProposals.length})</h3>
+                      {filteredProposals.map((prop) => (
+                        <Card key={prop.id} className="p-4 mb-3">
+                          <div className="flex items-center gap-3 mb-3">
+                            {prop.projects?.profiles?.avatar_url && (
+                              <img 
+                                src={prop.projects.profiles.avatar_url} 
+                                alt={prop.projects.profiles.full_name}
+                                className="w-10 h-10 rounded-full object-cover"
+                              />
+                            )}
+                            <div className="flex-1">
+                              <h4 className="font-medium">{prop.projects?.title}</h4>
+                              <p className="text-sm text-muted-foreground">
+                                Cliente: {prop.projects?.profiles?.full_name}
+                              </p>
+                            </div>
+                            <Badge variant={prop.status === 'pending' ? 'default' : 'secondary'}>
+                              {prop.status}
+                            </Badge>
+                          </div>
+                          
+                          <div className="space-y-2 max-h-96 overflow-y-auto">
+                            {prop.proposal_messages?.map((msg: any) => (
+                              <div
+                                key={msg.id}
+                                ref={(el) => messageRefs.current[msg.id] = el}
+                                className={`flex ${msg.sender_id === userId ? 'justify-end' : 'justify-start'}`}
+                              >
+                                <div
+                                  className={`max-w-[80%] rounded-xl px-3 py-2 text-sm ${
+                                    msg.moderation_status !== 'approved'
+                                      ? 'bg-destructive/20 border border-destructive'
+                                      : msg.sender_id === userId
+                                      ? 'bg-primary text-primary-foreground'
+                                      : 'bg-muted'
+                                  }`}
+                                >
+                                  <div className="whitespace-pre-wrap break-words">
+                                    {msg.content}
+                                  </div>
+                                  <div className="text-xs opacity-70 mt-1">
+                                    {new Date(msg.created_at).toLocaleString('pt-BR')}
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </ScrollArea>
+          </TabsContent>
 
           {/* Conversas AI */}
           <TabsContent value="ai">

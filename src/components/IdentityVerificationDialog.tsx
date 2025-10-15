@@ -138,10 +138,23 @@ export function IdentityVerificationDialog({
     try {
       const timestamp = Date.now();
       
+      // Get authenticated user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Usuário não autenticado');
+
+      // Get user profile
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (!profile) throw new Error('Perfil não encontrado');
+      
       const uploadFile = async (file: File, fileName: string) => {
         const { data, error } = await supabase.storage
           .from('identity-documents')
-          .upload(`${profileId}/${fileName}_${timestamp}.jpg`, file);
+          .upload(`${profile.id}/${fileName}_${timestamp}.jpg`, file);
         
         if (error) throw error;
         
@@ -156,7 +169,6 @@ export function IdentityVerificationDialog({
       let backUrl = '';
 
       if (uploadOption === 'combined' && combinedImage) {
-        // Se é documento combinado, usar a mesma imagem para frente e verso
         frontUrl = await uploadFile(combinedImage, 'document_combined');
         backUrl = frontUrl;
       } else {
@@ -164,12 +176,12 @@ export function IdentityVerificationDialog({
         if (backImage) backUrl = await uploadFile(backImage, 'document_back');
       }
 
-      // Call verification function sem selfie
+      // Call verification function
       const { data, error } = await supabase.functions.invoke('verify-identity-document', {
         body: {
           frontImageUrl: frontUrl,
           backImageUrl: backUrl,
-          profileId,
+          profileId: profile.id,
           registeredName,
           registeredCPF
         }
@@ -181,7 +193,7 @@ export function IdentityVerificationDialog({
       const { error: dbError } = await supabase
         .from('document_verifications')
         .insert({
-          profile_id: profileId,
+          profile_id: profile.id,
           document_front_url: frontUrl,
           document_back_url: backUrl,
           selfie_url: null,

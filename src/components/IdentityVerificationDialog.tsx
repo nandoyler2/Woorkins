@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Upload, CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import { Upload, CheckCircle, XCircle, Loader2, HelpCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { SupportChatDialog } from './SupportChatDialog';
 
 interface IdentityVerificationDialogProps {
   open: boolean;
@@ -37,6 +38,8 @@ export function IdentityVerificationDialog({
   const combinedInputRef = useRef<HTMLInputElement>(null);
   const frontInputRef = useRef<HTMLInputElement>(null);
   const backInputRef = useRef<HTMLInputElement>(null);
+  const [supportChatOpen, setSupportChatOpen] = useState(false);
+  const [supportInitialMessage, setSupportInitialMessage] = useState('');
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, type: 'front' | 'back' | 'combined') => {
     const file = e.target.files?.[0];
@@ -237,13 +240,32 @@ export function IdentityVerificationDialog({
           </div>
 
           {!isApproved && verificationResult.rejectionReasons && (
-            <div className="bg-amber-50 p-4 rounded-lg">
+            <div className="bg-amber-50 p-4 rounded-lg space-y-3">
               <h4 className="font-semibold text-amber-900 mb-2">Motivos:</h4>
               <ul className="list-disc list-inside space-y-1">
                 {verificationResult.rejectionReasons.map((reason: string, idx: number) => (
                   <li key={idx} className="text-sm text-amber-700">{reason}</li>
                 ))}
               </ul>
+              {verificationResult.rejectionReasons.some((r: string) => 
+                r.toLowerCase().includes('nome') || 
+                r.toLowerCase().includes('cpf') || 
+                r.toLowerCase().includes('dados') ||
+                r.toLowerCase().includes('cadastro')
+              ) && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setSupportInitialMessage('Meu documento não está sendo aprovado porque minhas informações de cadastro são diferentes');
+                    setSupportChatOpen(true);
+                  }}
+                  className="w-full mt-2 flex items-center gap-2"
+                >
+                  <HelpCircle className="h-4 w-4" />
+                  Solicitar Ajuda
+                </Button>
+              )}
             </div>
           )}
 
@@ -468,42 +490,51 @@ export function IdentityVerificationDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Verificação de Identidade</DialogTitle>
-          <DialogDescription>
-            Envie seu RG ou CNH para verificação
-          </DialogDescription>
-        </DialogHeader>
-        {renderContent()}
-        
-        {/* Hidden inputs - sempre no DOM */}
-        <input
-          ref={combinedInputRef}
-          type="file"
-          accept="image/*"
-          capture="environment"
-          onChange={(e) => handleFileChange(e, 'combined')}
-          className="hidden"
-        />
-        <input
-          ref={frontInputRef}
-          type="file"
-          accept="image/*"
-          capture="environment"
-          onChange={(e) => handleFileChange(e, 'front')}
-          className="hidden"
-        />
-        <input
-          ref={backInputRef}
-          type="file"
-          accept="image/*"
-          capture="environment"
-          onChange={(e) => handleFileChange(e, 'back')}
-          className="hidden"
-        />
-      </DialogContent>
-    </Dialog>
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Verificação de Identidade</DialogTitle>
+            <DialogDescription>
+              Envie seu RG ou CNH para verificação
+            </DialogDescription>
+          </DialogHeader>
+          {renderContent()}
+          
+          {/* Hidden inputs - sempre no DOM */}
+          <input
+            ref={combinedInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            onChange={(e) => handleFileChange(e, 'combined')}
+            className="hidden"
+          />
+          <input
+            ref={frontInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            onChange={(e) => handleFileChange(e, 'front')}
+            className="hidden"
+          />
+          <input
+            ref={backInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            onChange={(e) => handleFileChange(e, 'back')}
+            className="hidden"
+          />
+        </DialogContent>
+      </Dialog>
+
+      <SupportChatDialog 
+        open={supportChatOpen} 
+        onOpenChange={setSupportChatOpen}
+        profileId={profileId}
+        initialMessage={supportInitialMessage}
+      />
+    </>
   );
 }

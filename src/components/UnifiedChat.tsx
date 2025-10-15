@@ -456,12 +456,62 @@ useEffect(() => {
 
   return (
     <div className="h-full flex flex-col bg-white relative">
-      {/* Unified Header with Proposal Info */}
+      {/* Unified Header with Proposal Info - 3 Columns Layout */}
       {conversationType === 'proposal' && proposalData && (
         <div className="border-b bg-gradient-to-r from-slate-50 to-slate-100 flex-shrink-0">
-          {/* Top Row: Project Title + Actions */}
-          <div className="px-4 pt-3 pb-2 flex items-center justify-between gap-4">
-            <p className="text-sm font-semibold text-foreground truncate flex-1 min-w-0">{projectTitle}</p>
+          <div className="px-4 py-3 grid grid-cols-[auto_1fr_auto] gap-4 items-center">
+            {/* Coluna 1: Foto e Nome do Usuário */}
+            <div className="flex items-center gap-3">
+              <div className="relative flex-shrink-0">
+                <Avatar className="h-10 w-10 ring-2 ring-background">
+                  <AvatarImage src={otherUser.avatar} />
+                  <AvatarFallback className="bg-primary/10 text-primary">
+                    {otherUser.name.charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 bg-green-500 rounded-full border-2 border-background" />
+              </div>
+              <div className="min-w-0">
+                <h3 className="font-semibold text-sm truncate">
+                  {proposalData.payment_status === 'paid' ? otherUser.name : (() => {
+                    const parts = otherUser.name.split(' ');
+                    return parts.length > 1 ? `${parts[0]} ${parts[1].charAt(0)}.` : parts[0];
+                  })()}
+                </h3>
+                <div className="flex items-center gap-2">
+                  {otherUserTyping ? (
+                    <span className="text-xs text-primary animate-pulse font-medium">Digitando...</span>
+                  ) : (
+                    <>
+                      <span className="text-xs text-green-600 dark:text-green-400 font-medium">Online</span>
+                      <span className="text-xs text-muted-foreground">•</span>
+                      <Badge variant="secondary" className="text-xs">
+                        Proposta de Projeto
+                      </Badge>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Coluna 2: Nome do Projeto e Valor */}
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-foreground truncate mb-2">{projectTitle}</p>
+              <div className="inline-flex items-center gap-3 bg-white rounded-full px-4 py-1.5 shadow-sm border">
+                <div className="flex items-center gap-1.5">
+                  <DollarSign className="h-3.5 w-3.5 text-primary" />
+                  <span className="text-sm font-bold text-primary">
+                    R$ {proposalData.budget.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  </span>
+                </div>
+                <div className="h-3 w-px bg-border" />
+                <span className="text-xs text-muted-foreground">
+                  Prazo: {proposalData.delivery_days} dia{proposalData.delivery_days > 1 ? 's' : ''}
+                </span>
+              </div>
+            </div>
+
+            {/* Coluna 3: Botão Refazer, Status e Menu */}
             <div className="flex items-center gap-2 flex-shrink-0">
               <Button
                 variant="outline"
@@ -515,55 +565,6 @@ useEffect(() => {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-            </div>
-          </div>
-
-          {/* Bottom Row: Budget Info + User Info */}
-          <div className="px-4 pb-3 flex items-center justify-between gap-4">
-            <div className="inline-flex items-center gap-3 bg-white rounded-full px-4 py-1.5 shadow-sm border flex-shrink-0">
-              <div className="flex items-center gap-1.5">
-                <DollarSign className="h-3.5 w-3.5 text-primary" />
-                <span className="text-sm font-bold text-primary">
-                  R$ {proposalData.budget.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                </span>
-              </div>
-              <div className="h-3 w-px bg-border" />
-              <span className="text-xs text-muted-foreground">
-                Prazo: {proposalData.delivery_days} dia{proposalData.delivery_days > 1 ? 's' : ''}
-              </span>
-            </div>
-
-            <div className="flex items-center gap-3 flex-1 min-w-0">
-              <div className="relative flex-shrink-0">
-                <Avatar className="h-9 w-9 ring-2 ring-background">
-                  <AvatarImage src={otherUser.avatar} />
-                  <AvatarFallback className="bg-primary/10 text-primary text-sm">
-                    {otherUser.name.charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 bg-green-500 rounded-full border-2 border-background" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-sm truncate">
-                  {proposalData.payment_status === 'paid' ? otherUser.name : (() => {
-                    const parts = otherUser.name.split(' ');
-                    return parts.length > 1 ? `${parts[0]} ${parts[1].charAt(0)}.` : parts[0];
-                  })()}
-                </h3>
-                <div className="flex items-center gap-2">
-                  {otherUserTyping ? (
-                    <span className="text-xs text-primary animate-pulse font-medium">Digitando...</span>
-                  ) : (
-                    <>
-                      <span className="text-xs text-green-600 dark:text-green-400 font-medium">Online</span>
-                      <span className="text-xs text-muted-foreground">•</span>
-                      <Badge variant="secondary" className="text-xs">
-                        Proposta de Projeto
-                      </Badge>
-                    </>
-                  )}
-                </div>
-              </div>
             </div>
           </div>
         </div>

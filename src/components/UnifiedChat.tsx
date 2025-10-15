@@ -82,6 +82,42 @@ export function UnifiedChat({
     otherUserId: otherUser.id,
   });
 
+  // Check for system-level messaging blocks
+  const [systemMessagingBlock, setSystemMessagingBlock] = useState<any>(null);
+
+  useEffect(() => {
+    const checkSystemBlock = async () => {
+      const { data } = await supabase
+        .from('system_blocks')
+        .select('*')
+        .eq('profile_id', profileId)
+        .eq('block_type', 'messaging')
+        .maybeSingle();
+
+      if (data) {
+        // Check if block is still active
+        if (data.is_permanent || (data.blocked_until && new Date(data.blocked_until) > new Date())) {
+          setSystemMessagingBlock(data);
+        } else {
+          setSystemMessagingBlock(null);
+        }
+      } else {
+        setSystemMessagingBlock(null);
+      }
+    };
+
+    checkSystemBlock();
+    const interval = setInterval(checkSystemBlock, 10000);
+    return () => clearInterval(interval);
+  }, [profileId]);
+
+  // Determine final block status (system block takes precedence)
+  const finalIsBlocked = systemMessagingBlock ? true : isBlocked;
+  const finalBlockedUntil = systemMessagingBlock?.blocked_until 
+    ? new Date(systemMessagingBlock.blocked_until) 
+    : blockedUntil;
+  const finalBlockReason = systemMessagingBlock?.reason || blockReason;
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     
@@ -546,9 +582,9 @@ export function UnifiedChat({
 
       {/* Input - Floating Sticky Bottom */}
       <div className="sticky bottom-0 z-20 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 flex-shrink-0">
-        {isBlocked && blockedUntil ? (
+        {finalIsBlocked && finalBlockedUntil ? (
           <div className="p-3">
-            <BlockedMessageCountdown blockedUntil={blockedUntil} reason={blockReason} />
+            <BlockedMessageCountdown blockedUntil={finalBlockedUntil} reason={finalBlockReason} />
           </div>
         ) : (
           <form onSubmit={handleSendMessage} className="p-3">

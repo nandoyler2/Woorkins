@@ -1071,6 +1071,57 @@ export type Database = {
         }
         Relationships: []
       }
+      system_blocks: {
+        Row: {
+          block_type: string
+          blocked_by: string
+          blocked_until: string | null
+          created_at: string
+          id: string
+          is_permanent: boolean
+          profile_id: string
+          reason: string
+          updated_at: string
+        }
+        Insert: {
+          block_type: string
+          blocked_by: string
+          blocked_until?: string | null
+          created_at?: string
+          id?: string
+          is_permanent?: boolean
+          profile_id: string
+          reason: string
+          updated_at?: string
+        }
+        Update: {
+          block_type?: string
+          blocked_by?: string
+          blocked_until?: string | null
+          created_at?: string
+          id?: string
+          is_permanent?: boolean
+          profile_id?: string
+          reason?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "system_blocks_blocked_by_fkey"
+            columns: ["blocked_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "system_blocks_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       transactions: {
         Row: {
           amount: number

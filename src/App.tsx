@@ -4,9 +4,13 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { LanguageProvider } from "@/contexts/LanguageContext";
-import { AuthProvider } from "@/contexts/AuthContext";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AIAssistant } from "@/components/AIAssistant";
+import { SystemBlockAlert } from "@/components/SystemBlockAlert";
+import { useSystemBlock } from "@/hooks/useSystemBlock";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Feed from "./pages/Feed";
@@ -35,6 +39,74 @@ import Messages from "./pages/Messages";
 
 const queryClient = new QueryClient();
 
+function AppContent() {
+  const { user } = useAuth();
+  const [profileId, setProfileId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (!user) {
+        setProfileId(null);
+        return;
+      }
+
+      const { data } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (data) setProfileId(data.id);
+    };
+
+    loadProfile();
+  }, [user]);
+
+  const { systemBlock } = useSystemBlock(profileId);
+
+  return (
+    <>
+      {systemBlock && (
+        <SystemBlockAlert
+          blockType={systemBlock.block_type}
+          reason={systemBlock.reason}
+          blockedUntil={systemBlock.blocked_until ? new Date(systemBlock.blocked_until) : null}
+          isPermanent={systemBlock.is_permanent}
+        />
+      )}
+      <Routes>
+        <Route path="/" element={<Index />} />
+        <Route path="/autenticacao" element={<Auth />} />
+        <Route path="/painel" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+        <Route path="/conta" element={<ProtectedRoute><Account /></ProtectedRoute>} />
+        <Route path="/financeiro" element={<ProtectedRoute><Financeiro /></ProtectedRoute>} />
+        <Route path="/woorkoins" element={<ProtectedRoute><Woorkoins /></ProtectedRoute>} />
+        <Route path="/empresa/:slug/editar" element={<ProtectedRoute><BusinessEdit /></ProtectedRoute>} />
+        <Route path="/empresa/financas" element={<ProtectedRoute><BusinessFinances /></ProtectedRoute>} />
+        <Route path="/mensagens" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
+        <Route path="/projetos" element={<Projects />} />
+        <Route path="/projetos/novo" element={<ProtectedRoute><ProjectCreate /></ProtectedRoute>} />
+        <Route path="/projetos/:id" element={<ProjectDetails />} />
+        <Route path="/meus-projetos" element={<ProtectedRoute><MyProjects /></ProtectedRoute>} />
+        <Route path="/:slug" element={<BusinessProfile />} />
+        <Route path="/feed" element={<ProtectedRoute><Feed /></ProtectedRoute>} />
+        <Route path="/admin" element={<ProtectedRoute requireAdmin><AdminLayout /></ProtectedRoute>}>
+          <Route index element={<Admin />} />
+          <Route path="users" element={<AdminUsers />} />
+          <Route path="moderation" element={<AdminModeration />} />
+          <Route path="reports" element={<AdminReports />} />
+          <Route path="businesses" element={<AdminBusinesses />} />
+          <Route path="analytics" element={<AdminAnalytics />} />
+          <Route path="settings" element={<AdminSettings />} />
+          <Route path="payment-gateway" element={<AdminPaymentGateway />} />
+        </Route>
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+      <AIAssistant />
+    </>
+  );
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -43,35 +115,7 @@ const App = () => (
       <BrowserRouter>
         <LanguageProvider>
           <AuthProvider>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/autenticacao" element={<Auth />} />
-              <Route path="/painel" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-              <Route path="/conta" element={<ProtectedRoute><Account /></ProtectedRoute>} />
-              <Route path="/financeiro" element={<ProtectedRoute><Financeiro /></ProtectedRoute>} />
-              <Route path="/woorkoins" element={<ProtectedRoute><Woorkoins /></ProtectedRoute>} />
-              <Route path="/empresa/:slug/editar" element={<ProtectedRoute><BusinessEdit /></ProtectedRoute>} />
-              <Route path="/empresa/financas" element={<ProtectedRoute><BusinessFinances /></ProtectedRoute>} />
-              <Route path="/mensagens" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
-              <Route path="/projetos" element={<Projects />} />
-              <Route path="/projetos/novo" element={<ProtectedRoute><ProjectCreate /></ProtectedRoute>} />
-              <Route path="/projetos/:id" element={<ProjectDetails />} />
-              <Route path="/meus-projetos" element={<ProtectedRoute><MyProjects /></ProtectedRoute>} />
-              <Route path="/:slug" element={<BusinessProfile />} />
-              <Route path="/feed" element={<ProtectedRoute><Feed /></ProtectedRoute>} />
-              <Route path="/admin" element={<ProtectedRoute requireAdmin><AdminLayout /></ProtectedRoute>}>
-                <Route index element={<Admin />} />
-                <Route path="users" element={<AdminUsers />} />
-                <Route path="moderation" element={<AdminModeration />} />
-                <Route path="reports" element={<AdminReports />} />
-                <Route path="businesses" element={<AdminBusinesses />} />
-                <Route path="analytics" element={<AdminAnalytics />} />
-                <Route path="settings" element={<AdminSettings />} />
-                <Route path="payment-gateway" element={<AdminPaymentGateway />} />
-              </Route>
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-            <AIAssistant />
+            <AppContent />
           </AuthProvider>
         </LanguageProvider>
       </BrowserRouter>

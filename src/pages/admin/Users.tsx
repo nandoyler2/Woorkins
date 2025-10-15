@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,14 +20,42 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useToast } from '@/hooks/use-toast';
-import { Search, Shield, User, Ban } from 'lucide-react';
+import { Search, Shield, User, Ban, MoreVertical, Coins, ShieldOff } from 'lucide-react';
+import { ManageWoorkoinsDialog } from '@/components/admin/ManageWoorkoinsDialog';
+import { BlockUserDialog } from '@/components/admin/BlockUserDialog';
 
 export default function AdminUsers() {
+  const { user } = useAuth();
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [currentUserProfileId, setCurrentUserProfileId] = useState<string>('');
+  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [woorkoinsDialogOpen, setWoorkoinsDialogOpen] = useState(false);
+  const [blockDialogOpen, setBlockDialogOpen] = useState(false);
   const { toast } = useToast();
+
+  useEffect(() => {
+    const loadCurrentProfile = async () => {
+      if (!user) return;
+      const { data } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+      if (data) setCurrentUserProfileId(data.id);
+    };
+    loadCurrentProfile();
+  }, [user]);
 
   const loadUsers = async () => {
     try {
@@ -38,22 +67,35 @@ export default function AdminUsers() {
 
       if (profilesError) throw profilesError;
 
-      // Buscar roles separadamente para cada usuário
-      const usersWithRoles = await Promise.all(
+      // Buscar roles, woorkoins e bloqueios separadamente para cada usuário
+      const usersWithData = await Promise.all(
         (profiles || []).map(async (profile) => {
           const { data: roles } = await supabase
             .from('user_roles')
             .select('role')
             .eq('user_id', profile.user_id);
           
+          const { data: woorkoins } = await supabase
+            .from('woorkoins_balance')
+            .select('balance')
+            .eq('profile_id', profile.id)
+            .maybeSingle();
+
+          const { data: blocks } = await supabase
+            .from('system_blocks')
+            .select('*')
+            .eq('profile_id', profile.id);
+          
           return {
             ...profile,
-            user_roles: roles || []
+            user_roles: roles || [],
+            woorkoins_balance: woorkoins?.balance || 0,
+            blocks: blocks || []
           };
         })
       );
 
-      setUsers(usersWithRoles);
+      setUsers(usersWithData);
     } catch (error: any) {
       toast({
         title: 'Erro ao carregar usuários',
@@ -62,6 +104,31 @@ export default function AdminUsers() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleUnblockUser = async (profileId: string, blockType: 'messaging' | 'system') => {
+    try {
+      const { error } = await supabase
+        .from('system_blocks')
+        .delete()
+        .eq('profile_id', profileId)
+        .eq('block_type', blockType);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Usuário desbloqueado',
+        description: 'O bloqueio foi removido com sucesso',
+      });
+
+      loadUsers();
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Erro',
+        description: error.message || 'Não foi possível desbloquear o usuário',
+      });
     }
   };
 
@@ -125,66 +192,156 @@ export default function AdminUsers() {
           <TableHeader>
             <TableRow>
               <TableHead>Usuário</TableHead>
+              <TableHead>Woorkoins</TableHead>
               <TableHead>Tipo</TableHead>
               <TableHead>Role</TableHead>
-              <TableHead>Nível de Confiança</TableHead>
-              <TableHead>Ações</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredUsers.map((user) => (
-              <TableRow key={user.id}>
-                <TableCell>
-                  <div>
-                    <div className="font-medium">{user.full_name || user.username}</div>
-                    <div className="text-sm text-muted-foreground">@{user.username}</div>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <Badge variant="outline">{user.user_type}</Badge>
-                </TableCell>
-                <TableCell>
-                  <Select 
-                    value={user.user_roles?.[0]?.role || 'user'}
-                    onValueChange={(value) => updateUserRole(user.user_id, value as any)}
-                  >
-                    <SelectTrigger className="w-32">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="user">
-                        <div className="flex items-center gap-2">
-                          <User className="h-4 w-4" />
-                          User
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="moderator">
-                        <div className="flex items-center gap-2">
-                          <Shield className="h-4 w-4" />
-                          Moderator
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="admin">
-                        <div className="flex items-center gap-2">
-                          <Shield className="h-4 w-4 text-primary" />
-                          Admin
-                        </div>
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </TableCell>
-                <TableCell>
-                  <Badge>{user.trust_level}</Badge>
-                </TableCell>
-                <TableCell>
-                  <Button variant="ghost" size="sm">
-                    <Ban className="h-4 w-4" />
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
+            {filteredUsers.map((usr) => {
+              const messagingBlock = usr.blocks.find((b: any) => b.block_type === 'messaging');
+              const systemBlock = usr.blocks.find((b: any) => b.block_type === 'system');
+              const hasActiveBlock = messagingBlock || systemBlock;
+
+              return (
+                <TableRow key={usr.id}>
+                  <TableCell>
+                    <div>
+                      <div className="font-medium">{usr.full_name || usr.username}</div>
+                      <div className="text-sm text-muted-foreground">@{usr.username}</div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-1">
+                      <Coins className="h-4 w-4 text-primary" />
+                      <span className="font-medium">{usr.woorkoins_balance}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline">{usr.user_type}</Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Select 
+                      value={usr.user_roles?.[0]?.role || 'user'}
+                      onValueChange={(value) => updateUserRole(usr.user_id, value as any)}
+                    >
+                      <SelectTrigger className="w-32">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="user">
+                          <div className="flex items-center gap-2">
+                            <User className="h-4 w-4" />
+                            User
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="moderator">
+                          <div className="flex items-center gap-2">
+                            <Shield className="h-4 w-4" />
+                            Moderator
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="admin">
+                          <div className="flex items-center gap-2">
+                            <Shield className="h-4 w-4 text-primary" />
+                            Admin
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </TableCell>
+                  <TableCell>
+                    {hasActiveBlock ? (
+                      <div className="space-y-1">
+                        {messagingBlock && (
+                          <Badge variant="destructive" className="text-xs">
+                            🚫 Bloqueado (Mensagens)
+                          </Badge>
+                        )}
+                        {systemBlock && (
+                          <Badge variant="destructive" className="text-xs">
+                            🚫 Bloqueado (Sistema)
+                          </Badge>
+                        )}
+                      </div>
+                    ) : (
+                      <Badge variant="outline" className="text-xs">Ativo</Badge>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="sm">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setSelectedUser(usr);
+                            setWoorkoinsDialogOpen(true);
+                          }}
+                        >
+                          <Coins className="mr-2 h-4 w-4" />
+                          Gerenciar Woorkoins
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setSelectedUser(usr);
+                            setBlockDialogOpen(true);
+                          }}
+                        >
+                          <Ban className="mr-2 h-4 w-4" />
+                          Bloquear Usuário
+                        </DropdownMenuItem>
+                        {messagingBlock && (
+                          <DropdownMenuItem
+                            onClick={() => handleUnblockUser(usr.id, 'messaging')}
+                            className="text-green-600"
+                          >
+                            <ShieldOff className="mr-2 h-4 w-4" />
+                            Desbloquear Mensagens
+                          </DropdownMenuItem>
+                        )}
+                        {systemBlock && (
+                          <DropdownMenuItem
+                            onClick={() => handleUnblockUser(usr.id, 'system')}
+                            className="text-green-600"
+                          >
+                            <ShieldOff className="mr-2 h-4 w-4" />
+                            Desbloquear Sistema
+                          </DropdownMenuItem>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
+
+        {selectedUser && (
+          <>
+            <ManageWoorkoinsDialog
+              open={woorkoinsDialogOpen}
+              onOpenChange={setWoorkoinsDialogOpen}
+              user={selectedUser}
+              onSuccess={loadUsers}
+            />
+            <BlockUserDialog
+              open={blockDialogOpen}
+              onOpenChange={setBlockDialogOpen}
+              user={selectedUser}
+              currentUserProfileId={currentUserProfileId}
+              onSuccess={loadUsers}
+            />
+          </>
+        )}
       </Card>
     </div>
   );

@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Save, User, Mail, Lock, Shield, Camera } from 'lucide-react';
+import { ArrowLeft, Save, User, Mail, Lock, Shield, Camera, LockKeyhole } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { validateCPF } from '@/lib/utils';
 import { ProfilePhotoUpload } from '@/components/ProfilePhotoUpload';
@@ -254,12 +254,32 @@ export default function Account() {
             <CardContent>
               <form onSubmit={handleSaveProfile} className="space-y-4">
                 <div className="space-y-2">
-                  <Label>Nome Completo</Label>
+                  <Label className="flex items-center gap-2">
+                    Nome Completo
+                    {profile.cpf && <LockKeyhole className="h-3 w-3 text-muted-foreground" />}
+                  </Label>
                   <Input
                     value={profile.full_name}
-                    onChange={(e) => setProfile({ ...profile, full_name: e.target.value })}
+                    onChange={(e) => {
+                      if (!profile.cpf) {
+                        setProfile({ ...profile, full_name: e.target.value });
+                      }
+                    }}
+                    onClick={() => {
+                      if (profile.cpf) {
+                        setSupportInitialMessage('Preciso alterar meu nome no cadastro');
+                        setSupportChatOpen(true);
+                      }
+                    }}
+                    disabled={!!profile.cpf}
+                    className={profile.cpf ? 'bg-muted cursor-pointer' : ''}
                     placeholder="Seu nome completo"
                   />
+                  {profile.cpf && (
+                    <p className="text-xs text-muted-foreground">
+                      O nome não pode ser alterado após o CPF ser definido. Precisa alterar? Fale com nossa central de ajuda.
+                    </p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label>Nome de Usuário</Label>
@@ -287,7 +307,10 @@ export default function Account() {
                   </p>
                 </div>
                 <div className="space-y-2">
-                  <Label>CPF</Label>
+                  <Label className="flex items-center gap-2">
+                    CPF
+                    {profile.cpf && <LockKeyhole className="h-3 w-3 text-muted-foreground" />}
+                  </Label>
                   <Input
                     type="text"
                     value={profile.cpf ? profile.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4') : ''}

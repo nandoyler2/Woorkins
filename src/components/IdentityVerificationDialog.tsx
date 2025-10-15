@@ -37,20 +37,64 @@ export function IdentityVerificationDialog({
 
   const startCamera = async () => {
     try {
+      console.log('Tentando ativar câmera...');
+      
+      // Check if getUserMedia is available
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('Seu navegador não suporta acesso à câmera');
+      }
+
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'user', width: 1920, height: 1080 }
+        video: { 
+          facingMode: 'user',
+          width: { ideal: 1920 },
+          height: { ideal: 1080 }
+        },
+        audio: false
       });
+      
+      console.log('Stream obtido:', stream);
       
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         streamRef.current = stream;
-        setIsCameraActive(true);
+        
+        // Wait for video to be ready and play
+        videoRef.current.onloadedmetadata = () => {
+          console.log('Video metadata carregado');
+          videoRef.current?.play()
+            .then(() => {
+              console.log('Video reproduzindo');
+              setIsCameraActive(true);
+            })
+            .catch((playError) => {
+              console.error('Erro ao reproduzir video:', playError);
+              toast({
+                title: 'Erro ao iniciar câmera',
+                description: 'Não foi possível iniciar a visualização da câmera',
+                variant: 'destructive'
+              });
+            });
+        };
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Camera error:', error);
+      
+      let errorMessage = 'Permita o acesso à câmera para continuar';
+      
+      if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+        errorMessage = 'Você negou o acesso à câmera. Por favor, permita nas configurações do navegador.';
+      } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
+        errorMessage = 'Nenhuma câmera encontrada no seu dispositivo.';
+      } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
+        errorMessage = 'A câmera já está em uso por outro aplicativo.';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
       toast({
         title: 'Erro ao acessar câmera',
-        description: 'Permita o acesso à câmera para continuar',
+        description: errorMessage,
         variant: 'destructive'
       });
     }
@@ -255,15 +299,16 @@ export function IdentityVerificationDialog({
             </DialogDescription>
             
             <div className="relative bg-black rounded-lg overflow-hidden aspect-video">
-              {isCameraActive ? (
-                <video
-                  ref={videoRef}
-                  autoPlay
-                  playsInline
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="flex items-center justify-center h-full">
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                className={`w-full h-full object-cover ${isCameraActive ? 'block' : 'hidden'}`}
+              />
+              
+              {!isCameraActive && (
+                <div className="absolute inset-0 flex items-center justify-center">
                   <Button onClick={startCamera} size="lg">
                     <Camera className="mr-2 h-5 w-5" />
                     Ativar Câmera

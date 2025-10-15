@@ -283,35 +283,40 @@ export function IdentityVerificationDialog({
 
     if (!uploadOption) {
       return (
-        <div className="space-y-6 p-6">
-          <div className="text-center space-y-2">
-            <h3 className="font-semibold text-lg">Escolha a opção que preferir para enviar seu RG ou CNH</h3>
+        <div className="space-y-8 p-6">
+          <div className="text-center space-y-3">
+            <h3 className="font-semibold text-xl">Escolha a opção que preferir para enviar seu RG ou CNH</h3>
+            <p className="text-sm text-muted-foreground">Tire fotos claras do seu documento</p>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-4">
             <Button
               variant="outline"
-              className="w-full h-auto py-4 flex flex-col items-center gap-2"
+              className="w-full h-auto py-8 flex flex-col items-center gap-4 hover:bg-primary/5 hover:border-primary transition-all group"
               onClick={() => combinedInputRef.current?.click()}
             >
-              <Upload className="h-6 w-6" />
-              <div>
-                <p className="font-semibold">Documento Completo</p>
-                <p className="text-xs text-muted-foreground">Frente e verso em uma única imagem</p>
+              <div className="rounded-full bg-primary/10 p-4 group-hover:bg-primary/20 transition-colors">
+                <Upload className="h-8 w-8 text-primary" />
+              </div>
+              <div className="space-y-1">
+                <p className="font-semibold text-base">Documento Completo</p>
+                <p className="text-sm text-muted-foreground">Frente e verso em uma única imagem</p>
               </div>
             </Button>
 
             <Button
               variant="outline"
-              className="w-full h-auto py-4 flex flex-col items-center gap-2"
+              className="w-full h-auto py-8 flex flex-col items-center gap-4 hover:bg-primary/5 hover:border-primary transition-all group"
               onClick={() => {
                 setUploadOption('separate');
               }}
             >
-              <Upload className="h-6 w-6" />
-              <div>
-                <p className="font-semibold">Frente e Verso</p>
-                <p className="text-xs text-muted-foreground">Enviar frente e verso separadamente</p>
+              <div className="rounded-full bg-primary/10 p-4 group-hover:bg-primary/20 transition-colors">
+                <Upload className="h-8 w-8 text-primary" />
+              </div>
+              <div className="space-y-1">
+                <p className="font-semibold text-base">Frente e Verso</p>
+                <p className="text-sm text-muted-foreground">Enviar frente e verso separadamente</p>
               </div>
             </Button>
           </div>

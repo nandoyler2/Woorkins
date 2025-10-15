@@ -36,6 +36,7 @@ export const useRealtimeMessaging = ({
   const [isBlocked, setIsBlocked] = useState(false);
   const [blockedUntil, setBlockedUntil] = useState<Date | null>(null);
   const [blockReason, setBlockReason] = useState<string>('');
+  const [isConversationActive, setIsConversationActive] = useState(true); // Track if user is actively in the conversation
   
   const { toast } = useToast();
   const channelRef = useRef<RealtimeChannel | null>(null);
@@ -275,6 +276,7 @@ export const useRealtimeMessaging = ({
           }
         }
 
+        // Always show moderation toasts - these are important
         toast({
           variant: 'destructive',
           title: '🚫 Mensagem Bloqueada',
@@ -287,6 +289,7 @@ export const useRealtimeMessaging = ({
 
       // Check if message was flagged for bad conduct (warning only)
       if (moderationResult?.flagged) {
+        // Always show flagged warnings - these are important
         toast({
           variant: 'destructive',
           title: '⚠️ Aviso de Conduta',
@@ -407,15 +410,20 @@ export const useRealtimeMessaging = ({
     }, 2000);
   }, [isTyping, updateTypingIndicator]);
 
-  // Show browser notification
+  // Show browser notification - only if conversation is not active or document is hidden
   const showNotification = useCallback((message: Message) => {
-    if (document.hidden && 'Notification' in window && Notification.permission === 'granted') {
+    // Don't show notification if user is actively in this conversation
+    if (isConversationActive && !document.hidden) {
+      return;
+    }
+    
+    if ('Notification' in window && Notification.permission === 'granted') {
       new Notification('Nova mensagem', {
         body: `${message.sender_name}: ${message.content}`,
         icon: message.sender_avatar || '/placeholder.svg',
       });
     }
-  }, []);
+  }, [isConversationActive]);
 
   // Setup realtime subscriptions
   useEffect(() => {
@@ -560,23 +568,39 @@ export const useRealtimeMessaging = ({
     return () => clearInterval(interval);
   }, [checkBlockStatus]);
 
-  // Mark messages as read when conversation is visible
+  // Mark messages as read when conversation is visible and track active state
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (!document.hidden) {
+      const isVisible = !document.hidden;
+      setIsConversationActive(isVisible);
+      if (isVisible) {
         markMessagesAsRead();
       }
     };
 
+    const handleFocus = () => {
+      setIsConversationActive(true);
+      markMessagesAsRead();
+    };
+
+    const handleBlur = () => {
+      setIsConversationActive(false);
+    };
+
     document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+    window.addEventListener('blur', handleBlur);
     
     // Mark as read on mount if visible
     if (!document.hidden) {
+      setIsConversationActive(true);
       markMessagesAsRead();
     }
 
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('blur', handleBlur);
     };
   }, [markMessagesAsRead]);
 

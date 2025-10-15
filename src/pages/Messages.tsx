@@ -44,12 +44,10 @@ export default function Messages() {
   const location = useLocation();
 
   useEffect(() => {
-    if (!user) {
-      navigate('/autenticacao?mode=signin');
-      return;
+    if (user) {
+      loadProfile();
     }
-    loadProfile();
-  }, [user, navigate]);
+  }, [user]);
 
   useEffect(() => {
     if (profileId) {

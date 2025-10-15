@@ -7,13 +7,6 @@ import { Header } from '@/components/Header';
 export default function Feed() {
   const { user, loading } = useAuth();
   const { t } = useLanguage();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (!loading && !user) {
-      navigate('/autenticacao');
-    }
-  }, [user, loading, navigate]);
 
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center">Carregando...</div>;

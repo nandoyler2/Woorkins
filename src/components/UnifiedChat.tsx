@@ -419,16 +419,6 @@ export function UnifiedChat({
 
   return (
     <div className="h-full flex flex-col bg-white relative">
-      {/* Security Warning Banner */}
-      <Alert className="rounded-none border-x-0 border-t-0 bg-blue-50 border-blue-200 flex-shrink-0">
-        <Shield className="h-4 w-4 text-blue-600" />
-        <AlertDescription className="text-xs text-blue-900">
-          <strong>Aviso de Segurança:</strong> Todas as conversas são monitoradas para garantir transações seguras. 
-          É proibido compartilhar informações de contato (telefone, email, redes sociais). 
-          Violações podem resultar em bloqueio permanente da conta.
-        </AlertDescription>
-      </Alert>
-
       {/* Proposal Negotiation Panel - Compact & Beautiful */}
       {conversationType === 'proposal' && proposalData && (
         <div className="border-b px-4 py-3 bg-gradient-to-r from-slate-50 to-slate-100 flex-shrink-0">
@@ -579,8 +569,8 @@ export function UnifiedChat({
             </div>
           ) : (
             <>
-              {/* Security warning as first message for proposals */}
-              {conversationType === 'proposal' && (
+              {/* Security warning as first message for pending proposals */}
+              {conversationType === 'proposal' && proposalData?.status === 'pending' && (
                 <Alert className="mb-4 bg-blue-50 border-blue-200">
                   <Shield className="h-4 w-4 text-blue-600" />
                   <AlertDescription className="text-sm text-blue-900">

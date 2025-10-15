@@ -42,9 +42,13 @@ Deno.serve(async (req) => {
       if (/@[a-z0-9._]{3,}/i.test(tLow)) return true;
       // Messaging/social app keywords
       if (/\b(whats(app)?|zap|wpp|telegram|tg|signal|discord|messenger|skype|instagram|insta|ig|facebook|fb|tiktok|linkedin|tt|twitter|x)\b/i.test(tLow)) return true;
+      // PIX keywords - CRÍTICO para plataforma brasileira
+      if (/\b(pix|chave\s*pix|meu\s*pix|chave|código\s*pix)\b/i.test(tLow)) return true;
       // Phone-like digit sequences (8-12 digits when removing separators)
       const onlyDigits = tLow.replace(/\D/g, '');
       if (onlyDigits.length >= 8 && onlyDigits.length <= 12) return true;
+      // Brazilian phone patterns - números com 8-9 dígitos sequenciais
+      if (/\d{8,11}/.test(t)) return true;
       return false;
     };
 
@@ -75,28 +79,36 @@ SE DETECTAR ESTE PADRÃO = BLOQUEAR IMEDIATAMENTE E SINALIZAR
 
 🚫 ABSOLUTAMENTE PROIBIDO compartilhar:
 
-1. **Números de telefone** em QUALQUER formato:
+1. **PIX - ATENÇÃO MÁXIMA (Brasil)**:
+   - Palavra "pix" em qualquer contexto que indique compartilhamento
+   - "meu pix", "chave pix", "pix é", "te passo o pix", "preciso do seu pix"
+   - Combinação de "pix" + número/CPF/email/telefone
+   - "chave"
+
+2. **Números de telefone** em QUALQUER formato:
    - Padrão: (11) 98765-4321, 11987654321, 11 98765-4321
    - Separado: 1 1 9 8 7 6 5 4 3 2 1
    - Por extenso: "um um nove oito sete", "onze nove oito"
    - Disfarçado: "nove.oito.sete.seis.cinco"
-   - Qualquer sequência de 8-11 dígitos que pareça telefone
+   - **NÚMEROS DISFARÇADOS EM FRASES**: "993912083 motivos", "11999887766 razões", "21987654321 formas"
+   - Qualquer sequência de 8-11 dígitos MESMO QUE disfarçada em texto normal
    - Código de área + número: "11 9", "21 9", "DDD 9"
+   - **CRÍTICO**: Detectar números brasileiros com 8-11 dígitos consecutivos INDEPENDENTE do contexto
    - MÚLTIPLAS MENSAGENS COM NÚMEROS CURTOS: se houver username + números em sequência = TELEFONE
 
-2. **Apps de mensagem** (incluindo disfarces):
+3. **Apps de mensagem** (incluindo disfarces):
    - WhatsApp: "whats", "zap", "wpp", "what", "watts", "uats", "wp", "whatsa", "whts"
    - Telegram: "telegram", "telegran", "tg", "telgm", "telegr"
    - Signal, Discord, Messenger, Skype
 
-3. **Redes sociais** (incluindo variações):
+4. **Redes sociais** (incluindo variações):
    - Instagram: "insta", "ig", "gram", "inst@", "1nsta", "instagr", "instagram"
    - Facebook: "face", "fb", "f@ce", "facebook"
    - Twitter/X: "tt", "twitter", "x"
    - TikTok: "tiktok", "tik tok"
    - LinkedIn: "linkedin", "in", "linked"
 
-4. **Usernames e handles**:
+5. **Usernames e handles**:
    - Qualquer palavra que pareça username (sem espaços, com números/underscores)
    - Arrobas: "@usuario", "@ usuario", "arroba usuario"
    - Pontos: "usuario.sobrenome"
@@ -104,17 +116,17 @@ SE DETECTAR ESTE PADRÃO = BLOQUEAR IMEDIATAMENTE E SINALIZAR
    - "me procura como [nome]"
    - Nomes únicos sem contexto (ex: "nandoyler", "joao123")
 
-5. **E-mails** em qualquer formato:
+6. **E-mails** em qualquer formato:
    - usuario@dominio.com
    - "usuario arroba dominio ponto com"
    - "usuario [at] dominio [dot] com"
 
-6. **Links e URLs**:
+7. **Links e URLs**:
    - http, https, www
    - bit.ly, encurtadores
    - dominio.com, .com.br
 
-7. **Tentativas de burlar detecção**:
+8. **Tentativas de burlar detecção**:
    - "me procura no Insta"
    - "add no Zap"
    - "me acha lá"
@@ -123,10 +135,12 @@ SE DETECTAR ESTE PADRÃO = BLOQUEAR IMEDIATAMENTE E SINALIZAR
    - "ve lá" (referência a rede social)
    - "no meu" (referência a perfil)
    - Números disfarçados: "nove nove nove nove"
+   - **"preciso do seu pix", "te passo o pix", "meu pix é"**
+   - **Números disfarçados em frases normais**: "993912083 motivos", "tenho 11987654321 razões"
    - Instruções indiretas para contato externo
    - Username + números em mensagens separadas
 
-8. **IMAGENS com informações de contato**:
+9. **IMAGENS com informações de contato**:
    - Imagens contendo números de telefone
    - Capturas de tela de perfis de redes sociais
    - QR codes do WhatsApp ou outras redes
@@ -138,8 +152,11 @@ SE DETECTAR ESTE PADRÃO = BLOQUEAR IMEDIATAMENTE E SINALIZAR
 - Seja RIGOROSO, porém NÃO bloqueie mensagens neutras.
 - Na dúvida, APROVE e apenas marque "flagged": true se achar suspeito.
 - BLOQUEAR somente quando houver INDÍCIO CLARO E ACIONÁVEL NA MENSAGEM ATUAL ou quando a MENSAGEM ATUAL traz parte essencial (dígitos/handle/link) que completa, junto das mensagens recentes, um contato externo.
-- Exemplos para BLOQUEAR: número de telefone (8-12 dígitos), e-mail, URL, @handle, menção explícita a apps com instrução de contato.
-- Sequência de dígitos que pareça telefone = BLOQUEAR + SINALIZAR.
+- Exemplos para BLOQUEAR: 
+  * Número de telefone (8-12 dígitos) MESMO QUE disfarçado em frase ("993912083 motivos")
+  * Menção a PIX + intenção de compartilhar ("preciso do seu pix", "meu pix é")
+  * E-mail, URL, @handle, menção explícita a apps com instrução de contato
+- **CRÍTICO**: Sequência de 8-11 dígitos consecutivos = SEMPRE BLOQUEAR (é número de telefone brasileiro)
 - Username suspeito + números NAS MENSAGENS ATUAIS/RECENTES (e a mensagem atual possui parte do padrão) = BLOQUEAR + SINALIZAR.
 
 ✅ PERMITIDO (não bloquear):

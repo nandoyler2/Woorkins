@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { MessageCircle, X, Send, HelpCircle, Shield, Coins, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -41,38 +41,57 @@ export const AIAssistant = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [profileId, setProfileId] = useState<string | null>(null);
   const { toast } = useToast();
   const { session } = useAuth();
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Carregar perfil e conversas persistidas
   useEffect(() => {
-    const loadUserProfile = async () => {
+    const loadUserData = async () => {
       if (!session?.user) return;
       
       const { data: profile } = await supabase
         .from('profiles')
-        .select('full_name')
+        .select('id, full_name')
         .eq('user_id', session.user.id)
         .single();
 
-      if (profile?.full_name) {
-        const firstName = profile.full_name.split(' ')[0];
+      if (profile) {
+        setProfileId(profile.id);
+        const firstName = profile.full_name?.split(' ')[0] || '';
         setUserName(firstName);
-        setMessages([{
-          role: 'assistant',
-          content: `Olá, ${firstName}! 👋\n\nSou o assistente virtual da Woorkins e estou aqui para ajudá-lo(a) no que precisar.\n\nSelecione um dos tópicos abaixo ou digite sua dúvida diretamente:`
-        }]);
-      } else {
-        setMessages([{
-          role: 'assistant',
-          content: 'Olá! 👋\n\nSou o assistente virtual da Woorkins e estou aqui para ajudá-lo(a) no que precisar.\n\nSelecione um dos tópicos abaixo ou digite sua dúvida diretamente:'
-        }]);
+
+        // Carregar conversas anteriores
+        const { data: conversation } = await supabase
+          .from('ai_assistant_conversations')
+          .select('messages')
+          .eq('profile_id', profile.id)
+          .maybeSingle();
+
+        if (conversation?.messages && Array.isArray(conversation.messages) && conversation.messages.length > 0) {
+          setMessages(conversation.messages as unknown as Message[]);
+          setShowTopics(false);
+        } else {
+          // Primeira vez - mostrar mensagem de boas-vindas
+          const welcomeMsg = firstName 
+            ? `Olá, ${firstName}! 👋\n\nSou o assistente virtual da Woorkins e estou aqui para ajudá-lo(a) no que precisar.\n\nSelecione um dos tópicos abaixo ou digite sua dúvida diretamente:`
+            : 'Olá! 👋\n\nSou o assistente virtual da Woorkins e estou aqui para ajudá-lo(a) no que precisar.\n\nSelecione um dos tópicos abaixo ou digite sua dúvida diretamente:';
+          
+          setMessages([{ role: 'assistant', content: welcomeMsg }]);
+        }
       }
     };
 
     if (isOpen) {
-      loadUserProfile();
+      loadUserData();
     }
   }, [session, isOpen]);
+
+  // Scroll para última mensagem
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
   const handleTopicSelect = (topic: typeof helpTopics[0]) => {
     setShowTopics(false);
@@ -88,20 +107,41 @@ export const AIAssistant = () => {
   };
 
   const sendMessageInternal = async (messageText: string) => {
-    setMessages(prev => [...prev, { role: 'user', content: messageText }]);
+    const newUserMessage = { role: 'user' as const, content: messageText };
+    const updatedMessages = [...messages, newUserMessage];
+    setMessages(updatedMessages);
     setLoading(true);
 
     try {
       const { data, error } = await supabase.functions.invoke('ai-assistant', {
-        body: { message: messageText }
+        body: { 
+          message: messageText,
+          conversationHistory: updatedMessages 
+        }
       });
 
       if (error) throw error;
 
-      setMessages(prev => [...prev, { 
-        role: 'assistant', 
-        content: data.response 
-      }]);
+      const assistantMessage = { role: 'assistant' as const, content: data.response };
+      const finalMessages = [...updatedMessages, assistantMessage];
+      setMessages(finalMessages);
+
+      // Persistir conversa
+      if (profileId) {
+        await supabase
+          .from('ai_assistant_conversations')
+          .upsert({
+            profile_id: profileId,
+            messages: finalMessages as any
+          });
+      }
+
+      // Se foi desbloqueado, recarregar a página após 2 segundos
+      if (data.actionExecuted) {
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
+      }
     } catch (error) {
       console.error('Error calling AI assistant:', error);
       toast({
@@ -109,10 +149,8 @@ export const AIAssistant = () => {
         description: "Não foi possível processar sua mensagem. Tente novamente.",
         variant: "destructive"
       });
-      setMessages(prev => [...prev, { 
-        role: 'assistant', 
-        content: 'Desculpe, tive um problema ao processar sua mensagem. Pode tentar novamente?' 
-      }]);
+      const errorMessage = { role: 'assistant' as const, content: 'Desculpe, tive um problema ao processar sua mensagem. Pode tentar novamente?' };
+      setMessages(prev => [...prev, errorMessage]);
     } finally {
       setLoading(false);
     }
@@ -148,7 +186,7 @@ export const AIAssistant = () => {
           </div>
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          <div className="flex-1 overflow-y-auto p-4 space-y-4 scroll-smooth">
             {messages.map((msg, idx) => (
               <div key={idx}>
                 <div
@@ -193,6 +231,7 @@ export const AIAssistant = () => {
                 </div>
               </div>
             )}
+            <div ref={messagesEndRef} />
           </div>
 
           {/* Input */}

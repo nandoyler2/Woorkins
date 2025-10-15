@@ -14,6 +14,38 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_assistant_conversations: {
+        Row: {
+          created_at: string | null
+          id: string
+          messages: Json
+          profile_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          messages?: Json
+          profile_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          messages?: Json
+          profile_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_assistant_conversations_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       business_posts: {
         Row: {
           business_id: string

@@ -182,9 +182,19 @@ RESPONDA EM JSON:
     const extractedCPF = frontData.extractedData?.cpf || '';
     const extractedBirthDate = frontData.extractedData?.birthDate || '';
 
-    const normalizedExtractedCPF = extractedCPF.replace(/[.\-]/g, '');
-    const normalizedRegisteredCPF = registeredCPF.replace(/[.\-]/g, '');
+    console.log('=== CPF COMPARISON DEBUG ===');
+    console.log('Extracted CPF (raw):', extractedCPF);
+    console.log('Registered CPF (raw):', registeredCPF);
+    
+    const normalizedExtractedCPF = extractedCPF.replace(/[.\-\s]/g, '');
+    const normalizedRegisteredCPF = registeredCPF.replace(/[.\-\s]/g, '');
+    
+    console.log('Normalized Extracted CPF:', normalizedExtractedCPF);
+    console.log('Normalized Registered CPF:', normalizedRegisteredCPF);
+    
     const cpfMatches = normalizedExtractedCPF === normalizedRegisteredCPF;
+    console.log('CPF Matches:', cpfMatches);
+    console.log('=== END CPF DEBUG ===');
 
     const normalizedExtractedName = extractedName.toLowerCase().trim();
     const normalizedRegisteredName = registeredName.toLowerCase().trim();
@@ -197,12 +207,6 @@ RESPONDA EM JSON:
     // Validações
     if (!extractedName || extractedName.length < 3) {
       rejectionReasons.push('Nome não foi extraído. Envie uma imagem mais nítida.');
-    }
-    if (!normalizedExtractedCPF || normalizedExtractedCPF.length !== 11) {
-      rejectionReasons.push('CPF não foi identificado. Verifique a qualidade da imagem.');
-    }
-    if (!extractedBirthDate || !extractedBirthDate.match(/\d{2}\/\d{2}\/\d{4}/)) {
-      rejectionReasons.push('Data de nascimento não foi identificada.');
     }
     
     if (frontData.quality?.isReadable === false) {
@@ -225,11 +229,13 @@ RESPONDA EM JSON:
       rejectionReasons.push('Documento não parece autêntico.');
     }
     
-    if (!cpfMatches && normalizedExtractedCPF.length === 11) {
+    // Só rejeita por CPF se extraiu E não dá match (com pelo menos 11 dígitos)
+    if (normalizedExtractedCPF.length === 11 && normalizedRegisteredCPF.length === 11 && !cpfMatches) {
       rejectionReasons.push('CPF do documento não corresponde ao cadastro.');
     }
     
-    if (!nameMatches && normalizedExtractedName && normalizedRegisteredName) {
+    // Só rejeita por nome se ambos estão preenchidos E não dá match
+    if (normalizedExtractedName.length > 3 && normalizedRegisteredName.length > 3 && !nameMatches) {
       rejectionReasons.push('Nome do documento não corresponde ao cadastro.');
     }
 

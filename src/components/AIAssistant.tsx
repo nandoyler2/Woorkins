@@ -93,19 +93,19 @@ export const AIAssistant = () => {
           setShowTopics(false);
           setShowBlockQuestion(false);
         } else {
-          // Se tem bloqueio recente, simular digitação e mostrar pergunta sobre bloqueio
+          // Se tem bloqueio recente, mostrar pergunta sobre bloqueio com animação
           if (hasBlock) {
+            const blockMsg = `Olá, ${firstName}! 👋\n\nPercebi que você foi bloqueado recentemente. Gostaria de falar sobre isso?`;
+            setMessages([{ role: 'assistant', content: blockMsg }]);
             setIsTyping(true);
             setShowBlockQuestion(false);
+            setShowTopics(false);
             
-            // Simular digitação por 2 segundos
+            // Após 1.5s de animação, mostrar os botões
             setTimeout(() => {
-              const blockMsg = `Olá, ${firstName}! 👋\n\nPercebi que você foi bloqueado recentemente. Gostaria de falar sobre isso?`;
-              setMessages([{ role: 'assistant', content: blockMsg }]);
               setIsTyping(false);
               setShowBlockQuestion(true);
-              setShowTopics(false);
-            }, 2000);
+            }, 1500);
           } else {
             // Primeira vez - mostrar mensagem de boas-vindas
             const welcomeMsg = firstName 
@@ -234,17 +234,6 @@ export const AIAssistant = () => {
 
           {/* Messages */}
           <div className="flex-1 overflow-y-auto p-4 space-y-4 scroll-smooth">
-            {isTyping && messages.length === 0 && (
-              <div className="flex justify-start animate-fade-in">
-                <div className="bg-gradient-to-br from-muted to-muted/50 rounded-2xl px-4 py-3 border border-primary/10">
-                  <div className="flex space-x-2">
-                    <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" />
-                    <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
-                    <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
-                  </div>
-                </div>
-              </div>
-            )}
             {messages.map((msg, idx) => (
               <div key={idx}>
                 <div
@@ -258,6 +247,14 @@ export const AIAssistant = () => {
                     }`}
                   >
                     <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.content}</p>
+                    {/* Animação de digitação para a primeira mensagem se estiver carregando */}
+                    {msg.role === 'assistant' && idx === 0 && isTyping && (
+                      <div className="flex space-x-1 mt-2">
+                        <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" />
+                        <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
+                        <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+                      </div>
+                    )}
                   </div>
                 </div>
                 

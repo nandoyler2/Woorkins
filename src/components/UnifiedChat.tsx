@@ -410,7 +410,7 @@ export function UnifiedChat({
   };
 
   return (
-    <div className="h-full flex flex-col bg-white">
+    <div className="h-full flex flex-col bg-white relative">
       {/* Security Warning Banner */}
       <Alert className="rounded-none border-x-0 border-t-0 bg-blue-50 border-blue-200 flex-shrink-0">
         <Shield className="h-4 w-4 text-blue-600" />
@@ -527,7 +527,7 @@ export function UnifiedChat({
 
       {/* Messages - Scrollable Area */}
       <div className="flex-1 overflow-y-auto min-h-0">
-        <div className="p-4 space-y-4">
+        <div className="p-4 space-y-4 pb-44">
           {isChatLocked ? (
             <div className="text-center py-12">
               <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-yellow-500/10 mb-4">
@@ -693,8 +693,8 @@ export function UnifiedChat({
         </div>
       </div>
 
-      {/* Input - Fixed Bottom */}
-      <div className="border-t bg-background flex-shrink-0">
+      {/* Input - Floating Overlay Bottom */}
+      <div className="absolute bottom-3 left-3 right-3 z-30 border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 shadow-lg rounded-xl">
         {finalIsBlocked && finalBlockedUntil ? (
           <div className="p-3">
             <BlockedMessageCountdown blockedUntil={finalBlockedUntil} reason={finalBlockReason} />

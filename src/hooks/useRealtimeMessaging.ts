@@ -33,10 +33,107 @@ export const useRealtimeMessaging = ({
   const [isTyping, setIsTyping] = useState(false);
   const [otherUserTyping, setOtherUserTyping] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [isBlocked, setIsBlocked] = useState(false);
+  const [blockedUntil, setBlockedUntil] = useState<Date | null>(null);
+  const [blockReason, setBlockReason] = useState<string>('');
   
   const { toast } = useToast();
   const channelRef = useRef<RealtimeChannel | null>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Calculate progressive block duration in minutes
+  const getBlockDuration = (violationCount: number): number => {
+    const durations = [5, 15, 30, 60, 180, 360, 720, 1440]; // minutes: 5min, 15min, 30min, 1h, 3h, 6h, 12h, 24h
+    const index = Math.min(violationCount - 1, durations.length - 1);
+    return durations[Math.max(0, index)];
+  };
+
+  // Check if user is currently blocked
+  const checkBlockStatus = useCallback(async () => {
+    try {
+      const { data: violation, error } = await supabase
+        .from('moderation_violations')
+        .select('*')
+        .eq('profile_id', currentUserId)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (violation?.blocked_until) {
+        const blockedUntilDate = new Date(violation.blocked_until);
+        const now = new Date();
+        
+        if (blockedUntilDate > now) {
+          setIsBlocked(true);
+          setBlockedUntil(blockedUntilDate);
+          setBlockReason('Você foi bloqueado por violar repetidamente as regras da plataforma.');
+          return true;
+        } else {
+          // Block expired, clear it
+          await supabase
+            .from('moderation_violations')
+            .update({ blocked_until: null })
+            .eq('profile_id', currentUserId);
+          setIsBlocked(false);
+          setBlockedUntil(null);
+          return false;
+        }
+      }
+      
+      setIsBlocked(false);
+      setBlockedUntil(null);
+      return false;
+    } catch (error) {
+      console.error('Error checking block status:', error);
+      return false;
+    }
+  }, [currentUserId]);
+
+  // Track violation and apply progressive block
+  const trackViolation = useCallback(async (reason: string) => {
+    try {
+      // Get current violation record
+      const { data: currentViolation } = await supabase
+        .from('moderation_violations')
+        .select('*')
+        .eq('profile_id', currentUserId)
+        .maybeSingle();
+
+      const newCount = (currentViolation?.violation_count || 0) + 1;
+      
+      // Apply block after 5 violations
+      let blockedUntilDate = null;
+      if (newCount >= 5) {
+        const blockMinutes = getBlockDuration(newCount - 4); // Start progressive blocking from 5th violation
+        blockedUntilDate = new Date(Date.now() + blockMinutes * 60 * 1000);
+      }
+
+      // Upsert violation record
+      const { error } = await supabase
+        .from('moderation_violations')
+        .upsert({
+          profile_id: currentUserId,
+          violation_count: newCount,
+          blocked_until: blockedUntilDate?.toISOString() || null,
+          last_violation_at: new Date().toISOString(),
+        }, {
+          onConflict: 'profile_id'
+        });
+
+      if (error) throw error;
+
+      if (blockedUntilDate) {
+        setIsBlocked(true);
+        setBlockedUntil(blockedUntilDate);
+        setBlockReason(`Você foi bloqueado por ${getBlockDuration(newCount - 4)} minutos por violar repetidamente as regras da plataforma.`);
+      }
+
+      return { newCount, blockedUntil: blockedUntilDate };
+    } catch (error) {
+      console.error('Error tracking violation:', error);
+      return null;
+    }
+  }, [currentUserId]);
 
   // Request notification permission
   useEffect(() => {
@@ -128,6 +225,18 @@ export const useRealtimeMessaging = ({
   const sendMessage = useCallback(async (content: string) => {
     if (!content.trim() || isSending) return;
 
+    // Check if user is blocked before sending
+    const blocked = await checkBlockStatus();
+    if (blocked) {
+      toast({
+        variant: 'destructive',
+        title: '🚫 Você está bloqueado',
+        description: blockReason,
+        duration: 8000,
+      });
+      return;
+    }
+
     const tempId = `temp-${Date.now()}`;
     setIsSending(true);
 
@@ -151,26 +260,39 @@ export const useRealtimeMessaging = ({
 
       console.log('Moderation result:', moderationResult);
 
-      // Check if message was flagged for bad conduct
-      if (moderationResult?.flagged) {
-        toast({
-          variant: 'destructive',
-          title: '⚠️ Conversa Sinalizada',
-          description: 'Detectamos uma possível tentativa de compartilhar informações de contato. Seu perfil está sendo sinalizado e você pode ser bloqueado por má conduta. Continuando com este comportamento, sua conta será suspensa permanentemente.',
-          duration: 10000,
-        });
-      }
-
       // Check if message was rejected
       if (moderationResult && !moderationResult.approved) {
+        const violationResult = await trackViolation(moderationResult.reason || 'Violação das regras de moderação');
+        
+        let description = `❌ Motivo: ${moderationResult.reason || 'Esta mensagem viola nossa política de uso.'}\n\n`;
+        
+        if (violationResult) {
+          if (violationResult.newCount < 5) {
+            description += `⚠️ Atenção: Esta é sua ${violationResult.newCount}ª violação. Após 5 violações, você será bloqueado temporariamente.`;
+          } else if (violationResult.blockedUntil) {
+            const blockMinutes = Math.ceil((violationResult.blockedUntil.getTime() - Date.now()) / (1000 * 60));
+            description += `🚫 Você foi bloqueado por ${blockMinutes} minutos. Bloqueios aumentam progressivamente com violações repetidas (até 24h).`;
+          }
+        }
+
         toast({
           variant: 'destructive',
           title: '🚫 Mensagem Bloqueada',
-          description: (moderationResult.reason || 'Esta mensagem viola nossa política de uso.') + ' Tentativas repetidas resultarão no bloqueio permanente da sua conta.',
-          duration: 8000,
+          description,
+          duration: 10000,
         });
         setIsSending(false);
         return;
+      }
+
+      // Check if message was flagged for bad conduct (warning only)
+      if (moderationResult?.flagged) {
+        toast({
+          variant: 'destructive',
+          title: '⚠️ Aviso de Conduta',
+          description: 'Detectamos um padrão suspeito em suas mensagens. Por favor, mantenha a comunicação dentro da plataforma. Violações repetidas resultarão em bloqueio.',
+          duration: 8000,
+        });
       }
 
       const optimisticMessage: Message = {
@@ -423,10 +545,20 @@ export const useRealtimeMessaging = ({
     };
   }, [conversationId, conversationType, currentUserId, showNotification]);
 
-  // Load messages on mount
+  // Load messages on mount and check block status
   useEffect(() => {
     loadMessages();
-  }, [loadMessages]);
+    checkBlockStatus();
+  }, [loadMessages, checkBlockStatus]);
+
+  // Check block status periodically
+  useEffect(() => {
+    const interval = setInterval(() => {
+      checkBlockStatus();
+    }, 10000); // Check every 10 seconds
+
+    return () => clearInterval(interval);
+  }, [checkBlockStatus]);
 
   // Mark messages as read when conversation is visible
   useEffect(() => {
@@ -455,6 +587,9 @@ export const useRealtimeMessaging = ({
     isTyping,
     otherUserTyping,
     unreadCount,
+    isBlocked,
+    blockedUntil,
+    blockReason,
     sendMessage,
     handleTyping,
     markMessagesAsRead,

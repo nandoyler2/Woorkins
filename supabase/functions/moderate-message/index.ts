@@ -115,10 +115,15 @@ SE DETECTAR ESTE PADRÃO = BLOQUEAR IMEDIATAMENTE E SINALIZAR
 - "item 1", "opção 2"
 - Conversas normais sobre trabalho
 
+📋 IMPORTANTE: SEMPRE forneça um motivo ESPECÍFICO e CLARO quando bloquear:
+- Diga exatamente O QUE foi detectado (ex: "tentativa de compartilhar número de telefone", "menção ao WhatsApp", "username de rede social")
+- Explique POR QUE foi bloqueado (ex: "viola política de não compartilhamento de contatos externos")
+- Se detectou padrão em múltiplas mensagens, mencione isso
+
 Responda APENAS em JSON:
 {
   "approved": true/false,
-  "reason": "motivo específico da rejeição",
+  "reason": "MOTIVO ESPECÍFICO E DETALHADO da rejeição - diga exatamente o que foi detectado e por que",
   "confidence": 1.0,
   "flagged": true/false (true se detectar tentativa de burla grave que deve sinalizar o usuário)
 }`;

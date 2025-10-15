@@ -23,7 +23,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useRealtimeMessaging } from '@/hooks/useRealtimeMessaging';
 import { ProposalNegotiationPanel } from './ProposalNegotiationPanel';
-import { Checkbox } from '@/components/ui/checkbox';
+import { BlockedMessageCountdown } from './BlockedMessageCountdown';
 
 interface UnifiedChatProps {
   conversationId: string;
@@ -70,6 +70,9 @@ export function UnifiedChat({
     isLoading,
     isSending,
     otherUserTyping,
+    isBlocked,
+    blockedUntil,
+    blockReason,
     sendMessage: sendMessageHook,
     handleTyping,
   } = useRealtimeMessaging({
@@ -543,61 +546,67 @@ export function UnifiedChat({
 
       {/* Input - Floating Sticky Bottom */}
       <div className="sticky bottom-0 z-20 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 flex-shrink-0">
-        <form onSubmit={handleSendMessage} className="p-3">
-        {isChatLocked ? (
-          <div className="text-center py-2">
-            <p className="text-sm text-muted-foreground flex items-center justify-center gap-2">
-              <Lock className="h-4 w-4" />
-              Chat bloqueado até o criador aceitar sua proposta
-            </p>
+        {isBlocked && blockedUntil ? (
+          <div className="p-3">
+            <BlockedMessageCountdown blockedUntil={blockedUntil} reason={blockReason} />
           </div>
         ) : (
-          <div className="flex gap-2">
-            <Button 
-              type="button" 
-              variant="ghost" 
-              size="icon"
-              className="flex-shrink-0"
-            >
-              <Paperclip className="h-5 w-5" />
-            </Button>
-            <Input
-              value={messageInput}
-              onChange={handleInputChange}
-              placeholder="Digite sua mensagem..."
-              disabled={isSending}
-              className="flex-1 bg-background/50"
-              autoComplete="off"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSendMessage(e);
-                }
-              }}
-            />
-            <Button 
-              type="button" 
-              variant="ghost" 
-              size="icon"
-              className="flex-shrink-0"
-            >
-              <Smile className="h-5 h-5" />
-            </Button>
-            <Button 
-              type="submit" 
-              disabled={isSending || !messageInput.trim()}
-              size="icon"
-              className="flex-shrink-0"
-            >
-              {isSending ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Send className="h-4 w-4" />
-              )}
-            </Button>
-          </div>
+          <form onSubmit={handleSendMessage} className="p-3">
+          {isChatLocked ? (
+            <div className="text-center py-2">
+              <p className="text-sm text-muted-foreground flex items-center justify-center gap-2">
+                <Lock className="h-4 w-4" />
+                Chat bloqueado até o criador aceitar sua proposta
+              </p>
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <Button 
+                type="button" 
+                variant="ghost" 
+                size="icon"
+                className="flex-shrink-0"
+              >
+                <Paperclip className="h-5 w-5" />
+              </Button>
+              <Input
+                value={messageInput}
+                onChange={handleInputChange}
+                placeholder="Digite sua mensagem..."
+                disabled={isSending}
+                className="flex-1 bg-background/50"
+                autoComplete="off"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSendMessage(e);
+                  }
+                }}
+              />
+              <Button 
+                type="button" 
+                variant="ghost" 
+                size="icon"
+                className="flex-shrink-0"
+              >
+                <Smile className="h-5 h-5" />
+              </Button>
+              <Button 
+                type="submit" 
+                disabled={isSending || !messageInput.trim()}
+                size="icon"
+                className="flex-shrink-0"
+              >
+                {isSending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Send className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
+          )}
+          </form>
         )}
-        </form>
       </div>
 
       {/* Delete Confirmation Dialog */}

@@ -371,6 +371,44 @@ export type Database = {
         }
         Relationships: []
       }
+      moderation_violations: {
+        Row: {
+          blocked_until: string | null
+          created_at: string
+          id: string
+          last_violation_at: string | null
+          profile_id: string
+          updated_at: string
+          violation_count: number
+        }
+        Insert: {
+          blocked_until?: string | null
+          created_at?: string
+          id?: string
+          last_violation_at?: string | null
+          profile_id: string
+          updated_at?: string
+          violation_count?: number
+        }
+        Update: {
+          blocked_until?: string | null
+          created_at?: string
+          id?: string
+          last_violation_at?: string | null
+          profile_id?: string
+          updated_at?: string
+          violation_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "moderation_violations_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       negotiation_messages: {
         Row: {
           amount: number | null

@@ -167,7 +167,9 @@ export default function AdminSettings() {
                   value={commissions.free}
                   onChange={(e) => setCommissions({ ...commissions, free: parseFloat(e.target.value) || 0 })}
                 />
-                <p className="text-xs text-muted-foreground">Taxa Stripe: 2.9% + R$0.30 (fixo)</p>
+                <p className="text-xs text-muted-foreground">
+                  {activeGateway === 'stripe' ? 'Taxa Stripe: 2.9% + R$0.30 (fixo)' : 'Taxas Mercado Pago: Cartão 4.98% | PIX 0.99%'}
+                </p>
               </div>
               <div className="space-y-2">
                 <Label>Plano Pro (%)</Label>
@@ -179,7 +181,9 @@ export default function AdminSettings() {
                   value={commissions.pro}
                   onChange={(e) => setCommissions({ ...commissions, pro: parseFloat(e.target.value) || 0 })}
                 />
-                <p className="text-xs text-muted-foreground">Taxa Stripe: 2.9% + R$0.30 (fixo)</p>
+                <p className="text-xs text-muted-foreground">
+                  {activeGateway === 'stripe' ? 'Taxa Stripe: 2.9% + R$0.30 (fixo)' : 'Taxas Mercado Pago: Cartão 4.98% | PIX 0.99%'}
+                </p>
               </div>
               <div className="space-y-2">
                 <Label>Plano Premium (%)</Label>

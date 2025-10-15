@@ -654,6 +654,8 @@ export function IdentityVerificationDialog({
       <SupportChatDialog
         open={showSupportChat}
         onOpenChange={setShowSupportChat}
+        documentRejected={true}
+        profileId={profileId}
       />
     </>
   );

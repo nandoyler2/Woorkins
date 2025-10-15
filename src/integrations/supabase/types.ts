@@ -1248,6 +1248,82 @@ export type Database = {
         }
         Relationships: []
       }
+      support_conversations: {
+        Row: {
+          assigned_to: string | null
+          created_at: string
+          id: string
+          profile_id: string
+          reason: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          created_at?: string
+          id?: string
+          profile_id: string
+          reason?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          created_at?: string
+          id?: string
+          profile_id?: string
+          reason?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_conversations_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      support_messages: {
+        Row: {
+          attachments: Json | null
+          content: string
+          conversation_id: string
+          created_at: string
+          id: string
+          sender_id: string
+          sender_type: string
+        }
+        Insert: {
+          attachments?: Json | null
+          content: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          sender_id: string
+          sender_type: string
+        }
+        Update: {
+          attachments?: Json | null
+          content?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          sender_id?: string
+          sender_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "support_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       system_blocks: {
         Row: {
           block_type: string

@@ -29,9 +29,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useToast } from '@/hooks/use-toast';
-import { Search, Shield, User, Ban, MoreVertical, Coins, ShieldOff } from 'lucide-react';
+import { Search, Shield, User, Ban, MoreVertical, Coins, ShieldOff, Info } from 'lucide-react';
 import { ManageWoorkoinsDialog } from '@/components/admin/ManageWoorkoinsDialog';
 import { BlockUserDialog } from '@/components/admin/BlockUserDialog';
+import { BlockDetailsDialog } from '@/components/admin/BlockDetailsDialog';
 
 export default function AdminUsers() {
   const { user } = useAuth();
@@ -42,6 +43,9 @@ export default function AdminUsers() {
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [woorkoinsDialogOpen, setWoorkoinsDialogOpen] = useState(false);
   const [blockDialogOpen, setBlockDialogOpen] = useState(false);
+  const [blockDetailsDialogOpen, setBlockDetailsDialogOpen] = useState(false);
+  const [selectedBlock, setSelectedBlock] = useState<any>(null);
+  const [unblockLoading, setUnblockLoading] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -107,13 +111,13 @@ export default function AdminUsers() {
     }
   };
 
-  const handleUnblockUser = async (profileId: string, blockType: 'messaging' | 'system') => {
+  const handleUnblockUser = async (profileId: string, blockId: string) => {
+    setUnblockLoading(true);
     try {
       const { error } = await supabase
         .from('system_blocks')
         .delete()
-        .eq('profile_id', profileId)
-        .eq('block_type', blockType);
+        .eq('id', blockId);
 
       if (error) throw error;
 
@@ -122,6 +126,7 @@ export default function AdminUsers() {
         description: 'O bloqueio foi removido com sucesso',
       });
 
+      setBlockDetailsDialogOpen(false);
       loadUsers();
     } catch (error: any) {
       toast({
@@ -129,6 +134,8 @@ export default function AdminUsers() {
         title: 'Erro',
         description: error.message || 'Não foi possível desbloquear o usuário',
       });
+    } finally {
+      setUnblockLoading(false);
     }
   };
 
@@ -256,14 +263,36 @@ export default function AdminUsers() {
                     {hasActiveBlock ? (
                       <div className="space-y-1">
                         {messagingBlock && (
-                          <Badge variant="destructive" className="text-xs">
-                            🚫 Bloqueado (Mensagens)
-                          </Badge>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-auto p-0 hover:bg-transparent"
+                            onClick={() => {
+                              setSelectedBlock(messagingBlock);
+                              setBlockDetailsDialogOpen(true);
+                            }}
+                          >
+                            <Badge variant="destructive" className="text-xs cursor-pointer hover:bg-destructive/90">
+                              🚫 Bloqueado (Mensagens)
+                              <Info className="ml-1 h-3 w-3" />
+                            </Badge>
+                          </Button>
                         )}
                         {systemBlock && (
-                          <Badge variant="destructive" className="text-xs">
-                            🚫 Bloqueado (Sistema)
-                          </Badge>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-auto p-0 hover:bg-transparent"
+                            onClick={() => {
+                              setSelectedBlock(systemBlock);
+                              setBlockDetailsDialogOpen(true);
+                            }}
+                          >
+                            <Badge variant="destructive" className="text-xs cursor-pointer hover:bg-destructive/90">
+                              🚫 Bloqueado (Sistema)
+                              <Info className="ml-1 h-3 w-3" />
+                            </Badge>
+                          </Button>
                         )}
                       </div>
                     ) : (
@@ -300,20 +329,24 @@ export default function AdminUsers() {
                         </DropdownMenuItem>
                         {messagingBlock && (
                           <DropdownMenuItem
-                            onClick={() => handleUnblockUser(usr.id, 'messaging')}
-                            className="text-green-600"
+                            onClick={() => {
+                              setSelectedBlock(messagingBlock);
+                              setBlockDetailsDialogOpen(true);
+                            }}
                           >
-                            <ShieldOff className="mr-2 h-4 w-4" />
-                            Desbloquear Mensagens
+                            <Info className="mr-2 h-4 w-4" />
+                            Ver Detalhes do Bloqueio
                           </DropdownMenuItem>
                         )}
                         {systemBlock && (
                           <DropdownMenuItem
-                            onClick={() => handleUnblockUser(usr.id, 'system')}
-                            className="text-green-600"
+                            onClick={() => {
+                              setSelectedBlock(systemBlock);
+                              setBlockDetailsDialogOpen(true);
+                            }}
                           >
-                            <ShieldOff className="mr-2 h-4 w-4" />
-                            Desbloquear Sistema
+                            <Info className="mr-2 h-4 w-4" />
+                            Ver Detalhes do Bloqueio
                           </DropdownMenuItem>
                         )}
                       </DropdownMenuContent>
@@ -341,6 +374,16 @@ export default function AdminUsers() {
               onSuccess={loadUsers}
             />
           </>
+        )}
+
+        {selectedBlock && (
+          <BlockDetailsDialog
+            open={blockDetailsDialogOpen}
+            onOpenChange={setBlockDetailsDialogOpen}
+            block={selectedBlock}
+            onUnblock={() => handleUnblockUser(selectedBlock.profile_id, selectedBlock.id)}
+            loading={unblockLoading}
+          />
         )}
       </Card>
     </div>

@@ -92,7 +92,40 @@ serve(async (req) => {
       });
     }
 
-    // AI response
+    // Construir contexto de status atual do usuário (bloqueios)
+    let statusContext = '';
+    try {
+      const nowIso = new Date().toISOString();
+      const { data: sbBlocks } = await supabase
+        .from('system_blocks')
+        .select('id, blocked_until, is_permanent, block_type, reason')
+        .eq('profile_id', profileId)
+        .or(`is_permanent.eq.true,blocked_until.gt.${nowIso}`)
+        .order('created_at', { ascending: false })
+        .limit(1);
+      const activeBlock = sbBlocks && sbBlocks.length > 0 ? sbBlocks[0] : null;
+      if (activeBlock) {
+        statusContext = `STATUS DO USUÁRIO: BLOQUEIO ATIVO (${activeBlock.is_permanent ? 'permanente' : `até ${activeBlock.blocked_until}`}) – motivo: ${activeBlock.reason || 'não informado'}. Antes de dizer que está desbloqueado, verifique esse contexto.`;
+      } else {
+        const { data: mv } = await supabase
+          .from('moderation_violations')
+          .select('blocked_until')
+          .eq('profile_id', profileId)
+          .gt('blocked_until', nowIso)
+          .order('blocked_until', { ascending: false })
+          .limit(1);
+        if (mv && mv.length > 0) {
+          statusContext = `STATUS DO USUÁRIO: BLOQUEIO TEMPORÁRIO ATIVO até ${mv[0].blocked_until}.`;
+        } else {
+          statusContext = 'STATUS DO USUÁRIO: SEM BLOQUEIO ATIVO. Se o histórico mencionar bloqueio, informe que o acesso já foi liberado e siga com o novo assunto.';
+        }
+      }
+    } catch (e) {
+      // Falha ao buscar status — não interromper o fluxo
+      statusContext = 'STATUS DO USUÁRIO: (indisponível). Baseie-se no diálogo atual e evite assumir bloqueio sem confirmação.';
+    }
+
+    // Resposta da IA
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -111,6 +144,7 @@ CONTEXTO E ADAPTAÇÃO:
 - Se o usuário mudar de assunto, FOQUE no novo assunto, não no anterior
 - Identifique qual é o problema ATUAL do usuário, mesmo que seja diferente das mensagens antigas
 - Se perceber mudança de assunto, reconheça isso: "Entendi, agora você está falando sobre [novo assunto]..."
+- Antes de afirmar que o usuário está bloqueado, SEMPRE verifique o "Contexto de status do usuário" desta conversa
 
 DOCUMENTOS REJEITADOS - PROTOCOLO ESPECÍFICO:
 Se o usuário mencionar que seus documentos foram REJEITADOS ou que está tendo problemas com verificação:
@@ -137,6 +171,7 @@ NUNCA:
 - Ignore o contexto das mensagens recentes
 - Continue falando de assunto antigo quando o usuário mudou o assunto`
           },
+          { role: 'system', content: `Contexto de status do usuário: ${statusContext}` },
           ...(messages?.map(m => ({
             role: m.sender_type === 'user' ? 'user' : 'assistant',
             content: m.content

@@ -43,65 +43,71 @@ serve(async (req) => {
             content: [
               {
                 type: 'text',
-                text: `ANÁLISE INTELIGENTE DE DOCUMENTO BRASILEIRO - FRENTE
+                text: `ANÁLISE SUPER LENIENTE DE DOCUMENTO BRASILEIRO - FRENTE
 
-CONTEXTO CRÍTICO - SEJA PRÁTICO E REALISTA:
-- Documentos podem ter 5-20 ANOS - fotos antigas são NORMAIS
-- Crianças crescem, pessoas envelhecem - diferenças de idade são ESPERADAS
-- Algum brilho ou sombra é ACEITÁVEL se informações críticas estiverem legíveis
-- Desgaste natural do documento (desbotamento leve) é NORMAL
-- Foque em UTILIDADE, não perfeição
+REGRA DE OURO: SEJA EXTREMAMENTE LENIENTE E PRÁTICO!
 
-TAREFA:
+IMPORTANTE:
+- SE você consegue LER as informações, marque como "clear" 
+- SÓ marque "illegible" se for REALMENTE impossível ver
+- Brilho, sombra, documento antigo - TUDO OK se dá pra ler
+- Documentos podem ter 30+ ANOS - isso é NORMAL
+- Desgaste, desbotamento leve - ACEITÁVEL
+
+INSTRUÇÕES DE LEITURA:
 1. Identifique: RG ou CNH
-2. Extraia (faça o melhor esforço mesmo se parcialmente legível):
+2. EXTRAIA OS DADOS (faça força, mesmo com brilho/sombra):
    - Nome completo
-   - CPF (apenas números) - CRÍTICO
-   - Data de nascimento (DD/MM/AAAA) - CRÍTICO
+   - CPF (11 dígitos, apenas números)
+   - Data de nascimento (DD/MM/AAAA)
    - Número do documento
 
-AVALIAÇÃO DE QUALIDADE:
-- excellent: tudo perfeitamente nítido
-- good: maioria legível, pequenos problemas OK
-- acceptable: legível com esforço, mas campos críticos visíveis
-- poor: ilegível, precisa refazer
+CRITÉRIOS DE LEGIBILIDADE (seja generoso):
+Para cada campo, marque como:
+- "clear": consegue ler (MESMO com algum brilho/sombra)
+- "partially_visible": dificulta mas consegue ver a maioria
+- "illegible": IMPOSSÍVEL de ver (quase nunca use isso)
 
-LEGIBILIDADE POR CAMPO:
-Para cada campo: clear | partially_visible | illegible
-- clear: fácil de ler
-- partially_visible: pode ler com esforço
-- illegible: impossível ler
+EXEMPLOS DE "clear":
+- Texto com leve brilho mas números/letras visíveis
+- Documento velho mas informação legível
+- Sombra parcial mas dados visíveis
 
-SÓ REJEITE SE:
-- Campos CRÍTICOS (nome, CPF, data nasc) completamente ilegíveis
-- Evidência CLARA de fraude (edição digital óbvia, montagem)
-- Screenshot ao invés de documento físico
+EXEMPLOS DE "illegible":
+- Completamente apagado/cortado
+- Área totalmente coberta
+- Texto totalmente borrado (muito raro)
+
+VALIDAÇÃO:
+- isReadable: true se QUALQUER campo crítico estiver visível
+- isPhysicalDocument: false apenas se for CLARAMENTE screenshot
+- hasClearFraud: true apenas se ver edição ÓBVIA
 
 RESPONDA EM JSON:
 {
   "documentType": "RG" ou "CNH",
   "extractedData": {
-    "fullName": "nome ou null",
-    "cpf": "apenas números ou null",
-    "birthDate": "DD/MM/AAAA ou null",
-    "documentNumber": "número ou null"
+    "fullName": "NOME COMPLETO EXTRAÍDO",
+    "cpf": "12345678901",
+    "birthDate": "28/03/1996",
+    "documentNumber": "número"
   },
-  "quality": "excellent" | "good" | "acceptable" | "poor",
+  "quality": "excellent" | "good" | "acceptable",
   "readability": {
-    "name": "clear" | "partially_visible" | "illegible",
-    "cpf": "clear" | "partially_visible" | "illegible",
-    "birthDate": "clear" | "partially_visible" | "illegible",
-    "photo": "clear" | "partially_visible" | "illegible"
+    "name": "clear",
+    "cpf": "clear",
+    "birthDate": "clear",
+    "photo": "clear"
   },
   "validation": {
-    "isReadable": true/false,
-    "reason": "motivo específico se false",
-    "isPhysicalDocument": true/false
+    "isReadable": true,
+    "reason": "",
+    "isPhysicalDocument": true
   },
   "authenticity": {
-    "isAuthentic": true/false,
-    "hasClearFraud": true/false,
-    "details": "explicação"
+    "isAuthentic": true,
+    "hasClearFraud": false,
+    "details": "Documento parece autêntico"
   }
 }`
               },
@@ -334,18 +340,16 @@ RESPONDA EM JSON:
     let verificationStatus = 'rejected';
     let rejectionReasons = [];
 
-    // Validações INTELIGENTES - só rejeite com boas razões
-    if (frontData.readability?.name === 'illegible') {
-      rejectionReasons.push('Nome completamente ilegível. Melhore a iluminação e tire novamente.');
+    // Validações ULTRA LENIENTES - só rejeite se REALMENTE necessário
+    // SÓ rejeite por legibilidade se campos críticos NÃO foram extraídos
+    if (!extractedName || extractedName.length < 3) {
+      rejectionReasons.push('Nome não foi extraído. Melhore a iluminação na área do nome.');
     }
-    if (frontData.readability?.cpf === 'illegible') {
-      rejectionReasons.push('CPF ilegível. Melhore a iluminação e foque na área do CPF.');
+    if (!normalizedExtractedCPF || normalizedExtractedCPF.length !== 11) {
+      rejectionReasons.push('CPF não foi identificado. Tire foto mais nítida da área do CPF.');
     }
-    if (frontData.readability?.birthDate === 'illegible') {
-      rejectionReasons.push('Data de nascimento ilegível. Tire foto mais nítida.');
-    }
-    if (frontData.readability?.photo === 'illegible') {
-      rejectionReasons.push('Foto no documento muito escura. Use melhor iluminação.');
+    if (!extractedBirthDate || !extractedBirthDate.match(/\d{2}\/\d{2}\/\d{4}/)) {
+      rejectionReasons.push('Data de nascimento não foi identificada. Foque melhor essa área.');
     }
     
     if (frontData.validation?.isPhysicalDocument === false) {

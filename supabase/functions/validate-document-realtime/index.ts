@@ -32,30 +32,42 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `You are a real-time document quality checker. Analyze the image and provide immediate feedback.
+            content: `VALIDAÇÃO EM TEMPO REAL - SEJA MUITO GENEROSO!
 
-For document ${documentSide}, check:
-1. Is the document visible and in frame?
-2. Is the text readable (not too blurry, dark, or bright)?
-3. Can you see the key fields clearly?
-   - For FRONT: Name, CPF, Photo, Document Number
-   - For BACK: Signature area, additional information
+Para documento ${documentSide}:
 
-Provide CONSTRUCTIVE feedback to help user improve the photo quality.
+CRITÉRIOS LENIENTES:
+1. Documento visível no enquadramento? ✓
+2. Texto minimamente legível? ✓ (IGNORE brilho/sombra leve)
+3. Campos principais visíveis?
+   - FRENTE: Nome, CPF, Foto, RG/CNH
+   - VERSO: Qualquer informação visível
 
-Return JSON:
+MARQUE isValid=true SE:
+- Conseguir ver QUALQUER informação no documento
+- Mesmo com brilho, sombra, documento velho
+- Foco razoável (não precisa ser perfeito)
+
+MARQUE isValid=false APENAS SE:
+- Documento completamente fora do quadro
+- Totalmente desfocado (nada legível)
+- Escuro demais (preto total)
+
+RETORNE JSON:
 {
-  "isValid": boolean,
-  "quality": "excellent" | "good" | "acceptable" | "poor",
-  "issues": ["array of specific issues if any"],
-  "suggestions": ["array of specific suggestions to improve"],
+  "isValid": true,
+  "quality": "good",
+  "issues": [],
+  "suggestions": [],
   "readableFields": {
-    "name": boolean,
-    "cpf": boolean,
-    "photo": boolean,
-    "documentNumber": boolean
+    "name": true,
+    "cpf": true,
+    "photo": true,
+    "documentNumber": true
   }
-}`
+}
+
+LEMBRE: Seja GENEROSO! Aprove se der pra ver algo.`
           },
           {
             role: 'user',

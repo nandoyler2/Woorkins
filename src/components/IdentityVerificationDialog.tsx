@@ -147,9 +147,11 @@ export function IdentityVerificationDialog({
     try {
       const documentSide = step === 'front' ? 'front' : step === 'back' ? 'back' : 'selfie';
       
-      // Timeout de 5 segundos para validação
+      console.log('Validando documento em tempo real:', documentSide);
+      
+      // Timeout de 3 segundos para validação
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Timeout')), 5000)
+        setTimeout(() => reject(new Error('Timeout')), 3000)
       );
       
       const validationPromise = supabase.functions.invoke('validate-document-realtime', {
@@ -160,20 +162,19 @@ export function IdentityVerificationDialog({
 
       if (error) throw error;
 
+      console.log('Resultado da validação:', data);
       setRealtimeValidation(data);
-      setCanCapture(data.isValid && (data.quality === 'excellent' || data.quality === 'good' || data.quality === 'acceptable'));
+      setCanCapture(data.isValid);
     } catch (error) {
-      console.error('Real-time validation error:', error);
-      // Em caso de erro ou timeout, permite captura após 3 segundos
-      setTimeout(() => {
-        setRealtimeValidation({
-          isValid: true,
-          quality: 'good',
-          issues: [],
-          suggestions: ['A validação automática falhou. Você pode capturar manualmente.']
-        });
-        setCanCapture(true);
-      }, 3000);
+      console.error('Erro na validação em tempo real:', error);
+      // Em caso de erro ou timeout, seja LENIENTE e permita captura
+      setRealtimeValidation({
+        isValid: true,
+        quality: 'good',
+        issues: [],
+        suggestions: []
+      });
+      setCanCapture(true);
     } finally {
       setIsValidating(false);
     }

@@ -472,11 +472,6 @@ export default function Messages() {
                       type="button"
                       onClick={async () => {
                         setSelectedConversation(conv);
-                        // Persist selection in URL (no full reload)
-                        const params = new URLSearchParams(location.search);
-                        params.set('type', conv.type);
-                        params.set('id', conv.id);
-                        window.history.replaceState(null, '', `/mensagens?${params.toString()}`);
 
                         // Zero local badge immediately
                         setConversations(prev => prev.map(c => c.id === conv.id && c.type === conv.type ? { ...c, unreadCount: 0 } : c));

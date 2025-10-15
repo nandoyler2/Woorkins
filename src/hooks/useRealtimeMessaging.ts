@@ -15,6 +15,7 @@ interface Message {
   media_url?: string;
   media_type?: string;
   media_name?: string;
+  is_deleted?: boolean;
 }
 
 interface UseRealtimeMessagingProps {
@@ -177,6 +178,7 @@ export const useRealtimeMessaging = ({
           media_url: msg.media_url,
           media_type: msg.media_type,
           media_name: msg.media_name,
+          is_deleted: msg.is_deleted || false,
         };
       }));
 
@@ -254,10 +256,21 @@ export const useRealtimeMessaging = ({
         .slice(-5)
         .map(m => m.content);
 
+      // Create temp message to get ID for moderation
+      const tempMessage: Message = {
+        id: tempId,
+        sender_id: currentUserId,
+        sender_name: 'Você',
+        content: content.trim(),
+        created_at: new Date().toISOString(),
+        status: 'sending',
+      };
+
       // Call moderation function with context (including image if present)
       const moderationBody: any = { 
         content: content.trim(),
-        recentMessages: recentUserMessages 
+        recentMessages: recentUserMessages,
+        messageId: tempId
       };
 
       // If there's an attachment and it's an image, include it in moderation

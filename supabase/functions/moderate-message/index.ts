@@ -292,6 +292,39 @@ Responda APENAS em JSON:
       // Keep flagged status to warn user
     }
 
+    // If message is rejected, mark it as deleted
+    if (!moderationResult.approved) {
+      const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
+      const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+      
+      if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+        try {
+          const { messageId } = await req.json();
+          
+          if (messageId) {
+            // Update the message to mark it as deleted
+            const updateResponse = await fetch(
+              `${SUPABASE_URL}/rest/v1/negotiation_messages?id=eq.${messageId}`,
+              {
+                method: 'PATCH',
+                headers: {
+                  'apikey': SUPABASE_SERVICE_ROLE_KEY,
+                  'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+                  'Content-Type': 'application/json',
+                  'Prefer': 'return=minimal'
+                },
+                body: JSON.stringify({ is_deleted: true })
+              }
+            );
+            
+            console.log('Message marked as deleted:', updateResponse.ok);
+          }
+        } catch (error) {
+          console.error('Error marking message as deleted:', error);
+        }
+      }
+    }
+
     return new Response(
       JSON.stringify(moderationResult),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

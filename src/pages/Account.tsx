@@ -294,13 +294,22 @@ export default function Account() {
                         }
                       }
                     }}
+                    onClick={() => {
+                      if (profile.cpf) {
+                        toast({
+                          title: 'CPF não pode ser alterado',
+                          description: 'O CPF está incorreto? Entre em contato com nossa central de ajuda.',
+                          variant: 'destructive',
+                        });
+                      }
+                    }}
                     disabled={!!profile.cpf}
-                    className={profile.cpf ? 'bg-muted' : ''}
+                    className={profile.cpf ? 'bg-muted cursor-not-allowed' : ''}
                     placeholder="000.000.000-00"
                   />
                   <p className="text-xs text-muted-foreground">
                     {profile.cpf 
-                      ? 'O CPF não pode ser alterado após definido'
+                      ? 'O CPF não pode ser alterado após definido. CPF errado? Fale com nossa central de ajuda.'
                       : 'Obrigatório para realizar pagamentos'}
                   </p>
                 </div>

@@ -200,7 +200,8 @@ export function IdentityVerificationDialog({
     const photo = capturePhoto();
     if (!photo) return;
 
-    stopCamera();
+    // NÃO parar a câmera - manter ativa para próxima foto
+    // stopCamera(); // REMOVIDO
 
     if (step === 'front') {
       setFrontImage(photo);
@@ -211,14 +212,22 @@ export function IdentityVerificationDialog({
     } else if (step === 'selfie') {
       setSelfieImage(photo);
       setStep('selfie-preview');
+      // Só parar a câmera após última foto
+      stopCamera();
     }
   };
 
   const handleContinueFromPreview = () => {
     if (step === 'front-preview') {
       setStep('back');
+      // Câmera já está ativa, só resetar feedback
+      setRealtimeValidation(null);
+      setCanCapture(false);
     } else if (step === 'back-preview') {
       setStep('selfie');
+      // Câmera já está ativa, só resetar feedback
+      setRealtimeValidation(null);
+      setCanCapture(false);
     } else if (step === 'selfie-preview') {
       handleSubmit(frontImage!, backImage!, selfieImage!);
     }
@@ -228,12 +237,26 @@ export function IdentityVerificationDialog({
     if (step === 'front-preview') {
       setFrontImage(null);
       setStep('front');
+      // Câmera já está ativa, só resetar feedback
+      setRealtimeValidation(null);
+      setCanCapture(false);
     } else if (step === 'back-preview') {
       setBackImage(null);
       setStep('back');
+      // Câmera já está ativa, só resetar feedback
+      setRealtimeValidation(null);
+      setCanCapture(false);
     } else if (step === 'selfie-preview') {
       setSelfieImage(null);
       setStep('selfie');
+      // Reativar câmera já que foi parada após selfie
+      startCamera();
+      setTimeout(() => {
+        const interval = setInterval(() => {
+          validateDocumentRealtime();
+        }, 2000);
+        validationIntervalRef.current = interval as any;
+      }, 500);
     }
   };
 

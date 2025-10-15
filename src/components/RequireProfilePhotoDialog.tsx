@@ -12,6 +12,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Camera, Loader2, AlertTriangle } from 'lucide-react';
+import { ProfilePhotoCropDialog } from './ProfilePhotoCropDialog';
 
 interface RequireProfilePhotoDialogProps {
   open: boolean;
@@ -29,6 +30,8 @@ export function RequireProfilePhotoDialog({
   const { toast } = useToast();
   const [uploading, setUploading] = useState(false);
   const [moderating, setModerating] = useState(false);
+  const [imageToCrop, setImageToCrop] = useState<string | null>(null);
+  const [originalFile, setOriginalFile] = useState<File | null>(null);
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -54,12 +57,22 @@ export function RequireProfilePhotoDialog({
       return;
     }
 
+    // Store original file and show crop dialog
+    setOriginalFile(file);
+    const imageUrl = URL.createObjectURL(file);
+    setImageToCrop(imageUrl);
+  };
+
+  const handleCropComplete = async (croppedBlob: Blob) => {
+    if (!originalFile) return;
     try {
       setModerating(true);
+      setImageToCrop(null);
 
-      // Convert to base64 for moderation
+      // Convert cropped blob to base64 for moderation
       const reader = new FileReader();
-      reader.readAsDataURL(file);
+      reader.readAsDataURL(croppedBlob);
+
       
       await new Promise((resolve, reject) => {
         reader.onload = () => resolve(reader.result);
@@ -87,18 +100,19 @@ export function RequireProfilePhotoDialog({
           description: moderationResult?.reason || 'Esta foto não atende aos requisitos. Use uma foto real sua mostrando claramente seu rosto.',
           duration: 10000,
         });
+        setOriginalFile(null);
         return;
       }
 
       // Upload approved photo
       setUploading(true);
 
-      const fileExt = file.name.split('.').pop();
+      const fileExt = originalFile.name.split('.').pop();
       const fileName = `${userId}-${Date.now()}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(fileName, file, { upsert: true });
+        .upload(fileName, croppedBlob, { upsert: true });
 
       if (uploadError) throw uploadError;
 
@@ -121,6 +135,7 @@ export function RequireProfilePhotoDialog({
       });
 
       onPhotoUploaded();
+      setOriginalFile(null);
 
     } catch (error: any) {
       console.error('Error uploading photo:', error);
@@ -132,7 +147,6 @@ export function RequireProfilePhotoDialog({
     } finally {
       setUploading(false);
       setModerating(false);
-      event.target.value = '';
     }
   };
 
@@ -215,6 +229,19 @@ export function RequireProfilePhotoDialog({
             className="hidden"
           />
         </AlertDialogFooter>
+
+        {/* Crop Dialog */}
+        {imageToCrop && (
+          <ProfilePhotoCropDialog
+            imageUrl={imageToCrop}
+            onCropComplete={handleCropComplete}
+            onCancel={() => {
+              setImageToCrop(null);
+              setOriginalFile(null);
+              URL.revokeObjectURL(imageToCrop);
+            }}
+          />
+        )}
       </AlertDialogContent>
     </AlertDialog>
   );

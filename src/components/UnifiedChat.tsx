@@ -132,8 +132,15 @@ export function UnifiedChat({
   const finalBlockReason = systemMessagingBlock?.reason || blockReason;
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    
+    // Always scroll to bottom on new messages or when switching convo
+    const scrollToBottom = (smooth: boolean) => {
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'end' });
+      }, 0);
+    };
+
+    scrollToBottom(true);
+
     // Mark messages as read when opening the chat
     if (messages.length > 0 && profileId) {
       markMessagesAsRead();
@@ -185,7 +192,14 @@ export function UnifiedChat({
     if (conversationType === 'proposal' && messages.length > 0) {
       loadProposalData();
     }
-  }, [messages.length, conversationType]);
+}, [messages.length, conversationType]);
+
+// Also ensure scroll at bottom when conversation changes
+useEffect(() => {
+  setTimeout(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'auto', block: 'end' });
+  }, 0);
+}, [conversationId]);
 
   const loadProposalData = async () => {
     try {
@@ -512,8 +526,8 @@ export function UnifiedChat({
           </Avatar>
           <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 bg-green-500 rounded-full border-2 border-background" />
         </div>
-        <div className="flex-1">
-          <h3 className="font-semibold">{otherUser.name}</h3>
+        <div className="flex-1 min-w-0">
+          <h3 className="font-semibold truncate">{otherUser.name}</h3>
           <div className="flex items-center gap-2">
             {otherUserTyping ? (
               <span className="text-xs text-primary animate-pulse font-medium">Digitando...</span>
@@ -546,7 +560,7 @@ export function UnifiedChat({
 
       {/* Messages - Scrollable Area */}
       <div className="flex-1 overflow-y-auto min-h-0">
-        <div className="p-4 space-y-4 pb-28">
+        <div className="p-4 space-y-4 pb-4">
           {isChatLocked ? (
             <div className="text-center py-12">
               <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-yellow-500/10 mb-4">
@@ -722,85 +736,85 @@ export function UnifiedChat({
         </div>
       </div>
 
-      {/* Input - Fixed, anchored to bottom of chat pane */}
-      <div className="absolute bottom-0 left-0 right-0 z-20 border-t bg-background">
+      {/* Input - Bottom area (not absolute) */}
+      <div className="border-t bg-background">
         {finalIsBlocked && finalBlockedUntil ? (
           <div className="p-3">
             <BlockedMessageCountdown blockedUntil={finalBlockedUntil} reason={finalBlockReason} />
           </div>
-          ) : (
-            <form onSubmit={handleSendMessage} className="p-3 space-y-2">
-              {selectedFile && (
-                <div className="flex items-center gap-2 p-2 bg-muted rounded-lg">
-                  {filePreviewUrl && selectedFile.type.startsWith('image/') ? (
-                    <img src={filePreviewUrl} alt="Preview" className="h-12 w-12 object-cover rounded" />
-                  ) : (
-                    <div className="h-12 w-12 bg-background rounded flex items-center justify-center">
-                      {getFileIcon(selectedFile.type)}
-                    </div>
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{selectedFile.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {(selectedFile.size / 1024).toFixed(1)} KB
-                    </p>
+        ) : (
+          <form onSubmit={handleSendMessage} className="p-3 space-y-2">
+            {selectedFile && (
+              <div className="flex items-center gap-2 p-2 bg-muted rounded-lg">
+                {filePreviewUrl && selectedFile.type.startsWith('image/') ? (
+                  <img src={filePreviewUrl} alt="Preview" className="h-12 w-12 object-cover rounded" />
+                ) : (
+                  <div className="h-12 w-12 bg-background rounded flex items-center justify-center">
+                    {getFileIcon(selectedFile.type)}
                   </div>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={handleRemoveFile}
-                    className="flex-shrink-0"
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
+                )}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{selectedFile.name}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {(selectedFile.size / 1024).toFixed(1)} KB
+                  </p>
                 </div>
-              )}
-              <div className="flex gap-2">
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  onChange={handleFileSelect}
-                  className="hidden"
-                  accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.zip"
-                />
-                <Button 
-                  type="button" 
-                  variant="ghost" 
+                <Button
+                  type="button"
+                  variant="ghost"
                   size="icon"
-                  className="flex-shrink-0"
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  <Paperclip className="h-5 w-5" />
-                </Button>
-                <Input
-                  value={messageInput}
-                  onChange={handleInputChange}
-                  placeholder="Digite sua mensagem..."
-                  disabled={isSending}
-                  className="flex-1 bg-background/50"
-                  autoComplete="off"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSendMessage(e);
-                    }
-                  }}
-                />
-                <Button 
-                  type="submit" 
-                  disabled={isSending || (!messageInput.trim() && !selectedFile)}
-                  size="icon"
+                  onClick={handleRemoveFile}
                   className="flex-shrink-0"
                 >
-                  {isSending ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Send className="h-4 w-4" />
-                  )}
+                  <X className="h-4 w-4" />
                 </Button>
               </div>
-            </form>
+            )}
+            <div className="flex gap-2">
+              <input
+                ref={fileInputRef}
+                type="file"
+                onChange={handleFileSelect}
+                className="hidden"
+                accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.zip"
+              />
+              <Button 
+                type="button" 
+                variant="ghost" 
+                size="icon"
+                className="flex-shrink-0"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <Paperclip className="h-5 w-5" />
+              </Button>
+              <Input
+                value={messageInput}
+                onChange={handleInputChange}
+                placeholder="Digite sua mensagem..."
+                disabled={isSending}
+                className="flex-1 bg-background/50"
+                autoComplete="off"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSendMessage(e);
+                  }
+                }}
+              />
+              <Button 
+                type="submit" 
+                disabled={isSending || (!messageInput.trim() && !selectedFile)}
+                size="icon"
+                className="flex-shrink-0"
+              >
+                {isSending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Send className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
+          </form>
         )}
       </div>
 

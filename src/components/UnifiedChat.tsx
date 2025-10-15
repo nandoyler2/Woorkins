@@ -527,7 +527,7 @@ export function UnifiedChat({
 
       {/* Messages - Scrollable Area */}
       <div className="flex-1 overflow-y-auto min-h-0">
-        <div className="p-4 space-y-4 pb-44">
+        <div className="p-4 space-y-4 pb-4">
           {isChatLocked ? (
             <div className="text-center py-12">
               <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-yellow-500/10 mb-4">
@@ -693,8 +693,8 @@ export function UnifiedChat({
         </div>
       </div>
 
-      {/* Input - Floating Overlay Bottom */}
-      <div className="absolute bottom-3 left-3 right-3 z-30 border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 shadow-lg rounded-xl">
+      {/* Input - Fixed Bottom, always visible */}
+      <div className="sticky bottom-0 left-0 right-0 z-20 border-t bg-background">
         {finalIsBlocked && finalBlockedUntil ? (
           <div className="p-3">
             <BlockedMessageCountdown blockedUntil={finalBlockedUntil} reason={finalBlockReason} />

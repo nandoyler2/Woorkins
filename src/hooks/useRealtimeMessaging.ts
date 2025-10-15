@@ -412,8 +412,9 @@ export const useRealtimeMessaging = ({
 
   // Show browser notification - only if conversation is not active or document is hidden
   const showNotification = useCallback((message: Message) => {
-    // Don't show notification if user is actively in this conversation
-    if (isConversationActive && !document.hidden) {
+    // Don't show notification if user is actively in this conversation and window is focused
+    if (isConversationActive || !document.hidden) {
+      console.log('Notification suppressed - user is active in conversation');
       return;
     }
     

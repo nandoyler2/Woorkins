@@ -9,9 +9,9 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { content, recentMessages = [] } = await req.json();
+    const { content, recentMessages = [], imageUrl } = await req.json();
     
-    if (!content || typeof content !== 'string') {
+    if (!content && !imageUrl) {
       return new Response(
         JSON.stringify({ approved: false, reason: 'Conteúdo inválido', flagged: false }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
@@ -36,7 +36,7 @@ Deno.serve(async (req) => {
 
     const systemPrompt = `Você é um moderador EXTREMAMENTE RIGOROSO de conteúdo para uma plataforma de freelancers brasileira.
 
-Sua missão é detectar e BLOQUEAR QUALQUER tentativa de compartilhar informações de contato pessoal, INCLUINDO TENTATIVAS DE BURLA EM MÚLTIPLAS MENSAGENS.
+Sua missão é detectar e BLOQUEAR QUALQUER tentativa de compartilhar informações de contato pessoal, INCLUINDO TENTATIVAS DE BURLA EM MÚLTIPLAS MENSAGENS E IMAGENS QUE CONTENHAM CONTATOS.
 
 🚨 ATENÇÃO ESPECIAL: DETECÇÃO DE BURLAS EM SEQUÊNCIA
 Usuários tentam burlar a moderação dividindo informações em várias mensagens:
@@ -99,6 +99,14 @@ SE DETECTAR ESTE PADRÃO = BLOQUEAR IMEDIATAMENTE E SINALIZAR
    - Instruções indiretas para contato externo
    - Username + números em mensagens separadas
 
+8. **IMAGENS com informações de contato**:
+   - Imagens contendo números de telefone
+   - Capturas de tela de perfis de redes sociais
+   - QR codes do WhatsApp ou outras redes
+   - Textos com informações de contato em imagens
+   - Cards de visita ou informações de contato
+   - Qualquer imagem que contenha @ (arroba) ou links
+
 🚨 CRITÉRIOS DE BLOQUEIO E SINALIZAÇÃO:
 - Seja ULTRA RIGOROSO
 - Na dúvida, BLOQUEIE
@@ -128,6 +136,36 @@ Responda APENAS em JSON:
   "flagged": true/false (true se detectar tentativa de burla grave que deve sinalizar o usuário)
 }`;
 
+    // Prepare message content based on whether we have text, image, or both
+    let userMessage: any;
+    
+    if (imageUrl) {
+      // If we have an image, use multimodal analysis
+      userMessage = {
+        role: 'user',
+        content: [
+          {
+            type: 'text',
+            text: content 
+              ? `Analise esta imagem e mensagem: "${content}"${contextMessages}\n\nIMPORTANTE: Verifique se a imagem contém informações de contato como telefones, usernames de redes sociais, QR codes, ou qualquer tentativa de compartilhar contatos.`
+              : `Analise esta imagem:${contextMessages}\n\nIMPORTANTE: Verifique se a imagem contém informações de contato como telefones, usernames de redes sociais, QR codes, ou qualquer tentativa de compartilhar contatos.`
+          },
+          {
+            type: 'image_url',
+            image_url: {
+              url: imageUrl
+            }
+          }
+        ]
+      };
+    } else {
+      // Text only
+      userMessage = {
+        role: 'user',
+        content: `Analise esta mensagem: "${content}"${contextMessages}`
+      };
+    }
+
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -138,7 +176,7 @@ Responda APENAS em JSON:
         model: 'google/gemini-2.5-flash',
         messages: [
           { role: 'system', content: systemPrompt },
-          { role: 'user', content: `Analise esta mensagem: "${content}"${contextMessages}` }
+          userMessage
         ],
         temperature: 0.2, // Lower temperature for more consistent detection
       }),

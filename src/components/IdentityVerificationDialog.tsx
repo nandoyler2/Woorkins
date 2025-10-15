@@ -30,6 +30,7 @@ export function IdentityVerificationDialog({
   const [combinedImage, setCombinedImage] = useState<File | null>(null);
   const [verificationResult, setVerificationResult] = useState<any>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [needsSecondPart, setNeedsSecondPart] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'front' | 'back' | 'combined') => {
     const file = e.target.files?.[0];
@@ -38,6 +39,10 @@ export function IdentityVerificationDialog({
     if (type === 'front') setFrontImage(file);
     else if (type === 'back') setBackImage(file);
     else setCombinedImage(file);
+  };
+
+  const handleContinueToSecondPart = () => {
+    setNeedsSecondPart(true);
   };
 
   const handleSubmit = async () => {
@@ -49,13 +54,18 @@ export function IdentityVerificationDialog({
       return;
     }
     
-    if (uploadOption === 'front' && !frontImage) {
-      toast.error('Por favor, envie a frente do documento');
-      return;
-    }
-    
-    if (uploadOption === 'back' && !backImage) {
-      toast.error('Por favor, envie o verso do documento');
+    // Para opções separadas, precisa ter ambas as partes
+    if ((uploadOption === 'front' || uploadOption === 'back') && (!frontImage || !backImage)) {
+      // Se tem só uma parte, pedir a outra
+      if (frontImage && !backImage) {
+        setNeedsSecondPart(true);
+        return;
+      }
+      if (backImage && !frontImage) {
+        setNeedsSecondPart(true);
+        return;
+      }
+      toast.error('Por favor, envie frente e verso do documento');
       return;
     }
     
@@ -263,11 +273,13 @@ export function IdentityVerificationDialog({
         <div className="text-center space-y-2">
           <h3 className="font-semibold text-lg">
             {uploadOption === 'combined' && 'Envie o documento completo'}
-            {uploadOption === 'front' && 'Envie a frente do documento'}
-            {uploadOption === 'back' && 'Envie o verso do documento'}
+            {uploadOption === 'front' && (needsSecondPart ? 'Agora envie o verso do documento' : 'Envie a frente do documento')}
+            {uploadOption === 'back' && (needsSecondPart ? 'Agora envie a frente do documento' : 'Envie o verso do documento')}
           </h3>
           <p className="text-sm text-muted-foreground">
-            Tire uma foto ou selecione uma imagem do seu RG ou CNH
+            {needsSecondPart 
+              ? 'Para completar a verificação, precisamos da outra parte do documento'
+              : 'Tire uma foto ou selecione uma imagem do seu RG ou CNH'}
           </p>
         </div>
 
@@ -288,7 +300,7 @@ export function IdentityVerificationDialog({
             </div>
           )}
 
-          {uploadOption === 'front' && (
+          {(uploadOption === 'front' || (uploadOption === 'back' && needsSecondPart)) && (
             <div>
               <label className="block mb-2 text-sm font-medium">Frente do Documento</label>
               <input
@@ -297,6 +309,7 @@ export function IdentityVerificationDialog({
                 capture="environment"
                 onChange={(e) => handleFileChange(e, 'front')}
                 className="w-full"
+                disabled={!!frontImage}
               />
               {frontImage && (
                 <p className="mt-2 text-sm text-green-600">✓ Arquivo selecionado: {frontImage.name}</p>
@@ -304,7 +317,7 @@ export function IdentityVerificationDialog({
             </div>
           )}
 
-          {uploadOption === 'back' && (
+          {(uploadOption === 'back' || (uploadOption === 'front' && needsSecondPart)) && (
             <div>
               <label className="block mb-2 text-sm font-medium">Verso do Documento</label>
               <input
@@ -313,6 +326,7 @@ export function IdentityVerificationDialog({
                 capture="environment"
                 onChange={(e) => handleFileChange(e, 'back')}
                 className="w-full"
+                disabled={!!backImage}
               />
               {backImage && (
                 <p className="mt-2 text-sm text-green-600">✓ Arquivo selecionado: {backImage.name}</p>
@@ -328,6 +342,7 @@ export function IdentityVerificationDialog({
                 setFrontImage(null);
                 setBackImage(null);
                 setCombinedImage(null);
+                setNeedsSecondPart(false);
               }}
               className="flex-1"
             >
@@ -337,12 +352,15 @@ export function IdentityVerificationDialog({
               onClick={handleSubmit}
               disabled={
                 (uploadOption === 'combined' && !combinedImage) ||
-                (uploadOption === 'front' && !frontImage) ||
-                (uploadOption === 'back' && !backImage)
+                ((uploadOption === 'front' || uploadOption === 'back') && (!frontImage || !backImage))
               }
               className="flex-1"
             >
-              Enviar e Verificar
+              {needsSecondPart && frontImage && backImage ? 'Enviar e Verificar' : 
+               uploadOption === 'combined' && combinedImage ? 'Enviar e Verificar' :
+               frontImage && !backImage ? 'Continuar para Verso' :
+               backImage && !frontImage ? 'Continuar para Frente' :
+               'Selecionar Arquivo'}
             </Button>
           </div>
         </div>

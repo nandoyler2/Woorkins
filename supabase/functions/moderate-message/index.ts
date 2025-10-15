@@ -155,23 +155,29 @@ SE DETECTAR ESTE PADRÃO = BLOQUEAR IMEDIATAMENTE E SINALIZAR
    - bit.ly, encurtadores
    - dominio.com, .com.br
 
-8. **IMAGENS com informações de contato - ANÁLISE RIGOROSA**:
-   - Imagens contendo QUALQUER número de telefone visível
-   - Capturas de tela de perfis de redes sociais
+8. **IMAGENS com informações de contato - ANÁLISE ULTRA RIGOROSA**:
+   - 🚨 PRIORIDADE MÁXIMA: Números de telefone em QUALQUER parte da imagem
+   - Números visíveis em fotos de pessoas, objetos, telas, documentos
+   - Números em textos sobrepostos (como: "11 99612083" ou "11992612083")
+   - Mesmo se o número estiver discretamente posicionado
+   - Mesmo se o número aparecer em contexto aparentemente inocente (ex: em uma foto de aperto de mãos)
+   - Capturas de tela de conversas ou perfis
    - QR codes do WhatsApp ou outras redes
-   - Textos com informações de contato em imagens
    - Cards de visita ou informações de contato
    - Qualquer imagem que contenha @ (arroba) ou links
-   - Números de telefone em QUALQUER parte da imagem (até em segundo plano)
    - Informações de contato em cartões, documentos, telas de celular
+   - **ESCANEAR TODA A IMAGEM**: Procure atentamente por sequências de 8-11 dígitos em TODAS as áreas da imagem
+   - **FORMATOS VARIADOS**: (11) 99999-9999, 11 99999-9999, 11999999999, etc.
 
 🚨 CRITÉRIOS DE BLOQUEIO E SINALIZAÇÃO:
 - Seja EXTREMAMENTE RIGOROSO com @handles, emails e imagens com contatos.
 - BLOQUEAR IMEDIATAMENTE:
   * QUALQUER @ seguido de texto (ex: @nandoyler)
   * Partes de email (gmail, hotmail, ponto com, arroba)
-  * Sequência de 8-11 dígitos consecutivos
-  * Imagens com números de telefone visíveis
+  * Sequência de 8-11 dígitos consecutivos NO TEXTO
+  * 🔥 IMAGENS: QUALQUER sequência de 8-11 dígitos visível na imagem (mesmo em fotos normais)
+  * 🔥 IMAGENS: Números de telefone com DDD brasileiro (11, 21, 81, 85, etc.) seguidos de 8-9 dígitos
+  * 🔥 IMAGENS: Mesmo números parcialmente visíveis ou em segundo plano
   * Menção a PIX + intenção de compartilhar
   * E-mail, URL, @handle, menção explícita a apps
 
@@ -203,8 +209,8 @@ Responda APENAS em JSON:
           {
             type: 'text',
             text: content 
-              ? `Analise esta imagem e mensagem: "${content}"${contextMessages}\n\nIMPORTANTE: Verifique se a imagem contém informações de contato como telefones, usernames de redes sociais, QR codes, ou qualquer tentativa de compartilhar contatos.`
-              : `Analise esta imagem:${contextMessages}\n\nIMPORTANTE: Verifique se a imagem contém informações de contato como telefones, usernames de redes sociais, QR codes, ou qualquer tentativa de compartilhar contatos.`
+              ? `Analise esta imagem e mensagem: "${content}"${contextMessages}\n\n🔍 ANÁLISE CRÍTICA DE IMAGEM - PROCURE ATENTAMENTE:\n- ESCANEAR TODA A IMAGEM procurando números de telefone (8-11 dígitos)\n- Números com DDD brasileiro: (11) 9XXXX-XXXX, 11 9XXXXXXXX, etc.\n- Números em qualquer formato ou localização na imagem\n- Mesmo em fotos que parecem normais (pessoas, objetos, documentos)\n- @usernames, emails, QR codes, links visíveis\n- Qualquer tentativa de compartilhar contatos`
+              : `Analise esta imagem:${contextMessages}\n\n🔍 ANÁLISE CRÍTICA DE IMAGEM - PROCURE ATENTAMENTE:\n- ESCANEAR TODA A IMAGEM procurando números de telefone (8-11 dígitos)\n- Números com DDD brasileiro: (11) 9XXXX-XXXX, 11 9XXXXXXXX, etc.\n- Números em qualquer formato ou localização na imagem\n- Mesmo em fotos que parecem normais (pessoas, objetos, documentos)\n- @usernames, emails, QR codes, links visíveis\n- Qualquer tentativa de compartilhar contatos`
           },
           {
             type: 'image_url',

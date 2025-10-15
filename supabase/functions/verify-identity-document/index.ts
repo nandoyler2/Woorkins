@@ -18,7 +18,8 @@ serve(async (req) => {
       selfieBase64,
       profileId,
       registeredName,
-      registeredCPF 
+      registeredCPF,
+      currentProfilePhotoUrl
     } = await req.json();
 
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
@@ -285,6 +286,98 @@ RESPONDA EM JSON:
     const faceResult = await faceComparison.json();
     const faceData = JSON.parse(faceResult.choices[0].message.content);
 
+    // Validação adicional: comparar foto de perfil com selfie verificada
+    let profilePhotoValidation: any = null;
+    
+    if (currentProfilePhotoUrl) {
+      console.log('Validating profile photo against verified selfie...');
+      const profilePhotoComparison = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'google/gemini-2.5-flash',
+          messages: [
+            {
+              role: 'user',
+              content: [
+                {
+                  type: 'text',
+                  text: `VALIDAÇÃO DE FOTO DE PERFIL
+
+Compare a foto de perfil atual do usuário com a selfie verificada tirada ao vivo durante a verificação de identidade.
+
+ANÁLISE OBRIGATÓRIA:
+1. CORRESPONDÊNCIA FACIAL:
+   - A foto de perfil é da mesma pessoa da selfie verificada?
+   - Características faciais principais coincidem?
+   - Idade aparente é compatível?
+
+2. AUTENTICIDADE DA FOTO DE PERFIL:
+   - É uma foto real da pessoa ou pode ser de outra pessoa?
+   - Há sinais de que seja uma foto de celebridade, modelo ou pessoa famosa?
+   - Há sinais de manipulação, filtros excessivos ou edição pesada?
+   - É uma foto gerada por IA ou deepfake?
+
+3. VALIDAÇÃO:
+   - Confiança na correspondência (0-100%)
+   - É a mesma pessoa?
+   - A foto de perfil é real e autêntica?
+
+IMAGENS:
+- Primeira imagem: Foto de perfil atual
+- Segunda imagem: Selfie verificada (ao vivo)
+
+RESPONDA EM JSON:
+{
+  "faceMatch": {
+    "isSamePerson": true/false,
+    "confidence": 0-100,
+    "details": "explicação detalhada da comparação"
+  },
+  "profilePhotoAuthenticity": {
+    "isRealPhoto": true/false,
+    "isCelebrityOrModel": true/false,
+    "isHeavilyEdited": true/false,
+    "isAIGenerated": true/false,
+    "details": "explicação sobre a autenticidade"
+  },
+  "validation": {
+    "approved": true/false,
+    "reason": "motivo da aprovação ou rejeição"
+  }
+}`
+                },
+                {
+                  type: 'image_url',
+                  image_url: {
+                    url: currentProfilePhotoUrl
+                  }
+                },
+                {
+                  type: 'image_url',
+                  image_url: {
+                    url: selfieBase64
+                  }
+                }
+              ]
+            }
+          ],
+          temperature: 0.1,
+          response_format: { type: "json_object" }
+        })
+      });
+
+      if (profilePhotoComparison.ok) {
+        const profilePhotoResult = await profilePhotoComparison.json();
+        profilePhotoValidation = JSON.parse(profilePhotoResult.choices[0].message.content);
+      } else {
+        console.error('Profile photo validation failed:', await profilePhotoComparison.text());
+      }
+    }
+
     // Validações finais
     const extractedName = frontData.extractedData?.fullName || '';
     const extractedCPF = frontData.extractedData?.cpf || '';
@@ -343,6 +436,15 @@ RESPONDA EM JSON:
     if (!nameMatches) {
       rejectionReasons.push(`Nome do documento (${extractedName}) não corresponde ao nome cadastrado (${registeredName})`);
     }
+    if (profilePhotoValidation && !profilePhotoValidation.validation?.approved) {
+      rejectionReasons.push(`Foto de perfil não corresponde à pessoa verificada: ${profilePhotoValidation.validation?.reason || 'Foto de perfil não é da mesma pessoa'}`);
+    }
+    if (profilePhotoValidation?.profilePhotoAuthenticity?.isCelebrityOrModel) {
+      rejectionReasons.push('Foto de perfil parece ser de uma celebridade ou modelo, não da pessoa real');
+    }
+    if (profilePhotoValidation?.profilePhotoAuthenticity?.isAIGenerated) {
+      rejectionReasons.push('Foto de perfil parece ser gerada por IA');
+    }
 
     // Se passou em todas as validações
     if (rejectionReasons.length === 0) {
@@ -370,9 +472,11 @@ RESPONDA EM JSON:
       analysis: {
         front: frontData,
         back: backData,
-        face: faceData
+        face: faceData,
+        profilePhoto: profilePhotoValidation
       },
-      rejectionReasons: rejectionReasons.length > 0 ? rejectionReasons : null
+      rejectionReasons: rejectionReasons.length > 0 ? rejectionReasons : null,
+      requiresProfilePhotoChange: profilePhotoValidation && !profilePhotoValidation.validation?.approved
     };
 
     // Se aprovado e nome era parcial, atualizar perfil com nome completo e data de nascimento

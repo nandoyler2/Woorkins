@@ -107,6 +107,15 @@ export function IdentityVerificationDialog({
       const userId = (await supabase.auth.getUser()).data.user?.id;
       if (!userId) throw new Error('User not authenticated');
 
+      // Get current profile photo URL
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('avatar_url')
+        .eq('id', profileId)
+        .single();
+
+      const currentProfilePhotoUrl = profileData?.avatar_url || null;
+
       const timestamp = Date.now();
       
       const frontBlob = await fetch(front).then(r => r.blob());
@@ -150,7 +159,8 @@ export function IdentityVerificationDialog({
           selfieBase64: selfie,
           profileId,
           registeredName,
-          registeredCPF
+          registeredCPF,
+          currentProfilePhotoUrl
         }
       });
 
@@ -327,6 +337,17 @@ export function IdentityVerificationDialog({
                     <li key={i}>{reason}</li>
                   ))}
                 </ul>
+                
+                {verificationResult.requiresProfilePhotoChange && (
+                  <div className="bg-amber-50 border border-amber-200 p-3 rounded-lg mt-3">
+                    <p className="text-sm font-semibold text-amber-800 mb-1">⚠️ Ação Necessária:</p>
+                    <p className="text-sm text-amber-700">
+                      Sua foto de perfil não corresponde à sua identidade verificada. 
+                      Por favor, altere sua foto de perfil para uma foto real sua antes de tentar novamente.
+                    </p>
+                  </div>
+                )}
+
                 <Button 
                   onClick={() => {
                     setStep('intro');

@@ -271,7 +271,7 @@ export default function Account() {
                         setSupportChatOpen(true);
                       }
                     }}
-                    disabled={!!profile.cpf}
+                    readOnly={!!profile.cpf}
                     className={profile.cpf ? 'bg-muted cursor-pointer' : ''}
                     placeholder="Seu nome completo"
                   />
@@ -328,7 +328,7 @@ export default function Account() {
                         setSupportChatOpen(true);
                       }
                     }}
-                    disabled={!!profile.cpf}
+                    readOnly={!!profile.cpf}
                     className={profile.cpf ? 'bg-muted cursor-pointer' : ''}
                     placeholder="000.000.000-00"
                   />

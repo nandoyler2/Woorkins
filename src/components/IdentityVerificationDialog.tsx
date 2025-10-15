@@ -98,8 +98,6 @@ export function IdentityVerificationDialog({
 
       if (!data.isValid) {
         toast.error(`Documento inválido: ${data.issues.join(', ')}`);
-      } else {
-        toast.success(`✓ ${type === 'front' ? 'Frente' : type === 'back' ? 'Verso' : 'Documento'} validado!`);
       }
     } catch (error) {
       console.error('Pre-validation error:', error);

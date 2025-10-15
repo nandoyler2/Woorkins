@@ -465,11 +465,13 @@ useEffect(() => {
   // }
 
   // Check if chat should be locked (proposal not unlocked, user is freelancer, and no messages yet)
+  // Só bloqueia se realmente não há mensagens E já terminou de carregar
   const isChatLocked = conversationType === 'proposal' && 
     !isOwner && 
     !proposalData?.is_unlocked &&
     proposalData?.status === 'pending' &&
-    messages.length === 0;
+    messages.length === 0 &&
+    !_isLoading; // Só mostra bloqueio se já terminou de carregar
 
   const checkCanDelete = async () => {
     // Verificar se há proposta aceita

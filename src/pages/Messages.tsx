@@ -467,8 +467,15 @@ export default function Messages() {
                   {filteredConversations.map((conv) => (
                     <button
                       key={`${conv.type}-${conv.id}`}
+                      type="button"
                       onClick={async () => {
                         setSelectedConversation(conv);
+                        // Persist selection in URL (no full reload)
+                        const params = new URLSearchParams(location.search);
+                        params.set('type', conv.type);
+                        params.set('id', conv.id);
+                        window.history.replaceState(null, '', `/mensagens?${params.toString()}`);
+
                         // Zero local badge immediately
                         setConversations(prev => prev.map(c => c.id === conv.id && c.type === conv.type ? { ...c, unreadCount: 0 } : c));
 
@@ -479,9 +486,8 @@ export default function Messages() {
                           .update({ status: 'read', read_at: new Date().toISOString() })
                           .eq(idColumn, conv.id)
                           .neq('sender_id', profileId)
-                          .is('read_at', null);
+                          .in('status', ['sent','delivered']);
 
-                        // Persist read state (aggregated)
                         await supabase
                           .from('message_unread_counts')
                           .upsert(

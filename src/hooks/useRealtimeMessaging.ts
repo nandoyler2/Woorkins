@@ -153,21 +153,28 @@ export const useRealtimeMessaging = ({
   const loadMessages = useCallback(async () => {
     try {
       const table = conversationType === 'negotiation' ? 'negotiation_messages' : 'proposal_messages';
-      const { data, error } = await (supabase.from(table) as any)
-        .select('*')
-        .eq(conversationType === 'negotiation' ? 'negotiation_id' : 'proposal_id', conversationId)
-        .order('created_at', { ascending: true });
-
-      if (error) throw error;
-
-      // Fetch sender details for all messages
-      const messagesWithSenders = await Promise.all((data || []).map(async (msg: any) => {
-        const { data: sender } = await supabase
+      
+      // Buscar mensagens e perfis em paralelo para ser mais rápido
+      const [messagesResult, profilesResult] = await Promise.all([
+        (supabase.from(table) as any)
+          .select('*')
+          .eq(conversationType === 'negotiation' ? 'negotiation_id' : 'proposal_id', conversationId)
+          .order('created_at', { ascending: true }),
+        supabase
           .from('profiles')
-          .select('full_name, avatar_url')
-          .eq('id', msg.sender_id)
-          .single();
+          .select('id, full_name, avatar_url')
+      ]);
 
+      if (messagesResult.error) throw messagesResult.error;
+
+      // Criar um mapa de perfis para acesso rápido
+      const profilesMap = new Map(
+        (profilesResult.data || []).map(p => [p.id, p])
+      );
+
+      // Mapear mensagens com dados de perfil
+      const messagesWithSenders = (messagesResult.data || []).map((msg: any) => {
+        const sender = profilesMap.get(msg.sender_id);
         return {
           id: msg.id,
           sender_id: msg.sender_id,
@@ -182,7 +189,7 @@ export const useRealtimeMessaging = ({
           media_name: msg.media_name,
           is_deleted: msg.is_deleted || false,
         };
-      }));
+      });
 
       setMessages(messagesWithSenders);
       

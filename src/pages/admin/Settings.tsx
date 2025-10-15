@@ -212,6 +212,7 @@ export default function AdminSettings() {
                   <p className="font-medium">Plano Grátis ({commissions.free}%)</p>
                   <p>Comissão Woorkins: R$ {(1000 * commissions.free / 100).toFixed(2)}</p>
                   <p>Taxa Stripe: R$ {(1000 * 0.029 + 0.30).toFixed(2)}</p>
+                  <p className="text-blue-600">Lucro Woorkins: R$ {(1000 * commissions.free / 100 - (1000 * 0.029 + 0.30)).toFixed(2)}</p>
                   <p className="font-semibold">Total taxas: R$ {(1000 * commissions.free / 100 + 1000 * 0.029 + 0.30).toFixed(2)}</p>
                   <p className="text-green-600">Freelancer recebe: R$ {(1000 - (1000 * commissions.free / 100 + 1000 * 0.029 + 0.30)).toFixed(2)}</p>
                 </div>
@@ -219,6 +220,7 @@ export default function AdminSettings() {
                   <p className="font-medium">Plano Pro ({commissions.pro}%)</p>
                   <p>Comissão Woorkins: R$ {(1000 * commissions.pro / 100).toFixed(2)}</p>
                   <p>Taxa Stripe: R$ {(1000 * 0.029 + 0.30).toFixed(2)}</p>
+                  <p className="text-blue-600">Lucro Woorkins: R$ {(1000 * commissions.pro / 100 - (1000 * 0.029 + 0.30)).toFixed(2)}</p>
                   <p className="font-semibold">Total taxas: R$ {(1000 * commissions.pro / 100 + 1000 * 0.029 + 0.30).toFixed(2)}</p>
                   <p className="text-green-600">Freelancer recebe: R$ {(1000 - (1000 * commissions.pro / 100 + 1000 * 0.029 + 0.30)).toFixed(2)}</p>
                 </div>
@@ -226,6 +228,7 @@ export default function AdminSettings() {
                   <p className="font-medium">Plano Premium ({commissions.premium}%)</p>
                   <p>Comissão Woorkins: R$ {(1000 * commissions.premium / 100).toFixed(2)}</p>
                   <p>Taxa Stripe: R$ {(1000 * 0.029 + 0.30).toFixed(2)}</p>
+                  <p className="text-blue-600">Lucro Woorkins: R$ {(1000 * commissions.premium / 100 - (1000 * 0.029 + 0.30)).toFixed(2)}</p>
                   <p className="font-semibold">Total taxas: R$ {(1000 * commissions.premium / 100 + 1000 * 0.029 + 0.30).toFixed(2)}</p>
                   <p className="text-green-600">Freelancer recebe: R$ {(1000 - (1000 * commissions.premium / 100 + 1000 * 0.029 + 0.30)).toFixed(2)}</p>
                 </div>
@@ -238,6 +241,7 @@ export default function AdminSettings() {
                     <p className="font-medium">Plano Grátis ({commissions.free}%)</p>
                     <p>Comissão Woorkins: R$ {(1000 * commissions.free / 100).toFixed(2)}</p>
                     <p>Taxa Mercado Pago: R$ {(1000 * 0.0498).toFixed(2)}</p>
+                    <p className="text-blue-600">Lucro Woorkins: R$ {(1000 * commissions.free / 100 - 1000 * 0.0498).toFixed(2)}</p>
                     <p className="font-semibold">Total taxas: R$ {(1000 * commissions.free / 100 + 1000 * 0.0498).toFixed(2)}</p>
                     <p className="text-green-600">Freelancer recebe: R$ {(1000 - (1000 * commissions.free / 100 + 1000 * 0.0498)).toFixed(2)}</p>
                   </div>
@@ -245,6 +249,7 @@ export default function AdminSettings() {
                     <p className="font-medium">Plano Pro ({commissions.pro}%)</p>
                     <p>Comissão Woorkins: R$ {(1000 * commissions.pro / 100).toFixed(2)}</p>
                     <p>Taxa Mercado Pago: R$ {(1000 * 0.0498).toFixed(2)}</p>
+                    <p className="text-blue-600">Lucro Woorkins: R$ {(1000 * commissions.pro / 100 - 1000 * 0.0498).toFixed(2)}</p>
                     <p className="font-semibold">Total taxas: R$ {(1000 * commissions.pro / 100 + 1000 * 0.0498).toFixed(2)}</p>
                     <p className="text-green-600">Freelancer recebe: R$ {(1000 - (1000 * commissions.pro / 100 + 1000 * 0.0498)).toFixed(2)}</p>
                   </div>
@@ -252,6 +257,7 @@ export default function AdminSettings() {
                     <p className="font-medium">Plano Premium ({commissions.premium}%)</p>
                     <p>Comissão Woorkins: R$ {(1000 * commissions.premium / 100).toFixed(2)}</p>
                     <p>Taxa Mercado Pago: R$ {(1000 * 0.0498).toFixed(2)}</p>
+                    <p className="text-blue-600">Lucro Woorkins: R$ {(1000 * commissions.premium / 100 - 1000 * 0.0498).toFixed(2)}</p>
                     <p className="font-semibold">Total taxas: R$ {(1000 * commissions.premium / 100 + 1000 * 0.0498).toFixed(2)}</p>
                     <p className="text-green-600">Freelancer recebe: R$ {(1000 - (1000 * commissions.premium / 100 + 1000 * 0.0498)).toFixed(2)}</p>
                   </div>
@@ -263,6 +269,7 @@ export default function AdminSettings() {
                     <p className="font-medium">Plano Grátis ({commissions.free}%)</p>
                     <p>Comissão Woorkins: R$ {(1000 * commissions.free / 100).toFixed(2)}</p>
                     <p>Taxa Mercado Pago: R$ {(1000 * 0.0099).toFixed(2)}</p>
+                    <p className="text-blue-600">Lucro Woorkins: R$ {(1000 * commissions.free / 100 - 1000 * 0.0099).toFixed(2)}</p>
                     <p className="font-semibold">Total taxas: R$ {(1000 * commissions.free / 100 + 1000 * 0.0099).toFixed(2)}</p>
                     <p className="text-green-600">Freelancer recebe: R$ {(1000 - (1000 * commissions.free / 100 + 1000 * 0.0099)).toFixed(2)}</p>
                   </div>
@@ -270,6 +277,7 @@ export default function AdminSettings() {
                     <p className="font-medium">Plano Pro ({commissions.pro}%)</p>
                     <p>Comissão Woorkins: R$ {(1000 * commissions.pro / 100).toFixed(2)}</p>
                     <p>Taxa Mercado Pago: R$ {(1000 * 0.0099).toFixed(2)}</p>
+                    <p className="text-blue-600">Lucro Woorkins: R$ {(1000 * commissions.pro / 100 - 1000 * 0.0099).toFixed(2)}</p>
                     <p className="font-semibold">Total taxas: R$ {(1000 * commissions.pro / 100 + 1000 * 0.0099).toFixed(2)}</p>
                     <p className="text-green-600">Freelancer recebe: R$ {(1000 - (1000 * commissions.pro / 100 + 1000 * 0.0099)).toFixed(2)}</p>
                   </div>
@@ -277,6 +285,7 @@ export default function AdminSettings() {
                     <p className="font-medium">Plano Premium ({commissions.premium}%)</p>
                     <p>Comissão Woorkins: R$ {(1000 * commissions.premium / 100).toFixed(2)}</p>
                     <p>Taxa Mercado Pago: R$ {(1000 * 0.0099).toFixed(2)}</p>
+                    <p className="text-blue-600">Lucro Woorkins: R$ {(1000 * commissions.premium / 100 - 1000 * 0.0099).toFixed(2)}</p>
                     <p className="font-semibold">Total taxas: R$ {(1000 * commissions.premium / 100 + 1000 * 0.0099).toFixed(2)}</p>
                     <p className="text-green-600">Freelancer recebe: R$ {(1000 - (1000 * commissions.premium / 100 + 1000 * 0.0099)).toFixed(2)}</p>
                   </div>

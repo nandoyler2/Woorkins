@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Camera, Upload, CheckCircle, XCircle, AlertCircle, FileText, MessageCircle } from 'lucide-react';
@@ -43,6 +43,7 @@ export function IdentityVerificationDialog({
   const [isValidating, setIsValidating] = useState(false);
   const [canCapture, setCanCapture] = useState(false);
   const [showManualSubmission, setShowManualSubmission] = useState(false);
+  const [manualFallbackVisible, setManualFallbackVisible] = useState(false);
   const [showSupportChat, setShowSupportChat] = useState(false);
   
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -53,6 +54,7 @@ export function IdentityVerificationDialog({
   const startCamera = async () => {
     try {
       console.log('Tentando ativar câmera...');
+      setManualFallbackVisible(false);
       
       // Check if getUserMedia is available
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -121,8 +123,8 @@ export function IdentityVerificationDialog({
         variant: 'destructive'
       });
       
-      // Mostrar opção de upload manual
-      setShowManualSubmission(true);
+      // Habilitar opção de upload manual (sem abrir automaticamente)
+      setManualFallbackVisible(true);
     }
   };
 
@@ -190,6 +192,48 @@ export function IdentityVerificationDialog({
       setIsValidating(false);
     }
   };
+
+  // Garantir câmera ativa nas etapas e reanexar stream ao trocar de etapa
+  useEffect(() => {
+    const isLiveStep = step === 'front' || step === 'back' || step === 'selfie';
+
+    // Limpa qualquer validação anterior ao mudar de etapa
+    if (validationIntervalRef.current) {
+      clearInterval(validationIntervalRef.current);
+      validationIntervalRef.current = null;
+    }
+
+    if (isLiveStep) {
+      // Se já existe stream, reanexar ao novo elemento de vídeo
+      if (streamRef.current && videoRef.current) {
+        (videoRef.current as any).srcObject = streamRef.current;
+        videoRef.current.onloadedmetadata = () => {
+          videoRef.current?.play()
+            .then(() => setIsCameraActive(true))
+            .catch(() => setIsCameraActive(true));
+        };
+      } else {
+        // Se não há stream, tentar iniciar a câmera
+        startCamera();
+      }
+
+      // Reiniciar feedback e validação contínua
+      setRealtimeValidation(null);
+      setCanCapture(false);
+
+      const interval = window.setInterval(() => {
+        validateDocumentRealtime();
+      }, 2000);
+      validationIntervalRef.current = interval as any;
+    }
+
+    return () => {
+      if (validationIntervalRef.current) {
+        clearInterval(validationIntervalRef.current);
+        validationIntervalRef.current = null;
+      }
+    };
+  }, [step]);
 
   const capturePhoto = () => {
     if (!videoRef.current) return null;
@@ -456,14 +500,16 @@ export function IdentityVerificationDialog({
                     <Camera className="mr-2 h-5 w-5" />
                     Ativar Câmera
                   </Button>
-                  <Button 
-                    onClick={() => setShowManualSubmission(true)} 
-                    variant="outline"
-                    size="sm"
-                  >
-                    <Upload className="mr-2 h-4 w-4" />
-                    Enviar documentos em anexo
-                  </Button>
+                  {manualFallbackVisible && (
+                    <Button 
+                      onClick={() => setShowManualSubmission(true)} 
+                      variant="outline"
+                      size="sm"
+                    >
+                      <Upload className="mr-2 h-4 w-4" />
+                      Enviar documentos em anexo
+                    </Button>
+                  )}
                 </div>
               )}
 

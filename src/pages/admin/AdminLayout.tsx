@@ -7,7 +7,9 @@ import {
   Settings, 
   Shield,
   Home,
-  CreditCard
+  CreditCard,
+  FileCheck,
+  MessageCircle
 } from 'lucide-react';
 import {
   Sidebar,
@@ -31,6 +33,8 @@ const adminMenuItems = [
   { title: "Negócios", url: "/admin/businesses", icon: Briefcase },
   { title: "Analytics", url: "/admin/analytics", icon: BarChart3 },
   { title: "Gateway de Pagamento", url: "/admin/payment-gateway", icon: CreditCard },
+  { title: "Verificação de Documentos", url: "/admin/document-verifications", icon: FileCheck },
+  { title: "Suporte", url: "/admin/support", icon: MessageCircle },
   { title: "Configurações", url: "/admin/settings", icon: Settings },
 ];
 

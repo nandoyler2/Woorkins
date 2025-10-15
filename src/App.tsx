@@ -32,6 +32,8 @@ import AdminBusinesses from "./pages/admin/Businesses";
 import AdminAnalytics from "./pages/admin/Analytics";
 import AdminSettings from "./pages/admin/Settings";
 import AdminPaymentGateway from "./pages/admin/PaymentGateway";
+import AdminDocumentVerifications from "./pages/admin/DocumentVerifications";
+import AdminSupport from "./pages/admin/Support";
 import Account from "./pages/Account";
 import Financeiro from "./pages/Financeiro";
 import Woorkoins from "./pages/Woorkoins";
@@ -98,6 +100,8 @@ function AppContent() {
           <Route path="analytics" element={<AdminAnalytics />} />
           <Route path="settings" element={<AdminSettings />} />
           <Route path="payment-gateway" element={<AdminPaymentGateway />} />
+          <Route path="document-verifications" element={<AdminDocumentVerifications />} />
+          <Route path="support" element={<AdminSupport />} />
         </Route>
         <Route path="/:slug" element={<BusinessProfile />} />
         <Route path="*" element={<NotFound />} />

@@ -78,7 +78,18 @@ export const AIAssistant = () => {
           .gte('created_at', oneDayAgo.toISOString())
           .limit(1);
 
-        const hasBlock = !!(recentBlocks && recentBlocks.length > 0) || !!systemBlock || !!messagingBlock;
+        // Verificar bloqueios de moderação
+        const { data: moderationViolation } = await supabase
+          .from('moderation_violations')
+          .select('*')
+          .eq('profile_id', profile.id)
+          .maybeSingle();
+
+        const hasModeratedBlock = moderationViolation?.blocked_until 
+          ? new Date(moderationViolation.blocked_until) > new Date()
+          : false;
+
+        const hasBlock = !!(recentBlocks && recentBlocks.length > 0) || !!systemBlock || !!messagingBlock || hasModeratedBlock;
         setHasRecentBlock(hasBlock);
 
         // Carregar conversas anteriores

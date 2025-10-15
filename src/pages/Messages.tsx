@@ -126,8 +126,13 @@ export default function Messages() {
     if (type && id && conversations.length > 0) {
       const match = conversations.find(c => c.id === id && c.type === type);
       if (match) setSelectedConversation(match);
+      return;
     }
-  }, [location.search, conversations]);
+    // Auto-seleciona a conversa mais recente quando não há nenhuma selecionada
+    if (!selectedConversation && conversations.length > 0) {
+      setSelectedConversation(conversations[0]);
+    }
+  }, [location.search, conversations, selectedConversation]);
 
   const loadProfile = async () => {
     try {

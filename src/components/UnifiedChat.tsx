@@ -133,7 +133,7 @@ export function UnifiedChat({
   const finalBlockReason = systemMessagingBlock?.reason || blockReason;
 
   useEffect(() => {
-    // Always scroll to bottom on new messages or when switching convo
+    // Sempre rolar para o final ao carregar mensagens ou trocar de conversa
     const scrollToBottom = (smooth: boolean) => {
       requestAnimationFrame(() => {
         const el = messagesContainerRef.current;
@@ -147,10 +147,25 @@ export function UnifiedChat({
 
     scrollToBottom(true);
 
-    // Mark messages as read when opening the chat
+    // Garantir rolagem após carregamento de imagens e próximo tick
+    const el = messagesContainerRef.current;
+    const handleImgLoad = () => scrollToBottom(false);
+    const timeoutId = window.setTimeout(() => scrollToBottom(false), 120);
+
+    const imgs = el ? Array.from(el.querySelectorAll('img')) : [];
+    imgs.forEach(img => {
+      if (!img.complete) img.addEventListener('load', handleImgLoad);
+    });
+
+    // Marcar mensagens como lidas ao abrir o chat
     if (messages.length > 0 && profileId) {
       markMessagesAsRead();
     }
+
+    return () => {
+      imgs.forEach(img => img.removeEventListener('load', handleImgLoad));
+      window.clearTimeout(timeoutId);
+    };
   }, [messages, conversationId, profileId]);
 
   const markMessagesAsRead = async () => {

@@ -110,6 +110,7 @@ export function IdentityVerificationDialog({
           profile_id: profileId,
           document_front_url: frontUrl,
           document_back_url: backUrl,
+          selfie_url: null,
           verification_status: data.status,
           verification_result: data,
           ai_analysis: data.aiAnalysis,

@@ -29,6 +29,33 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Helpers to detect explicit contact indicators in the CURRENT message only
+    const textContent: string = typeof content === 'string' ? content : '';
+
+    const hasContactIndicators = (t: string): boolean => {
+      const tLow = (t || '').toLowerCase();
+      // URLs
+      if (/(https?:\/\/|www\.)/i.test(tLow)) return true;
+      // Emails
+      if (/\b[\w.+-]+@[\w.-]+\.[a-z]{2,}\b/i.test(tLow)) return true;
+      // @handles
+      if (/@[a-z0-9._]{3,}/i.test(tLow)) return true;
+      // Messaging/social app keywords
+      if (/\b(whats(app)?|zap|wpp|telegram|tg|signal|discord|messenger|skype|instagram|insta|ig|facebook|fb|tiktok|linkedin|tt|twitter|x)\b/i.test(tLow)) return true;
+      // Phone-like digit sequences (8-12 digits when removing separators)
+      const onlyDigits = tLow.replace(/\D/g, '');
+      if (onlyDigits.length >= 8 && onlyDigits.length <= 12) return true;
+      return false;
+    };
+
+    // If there's no image and the current message has NO explicit indicators, approve immediately
+    if (!imageUrl && !hasContactIndicators(textContent)) {
+      return new Response(
+        JSON.stringify({ approved: true, flagged: false }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+      );
+    }
+
     // Prepare context from recent messages if available
     const contextMessages = recentMessages.length > 0 
       ? `\n\nMENSAGENS RECENTES DO MESMO USUÁRIO (para detectar tentativas de burla em múltiplas mensagens):\n${recentMessages.map((m: any, i: number) => `${i + 1}. "${m}"`).join('\n')}`
@@ -108,20 +135,16 @@ SE DETECTAR ESTE PADRÃO = BLOQUEAR IMEDIATAMENTE E SINALIZAR
    - Qualquer imagem que contenha @ (arroba) ou links
 
 🚨 CRITÉRIOS DE BLOQUEIO E SINALIZAÇÃO:
-- Seja ULTRA RIGOROSO
-- Na dúvida, BLOQUEIE
-- Qualquer menção de rede social ou app de mensagem = BLOQUEAR + SINALIZAR
-- Sequência de números que pareça telefone = BLOQUEAR + SINALIZAR
-- Username suspeito + números nas mensagens recentes = BLOQUEAR + SINALIZAR
-- Referência a contato externo = BLOQUEAR + SINALIZAR
-- Múltiplas mensagens curtas com números = COMPORTAMENTO SUSPEITO = SINALIZAR
+- Seja RIGOROSO, porém NÃO bloqueie mensagens neutras.
+- Na dúvida, APROVE e apenas marque "flagged": true se achar suspeito.
+- BLOQUEAR somente quando houver INDÍCIO CLARO E ACIONÁVEL NA MENSAGEM ATUAL ou quando a MENSAGEM ATUAL traz parte essencial (dígitos/handle/link) que completa, junto das mensagens recentes, um contato externo.
+- Exemplos para BLOQUEAR: número de telefone (8-12 dígitos), e-mail, URL, @handle, menção explícita a apps com instrução de contato.
+- Sequência de dígitos que pareça telefone = BLOQUEAR + SINALIZAR.
+- Username suspeito + números NAS MENSAGENS ATUAIS/RECENTES (e a mensagem atual possui parte do padrão) = BLOQUEAR + SINALIZAR.
 
 ✅ PERMITIDO (não bloquear):
+- Palavras genéricas sem detalhes de contato (ex.: "número", "numero", "rede social", "contato", "whatsapp" sem número/handle/link).
 - "3 projetos", "5 dias", "10 horas"
-- "R$ 500", "100 reais"
-- "versão 18", "Node.js 16"
-- "item 1", "opção 2"
-- Conversas normais sobre trabalho
 
 📋 IMPORTANTE: SEMPRE forneça um motivo ESPECÍFICO e CLARO quando bloquear:
 - Diga exatamente O QUE foi detectado (ex: "tentativa de compartilhar número de telefone", "menção ao WhatsApp", "username de rede social")

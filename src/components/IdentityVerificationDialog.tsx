@@ -559,6 +559,18 @@ export function IdentityVerificationDialog({
                     Capturar Mesmo Assim
                   </Button>
                 )}
+                <Button 
+                  onClick={() => {
+                    stopCamera();
+                    setShowManualSubmission(true);
+                  }} 
+                  className="w-full" 
+                  size="sm"
+                  variant="ghost"
+                >
+                  <Upload className="mr-2 h-4 w-4" />
+                  Enviar documentos em anexo
+                </Button>
               </div>
             )}
           </div>

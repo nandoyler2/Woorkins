@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Bell, MessageSquare, FileText, UserPlus, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ToastAction } from '@/components/ui/toast';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -50,10 +51,18 @@ export const NotificationBell = ({ profileId }: { profileId: string }) => {
           setNotifications(prev => [newNotification, ...prev]);
           setUnreadCount(prev => prev + 1);
           
-          // Show toast for new notification
+          // Show toast for new notification with click action
           toast({
             title: newNotification.title,
             description: newNotification.message,
+            action: newNotification.link ? (
+              <ToastAction 
+                altText="Ver notificação" 
+                onClick={() => navigate(newNotification.link!)}
+              >
+                Ver
+              </ToastAction>
+            ) : undefined,
           });
         }
       )

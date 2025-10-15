@@ -1,38 +1,99 @@
-import { useState } from 'react';
-import { MessageCircle, X, Send } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { MessageCircle, X, Send, HelpCircle, Shield, Coins, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Message {
   role: 'user' | 'assistant';
   content: string;
 }
 
+const helpTopics = [
+  {
+    icon: HelpCircle,
+    title: 'Como funciona a plataforma',
+    message: 'Olá! Gostaria de entender melhor como funciona a Woorkins.'
+  },
+  {
+    icon: Shield,
+    title: 'Problemas com bloqueio',
+    message: 'Fui bloqueado e gostaria de entender o motivo.'
+  },
+  {
+    icon: Coins,
+    title: 'Questões sobre Woorkoins',
+    message: 'Tenho uma dúvida sobre meu saldo de Woorkoins.'
+  },
+  {
+    icon: AlertCircle,
+    title: 'Reportar um problema',
+    message: 'Estou com um problema na plataforma e preciso de ajuda.'
+  }
+];
+
 export const AIAssistant = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      role: 'assistant',
-      content: 'Olá! Sou o assistente virtual da Woorkins. Como posso te ajudar hoje?'
-    }
-  ]);
+  const [showTopics, setShowTopics] = useState(true);
+  const [userName, setUserName] = useState('');
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const { session } = useAuth();
+
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      if (!session?.user) return;
+      
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('user_id', session.user.id)
+        .single();
+
+      if (profile?.full_name) {
+        const firstName = profile.full_name.split(' ')[0];
+        setUserName(firstName);
+        setMessages([{
+          role: 'assistant',
+          content: `Olá, ${firstName}! 👋\n\nSou o assistente virtual da Woorkins e estou aqui para ajudá-lo(a) no que precisar.\n\nSelecione um dos tópicos abaixo ou digite sua dúvida diretamente:`
+        }]);
+      } else {
+        setMessages([{
+          role: 'assistant',
+          content: 'Olá! 👋\n\nSou o assistente virtual da Woorkins e estou aqui para ajudá-lo(a) no que precisar.\n\nSelecione um dos tópicos abaixo ou digite sua dúvida diretamente:'
+        }]);
+      }
+    };
+
+    if (isOpen) {
+      loadUserProfile();
+    }
+  }, [session, isOpen]);
+
+  const handleTopicSelect = (topic: typeof helpTopics[0]) => {
+    setShowTopics(false);
+    sendMessageInternal(topic.message);
+  };
 
   const sendMessage = async () => {
     if (!input.trim() || loading) return;
-
+    setShowTopics(false);
     const userMessage = input.trim();
     setInput('');
-    setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
+    sendMessageInternal(userMessage);
+  };
+
+  const sendMessageInternal = async (messageText: string) => {
+    setMessages(prev => [...prev, { role: 'user', content: messageText }]);
     setLoading(true);
 
     try {
       const { data, error } = await supabase.functions.invoke('ai-assistant', {
-        body: { message: userMessage }
+        body: { message: messageText }
       });
 
       if (error) throw error;
@@ -62,52 +123,72 @@ export const AIAssistant = () => {
       {/* Botão flutuante */}
       <Button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 left-6 h-14 px-6 rounded-full shadow-lg z-50 bg-primary/90 hover:bg-primary text-white flex items-center gap-2"
+        className="fixed bottom-6 left-6 h-14 px-6 rounded-full shadow-2xl z-50 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-white flex items-center gap-2 animate-fade-in hover-scale border border-white/20"
       >
         {isOpen ? (
           <X className="h-5 w-5" />
         ) : (
           <>
             <MessageCircle className="h-5 w-5" />
-            <span className="font-medium">Ajuda</span>
+            <span className="font-medium">Precisa de Ajuda?</span>
           </>
         )}
       </Button>
 
       {/* Chat window */}
       {isOpen && (
-        <div className="fixed bottom-24 left-6 w-96 h-[500px] bg-background border-2 border-foreground/10 rounded-2xl shadow-2xl z-50 flex flex-col">
+        <div className="fixed bottom-24 left-6 w-96 h-[600px] bg-gradient-to-br from-background via-background to-background/95 border-2 border-primary/20 rounded-3xl shadow-2xl z-50 flex flex-col backdrop-blur-sm animate-scale-in">
           {/* Header */}
-          <div className="p-4 border-b border-foreground/10">
-            <h3 className="font-semibold">Assistente Virtual</h3>
-            <p className="text-sm text-muted-foreground">Estou aqui para ajudar!</p>
+          <div className="p-6 border-b border-primary/10 bg-gradient-to-r from-primary/5 to-transparent rounded-t-3xl">
+            <h3 className="font-bold text-lg flex items-center gap-2">
+              <MessageCircle className="h-5 w-5 text-primary" />
+              Assistente Virtual Woorkins
+            </h3>
+            <p className="text-sm text-muted-foreground mt-1">Estou aqui para ajudar você{userName && `, ${userName}`}!</p>
           </div>
 
           {/* Messages */}
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
             {messages.map((msg, idx) => (
-              <div
-                key={idx}
-                className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
+              <div key={idx}>
                 <div
-                  className={`max-w-[80%] rounded-2xl px-4 py-2 ${
-                    msg.role === 'user'
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted'
-                  }`}
+                  className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in`}
                 >
-                  <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                  <div
+                    className={`max-w-[80%] rounded-2xl px-4 py-3 shadow-sm ${
+                      msg.role === 'user'
+                        ? 'bg-gradient-to-br from-primary to-primary/80 text-primary-foreground'
+                        : 'bg-gradient-to-br from-muted to-muted/50 border border-primary/10'
+                    }`}
+                  >
+                    <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.content}</p>
+                  </div>
                 </div>
+                
+                {/* Show topics after first assistant message */}
+                {msg.role === 'assistant' && idx === 0 && showTopics && (
+                  <div className="mt-4 grid grid-cols-2 gap-2 animate-fade-in">
+                    {helpTopics.map((topic, topicIdx) => (
+                      <button
+                        key={topicIdx}
+                        onClick={() => handleTopicSelect(topic)}
+                        className="p-3 rounded-xl border border-primary/20 hover:border-primary/40 hover:bg-primary/5 transition-all duration-200 text-left group hover-scale"
+                      >
+                        <topic.icon className="h-4 w-4 text-primary mb-1 group-hover:scale-110 transition-transform" />
+                        <p className="text-xs font-medium">{topic.title}</p>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
             {loading && (
-              <div className="flex justify-start">
-                <div className="bg-muted rounded-2xl px-4 py-2">
+              <div className="flex justify-start animate-fade-in">
+                <div className="bg-gradient-to-br from-muted to-muted/50 rounded-2xl px-4 py-3 border border-primary/10">
                   <div className="flex space-x-2">
-                    <div className="w-2 h-2 bg-foreground/50 rounded-full animate-bounce" />
-                    <div className="w-2 h-2 bg-foreground/50 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
-                    <div className="w-2 h-2 bg-foreground/50 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+                    <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" />
+                    <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
+                    <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
                   </div>
                 </div>
               </div>
@@ -115,7 +196,7 @@ export const AIAssistant = () => {
           </div>
 
           {/* Input */}
-          <div className="p-4 border-t border-foreground/10">
+          <div className="p-4 border-t border-primary/10 bg-gradient-to-r from-transparent to-primary/5 rounded-b-3xl">
             <div className="flex gap-2">
               <Textarea
                 value={input}
@@ -126,8 +207,8 @@ export const AIAssistant = () => {
                     sendMessage();
                   }
                 }}
-                placeholder="Digite sua mensagem..."
-                className="resize-none"
+                placeholder="Digite sua dúvida ou selecione um tópico acima..."
+                className="resize-none border-primary/20 focus:border-primary/40 bg-background/50"
                 rows={2}
                 disabled={loading}
               />
@@ -135,7 +216,7 @@ export const AIAssistant = () => {
                 onClick={sendMessage}
                 disabled={!input.trim() || loading}
                 size="icon"
-                className="shrink-0"
+                className="shrink-0 bg-gradient-to-br from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-md"
               >
                 <Send className="h-4 w-4" />
               </Button>

@@ -318,14 +318,14 @@ export const useRealtimeMessaging = ({
         if (moderationResult && !moderationResult.approved) {
           const violationResult = await trackViolation(moderationResult.reason || 'Violação das regras de moderação');
           
-          let description = 'Você está tentando enviar uma forma de contato. Informações de contato só poderão ser passadas após o pagamento ser feito dentro do Woorkins.\n\n';
+          let description = 'Você está tentando enviar uma forma de contato. Informações de contato só poderão ser passadas após o pagamento ser feito dentro do Woorkins.';
           
           if (violationResult) {
             if (violationResult.newCount < 5) {
-              description += `⚠️ Atenção: Esta é sua ${violationResult.newCount}ª violação. Após 5 violações, você será bloqueado temporariamente.`;
+              description += `\n\n━━━━━━━━━━━━━━━━━━\n\n⚠️ Atenção: Esta é sua ${violationResult.newCount}ª violação. Após 5 violações, você será bloqueado temporariamente.`;
             } else if (violationResult.blockedUntil) {
               const blockMinutes = Math.ceil((violationResult.blockedUntil.getTime() - Date.now()) / (1000 * 60));
-              description += `🚫 Você foi bloqueado por ${blockMinutes} minutos. Bloqueios aumentam progressivamente com violações repetidas (até 24h).`;
+              description += `\n\n━━━━━━━━━━━━━━━━━━\n\n🚫 Você foi bloqueado por ${blockMinutes} minutos. Bloqueios aumentam progressivamente com violações repetidas (até 24h).`;
             }
           }
 

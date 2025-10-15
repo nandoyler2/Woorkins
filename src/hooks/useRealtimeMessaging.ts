@@ -252,8 +252,23 @@ export const useRealtimeMessaging = ({
     setIsSending(true);
 
     try {
-      // Only moderate if conversation is for a pending proposal
-      const shouldModerate = conversationType === 'proposal' && proposalStatus === 'pending';
+      // Check if moderation should be applied based on payment status
+      let shouldModerate = false;
+      
+      if (conversationType === 'proposal') {
+        // For proposals, check if it's still pending
+        shouldModerate = proposalStatus === 'pending';
+      } else if (conversationType === 'negotiation') {
+        // For negotiations, check if payment has been made
+        const { data: negotiation } = await supabase
+          .from('negotiations')
+          .select('payment_status')
+          .eq('id', conversationId)
+          .single();
+        
+        // Only moderate if payment hasn't been made (unpaid or pending)
+        shouldModerate = negotiation?.payment_status !== 'paid';
+      }
 
       if (shouldModerate) {
         // Get recent messages from this user for context (last 5 messages)

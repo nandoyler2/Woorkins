@@ -455,23 +455,23 @@ export const AIAssistant = () => {
       {isOpen && (
         <div className="fixed bottom-24 left-6 w-96 h-[600px] bg-gradient-to-br from-background via-background to-background/95 border-2 border-primary/20 rounded-3xl shadow-2xl z-50 flex flex-col backdrop-blur-sm animate-scale-in">
           <div className="p-6 border-b border-primary/10 bg-gradient-to-r from-primary/5 to-transparent rounded-t-3xl">
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex-1 min-w-0">
                 <h3 className="font-bold text-lg flex items-center gap-2">
                   <MessageCircle className="h-5 w-5 text-primary" />
                   Assistente Virtual Woorkins
                 </h3>
                 <p className="text-sm text-muted-foreground mt-1">Estou aqui para ajudar você{userName && `, ${userName}`}!</p>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-shrink-0">
                 {viewMode === 'welcome' && (
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={showHistoryView}
-                    className="h-8"
+                    className="h-8 whitespace-nowrap"
                   >
-                    Histórico de conversas
+                    Histórico
                   </Button>
                 )}
                 {viewMode === 'chat' && messages.length > 1 && (
@@ -479,9 +479,9 @@ export const AIAssistant = () => {
                     variant="outline"
                     size="sm"
                     onClick={endConversation}
-                    className="h-8"
+                    className="h-8 whitespace-nowrap"
                   >
-                    Encerrar conversa
+                    Encerrar
                   </Button>
                 )}
                 {viewMode === 'history' && (
@@ -489,7 +489,7 @@ export const AIAssistant = () => {
                     variant="outline"
                     size="sm"
                     onClick={backToWelcome}
-                    className="h-8"
+                    className="h-8 whitespace-nowrap"
                   >
                     Voltar
                   </Button>
@@ -501,7 +501,8 @@ export const AIAssistant = () => {
                     close();
                     setInternalOpen(false);
                   }}
-                  className="h-8 w-8"
+                  className="h-8 w-8 flex-shrink-0"
+                  aria-label="Fechar assistente"
                 >
                   <X className="h-4 w-4" />
                 </Button>

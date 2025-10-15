@@ -88,7 +88,6 @@ function AppContent() {
         <Route path="/projetos/novo" element={<ProtectedRoute><ProjectCreate /></ProtectedRoute>} />
         <Route path="/projetos/:id" element={<ProjectDetails />} />
         <Route path="/meus-projetos" element={<ProtectedRoute><MyProjects /></ProtectedRoute>} />
-        <Route path="/:slug" element={<BusinessProfile />} />
         <Route path="/feed" element={<ProtectedRoute><Feed /></ProtectedRoute>} />
         <Route path="/admin" element={<ProtectedRoute requireAdmin><AdminLayout /></ProtectedRoute>}>
           <Route index element={<Admin />} />
@@ -100,6 +99,7 @@ function AppContent() {
           <Route path="settings" element={<AdminSettings />} />
           <Route path="payment-gateway" element={<AdminPaymentGateway />} />
         </Route>
+        <Route path="/:slug" element={<BusinessProfile />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       <AIAssistant />

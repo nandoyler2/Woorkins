@@ -35,6 +35,7 @@ import AdminSettings from "./pages/admin/Settings";
 import AdminPaymentGateway from "./pages/admin/PaymentGateway";
 import AdminDocumentVerifications from "./pages/admin/DocumentVerifications";
 import AdminSupport from "./pages/admin/Support";
+import UserMessages from "./pages/admin/UserMessages";
 import Account from "./pages/Account";
 import Financeiro from "./pages/Financeiro";
 import Woorkoins from "./pages/Woorkoins";
@@ -95,6 +96,7 @@ function AppContent() {
         <Route path="/admin" element={<ProtectedRoute requireAdmin><AdminLayout /></ProtectedRoute>}>
           <Route index element={<Admin />} />
           <Route path="users" element={<AdminUsers />} />
+          <Route path="users/:userId/messages" element={<UserMessages />} />
           <Route path="moderation" element={<AdminModeration />} />
           <Route path="reports" element={<AdminReports />} />
           <Route path="businesses" element={<AdminBusinesses />} />

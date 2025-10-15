@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card } from '@/components/ui/card';
@@ -33,10 +34,10 @@ import { Search, Shield, User, Ban, MoreVertical, Coins, ShieldOff, Info, Histor
 import { ManageWoorkoinsDialog } from '@/components/admin/ManageWoorkoinsDialog';
 import { BlockUserDialog } from '@/components/admin/BlockUserDialog';
 import { BlockDetailsDialog } from '@/components/admin/BlockDetailsDialog';
-import { UserHistoryDialog } from '@/components/admin/UserHistoryDialog';
 
 export default function AdminUsers() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -47,7 +48,6 @@ export default function AdminUsers() {
   const [blockDetailsDialogOpen, setBlockDetailsDialogOpen] = useState(false);
   const [selectedBlock, setSelectedBlock] = useState<any>(null);
   const [unblockLoading, setUnblockLoading] = useState(false);
-  const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -357,13 +357,10 @@ export default function AdminUsers() {
                         <DropdownMenuLabel>Ações</DropdownMenuLabel>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
-                          onClick={() => {
-                            setSelectedUser(usr);
-                            setHistoryDialogOpen(true);
-                          }}
+                          onClick={() => navigate(`/admin/users/${usr.id}/messages`)}
                         >
                           <History className="mr-2 h-4 w-4" />
-                          Ver Histórico Completo
+                          Histórico de Mensagens
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => {
@@ -416,11 +413,6 @@ export default function AdminUsers() {
 
         {selectedUser && (
           <>
-            <UserHistoryDialog
-              open={historyDialogOpen}
-              onOpenChange={setHistoryDialogOpen}
-              user={selectedUser}
-            />
             <ManageWoorkoinsDialog
               open={woorkoinsDialogOpen}
               onOpenChange={setWoorkoinsDialogOpen}

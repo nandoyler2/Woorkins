@@ -494,16 +494,13 @@ useEffect(() => {
               </div>
             </div>
 
-            {/* Coluna 2: Nome do Projeto e Valor */}
-            <div className="min-w-0">
-              <p className="text-sm font-semibold text-foreground truncate mb-2">{projectTitle}</p>
+            {/* Coluna 2: Nome do Projeto e Valor - Centralizado */}
+            <div className="min-w-0 flex flex-col items-center justify-center">
+              <p className="text-sm font-semibold text-foreground truncate mb-2 text-center">{projectTitle}</p>
               <div className="inline-flex items-center gap-3 bg-white rounded-full px-4 py-1.5 shadow-sm border">
-                <div className="flex items-center gap-1.5">
-                  <DollarSign className="h-3.5 w-3.5 text-primary" />
-                  <span className="text-sm font-bold text-primary">
-                    R$ {proposalData.budget.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                  </span>
-                </div>
+                <span className="text-sm font-bold text-primary">
+                  R$ {proposalData.budget.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                </span>
                 <div className="h-3 w-px bg-border" />
                 <span className="text-xs text-muted-foreground">
                   Prazo: {proposalData.delivery_days} dia{proposalData.delivery_days > 1 ? 's' : ''}

@@ -47,11 +47,14 @@ Deno.serve(async (req) => {
       // URLs
       if (haystacks.some(h => /(https?:\/\/|www\.)/i.test(h))) return true;
 
-      // Emails
+      // Emails - improved detection including split attempts
       if (haystacks.some(h => /\b[\w.+-]+@[\w.-]+\.[a-z]{2,}\b/i.test(h))) return true;
+      if (haystacks.some(h => /\b(arroba|at)\b/i.test(h))) return true; // email components
+      if (/(gmail|hotmail|outlook|yahoo|email|mail)/.test(tNoAccents)) return true; // email services
+      if (/(ponto\s*com|dot\s*com)/i.test(tNoAccents)) return true; // email endings
 
-      // @handles (after de-leet too)
-      if (haystacks.some(h => /@[a-z0-9._]{3,}/i.test(h))) return true;
+      // @handles (after de-leet too) - more strict
+      if (haystacks.some(h => /@\w+/i.test(h))) return true; // any @ followed by word chars
 
       // Messaging/social app keywords (after de-leet too)
       const appRegex = /\b(whats(app)?|zap|wpp|telegram|tg|signal|discord|messenger|skype|instagram|insta|ig|facebook|fb|tiktok|linkedin|tt|twitter|x)\b/i;
@@ -96,104 +99,90 @@ Sua missão é detectar e BLOQUEAR QUALQUER tentativa de compartilhar informaç�
 
 🚨 ATENÇÃO ESPECIAL: DETECÇÃO DE BURLAS EM SEQUÊNCIA
 Usuários tentam burlar a moderação dividindo informações em várias mensagens:
-- Exemplo 1: "nandoyler" em uma msg + "11" em outra + "9" em outra + "8782" em outra + "6652" em outra
-- Exemplo 2: "me acha no" + "insta" + "como" + "@usuario"
-- Exemplo 3: Qualquer username de rede social + números em sequência = TELEFONE DIVIDIDO
+- Exemplo 1: "@nandoyler" = BLOQUEAR (username de rede social)
+- Exemplo 2: "quentemail" + "ponto com" = tentativa de formar email
+- Exemplo 3: Qualquer @ seguido de texto = handle de rede social
+- Exemplo 4: Imagem com número de telefone (ex: 11 993912083)
 
 SE DETECTAR ESTE PADRÃO = BLOQUEAR IMEDIATAMENTE E SINALIZAR
 
 🚫 ABSOLUTAMENTE PROIBIDO compartilhar:
 
-1. **PIX - ATENÇÃO MÁXIMA (Brasil)**:
+1. **USERNAMES E @HANDLES - BLOQUEIO AUTOMÁTICO**:
+   - QUALQUER @ seguido de caracteres (ex: @nandoyler, @usuario, @qualquercoisa)
+   - Usernames sem @ mas que pareçam handles de redes sociais
+   - "me procura como [nome]", "meu user é", "me acha no"
+   - Combinações únicas sem espaço (ex: "nandoyler", "joao_silva123")
+
+2. **E-MAILS - BLOQUEIO RIGOROSO**:
+   - usuario@dominio.com
+   - Tentativas divididas: "quentemail" + "ponto com" = email
+   - "arroba", "at", "@"
+   - Menções a serviços: gmail, hotmail, outlook, yahoo
+   - "ponto com", "dot com", ".com"
+
+3. **PIX - ATENÇÃO MÁXIMA (Brasil)**:
    - Palavra "pix" em qualquer contexto que indique compartilhamento
    - "meu pix", "chave pix", "pix é", "te passo o pix", "preciso do seu pix"
    - Combinação de "pix" + número/CPF/email/telefone
    - "chave"
 
-2. **Números de telefone** em QUALQUER formato:
+4. **Números de telefone** em QUALQUER formato:
    - Padrão: (11) 98765-4321, 11987654321, 11 98765-4321
    - Separado: 1 1 9 8 7 6 5 4 3 2 1
    - Por extenso: "um um nove oito sete", "onze nove oito"
    - Disfarçado: "nove.oito.sete.seis.cinco"
-   - **NÚMEROS DISFARÇADOS EM FRASES**: "993912083 motivos", "11999887766 razões", "21987654321 formas"
+   - **NÚMEROS DISFARÇADOS EM FRASES**: "993912083 motivos", "11999887766 razões"
    - **🚨 CRÍTICO - NÚMEROS CAMUFLADOS**: "tem 993 cavalos e anda a 912 km/h e a 083 segundos" = 993912083
    - **EXTRAIR TODOS OS NÚMEROS**: Se ao juntar TODOS os números da frase formar 8-11 dígitos = TELEFONE
    - Qualquer sequência de 8-11 dígitos MESMO QUE disfarçada em texto normal
    - Código de área + número: "11 9", "21 9", "DDD 9"
-   - **DETECTAR**: Números separados por palavras que ao juntar formem telefone brasileiro
-   - MÚLTIPLAS MENSAGENS COM NÚMEROS CURTOS: se houver username + números em sequência = TELEFONE
 
-3. **Apps de mensagem** (incluindo disfarces):
+5. **Apps de mensagem** (incluindo disfarces):
    - WhatsApp: "whats", "zap", "wpp", "what", "watts", "uats", "wp", "whatsa", "whts"
    - Telegram: "telegram", "telegran", "tg", "telgm", "telegr"
    - Signal, Discord, Messenger, Skype
 
-4. **Redes sociais** (incluindo variações):
+6. **Redes sociais** (incluindo variações):
    - Instagram: "insta", "ig", "gram", "inst@", "1nsta", "instagr", "instagram"
    - Facebook: "face", "fb", "f@ce", "facebook"
    - Twitter/X: "tt", "twitter", "x"
    - TikTok: "tiktok", "tik tok"
    - LinkedIn: "linkedin", "in", "linked"
 
-5. **Usernames e handles**:
-   - Qualquer palavra que pareça username (sem espaços, com números/underscores)
-   - Arrobas: "@usuario", "@ usuario", "arroba usuario"
-   - Pontos: "usuario.sobrenome"
-   - Underscores: "usuario_sobrenome"
-   - "me procura como [nome]"
-   - Nomes únicos sem contexto (ex: "nandoyler", "joao123")
-
-6. **E-mails** em qualquer formato:
-   - usuario@dominio.com
-   - "usuario arroba dominio ponto com"
-   - "usuario [at] dominio [dot] com"
-
 7. **Links e URLs**:
    - http, https, www
    - bit.ly, encurtadores
    - dominio.com, .com.br
 
-8. **Tentativas de burlar detecção**:
-   - "me procura no Insta"
-   - "add no Zap"
-   - "me acha lá"
-   - "pesquisa meu nome"
-   - "me encontra no Face"
-   - "ve lá" (referência a rede social)
-   - "no meu" (referência a perfil)
-   - Números disfarçados: "nove nove nove nove"
-   - **"preciso do seu pix", "te passo o pix", "meu pix é"**
-   - **Números disfarçados em frases normais**: "993912083 motivos", "tenho 11987654321 razões"
-   - Instruções indiretas para contato externo
-   - Username + números em mensagens separadas
-
-9. **IMAGENS com informações de contato**:
-   - Imagens contendo números de telefone
+8. **IMAGENS com informações de contato - ANÁLISE RIGOROSA**:
+   - Imagens contendo QUALQUER número de telefone visível
    - Capturas de tela de perfis de redes sociais
    - QR codes do WhatsApp ou outras redes
    - Textos com informações de contato em imagens
    - Cards de visita ou informações de contato
    - Qualquer imagem que contenha @ (arroba) ou links
+   - Números de telefone em QUALQUER parte da imagem (até em segundo plano)
+   - Informações de contato em cartões, documentos, telas de celular
 
 🚨 CRITÉRIOS DE BLOQUEIO E SINALIZAÇÃO:
-- Seja RIGOROSO, porém NÃO bloqueie mensagens neutras.
-- Na dúvida, APROVE e apenas marque "flagged": true se achar suspeito.
-- BLOQUEAR somente quando houver INDÍCIO CLARO E ACIONÁVEL NA MENSAGEM ATUAL ou quando a MENSAGEM ATUAL traz parte essencial (dígitos/handle/link) que completa, junto das mensagens recentes, um contato externo.
-- Exemplos para BLOQUEAR: 
-  * Número de telefone (8-12 dígitos) MESMO QUE disfarçado em frase ("993912083 motivos")
-  * Menção a PIX + intenção de compartilhar ("preciso do seu pix", "meu pix é")
-  * E-mail, URL, @handle, menção explícita a apps com instrução de contato
-- **CRÍTICO**: Sequência de 8-11 dígitos consecutivos = SEMPRE BLOQUEAR (é número de telefone brasileiro)
-- Username suspeito + números NAS MENSAGENS ATUAIS/RECENTES (e a mensagem atual possui parte do padrão) = BLOQUEAR + SINALIZAR.
+- Seja EXTREMAMENTE RIGOROSO com @handles, emails e imagens com contatos.
+- BLOQUEAR IMEDIATAMENTE:
+  * QUALQUER @ seguido de texto (ex: @nandoyler)
+  * Partes de email (gmail, hotmail, ponto com, arroba)
+  * Sequência de 8-11 dígitos consecutivos
+  * Imagens com números de telefone visíveis
+  * Menção a PIX + intenção de compartilhar
+  * E-mail, URL, @handle, menção explícita a apps
 
 ✅ PERMITIDO (não bloquear):
-- Palavras genéricas sem detalhes de contato (ex.: "número", "numero", "rede social", "contato", "whatsapp" sem número/handle/link).
+- Palavras genéricas sem detalhes (ex: "número", "rede social", "contato")
 - "3 projetos", "5 dias", "10 horas"
 
 📋 IMPORTANTE: SEMPRE forneça um motivo ESPECÍFICO e CLARO quando bloquear:
-- Diga exatamente O QUE foi detectado (ex: "tentativa de compartilhar número de telefone", "menção ao WhatsApp", "username de rede social")
-- Explique POR QUE foi bloqueado (ex: "viola política de não compartilhamento de contatos externos")
-- Se detectou padrão em múltiplas mensagens, mencione isso
+- Diga exatamente O QUE foi detectado
+- Explique POR QUE foi bloqueado
+- Se detectou padrão em múltiplas mensagens ou imagens, mencione isso
 
 Responda APENAS em JSON:
 {

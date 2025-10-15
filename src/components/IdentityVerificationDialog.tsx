@@ -147,9 +147,16 @@ export function IdentityVerificationDialog({
     try {
       const documentSide = step === 'front' ? 'front' : step === 'back' ? 'back' : 'selfie';
       
-      const { data, error } = await supabase.functions.invoke('validate-document-realtime', {
+      // Timeout de 5 segundos para validação
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout')), 5000)
+      );
+      
+      const validationPromise = supabase.functions.invoke('validate-document-realtime', {
         body: { imageBase64, documentSide }
       });
+
+      const { data, error } = await Promise.race([validationPromise, timeoutPromise]) as any;
 
       if (error) throw error;
 
@@ -157,6 +164,16 @@ export function IdentityVerificationDialog({
       setCanCapture(data.isValid && (data.quality === 'excellent' || data.quality === 'good' || data.quality === 'acceptable'));
     } catch (error) {
       console.error('Real-time validation error:', error);
+      // Em caso de erro ou timeout, permite captura após 3 segundos
+      setTimeout(() => {
+        setRealtimeValidation({
+          isValid: true,
+          quality: 'good',
+          issues: [],
+          suggestions: ['A validação automática falhou. Você pode capturar manualmente.']
+        });
+        setCanCapture(true);
+      }, 3000);
     } finally {
       setIsValidating(false);
     }
@@ -439,16 +456,28 @@ export function IdentityVerificationDialog({
             </div>
 
             {isCameraActive && (
-              <Button 
-                onClick={handleCapture} 
-                className="w-full" 
-                size="lg"
-                disabled={!canCapture}
-                variant={canCapture ? "default" : "secondary"}
-              >
-                <Camera className="mr-2 h-5 w-5" />
-                {canCapture ? 'Capturar Foto' : 'Aguarde... Ajustando'}
-              </Button>
+              <div className="space-y-2">
+                <Button 
+                  onClick={handleCapture} 
+                  className="w-full" 
+                  size="lg"
+                  disabled={!canCapture}
+                  variant={canCapture ? "default" : "secondary"}
+                >
+                  <Camera className="mr-2 h-5 w-5" />
+                  {canCapture ? 'Capturar Foto' : 'Aguarde... Ajustando'}
+                </Button>
+                {!canCapture && (
+                  <Button 
+                    onClick={handleCapture} 
+                    className="w-full" 
+                    size="sm"
+                    variant="outline"
+                  >
+                    Capturar Mesmo Assim
+                  </Button>
+                )}
+              </div>
             )}
           </div>
         );

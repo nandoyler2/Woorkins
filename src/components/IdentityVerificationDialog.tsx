@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Upload, CheckCircle, XCircle, Loader2 } from 'lucide-react';
@@ -14,7 +14,7 @@ interface IdentityVerificationDialogProps {
   onVerificationComplete?: () => void;
 }
 
-type UploadOption = 'combined' | 'front' | 'back';
+type UploadOption = 'combined' | 'separate';
 
 export function IdentityVerificationDialog({
   open,
@@ -30,30 +30,44 @@ export function IdentityVerificationDialog({
   const [combinedImage, setCombinedImage] = useState<File | null>(null);
   const [verificationResult, setVerificationResult] = useState<any>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [needsSecondPart, setNeedsSecondPart] = useState(false);
-  const [preValidation, setPreValidation] = useState<any>(null);
+  const [preValidationFront, setPreValidationFront] = useState<any>(null);
+  const [preValidationBack, setPreValidationBack] = useState<any>(null);
   const [isPreValidating, setIsPreValidating] = useState(false);
+  const combinedInputRef = useRef<HTMLInputElement>(null);
+  const frontInputRef = useRef<HTMLInputElement>(null);
+  const backInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, type: 'front' | 'back' | 'combined') => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (type === 'front') setFrontImage(file);
-    else if (type === 'back') setBackImage(file);
-    else setCombinedImage(file);
-
-    // Fazer pré-validação do documento
-    await preValidateDocument(file, type);
+    if (type === 'front') {
+      setFrontImage(file);
+      await preValidateDocument(file, 'front');
+    } else if (type === 'back') {
+      setBackImage(file);
+      await preValidateDocument(file, 'back');
+    } else {
+      setCombinedImage(file);
+      await preValidateDocument(file, 'combined');
+      // Para documento combinado, verificar automaticamente após pré-validação
+      setTimeout(() => processVerification(file, file), 100);
+    }
   };
+
+  // Auto-submit quando ambas as imagens forem selecionadas (modo separate)
+  useEffect(() => {
+    if (uploadOption === 'separate' && frontImage && backImage && 
+        preValidationFront?.isValid && preValidationBack?.isValid && !isProcessing) {
+      processVerification(frontImage, backImage);
+    }
+  }, [frontImage, backImage, preValidationFront, preValidationBack, uploadOption, isProcessing]);
 
   const preValidateDocument = async (file: File, type: 'front' | 'back' | 'combined') => {
     setIsPreValidating(true);
-    setPreValidation(null);
 
     try {
-      // Converter arquivo para base64
       const base64 = await fileToBase64(file);
-
       const documentSide = type === 'combined' ? 'front' : type;
 
       const { data, error } = await supabase.functions.invoke('validate-document-realtime', {
@@ -65,16 +79,22 @@ export function IdentityVerificationDialog({
 
       if (error) throw error;
 
-      setPreValidation({
+      const validationResult = {
         type,
         result: data,
         isValid: data.isValid
-      });
+      };
+
+      if (type === 'front') {
+        setPreValidationFront(validationResult);
+      } else if (type === 'back') {
+        setPreValidationBack(validationResult);
+      }
 
       if (!data.isValid) {
         toast.error(`Documento inválido: ${data.issues.join(', ')}`);
       } else {
-        toast.success(`✓ ${type === 'front' ? 'Frente' : type === 'back' ? 'Verso' : 'Documento'} validado com sucesso!`);
+        toast.success(`✓ ${type === 'front' ? 'Frente' : type === 'back' ? 'Verso' : 'Documento'} validado!`);
       }
     } catch (error) {
       console.error('Pre-validation error:', error);
@@ -93,45 +113,8 @@ export function IdentityVerificationDialog({
     });
   };
 
-  const handleContinueToSecondPart = () => {
-    if (uploadOption === 'front' && frontImage) {
-      setNeedsSecondPart(true);
-    } else if (uploadOption === 'back' && backImage) {
-      setNeedsSecondPart(true);
-    }
-  };
-
-  const handleSubmit = async () => {
-    if (!uploadOption) return;
-    
-    // Para opções separadas que ainda precisam da segunda parte
-    if ((uploadOption === 'front' && frontImage && !backImage) || 
-        (uploadOption === 'back' && backImage && !frontImage)) {
-      handleContinueToSecondPart();
-      return;
-    }
-    if (!uploadOption) return;
-    
-    // Validar se os arquivos necessários foram enviados
-    if (uploadOption === 'combined' && !combinedImage) {
-      toast.error('Por favor, envie o documento completo (frente e verso)');
-      return;
-    }
-    
-    // Para opções separadas, precisa ter ambas as partes
-    if ((uploadOption === 'front' || uploadOption === 'back') && (!frontImage || !backImage)) {
-      // Se tem só uma parte, pedir a outra
-      if (frontImage && !backImage) {
-        setNeedsSecondPart(true);
-        return;
-      }
-      if (backImage && !frontImage) {
-        setNeedsSecondPart(true);
-        return;
-      }
-      toast.error('Por favor, envie frente e verso do documento');
-      return;
-    }
+  const processVerification = async (frontFile: File, backFile: File) => {
+    if (isProcessing) return;
     
     setIsProcessing(true);
     
@@ -171,12 +154,12 @@ export function IdentityVerificationDialog({
       let frontUrl = '';
       let backUrl = '';
 
-      if (uploadOption === 'combined' && combinedImage) {
-        frontUrl = await uploadFile(combinedImage, 'document_combined');
+      if (uploadOption === 'combined') {
+        frontUrl = await uploadFile(frontFile, 'document_combined');
         backUrl = frontUrl;
       } else {
-        if (frontImage) frontUrl = await uploadFile(frontImage, 'document_front');
-        if (backImage) backUrl = await uploadFile(backImage, 'document_back');
+        frontUrl = await uploadFile(frontFile, 'document_front');
+        backUrl = await uploadFile(backFile, 'document_back');
       }
 
       // Call verification function
@@ -283,17 +266,17 @@ export function IdentityVerificationDialog({
       return (
         <div className="space-y-6 p-6">
           <div className="text-center space-y-2">
-            <h3 className="font-semibold text-lg">Como deseja enviar seu documento?</h3>
-            <p className="text-sm text-muted-foreground">
-              Escolha a opção que preferir para enviar seu RG ou CNH
-            </p>
+            <h3 className="font-semibold text-lg">Escolha a opção que preferir para enviar seu RG ou CNH</h3>
           </div>
 
           <div className="space-y-3">
             <Button
               variant="outline"
               className="w-full h-auto py-4 flex flex-col items-center gap-2"
-              onClick={() => setUploadOption('combined')}
+              onClick={() => {
+                setUploadOption('combined');
+                setTimeout(() => combinedInputRef.current?.click(), 100);
+              }}
             >
               <Upload className="h-6 w-6" />
               <div>
@@ -305,27 +288,25 @@ export function IdentityVerificationDialog({
             <Button
               variant="outline"
               className="w-full h-auto py-4 flex flex-col items-center gap-2"
-              onClick={() => setUploadOption('front')}
+              onClick={() => setUploadOption('separate')}
             >
               <Upload className="h-6 w-6" />
               <div>
-                <p className="font-semibold">Apenas Frente</p>
-                <p className="text-xs text-muted-foreground">Enviar somente a frente do documento</p>
-              </div>
-            </Button>
-
-            <Button
-              variant="outline"
-              className="w-full h-auto py-4 flex flex-col items-center gap-2"
-              onClick={() => setUploadOption('back')}
-            >
-              <Upload className="h-6 w-6" />
-              <div>
-                <p className="font-semibold">Apenas Verso</p>
-                <p className="text-xs text-muted-foreground">Enviar somente o verso do documento</p>
+                <p className="font-semibold">Frente e Verso</p>
+                <p className="text-xs text-muted-foreground">Enviar frente e verso separadamente</p>
               </div>
             </Button>
           </div>
+          
+          {/* Hidden inputs */}
+          <input
+            ref={combinedInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            onChange={(e) => handleFileChange(e, 'combined')}
+            className="hidden"
+          />
         </div>
       );
     }
@@ -334,174 +315,161 @@ export function IdentityVerificationDialog({
       <div className="space-y-6 p-6">
         <div className="text-center space-y-2">
           <h3 className="font-semibold text-lg">
-            {uploadOption === 'combined' && 'Envie o documento completo'}
-            {uploadOption === 'front' && (needsSecondPart ? 'Agora envie o verso do documento' : 'Envie a frente do documento')}
-            {uploadOption === 'back' && (needsSecondPart ? 'Agora envie a frente do documento' : 'Envie o verso do documento')}
+            {uploadOption === 'combined' ? 'Processando documento...' : 'Envie frente e verso do documento'}
           </h3>
           <p className="text-sm text-muted-foreground">
-            {needsSecondPart 
-              ? 'Para completar a verificação, precisamos da outra parte do documento'
-              : 'Tire uma foto ou selecione uma imagem do seu RG ou CNH'}
+            {uploadOption === 'combined' 
+              ? 'Aguarde enquanto validamos seu documento' 
+              : 'Tire fotos claras de ambos os lados do seu RG ou CNH'}
           </p>
         </div>
 
-        <div className="space-y-4">
-          {preValidation && (
-            <div className={`p-3 rounded-lg ${preValidation.isValid ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
-              <div className="flex items-center gap-2">
-                {preValidation.isValid ? (
-                  <CheckCircle className="h-5 w-5 text-green-600" />
+        {uploadOption === 'separate' && (
+          <div className="grid grid-cols-2 gap-4">
+            {/* Frente */}
+            <div className="space-y-2">
+              <div 
+                className={`relative border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
+                  frontImage 
+                    ? preValidationFront?.isValid 
+                      ? 'border-green-500 bg-green-50' 
+                      : 'border-red-500 bg-red-50'
+                    : 'border-gray-300 hover:border-primary'
+                }`}
+                onClick={() => !frontImage && frontInputRef.current?.click()}
+              >
+                {frontImage ? (
+                  <div className="space-y-2">
+                    {preValidationFront?.isValid ? (
+                      <CheckCircle className="h-8 w-8 text-green-600 mx-auto" />
+                    ) : (
+                      <XCircle className="h-8 w-8 text-red-600 mx-auto" />
+                    )}
+                    <p className="text-sm font-medium">
+                      {preValidationFront?.isValid ? '✓ Frente validada' : '✗ Frente inválida'}
+                    </p>
+                    <Button 
+                      size="sm" 
+                      variant="ghost"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setFrontImage(null);
+                        setPreValidationFront(null);
+                      }}
+                    >
+                      Trocar
+                    </Button>
+                  </div>
                 ) : (
-                  <XCircle className="h-5 w-5 text-red-600" />
+                  <div className="space-y-2">
+                    <Upload className="h-8 w-8 mx-auto text-muted-foreground" />
+                    <p className="text-sm font-medium">Frente do Documento</p>
+                    <p className="text-xs text-muted-foreground">Clique para selecionar</p>
+                  </div>
                 )}
-                <p className={`text-sm font-medium ${preValidation.isValid ? 'text-green-900' : 'text-red-900'}`}>
-                  {preValidation.isValid ? 'Documento válido' : 'Documento inválido'}
-                </p>
               </div>
-              {preValidation.result?.issues && preValidation.result.issues.length > 0 && (
-                <ul className="mt-2 text-xs text-red-700 list-disc list-inside">
-                  {preValidation.result.issues.map((issue: string, idx: number) => (
+              {preValidationFront?.result?.issues && preValidationFront.result.issues.length > 0 && (
+                <ul className="text-xs text-red-600 list-disc list-inside">
+                  {preValidationFront.result.issues.slice(0, 2).map((issue: string, idx: number) => (
                     <li key={idx}>{issue}</li>
                   ))}
                 </ul>
               )}
-              {preValidation.result?.suggestions && preValidation.result.suggestions.length > 0 && (
-                <ul className="mt-2 text-xs text-amber-700 list-disc list-inside">
-                  {preValidation.result.suggestions.map((suggestion: string, idx: number) => (
-                    <li key={idx}>{suggestion}</li>
+            </div>
+
+            {/* Verso */}
+            <div className="space-y-2">
+              <div 
+                className={`relative border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
+                  backImage 
+                    ? preValidationBack?.isValid 
+                      ? 'border-green-500 bg-green-50' 
+                      : 'border-red-500 bg-red-50'
+                    : 'border-gray-300 hover:border-primary'
+                }`}
+                onClick={() => !backImage && backInputRef.current?.click()}
+              >
+                {backImage ? (
+                  <div className="space-y-2">
+                    {preValidationBack?.isValid ? (
+                      <CheckCircle className="h-8 w-8 text-green-600 mx-auto" />
+                    ) : (
+                      <XCircle className="h-8 w-8 text-red-600 mx-auto" />
+                    )}
+                    <p className="text-sm font-medium">
+                      {preValidationBack?.isValid ? '✓ Verso validado' : '✗ Verso inválido'}
+                    </p>
+                    <Button 
+                      size="sm" 
+                      variant="ghost"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setBackImage(null);
+                        setPreValidationBack(null);
+                      }}
+                    >
+                      Trocar
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <Upload className="h-8 w-8 mx-auto text-muted-foreground" />
+                    <p className="text-sm font-medium">Verso do Documento</p>
+                    <p className="text-xs text-muted-foreground">Clique para selecionar</p>
+                  </div>
+                )}
+              </div>
+              {preValidationBack?.result?.issues && preValidationBack.result.issues.length > 0 && (
+                <ul className="text-xs text-red-600 list-disc list-inside">
+                  {preValidationBack.result.issues.slice(0, 2).map((issue: string, idx: number) => (
+                    <li key={idx}>{issue}</li>
                   ))}
                 </ul>
               )}
             </div>
-          )}
-
-          {uploadOption === 'combined' && (
-            <div>
-              <label className="block mb-2 text-sm font-medium">Documento Completo (Frente e Verso)</label>
-              <input
-                type="file"
-                accept="image/*"
-                capture="environment"
-                onChange={(e) => handleFileChange(e, 'combined')}
-                className="w-full"
-              />
-              {combinedImage && (
-                <p className="mt-2 text-sm text-green-600">✓ Arquivo selecionado: {combinedImage.name}</p>
-              )}
-            </div>
-          )}
-
-          {(uploadOption === 'front' || (uploadOption === 'back' && needsSecondPart)) && (
-            <div>
-              <label className="block mb-2 text-sm font-medium">Frente do Documento</label>
-              <input
-                type="file"
-                accept="image/*"
-                capture="environment"
-                onChange={(e) => handleFileChange(e, 'front')}
-                className="w-full"
-                disabled={!!frontImage || isPreValidating}
-              />
-              {frontImage && (
-                <div className="mt-2 flex items-center gap-2">
-                  <p className="text-sm text-green-600">✓ Arquivo selecionado: {frontImage.name}</p>
-                  {!needsSecondPart && (
-                    <Button 
-                      size="sm" 
-                      variant="ghost"
-                      onClick={() => {
-                        setFrontImage(null);
-                        setPreValidation(null);
-                      }}
-                    >
-                      Trocar
-                    </Button>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
-
-          {(uploadOption === 'back' || (uploadOption === 'front' && needsSecondPart)) && (
-            <div>
-              <label className="block mb-2 text-sm font-medium">Verso do Documento</label>
-              <input
-                type="file"
-                accept="image/*"
-                capture="environment"
-                onChange={(e) => handleFileChange(e, 'back')}
-                className="w-full"
-                disabled={!!backImage || isPreValidating}
-              />
-              {backImage && (
-                <div className="mt-2 flex items-center gap-2">
-                  <p className="text-sm text-green-600">✓ Arquivo selecionado: {backImage.name}</p>
-                  {!needsSecondPart && (
-                    <Button 
-                      size="sm" 
-                      variant="ghost"
-                      onClick={() => {
-                        setBackImage(null);
-                        setPreValidation(null);
-                      }}
-                    >
-                      Trocar
-                    </Button>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
-
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              onClick={() => {
-                if (needsSecondPart) {
-                  // Voltar para primeira parte
-                  setNeedsSecondPart(false);
-                  if (uploadOption === 'front') setBackImage(null);
-                  if (uploadOption === 'back') setFrontImage(null);
-                  setPreValidation(null);
-                } else {
-                  // Voltar para seleção de opção
-                  setUploadOption(null);
-                  setFrontImage(null);
-                  setBackImage(null);
-                  setCombinedImage(null);
-                  setPreValidation(null);
-                }
-              }}
-              className="flex-1"
-            >
-              Voltar
-            </Button>
-            <Button
-              onClick={handleSubmit}
-              disabled={
-                isPreValidating ||
-                (uploadOption === 'combined' && !combinedImage) ||
-                ((uploadOption === 'front' || uploadOption === 'back') && (!frontImage || !backImage)) ||
-                (preValidation && !preValidation.isValid)
-              }
-              className="flex-1"
-            >
-              {isPreValidating ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Validando...
-                </>
-              ) : (
-                <>
-                  {(frontImage && backImage) || combinedImage ? 'Enviar e Verificar' : 
-                   frontImage && !needsSecondPart ? 'Continuar para Verso' :
-                   backImage && !needsSecondPart ? 'Continuar para Frente' :
-                   'Selecionar Arquivo'}
-                </>
-              )}
-            </Button>
           </div>
-        </div>
+        )}
+
+        {/* Status de processamento automático */}
+        {((uploadOption === 'separate' && frontImage && backImage && preValidationFront?.isValid && preValidationBack?.isValid) || 
+          (uploadOption === 'combined' && combinedImage)) && !isProcessing && (
+          <div className="text-center text-sm text-muted-foreground">
+            Verificação iniciará automaticamente...
+          </div>
+        )}
+
+        {/* Hidden inputs */}
+        <input
+          ref={frontInputRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          onChange={(e) => handleFileChange(e, 'front')}
+          className="hidden"
+        />
+        <input
+          ref={backInputRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          onChange={(e) => handleFileChange(e, 'back')}
+          className="hidden"
+        />
+
+        <Button
+          variant="outline"
+          onClick={() => {
+            setUploadOption(null);
+            setFrontImage(null);
+            setBackImage(null);
+            setCombinedImage(null);
+            setPreValidationFront(null);
+            setPreValidationBack(null);
+          }}
+          className="w-full"
+        >
+          Voltar
+        </Button>
       </div>
     );
   };

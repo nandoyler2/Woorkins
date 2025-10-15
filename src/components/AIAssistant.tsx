@@ -215,6 +215,28 @@ export const AIAssistant = () => {
     }
   };
 
+  const endConversation = async () => {
+    try {
+      if (profileId) {
+        await supabase
+          .from('ai_assistant_conversations')
+          .delete()
+          .eq('profile_id', profileId);
+      }
+    } catch (e) {
+      console.error('Error ending AI conversation:', e);
+    }
+
+    const welcomeMsg = userName
+      ? `Olá, ${userName}! 👋\n\nSou o assistente virtual da Woorkins e estou aqui para ajudá-lo(a) no que precisar.\n\nSelecione um dos tópicos abaixo ou digite sua dúvida diretamente:`
+      : 'Olá! 👋\n\nSou o assistente virtual da Woorkins e estou aqui para ajudá-lo(a) no que precisar.\n\nSelecione um dos tópicos abaixo ou digite sua dúvida diretamente:';
+
+    setMessages([{ role: 'assistant', content: welcomeMsg }]);
+    setShowTopics(true);
+    setShowBlockQuestion(false);
+    toast({ title: 'Conversa encerrada', description: 'Voltei para os tópicos iniciais.' });
+  };
+
   return (
     <>
       {/* Botão flutuante - menor */}
@@ -235,12 +257,23 @@ export const AIAssistant = () => {
       {/* Chat window */}
       {isOpen && (
         <div className="fixed bottom-24 left-6 w-96 h-[600px] bg-gradient-to-br from-background via-background to-background/95 border-2 border-primary/20 rounded-3xl shadow-2xl z-50 flex flex-col backdrop-blur-sm animate-scale-in">
-          {/* Header */}
           <div className="p-6 border-b border-primary/10 bg-gradient-to-r from-primary/5 to-transparent rounded-t-3xl">
-            <h3 className="font-bold text-lg flex items-center gap-2">
-              <MessageCircle className="h-5 w-5 text-primary" />
-              Assistente Virtual Woorkins
-            </h3>
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold text-lg flex items-center gap-2">
+                <MessageCircle className="h-5 w-5 text-primary" />
+                Assistente Virtual Woorkins
+              </h3>
+              {messages.length > 0 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={endConversation}
+                  className="h-8"
+                >
+                  Encerrar conversa
+                </Button>
+              )}
+            </div>
             <p className="text-sm text-muted-foreground mt-1">Estou aqui para ajudar você{userName && `, ${userName}`}!</p>
           </div>
 

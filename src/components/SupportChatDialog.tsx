@@ -328,7 +328,7 @@ export function SupportChatDialog({ open, onOpenChange, documentRejected, profil
               Suporte
             </div>
             <div className="flex items-center gap-2">
-              {!showWelcome && conversationId && (
+              {conversationId && (
                 <>
                   <div className="text-xs text-muted-foreground">
                     Encerra em: {formatTime(timeUntilClose)}

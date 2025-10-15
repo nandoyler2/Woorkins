@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { MessageCircle, X, Send, HelpCircle, Shield, Coins, AlertCircle } from 'lucide-react';
+import { MessageCircle, X, Send, HelpCircle, Shield, Coins, AlertCircle, History } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
@@ -36,9 +36,19 @@ const helpTopics = [
   }
 ];
 
+type ViewMode = 'welcome' | 'chat' | 'history';
+
+interface ArchivedConversation {
+  id: string;
+  messages: Message[];
+  archived_at: string;
+  created_at: string;
+}
+
 export const AIAssistant = () => {
   const { isOpen: contextIsOpen, close, initialMessage } = useAIAssistant();
   const [internalOpen, setInternalOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>('welcome');
   const [showTopics, setShowTopics] = useState(true);
   const [userName, setUserName] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
@@ -50,6 +60,12 @@ export const AIAssistant = () => {
   const [isTyping, setIsTyping] = useState(false);
   const [streamingMessage, setStreamingMessage] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
+  const [archivedConversations, setArchivedConversations] = useState<ArchivedConversation[]>([]);
+  const [filteredConversations, setFilteredConversations] = useState<ArchivedConversation[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [selectedConversation, setSelectedConversation] = useState<ArchivedConversation | null>(null);
+  const conversationsPerPage = 10;
   const { toast } = useToast();
   const { session } = useAuth();
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -99,11 +115,12 @@ export const AIAssistant = () => {
         const hasBlock = !!(recentBlocks && recentBlocks.length > 0) || !!systemBlock || !!messagingBlock || hasModeratedBlock;
         setHasRecentBlock(hasBlock);
 
-        // Carregar conversas anteriores
+        // Carregar conversas não arquivadas
         const { data: conversation } = await supabase
           .from('ai_assistant_conversations')
           .select('messages')
           .eq('profile_id', profile.id)
+          .eq('archived', false)
           .maybeSingle();
 
         if (conversation?.messages && Array.isArray(conversation.messages) && conversation.messages.length > 0) {
@@ -117,6 +134,7 @@ export const AIAssistant = () => {
             setMessages(existing);
             setShowTopics(false);
             setShowBlockQuestion(false);
+            setViewMode('chat');
           }
         } else {
           if (hasBlock) {
@@ -124,6 +142,7 @@ export const AIAssistant = () => {
             setMessages([{ role: 'assistant', content: blockMsg }]);
             setShowBlockQuestion(true);
             setShowTopics(false);
+            setViewMode('chat');
           } else {
             // Primeira vez - mostrar mensagem de boas-vindas
             const welcomeMsg = firstName 
@@ -132,6 +151,7 @@ export const AIAssistant = () => {
             
             setMessages([{ role: 'assistant', content: welcomeMsg }]);
             setShowTopics(true);
+            setViewMode('welcome');
           }
         }
       }
@@ -172,6 +192,7 @@ export const AIAssistant = () => {
   const handleTopicSelect = (topic: typeof helpTopics[0]) => {
     setShowTopics(false);
     setShowBlockQuestion(false);
+    setViewMode('chat');
     sendMessageInternal(topic.message);
   };
 
@@ -324,13 +345,18 @@ export const AIAssistant = () => {
   const endConversation = async () => {
     try {
       if (profileId) {
+        // Arquivar conversa ao invés de deletar
         await supabase
           .from('ai_assistant_conversations')
-          .delete()
-          .eq('profile_id', profileId);
+          .update({ 
+            archived: true, 
+            archived_at: new Date().toISOString() 
+          })
+          .eq('profile_id', profileId)
+          .eq('archived', false);
       }
     } catch (e) {
-      console.error('Error ending AI conversation:', e);
+      console.error('Error archiving AI conversation:', e);
     }
 
     const welcomeMsg = userName
@@ -340,8 +366,77 @@ export const AIAssistant = () => {
     setMessages([{ role: 'assistant', content: welcomeMsg }]);
     setShowTopics(true);
     setShowBlockQuestion(false);
-    toast({ title: 'Conversa encerrada', description: 'Voltei para os tópicos iniciais.' });
+    setViewMode('welcome');
+    toast({ title: 'Conversa arquivada', description: 'Você pode acessá-la no histórico.' });
   };
+
+  const loadArchivedConversations = async () => {
+    if (!profileId) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('ai_assistant_conversations')
+        .select('*')
+        .eq('profile_id', profileId)
+        .eq('archived', true)
+        .order('archived_at', { ascending: false });
+
+      if (error) throw error;
+
+      const conversations = (data || []).map(conv => ({
+        ...conv,
+        messages: conv.messages as unknown as Message[]
+      }));
+
+      setArchivedConversations(conversations);
+      setFilteredConversations(conversations);
+    } catch (e) {
+      console.error('Error loading archived conversations:', e);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível carregar o histórico.',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    setCurrentPage(1);
+
+    if (!query.trim()) {
+      setFilteredConversations(archivedConversations);
+      return;
+    }
+
+    const filtered = archivedConversations.filter(conv => {
+      const messagesText = conv.messages.map(m => m.content).join(' ').toLowerCase();
+      return messagesText.includes(query.toLowerCase());
+    });
+
+    setFilteredConversations(filtered);
+  };
+
+  const showHistoryView = () => {
+    setViewMode('history');
+    setSelectedConversation(null);
+    setSearchQuery('');
+    setCurrentPage(1);
+    loadArchivedConversations();
+  };
+
+  const backToWelcome = () => {
+    setViewMode('welcome');
+    setSelectedConversation(null);
+    setSearchQuery('');
+    setCurrentPage(1);
+  };
+
+  // Paginação
+  const indexOfLastConv = currentPage * conversationsPerPage;
+  const indexOfFirstConv = indexOfLastConv - conversationsPerPage;
+  const currentConversations = filteredConversations.slice(indexOfFirstConv, indexOfLastConv);
+  const totalPages = Math.ceil(filteredConversations.length / conversationsPerPage);
 
   return (
     <>
@@ -369,7 +464,17 @@ export const AIAssistant = () => {
                 <p className="text-sm text-muted-foreground mt-1">Estou aqui para ajudar você{userName && `, ${userName}`}!</p>
               </div>
               <div className="flex items-center gap-2">
-                {messages.length > 0 && (
+                {viewMode === 'welcome' && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={showHistoryView}
+                    className="h-8"
+                  >
+                    Histórico de conversas
+                  </Button>
+                )}
+                {viewMode === 'chat' && messages.length > 1 && (
                   <Button
                     variant="outline"
                     size="sm"
@@ -377,6 +482,16 @@ export const AIAssistant = () => {
                     className="h-8"
                   >
                     Encerrar conversa
+                  </Button>
+                )}
+                {viewMode === 'history' && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={backToWelcome}
+                    className="h-8"
+                  >
+                    Voltar
                   </Button>
                 )}
                 <Button
@@ -394,8 +509,109 @@ export const AIAssistant = () => {
             </div>
           </div>
 
+          {/* History View */}
+          {viewMode === 'history' && !selectedConversation && (
+            <div className="flex-1 overflow-y-auto p-4">
+              <div className="mb-4">
+                <input
+                  type="text"
+                  placeholder="Buscar nas conversas..."
+                  value={searchQuery}
+                  onChange={(e) => handleSearch(e.target.value)}
+                  className="w-full px-4 py-2 border border-primary/20 rounded-xl focus:outline-none focus:border-primary/40 bg-background"
+                />
+              </div>
+
+              {currentConversations.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  {searchQuery ? 'Nenhuma conversa encontrada.' : 'Nenhuma conversa arquivada ainda.'}
+                </div>
+              ) : (
+                <>
+                  <div className="space-y-3">
+                    {currentConversations.map((conv) => (
+                      <button
+                        key={conv.id}
+                        onClick={() => setSelectedConversation(conv)}
+                        className="w-full text-left p-4 border border-primary/20 rounded-xl hover:bg-primary/5 transition-colors"
+                      >
+                        <div className="flex justify-between items-start mb-2">
+                          <span className="font-medium text-sm">
+                            {new Date(conv.archived_at).toLocaleDateString('pt-BR')} às{' '}
+                            {new Date(conv.archived_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground line-clamp-2">
+                          {conv.messages[1]?.content || 'Conversa vazia'}
+                        </p>
+                      </button>
+                    ))}
+                  </div>
+
+                  {totalPages > 1 && (
+                    <div className="flex justify-center items-center gap-2 mt-4">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                        disabled={currentPage === 1}
+                      >
+                        Anterior
+                      </Button>
+                      <span className="text-sm">
+                        Página {currentPage} de {totalPages}
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                        disabled={currentPage === totalPages}
+                      >
+                        Próxima
+                      </Button>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+
+          {/* Selected Conversation View */}
+          {viewMode === 'history' && selectedConversation && (
+            <div className="flex-1 overflow-y-auto p-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setSelectedConversation(null)}
+                className="mb-4"
+              >
+                ← Voltar para lista
+              </Button>
+
+              <div className="space-y-4">
+                {selectedConversation.messages.map((msg, idx) => (
+                  <div
+                    key={idx}
+                    className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                  >
+                    <div
+                      className={`max-w-[80%] rounded-2xl px-4 py-3 shadow-sm ${
+                        msg.role === 'user'
+                          ? 'bg-gradient-to-br from-primary to-primary/80 text-primary-foreground'
+                          : 'bg-gradient-to-br from-muted to-muted/50 border border-primary/10'
+                      }`}
+                    >
+                      <p className="text-sm whitespace-pre-wrap leading-relaxed">{formatMessageContent(msg.content)}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4 scroll-smooth">
+          {viewMode !== 'history' && (
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 scroll-smooth">
             {messages.map((msg, idx) => (
               <div key={idx}>
                 <div
@@ -459,11 +675,13 @@ export const AIAssistant = () => {
                 </div>
               </div>
             )}
-            <div ref={messagesEndRef} />
-          </div>
+              <div ref={messagesEndRef} />
+            </div>
+          )}
 
           {/* Input */}
-          <div className="p-4 border-t border-primary/10 bg-gradient-to-r from-transparent to-primary/5 rounded-b-3xl">
+          {viewMode !== 'history' && (
+            <div className="p-4 border-t border-primary/10 bg-gradient-to-r from-transparent to-primary/5 rounded-b-3xl">
             <div className="flex gap-2">
               <Textarea
                 value={input}
@@ -489,6 +707,7 @@ export const AIAssistant = () => {
               </Button>
             </div>
           </div>
+          )}
         </div>
       )}
     </>

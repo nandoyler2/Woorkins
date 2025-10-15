@@ -16,6 +16,8 @@ export type Database = {
     Tables: {
       ai_assistant_conversations: {
         Row: {
+          archived: boolean | null
+          archived_at: string | null
           created_at: string | null
           id: string
           messages: Json
@@ -23,6 +25,8 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          archived?: boolean | null
+          archived_at?: string | null
           created_at?: string | null
           id?: string
           messages?: Json
@@ -30,6 +34,8 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          archived?: boolean | null
+          archived_at?: string | null
           created_at?: string | null
           id?: string
           messages?: Json

@@ -561,7 +561,7 @@ export default function Messages() {
           </div>
 
           {/* Área de Chat */}
-          <div className="flex-1 bg-card overflow-hidden">
+          <div className="flex-1 bg-card overflow-hidden flex flex-col">
             {selectedConversation ? (
               <UnifiedChat
                 conversationId={selectedConversation.id}

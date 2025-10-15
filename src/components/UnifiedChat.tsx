@@ -88,7 +88,7 @@ export function UnifiedChat({
 
   const {
     messages,
-    isLoading,
+    isLoading: _isLoading,
     isSending,
     otherUserTyping,
     isBlocked,
@@ -455,13 +455,14 @@ useEffect(() => {
 
   const isMyMessage = (senderId: string) => senderId === profileId;
 
-  if (isLoading || isLoadingProposal) {
-    return (
-      <div className="h-full flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
+  // Renderiza imediatamente sem loading
+  // if (_isLoading || isLoadingProposal) {
+  //   return (
+  //     <div className="h-full flex items-center justify-center">
+  //       <Loader2 className="h-8 w-8 animate-spin text-primary" />
+  //     </div>
+  //   );
+  // }
 
   // Check if chat should be locked (proposal not unlocked, user is freelancer, and no messages yet)
   const isChatLocked = conversationType === 'proposal' && 

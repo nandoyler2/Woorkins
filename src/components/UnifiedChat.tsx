@@ -7,7 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Send, Loader2, Check, CheckCheck, Paperclip, Smile, ExternalLink, Lock, Shield, AlertTriangle, Trash2 } from 'lucide-react';
+import { Send, Loader2, Check, CheckCheck, Paperclip, Smile, ExternalLink, Lock, Shield, AlertTriangle, Trash2, X, Download, FileText, File } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import {
   AlertDialog,
@@ -24,6 +24,7 @@ import { ptBR } from 'date-fns/locale';
 import { useRealtimeMessaging } from '@/hooks/useRealtimeMessaging';
 import { ProposalNegotiationPanel } from './ProposalNegotiationPanel';
 import { BlockedMessageCountdown } from './BlockedMessageCountdown';
+import { ImageViewer } from './ImageViewer';
 
 interface UnifiedChatProps {
   conversationId: string;
@@ -64,6 +65,10 @@ export function UnifiedChat({
   const [isOwner, setIsOwner] = useState(false);
   const [isLoadingProposal, setIsLoadingProposal] = useState(true);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [filePreviewUrl, setFilePreviewUrl] = useState<string | null>(null);
+  const [viewingImage, setViewingImage] = useState<{ url: string; name: string } | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const {
     messages,
@@ -200,7 +205,7 @@ export function UnifiedChat({
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!messageInput.trim() || isSending) return;
+    if ((!messageInput.trim() && !selectedFile) || isSending) return;
 
     // If it's a proposal and owner sends first message, unlock it
     if (conversationType === 'proposal' && isOwner && !proposalData?.is_unlocked) {
@@ -213,8 +218,78 @@ export function UnifiedChat({
         .eq('id', conversationId);
     }
 
-    await sendMessageHook(messageInput);
+    const attachment = selectedFile && filePreviewUrl 
+      ? { file: selectedFile, url: filePreviewUrl }
+      : undefined;
+
+    await sendMessageHook(messageInput, attachment);
     setMessageInput('');
+    setSelectedFile(null);
+    setFilePreviewUrl(null);
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Check file size (10MB limit)
+    if (file.size > 10 * 1024 * 1024) {
+      toast({
+        variant: 'destructive',
+        title: 'Arquivo muito grande',
+        description: 'O arquivo deve ter no máximo 10MB',
+      });
+      return;
+    }
+
+    setSelectedFile(file);
+
+    // Create preview URL for images
+    if (file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFilePreviewUrl(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      setFilePreviewUrl(null);
+    }
+  };
+
+  const handleRemoveFile = () => {
+    setSelectedFile(null);
+    setFilePreviewUrl(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const getFileIcon = (type: string) => {
+    if (type.startsWith('image/')) return null;
+    if (type === 'application/pdf') return <FileText className="h-4 w-4" />;
+    return <File className="h-4 w-4" />;
+  };
+
+  const handleDownloadFile = async (url: string, name: string) => {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = name;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(downloadUrl);
+    } catch (error) {
+      console.error('Erro ao baixar arquivo:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Erro ao baixar',
+        description: 'Não foi possível baixar o arquivo',
+      });
+    }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -538,29 +613,55 @@ export function UnifiedChat({
                       </Avatar>
                     )}
                     
-                    <div className={`flex flex-col max-w-[75%] ${isMine ? 'items-end' : 'items-start'}`}>
-                      <div
-                        className={`group rounded-2xl px-4 py-2.5 shadow-sm relative ${
-                          isMine
-                            ? 'bg-primary text-primary-foreground rounded-tr-sm'
-                            : 'bg-card border rounded-tl-sm'
-                        }`}
-                      >
-                        <p className="text-sm leading-relaxed break-words">{message.content}</p>
-                        {isMine && (! (conversationType === 'proposal' && proposalData?.status === 'accepted')) && (
-                          <button
-                            type="button"
-                            onClick={async () => {
-                              const table = conversationType === 'negotiation' ? 'negotiation_messages' : 'proposal_messages';
-                              await supabase.from(table).delete().eq('id', message.id);
-                            }}
-                            className={`absolute -top-2 ${isMine ? '-left-2' : '-right-2'} opacity-0 group-hover:opacity-100 transition-opacity text-xs px-1 py-0.5 rounded bg-destructive text-destructive-foreground`}
-                            title="Apagar mensagem"
-                          >
-                            Excluir
-                          </button>
-                        )}
-                      </div>
+                     <div className={`flex flex-col max-w-[75%] ${isMine ? 'items-end' : 'items-start'}`}>
+                       <div
+                         className={`group rounded-2xl px-4 py-2.5 shadow-sm relative ${
+                           isMine
+                             ? 'bg-primary text-primary-foreground rounded-tr-sm'
+                             : 'bg-card border rounded-tl-sm'
+                         }`}
+                       >
+                         {message.media_url && message.media_type?.startsWith('image/') && (
+                           <div 
+                             className="mb-2 cursor-pointer hover:opacity-80 transition-opacity"
+                             onClick={() => setViewingImage({ url: message.media_url!, name: message.media_name || 'imagem.jpg' })}
+                           >
+                             <img 
+                               src={message.media_url} 
+                               alt={message.media_name || 'Imagem'}
+                               className="max-w-[300px] max-h-[300px] rounded-lg object-cover"
+                             />
+                           </div>
+                         )}
+                         {message.media_url && !message.media_type?.startsWith('image/') && (
+                           <div className="mb-2 flex items-center gap-2 p-2 bg-background/10 rounded-lg">
+                             {getFileIcon(message.media_type || '')}
+                             <span className="text-xs flex-1 truncate">{message.media_name}</span>
+                             <Button
+                               variant="ghost"
+                               size="icon"
+                               className="h-6 w-6"
+                               onClick={() => handleDownloadFile(message.media_url!, message.media_name || 'arquivo')}
+                             >
+                               <Download className="h-3 w-3" />
+                             </Button>
+                           </div>
+                         )}
+                         {message.content && <p className="text-sm leading-relaxed break-words">{message.content}</p>}
+                         {isMine && (! (conversationType === 'proposal' && proposalData?.status === 'accepted')) && (
+                           <button
+                             type="button"
+                             onClick={async () => {
+                               const table = conversationType === 'negotiation' ? 'negotiation_messages' : 'proposal_messages';
+                               await supabase.from(table).delete().eq('id', message.id);
+                             }}
+                             className={`absolute -top-2 ${isMine ? '-left-2' : '-right-2'} opacity-0 group-hover:opacity-100 transition-opacity text-xs px-1 py-0.5 rounded bg-destructive text-destructive-foreground`}
+                             title="Apagar mensagem"
+                           >
+                             Excluir
+                           </button>
+                         )}
+                       </div>
                       <div className={`flex items-center gap-1.5 mt-1 ${isMine ? 'flex-row-reverse' : 'flex-row'}`}>
                         <span className="text-xs text-muted-foreground">
                           {formatDistanceToNow(new Date(message.created_at), {
@@ -586,8 +687,34 @@ export function UnifiedChat({
           <div className="p-3">
             <BlockedMessageCountdown blockedUntil={finalBlockedUntil} reason={finalBlockReason} />
           </div>
-        ) : (
-          <form onSubmit={handleSendMessage} className="p-3">
+          ) : (
+            <form onSubmit={handleSendMessage} className="p-3 space-y-2">
+              {selectedFile && (
+                <div className="flex items-center gap-2 p-2 bg-muted rounded-lg">
+                  {filePreviewUrl && selectedFile.type.startsWith('image/') ? (
+                    <img src={filePreviewUrl} alt="Preview" className="h-12 w-12 object-cover rounded" />
+                  ) : (
+                    <div className="h-12 w-12 bg-background rounded flex items-center justify-center">
+                      {getFileIcon(selectedFile.type)}
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{selectedFile.name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {(selectedFile.size / 1024).toFixed(1)} KB
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleRemoveFile}
+                    className="flex-shrink-0"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
           {isChatLocked ? (
             <div className="text-center py-2">
               <p className="text-sm text-muted-foreground flex items-center justify-center gap-2">
@@ -597,11 +724,19 @@ export function UnifiedChat({
             </div>
           ) : (
             <div className="flex gap-2">
+              <input
+                ref={fileInputRef}
+                type="file"
+                onChange={handleFileSelect}
+                className="hidden"
+                accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.zip"
+              />
               <Button 
                 type="button" 
                 variant="ghost" 
                 size="icon"
                 className="flex-shrink-0"
+                onClick={() => fileInputRef.current?.click()}
               >
                 <Paperclip className="h-5 w-5" />
               </Button>
@@ -620,16 +755,8 @@ export function UnifiedChat({
                 }}
               />
               <Button 
-                type="button" 
-                variant="ghost" 
-                size="icon"
-                className="flex-shrink-0"
-              >
-                <Smile className="h-5 h-5" />
-              </Button>
-              <Button 
                 type="submit" 
-                disabled={isSending || !messageInput.trim()}
+                disabled={isSending || (!messageInput.trim() && !selectedFile)}
                 size="icon"
                 className="flex-shrink-0"
               >
@@ -644,6 +771,15 @@ export function UnifiedChat({
           </form>
         )}
       </div>
+
+      {/* Image Viewer */}
+      {viewingImage && (
+        <ImageViewer
+          imageUrl={viewingImage.url}
+          imageName={viewingImage.name}
+          onClose={() => setViewingImage(null)}
+        />
+      )}
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>

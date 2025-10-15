@@ -416,6 +416,9 @@ export type Database = {
           created_at: string
           delivered_at: string | null
           id: string
+          media_name: string | null
+          media_type: string | null
+          media_url: string | null
           message_type: string
           moderation_reason: string | null
           moderation_status: string | null
@@ -431,6 +434,9 @@ export type Database = {
           created_at?: string
           delivered_at?: string | null
           id?: string
+          media_name?: string | null
+          media_type?: string | null
+          media_url?: string | null
           message_type?: string
           moderation_reason?: string | null
           moderation_status?: string | null
@@ -446,6 +452,9 @@ export type Database = {
           created_at?: string
           delivered_at?: string | null
           id?: string
+          media_name?: string | null
+          media_type?: string | null
+          media_url?: string | null
           message_type?: string
           moderation_reason?: string | null
           moderation_status?: string | null
@@ -871,6 +880,9 @@ export type Database = {
           created_at: string
           delivered_at: string | null
           id: string
+          media_name: string | null
+          media_type: string | null
+          media_url: string | null
           moderation_reason: string | null
           moderation_status: string | null
           proposal_id: string
@@ -883,6 +895,9 @@ export type Database = {
           created_at?: string
           delivered_at?: string | null
           id?: string
+          media_name?: string | null
+          media_type?: string | null
+          media_url?: string | null
           moderation_reason?: string | null
           moderation_status?: string | null
           proposal_id: string
@@ -895,6 +910,9 @@ export type Database = {
           created_at?: string
           delivered_at?: string | null
           id?: string
+          media_name?: string | null
+          media_type?: string | null
+          media_url?: string | null
           moderation_reason?: string | null
           moderation_status?: string | null
           proposal_id?: string

@@ -12,6 +12,9 @@ interface Message {
   created_at: string;
   status?: 'sending' | 'sent' | 'delivered' | 'read';
   read_at?: string;
+  media_url?: string;
+  media_type?: string;
+  media_name?: string;
 }
 
 interface UseRealtimeMessagingProps {
@@ -171,6 +174,9 @@ export const useRealtimeMessaging = ({
           created_at: msg.created_at,
           status: msg.status || 'sent',
           read_at: msg.read_at,
+          media_url: msg.media_url,
+          media_type: msg.media_type,
+          media_name: msg.media_name,
         };
       }));
 
@@ -223,8 +229,8 @@ export const useRealtimeMessaging = ({
   }, [conversationId, conversationType, currentUserId]);
 
   // Send message with optimistic UI and content moderation
-  const sendMessage = useCallback(async (content: string) => {
-    if (!content.trim() || isSending) return;
+  const sendMessage = useCallback(async (content: string, attachment?: { file: File; url: string }) => {
+    if ((!content.trim() && !attachment) || isSending) return;
 
     // Check if user is blocked before sending
     const blocked = await checkBlockStatus();
@@ -248,15 +254,20 @@ export const useRealtimeMessaging = ({
         .slice(-5)
         .map(m => m.content);
 
-      // Call moderation function with context
+      // Call moderation function with context (including image if present)
+      const moderationBody: any = { 
+        content: content.trim(),
+        recentMessages: recentUserMessages 
+      };
+
+      // If there's an attachment and it's an image, include it in moderation
+      if (attachment && attachment.file.type.startsWith('image/')) {
+        moderationBody.imageUrl = attachment.url;
+      }
+
       const { data: moderationResult, error: moderationError } = await supabase.functions.invoke(
         'moderate-message',
-        {
-          body: { 
-            content: content.trim(),
-            recentMessages: recentUserMessages 
-          }
-        }
+        { body: moderationBody }
       );
 
       console.log('Moderation result:', moderationResult);
@@ -298,6 +309,41 @@ export const useRealtimeMessaging = ({
         });
       }
 
+      // Upload attachment if present
+      let uploadedMediaUrl: string | undefined;
+      let mediaType: string | undefined;
+      let mediaName: string | undefined;
+
+      if (attachment) {
+        try {
+          const fileExt = attachment.file.name.split('.').pop();
+          const fileName = `${currentUserId}/${Date.now()}.${fileExt}`;
+          
+          const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('message-attachments')
+            .upload(fileName, attachment.file);
+
+          if (uploadError) throw uploadError;
+
+          const { data: { publicUrl } } = supabase.storage
+            .from('message-attachments')
+            .getPublicUrl(fileName);
+
+          uploadedMediaUrl = publicUrl;
+          mediaType = attachment.file.type;
+          mediaName = attachment.file.name;
+        } catch (uploadError) {
+          console.error('Error uploading attachment:', uploadError);
+          toast({
+            variant: 'destructive',
+            title: 'Erro ao enviar anexo',
+            description: 'Não foi possível fazer upload do arquivo',
+          });
+          setIsSending(false);
+          return;
+        }
+      }
+
       const optimisticMessage: Message = {
         id: tempId,
         sender_id: currentUserId,
@@ -305,6 +351,9 @@ export const useRealtimeMessaging = ({
         content: content.trim(),
         created_at: new Date().toISOString(),
         status: 'sending',
+        media_url: uploadedMediaUrl,
+        media_type: mediaType,
+        media_name: mediaName,
       };
 
       // Optimistic UI update
@@ -318,6 +367,9 @@ export const useRealtimeMessaging = ({
         content: content.trim(),
         status: 'sent',
         moderation_status: 'approved',
+        media_url: uploadedMediaUrl,
+        media_type: mediaType,
+        media_name: mediaName,
       };
 
       if (conversationType === 'negotiation') {
@@ -354,6 +406,9 @@ export const useRealtimeMessaging = ({
               content: data.content,
               created_at: data.created_at,
               status: 'sent',
+              media_url: data.media_url,
+              media_type: data.media_type,
+              media_name: data.media_name,
             }
           : msg
       ));
@@ -459,6 +514,9 @@ export const useRealtimeMessaging = ({
             content: newMessage.content,
             created_at: newMessage.created_at,
             status: newMessage.status || 'sent',
+            media_url: newMessage.media_url,
+            media_type: newMessage.media_type,
+            media_name: newMessage.media_name,
           };
 
           // Only add if not from current user (to avoid duplicates from optimistic UI)

@@ -118,7 +118,7 @@ export default function Messages() {
     }
   }, [profileId, selectedConversation]);
 
-  // Auto-select conversation from query params
+  // Auto-select conversation from query params (only from notifications)
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const type = params.get('type') as 'negotiation' | 'proposal' | null;
@@ -126,13 +126,8 @@ export default function Messages() {
     if (type && id && conversations.length > 0) {
       const match = conversations.find(c => c.id === id && c.type === type);
       if (match) setSelectedConversation(match);
-      return;
     }
-    // Auto-seleciona a conversa mais recente quando não há nenhuma selecionada
-    if (!selectedConversation && conversations.length > 0) {
-      setSelectedConversation(conversations[0]);
-    }
-  }, [location.search, conversations, selectedConversation]);
+  }, [location.search, conversations]);
 
   const loadProfile = async () => {
     try {

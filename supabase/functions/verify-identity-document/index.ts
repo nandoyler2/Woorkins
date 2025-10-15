@@ -264,7 +264,7 @@ RESPONDA EM JSON:
       rejectionReasons: rejectionReasons.length > 0 ? rejectionReasons : null
     };
 
-    // Se aprovado, atualizar perfil
+    // Se aprovado, atualizar perfil e inserir registro de verificação
     if (verificationStatus === 'approved') {
       const updates: any = {
         document_verified: true,
@@ -291,6 +291,25 @@ RESPONDA EM JSON:
         .update(updates)
         .eq('id', profileId);
     }
+
+    // Inserir registro de verificação (usando service_role para bypass RLS)
+    await supabase
+      .from('document_verifications')
+      .insert({
+        profile_id: profileId,
+        document_front_url: frontImageUrl,
+        document_back_url: backImageUrl,
+        selfie_url: null,
+        verification_status: verificationStatus,
+        verification_result: result,
+        ai_analysis: result.aiAnalysis,
+        extracted_name: extractedName,
+        extracted_cpf: normalizedExtractedCPF,
+        extracted_birth_date: extractedBirthDate ? (() => {
+          const [day, month, year] = extractedBirthDate.split('/');
+          return `${year}-${month}-${day}`;
+        })() : null
+      });
 
     return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }

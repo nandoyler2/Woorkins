@@ -189,24 +189,7 @@ export function IdentityVerificationDialog({
 
       if (error) throw error;
 
-      // Save verification result
-      const { error: dbError } = await supabase
-        .from('document_verifications')
-        .insert({
-          profile_id: profile.id,
-          document_front_url: frontUrl,
-          document_back_url: backUrl,
-          selfie_url: null,
-          verification_status: data.status,
-          verification_result: data,
-          ai_analysis: data.aiAnalysis,
-          extracted_name: data.extractedData?.name,
-          extracted_cpf: data.extractedData?.cpf,
-          extracted_birth_date: data.extractedData?.birthDate
-        });
-
-      if (dbError) throw dbError;
-
+      // Edge function já salva o resultado da verificação
       setVerificationResult(data);
     } catch (error: any) {
       console.error('Verification error:', error);

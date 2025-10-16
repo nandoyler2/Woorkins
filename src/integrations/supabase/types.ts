@@ -1804,6 +1804,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      delete_own_account: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       get_freelancer_wallet_balance: {
         Args: { freelancer_profile_id: string }
         Returns: {

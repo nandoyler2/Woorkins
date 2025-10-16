@@ -387,7 +387,7 @@ export default function Account() {
       setLoading(true);
 
       // Deletar a conta do usuário
-      const { error } = await supabase.rpc('delete_user');
+      const { error } = await supabase.rpc('delete_own_account');
 
       if (error) throw error;
 

@@ -16,7 +16,7 @@ async function getUserContext(supabase: any, userId: string) {
 
   if (!profile) return null;
 
-  // Buscar bloqueios manuais do sistema
+  // Buscar bloqueios manuais do sistema com detalhes
   const { data: blocks } = await supabase
     .from('system_blocks')
     .select('*')
@@ -46,15 +46,51 @@ async function getUserContext(supabase: any, userId: string) {
     .select('*')
     .eq('profile_id', profile.id)
     .order('created_at', { ascending: false })
-    .limit(10);
+    .limit(20);
 
-  const { data: recentMessages } = await supabase
+  // Buscar mensagens rejeitadas de negociação com detalhes do destinatário
+  const { data: rejectedNegotiationMessages } = await supabase
     .from('negotiation_messages')
-    .select('*, negotiations(*)')
+    .select(`
+      *,
+      negotiations!inner(
+        id,
+        business_id,
+        user_id
+      )
+    `)
     .eq('sender_id', profile.id)
     .eq('moderation_status', 'rejected')
     .order('created_at', { ascending: false })
     .limit(5);
+
+  // Buscar mensagens rejeitadas de propostas com detalhes
+  const { data: rejectedProposalMessages } = await supabase
+    .from('proposal_messages')
+    .select(`
+      *,
+      proposals!inner(
+        id,
+        freelancer_id,
+        project_id,
+        projects!inner(
+          profile_id
+        )
+      )
+    `)
+    .eq('sender_id', profile.id)
+    .eq('moderation_status', 'rejected')
+    .order('created_at', { ascending: false })
+    .limit(5);
+
+  // Buscar pagamentos de woorkoins (stripe)
+  const { data: woorkoinsPayments } = await supabase
+    .from('woorkoins_transactions')
+    .select('*')
+    .eq('profile_id', profile.id)
+    .in('type', ['purchase', 'admin_adjustment'])
+    .order('created_at', { ascending: false })
+    .limit(10);
 
   return {
     profile,
@@ -63,7 +99,9 @@ async function getUserContext(supabase: any, userId: string) {
     hasActiveViolationBlock,
     balance,
     transactions: transactions || [],
-    recentMessages: recentMessages || []
+    rejectedNegotiationMessages: rejectedNegotiationMessages || [],
+    rejectedProposalMessages: rejectedProposalMessages || [],
+    woorkoinsPayments: woorkoinsPayments || []
   };
 }
 
@@ -117,8 +155,12 @@ async function executeAdminAction(supabase: any, action: string, params: any) {
 
       await supabase
         .from('woorkoins_balance')
-        .update({ balance: (currentBalance?.balance || 0) + params.amount })
-        .eq('profile_id', params.profileId);
+        .upsert({ 
+          profile_id: params.profileId,
+          balance: (currentBalance?.balance || 0) + params.amount 
+        }, {
+          onConflict: 'profile_id'
+        });
 
       await supabase
         .from('woorkoins_transactions')
@@ -126,10 +168,43 @@ async function executeAdminAction(supabase: any, action: string, params: any) {
           profile_id: params.profileId,
           type: 'admin_adjustment',
           amount: params.amount,
-          description: params.reason || 'Ajuste administrativo via AI'
+          description: params.reason || 'Compensação por erro do sistema'
         });
 
-      return { success: true, message: `${params.amount} woorkoins adicionados` };
+      return { success: true, message: `${params.amount} woorkoins adicionados com sucesso! ✨` };
+
+    case 'compensate_error':
+      // Adicionar woorkoins de compensação
+      const { data: balance } = await supabase
+        .from('woorkoins_balance')
+        .select('balance')
+        .eq('profile_id', params.profileId)
+        .maybeSingle();
+
+      const compensationAmount = params.originalAmount + 100; // Original + 100 de desculpas
+
+      await supabase
+        .from('woorkoins_balance')
+        .upsert({ 
+          profile_id: params.profileId,
+          balance: (balance?.balance || 0) + compensationAmount
+        }, {
+          onConflict: 'profile_id'
+        });
+
+      await supabase
+        .from('woorkoins_transactions')
+        .insert({
+          profile_id: params.profileId,
+          type: 'admin_adjustment',
+          amount: compensationAmount,
+          description: `Compensação: ${params.reason}. Inclui 100 woorkoins extras como pedido de desculpas.`
+        });
+
+      return { 
+        success: true, 
+        message: `Pronto! Adicionei ${params.originalAmount} woorkoins que você comprou + 100 woorkoins extras como pedido de desculpas pelo erro. Total: ${compensationAmount} woorkoins! ❤️✨` 
+      };
 
     case 'reset_violations':
       await supabase
@@ -247,38 +322,115 @@ ${userContext.blocks.map((b: any) => `
   - Tipo: ${b.block_type}
   - Motivo: ${b.reason}
   - Permanente: ${b.is_permanent ? 'Sim' : 'Não'}
-  - Expira em: ${b.blocked_until || 'N/A'}
+  - Data do bloqueio: ${new Date(b.created_at).toLocaleString('pt-BR')}
+  - Expira em: ${b.blocked_until ? new Date(b.blocked_until).toLocaleString('pt-BR') : 'N/A'}
 `).join('\n')}
 
 BLOQUEIO POR MODERAÇÃO AUTOMÁTICA: ${userContext.hasActiveViolationBlock ? 'SIM ⚠️' : 'NÃO'}
 ${userContext.hasActiveViolationBlock ? `
   - Total de violações: ${userContext.violations?.violation_count || 0}
-  - Bloqueado até: ${userContext.violations?.blocked_until || 'N/A'}
-  - Última violação: ${userContext.violations?.last_violation_at || 'Nunca'}
+  - Bloqueado até: ${new Date(userContext.violations.blocked_until).toLocaleString('pt-BR')}
+  - Última violação: ${new Date(userContext.violations.last_violation_at).toLocaleString('pt-BR')}
 ` : ''}
 
 VIOLAÇÕES DE MODERAÇÃO (histórico):
 - Total acumulado: ${userContext.violations?.violation_count || 0}
-- Última violação: ${userContext.violations?.last_violation_at || 'Nunca'}
+- Última violação: ${userContext.violations?.last_violation_at ? new Date(userContext.violations.last_violation_at).toLocaleString('pt-BR') : 'Nunca'}
 
-MENSAGENS BLOQUEADAS RECENTEMENTE: ${userContext.recentMessages.length}
-${userContext.recentMessages.slice(0, 3).map((m: any) => `
-  - Data: ${new Date(m.created_at).toLocaleString('pt-BR')}
-  - Motivo: ${m.moderation_reason}
-  - Conteúdo: ${m.content?.substring(0, 100)}...
+MENSAGENS BLOQUEADAS EM NEGOCIAÇÕES: ${userContext.rejectedNegotiationMessages.length}
+${userContext.rejectedNegotiationMessages.slice(0, 3).map((m: any) => `
+  - Data e hora: ${new Date(m.created_at).toLocaleString('pt-BR')}
+  - Motivo do bloqueio: ${m.moderation_reason}
+  - Mensagem enviada: "${m.content}"
+  - Contexto: Negociação #${m.negotiation_id.substring(0, 8)}
 `).join('\n')}
 
-TRANSAÇÕES RECENTES (Últimas 5):
-${userContext.transactions.slice(0, 5).map((t: any) => `
+MENSAGENS BLOQUEADAS EM PROPOSTAS: ${userContext.rejectedProposalMessages.length}
+${userContext.rejectedProposalMessages.slice(0, 3).map((m: any) => `
+  - Data e hora: ${new Date(m.created_at).toLocaleString('pt-BR')}
+  - Motivo do bloqueio: ${m.moderation_reason}
+  - Mensagem enviada: "${m.content}"
+  - Contexto: Proposta #${m.proposal_id.substring(0, 8)}
+`).join('\n')}
+
+TRANSAÇÕES E PAGAMENTOS DE WOORKOINS:
+${userContext.woorkoinsPayments.slice(0, 5).map((t: any) => `
+  - Data: ${new Date(t.created_at).toLocaleString('pt-BR')}
+  - Tipo: ${t.type}
+  - Quantidade: ${t.amount} woorkoins
+  - Descrição: ${t.description || 'N/A'}
+  - Status: ${t.status || 'completed'}
+`).join('\n')}
+
+TRANSAÇÕES RECENTES (Últimas 10):
+${userContext.transactions.slice(0, 10).map((t: any) => `
   - ${new Date(t.created_at).toLocaleString('pt-BR')}: ${t.type} - ${t.amount} woorkoins
   - Descrição: ${t.description || 'N/A'}
-  - Status: ${t.status || 'N/A'}
 `).join('\n')}`;
 
     const systemPrompt = `Você é uma assistente virtual ALEGRE e HUMANIZADA de suporte da Woorkins! 😊
 
 🎯 SEU PAPEL:
 Você é uma pessoa real, amigável e que entende quando alguém está sendo sincero ou não. Converse naturalmente!
+
+🔍 VERIFICAÇÃO DE CONTA (CRÍTICO):
+SEMPRE que o usuário mencionar problemas como:
+- Bloqueio ou mensagens bloqueadas
+- Compra de woorkoins que não foi creditada
+- Qualquer problema relacionado ao sistema
+
+VOCÊ DEVE PRIMEIRO:
+1. Dizer: "Vou dar uma verificada na sua conta, um minuto... 🔍"
+2. Analisar TODO o contexto da conta fornecido abaixo
+3. Verificar se o que ele está dizendo é verdade
+4. Responder com INFORMAÇÕES ESPECÍFICAS e REAIS
+
+EXEMPLOS DE VERIFICAÇÃO:
+
+📱 **BLOQUEIO POR MENSAGEM:**
+- Verifique as mensagens bloqueadas na seção "MENSAGENS BLOQUEADAS"
+- Diga EXATAMENTE: "Verifiquei sua conta ${firstName}. Você foi bloqueado no dia [DATA] às [HORA] porque em uma [negociação/proposta] você enviou esta mensagem: '[MENSAGEM EXATA]'. [EXPLICAÇÃO DO MOTIVO]"
+- Seja específica sobre data, hora e conteúdo
+
+💰 **WOORKOINS NÃO CREDITADOS:**
+- Verifique "TRANSAÇÕES E PAGAMENTOS DE WOORKOINS"
+- Verifique o saldo atual em "Saldo Woorkoins"
+- Compare se o pagamento existe nas transações mas não foi creditado
+- Se FOI CREDITADO: "Verifiquei ${firstName}, sua compra de [X] woorkoins foi processada no dia [DATA] às [HORA] e está no seu saldo. Seu saldo atual é [SALDO]."
+- Se NÃO FOI CREDITADO (erro real): Use a ação "compensate_error" (explicado abaixo)
+
+🎁 **COMPENSAÇÃO POR ERRO DA PLATAFORMA:**
+Se você identificar que a PLATAFORMA ERROU (não o usuário):
+- Bloqueio errôneo de mensagem que não violava regras
+- Woorkoins comprados mas não creditados (pagamento existe mas não aparece no saldo)
+- Qualquer erro técnico verificável
+
+VOCÊ DEVE:
+1. Pedir desculpas sinceras
+2. Explicar que vai cuidar para não acontecer mais
+3. **EXECUTAR A AÇÃO DE COMPENSAÇÃO:**
+
+Para woorkoins não creditados:
+{
+  "action": "compensate_error",
+  "params": {
+    "profileId": "${userContext.profile.id}",
+    "originalAmount": [VALOR_QUE_ELE_COMPROU],
+    "reason": "Woorkoins comprados não creditados - Pagamento ID: [ID]"
+  },
+  "message": "Peço desculpas ${firstName}! 😔 Verifiquei e realmente houve um erro no sistema. Já creditei os [X] woorkoins que você comprou + 100 woorkoins extras como pedido de desculpas. Vou cuidar para isso não acontecer mais! Você é muito importante pra gente! ❤️"
+}
+
+Para bloqueio errôneo + 100 woorkoins:
+{
+  "action": "add_woorkoins",
+  "params": {
+    "profileId": "${userContext.profile.id}",
+    "amount": 100,
+    "reason": "Compensação por bloqueio errôneo"
+  },
+  "message": "Peço desculpas ${firstName}! 😔 Analisando melhor, vi que sua mensagem não violava nossas regras. Já desbloqueei você e adicionei 100 woorkoins como pedido de desculpas. Vou cuidar para isso não acontecer mais! ❤️"
+}
 
 ⚠️ PERGUNTAS FORA DO ESCOPO:
 Se o usuário perguntar sobre coisas que NÃO têm relação com a Woorkins (conversa geral, outras plataformas, etc):

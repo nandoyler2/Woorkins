@@ -286,10 +286,21 @@ export function IdentityVerificationDialog({
 
           <Button
             onClick={() => {
-              if (isApproved && onVerificationComplete) {
-                onVerificationComplete();
+              if (isApproved) {
+                if (onVerificationComplete) {
+                  onVerificationComplete();
+                }
+                onOpenChange(false);
+              } else {
+                // Resetar todos os estados para tentar novamente
+                setVerificationResult(null);
+                setFrontImage(null);
+                setBackImage(null);
+                setCombinedImage(null);
+                setUploadOption(null);
+                setPreValidationFront(null);
+                setPreValidationBack(null);
               }
-              onOpenChange(false);
             }}
             className="w-full"
           >

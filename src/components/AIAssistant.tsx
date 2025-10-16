@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { MessageCircle, X, Send, HelpCircle, Shield, Coins, AlertCircle, History } from 'lucide-react';
+import { MessageCircle, X, Send, HelpCircle, Shield, Coins, AlertCircle, History, GripVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSystemBlock } from '@/hooks/useSystemBlock';
 import { useAIAssistant } from '@/contexts/AIAssistantContext';
+import { useLocation } from 'react-router-dom';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -65,11 +66,18 @@ export const AIAssistant = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedConversation, setSelectedConversation] = useState<ArchivedConversation | null>(null);
+  const [buttonPosition, setButtonPosition] = useState({ x: 24, y: window.innerHeight - 80 }); // Posição padrão
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const conversationsPerPage = 10;
   const { toast } = useToast();
   const { session } = useAuth();
+  const location = useLocation();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { systemBlock, messagingBlock } = useSystemBlock(profileId || '');
+
+  // Verificar se está na área admin
+  const isAdminArea = location.pathname.startsWith('/admin');
 
   // Sincronizar isOpen do contexto com o estado interno
   const isOpen = contextIsOpen || internalOpen;
@@ -438,17 +446,70 @@ export const AIAssistant = () => {
   const currentConversations = filteredConversations.slice(indexOfFirstConv, indexOfLastConv);
   const totalPages = Math.ceil(filteredConversations.length / conversationsPerPage);
 
+  // Funções de arrastar
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setIsDragging(true);
+    setDragOffset({
+      x: e.clientX - buttonPosition.x,
+      y: e.clientY - buttonPosition.y
+    });
+  };
+
+  const handleMouseMove = (e: MouseEvent) => {
+    if (!isDragging) return;
+    
+    const newX = e.clientX - dragOffset.x;
+    const newY = e.clientY - dragOffset.y;
+    
+    // Limitar posição dentro da tela
+    const maxX = window.innerWidth - 200; // largura aproximada do botão
+    const maxY = window.innerHeight - 50; // altura do botão
+    
+    setButtonPosition({
+      x: Math.max(0, Math.min(newX, maxX)),
+      y: Math.max(0, Math.min(newY, maxY))
+    });
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  useEffect(() => {
+    if (isDragging) {
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+      
+      return () => {
+        window.removeEventListener('mousemove', handleMouseMove);
+        window.removeEventListener('mouseup', handleMouseUp);
+      };
+    }
+  }, [isDragging, dragOffset]);
+
   return (
     <>
-      {/* Botão flutuante - 30% menor */}
-      {!isOpen && (
-        <Button
-          onClick={() => setInternalOpen(true)}
-          className="fixed bottom-6 left-6 h-8 px-3 rounded-full shadow-2xl z-50 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-white flex items-center gap-1.5 animate-fade-in hover-scale border border-white/20"
+      {/* Botão flutuante - 30% menor - oculto na área admin */}
+      {!isOpen && !isAdminArea && (
+        <div
+          style={{
+            position: 'fixed',
+            left: `${buttonPosition.x}px`,
+            top: `${buttonPosition.y}px`,
+            cursor: isDragging ? 'grabbing' : 'grab'
+          }}
+          className="z-50 group"
         >
-          <MessageCircle className="h-3.5 w-3.5" />
-          <span className="font-medium text-xs">Precisa de Ajuda?</span>
-        </Button>
+          <Button
+            onClick={() => setInternalOpen(true)}
+            onMouseDown={handleMouseDown}
+            className="h-8 px-3 rounded-full shadow-2xl bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-white flex items-center gap-1.5 animate-fade-in hover-scale border border-white/20 transition-all"
+          >
+            <GripVertical className="h-3 w-3 opacity-50 group-hover:opacity-100 transition-opacity" />
+            <MessageCircle className="h-3.5 w-3.5" />
+            <span className="font-medium text-xs">Precisa de Ajuda?</span>
+          </Button>
+        </div>
       )}
 
       {/* Chat window */}

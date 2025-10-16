@@ -90,10 +90,11 @@ export default function AdminUsers() {
       // Buscar roles, woorkoins, bloqueios, documentos verificados e plano separadamente para cada usuário
       const usersWithData = await Promise.all(
         (profiles || []).map(async (profile) => {
-          const { data: roles } = await supabase
+          const { data: role } = await supabase
             .from('user_roles')
             .select('role')
-            .eq('user_id', profile.user_id);
+            .eq('user_id', profile.user_id)
+            .maybeSingle();
           
           const { data: woorkoins } = await supabase
             .from('woorkoins_balance')
@@ -155,7 +156,7 @@ export default function AdminUsers() {
           
           return {
             ...profile,
-            user_roles: roles || [],
+            user_role: role?.role || 'user',
             woorkoins_balance: woorkoins?.balance || 0,
             blocks: blocks,
             violations: violations,
@@ -327,7 +328,7 @@ export default function AdminUsers() {
                   </TableCell>
                   <TableCell>
                     <Select 
-                      value={usr.user_roles?.[0]?.role || 'user'}
+                      value={usr.user_role || 'user'}
                       onValueChange={(value) => updateUserRole(usr.user_id, usr.id, value as any)}
                       disabled={usr.id === currentUserProfileId}
                     >

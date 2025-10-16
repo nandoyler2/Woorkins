@@ -116,22 +116,33 @@ function AppContent() {
   );
 }
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <LanguageProvider>
-          <AuthProvider>
-            <AIAssistantProvider>
-              <AppContent />
-            </AIAssistantProvider>
-          </AuthProvider>
-        </LanguageProvider>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  useEffect(() => {
+    // Redirect from Lovable domain to custom domain
+    const currentHost = window.location.hostname;
+    if (currentHost.includes('lovable.app')) {
+      const newUrl = `https://woorkins.com${window.location.pathname}${window.location.search}${window.location.hash}`;
+      window.location.replace(newUrl);
+    }
+  }, []);
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <LanguageProvider>
+            <AuthProvider>
+              <AIAssistantProvider>
+                <AppContent />
+              </AIAssistantProvider>
+            </AuthProvider>
+          </LanguageProvider>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;

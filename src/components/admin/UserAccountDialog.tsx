@@ -279,43 +279,33 @@ export function UserAccountDialog({ open, onOpenChange, user, onUpdate }: UserAc
 
       const usernameChanged = formData.username !== user.username;
 
-      // Atualizar perfil
+      // Preparar dados
       const updateData: any = {
         full_name: formData.full_name.trim(),
-        cpf: formData.cpf.replace(/[^\d]/g, ''), // Remove formatação
+        cpf: formData.cpf.replace(/[^\d]/g, ''),
         birth_date: formData.birth_date || null,
         location: formData.location?.trim() || null,
         bio: formData.bio?.trim() || null,
         filiation: formData.filiation?.trim() || null,
         nationality: formData.nationality?.trim() || null,
         place_of_birth: formData.place_of_birth?.trim() || null,
-        updated_at: new Date().toISOString()
       };
 
       if (usernameChanged) {
         updateData.username = formData.username.trim();
-        updateData.last_username_change = new Date().toISOString();
       }
 
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update(updateData)
-        .eq('id', user.id);
-
-      if (updateError) throw updateError;
-
-      // Atualizar email se mudou - fazer via edge function
-      if (formData.email && formData.email !== userEmail) {
-        try {
-          const { error: emailError } = await supabase.functions.invoke('update-user-email', {
-            body: { userId: user.user_id, newEmail: formData.email }
-          });
-          if (emailError) throw emailError;
-        } catch (emailErr) {
-          console.error('Error updating email:', emailErr);
-          // Não falhar a operação toda por causa do email
+      // Atualização via Edge Function (service role) para bypass de RLS
+      const { data, error } = await supabase.functions.invoke('admin-update-profile', {
+        body: {
+          profileId: user.id,
+          userId: user.user_id,
+          data: updateData,
+          email: formData.email
         }
-      }
+      });
+
+      if (error) throw error;
 
       toast({
         title: 'Sucesso',

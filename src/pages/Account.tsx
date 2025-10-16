@@ -61,6 +61,7 @@ export default function Account() {
   const [showUsernameWarning, setShowUsernameWarning] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
+  const [showFieldEditWarning, setShowFieldEditWarning] = useState<'name' | 'cpf' | null>(null);
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
     newPassword: '',
@@ -547,7 +548,7 @@ export default function Account() {
                     }}
                     onClick={() => {
                       if (profile.cpf) {
-                        openWithMessage('Preciso alterar meu nome no cadastro');
+                        setShowFieldEditWarning('name');
                       }
                     }}
                     readOnly={!!profile.cpf}
@@ -707,7 +708,7 @@ export default function Account() {
                     }}
                     onClick={() => {
                       if (profile.cpf) {
-                        openWithMessage('Meu CPF está errado, preciso trocar');
+                        setShowFieldEditWarning('cpf');
                       }
                     }}
                     readOnly={!!profile.cpf}
@@ -891,6 +892,45 @@ export default function Account() {
               className="bg-destructive hover:bg-destructive/90"
             >
               {loading ? 'Excluindo...' : 'Excluir Permanentemente'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Dialog de aviso para edição de nome/CPF */}
+      <AlertDialog open={!!showFieldEditWarning} onOpenChange={(open) => !open && setShowFieldEditWarning(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {showFieldEditWarning === 'name' ? 'Nome não pode ser alterado' : 'CPF não pode ser alterado'}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-4">
+              <p>
+                {showFieldEditWarning === 'name' 
+                  ? 'O nome completo não pode ser alterado após o CPF ser definido por questões de segurança e conformidade.'
+                  : 'O CPF não pode ser alterado após definido por questões de segurança e conformidade.'}
+              </p>
+              <p>
+                Se você identificou algum erro no seu {showFieldEditWarning === 'name' ? 'nome' : 'CPF'}, 
+                entre em contato com nossa central de suporte para que possamos ajudá-lo.
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setShowFieldEditWarning(null)}>
+              Sair
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                const message = showFieldEditWarning === 'name' 
+                  ? 'Preciso alterar meu nome no cadastro'
+                  : 'Meu CPF está errado, preciso trocar';
+                setShowFieldEditWarning(null);
+                openWithMessage(message);
+              }}
+              className="bg-gradient-primary"
+            >
+              Falar com o Suporte
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

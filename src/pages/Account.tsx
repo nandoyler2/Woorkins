@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Save, User, Mail, Lock, Shield, Camera, LockKeyhole, ExternalLink, Trash2 } from 'lucide-react';
+import { ArrowLeft, Save, User, Mail, Lock, Shield, Camera, LockKeyhole, ExternalLink, Trash2, Check } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { validateCPF, formatFullName, formatShortName } from '@/lib/utils';
 import { ProfilePhotoUpload } from '@/components/ProfilePhotoUpload';
@@ -636,8 +636,10 @@ export default function Account() {
                         type="button"
                         variant="outline"
                         disabled
+                        className="gap-2"
                       >
-                        Email selecionado
+                        <Check className="h-4 w-4" />
+                        Email verificado
                       </Button>
                     )}
                   </div>

@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Star, Search, Briefcase, MessageSquare, CheckCircle2, Phone, Building2, Users, UserPlus, ThumbsUp, MessageCircle, Award, Activity, TrendingUp, Bell, Clock, Trophy, Share2, Heart, Bookmark } from 'lucide-react';
+import { Star, Search, Briefcase, MessageSquare, CheckCircle2, Phone, Building2, Users, UserPlus, ThumbsUp, MessageCircle, Award, Activity, TrendingUp, Bell, Clock, Trophy, Share2, Heart, Bookmark, Camera, Mail, FileCheck } from 'lucide-react';
 import woorkoinsIcon from '@/assets/woorkoins-icon-latest.png';
 import { Link } from 'react-router-dom';
 import { Progress } from '@/components/ui/progress';
@@ -14,11 +14,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { formatShortName } from '@/lib/utils';
 import { ProfileEditDialog } from '@/components/ProfileEditDialog';
+import { IdentityVerificationDialog } from '@/components/IdentityVerificationDialog';
+import confetti from 'canvas-confetti';
 interface Profile {
   id: string;
   username: string;
   full_name: string | null;
   avatar_url: string | null;
+  document_verified: boolean;
+  cpf: string | null;
 }
 
 interface BusinessProfile {
@@ -76,6 +80,10 @@ export default function Dashboard() {
   const [unreadMessages, setUnreadMessages] = useState(5);
   const [woorkoinsBalance, setWoorkoinsBalance] = useState(0);
   const [showProfileEdit, setShowProfileEdit] = useState(false);
+  const [showVerificationDialog, setShowVerificationDialog] = useState(false);
+  const [emailConfirmed, setEmailConfirmed] = useState(false);
+  const [profileCompleted, setProfileCompleted] = useState(false);
+  const [hasShownConfetti, setHasShownConfetti] = useState(false);
   
   // Mock data for feed posts
   const feedPosts: FeedPost[] = [
@@ -224,8 +232,15 @@ export default function Dashboard() {
   useEffect(() => {
     if (user) {
       loadProfile();
+      checkEmailConfirmation();
     }
   }, [user]);
+
+  const checkEmailConfirmation = async () => {
+    if (!user) return;
+    const { data: { user: authUser } } = await supabase.auth.getUser();
+    setEmailConfirmed(!!authUser?.email_confirmed_at);
+  };
   
   const loadProfile = async () => {
     if (!user) return;
@@ -243,6 +258,94 @@ export default function Dashboard() {
     }
     setLoading(false);
   };
+
+  // Calcular tarefas de conclusão do perfil
+  const getProfileTasks = () => {
+    if (!profile) return { tasks: [], completion: 0 };
+
+    const tasks = [
+      {
+        id: 'photo',
+        title: 'Foto de perfil',
+        icon: Camera,
+        completed: !!profile.avatar_url,
+        action: () => setShowProfileEdit(true),
+      },
+      {
+        id: 'email',
+        title: 'Confirmação de email',
+        icon: Mail,
+        completed: emailConfirmed,
+        action: async () => {
+          try {
+            const { error } = await supabase.auth.resend({
+              type: 'signup',
+              email: user?.email || '',
+            });
+            if (!error) {
+              alert('Email de confirmação enviado! Verifique sua caixa de entrada.');
+            }
+          } catch (error) {
+            console.error('Error resending email:', error);
+          }
+        },
+      },
+      {
+        id: 'verification',
+        title: 'Verificação',
+        icon: FileCheck,
+        completed: profile.document_verified || false,
+        action: () => setShowVerificationDialog(true),
+      },
+    ];
+
+    const completedCount = tasks.filter(t => t.completed).length;
+    const completion = Math.round((completedCount / tasks.length) * 100);
+
+    return { tasks, completion };
+  };
+
+  const { tasks: profileTasks, completion: profileCompletion } = getProfileTasks();
+  const pendingTasks = profileTasks.filter(t => !t.completed);
+
+  // Animação de confete quando completar tudo
+  useEffect(() => {
+    const allCompleted = profileTasks.every(t => t.completed);
+    if (allCompleted && !hasShownConfetti && !loading) {
+      // Disparar confete
+      const duration = 3000;
+      const end = Date.now() + duration;
+
+      const frame = () => {
+        confetti({
+          particleCount: 3,
+          angle: 60,
+          spread: 55,
+          origin: { x: 0 },
+          colors: ['#3b82f6', '#10b981', '#f59e0b'],
+        });
+        confetti({
+          particleCount: 3,
+          angle: 120,
+          spread: 55,
+          origin: { x: 1 },
+          colors: ['#3b82f6', '#10b981', '#f59e0b'],
+        });
+
+        if (Date.now() < end) {
+          requestAnimationFrame(frame);
+        }
+      };
+      frame();
+
+      setHasShownConfetti(true);
+      
+      // Remover seção após 5 segundos
+      setTimeout(() => {
+        setProfileCompleted(true);
+      }, 5000);
+    }
+  }, [profileTasks, hasShownConfetti, loading]);
 
   const loadWoorkoinsBalance = async (profileId: string) => {
     const { data, error } = await supabase
@@ -274,7 +377,6 @@ export default function Dashboard() {
     );
   }
 
-  const profileCompletion = 75; // Mock data
   const accountType = 'Conta Grátis';
   const points = 1250;
   const maxPoints = 2000;
@@ -310,36 +412,81 @@ export default function Dashboard() {
                       </Link>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="text-xs text-slate-600 mb-1">Conclusão do Perfil</div>
-                    <div className="text-xl font-bold text-primary">{profileCompletion}%</div>
-                  </div>
+                  {!profileCompleted && (
+                    <div className="text-right">
+                      <div className="text-xs text-slate-600 mb-1">Conclusão do Perfil</div>
+                      <div className="text-xl font-bold text-primary">{profileCompletion}%</div>
+                    </div>
+                  )}
                 </div>
                 
-                <Progress value={profileCompletion} className="h-2 mb-4" />
+                {!profileCompleted && (
+                  <>
+                    <Progress value={profileCompletion} className="h-2 mb-4" />
 
-                {/* Profile Completion Tasks */}
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                  <div className="flex items-start gap-2 mb-2">
-                    <div className="w-6 h-6 bg-primary rounded flex items-center justify-center flex-shrink-0">
-                      <CheckCircle2 className="w-4 h-4 text-white" />
-                    </div>
-                    <p className="text-sm font-medium text-slate-900">
-                      Complete seu perfil para desbloquear mais recursos
-                    </p>
+                    {/* Profile Completion Tasks */}
+                    {pendingTasks.length > 0 ? (
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 animate-fade-in">
+                        <div className="flex items-start gap-2 mb-3">
+                          <div className="w-6 h-6 bg-primary rounded flex items-center justify-center flex-shrink-0">
+                            <CheckCircle2 className="w-4 h-4 text-white" />
+                          </div>
+                          <p className="text-sm font-medium text-slate-900">
+                            Complete seu perfil para desbloquear mais recursos
+                          </p>
+                        </div>
+                        <div className="flex flex-wrap gap-2 ml-8">
+                          {pendingTasks.map((task) => (
+                            <Button
+                              key={task.id}
+                              variant="outline"
+                              size="sm"
+                              className="text-xs h-7 border-slate-300 hover:border-primary hover:text-primary"
+                              onClick={task.action}
+                            >
+                              <task.icon className="w-3 h-3 mr-1" />
+                              {task.title}
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="bg-green-50 border-2 border-green-300 rounded-lg p-4 animate-scale-in">
+                        <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+                            <CheckCircle2 className="w-7 h-7 text-white" />
+                          </div>
+                          <div>
+                            <h3 className="text-lg font-bold text-green-900 mb-1">
+                              🎉 Parabéns! Perfil Completo!
+                            </h3>
+                            <p className="text-sm text-green-700">
+                              Você completou todas as informações importantes para usar o Woorkins!
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {/* Completed Tasks Display */}
+                {profileTasks.some(t => t.completed) && !profileCompleted && (
+                  <div className="mt-3 flex flex-wrap gap-2 ml-8">
+                    {profileTasks.filter(t => t.completed).map((task) => (
+                      <Button
+                        key={task.id}
+                        variant="outline"
+                        size="sm"
+                        className="text-xs h-7 border-green-500 text-green-600 bg-green-50 cursor-default"
+                        disabled
+                      >
+                        <CheckCircle2 className="w-3 h-3 mr-1" />
+                        {task.title} - Concluído
+                      </Button>
+                    ))}
                   </div>
-                  <div className="flex flex-wrap gap-2 ml-8">
-                    <Button variant="outline" size="sm" className="text-xs h-7 border-slate-300">
-                      + Adicionar Itens do Portfólio
-                    </Button>
-                    <Button variant="outline" size="sm" className="text-xs h-7 border-slate-300">
-                      + Verificar Número de Telefone
-                    </Button>
-                    <Button variant="outline" size="sm" className="text-xs h-7 border-slate-300">
-                      + Completar Perfil Empresarial
-                    </Button>
-                  </div>
-                </div>
+                )}
               </CardContent>
             </Card>
 
@@ -804,13 +951,22 @@ export default function Dashboard() {
       </div>
 
       {/* Dialog de edição de perfil */}
-      {user && (
-        <ProfileEditDialog
-          open={showProfileEdit}
-          onOpenChange={setShowProfileEdit}
-          userId={user.id}
-          onUpdate={loadProfile}
-        />
+      {user && profile && (
+        <>
+          <ProfileEditDialog
+            open={showProfileEdit}
+            onOpenChange={setShowProfileEdit}
+            userId={user.id}
+            onUpdate={loadProfile}
+          />
+          <IdentityVerificationDialog
+            open={showVerificationDialog}
+            onOpenChange={setShowVerificationDialog}
+            profileId={profile.id}
+            registeredName={profile.full_name || ''}
+            registeredCPF={profile.cpf || ''}
+          />
+        </>
       )}
     </div>
   );

@@ -18,6 +18,7 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useDocumentVerification } from '@/hooks/useDocumentVerification';
 import { RequireDocumentVerificationDialog } from '@/components/RequireDocumentVerificationDialog';
+import { RequireProfilePhotoDialog } from '@/components/RequireProfilePhotoDialog';
 
 export default function ProjectCreate() {
   const { user } = useAuth();
@@ -34,17 +35,23 @@ export default function ProjectCreate() {
   const [profileId, setProfileId] = useState<string>('');
   const [registeredName, setRegisteredName] = useState('');
   const [registeredCPF, setRegisteredCPF] = useState('');
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [showVerificationDialog, setShowVerificationDialog] = useState(false);
+  const [showPhotoDialog, setShowPhotoDialog] = useState(false);
+  const [isCheckingRequirements, setIsCheckingRequirements] = useState(true);
 
   const { isVerified, isLoading: isCheckingVerification } = useDocumentVerification(profileId);
 
   useEffect(() => {
-    const loadProfile = async () => {
-      if (!user) return;
+    const checkRequirements = async () => {
+      if (!user) {
+        setIsCheckingRequirements(false);
+        return;
+      }
       
       const { data } = await supabase
         .from('profiles')
-        .select('id, full_name, cpf')
+        .select('id, full_name, cpf, avatar_url, document_verified')
         .eq('user_id', user.id)
         .single();
       
@@ -52,17 +59,32 @@ export default function ProjectCreate() {
         setProfileId(data.id);
         setRegisteredName(data.full_name || '');
         setRegisteredCPF(data.cpf || '');
+        setAvatarUrl(data.avatar_url);
+        
+        // Verificar requisitos na ordem: foto primeiro, depois documento
+        if (!data.avatar_url) {
+          setShowPhotoDialog(true);
+        } else if (!data.document_verified) {
+          setShowVerificationDialog(true);
+        }
       }
+      
+      setIsCheckingRequirements(false);
     };
 
-    loadProfile();
+    checkRequirements();
   }, [user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
 
-    // Check verification first
+    // Verificar requisitos novamente antes de enviar
+    if (!avatarUrl) {
+      setShowPhotoDialog(true);
+      return;
+    }
+
     if (!isVerified) {
       setShowVerificationDialog(true);
       return;
@@ -153,7 +175,17 @@ export default function ProjectCreate() {
             </div>
           </div>
 
-          <Card className="bg-card/50 backdrop-blur-sm border-2">
+          {isCheckingRequirements ? (
+            <Card className="bg-card/50 backdrop-blur-sm border-2">
+              <CardContent className="py-12">
+                <div className="flex flex-col items-center justify-center gap-4">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                  <p className="text-muted-foreground">Verificando requisitos...</p>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card className="bg-card/50 backdrop-blur-sm border-2">
             <CardHeader>
               <CardTitle>Detalhes do Projeto</CardTitle>
               <CardDescription>
@@ -265,12 +297,45 @@ export default function ProjectCreate() {
               </form>
             </CardContent>
           </Card>
+          )}
         </div>
       </div>
 
+      <RequireProfilePhotoDialog
+        open={showPhotoDialog}
+        userName={registeredName}
+        userId={user?.id || ''}
+        onPhotoUploaded={() => {
+          // Recarregar dados do perfil
+          const reloadProfile = async () => {
+            const { data } = await supabase
+              .from('profiles')
+              .select('avatar_url')
+              .eq('user_id', user?.id)
+              .single();
+            
+            if (data?.avatar_url) {
+              setAvatarUrl(data.avatar_url);
+              setShowPhotoDialog(false);
+              // Verificar documento após adicionar foto
+              if (!isVerified) {
+                setShowVerificationDialog(true);
+              }
+            }
+          };
+          reloadProfile();
+        }}
+      />
+
       <RequireDocumentVerificationDialog
         open={showVerificationDialog}
-        onOpenChange={setShowVerificationDialog}
+        onOpenChange={(open) => {
+          setShowVerificationDialog(open);
+          if (!open && !isVerified) {
+            // Se fechar sem verificar, redirecionar
+            navigate('/projetos');
+          }
+        }}
         profileId={profileId}
         registeredName={registeredName}
         registeredCPF={registeredCPF}

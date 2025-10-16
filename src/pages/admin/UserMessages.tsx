@@ -91,7 +91,12 @@ export default function UserMessages() {
           *,
           business_profiles (
             company_name,
-            logo_url
+            logo_url,
+            profile_id,
+            profiles (
+              full_name,
+              avatar_url
+            )
           ),
           negotiation_messages (
             id,
@@ -119,8 +124,14 @@ export default function UserMessages() {
             profile_id,
             profiles (
               full_name,
-              avatar_url
+              avatar_url,
+              id
             )
+          ),
+          profiles:freelancer_id (
+            full_name,
+            avatar_url,
+            id
           ),
           proposal_messages (
             id,
@@ -404,24 +415,60 @@ export default function UserMessages() {
                       <h3 className="text-lg font-semibold mb-3">Negociações ({filteredNegotiations.length})</h3>
                       {filteredNegotiations.map((neg) => (
                         <Card key={neg.id} className="p-4 mb-3">
-                          <div className="flex items-center gap-3 mb-3">
-                            {neg.business_profiles?.logo_url && (
-                              <img 
-                                src={neg.business_profiles.logo_url} 
-                                alt={neg.business_profiles.company_name}
-                                className="w-10 h-10 rounded-full object-cover"
-                              />
-                            )}
-                            <div className="flex-1">
-                              <h4 className="font-medium">{neg.business_profiles?.company_name}</h4>
-                              {neg.service_description && (
-                                <p className="text-sm text-muted-foreground">{neg.service_description}</p>
+                          {/* Participantes da conversa */}
+                          <div className="flex items-center justify-between mb-4 pb-3 border-b">
+                            <div className="flex items-center gap-6">
+                              {/* Usuário */}
+                              <a
+                                href={`/admin/users/${user?.id}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+                              >
+                                {user?.avatar_url && (
+                                  <img 
+                                    src={user.avatar_url} 
+                                    alt={user.full_name}
+                                    className="w-10 h-10 rounded-full object-cover border-2 border-primary"
+                                  />
+                                )}
+                                <div>
+                                  <p className="text-sm font-medium">{user?.full_name}</p>
+                                  <p className="text-xs text-muted-foreground">Cliente</p>
+                                </div>
+                              </a>
+                              
+                              {/* Empresa */}
+                              {neg.business_profiles && (
+                                <a
+                                  href={`/admin/users/${neg.business_profiles.profile_id}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+                                >
+                                  {neg.business_profiles.logo_url && (
+                                    <img 
+                                      src={neg.business_profiles.logo_url} 
+                                      alt={neg.business_profiles.company_name}
+                                      className="w-10 h-10 rounded-full object-cover border-2 border-blue-500"
+                                    />
+                                  )}
+                                  <div>
+                                    <p className="text-sm font-medium">{neg.business_profiles.company_name}</p>
+                                    <p className="text-xs text-muted-foreground">Empresa</p>
+                                  </div>
+                                </a>
                               )}
                             </div>
+                            
                             <Badge variant={neg.status === 'open' ? 'default' : 'secondary'}>
                               {neg.status}
                             </Badge>
                           </div>
+                          
+                          {neg.service_description && (
+                            <p className="text-sm text-muted-foreground mb-3">{neg.service_description}</p>
+                          )}
                           
                           <div className="space-y-2 max-h-96 overflow-y-auto">
                             {neg.negotiation_messages?.map((msg: any) => (
@@ -463,23 +510,61 @@ export default function UserMessages() {
                       <h3 className="text-lg font-semibold mb-3">Propostas ({filteredProposals.length})</h3>
                       {filteredProposals.map((prop) => (
                         <Card key={prop.id} className="p-4 mb-3">
-                          <div className="flex items-center gap-3 mb-3">
-                            {prop.projects?.profiles?.avatar_url && (
-                              <img 
-                                src={prop.projects.profiles.avatar_url} 
-                                alt={prop.projects.profiles.full_name}
-                                className="w-10 h-10 rounded-full object-cover"
-                              />
-                            )}
-                            <div className="flex-1">
-                              <h4 className="font-medium">{prop.projects?.title}</h4>
-                              <p className="text-sm text-muted-foreground">
-                                Cliente: {prop.projects?.profiles?.full_name}
-                              </p>
+                          {/* Participantes da conversa */}
+                          <div className="flex items-center justify-between mb-4 pb-3 border-b">
+                            <div className="flex items-center gap-6">
+                              {/* Freelancer */}
+                              {prop.profiles && (
+                                <a
+                                  href={`/admin/users/${prop.profiles.id}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+                                >
+                                  {prop.profiles.avatar_url && (
+                                    <img 
+                                      src={prop.profiles.avatar_url} 
+                                      alt={prop.profiles.full_name}
+                                      className="w-10 h-10 rounded-full object-cover border-2 border-green-500"
+                                    />
+                                  )}
+                                  <div>
+                                    <p className="text-sm font-medium">{prop.profiles.full_name}</p>
+                                    <p className="text-xs text-muted-foreground">Freelancer</p>
+                                  </div>
+                                </a>
+                              )}
+                              
+                              {/* Cliente do projeto */}
+                              {prop.projects?.profiles && (
+                                <a
+                                  href={`/admin/users/${prop.projects.profiles.id}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+                                >
+                                  {prop.projects.profiles.avatar_url && (
+                                    <img 
+                                      src={prop.projects.profiles.avatar_url} 
+                                      alt={prop.projects.profiles.full_name}
+                                      className="w-10 h-10 rounded-full object-cover border-2 border-primary"
+                                    />
+                                  )}
+                                  <div>
+                                    <p className="text-sm font-medium">{prop.projects.profiles.full_name}</p>
+                                    <p className="text-xs text-muted-foreground">Cliente</p>
+                                  </div>
+                                </a>
+                              )}
                             </div>
+                            
                             <Badge variant={prop.status === 'pending' ? 'default' : 'secondary'}>
                               {prop.status}
                             </Badge>
+                          </div>
+                          
+                          <div className="mb-3">
+                            <h4 className="font-medium">{prop.projects?.title}</h4>
                           </div>
                           
                           <div className="space-y-2 max-h-96 overflow-y-auto">

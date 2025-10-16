@@ -459,6 +459,42 @@ export default function Dashboard() {
 
           {/* Sidebar */}
           <div className="lg:col-span-4 space-y-4">
+            {/* Personal Profile Card */}
+            <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 shadow-sm border-2 border-blue-200">
+              <CardHeader className="border-b border-blue-200 p-4 bg-white/50">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 bg-blue-500 rounded-lg flex items-center justify-center">
+                    <Users className="w-4 h-4 text-white" />
+                  </div>
+                  <h3 className="text-base font-bold text-slate-900">Perfil de interações no Woorkins</h3>
+                </div>
+              </CardHeader>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3 p-3 rounded-lg border-2 border-blue-300 bg-white hover:shadow-md transition-all">
+                  <Avatar className="h-10 w-10 border-2 border-blue-400">
+                    {profile?.avatar_url ? (
+                      <AvatarImage src={profile.avatar_url} alt={profile.username} />
+                    ) : (
+                      <AvatarFallback className="bg-blue-100 text-blue-700">
+                        {profile?.username?.charAt(0).toUpperCase() || 'U'}
+                      </AvatarFallback>
+                    )}
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-sm font-semibold text-slate-900 truncate">
+                      {formatShortName(profile?.full_name) || profile?.username}
+                    </h4>
+                    <p className="text-xs text-blue-600 truncate">@{profile?.username}</p>
+                  </div>
+                  <Link to={`/perfil/${profile?.username}`}>
+                    <Button variant="outline" size="sm" className="text-xs h-7 px-3 border-blue-400 text-blue-600 hover:bg-blue-50">
+                      Ver perfil
+                    </Button>
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Professional Profiles Card */}
             <Card className="bg-white shadow-sm border border-slate-200">
               <CardHeader className="border-b border-slate-100 p-4">

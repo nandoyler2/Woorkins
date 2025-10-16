@@ -64,11 +64,19 @@ export function IdentityVerificationDialog({
 
   // Auto-submit quando ambas as imagens forem selecionadas (modo separate)
   useEffect(() => {
-    if (uploadOption === 'separate' && frontImage && backImage && 
-        preValidationFront?.isValid && preValidationBack?.isValid && !isProcessing) {
+    if (
+      uploadOption === 'separate' &&
+      frontImage &&
+      backImage &&
+      preValidationFront?.isValid &&
+      preValidationBack?.isValid &&
+      !isPreValidatingFront &&
+      !isPreValidatingBack &&
+      !isProcessing
+    ) {
       processVerification(frontImage, backImage);
     }
-  }, [frontImage, backImage, preValidationFront, preValidationBack, uploadOption, isProcessing]);
+  }, [frontImage, backImage, preValidationFront, preValidationBack, isPreValidatingFront, isPreValidatingBack, uploadOption, isProcessing]);
 
   const preValidateDocument = async (file: File, type: 'front' | 'back' | 'combined') => {
     if (type === 'front') {
@@ -99,7 +107,7 @@ export function IdentityVerificationDialog({
         type,
         result: data,
         isValid: data.isValid
-      };
+  };
 
       if (type === 'front') {
         setPreValidationFront(validationResult);
@@ -132,6 +140,13 @@ export function IdentityVerificationDialog({
       reader.onerror = reject;
       reader.readAsDataURL(file);
     });
+  };
+
+  const withTimeout = <T,>(promise: Promise<T>, ms: number, message: string): Promise<T> => {
+    return Promise.race([
+      promise,
+      new Promise<T>((_, reject) => setTimeout(() => reject(new Error(message)), ms)),
+    ]) as Promise<T>;
   };
 
   const processVerification = async (frontFile: File, backFile: File) => {

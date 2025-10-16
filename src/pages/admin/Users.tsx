@@ -37,11 +37,12 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { useToast } from '@/hooks/use-toast';
-import { Search, Shield, User, Ban, MoreVertical, Coins, ShieldOff, Info, History, FileCheck } from 'lucide-react';
+import { Search, Shield, User, Ban, MoreVertical, Coins, ShieldOff, Info, History, FileCheck, UserCircle } from 'lucide-react';
 import { formatShortName } from '@/lib/utils';
 import { ManageWoorkoinsDialog } from '@/components/admin/ManageWoorkoinsDialog';
 import { BlockUserDialog } from '@/components/admin/BlockUserDialog';
 import { BlockDetailsDialog } from '@/components/admin/BlockDetailsDialog';
+import { UserAccountDialog } from '@/components/admin/UserAccountDialog';
 
 export default function AdminUsers() {
   const { user } = useAuth();
@@ -58,6 +59,8 @@ export default function AdminUsers() {
   const [unblockLoading, setUnblockLoading] = useState(false);
   const [documentDialogOpen, setDocumentDialogOpen] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState<any>(null);
+  const [accountDialogOpen, setAccountDialogOpen] = useState(false);
+  const [selectedAccountUser, setSelectedAccountUser] = useState<any>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -83,7 +86,7 @@ export default function AdminUsers() {
 
       if (profilesError) throw profilesError;
 
-      // Buscar roles, woorkoins, bloqueios e documentos verificados separadamente para cada usuário
+      // Buscar roles, woorkoins, bloqueios, documentos verificados e plano separadamente para cada usuário
       const usersWithData = await Promise.all(
         (profiles || []).map(async (profile) => {
           const { data: roles } = await supabase
@@ -118,6 +121,14 @@ export default function AdminUsers() {
             .order('verified_at', { ascending: false })
             .limit(1);
 
+          // Buscar plano ativo do usuário
+          const { data: subscription } = await supabase
+            .from('user_subscription_plans')
+            .select('plan_type')
+            .eq('user_id', profile.user_id)
+            .eq('is_active', true)
+            .maybeSingle();
+
           // Criar bloqueio sintético se há violação ativa
           const blocks = [...(systemBlocks || [])];
           
@@ -147,7 +158,8 @@ export default function AdminUsers() {
             woorkoins_balance: woorkoins?.balance || 0,
             blocks: blocks,
             violations: violations,
-            approved_document: approvedDocuments?.[0] || null
+            approved_document: approvedDocuments?.[0] || null,
+            subscription_plan: subscription?.plan_type || 'free'
           };
         })
       );
@@ -267,7 +279,7 @@ export default function AdminUsers() {
             <TableRow>
               <TableHead>Usuário</TableHead>
               <TableHead>Woorkoins</TableHead>
-              <TableHead>Tipo</TableHead>
+              <TableHead>Plano</TableHead>
               <TableHead>Role</TableHead>
               <TableHead>Documento</TableHead>
               <TableHead>Status</TableHead>
@@ -295,7 +307,12 @@ export default function AdminUsers() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline">{usr.user_type}</Badge>
+                    <Badge variant="outline" className="capitalize">
+                      {usr.subscription_plan === 'free' && 'Gratuito'}
+                      {usr.subscription_plan === 'basic' && 'Básico'}
+                      {usr.subscription_plan === 'premium' && 'Premium'}
+                      {usr.subscription_plan === 'enterprise' && 'Empresarial'}
+                    </Badge>
                   </TableCell>
                   <TableCell>
                     <Select 
@@ -393,6 +410,15 @@ export default function AdminUsers() {
                         >
                           <History className="mr-2 h-4 w-4" />
                           Histórico de Mensagens
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setSelectedAccountUser(usr);
+                            setAccountDialogOpen(true);
+                          }}
+                        >
+                          <UserCircle className="mr-2 h-4 w-4" />
+                          Conta
                         </DropdownMenuItem>
                         {usr.approved_document && (
                           <DropdownMenuItem
@@ -546,6 +572,16 @@ export default function AdminUsers() {
             )}
           </DialogContent>
         </Dialog>
+
+        {/* Diálogo de Conta do Usuário */}
+        {selectedAccountUser && (
+          <UserAccountDialog
+            open={accountDialogOpen}
+            onOpenChange={setAccountDialogOpen}
+            user={selectedAccountUser}
+            onUpdate={loadUsers}
+          />
+        )}
       </Card>
     </div>
   );

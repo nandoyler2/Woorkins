@@ -935,9 +935,12 @@ export type Database = {
           created_at: string
           document_verification_status: string | null
           document_verified: boolean | null
+          filiation: string | null
           full_name: string | null
           id: string
           location: string | null
+          nationality: string | null
+          place_of_birth: string | null
           trust_level: string | null
           updated_at: string
           user_id: string
@@ -954,9 +957,12 @@ export type Database = {
           created_at?: string
           document_verification_status?: string | null
           document_verified?: boolean | null
+          filiation?: string | null
           full_name?: string | null
           id?: string
           location?: string | null
+          nationality?: string | null
+          place_of_birth?: string | null
           trust_level?: string | null
           updated_at?: string
           user_id: string
@@ -973,9 +979,12 @@ export type Database = {
           created_at?: string
           document_verification_status?: string | null
           document_verified?: boolean | null
+          filiation?: string | null
           full_name?: string | null
           id?: string
           location?: string | null
+          nationality?: string | null
+          place_of_birth?: string | null
           trust_level?: string | null
           updated_at?: string
           user_id?: string

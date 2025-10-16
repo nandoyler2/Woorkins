@@ -235,9 +235,9 @@ const handler = async (req: Request): Promise<Response> => {
   } catch (error: any) {
     console.error("Error in send-email-verification-code:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ success: false, error: error.message || 'Erro ao enviar código' }),
       {
-        status: error.message === "Unauthorized" ? 401 : 400,
+        status: 200, // Retorna 200 para evitar erro genérico no client
         headers: { "Content-Type": "application/json", ...corsHeaders },
       }
     );

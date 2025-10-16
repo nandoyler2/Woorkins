@@ -265,30 +265,9 @@ export function IdentityVerificationDialog({
   };
 
   const renderContent = () => {
-    // Apenas mostrar loading full screen durante processamento final ou documento combinado
-    if ((loadingStep === 'checking' && uploadOption === 'combined') || (isProcessing && loadingStep === 'validating')) {
-      return (
-        <div className="flex flex-col items-center justify-center p-8 space-y-4">
-          <Loader2 className="h-12 w-12 animate-spin text-primary" />
-          {loadingStep === 'checking' && (
-            <>
-              <p className="text-center font-semibold">Estamos verificando se o documento está correto</p>
-              <p className="text-sm text-muted-foreground text-center">Aguarde enquanto validamos seu documento</p>
-            </>
-          )}
-          {loadingStep === 'validating' && (
-            <>
-              <p className="text-center font-semibold">Validando as informações...</p>
-              <p className="text-sm text-muted-foreground text-center">Isso pode levar alguns segundos</p>
-            </>
-          )}
-        </div>
-      );
-    }
-
+    // 1) Resultado tem prioridade sobre qualquer loading
     if (verificationResult) {
       const isApproved = verificationResult.status === 'approved';
-      
       return (
         <div className="space-y-6 p-6">
           <div className={`flex items-center gap-3 p-4 rounded-lg ${isApproved ? 'bg-green-50' : 'bg-red-50'}`}>
@@ -377,6 +356,27 @@ export function IdentityVerificationDialog({
           >
             {isApproved ? 'Continuar' : 'Tentar Novamente'}
           </Button>
+        </div>
+      );
+    }
+
+    // 2) Loading somente quando não houver resultado
+    if ((loadingStep === 'checking' && uploadOption === 'combined') || (isProcessing && loadingStep === 'validating')) {
+      return (
+        <div className="flex flex-col items-center justify-center p-8 space-y-4">
+          <Loader2 className="h-12 w-12 animate-spin text-primary" />
+          {loadingStep === 'checking' && (
+            <>
+              <p className="text-center font-semibold">Estamos verificando se o documento está correto</p>
+              <p className="text-sm text-muted-foreground text-center">Aguarde enquanto validamos seu documento</p>
+            </>
+          )}
+          {loadingStep === 'validating' && (
+            <>
+              <p className="text-center font-semibold">Validando as informações...</p>
+              <p className="text-sm text-muted-foreground text-center">Isso pode levar alguns segundos</p>
+            </>
+          )}
         </div>
       );
     }

@@ -203,7 +203,7 @@ export default function Account() {
       }
 
       if (!response.data?.success) {
-        throw new Error('Erro ao enviar código');
+        throw new Error(response.data?.error || 'Erro ao enviar código');
       }
 
       setCodeSent(true);

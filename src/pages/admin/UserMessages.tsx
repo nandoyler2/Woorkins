@@ -608,7 +608,7 @@ export default function UserMessages() {
 
           {/* Conversas AI */}
           <TabsContent value="ai">
-            <ScrollArea className="h-[calc(100vh-24rem)]">
+            <ScrollArea className="h-[calc(100vh-12rem)]">
               {loading ? (
                 <div className="text-center py-8 text-muted-foreground">Carregando...</div>
               ) : filteredAiConversations.length === 0 ? (
@@ -619,6 +619,11 @@ export default function UserMessages() {
                 <div className="space-y-4 pr-4">
                   {filteredAiConversations.map((conv) => {
                     const messages = conv.messages as unknown as Message[];
+                    const aiSearchQuery = messageSearchQuery[conv.id] || '';
+                    const filteredMessages = messages.filter((msg) => 
+                      msg.content?.toLowerCase().includes(aiSearchQuery.toLowerCase())
+                    );
+                    
                     return (
                       <Card key={conv.id} className="p-4">
                         <div className="flex items-center justify-between mb-3">
@@ -631,8 +636,23 @@ export default function UserMessages() {
                             </span>
                           </div>
                         </div>
+                        
+                        {/* Campo de busca nas mensagens */}
+                        <div className="relative mb-3">
+                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                          <Input
+                            placeholder="Buscar nas mensagens..."
+                            value={aiSearchQuery}
+                            onChange={(e) => setMessageSearchQuery(prev => ({
+                              ...prev,
+                              [conv.id]: e.target.value
+                            }))}
+                            className="pl-9"
+                          />
+                        </div>
+                        
                         <div className="space-y-3">
-                          {messages.map((msg, idx) => (
+                          {filteredMessages.map((msg, idx) => (
                             <div
                               key={idx}
                               className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
@@ -661,7 +681,7 @@ export default function UserMessages() {
 
           {/* Mensagens Sinalizadas */}
           <TabsContent value="flagged">
-            <ScrollArea className="h-[calc(100vh-24rem)]">
+            <ScrollArea className="h-[calc(100vh-12rem)]">
               {/* Bloqueios e Restrições */}
               {blocks.length > 0 && (
                 <Card className="p-4 mb-4 border-destructive bg-destructive/5">
@@ -770,7 +790,7 @@ export default function UserMessages() {
 
           {/* Mensagens Excluídas */}
           <TabsContent value="deleted">
-            <ScrollArea className="h-[calc(100vh-24rem)]">
+            <ScrollArea className="h-[calc(100vh-12rem)]">
               {loading ? (
                 <div className="text-center py-8 text-muted-foreground">Carregando...</div>
               ) : filteredDeletedMessages.length === 0 ? (
@@ -827,7 +847,7 @@ export default function UserMessages() {
 
           {/* Conversas de Suporte */}
           <TabsContent value="support">
-            <ScrollArea className="h-[calc(100vh-24rem)]">
+            <ScrollArea className="h-[calc(100vh-12rem)]">
               {loading ? (
                 <div className="text-center py-8 text-muted-foreground">Carregando...</div>
               ) : filteredSupportConversations.length === 0 ? (
@@ -836,25 +856,46 @@ export default function UserMessages() {
                 </div>
               ) : (
                 <div className="space-y-4 pr-4">
-                  {filteredSupportConversations.map((conv) => (
-                    <Card key={conv.id} className="p-4">
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-2">
-                          <Badge variant={conv.status === 'active' ? 'default' : 'secondary'}>
-                            {conv.status === 'active' ? 'Ativa' : 'Resolvida'}
-                          </Badge>
-                          {conv.reason && (
-                            <span className="text-sm text-muted-foreground">
-                              Motivo: {conv.reason}
-                            </span>
-                          )}
+                  {filteredSupportConversations.map((conv) => {
+                    const supportSearchQuery = messageSearchQuery[conv.id] || '';
+                    const filteredMessages = conv.support_messages?.filter((msg: any) => 
+                      msg.content?.toLowerCase().includes(supportSearchQuery.toLowerCase())
+                    ) || [];
+                    
+                    return (
+                      <Card key={conv.id} className="p-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-2">
+                            <Badge variant={conv.status === 'active' ? 'default' : 'secondary'}>
+                              {conv.status === 'active' ? 'Ativa' : 'Resolvida'}
+                            </Badge>
+                            {conv.reason && (
+                              <span className="text-sm text-muted-foreground">
+                                Motivo: {conv.reason}
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-xs text-muted-foreground">
+                            {new Date(conv.created_at).toLocaleString('pt-BR')}
+                          </span>
                         </div>
-                        <span className="text-xs text-muted-foreground">
-                          {new Date(conv.created_at).toLocaleString('pt-BR')}
-                        </span>
-                      </div>
-                      <div className="space-y-2">
-                        {conv.support_messages?.map((msg: any) => (
+                        
+                        {/* Campo de busca nas mensagens */}
+                        <div className="relative mb-3">
+                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                          <Input
+                            placeholder="Buscar nas mensagens..."
+                            value={supportSearchQuery}
+                            onChange={(e) => setMessageSearchQuery(prev => ({
+                              ...prev,
+                              [conv.id]: e.target.value
+                            }))}
+                            className="pl-9"
+                          />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          {filteredMessages.map((msg: any) => (
                           <div
                             key={msg.id}
                             className={`flex ${msg.sender_type === 'user' ? 'justify-end' : 'justify-start'}`}
@@ -877,10 +918,11 @@ export default function UserMessages() {
                               </div>
                             </div>
                           </div>
-                        ))}
-                      </div>
-                    </Card>
-                  ))}
+                          ))}
+                        </div>
+                      </Card>
+                    );
+                  })}
                 </div>
               )}
             </ScrollArea>

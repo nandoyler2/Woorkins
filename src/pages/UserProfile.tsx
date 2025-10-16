@@ -48,7 +48,7 @@ interface UserPost {
 }
 
 export default function UserProfile() {
-  const { username } = useParams();
+  const { slug } = useParams();
   const { toast } = useToast();
   const [profile, setProfile] = useState<UserProfileData | null>(null);
   const [projects, setProjects] = useState<UserProject[]>([]);
@@ -58,17 +58,17 @@ export default function UserProfile() {
 
   useEffect(() => {
     loadUserProfile();
-  }, [username]);
+  }, [slug]);
 
   const loadUserProfile = async () => {
-    if (!username) return;
+    if (!slug) return;
 
     try {
       // Load user profile
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
-        .eq('username', username)
+        .eq('username', slug)
         .maybeSingle();
 
       if (profileError || !profileData) {

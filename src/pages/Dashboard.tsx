@@ -636,7 +636,7 @@ export default function Dashboard() {
                     <p className="text-xs text-blue-600 truncate">@{profile?.username}</p>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
-                    <Link to={`/perfil/${profile?.username}`}>
+                    <Link to={`/${profile?.username}`}>
                       <Button variant="outline" size="sm" className="text-xs h-7 px-2 border-blue-400 text-blue-600 hover:bg-blue-50">
                         Ver perfil
                       </Button>

@@ -604,7 +604,7 @@ export default function Account() {
                   )}
                   <p className="text-xs text-muted-foreground flex items-center gap-1">
                     Seu perfil: woorkins.com/{profile.username || 'username'}
-                    <Link to={`/perfil/${profile.username}`} target="_blank">
+                    <Link to={`/${profile.username}`} target="_blank">
                       <ExternalLink className="w-3 h-3" />
                     </Link>
                   </p>

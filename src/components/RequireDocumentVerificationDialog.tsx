@@ -95,7 +95,7 @@ export function RequireDocumentVerificationDialog({
           </div>
 
           <p className="text-sm text-center text-muted-foreground px-4">
-            O processo é rápido e seguro. Você precisará enviar fotos do seu documento.
+            O processo é rápido e seguro. Você precisará enviar fotos do seu documento de identidade (RG ou CNH).
           </p>
         </div>
 

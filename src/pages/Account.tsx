@@ -197,7 +197,13 @@ export default function Account() {
       });
 
       if (response.error) {
-        throw new Error(response.error.message);
+        // Se houver erro HTTP na edge function
+        const errorMessage = response.data?.error || response.error.message || 'Erro desconhecido';
+        throw new Error(errorMessage);
+      }
+
+      if (!response.data?.success) {
+        throw new Error('Erro ao enviar código');
       }
 
       setCodeSent(true);

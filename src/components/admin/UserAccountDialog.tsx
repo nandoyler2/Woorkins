@@ -9,7 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { SafeImage } from '@/components/ui/safe-image';
-import { User, Mail, Calendar, MapPin, FileText, Upload, Save, AlertTriangle } from 'lucide-react';
+import { User, Mail, Calendar, MapPin, FileText, Upload, Save, AlertTriangle, Trash2 } from 'lucide-react';
 import { formatFullName } from '@/lib/utils';
 
 interface UserAccountDialogProps {
@@ -41,6 +41,8 @@ export function UserAccountDialog({ open, onOpenChange, user, onUpdate }: UserAc
   const [userEmail, setUserEmail] = useState('');
   const [lastUsernameChange, setLastUsernameChange] = useState<Date | null>(null);
   const [showUsernameWarning, setShowUsernameWarning] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState('');
   const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
   const [checkingUsername, setCheckingUsername] = useState(false);
   const [formData, setFormData] = useState({
@@ -317,6 +319,45 @@ export function UserAccountDialog({ open, onOpenChange, user, onUpdate }: UserAc
     }
   };
 
+  const handleDeleteProfile = async () => {
+    if (deleteConfirmation !== `@${user.username}`) {
+      toast({
+        title: 'Confirmação incorreta',
+        description: `Digite exatamente @${user.username} para confirmar a exclusão`,
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      // Deletar o usuário (isso vai deletar o profile em cascata)
+      const { error } = await supabase.auth.admin.deleteUser(user.user_id);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Perfil excluído',
+        description: 'O perfil foi excluído permanentemente',
+      });
+
+      onUpdate();
+      onOpenChange(false);
+      setShowDeleteDialog(false);
+      setDeleteConfirmation('');
+    } catch (error: any) {
+      console.error('Error deleting profile:', error);
+      toast({
+        title: 'Erro ao excluir',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
@@ -512,6 +553,25 @@ export function UserAccountDialog({ open, onOpenChange, user, onUpdate }: UserAc
             </div>
           )}
 
+          {/* Zona de Perigo */}
+          <div className="space-y-4 p-4 border-2 border-destructive/20 rounded-lg bg-destructive/5">
+            <h3 className="font-semibold flex items-center gap-2 text-destructive">
+              <AlertTriangle className="h-4 w-4" />
+              Zona de Perigo
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              A exclusão do perfil é permanente e não pode ser desfeita. Todos os dados do usuário serão removidos.
+            </p>
+            <Button 
+              variant="destructive" 
+              onClick={() => setShowDeleteDialog(true)}
+              className="w-full"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Excluir Perfil Permanentemente
+            </Button>
+          </div>
+
           {/* Botões de Ação */}
           <div className="flex justify-end gap-2 pt-4 border-t">
             <Button variant="outline" onClick={() => onOpenChange(false)}>
@@ -547,6 +607,63 @@ export function UserAccountDialog({ open, onOpenChange, user, onUpdate }: UserAc
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction onClick={saveChanges}>
               Confirmar alteração
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Dialog de confirmação de exclusão */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+              <Trash2 className="h-5 w-5" />
+              Excluir Perfil Permanentemente
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-4">
+              <div className="space-y-2">
+                <p className="text-destructive font-semibold">
+                  ⚠️ ATENÇÃO: Esta ação não pode ser desfeita!
+                </p>
+                <p>
+                  Você está prestes a excluir permanentemente o perfil de <strong>{formatFullName(user.full_name)}</strong>.
+                </p>
+                <p>Isso irá remover:</p>
+                <ul className="list-disc list-inside space-y-1 text-sm">
+                  <li>Todos os dados do perfil</li>
+                  <li>Todas as mensagens</li>
+                  <li>Todos os projetos</li>
+                  <li>Todo o histórico do usuário</li>
+                </ul>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="delete-confirmation">
+                  Para confirmar, digite <span className="font-mono font-bold">@{user.username}</span>
+                </Label>
+                <Input
+                  id="delete-confirmation"
+                  value={deleteConfirmation}
+                  onChange={(e) => setDeleteConfirmation(e.target.value)}
+                  placeholder={`@${user.username}`}
+                  className="font-mono"
+                />
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => {
+              setDeleteConfirmation('');
+              setShowDeleteDialog(false);
+            }}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteProfile}
+              disabled={deleteConfirmation !== `@${user.username}` || loading}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              {loading ? 'Excluindo...' : 'Excluir Permanentemente'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

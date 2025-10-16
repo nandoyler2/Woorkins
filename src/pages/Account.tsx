@@ -7,8 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Save, User, Mail, Lock, Shield, Camera, LockKeyhole, ExternalLink } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { ArrowLeft, Save, User, Mail, Lock, Shield, Camera, LockKeyhole, ExternalLink, Trash2 } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import { validateCPF, formatFullName, formatShortName } from '@/lib/utils';
 import { ProfilePhotoUpload } from '@/components/ProfilePhotoUpload';
 import { useAIAssistant } from '@/contexts/AIAssistantContext';
@@ -39,6 +39,7 @@ export default function Account() {
   const { user } = useAuth();
   const { toast } = useToast();
   const { openWithMessage } = useAIAssistant();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [profile, setProfile] = useState({
     id: '',
@@ -54,6 +55,8 @@ export default function Account() {
   const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
   const [checkingUsername, setCheckingUsername] = useState(false);
   const [showUsernameWarning, setShowUsernameWarning] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState('');
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
     newPassword: '',
@@ -370,6 +373,44 @@ export default function Account() {
     }
   };
 
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmation !== `@${profile.username}`) {
+      toast({
+        title: 'Confirmação incorreta',
+        description: `Digite exatamente @${profile.username} para confirmar a exclusão`,
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      // Deletar a conta do usuário
+      const { error } = await supabase.rpc('delete_user');
+
+      if (error) throw error;
+
+      toast({
+        title: 'Conta excluída',
+        description: 'Sua conta foi excluída permanentemente',
+      });
+
+      // Fazer logout e redirecionar
+      await supabase.auth.signOut();
+      navigate('/');
+    } catch (error: any) {
+      console.error('Error deleting account:', error);
+      toast({
+        title: 'Erro ao excluir conta',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background">
       <Header />
@@ -584,6 +625,35 @@ export default function Account() {
               </form>
             </CardContent>
           </Card>
+
+          {/* Zona de Perigo */}
+          <Card className="bg-card/50 backdrop-blur-sm border-2 border-destructive/20">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-destructive">
+                <Trash2 className="w-5 h-5" />
+                Zona de Perigo
+              </CardTitle>
+              <CardDescription>
+                Ações irreversíveis que afetam permanentemente sua conta
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="p-4 border border-destructive/20 rounded-lg bg-destructive/5">
+                <h3 className="font-semibold mb-2">Excluir Conta</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  A exclusão da conta é permanente e não pode ser desfeita. Todos os seus dados serão removidos.
+                </p>
+                <Button 
+                  variant="destructive" 
+                  onClick={() => setShowDeleteDialog(true)}
+                  className="w-full"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Excluir Minha Conta Permanentemente
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
 
@@ -617,6 +687,63 @@ export default function Account() {
               }}
             >
               Confirmar alteração
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Dialog de confirmação de exclusão de conta */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+              <Trash2 className="h-5 w-5" />
+              Excluir Conta Permanentemente
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-4">
+              <div className="space-y-2">
+                <p className="text-destructive font-semibold">
+                  ⚠️ ATENÇÃO: Esta ação não pode ser desfeita!
+                </p>
+                <p>
+                  Você está prestes a excluir permanentemente sua conta.
+                </p>
+                <p>Isso irá remover:</p>
+                <ul className="list-disc list-inside space-y-1 text-sm">
+                  <li>Todos os dados do seu perfil</li>
+                  <li>Todas as suas mensagens</li>
+                  <li>Todos os seus projetos</li>
+                  <li>Todo o seu histórico</li>
+                </ul>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="delete-confirmation">
+                  Para confirmar, digite <span className="font-mono font-bold">@{profile.username}</span>
+                </Label>
+                <Input
+                  id="delete-confirmation"
+                  value={deleteConfirmation}
+                  onChange={(e) => setDeleteConfirmation(e.target.value)}
+                  placeholder={`@${profile.username}`}
+                  className="font-mono"
+                />
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => {
+              setDeleteConfirmation('');
+              setShowDeleteDialog(false);
+            }}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteAccount}
+              disabled={deleteConfirmation !== `@${profile.username}` || loading}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              {loading ? 'Excluindo...' : 'Excluir Permanentemente'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

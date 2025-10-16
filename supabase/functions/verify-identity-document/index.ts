@@ -45,6 +45,80 @@ serve(async (req) => {
     const frontBase64 = await blobToBase64(frontBlob);
     const backBase64 = await blobToBase64(backBlob);
 
+    // PRIMEIRA ANÁLISE: Identificar qual imagem é frente e qual é verso
+    console.log('Identifying document sides...');
+    const identificationAnalysis = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          {
+            role: 'user',
+            content: [
+              {
+                type: 'text',
+                text: `IDENTIFICAÇÃO DE LADO DO DOCUMENTO
+
+Analise estas duas imagens e identifique qual é a FRENTE e qual é o VERSO de um documento de identidade brasileiro (RG ou CNH).
+
+CARACTERÍSTICAS DA FRENTE:
+- Foto da pessoa
+- Nome completo
+- CPF
+- Data de nascimento
+- RG ou número da CNH
+
+CARACTERÍSTICAS DO VERSO:
+- Sem foto da pessoa
+- Informações complementares
+- Espaço para digitais ou observações
+
+RESPONDA EM JSON:
+{
+  "firstImageIsFront": true ou false,
+  "confidence": "high" ou "medium" ou "low",
+  "reasoning": "explicação breve"
+}`
+              },
+              {
+                type: 'image_url',
+                image_url: { url: frontBase64 }
+              },
+              {
+                type: 'image_url',
+                image_url: { url: backBase64 }
+              }
+            ]
+          }
+        ],
+        temperature: 0.1,
+        response_format: { type: "json_object" }
+      })
+    });
+
+    if (!identificationAnalysis.ok) {
+      throw new Error(`Identification analysis failed: ${identificationAnalysis.status}`);
+    }
+
+    const identificationResult = await identificationAnalysis.json();
+    const identificationData = JSON.parse(identificationResult.choices[0].message.content);
+    
+    console.log('=== IDENTIFICATION RESULT ===');
+    console.log('First image is front:', identificationData.firstImageIsFront);
+    console.log('Confidence:', identificationData.confidence);
+    console.log('Reasoning:', identificationData.reasoning);
+    console.log('=== END IDENTIFICATION ===');
+
+    // Determinar qual base64 usar para cada lado
+    const actualFrontBase64 = identificationData.firstImageIsFront ? frontBase64 : backBase64;
+    const actualBackBase64 = identificationData.firstImageIsFront ? backBase64 : frontBase64;
+    const actualFrontUrl = identificationData.firstImageIsFront ? frontImageUrl : backImageUrl;
+    const actualBackUrl = identificationData.firstImageIsFront ? backImageUrl : frontImageUrl;
+
     // Análise inteligente do documento (frente)
     console.log('Analyzing front document...');
     const frontAnalysis = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -107,7 +181,7 @@ RESPONDA EM JSON:
               },
               {
                 type: 'image_url',
-                image_url: { url: frontBase64 }
+                image_url: { url: actualFrontBase64 }
               }
             ]
           }
@@ -162,7 +236,7 @@ RESPONDA EM JSON:
               },
               {
                 type: 'image_url',
-                image_url: { url: backBase64 }
+                image_url: { url: actualBackBase64 }
               }
             ]
           }
@@ -347,8 +421,8 @@ RESPONDA EM JSON:
       .from('document_verifications')
       .insert({
         profile_id: profileId,
-        document_front_url: frontImageUrl,
-        document_back_url: backImageUrl,
+        document_front_url: actualFrontUrl,
+        document_back_url: actualBackUrl,
         selfie_url: null,
         verification_status: verificationStatus,
         verification_result: result,

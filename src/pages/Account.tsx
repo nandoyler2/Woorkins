@@ -614,14 +614,32 @@ export default function Account() {
                       placeholder="seu@email.com"
                       disabled={codeSent}
                     />
-                    <Button
-                      type="button"
-                      onClick={handleSendVerificationCode}
-                      disabled={sendingCode || !newEmail || newEmail === profile.email || codeSent}
-                      variant="outline"
-                    >
-                      {sendingCode ? 'Enviando...' : codeSent ? 'Código Enviado' : 'Enviar Código'}
-                    </Button>
+                    {newEmail !== profile.email && !codeSent ? (
+                      <Button
+                        type="button"
+                        onClick={handleSendVerificationCode}
+                        disabled={sendingCode || !newEmail}
+                        variant="outline"
+                      >
+                        {sendingCode ? 'Enviando...' : 'Enviar Código'}
+                      </Button>
+                    ) : codeSent ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        disabled
+                      >
+                        Código Enviado
+                      </Button>
+                    ) : (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        disabled
+                      >
+                        Email selecionado
+                      </Button>
+                    )}
                   </div>
                   {codeSent && (
                     <div className="space-y-2 mt-4 p-4 border-2 border-primary/20 rounded-lg bg-primary/5">

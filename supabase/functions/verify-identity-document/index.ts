@@ -130,39 +130,47 @@ RESPONDA EM JSON:
       body: JSON.stringify({
         model: 'google/gemini-2.5-flash',
         messages: [
-          {
-            role: 'user',
-            content: [
-              {
-                type: 'text',
-                text: `ANÁLISE DETALHADA DE DOCUMENTO BRASILEIRO - FRENTE
+            {
+              role: 'user',
+              content: [
+                {
+                  type: 'text',
+                  text: `ANÁLISE DETALHADA DE DOCUMENTO BRASILEIRO - FRENTE
 
 Analise este documento de identidade brasileiro (RG ou CNH) e extraia TODAS as informações visíveis.
 
+INSTRUÇÕES CRÍTICAS PARA CPF:
+- Procure TODOS os números no documento
+- O CPF pode estar em QUALQUER parte do documento (frente ou campos adicionais)
+- Aceite CPF com ou sem formatação (XXX.XXX.XXX-XX ou XXXXXXXXXXX)
+- Se ver 11 dígitos numéricos, EXTRAIA como CPF
+- Seja MUITO CUIDADOSO para não perder nenhum dígito
+- Se o CPF estiver parcialmente legível, tente ao máximo identificar todos os 11 dígitos
+
 INSTRUÇÕES DE LEITURA:
 1. Identifique: RG ou CNH
-2. EXTRAIA OS DADOS com precisão:
-   - Nome completo
-   - CPF (11 dígitos, apenas números)
+2. EXTRAIA OS DADOS com MÁXIMA precisão:
+   - Nome completo (exatamente como está escrito)
+   - CPF (TODOS os 11 dígitos - pode ter formatação)
    - Data de nascimento (DD/MM/AAAA)
    - Número do documento
    - RG (se houver)
    - Órgão emissor e UF
 
-3. AVALIE A QUALIDADE:
-   - Legibilidade geral
-   - Presença de brilho ou sombras
-   - Idade aparente do documento
-   - Se é documento físico ou screenshot
+3. AVALIE A QUALIDADE (seja GENEROSO):
+   - Documentos antigos são NORMAIS e devem ser aceitos
+   - Brilho leve é ACEITÁVEL
+   - Foco levemente reduzido é ACEITÁVEL
+   - Marque isReadable=false APENAS se REALMENTE impossível ler
 
 RESPONDA EM JSON:
 {
   "documentType": "RG" ou "CNH",
   "extractedData": {
-    "fullName": "NOME COMPLETO EXTRAÍDO",
-    "cpf": "12345678901",
-    "birthDate": "28/03/1996",
-    "documentNumber": "número do doc",
+    "fullName": "NOME COMPLETO EXTRAÍDO EXATAMENTE",
+    "cpf": "12345678901 ou 123.456.789-01",
+    "birthDate": "DD/MM/AAAA",
+    "documentNumber": "número do documento",
     "rg": "RG se houver",
     "issuer": "SSP-XX"
   },
@@ -178,13 +186,13 @@ RESPONDA EM JSON:
     "details": "explicação"
   }
 }`
-              },
-              {
-                type: 'image_url',
-                image_url: { url: actualFrontBase64 }
-              }
-            ]
-          }
+                },
+                {
+                  type: 'image_url',
+                  image_url: { url: actualFrontBase64 }
+                }
+              ]
+            }
         ],
         temperature: 0.2,
         response_format: { type: "json_object" }
@@ -255,41 +263,46 @@ RESPONDA EM JSON:
 
     // Validação final - Extrair dados
     const extractedName = frontData.extractedData?.fullName || '';
-    const extractedCPF = frontData.extractedData?.cpf || '';
+    let extractedCPF = frontData.extractedData?.cpf || '';
     const extractedBirthDate = frontData.extractedData?.birthDate || '';
 
     console.log('=== EXTRACTED DATA DEBUG ===');
     console.log('Raw Name:', extractedName);
-    console.log('Raw CPF:', extractedCPF);
+    console.log('Raw CPF (original):', extractedCPF);
     console.log('Raw Birth Date:', extractedBirthDate);
     console.log('Registered Name:', registeredName);
     console.log('Registered CPF:', registeredCPF);
     
-    // Normalizar dados extraídos
-    const normalizedExtractedCPF = extractedCPF.replace(/[.\-\s]/g, '');
-    const normalizedRegisteredCPF = registeredCPF.replace(/[.\-\s]/g, '');
+    // Normalizar CPF extraído - remover TUDO que não é dígito
+    const normalizedExtractedCPF = extractedCPF.replace(/\D/g, '');
+    const normalizedRegisteredCPF = registeredCPF.replace(/\D/g, '');
+    
+    console.log('Normalized Extracted CPF (after cleanup):', normalizedExtractedCPF);
+    console.log('Normalized Registered CPF:', normalizedRegisteredCPF);
+    console.log('CPF Length:', normalizedExtractedCPF.length);
+    
+    // Normalizar nomes
     const normalizedExtractedName = extractedName.toLowerCase().trim();
     const normalizedRegisteredName = registeredName.toLowerCase().trim();
     
-    console.log('Normalized Extracted CPF:', normalizedExtractedCPF);
-    console.log('Normalized Registered CPF:', normalizedRegisteredCPF);
     console.log('Normalized Extracted Name:', normalizedExtractedName);
     console.log('Normalized Registered Name:', normalizedRegisteredName);
     console.log('=== END EXTRACTED DATA DEBUG ===');
 
-    // Verificar se dados são válidos (não N/A, não vazio, não muito curto)
+    // Verificar se dados são válidos - CPF aceita 11 dígitos OU mais (para documentos que mostram CPF completo)
     const isValidName = extractedName && 
                         extractedName.length > 5 && 
-                        extractedName.toLowerCase() !== 'n/a' &&
-                        extractedName.toLowerCase() !== 'não identificado';
+                        !extractedName.toLowerCase().includes('n/a') &&
+                        !extractedName.toLowerCase().includes('não identificado');
     
+    // CPF é válido se tem pelo menos 11 dígitos numéricos consecutivos
     const isValidCPF = normalizedExtractedCPF && 
-                       normalizedExtractedCPF.length === 11 && 
-                       /^\d{11}$/.test(normalizedExtractedCPF);
+                       normalizedExtractedCPF.length >= 11 && 
+                       /\d{11}/.test(normalizedExtractedCPF);
     
     const isValidBirthDate = extractedBirthDate && 
-                             extractedBirthDate.toLowerCase() !== 'n/a' &&
-                             /^\d{2}\/\d{2}\/\d{4}$/.test(extractedBirthDate);
+                             !extractedBirthDate.toLowerCase().includes('n/a') &&
+                             /\d{2}\/\d{2}\/\d{4}/.test(extractedBirthDate);
 
     console.log('=== VALIDATION FLAGS ===');
     console.log('Is Valid Name:', isValidName);
@@ -298,7 +311,16 @@ RESPONDA EM JSON:
     console.log('=== END VALIDATION FLAGS ===');
 
     // Comparar dados quando válidos
-    const cpfMatches = isValidCPF && normalizedExtractedCPF === normalizedRegisteredCPF;
+    // Para CPF, pegar apenas os primeiros 11 dígitos se houver mais
+    const cpfToCompare = normalizedExtractedCPF.substring(0, 11);
+    const cpfMatches = isValidCPF && cpfToCompare === normalizedRegisteredCPF;
+    
+    console.log('=== CPF COMPARISON ===');
+    console.log('CPF to compare (first 11 digits):', cpfToCompare);
+    console.log('Registered CPF:', normalizedRegisteredCPF);
+    console.log('CPF Matches:', cpfMatches);
+    console.log('=== END CPF COMPARISON ===');
+    
     const nameMatches = isValidName && (
       normalizedExtractedName.includes(normalizedRegisteredName) || 
       normalizedRegisteredName.includes(normalizedExtractedName)
@@ -370,7 +392,7 @@ RESPONDA EM JSON:
       status: verificationStatus,
       extractedData: {
         name: extractedName,
-        cpf: normalizedExtractedCPF,
+        cpf: cpfToCompare, // Usar apenas os 11 primeiros dígitos
         birthDate: extractedBirthDate,
         documentType: frontData.documentType,
         documentNumber: frontData.extractedData?.documentNumber,
@@ -406,8 +428,8 @@ RESPONDA EM JSON:
         }
       }
 
-      if (normalizedExtractedCPF) {
-        updates.cpf = normalizedExtractedCPF;
+      if (cpfToCompare && cpfToCompare.length === 11) {
+        updates.cpf = cpfToCompare;
       }
 
       await supabase
@@ -428,7 +450,7 @@ RESPONDA EM JSON:
         verification_result: result,
         ai_analysis: result.aiAnalysis,
         extracted_name: extractedName,
-        extracted_cpf: normalizedExtractedCPF,
+        extracted_cpf: cpfToCompare,
         extracted_birth_date: extractedBirthDate ? (() => {
           const [day, month, year] = extractedBirthDate.split('/');
           return `${year}-${month}-${day}`;

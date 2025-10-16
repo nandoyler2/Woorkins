@@ -342,7 +342,7 @@ export function IdentityVerificationDialog({
                 }
                 onOpenChange(false);
               } else {
-                // Resetar todos os estados para tentar novamente
+                // Resetar COMPLETAMENTE todos os estados e inputs para tentar novamente
                 setVerificationResult(null);
                 setFrontImage(null);
                 setBackImage(null);
@@ -350,6 +350,15 @@ export function IdentityVerificationDialog({
                 setUploadOption(null);
                 setPreValidationFront(null);
                 setPreValidationBack(null);
+                setIsProcessing(false);
+                setIsPreValidatingFront(false);
+                setIsPreValidatingBack(false);
+                setLoadingStep(null);
+                
+                // Limpar os inputs de arquivo
+                if (frontInputRef.current) frontInputRef.current.value = '';
+                if (backInputRef.current) backInputRef.current.value = '';
+                if (combinedInputRef.current) combinedInputRef.current.value = '';
               }
             }}
             className="w-full"

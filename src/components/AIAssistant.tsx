@@ -69,6 +69,7 @@ export const AIAssistant = () => {
   const [buttonPosition, setButtonPosition] = useState({ x: 24, y: window.innerHeight - 80 }); // Posição padrão
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [dragStartPos, setDragStartPos] = useState({ x: 0, y: 0 });
   const conversationsPerPage = 10;
   const { toast } = useToast();
   const { session } = useAuth();
@@ -448,7 +449,9 @@ export const AIAssistant = () => {
 
   // Funções de arrastar
   const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
     setIsDragging(true);
+    setDragStartPos({ x: e.clientX, y: e.clientY });
     setDragOffset({
       x: e.clientX - buttonPosition.x,
       y: e.clientY - buttonPosition.y
@@ -471,7 +474,16 @@ export const AIAssistant = () => {
     });
   };
 
-  const handleMouseUp = () => {
+  const handleMouseUp = (e: MouseEvent) => {
+    if (isDragging) {
+      // Calcular se houve movimento significativo (mais de 5px)
+      const moved = Math.abs(e.clientX - dragStartPos.x) > 5 || Math.abs(e.clientY - dragStartPos.y) > 5;
+      
+      // Só abrir se não houve movimento (foi um clique)
+      if (!moved) {
+        setInternalOpen(true);
+      }
+    }
     setIsDragging(false);
   };
 
@@ -501,7 +513,6 @@ export const AIAssistant = () => {
           className="z-50 group"
         >
           <Button
-            onClick={() => setInternalOpen(true)}
             onMouseDown={handleMouseDown}
             className="h-8 px-3 rounded-full shadow-2xl bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-white flex items-center gap-1.5 animate-fade-in hover-scale border border-white/20 transition-all"
           >

@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { SafeImage } from '@/components/ui/safe-image';
+import { ImageViewer } from '@/components/ImageViewer';
 import { FileText, Trash2, AlertTriangle } from 'lucide-react';
 import {
   AlertDialog,
@@ -32,6 +33,15 @@ export function DocumentsDialog({ open, onOpenChange, user, onUpdate }: Document
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
+  const [viewerImage, setViewerImage] = useState<{ url: string; name: string } | null>(null);
+
+  // Detectar se é documento completo (frente e verso juntos) ou separado
+  const isCompleteDocument = user.approved_document?.document_front_url && 
+                             !user.approved_document?.document_back_url;
+
+  const handleImageClick = (url: string, name: string) => {
+    setViewerImage({ url, name });
+  };
 
   const handleDeleteDocuments = async () => {
     try {
@@ -140,39 +150,68 @@ export function DocumentsDialog({ open, onOpenChange, user, onUpdate }: Document
               <h3 className="font-semibold">Documentos Enviados</h3>
               
               <div className="grid gap-4 md:grid-cols-2">
-                {/* Frente do Documento */}
-                {user.approved_document.document_front_url && (
+                {/* Documento Completo ou Frente/Verso Separado */}
+                {isCompleteDocument ? (
+                  // Documento completo (frente e verso juntos)
                   <div className="space-y-2">
-                    <p className="text-sm font-medium">Frente do Documento</p>
-                    <div className="border rounded-lg overflow-hidden">
+                    <p className="text-sm font-medium">Documento Completo</p>
+                    <div 
+                      className="border rounded-lg overflow-hidden cursor-pointer hover:opacity-80 transition-opacity"
+                      onClick={() => handleImageClick(user.approved_document.document_front_url, 'documento-completo.jpg')}
+                    >
                       <SafeImage
                         src={user.approved_document.document_front_url}
-                        alt="Frente do documento"
+                        alt="Documento completo"
                         className="w-full h-auto"
                       />
                     </div>
                   </div>
-                )}
+                ) : (
+                  <>
+                    {/* Frente do Documento */}
+                    {user.approved_document.document_front_url && (
+                      <div className="space-y-2">
+                        <p className="text-sm font-medium">Frente do Documento</p>
+                        <div 
+                          className="border rounded-lg overflow-hidden cursor-pointer hover:opacity-80 transition-opacity"
+                          onClick={() => handleImageClick(user.approved_document.document_front_url, 'documento-frente.jpg')}
+                        >
+                          <SafeImage
+                            src={user.approved_document.document_front_url}
+                            alt="Frente do documento"
+                            className="w-full h-auto"
+                          />
+                        </div>
+                      </div>
+                    )}
 
-                {/* Verso do Documento */}
-                {user.approved_document.document_back_url && (
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium">Verso do Documento</p>
-                    <div className="border rounded-lg overflow-hidden">
-                      <SafeImage
-                        src={user.approved_document.document_back_url}
-                        alt="Verso do documento"
-                        className="w-full h-auto"
-                      />
-                    </div>
-                  </div>
+                    {/* Verso do Documento */}
+                    {user.approved_document.document_back_url && (
+                      <div className="space-y-2">
+                        <p className="text-sm font-medium">Verso do Documento</p>
+                        <div 
+                          className="border rounded-lg overflow-hidden cursor-pointer hover:opacity-80 transition-opacity"
+                          onClick={() => handleImageClick(user.approved_document.document_back_url, 'documento-verso.jpg')}
+                        >
+                          <SafeImage
+                            src={user.approved_document.document_back_url}
+                            alt="Verso do documento"
+                            className="w-full h-auto"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </>
                 )}
 
                 {/* Selfie */}
                 {user.approved_document.selfie_url && (
                   <div className="space-y-2">
                     <p className="text-sm font-medium">Selfie com Documento</p>
-                    <div className="border rounded-lg overflow-hidden">
+                    <div 
+                      className="border rounded-lg overflow-hidden cursor-pointer hover:opacity-80 transition-opacity"
+                      onClick={() => handleImageClick(user.approved_document.selfie_url, 'selfie-documento.jpg')}
+                    >
                       <SafeImage
                         src={user.approved_document.selfie_url}
                         alt="Selfie com documento"
@@ -231,6 +270,15 @@ export function DocumentsDialog({ open, onOpenChange, user, onUpdate }: Document
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Visualizador de Imagem em Tela Cheia */}
+      {viewerImage && (
+        <ImageViewer
+          imageUrl={viewerImage.url}
+          imageName={viewerImage.name}
+          onClose={() => setViewerImage(null)}
+        />
+      )}
     </>
   );
 }

@@ -52,6 +52,10 @@ export default function Account() {
   });
   const [originalUsername, setOriginalUsername] = useState('');
   const [newEmail, setNewEmail] = useState('');
+  const [verificationCode, setVerificationCode] = useState('');
+  const [codeSent, setCodeSent] = useState(false);
+  const [sendingCode, setSendingCode] = useState(false);
+  const [verifyingCode, setVerifyingCode] = useState(false);
   const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
   const [checkingUsername, setCheckingUsername] = useState(false);
   const [showUsernameWarning, setShowUsernameWarning] = useState(false);
@@ -158,6 +162,103 @@ export default function Account() {
 
     return () => clearTimeout(timer);
   }, [profile.username]);
+
+  const handleSendVerificationCode = async () => {
+    if (!newEmail || newEmail === profile.email) {
+      toast({
+        title: 'Email inválido',
+        description: 'Digite um novo email diferente do atual',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(newEmail)) {
+      toast({
+        title: 'Email inválido',
+        description: 'Por favor, insira um email válido',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setSendingCode(true);
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      const response = await supabase.functions.invoke('send-email-verification-code', {
+        body: { newEmail },
+        headers: {
+          Authorization: `Bearer ${session?.access_token}`,
+        },
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message);
+      }
+
+      setCodeSent(true);
+      toast({
+        title: 'Código enviado!',
+        description: 'Verifique seu email e digite o código de 6 dígitos',
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Erro ao enviar código',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setSendingCode(false);
+    }
+  };
+
+  const handleVerifyCode = async () => {
+    if (!verificationCode || verificationCode.length !== 6) {
+      toast({
+        title: 'Código inválido',
+        description: 'Digite o código de 6 dígitos',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setVerifyingCode(true);
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      const response = await supabase.functions.invoke('verify-email-change-code', {
+        body: { code: verificationCode },
+        headers: {
+          Authorization: `Bearer ${session?.access_token}`,
+        },
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message);
+      }
+
+      toast({
+        title: 'Email atualizado!',
+        description: 'Faça login novamente com seu novo email',
+      });
+
+      // Fazer logout
+      await supabase.auth.signOut();
+      navigate('/autenticacao');
+    } catch (error: any) {
+      toast({
+        title: 'Erro ao verificar código',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setVerifyingCode(false);
+    }
+  };
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -275,39 +376,10 @@ export default function Account() {
         }
       }
 
-      // Check if email changed
-      if (newEmail !== profile.email && newEmail.trim() !== '') {
-        // Validate email format
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(newEmail)) {
-          toast({
-            title: 'Email inválido',
-            description: 'Por favor, insira um email válido',
-            variant: 'destructive',
-          });
-          setLoading(false);
-          return;
-        }
-
-        // Update email using Supabase Auth (will send confirmation email)
-        const { error: emailError } = await supabase.auth.updateUser({
-          email: newEmail,
-        });
-
-        if (emailError) {
-          throw emailError;
-        }
-
-        toast({
-          title: 'Confirmação enviada!',
-          description: 'Um email de confirmação foi enviado para o novo endereço. Por favor, confirme para concluir a alteração.',
-        });
-      } else {
-        toast({
-          title: 'Perfil atualizado!',
-          description: 'Suas informações foram salvas com sucesso.',
-        });
-      }
+      toast({
+        title: 'Perfil atualizado!',
+        description: 'Suas informações foram salvas com sucesso.',
+      });
 
       // Reload profile to get the updated CPF
       loadProfile();
@@ -530,17 +602,72 @@ export default function Account() {
                     <Mail className="w-4 h-4" />
                     Email
                   </Label>
-                  <Input
-                    type="email"
-                    value={newEmail}
-                    onChange={(e) => setNewEmail(e.target.value)}
-                    placeholder="seu@email.com"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    {newEmail !== profile.email 
-                      ? '⚠️ Um email de confirmação será enviado para o novo endereço'
-                      : 'Email atual da conta'}
-                  </p>
+                  <div className="flex gap-2">
+                    <Input
+                      type="email"
+                      value={newEmail}
+                      onChange={(e) => {
+                        setNewEmail(e.target.value);
+                        setCodeSent(false);
+                        setVerificationCode('');
+                      }}
+                      placeholder="seu@email.com"
+                      disabled={codeSent}
+                    />
+                    <Button
+                      type="button"
+                      onClick={handleSendVerificationCode}
+                      disabled={sendingCode || !newEmail || newEmail === profile.email || codeSent}
+                      variant="outline"
+                    >
+                      {sendingCode ? 'Enviando...' : codeSent ? 'Código Enviado' : 'Enviar Código'}
+                    </Button>
+                  </div>
+                  {codeSent && (
+                    <div className="space-y-2 mt-4 p-4 border-2 border-primary/20 rounded-lg bg-primary/5">
+                      <Label>Código de Verificação</Label>
+                      <p className="text-xs text-muted-foreground mb-2">
+                        Digite o código de 6 dígitos enviado para {newEmail}
+                      </p>
+                      <div className="flex gap-2">
+                        <Input
+                          type="text"
+                          value={verificationCode}
+                          onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                          placeholder="000000"
+                          maxLength={6}
+                          className="text-center text-2xl font-mono tracking-widest"
+                        />
+                        <Button
+                          type="button"
+                          onClick={handleVerifyCode}
+                          disabled={verifyingCode || verificationCode.length !== 6}
+                          className="bg-gradient-primary"
+                        >
+                          {verifyingCode ? 'Verificando...' : 'Verificar'}
+                        </Button>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setCodeSent(false);
+                          setVerificationCode('');
+                        }}
+                        className="w-full"
+                      >
+                        Cancelar troca de email
+                      </Button>
+                    </div>
+                  )}
+                  {!codeSent && (
+                    <p className="text-xs text-muted-foreground">
+                      {newEmail !== profile.email 
+                        ? '⚠️ Você receberá um código de verificação no novo email'
+                        : 'Email atual da conta'}
+                    </p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label className="flex items-center gap-2">

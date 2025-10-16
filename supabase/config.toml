@@ -50,3 +50,9 @@ verify_jwt = false
 
 [functions.send-confirmation-email]
 verify_jwt = false
+
+[functions.send-email-verification-code]
+verify_jwt = true
+
+[functions.verify-email-change-code]
+verify_jwt = true

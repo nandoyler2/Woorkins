@@ -302,6 +302,36 @@ export type Database = {
           },
         ]
       }
+      email_change_verifications: {
+        Row: {
+          created_at: string | null
+          expires_at: string
+          id: string
+          new_email: string
+          user_id: string
+          verification_code: string
+          verified: boolean | null
+        }
+        Insert: {
+          created_at?: string | null
+          expires_at: string
+          id?: string
+          new_email: string
+          user_id: string
+          verification_code: string
+          verified?: boolean | null
+        }
+        Update: {
+          created_at?: string | null
+          expires_at?: string
+          id?: string
+          new_email?: string
+          user_id?: string
+          verification_code?: string
+          verified?: boolean | null
+        }
+        Relationships: []
+      }
       evaluations: {
         Row: {
           business_id: string
@@ -1799,6 +1829,10 @@ export type Database = {
           stripe_fee: number
           total_fees: number
         }[]
+      }
+      cleanup_expired_email_verifications: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       cleanup_typing_indicators: {
         Args: Record<PropertyKey, never>

@@ -150,7 +150,10 @@ export function IdentityVerificationDialog({
   };
 
   const processVerification = async (frontFile: File, backFile: File) => {
-    if (isProcessing) return;
+    if (isProcessing) {
+      console.log('Already processing, skipping duplicate call');
+      return;
+    }
     
     setIsProcessing(true);
     setLoadingStep('validating');
@@ -199,8 +202,8 @@ export function IdentityVerificationDialog({
         backUrl = await uploadFile(backFile, 'document_back');
       }
 
-      // Call verification function
-      const { data, error } = await supabase.functions.invoke('verify-identity-document', {
+      // Call verification function with timeout
+      const verificationPromise = supabase.functions.invoke('verify-identity-document', {
         body: {
           frontImageUrl: frontUrl,
           backImageUrl: backUrl,
@@ -210,13 +213,36 @@ export function IdentityVerificationDialog({
         }
       });
 
-      if (error) throw error;
+      // Add 60 second timeout
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Tempo de verificação esgotado. Tente novamente.')), 60000)
+      );
+
+      const { data, error } = await Promise.race([verificationPromise, timeoutPromise]) as any;
+
+      if (error) {
+        console.error('Verification error from edge function:', error);
+        throw new Error(error.message || 'Erro ao processar verificação');
+      }
+
+      // Se a resposta tem status rejected, mostrar motivos
+      if (data?.status === 'rejected' && data?.rejectionReasons) {
+        toast.error('Documento rejeitado: ' + data.rejectionReasons.join(', '));
+      }
 
       // Edge function já salva o resultado da verificação
       setVerificationResult(data);
     } catch (error: any) {
       console.error('Verification error:', error);
-      toast.error('Erro ao processar verificação: ' + error.message);
+      const errorMessage = error.message || 'Erro ao processar verificação';
+      toast.error(errorMessage);
+      
+      // Resetar o estado para permitir tentar novamente
+      setVerificationResult({
+        status: 'rejected',
+        rejectionReasons: [errorMessage],
+        extractedData: null
+      });
     } finally {
       setIsProcessing(false);
       setLoadingStep(null);

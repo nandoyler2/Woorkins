@@ -20,6 +20,8 @@ serve(async (req) => {
       registeredCPF
     } = await req.json();
 
+    console.log('Starting document verification for profile:', profileId);
+
     if (!frontImageUrl || !backImageUrl) {
       throw new Error('frontImageUrl e backImageUrl são obrigatórios');
     }
@@ -317,20 +319,33 @@ RESPONDA EM JSON:
         })() : null
       });
 
+    console.log('Verification completed successfully:', verificationStatus);
     return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
 
   } catch (error) {
-    console.error('Verification error:', error);
+    console.error('Verification error details:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      type: typeof error
+    });
+    
+    const errorResult = { 
+      status: 'rejected',
+      rejectionReasons: [
+        'Erro ao processar documentos. Tente novamente.',
+        error instanceof Error ? error.message : 'Erro desconhecido'
+      ],
+      extractedData: null,
+      validation: null,
+      aiAnalysis: null
+    };
+    
     return new Response(
-      JSON.stringify({ 
-        error: error instanceof Error ? error.message : 'Unknown error',
-        status: 'rejected',
-        rejectionReasons: ['Erro ao processar documentos. Tente novamente.']
-      }), 
+      JSON.stringify(errorResult), 
       {
-        status: 500,
+        status: 200, // Return 200 with rejected status instead of 500
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );

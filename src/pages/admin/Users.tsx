@@ -43,6 +43,7 @@ import { ManageWoorkoinsDialog } from '@/components/admin/ManageWoorkoinsDialog'
 import { BlockUserDialog } from '@/components/admin/BlockUserDialog';
 import { BlockDetailsDialog } from '@/components/admin/BlockDetailsDialog';
 import { UserAccountDialog } from '@/components/admin/UserAccountDialog';
+import { DocumentsDialog } from '@/components/admin/DocumentsDialog';
 
 export default function AdminUsers() {
   const { user } = useAuth();
@@ -57,8 +58,8 @@ export default function AdminUsers() {
   const [blockDetailsDialogOpen, setBlockDetailsDialogOpen] = useState(false);
   const [selectedBlock, setSelectedBlock] = useState<any>(null);
   const [unblockLoading, setUnblockLoading] = useState(false);
-  const [documentDialogOpen, setDocumentDialogOpen] = useState(false);
-  const [selectedDocument, setSelectedDocument] = useState<any>(null);
+  const [documentsDialogOpen, setDocumentsDialogOpen] = useState(false);
+  const [selectedDocumentUser, setSelectedDocumentUser] = useState<any>(null);
   const [accountDialogOpen, setAccountDialogOpen] = useState(false);
   const [selectedAccountUser, setSelectedAccountUser] = useState<any>(null);
   const { toast } = useToast();
@@ -345,7 +346,7 @@ export default function AdminUsers() {
                     </Select>
                   </TableCell>
                   <TableCell>
-                    {usr.approved_document ? (
+                    {usr.document_verified ? (
                       <Badge variant="default" className="text-xs">
                         ✓ Verificado
                       </Badge>
@@ -420,15 +421,15 @@ export default function AdminUsers() {
                           <UserCircle className="mr-2 h-4 w-4" />
                           Conta
                         </DropdownMenuItem>
-                        {usr.approved_document && (
+                        {usr.document_verified && (
                           <DropdownMenuItem
                             onClick={() => {
-                              setSelectedDocument(usr.approved_document);
-                              setDocumentDialogOpen(true);
+                              setSelectedDocumentUser(usr);
+                              setDocumentsDialogOpen(true);
                             }}
                           >
                             <FileCheck className="mr-2 h-4 w-4" />
-                            Ver Documento Aprovado
+                            Documentos
                           </DropdownMenuItem>
                         )}
                         <DropdownMenuItem
@@ -512,66 +513,15 @@ export default function AdminUsers() {
           />
         )}
 
-        {/* Diálogo de Documento Aprovado */}
-        <Dialog open={documentDialogOpen} onOpenChange={setDocumentDialogOpen}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Documento Aprovado</DialogTitle>
-              <DialogDescription>
-                Documento de identidade verificado e aprovado
-              </DialogDescription>
-            </DialogHeader>
-
-            {selectedDocument && (
-              <div className="space-y-6">
-                <div className="grid md:grid-cols-3 gap-4">
-                  <div>
-                    <p className="text-sm font-medium mb-2">Documento - Frente</p>
-                    <img 
-                      src={selectedDocument.document_front_url} 
-                      alt="Documento Frente"
-                      className="w-full rounded-lg border"
-                    />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium mb-2">Documento - Verso</p>
-                    <img 
-                      src={selectedDocument.document_back_url} 
-                      alt="Documento Verso"
-                      className="w-full rounded-lg border"
-                    />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium mb-2">Selfie</p>
-                    <img 
-                      src={selectedDocument.selfie_url} 
-                      alt="Selfie"
-                      className="w-full rounded-lg border"
-                    />
-                  </div>
-                </div>
-
-                <div className="bg-green-50 border border-green-200 p-4 rounded-lg">
-                  <h3 className="font-semibold text-green-900 mb-2">Dados Verificados:</h3>
-                  <div className="space-y-1 text-sm text-green-700">
-                    {selectedDocument.extracted_name && (
-                      <p><strong>Nome:</strong> {selectedDocument.extracted_name}</p>
-                    )}
-                    {selectedDocument.extracted_cpf && (
-                      <p><strong>CPF:</strong> {selectedDocument.extracted_cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')}</p>
-                    )}
-                    {selectedDocument.extracted_birth_date && (
-                      <p><strong>Data de Nascimento:</strong> {selectedDocument.extracted_birth_date}</p>
-                    )}
-                    {selectedDocument.verified_at && (
-                      <p><strong>Verificado em:</strong> {new Date(selectedDocument.verified_at).toLocaleString('pt-BR')}</p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-          </DialogContent>
-        </Dialog>
+        {/* Diálogo de Documentos */}
+        {selectedDocumentUser && (
+          <DocumentsDialog
+            open={documentsDialogOpen}
+            onOpenChange={setDocumentsDialogOpen}
+            user={selectedDocumentUser}
+            onUpdate={loadUsers}
+          />
+        )}
 
         {/* Diálogo de Conta do Usuário */}
         {selectedAccountUser && (

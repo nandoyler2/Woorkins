@@ -56,3 +56,6 @@ verify_jwt = true
 
 [functions.verify-email-change-code]
 verify_jwt = true
+
+[functions.fix-verification-status]
+verify_jwt = true

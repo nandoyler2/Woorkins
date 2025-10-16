@@ -253,6 +253,29 @@ export default function AdminUsers() {
     }
   };
 
+  const fixVerificationStatus = async (profileId: string, username: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('fix-verification-status', {
+        body: { profileId }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: 'Status corrigido',
+        description: `Status de verificação do @${username} foi atualizado com base nos registros do banco.`,
+      });
+
+      loadUsers();
+    } catch (error: any) {
+      toast({
+        title: 'Erro ao corrigir status',
+        description: error.message || 'Não foi possível corrigir o status',
+        variant: 'destructive',
+      });
+    }
+  };
+
   useEffect(() => {
     loadUsers();
   }, []);
@@ -435,6 +458,12 @@ export default function AdminUsers() {
                         >
                           <UserCircle className="mr-2 h-4 w-4" />
                           Editar perfil
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => fixVerificationStatus(usr.id, usr.username)}
+                        >
+                          <FileCheck className="mr-2 h-4 w-4" />
+                          Corrigir Status de Verificação
                         </DropdownMenuItem>
                         {usr.approved_document && (
                           <DropdownMenuItem

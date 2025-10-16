@@ -82,8 +82,14 @@ export default function Dashboard() {
   const [showProfileEdit, setShowProfileEdit] = useState(false);
   const [showVerificationDialog, setShowVerificationDialog] = useState(false);
   const [emailConfirmed, setEmailConfirmed] = useState(false);
-  const [profileCompleted, setProfileCompleted] = useState(false);
-  const [hasShownConfetti, setHasShownConfetti] = useState(false);
+  const [profileCompleted, setProfileCompleted] = useState(() => {
+    // Se já foi mostrado, considerar como completo para não exibir novamente
+    return localStorage.getItem('woorkins_confetti_shown') === 'true';
+  });
+  const [hasShownConfetti, setHasShownConfetti] = useState(() => {
+    // Verificar se já foi mostrado anteriormente
+    return localStorage.getItem('woorkins_confetti_shown') === 'true';
+  });
   
   // Mock data for feed posts
   const feedPosts: FeedPost[] = [
@@ -308,7 +314,7 @@ export default function Dashboard() {
   const { tasks: profileTasks, completion: profileCompletion } = getProfileTasks();
   const pendingTasks = profileTasks.filter(t => !t.completed);
 
-  // Animação de confete quando completar tudo
+  // Animação de confete quando completar tudo (apenas uma vez)
   useEffect(() => {
     const allCompleted = profileTasks.every(t => t.completed);
     if (allCompleted && !hasShownConfetti && !loading) {
@@ -338,12 +344,10 @@ export default function Dashboard() {
       };
       frame();
 
+      // Marcar como mostrado no localStorage permanentemente
+      localStorage.setItem('woorkins_confetti_shown', 'true');
       setHasShownConfetti(true);
-      
-      // Remover seção após 5 segundos
-      setTimeout(() => {
-        setProfileCompleted(true);
-      }, 5000);
+      setProfileCompleted(true);
     }
   }, [profileTasks, hasShownConfetti, loading]);
 

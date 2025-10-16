@@ -346,7 +346,7 @@ export default function AdminUsers() {
                     </Select>
                   </TableCell>
                   <TableCell>
-                    {usr.document_verified ? (
+                    {usr.approved_document ? (
                       <Badge variant="default" className="text-xs">
                         ✓ Verificado
                       </Badge>
@@ -421,7 +421,7 @@ export default function AdminUsers() {
                           <UserCircle className="mr-2 h-4 w-4" />
                           Conta
                         </DropdownMenuItem>
-                        {usr.document_verified && (
+                        {usr.approved_document && (
                           <DropdownMenuItem
                             onClick={() => {
                               setSelectedDocumentUser(usr);

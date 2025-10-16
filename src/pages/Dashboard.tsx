@@ -486,11 +486,18 @@ export default function Dashboard() {
                     </h4>
                     <p className="text-xs text-blue-600 truncate">@{profile?.username}</p>
                   </div>
-                  <Link to={`/perfil/${profile?.username}`}>
-                    <Button variant="outline" size="sm" className="text-xs h-7 px-3 border-blue-400 text-blue-600 hover:bg-blue-50">
-                      Ver perfil
-                    </Button>
-                  </Link>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <Link to={`/perfil/${profile?.username}`}>
+                      <Button variant="outline" size="sm" className="text-xs h-7 px-2 border-blue-400 text-blue-600 hover:bg-blue-50">
+                        Ver perfil
+                      </Button>
+                    </Link>
+                    <Link to="/conta">
+                      <Button variant="default" size="sm" className="text-xs h-7 px-2 bg-blue-500 hover:bg-blue-600">
+                        Editar
+                      </Button>
+                    </Link>
+                  </div>
                 </div>
               </CardContent>
             </Card>

@@ -7,11 +7,33 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Save, User, Mail, Lock, Shield, Camera, LockKeyhole } from 'lucide-react';
+import { ArrowLeft, Save, User, Mail, Lock, Shield, Camera, LockKeyhole, ExternalLink } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { validateCPF, formatFullName, formatShortName } from '@/lib/utils';
 import { ProfilePhotoUpload } from '@/components/ProfilePhotoUpload';
 import { useAIAssistant } from '@/contexts/AIAssistantContext';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+
+// Lista de usernames reservados do sistema
+const RESERVED_USERNAMES = [
+  'admin', 'root', 'woorkins', 'api', 'app', 'web', 'www', 'supabase', 
+  'auth', 'login', 'signup', 'dashboard', 'painel', 'perfil', 'profile',
+  'conta', 'account', 'configuracoes', 'settings', 'projetos', 'projects',
+  'mensagens', 'messages', 'notificacoes', 'notifications', 'buscar', 'search',
+  'ajuda', 'help', 'suporte', 'support', 'sobre', 'about', 'contato', 'contact',
+  'termos', 'terms', 'privacidade', 'privacy', 'feed', 'admin', 'moderador',
+  'moderator', 'sistema', 'system', 'equipe', 'team', 'blog', 'noticias', 'news',
+  'pagamento', 'payment', 'checkout', 'success', 'error', 'financeiro', 'finances'
+];
 
 export default function Account() {
   const { user } = useAuth();
@@ -24,9 +46,14 @@ export default function Account() {
     username: '',
     email: '',
     cpf: '',
-    avatar_url: ''
+    avatar_url: '',
+    last_username_change: null as string | null,
   });
+  const [originalUsername, setOriginalUsername] = useState('');
   const [newEmail, setNewEmail] = useState('');
+  const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
+  const [checkingUsername, setCheckingUsername] = useState(false);
+  const [showUsernameWarning, setShowUsernameWarning] = useState(false);
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
     newPassword: '',
@@ -42,7 +69,7 @@ export default function Account() {
 
     const { data } = await supabase
       .from('profiles')
-      .select('id, full_name, username, cpf, avatar_url')
+      .select('id, full_name, username, cpf, avatar_url, last_username_change')
       .eq('user_id', user.id)
       .single();
 
@@ -53,22 +80,163 @@ export default function Account() {
         username: data.username || '',
         email: user.email || '',
         cpf: data.cpf || '',
-        avatar_url: data.avatar_url || ''
+        avatar_url: data.avatar_url || '',
+        last_username_change: data.last_username_change || null,
       });
+      setOriginalUsername(data.username || '');
       setNewEmail(user.email || '');
     }
   };
 
+  const canChangeUsername = () => {
+    if (!profile.last_username_change) return true;
+    const lastChange = new Date(profile.last_username_change);
+    const daysSinceChange = Math.floor((Date.now() - lastChange.getTime()) / (1000 * 60 * 60 * 24));
+    return daysSinceChange >= 7;
+  };
+
+  const getDaysUntilUsernameChange = () => {
+    if (!profile.last_username_change) return 0;
+    const lastChange = new Date(profile.last_username_change);
+    const daysSinceChange = Math.floor((Date.now() - lastChange.getTime()) / (1000 * 60 * 60 * 24));
+    return Math.max(0, 7 - daysSinceChange);
+  };
+
+  const checkUsernameAvailability = async (username: string) => {
+    if (!username || username === originalUsername) {
+      setUsernameAvailable(null);
+      return;
+    }
+
+    // Validar caracteres
+    if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+      setUsernameAvailable(false);
+      return;
+    }
+
+    // Validar tamanho
+    if (username.length < 3 || username.length > 30) {
+      setUsernameAvailable(false);
+      return;
+    }
+
+    // Verificar se é reservado
+    if (RESERVED_USERNAMES.includes(username.toLowerCase())) {
+      setUsernameAvailable(false);
+      return;
+    }
+
+    setCheckingUsername(true);
+
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('username', username)
+        .maybeSingle();
+
+      if (error) throw error;
+      setUsernameAvailable(!data);
+    } catch (error) {
+      console.error('Error checking username:', error);
+      setUsernameAvailable(false);
+    } finally {
+      setCheckingUsername(false);
+    }
+  };
+
+  // Debounce para verificação de username
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (profile.username && profile.username !== originalUsername) {
+        checkUsernameAvailability(profile.username);
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [profile.username]);
+
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Verificar se o username mudou
+    const usernameChanged = profile.username !== originalUsername;
+
+    if (usernameChanged) {
+      // Validar caracteres
+      if (!/^[a-zA-Z0-9_]+$/.test(profile.username)) {
+        toast({
+          title: 'Username inválido',
+          description: 'Use apenas letras, números e underscore (_)',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // Validar tamanho
+      if (profile.username.length < 3 || profile.username.length > 30) {
+        toast({
+          title: 'Username inválido',
+          description: 'O username deve ter entre 3 e 30 caracteres',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // Verificar se é reservado
+      if (RESERVED_USERNAMES.includes(profile.username.toLowerCase())) {
+        toast({
+          title: 'Username não disponível',
+          description: 'Este nome de usuário está reservado pelo sistema',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // Verificar disponibilidade
+      if (usernameAvailable === false) {
+        toast({
+          title: 'Username não disponível',
+          description: 'Este nome de usuário já está em uso',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // Verificar se pode alterar (7 dias)
+      if (!canChangeUsername()) {
+        const daysLeft = getDaysUntilUsernameChange();
+        toast({
+          title: 'Alteração não permitida',
+          description: `Você poderá alterar seu username novamente em ${daysLeft} dia(s)`,
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // Mostrar aviso antes de alterar
+      setShowUsernameWarning(true);
+      return;
+    }
+
+    // Se não mudou o username, salvar normalmente
+    await saveChanges();
+  };
+
+  const saveChanges = async () => {
     setLoading(true);
 
     try {
       // Validate CPF if being added for the first time
       let updateData: any = {
         full_name: profile.full_name,
-        username: profile.username,
       };
+
+      // Se username mudou, incluir na atualização
+      if (profile.username !== originalUsername) {
+        updateData.username = profile.username;
+        updateData.last_username_change = new Date().toISOString();
+      }
 
       // If CPF is being set for the first time, validate and add it
       if (profile.cpf && !profile.cpf.match(/\d{3}\.\d{3}\.\d{3}-\d{2}/)) {
@@ -283,9 +451,38 @@ export default function Account() {
                   <Label>Nome de Usuário</Label>
                   <Input
                     value={profile.username}
-                    onChange={(e) => setProfile({ ...profile, username: e.target.value })}
+                    onChange={(e) => {
+                      const cleaned = e.target.value.replace(/[^a-zA-Z0-9_]/g, '');
+                      setProfile({ ...profile, username: cleaned });
+                    }}
                     placeholder="seu_username"
+                    disabled={!canChangeUsername()}
+                    className={!canChangeUsername() ? 'bg-muted cursor-not-allowed' : ''}
                   />
+                  {profile.username !== originalUsername && (
+                    <div className="text-xs">
+                      {checkingUsername && (
+                        <p className="text-muted-foreground">Verificando disponibilidade...</p>
+                      )}
+                      {!checkingUsername && usernameAvailable === true && (
+                        <p className="text-green-600">✓ Username disponível</p>
+                      )}
+                      {!checkingUsername && usernameAvailable === false && (
+                        <p className="text-destructive">✗ Username não disponível</p>
+                      )}
+                    </div>
+                  )}
+                  {!canChangeUsername() && (
+                    <p className="text-xs text-muted-foreground">
+                      Você poderá alterar seu username novamente em {getDaysUntilUsernameChange()} dia(s)
+                    </p>
+                  )}
+                  <p className="text-xs text-muted-foreground flex items-center gap-1">
+                    Seu perfil: woorkins.com/{profile.username || 'username'}
+                    <Link to={`/perfil/${profile.username}`} target="_blank">
+                      <ExternalLink className="w-3 h-3" />
+                    </Link>
+                  </p>
                 </div>
                 <div className="space-y-2">
                   <Label className="flex items-center gap-2">
@@ -389,6 +586,41 @@ export default function Account() {
           </Card>
         </div>
       </div>
+
+      {/* Dialog de confirmação de alteração de username */}
+      <AlertDialog open={showUsernameWarning} onOpenChange={setShowUsernameWarning}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar alteração de username</AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              <p>Você está prestes a alterar seu username para: <strong>{profile.username}</strong></p>
+              <p className="text-destructive font-semibold">
+                ⚠️ Após confirmar, você só poderá alterar novamente após 7 dias.
+              </p>
+              <p>Seu perfil público ficará disponível em:</p>
+              <p className="font-mono text-sm bg-muted p-2 rounded">
+                woorkins.com/{profile.username}
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => {
+              setProfile({ ...profile, username: originalUsername });
+              setShowUsernameWarning(false);
+            }}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setShowUsernameWarning(false);
+                saveChanges();
+              }}
+            >
+              Confirmar alteração
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

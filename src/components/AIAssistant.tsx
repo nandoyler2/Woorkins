@@ -525,7 +525,7 @@ export const AIAssistant = () => {
 
       {/* Chat window */}
       {isOpen && (
-        <div className="fixed bottom-24 left-6 w-96 h-[600px] bg-gradient-to-br from-background via-background to-background/95 border-2 border-primary/20 rounded-3xl shadow-2xl z-50 flex flex-col backdrop-blur-sm animate-scale-in">
+        <div className="fixed bottom-2 left-6 w-96 h-[600px] bg-gradient-to-br from-background via-background to-background/95 border-2 border-primary/20 rounded-3xl shadow-2xl z-50 flex flex-col backdrop-blur-sm animate-scale-in">
           <div className="p-6 border-b border-primary/10 bg-gradient-to-r from-primary/5 to-transparent rounded-t-3xl">
             <div className="flex items-center justify-between gap-4">
               <div className="flex-1 min-w-0">

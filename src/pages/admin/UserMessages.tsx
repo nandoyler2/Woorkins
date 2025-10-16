@@ -27,6 +27,7 @@ export default function UserMessages() {
   const [flaggedMessages, setFlaggedMessages] = useState<any[]>([]);
   const [blocks, setBlocks] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [messageSearchQuery, setMessageSearchQuery] = useState<{ [key: string]: string }>({});
   const [loading, setLoading] = useState(true);
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
   const [scrollToMessageId, setScrollToMessageId] = useState<string | null>(null);
@@ -400,7 +401,7 @@ export default function UserMessages() {
 
           {/* Mensagens Normais */}
           <TabsContent value="messages">
-            <ScrollArea className="h-[calc(100vh-24rem)]">
+            <ScrollArea className="h-[calc(100vh-12rem)]">
               {loading ? (
                 <div className="text-center py-8 text-muted-foreground">Carregando...</div>
               ) : filteredNegotiations.length === 0 && filteredProposals.length === 0 ? (
@@ -413,16 +414,36 @@ export default function UserMessages() {
                   {filteredNegotiations.length > 0 && (
                     <div>
                       <h3 className="text-lg font-semibold mb-3">Negociações ({filteredNegotiations.length})</h3>
-                      {filteredNegotiations.map((neg) => (
-                        <Card key={neg.id} className="p-4 mb-3">
-                          {neg.service_description && (
-                            <p className="text-sm text-muted-foreground mb-3 pb-3 border-b">
-                              <span className="font-medium">Serviço:</span> {neg.service_description}
-                            </p>
-                          )}
-                          
-                          <div className="space-y-3">
-                            {neg.negotiation_messages?.map((msg: any) => {
+                      {filteredNegotiations.map((neg) => {
+                        const negSearchQuery = messageSearchQuery[neg.id] || '';
+                        const filteredMessages = neg.negotiation_messages?.filter((msg: any) => 
+                          msg.content?.toLowerCase().includes(negSearchQuery.toLowerCase())
+                        ) || [];
+                        
+                        return (
+                          <Card key={neg.id} className="p-4 mb-3">
+                            {neg.service_description && (
+                              <p className="text-sm text-muted-foreground mb-3 pb-3 border-b">
+                                <span className="font-medium">Serviço:</span> {neg.service_description}
+                              </p>
+                            )}
+                            
+                            {/* Campo de busca nas mensagens */}
+                            <div className="relative mb-3">
+                              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                              <Input
+                                placeholder="Buscar nas mensagens..."
+                                value={negSearchQuery}
+                                onChange={(e) => setMessageSearchQuery(prev => ({
+                                  ...prev,
+                                  [neg.id]: e.target.value
+                                }))}
+                                className="pl-9"
+                              />
+                            </div>
+                            
+                            <div className="space-y-3">
+                              {filteredMessages.map((msg: any) => {
                               const isUser = msg.sender_type === 'user';
                               const senderAvatar = isUser ? user?.avatar_url : neg.business_profiles?.logo_url;
                               const senderName = isUser ? user?.full_name : neg.business_profiles?.company_name;
@@ -481,7 +502,8 @@ export default function UserMessages() {
                             })}
                           </div>
                         </Card>
-                      ))}
+                      );
+                    })}
                     </div>
                   )}
 
@@ -489,17 +511,37 @@ export default function UserMessages() {
                   {filteredProposals.length > 0 && (
                     <div>
                       <h3 className="text-lg font-semibold mb-3">Propostas ({filteredProposals.length})</h3>
-                      {filteredProposals.map((prop) => (
-                        <Card key={prop.id} className="p-4 mb-3">
-                          <div className="mb-3 pb-3 border-b">
-                            <h4 className="font-medium">{prop.projects?.title}</h4>
-                            <Badge variant={prop.status === 'pending' ? 'default' : 'secondary'} className="mt-2">
-                              {prop.status}
-                            </Badge>
-                          </div>
-                          
-                          <div className="space-y-3">
-                            {prop.proposal_messages?.map((msg: any) => {
+                      {filteredProposals.map((prop) => {
+                        const propSearchQuery = messageSearchQuery[prop.id] || '';
+                        const filteredMessages = prop.proposal_messages?.filter((msg: any) => 
+                          msg.content?.toLowerCase().includes(propSearchQuery.toLowerCase())
+                        ) || [];
+                        
+                        return (
+                          <Card key={prop.id} className="p-4 mb-3">
+                            <div className="mb-3 pb-3 border-b">
+                              <h4 className="font-medium">{prop.projects?.title}</h4>
+                              <Badge variant={prop.status === 'pending' ? 'default' : 'secondary'} className="mt-2">
+                                {prop.status}
+                              </Badge>
+                            </div>
+                            
+                            {/* Campo de busca nas mensagens */}
+                            <div className="relative mb-3">
+                              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                              <Input
+                                placeholder="Buscar nas mensagens..."
+                                value={propSearchQuery}
+                                onChange={(e) => setMessageSearchQuery(prev => ({
+                                  ...prev,
+                                  [prop.id]: e.target.value
+                                }))}
+                                className="pl-9"
+                              />
+                            </div>
+                            
+                            <div className="space-y-3">
+                              {filteredMessages.map((msg: any) => {
                               const isFreelancer = msg.sender_id === userId;
                               const senderAvatar = isFreelancer ? prop.profiles?.avatar_url : prop.projects?.profiles?.avatar_url;
                               const senderName = isFreelancer ? prop.profiles?.full_name : prop.projects?.profiles?.full_name;
@@ -555,7 +597,8 @@ export default function UserMessages() {
                             })}
                           </div>
                         </Card>
-                      ))}
+                      );
+                    })}
                     </div>
                   )}
                 </div>

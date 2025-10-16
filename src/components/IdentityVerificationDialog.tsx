@@ -155,6 +155,7 @@ export function IdentityVerificationDialog({
       return;
     }
     
+    console.log('[DEBUG] Starting processVerification...');
     setIsProcessing(true);
     setLoadingStep('validating');
     
@@ -174,6 +175,7 @@ export function IdentityVerificationDialog({
 
       if (!profile) throw new Error('Perfil não encontrado');
       
+      console.log('[DEBUG] Uploading files...');
       const uploadFile = async (file: File, fileName: string) => {
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('identity-documents')
@@ -202,8 +204,9 @@ export function IdentityVerificationDialog({
         backUrl = await uploadFile(backFile, 'document_back');
       }
 
-      // Call verification function with timeout
-      const verificationPromise = supabase.functions.invoke('verify-identity-document', {
+      console.log('[DEBUG] Calling verification function...');
+      // Call verification function with longer timeout
+      const { data, error } = await supabase.functions.invoke('verify-identity-document', {
         body: {
           frontImageUrl: frontUrl,
           backImageUrl: backUrl,
@@ -213,27 +216,38 @@ export function IdentityVerificationDialog({
         }
       });
 
-      // Add 60 second timeout
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Tempo de verificação esgotado. Tente novamente.')), 60000)
-      );
+      console.log('[DEBUG] Verification response:', { data, error });
 
-      const { data, error } = await Promise.race([verificationPromise, timeoutPromise]) as any;
-
+      // Verificar se houve erro na chamada
       if (error) {
-        console.error('Verification error from edge function:', error);
-        throw new Error(error.message || 'Erro ao processar verificação');
+        console.error('[DEBUG] Error from edge function:', error);
+        throw new Error(error.message || 'Erro ao comunicar com servidor');
+      }
+
+      // Verificar se recebemos dados
+      if (!data) {
+        console.error('[DEBUG] No data received from edge function');
+        throw new Error('Nenhuma resposta recebida do servidor');
       }
 
       // Se a resposta tem status rejected, mostrar motivos
-      if (data?.status === 'rejected' && data?.rejectionReasons) {
-        toast.error('Documento rejeitado: ' + data.rejectionReasons.join(', '));
+      if (data.status === 'rejected') {
+        console.log('[DEBUG] Document rejected:', data.rejectionReasons);
+        if (data.rejectionReasons && data.rejectionReasons.length > 0) {
+          toast.error('Documento rejeitado: ' + data.rejectionReasons.join(', '));
+        } else {
+          toast.error('Documento rejeitado');
+        }
+      } else if (data.status === 'approved') {
+        console.log('[DEBUG] Document approved!');
+        toast.success('Documento verificado com sucesso!');
       }
 
       // Edge function já salva o resultado da verificação
+      console.log('[DEBUG] Setting verification result...');
       setVerificationResult(data);
     } catch (error: any) {
-      console.error('Verification error:', error);
+      console.error('[DEBUG] Caught error in processVerification:', error);
       const errorMessage = error.message || 'Erro ao processar verificação';
       toast.error(errorMessage);
       
@@ -244,6 +258,7 @@ export function IdentityVerificationDialog({
         extractedData: null
       });
     } finally {
+      console.log('[DEBUG] Cleaning up processVerification...');
       setIsProcessing(false);
       setLoadingStep(null);
     }

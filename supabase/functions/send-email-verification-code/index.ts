@@ -87,6 +87,8 @@ const handler = async (req: Request): Promise<Response> => {
     const userName = profile?.full_name || "Usuário";
 
     // Send verification email using Resend API
+    console.log("Sending verification email to:", newEmail);
+    
     const emailResponse = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -94,7 +96,7 @@ const handler = async (req: Request): Promise<Response> => {
         "Authorization": `Bearer ${resendApiKey}`,
       },
       body: JSON.stringify({
-        from: "Woorkins <noreply@woorkins.com>",
+        from: "Woorkins <onboarding@resend.dev>",
         to: [newEmail],
         subject: "Confirme sua troca de email - Woorkins",
         html: `
@@ -211,7 +213,14 @@ const handler = async (req: Request): Promise<Response> => {
       }),
     });
 
-    console.log("Verification email sent:", emailResponse);
+    const emailData = await emailResponse.json();
+    
+    if (!emailResponse.ok) {
+      console.error("Failed to send email via Resend:", emailData);
+      throw new Error(`Falha ao enviar email: ${emailData.message || 'Erro desconhecido'}`);
+    }
+    
+    console.log("Verification email sent successfully:", emailData);
 
     return new Response(
       JSON.stringify({ 

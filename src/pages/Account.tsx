@@ -245,7 +245,12 @@ export default function Account() {
       });
 
       if (response.error) {
-        throw new Error(response.error.message);
+        const errorMessage = response.data?.error || response.error.message || 'Erro desconhecido';
+        throw new Error(errorMessage);
+      }
+
+      if (!response.data?.success) {
+        throw new Error('Erro ao verificar código');
       }
 
       toast({

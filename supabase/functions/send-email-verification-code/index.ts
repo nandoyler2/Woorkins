@@ -45,12 +45,9 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("Email inválido");
     }
 
-    // Check if email is already in use
-    const { data: existingUser } = await supabase.auth.admin.listUsers();
-    const emailInUse = existingUser?.users?.some(u => u.email === newEmail);
-    
-    if (emailInUse) {
-      throw new Error("Este email já está em uso");
+    // Prevent sending code to the same email as current one
+    if (user.email && user.email.toLowerCase() === newEmail.toLowerCase()) {
+      throw new Error("O novo email deve ser diferente do atual");
     }
 
     // Generate 6-digit code

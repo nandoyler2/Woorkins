@@ -36,9 +36,14 @@ export default function UserMessages() {
   useEffect(() => {
     if (userId) {
       loadUser();
-      loadHistories();
     }
   }, [userId]);
+
+  useEffect(() => {
+    if (user) {
+      loadHistories();
+    }
+  }, [user]);
 
   useEffect(() => {
     if (scrollToMessageId && messageRefs.current[scrollToMessageId]) {

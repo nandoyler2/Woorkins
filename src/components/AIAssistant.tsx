@@ -50,8 +50,21 @@ interface ArchivedConversation {
 
 export const AIAssistant = () => {
   const { isOpen: contextIsOpen, close, initialMessage } = useAIAssistant();
-  const { profile } = useAuth();
-  const { isBlocked, remainingSeconds, spamBlock } = useSpamBlock(profile?.id, 'ai_assistant');
+  const { user } = useAuth();
+  const [userProfileId, setUserProfileId] = useState<string | undefined>();
+  
+  useEffect(() => {
+    if (user) {
+      supabase
+        .from('profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .single()
+        .then(({ data }) => setUserProfileId(data?.id));
+    }
+  }, [user]);
+  
+  const { isBlocked: isSpamBlocked, remainingSeconds, spamBlock } = useSpamBlock(userProfileId, 'ai_assistant');
   const [internalOpen, setInternalOpen] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('welcome');
   const [showTopics, setShowTopics] = useState(true);

@@ -555,34 +555,44 @@ export function SupportChatDialog({ open, onOpenChange, documentRejected, profil
               </div>
             )}
 
+            {/* Spam block alert */}
+            {isBlocked && (
+              <div className="mb-4">
+                <SpamBlockCountdown 
+                  remainingSeconds={remainingSeconds}
+                  reason="Por favor, aguarde alguns minutos antes de enviar mais mensagens."
+                />
+              </div>
+            )}
+
             <div className="flex gap-2">
               <Button
                 variant="outline"
                 size="icon"
                 onClick={() => setShowDocumentUpload(!showDocumentUpload)}
-                disabled={isSending}
+                disabled={isSending || isBlocked}
               >
                 <Paperclip className="h-4 w-4" />
               </Button>
 
               <Textarea
-                placeholder="Digite sua mensagem..."
+                disabled={isBlocked || isSending}
+                placeholder={isBlocked ? "Aguarde o desbloqueio..." : "Digite sua mensagem..."}
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
+                  if (e.key === 'Enter' && !e.shiftKey && !isBlocked) {
                     e.preventDefault();
                     handleSendMessage();
                   }
                 }}
                 rows={2}
                 className="resize-none flex-1"
-                disabled={isSending}
               />
 
               <Button
                 onClick={() => handleSendMessage()}
-                disabled={isSending || (!message.trim() && !showDocumentUpload)}
+                disabled={isSending || isBlocked || (!message.trim() && !showDocumentUpload)}
               >
                 {isSending ? (
                   <Loader2 className="h-4 w-4 animate-spin" />

@@ -73,6 +73,23 @@ async function executeAdminAction(supabase: any, action: string, params: any) {
   
   switch (action) {
     case 'unblock_user':
+      // Registrar desbloqueio no histórico (usando ai_assistant_conversations)
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      await supabase
+        .from('ai_assistant_conversations')
+        .upsert({
+          profile_id: params.profileId,
+          messages: JSON.stringify([{
+            role: 'system',
+            content: `DESBLOQUEIO_REALIZADO_${new Date().toISOString()}`
+          }]),
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'profile_id'
+        });
+      
       // Remover bloqueios manuais
       await supabase
         .from('system_blocks')
@@ -89,7 +106,7 @@ async function executeAdminAction(supabase: any, action: string, params: any) {
         })
         .eq('profile_id', params.profileId);
       
-      return { success: true, message: 'Você foi desbloqueado! ⚠️ ATENÇÃO: Se repetir o mesmo tipo de violação, não poderá mais desbloquear pelo chat e terá que aguardar o prazo completo do bloqueio.' };
+      return { success: true, message: 'Tudo certo! ❤️ Você é importante pra gente! Mas lembre-se: se repetir, não poderemos desbloquear novamente hoje e você precisará aguardar. 💪✨' };
 
     case 'add_woorkoins':
       const { data: currentBalance } = await supabase
@@ -159,6 +176,28 @@ serve(async (req) => {
       throw new Error('Perfil não encontrado');
     }
     
+    // Verificar se já foi desbloqueado hoje
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const { data: todayUnblocks } = await supabase
+      .from('ai_assistant_conversations')
+      .select('messages, updated_at')
+      .eq('profile_id', userContext.profile.id)
+      .gte('updated_at', today.toISOString())
+      .maybeSingle();
+    
+    let wasUnblockedToday = false;
+    if (todayUnblocks?.messages) {
+      const msgs = typeof todayUnblocks.messages === 'string' 
+        ? JSON.parse(todayUnblocks.messages) 
+        : todayUnblocks.messages;
+      
+      wasUnblockedToday = msgs.some((m: any) => 
+        m.role === 'system' && m.content?.includes('DESBLOQUEIO_REALIZADO_')
+      );
+    }
+    
     // Verificar se está bloqueado por spam
     const { data: spamBlock } = await supabase
       .from('message_spam_tracking')
@@ -186,6 +225,10 @@ serve(async (req) => {
 
     // Construir contexto para a IA
     const firstName = userContext.profile.full_name?.split(' ')[0] || 'usuário';
+    
+    const unblockHistoryInfo = wasUnblockedToday 
+      ? `\n\n🚨 IMPORTANTE: Este usuário JÁ FOI DESBLOQUEADO HOJE! NÃO desbloqueie novamente!`
+      : `\n\nℹ️ Este usuário ainda não foi desbloqueado hoje. Você pode considerar desbloqueá-lo se ele demonstrar arrependimento genuíno.`;
     
     const contextInfo = `
 CONTEXTO DO USUÁRIO:
@@ -298,15 +341,21 @@ Retorne este JSON para bloquear temporariamente:
 
 ⚠️ ANÁLISE PARA DESBLOQUEIO:
 
-**SEJA HUMANIZADA MAS FIRME:**
+**REGRA CRÍTICA - JÁ FOI DESBLOQUEADO HOJE:**
+Se o usuário já foi desbloqueado HOJE (verifique o histórico de conversa), NÃO desbloqueie novamente!
+Resposta imediata: "Oi ${firstName}! ❤️ Você é muito importante pra gente, mas como já te desbloqueei mais cedo hoje, não posso fazer isso de novo. Precisa aguardar o tempo restante, ok? Te oriento a não repetir essas ações porque queremos você aqui conosco! 💪"
+
+**SEJA DOCE E HUMANIZADA:**
 
 ✅ **Desbloquear APENAS se:**
+- Primeira vez hoje que pede desbloqueio
 - Usuário explicou DETALHADAMENTE o que fez
 - Mostrou que REALMENTE entendeu por que errou
-- Demonstrou ARREPENDIMENTO GENUÍNO (não só "desculpa")
+- Demonstrou ARREPENDIMENTO GENUÍNO
 - Você está CONVENCIDA de que ele aprendeu
 
 ❌ **NÃO desbloquear se:**
+- Já foi desbloqueado HOJE (verifique histórico!)
 - Respostas vagas ("foi sem querer", "desculpa")
 - Não explicou direito o que aconteceu
 - Está sendo agressivo ou desrespeitoso
@@ -314,18 +363,19 @@ Retorne este JSON para bloquear temporariamente:
 - Bloqueio é PERMANENTE
 
 🗣️ **Como conduzir:**
-1ª mensagem: "Oi! Me conta o que aconteceu?"
-2ª mensagem: Analise a resposta dele
-   - Se foi boa → Considere desbloquear
+1ª mensagem: "Oi ${firstName}! 😊 Me conta o que aconteceu?"
+2ª mensagem: Analise a resposta
+   - Se foi boa → Considere desbloquear (se primeira vez hoje!)
    - Se foi vaga → "Pode explicar melhor X?"
 3ª mensagem: Decisão final
-   - Desbloquear OU
-   - "Entendo, mas como você já sabia das regras, terá que aguardar o tempo do bloqueio ⏳"
+   - Desbloquear (primeira vez hoje!) OU
+   - "Entendo ${firstName} ❤️ Mas como você já sabia das regras, precisa aguardar o tempo do bloqueio. Você é importante pra gente! ⏳"
    
-**DEPOIS DA DECISÃO:**
-- NÃO fique perguntando a mesma coisa
-- Se ele insistir → "A decisão já foi tomada. Posso te ajudar com outra coisa?"
-- Se insistir MUITO → Avise sobre cooldown
+**SEMPRE SEJA DOCE:**
+- Use ❤️ 😊 💪 ✨
+- Sempre reforce: "Você é importante pra plataforma!"
+- Seja firme mas amorosa
+- Mostre que se importa com ele
 
 AÇÕES DISPONÍVEIS:
 

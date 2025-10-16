@@ -128,7 +128,7 @@ RESPONDA EM JSON:
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-pro',
+        model: 'google/gemini-2.5-flash',
         messages: [
             {
               role: 'user',
@@ -137,59 +137,41 @@ RESPONDA EM JSON:
                   type: 'text',
                   text: `ANÁLISE DETALHADA DE DOCUMENTO BRASILEIRO - FRENTE
 
-Você está analisando um documento de identidade brasileiro (RG ou CNH). Sua tarefa principal é EXTRAIR O CPF COM PRECISÃO ABSOLUTA.
+Analise este documento de identidade brasileiro (RG ou CNH) e extraia TODAS as informações visíveis.
 
-🔴 INSTRUÇÕES CRÍTICAS PARA LOCALIZAÇÃO DO CPF:
+INSTRUÇÕES CRÍTICAS PARA CPF:
+- Procure TODOS os números no documento
+- O CPF pode estar em QUALQUER parte do documento (frente ou campos adicionais)
+- Aceite CPF com ou sem formatação (XXX.XXX.XXX-XX ou XXXXXXXXXXX)
+- Se ver 11 dígitos numéricos, EXTRAIA como CPF
+- Seja MUITO CUIDADOSO para não perder nenhum dígito
+- Se o CPF estiver parcialmente legível, tente ao máximo identificar todos os 11 dígitos
 
-ONDE PROCURAR O CPF:
-1. **RG (Frente)**: O CPF aparece geralmente em VERMELHO no lado direito superior ou central
-   - Formato comum: XXX.XXX.XXX-XX (com pontos e traço)
-   - Pode estar em uma linha separada com o texto "CPF" antes
-   - Em RGs novos, pode estar no rodapé em formato menor
+INSTRUÇÕES DE LEITURA:
+1. Identifique: RG ou CNH
+2. EXTRAIA OS DADOS com MÁXIMA precisão:
+   - Nome completo (exatamente como está escrito)
+   - CPF (TODOS os 11 dígitos - pode ter formatação)
+   - Data de nascimento (DD/MM/AAAA)
+   - Número do documento
+   - RG (se houver)
+   - Órgão emissor e UF
 
-2. **RG (Verso)**: O CPF pode aparecer abaixo da impressão digital
-   - Formato: pode ser XXX.XXX.XXX-XX ou apenas números
-   - Procure por uma sequência de 11 dígitos
-
-3. **Padrões visuais do CPF**:
-   - SEMPRE tem 11 dígitos numéricos
-   - Pode ter formatação: 123.456.789-01
-   - Pode não ter formatação: 12345678901
-   - Normalmente aparece em VERMELHO ou PRETO
-   - Pode estar em posição horizontal ou vertical
-
-🔴 MÉTODO DE EXTRAÇÃO DO CPF:
-1. Primeiro, ESCANEIE TODO o documento procurando qualquer sequência de números
-2. Identifique TODAS as sequências numéricas que você vê
-3. Procure especificamente por:
-   - Números em vermelho (cor comum para CPF)
-   - Sequências de 11 dígitos (com ou sem formatação)
-   - Texto "CPF:" seguido de números
-4. Se encontrar múltiplas sequências de 11 dígitos, escolha a mais provável (geralmente a que está formatada ou em vermelho)
-5. EXTRAIA TODOS OS 11 DÍGITOS, removendo apenas pontos e traços
-
-🔴 DADOS A EXTRAIR:
-- Nome completo (EXATAMENTE como escrito)
-- **CPF (OBRIGATÓRIO - TODOS os 11 dígitos)**
-- Data de nascimento (DD/MM/AAAA)
-- Número do RG
-- Órgão emissor (ex: SSP-SP)
-
-🔴 AVALIAÇÃO DE QUALIDADE (seja GENEROSO):
-- Documentos antigos/desgastados são NORMAIS - aceite-os
-- Brilho/reflexo leve é ACEITÁVEL
-- Foto levemente desfocada é ACEITÁVEL
-- Marque isReadable=false SOMENTE se REALMENTE impossível ler qualquer texto
+3. AVALIE A QUALIDADE (seja GENEROSO):
+   - Documentos antigos são NORMAIS e devem ser aceitos
+   - Brilho leve é ACEITÁVEL
+   - Foco levemente reduzido é ACEITÁVEL
+   - Marque isReadable=false APENAS se REALMENTE impossível ler
 
 RESPONDA EM JSON:
 {
   "documentType": "RG" ou "CNH",
   "extractedData": {
-    "fullName": "NOME COMPLETO EXTRAÍDO",
-    "cpf": "TODOS os 11 dígitos do CPF (pode incluir formatação)",
+    "fullName": "NOME COMPLETO EXTRAÍDO EXATAMENTE",
+    "cpf": "12345678901 ou 123.456.789-01",
     "birthDate": "DD/MM/AAAA",
-    "documentNumber": "número do RG",
-    "rg": "número do RG",
+    "documentNumber": "número do documento",
+    "rg": "RG se houver",
     "issuer": "SSP-XX"
   },
   "quality": {
@@ -202,10 +184,6 @@ RESPONDA EM JSON:
     "isPhysicalDocument": true/false,
     "hasAlteration": false,
     "details": "explicação"
-  },
-  "debugInfo": {
-    "allNumbersFound": ["liste todas as sequências numéricas que você identificou no documento"],
-    "cpfLocation": "descreva onde você encontrou o CPF (ex: canto superior direito, em vermelho)"
   }
 }`
                 },
@@ -216,7 +194,7 @@ RESPONDA EM JSON:
               ]
             }
         ],
-        temperature: 0.3,
+        temperature: 0.2,
         response_format: { type: "json_object" }
       })
     });
@@ -294,7 +272,6 @@ RESPONDA EM JSON:
     console.log('Raw Birth Date:', extractedBirthDate);
     console.log('Registered Name:', registeredName);
     console.log('Registered CPF:', registeredCPF);
-    console.log('AI Debug Info:', frontData.debugInfo);
     
     // Normalizar CPF extraído - remover TUDO que não é dígito
     const normalizedExtractedCPF = extractedCPF.replace(/\D/g, '');

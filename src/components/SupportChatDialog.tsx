@@ -7,6 +7,8 @@ import { Label } from '@/components/ui/label';
 import { MessageCircle, Send, Loader2, Paperclip, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useSpamBlock } from '@/hooks/useSpamBlock';
+import { SpamBlockCountdown } from './SpamBlockCountdown';
 
 // Função para formatar markdown simples (negrito)
 const formatMarkdown = (text: string) => {
@@ -31,6 +33,7 @@ interface Message {
 }
 
 export function SupportChatDialog({ open, onOpenChange, documentRejected, profileId, initialMessage }: SupportChatDialogProps) {
+  const { isBlocked, remainingSeconds, spamBlock } = useSpamBlock(profileId, 'support_chat');
   const [messages, setMessages] = useState<Message[]>([]);
   const [message, setMessage] = useState('');
   const [conversationId, setConversationId] = useState<string | null>(null);

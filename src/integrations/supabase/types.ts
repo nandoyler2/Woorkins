@@ -521,6 +521,50 @@ export type Database = {
           },
         ]
       }
+      message_spam_tracking: {
+        Row: {
+          block_duration_minutes: number | null
+          blocked_until: string | null
+          context: string
+          created_at: string | null
+          id: string
+          last_spam_at: string | null
+          profile_id: string
+          spam_count: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          block_duration_minutes?: number | null
+          blocked_until?: string | null
+          context: string
+          created_at?: string | null
+          id?: string
+          last_spam_at?: string | null
+          profile_id: string
+          spam_count?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          block_duration_minutes?: number | null
+          blocked_until?: string | null
+          context?: string
+          created_at?: string | null
+          id?: string
+          last_spam_at?: string | null
+          profile_id?: string
+          spam_count?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_spam_tracking_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       message_unread_counts: {
         Row: {
           conversation_id: string
@@ -1831,6 +1875,10 @@ export type Database = {
         }[]
       }
       cleanup_expired_email_verifications: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      cleanup_expired_spam_blocks: {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }

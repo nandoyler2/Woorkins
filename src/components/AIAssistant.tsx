@@ -8,6 +8,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useSystemBlock } from '@/hooks/useSystemBlock';
 import { useAIAssistant } from '@/contexts/AIAssistantContext';
 import { useLocation } from 'react-router-dom';
+import { useSpamBlock } from '@/hooks/useSpamBlock';
+import { SpamBlockCountdown } from './SpamBlockCountdown';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -48,6 +50,8 @@ interface ArchivedConversation {
 
 export const AIAssistant = () => {
   const { isOpen: contextIsOpen, close, initialMessage } = useAIAssistant();
+  const { profile } = useAuth();
+  const { isBlocked, remainingSeconds, spamBlock } = useSpamBlock(profile?.id, 'ai_assistant');
   const [internalOpen, setInternalOpen] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('welcome');
   const [showTopics, setShowTopics] = useState(true);

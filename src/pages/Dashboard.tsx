@@ -436,16 +436,30 @@ export default function Dashboard() {
                           </p>
                         </div>
                         <div className="flex flex-wrap gap-2 ml-8">
-                          {pendingTasks.map((task) => (
+                          {profileTasks.map((task) => (
                             <Button
                               key={task.id}
                               variant="outline"
                               size="sm"
-                              className="text-xs h-7 border-slate-300 hover:border-primary hover:text-primary"
-                              onClick={task.action}
+                              className={
+                                task.completed
+                                  ? "text-xs h-7 border-green-500 text-green-600 bg-green-50 cursor-default"
+                                  : "text-xs h-7 border-slate-300 hover:border-primary hover:text-primary"
+                              }
+                              onClick={task.completed ? undefined : task.action}
+                              disabled={task.completed}
                             >
-                              <task.icon className="w-3 h-3 mr-1" />
-                              {task.title}
+                              {task.completed ? (
+                                <>
+                                  <CheckCircle2 className="w-3 h-3 mr-1" />
+                                  {task.title} - Concluído
+                                </>
+                              ) : (
+                                <>
+                                  <task.icon className="w-3 h-3 mr-1" />
+                                  {task.title}
+                                </>
+                              )}
                             </Button>
                           ))}
                         </div>
@@ -468,24 +482,6 @@ export default function Dashboard() {
                       </div>
                     )}
                   </>
-                )}
-
-                {/* Completed Tasks Display */}
-                {profileTasks.some(t => t.completed) && !profileCompleted && (
-                  <div className="mt-3 flex flex-wrap gap-2 ml-8">
-                    {profileTasks.filter(t => t.completed).map((task) => (
-                      <Button
-                        key={task.id}
-                        variant="outline"
-                        size="sm"
-                        className="text-xs h-7 border-green-500 text-green-600 bg-green-50 cursor-default"
-                        disabled
-                      >
-                        <CheckCircle2 className="w-3 h-3 mr-1" />
-                        {task.title} - Concluído
-                      </Button>
-                    ))}
-                  </div>
                 )}
               </CardContent>
             </Card>

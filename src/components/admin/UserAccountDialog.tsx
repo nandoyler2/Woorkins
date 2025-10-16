@@ -41,6 +41,8 @@ export function UserAccountDialog({ open, onOpenChange, user, onUpdate }: UserAc
   const [userEmail, setUserEmail] = useState('');
   const [lastUsernameChange, setLastUsernameChange] = useState<Date | null>(null);
   const [showUsernameWarning, setShowUsernameWarning] = useState(false);
+  const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
+  const [checkingUsername, setCheckingUsername] = useState(false);
   const [formData, setFormData] = useState({
     full_name: user.full_name || '',
     username: user.username || '',
@@ -51,6 +53,20 @@ export function UserAccountDialog({ open, onOpenChange, user, onUpdate }: UserAc
     nationality: user.nationality || '',
     place_of_birth: user.place_of_birth || '',
   });
+
+  // Nomes reservados do sistema
+  const RESERVED_USERNAMES = [
+    'admin', 'administrador', 'suporte', 'support', 'moderator', 'moderacao',
+    'sistema', 'system', 'woorkins', 'api', 'root', 'sudo',
+    'auth', 'login', 'logout', 'signup', 'signin', 'register', 'cadastro',
+    'perfil', 'profile', 'conta', 'account', 'settings', 'configuracoes',
+    'mensagens', 'messages', 'projetos', 'projects', 'projeto', 'project',
+    'feed', 'empresa', 'business', 'businesses', 'empresas',
+    'painel', 'dashboard', 'admin', 'financeiro', 'woorkoins',
+    'sobre', 'about', 'contato', 'contact', 'ajuda', 'help',
+    'termos', 'terms', 'privacidade', 'privacy', 'politica', 'policy',
+    'autenticacao', 'meus-projetos', 'editar', 'edit', 'novo', 'new'
+  ];
 
   useEffect(() => {
     const loadUserData = async () => {
@@ -161,19 +177,84 @@ export function UserAccountDialog({ open, onOpenChange, user, onUpdate }: UserAc
     return Math.max(0, Math.ceil(7 - daysSinceChange));
   };
 
-  const handleSave = async () => {
-    // Se o username mudou e pode ser alterado, mostrar aviso
-    if (formData.username !== user.username && canChangeUsername()) {
-      setShowUsernameWarning(true);
+  // Verificar disponibilidade do username
+  const checkUsernameAvailability = async (username: string) => {
+    if (!username || username === user.username) {
+      setUsernameAvailable(null);
       return;
     }
 
-    if (formData.username !== user.username && !canChangeUsername()) {
-      toast({
-        title: 'Não é possível alterar username',
-        description: `Você só pode alterar o username após 7 dias. Aguarde mais ${getDaysUntilUsernameChange()} dia(s).`,
-        variant: 'destructive',
-      });
+    // Verificar se é um nome reservado
+    if (RESERVED_USERNAMES.includes(username.toLowerCase())) {
+      setUsernameAvailable(false);
+      return;
+    }
+
+    setCheckingUsername(true);
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('username', username)
+        .maybeSingle();
+
+      if (error) throw error;
+      setUsernameAvailable(!data);
+    } catch (error) {
+      console.error('Error checking username:', error);
+      setUsernameAvailable(null);
+    } finally {
+      setCheckingUsername(false);
+    }
+  };
+
+  // Debounce para verificação de username
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (formData.username && formData.username !== user.username) {
+        checkUsernameAvailability(formData.username);
+      } else {
+        setUsernameAvailable(null);
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [formData.username]);
+
+  const handleSave = async () => {
+    // Validar username se mudou
+    if (formData.username !== user.username) {
+      if (!canChangeUsername()) {
+        toast({
+          title: 'Não é possível alterar username',
+          description: `Você só pode alterar o username após 7 dias. Aguarde mais ${getDaysUntilUsernameChange()} dia(s).`,
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // Verificar se é um nome reservado
+      if (RESERVED_USERNAMES.includes(formData.username.toLowerCase())) {
+        toast({
+          title: 'Username não disponível',
+          description: 'Este username está reservado pelo sistema.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // Verificar disponibilidade
+      if (usernameAvailable === false) {
+        toast({
+          title: 'Username não disponível',
+          description: 'Este username já está em uso. Por favor, escolha outro.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // Mostrar aviso de alteração
+      setShowUsernameWarning(true);
       return;
     }
 
@@ -313,11 +394,25 @@ export function UserAccountDialog({ open, onOpenChange, user, onUpdate }: UserAc
                   <Input 
                     id="username"
                     value={formData.username} 
-                    onChange={(e) => setFormData({ ...formData, username: e.target.value.replace(/[^a-zA-Z0-9_]/g, '') })}
+                    onChange={(e) => setFormData({ ...formData, username: e.target.value.replace(/[^a-zA-Z0-9_]/g, '').toLowerCase() })}
                     disabled={!canChangeUsername()}
                     className="pl-7"
                   />
+                  {formData.username !== user.username && (
+                    <div className="mt-1 text-xs">
+                      {checkingUsername ? (
+                        <span className="text-muted-foreground">Verificando disponibilidade...</span>
+                      ) : usernameAvailable === true ? (
+                        <span className="text-green-600 dark:text-green-500">✓ Username disponível</span>
+                      ) : usernameAvailable === false ? (
+                        <span className="text-destructive">✗ Username não disponível</span>
+                      ) : null}
+                    </div>
+                  )}
                 </div>
+                <p className="text-xs text-muted-foreground">
+                  Seu perfil: woorkins.com/{formData.username || 'username'}
+                </p>
               </div>
 
               <div className="space-y-2 md:col-span-2">

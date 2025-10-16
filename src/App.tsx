@@ -20,6 +20,7 @@ import Dashboard from "./pages/Dashboard";
 import BusinessEdit from "./pages/BusinessEdit";
 import BusinessProfile from "./pages/BusinessProfile";
 import BusinessFinances from "./pages/BusinessFinances";
+import UserProfile from "./pages/UserProfile";
 import Projects from "./pages/Projects";
 import ProjectCreate from "./pages/ProjectCreate";
 import ProjectDetails from "./pages/ProjectDetails";
@@ -106,6 +107,7 @@ function AppContent() {
           <Route path="document-verifications" element={<AdminDocumentVerifications />} />
           <Route path="support" element={<AdminSupport />} />
         </Route>
+        <Route path="/perfil/:username" element={<UserProfile />} />
         <Route path="/:slug" element={<BusinessProfile />} />
         <Route path="*" element={<NotFound />} />
       </Routes>

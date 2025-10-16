@@ -103,7 +103,7 @@ export default function UserMessages() {
             is_deleted
           )
         `)
-        .eq('user_id', user?.user_id)
+        .eq('user_id', user?.id)
         .order('updated_at', { ascending: false });
 
       if (negError) throw negError;

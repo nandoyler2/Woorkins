@@ -49,6 +49,8 @@ export function UserAccountDialog({ open, onOpenChange, user, onUpdate }: UserAc
     full_name: user.full_name || '',
     username: user.username || '',
     email: '',
+    cpf: user.cpf || '',
+    birth_date: user.birth_date || '',
     location: user.location || '',
     bio: user.bio || '',
     filiation: user.filiation || '',
@@ -77,7 +79,12 @@ export function UserAccountDialog({ open, onOpenChange, user, onUpdate }: UserAc
         const { data: { user: authUser } } = await supabase.auth.admin.getUserById(user.user_id);
         if (authUser?.email) {
           setUserEmail(authUser.email);
-          setFormData(prev => ({ ...prev, email: authUser.email }));
+          setFormData(prev => ({ 
+            ...prev, 
+            email: authUser.email,
+            cpf: user.cpf ? user.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4') : '',
+            birth_date: user.birth_date || ''
+          }));
         }
 
         // Buscar data da última alteração de username
@@ -272,6 +279,8 @@ export function UserAccountDialog({ open, onOpenChange, user, onUpdate }: UserAc
       // Atualizar perfil
       const updateData: any = {
         full_name: formData.full_name,
+        cpf: formData.cpf.replace(/[^\d]/g, ''), // Remove formatação
+        birth_date: formData.birth_date || null,
         location: formData.location,
         bio: formData.bio,
         filiation: formData.filiation,
@@ -470,21 +479,30 @@ export function UserAccountDialog({ open, onOpenChange, user, onUpdate }: UserAc
               </div>
 
               <div className="space-y-2">
-                <Label>CPF</Label>
+                <Label htmlFor="cpf">CPF</Label>
                 <Input 
-                  value={user.cpf ? user.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4') : 'Não informado'} 
-                  disabled 
+                  id="cpf"
+                  value={formData.cpf}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, '');
+                    const formatted = value.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+                    setFormData({ ...formData, cpf: formatted });
+                  }}
+                  placeholder="000.000.000-00"
+                  maxLength={14}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label>
+                <Label htmlFor="birth_date">
                   <Calendar className="h-4 w-4 inline mr-1" />
                   Data de Nascimento
                 </Label>
                 <Input 
-                  value={user.birth_date ? new Date(user.birth_date).toLocaleDateString('pt-BR') : 'Não informado'} 
-                  disabled 
+                  id="birth_date"
+                  type="date"
+                  value={formData.birth_date}
+                  onChange={(e) => setFormData({ ...formData, birth_date: e.target.value })}
                 />
               </div>
 

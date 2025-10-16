@@ -33,7 +33,8 @@ export function IdentityVerificationDialog({
   const [isProcessing, setIsProcessing] = useState(false);
   const [preValidationFront, setPreValidationFront] = useState<any>(null);
   const [preValidationBack, setPreValidationBack] = useState<any>(null);
-  const [isPreValidating, setIsPreValidating] = useState(false);
+  const [isPreValidatingFront, setIsPreValidatingFront] = useState(false);
+  const [isPreValidatingBack, setIsPreValidatingBack] = useState(false);
   const [loadingStep, setLoadingStep] = useState<'checking' | 'validating' | null>(null);
   const combinedInputRef = useRef<HTMLInputElement>(null);
   const frontInputRef = useRef<HTMLInputElement>(null);
@@ -70,8 +71,16 @@ export function IdentityVerificationDialog({
   }, [frontImage, backImage, preValidationFront, preValidationBack, uploadOption, isProcessing]);
 
   const preValidateDocument = async (file: File, type: 'front' | 'back' | 'combined') => {
-    setIsPreValidating(true);
-    setLoadingStep('checking');
+    if (type === 'front') {
+      setIsPreValidatingFront(true);
+    } else if (type === 'back') {
+      setIsPreValidatingBack(true);
+    }
+
+    // Para documento combinado, mostrar loading geral
+    if (type === 'combined') {
+      setLoadingStep('checking');
+    }
 
     try {
       const base64 = await fileToBase64(file);
@@ -105,8 +114,14 @@ export function IdentityVerificationDialog({
       console.error('Pre-validation error:', error);
       toast.error('Erro ao validar documento');
     } finally {
-      setIsPreValidating(false);
-      setLoadingStep(null);
+      if (type === 'front') {
+        setIsPreValidatingFront(false);
+      } else if (type === 'back') {
+        setIsPreValidatingBack(false);
+      }
+      if (type === 'combined') {
+        setLoadingStep(null);
+      }
     }
   };
 
@@ -194,7 +209,8 @@ export function IdentityVerificationDialog({
   };
 
   const renderContent = () => {
-    if (isPreValidating || isProcessing) {
+    // Apenas mostrar loading full screen durante processamento final ou documento combinado
+    if ((loadingStep === 'checking' && uploadOption === 'combined') || (isProcessing && loadingStep === 'validating')) {
       return (
         <div className="flex flex-col items-center justify-center p-8 space-y-4">
           <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -377,9 +393,14 @@ export function IdentityVerificationDialog({
                       : 'border-red-500 bg-red-50'
                     : 'border-gray-300 hover:border-primary'
                 }`}
-                onClick={() => !frontImage && frontInputRef.current?.click()}
+                onClick={() => !frontImage && !isPreValidatingFront && frontInputRef.current?.click()}
               >
-                {frontImage ? (
+                {isPreValidatingFront ? (
+                  <div className="space-y-2">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
+                    <p className="text-sm font-medium">Verificando...</p>
+                  </div>
+                ) : frontImage ? (
                   <div className="space-y-2">
                     {preValidationFront?.isValid ? (
                       <CheckCircle className="h-8 w-8 text-green-600 mx-auto" />
@@ -428,9 +449,14 @@ export function IdentityVerificationDialog({
                       : 'border-red-500 bg-red-50'
                     : 'border-gray-300 hover:border-primary'
                 }`}
-                onClick={() => !backImage && backInputRef.current?.click()}
+                onClick={() => !backImage && !isPreValidatingBack && backInputRef.current?.click()}
               >
-                {backImage ? (
+                {isPreValidatingBack ? (
+                  <div className="space-y-2">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
+                    <p className="text-sm font-medium">Verificando...</p>
+                  </div>
+                ) : backImage ? (
                   <div className="space-y-2">
                     {preValidationBack?.isValid ? (
                       <CheckCircle className="h-8 w-8 text-green-600 mx-auto" />

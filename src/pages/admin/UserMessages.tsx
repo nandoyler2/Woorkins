@@ -349,45 +349,6 @@ export default function UserMessages() {
           </div>
         </div>
 
-        {/* Notificações de Bloqueio */}
-        {blocks.length > 0 && (
-          <Card className="p-4 mb-6 border-destructive bg-destructive/5">
-            <div className="flex items-start gap-3">
-              <ShieldAlert className="h-5 w-5 text-destructive mt-0.5" />
-              <div className="flex-1">
-                <h3 className="font-semibold text-destructive mb-2">
-                  Bloqueios e Restrições ({blocks.length})
-                </h3>
-                <div className="space-y-2">
-                  {blocks.map((block, idx) => (
-                    <div key={idx} className="text-sm bg-background rounded-lg p-3">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Badge variant="destructive">
-                          {block.type === 'system' ? 'Bloqueio Sistema' : 'Violação Moderação'}
-                        </Badge>
-                        {block.is_permanent && (
-                          <Badge variant="outline">Permanente</Badge>
-                        )}
-                        {block.blocked_until && (
-                          <span className="text-xs text-muted-foreground">
-                            Até: {new Date(block.blocked_until).toLocaleString('pt-BR')}
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-muted-foreground">
-                        {block.reason || `${block.violation_count} violações`}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {new Date(block.created_at || block.last_violation_at).toLocaleString('pt-BR')}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </Card>
-        )}
-
         {/* Search */}
         <div className="mb-4">
           <div className="relative">
@@ -612,6 +573,45 @@ export default function UserMessages() {
           {/* Mensagens Sinalizadas */}
           <TabsContent value="flagged">
             <ScrollArea className="h-[calc(100vh-24rem)]">
+              {/* Bloqueios e Restrições */}
+              {blocks.length > 0 && (
+                <Card className="p-4 mb-4 border-destructive bg-destructive/5">
+                  <div className="flex items-start gap-3">
+                    <ShieldAlert className="h-5 w-5 text-destructive mt-0.5" />
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-destructive mb-2">
+                        Bloqueios e Restrições ({blocks.length})
+                      </h3>
+                      <div className="space-y-2">
+                        {blocks.map((block, idx) => (
+                          <div key={idx} className="text-sm bg-background rounded-lg p-3">
+                            <div className="flex items-center gap-2 mb-1">
+                              <Badge variant="destructive">
+                                {block.type === 'system' ? 'Bloqueio Sistema' : 'Violação Moderação'}
+                              </Badge>
+                              {block.is_permanent && (
+                                <Badge variant="outline">Permanente</Badge>
+                              )}
+                              {block.blocked_until && (
+                                <span className="text-xs text-muted-foreground">
+                                  Até: {new Date(block.blocked_until).toLocaleString('pt-BR')}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-muted-foreground">
+                              {block.reason || `${block.violation_count} violações`}
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {new Date(block.created_at || block.last_violation_at).toLocaleString('pt-BR')}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              )}
+
               {loading ? (
                 <div className="text-center py-8 text-muted-foreground">Carregando...</div>
               ) : filteredFlaggedMessages.length === 0 ? (

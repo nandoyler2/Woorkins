@@ -202,7 +202,6 @@ export function IdentityVerificationDialog({
             <>
               <p className="text-center font-semibold">Estamos verificando se o documento está correto</p>
               <p className="text-sm text-muted-foreground text-center">Aguarde enquanto validamos seu documento</p>
-              <p className="text-sm text-muted-foreground text-center">Verificação iniciará automaticamente...</p>
             </>
           )}
           {loadingStep === 'validating' && (
@@ -472,13 +471,6 @@ export function IdentityVerificationDialog({
           </div>
         )}
 
-        {/* Status de processamento automático */}
-        {((uploadOption === 'separate' && frontImage && backImage && preValidationFront?.isValid && preValidationBack?.isValid) || 
-          (uploadOption === 'combined' && combinedImage)) && !isProcessing && (
-          <div className="text-center text-sm text-muted-foreground">
-            Verificação iniciará automaticamente...
-          </div>
-        )}
 
         <Button
           variant="outline"

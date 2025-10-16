@@ -415,89 +415,70 @@ export default function UserMessages() {
                       <h3 className="text-lg font-semibold mb-3">Negociações ({filteredNegotiations.length})</h3>
                       {filteredNegotiations.map((neg) => (
                         <Card key={neg.id} className="p-4 mb-3">
-                          {/* Participantes da conversa */}
-                          <div className="flex items-center justify-between mb-4 pb-3 border-b">
-                            <div className="flex items-center gap-6">
-                              {/* Usuário */}
-                              <a
-                                href={`/admin/users/${user?.id}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex items-center gap-2 hover:opacity-80 transition-opacity"
-                              >
-                                {user?.avatar_url && (
-                                  <img 
-                                    src={user.avatar_url} 
-                                    alt={user.full_name}
-                                    className="w-10 h-10 rounded-full object-cover border-2 border-primary"
-                                  />
-                                )}
-                                <div>
-                                  <p className="text-sm font-medium">{user?.full_name}</p>
-                                  <p className="text-xs text-muted-foreground">Cliente</p>
-                                </div>
-                              </a>
-                              
-                              {/* Empresa */}
-                              {neg.business_profiles && (
-                                <a
-                                  href={`/admin/users/${neg.business_profiles.profile_id}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="flex items-center gap-2 hover:opacity-80 transition-opacity"
-                                >
-                                  {neg.business_profiles.logo_url && (
-                                    <img 
-                                      src={neg.business_profiles.logo_url} 
-                                      alt={neg.business_profiles.company_name}
-                                      className="w-10 h-10 rounded-full object-cover border-2 border-blue-500"
-                                    />
-                                  )}
-                                  <div>
-                                    <p className="text-sm font-medium">{neg.business_profiles.company_name}</p>
-                                    <p className="text-xs text-muted-foreground">Empresa</p>
-                                  </div>
-                                </a>
-                              )}
-                            </div>
-                            
-                            <Badge variant={neg.status === 'open' ? 'default' : 'secondary'}>
-                              {neg.status}
-                            </Badge>
-                          </div>
-                          
                           {neg.service_description && (
-                            <p className="text-sm text-muted-foreground mb-3">{neg.service_description}</p>
+                            <p className="text-sm text-muted-foreground mb-3 pb-3 border-b">
+                              <span className="font-medium">Serviço:</span> {neg.service_description}
+                            </p>
                           )}
                           
-                          <div className="space-y-2 max-h-96 overflow-y-auto">
-                            {neg.negotiation_messages?.map((msg: any) => (
-                              <div
-                                key={msg.id}
-                                ref={(el) => messageRefs.current[msg.id] = el}
-                                className={`flex ${msg.sender_type === 'user' ? 'justify-end' : 'justify-start'}`}
-                              >
+                          <div className="space-y-3 max-h-96 overflow-y-auto">
+                            {neg.negotiation_messages?.map((msg: any) => {
+                              const isUser = msg.sender_type === 'user';
+                              const senderAvatar = isUser ? user?.avatar_url : neg.business_profiles?.logo_url;
+                              const senderName = isUser ? user?.full_name : neg.business_profiles?.company_name;
+                              const senderProfileId = isUser ? user?.id : neg.business_profiles?.profile_id;
+                              
+                              return (
                                 <div
-                                  className={`max-w-[80%] rounded-xl px-3 py-2 text-sm ${
-                                    msg.is_deleted 
-                                      ? 'bg-muted/50 opacity-50 line-through'
-                                      : msg.moderation_status !== 'approved'
-                                      ? 'bg-destructive/20 border border-destructive'
-                                      : msg.sender_type === 'user'
-                                      ? 'bg-primary text-primary-foreground'
-                                      : 'bg-muted'
-                                  }`}
+                                  key={msg.id}
+                                  ref={(el) => messageRefs.current[msg.id] = el}
+                                  className={`flex gap-2 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}
                                 >
-                                  <div className="whitespace-pre-wrap break-words">
-                                    {msg.content}
-                                  </div>
-                                  <div className="text-xs opacity-70 mt-1">
-                                    {new Date(msg.created_at).toLocaleString('pt-BR')}
-                                    {msg.is_deleted && ' (Excluída)'}
+                                  <a
+                                    href={`/admin/users/${senderProfileId}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex-shrink-0 hover:opacity-80 transition-opacity"
+                                  >
+                                    <img 
+                                      src={senderAvatar || '/placeholder.svg'} 
+                                      alt={senderName}
+                                      className="w-8 h-8 rounded-full object-cover"
+                                    />
+                                  </a>
+                                  
+                                  <div className={`flex flex-col ${isUser ? 'items-end' : 'items-start'}`}>
+                                    <a
+                                      href={`/admin/users/${senderProfileId}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-xs font-medium mb-1 hover:underline"
+                                    >
+                                      {senderName}
+                                    </a>
+                                    <div
+                                      className={`max-w-[80%] rounded-xl px-3 py-2 text-sm ${
+                                        msg.is_deleted 
+                                          ? 'bg-muted/50 opacity-50 line-through'
+                                          : msg.moderation_status !== 'approved'
+                                          ? 'bg-destructive/20 border border-destructive'
+                                          : isUser
+                                          ? 'bg-primary text-primary-foreground'
+                                          : 'bg-muted'
+                                      }`}
+                                    >
+                                      <div className="whitespace-pre-wrap break-words">
+                                        {msg.content}
+                                      </div>
+                                      <div className="text-xs opacity-70 mt-1">
+                                        {new Date(msg.created_at).toLocaleString('pt-BR')}
+                                        {msg.is_deleted && ' (Excluída)'}
+                                      </div>
+                                    </div>
                                   </div>
                                 </div>
-                              </div>
-                            ))}
+                              );
+                            })}
                           </div>
                         </Card>
                       ))}
@@ -510,88 +491,68 @@ export default function UserMessages() {
                       <h3 className="text-lg font-semibold mb-3">Propostas ({filteredProposals.length})</h3>
                       {filteredProposals.map((prop) => (
                         <Card key={prop.id} className="p-4 mb-3">
-                          {/* Participantes da conversa */}
-                          <div className="flex items-center justify-between mb-4 pb-3 border-b">
-                            <div className="flex items-center gap-6">
-                              {/* Freelancer */}
-                              {prop.profiles && (
-                                <a
-                                  href={`/admin/users/${prop.profiles.id}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="flex items-center gap-2 hover:opacity-80 transition-opacity"
-                                >
-                                  {prop.profiles.avatar_url && (
-                                    <img 
-                                      src={prop.profiles.avatar_url} 
-                                      alt={prop.profiles.full_name}
-                                      className="w-10 h-10 rounded-full object-cover border-2 border-green-500"
-                                    />
-                                  )}
-                                  <div>
-                                    <p className="text-sm font-medium">{prop.profiles.full_name}</p>
-                                    <p className="text-xs text-muted-foreground">Freelancer</p>
-                                  </div>
-                                </a>
-                              )}
-                              
-                              {/* Cliente do projeto */}
-                              {prop.projects?.profiles && (
-                                <a
-                                  href={`/admin/users/${prop.projects.profiles.id}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="flex items-center gap-2 hover:opacity-80 transition-opacity"
-                                >
-                                  {prop.projects.profiles.avatar_url && (
-                                    <img 
-                                      src={prop.projects.profiles.avatar_url} 
-                                      alt={prop.projects.profiles.full_name}
-                                      className="w-10 h-10 rounded-full object-cover border-2 border-primary"
-                                    />
-                                  )}
-                                  <div>
-                                    <p className="text-sm font-medium">{prop.projects.profiles.full_name}</p>
-                                    <p className="text-xs text-muted-foreground">Cliente</p>
-                                  </div>
-                                </a>
-                              )}
-                            </div>
-                            
-                            <Badge variant={prop.status === 'pending' ? 'default' : 'secondary'}>
+                          <div className="mb-3 pb-3 border-b">
+                            <h4 className="font-medium">{prop.projects?.title}</h4>
+                            <Badge variant={prop.status === 'pending' ? 'default' : 'secondary'} className="mt-2">
                               {prop.status}
                             </Badge>
                           </div>
                           
-                          <div className="mb-3">
-                            <h4 className="font-medium">{prop.projects?.title}</h4>
-                          </div>
-                          
-                          <div className="space-y-2 max-h-96 overflow-y-auto">
-                            {prop.proposal_messages?.map((msg: any) => (
-                              <div
-                                key={msg.id}
-                                ref={(el) => messageRefs.current[msg.id] = el}
-                                className={`flex ${msg.sender_id === userId ? 'justify-end' : 'justify-start'}`}
-                              >
+                          <div className="space-y-3 max-h-96 overflow-y-auto">
+                            {prop.proposal_messages?.map((msg: any) => {
+                              const isFreelancer = msg.sender_id === userId;
+                              const senderAvatar = isFreelancer ? prop.profiles?.avatar_url : prop.projects?.profiles?.avatar_url;
+                              const senderName = isFreelancer ? prop.profiles?.full_name : prop.projects?.profiles?.full_name;
+                              const senderProfileId = isFreelancer ? prop.profiles?.id : prop.projects?.profiles?.id;
+                              
+                              return (
                                 <div
-                                  className={`max-w-[80%] rounded-xl px-3 py-2 text-sm ${
-                                    msg.moderation_status !== 'approved'
-                                      ? 'bg-destructive/20 border border-destructive'
-                                      : msg.sender_id === userId
-                                      ? 'bg-primary text-primary-foreground'
-                                      : 'bg-muted'
-                                  }`}
+                                  key={msg.id}
+                                  ref={(el) => messageRefs.current[msg.id] = el}
+                                  className={`flex gap-2 ${isFreelancer ? 'flex-row-reverse' : 'flex-row'}`}
                                 >
-                                  <div className="whitespace-pre-wrap break-words">
-                                    {msg.content}
-                                  </div>
-                                  <div className="text-xs opacity-70 mt-1">
-                                    {new Date(msg.created_at).toLocaleString('pt-BR')}
+                                  <a
+                                    href={`/admin/users/${senderProfileId}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex-shrink-0 hover:opacity-80 transition-opacity"
+                                  >
+                                    <img 
+                                      src={senderAvatar || '/placeholder.svg'} 
+                                      alt={senderName}
+                                      className="w-8 h-8 rounded-full object-cover"
+                                    />
+                                  </a>
+                                  
+                                  <div className={`flex flex-col ${isFreelancer ? 'items-end' : 'items-start'}`}>
+                                    <a
+                                      href={`/admin/users/${senderProfileId}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-xs font-medium mb-1 hover:underline"
+                                    >
+                                      {senderName}
+                                    </a>
+                                    <div
+                                      className={`max-w-[80%] rounded-xl px-3 py-2 text-sm ${
+                                        msg.moderation_status !== 'approved'
+                                          ? 'bg-destructive/20 border border-destructive'
+                                          : isFreelancer
+                                          ? 'bg-primary text-primary-foreground'
+                                          : 'bg-muted'
+                                      }`}
+                                    >
+                                      <div className="whitespace-pre-wrap break-words">
+                                        {msg.content}
+                                      </div>
+                                      <div className="text-xs opacity-70 mt-1">
+                                        {new Date(msg.created_at).toLocaleString('pt-BR')}
+                                      </div>
+                                    </div>
                                   </div>
                                 </div>
-                              </div>
-                            ))}
+                              );
+                            })}
                           </div>
                         </Card>
                       ))}

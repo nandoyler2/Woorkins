@@ -1,14 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { SafeImage } from '@/components/ui/safe-image';
-import { User, Mail, Calendar, MapPin, FileText, Upload, Save } from 'lucide-react';
+import { User, Mail, Calendar, MapPin, FileText, Upload, Save, AlertTriangle } from 'lucide-react';
 import { formatFullName } from '@/lib/utils';
 
 interface UserAccountDialogProps {
@@ -37,14 +38,49 @@ export function UserAccountDialog({ open, onOpenChange, user, onUpdate }: UserAc
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [userEmail, setUserEmail] = useState('');
+  const [lastUsernameChange, setLastUsernameChange] = useState<Date | null>(null);
+  const [showUsernameWarning, setShowUsernameWarning] = useState(false);
   const [formData, setFormData] = useState({
     full_name: user.full_name || '',
+    username: user.username || '',
+    email: '',
     location: user.location || '',
     bio: user.bio || '',
     filiation: user.filiation || '',
     nationality: user.nationality || '',
     place_of_birth: user.place_of_birth || '',
   });
+
+  useEffect(() => {
+    const loadUserData = async () => {
+      try {
+        // Buscar email do usuário
+        const { data: { user: authUser } } = await supabase.auth.admin.getUserById(user.user_id);
+        if (authUser?.email) {
+          setUserEmail(authUser.email);
+          setFormData(prev => ({ ...prev, email: authUser.email }));
+        }
+
+        // Buscar data da última alteração de username
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('last_username_change')
+          .eq('id', user.id)
+          .single();
+        
+        if (profileData?.last_username_change) {
+          setLastUsernameChange(new Date(profileData.last_username_change));
+        }
+      } catch (error) {
+        console.error('Error loading user data:', error);
+      }
+    };
+
+    if (open) {
+      loadUserData();
+    }
+  }, [open, user.user_id, user.id]);
 
   const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     try {
@@ -113,27 +149,77 @@ export function UserAccountDialog({ open, onOpenChange, user, onUpdate }: UserAc
     }
   };
 
+  const canChangeUsername = () => {
+    if (!lastUsernameChange) return true;
+    const daysSinceChange = (new Date().getTime() - lastUsernameChange.getTime()) / (1000 * 60 * 60 * 24);
+    return daysSinceChange >= 7;
+  };
+
+  const getDaysUntilUsernameChange = () => {
+    if (!lastUsernameChange) return 0;
+    const daysSinceChange = (new Date().getTime() - lastUsernameChange.getTime()) / (1000 * 60 * 60 * 24);
+    return Math.max(0, Math.ceil(7 - daysSinceChange));
+  };
+
   const handleSave = async () => {
+    // Se o username mudou e pode ser alterado, mostrar aviso
+    if (formData.username !== user.username && canChangeUsername()) {
+      setShowUsernameWarning(true);
+      return;
+    }
+
+    if (formData.username !== user.username && !canChangeUsername()) {
+      toast({
+        title: 'Não é possível alterar username',
+        description: `Você só pode alterar o username após 7 dias. Aguarde mais ${getDaysUntilUsernameChange()} dia(s).`,
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    await saveChanges();
+  };
+
+  const saveChanges = async () => {
     try {
       setLoading(true);
 
+      const usernameChanged = formData.username !== user.username;
+
+      // Atualizar perfil
+      const updateData: any = {
+        full_name: formData.full_name,
+        location: formData.location,
+        bio: formData.bio,
+        filiation: formData.filiation,
+        nationality: formData.nationality,
+        place_of_birth: formData.place_of_birth,
+      };
+
+      if (usernameChanged) {
+        updateData.username = formData.username;
+        updateData.last_username_change = new Date().toISOString();
+      }
+
       const { error } = await supabase
         .from('profiles')
-        .update({
-          full_name: formData.full_name,
-          location: formData.location,
-          bio: formData.bio,
-          filiation: formData.filiation,
-          nationality: formData.nationality,
-          place_of_birth: formData.place_of_birth,
-        })
+        .update(updateData)
         .eq('id', user.id);
 
       if (error) throw error;
 
+      // Atualizar email se mudou
+      if (formData.email !== userEmail) {
+        const { error: emailError } = await supabase.auth.admin.updateUserById(
+          user.user_id,
+          { email: formData.email }
+        );
+        if (emailError) throw emailError;
+      }
+
       toast({
         title: 'Sucesso',
-        description: 'Informações atualizadas com sucesso',
+        description: 'Informações atualizadas com sucesso' + (usernameChanged ? '. Próxima alteração de username disponível em 7 dias.' : ''),
       });
 
       onUpdate();
@@ -151,14 +237,15 @@ export function UserAccountDialog({ open, onOpenChange, user, onUpdate }: UserAc
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Conta do Usuário</DialogTitle>
-          <DialogDescription>
-            Visualize e edite as informações da conta de {formatFullName(user.full_name)}
-          </DialogDescription>
-        </DialogHeader>
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Editar Perfil</DialogTitle>
+            <DialogDescription>
+              Edite as informações do perfil de {formatFullName(user.full_name)}
+            </DialogDescription>
+          </DialogHeader>
 
         <div className="space-y-6">
           {/* Foto de Perfil */}
@@ -213,8 +300,37 @@ export function UserAccountDialog({ open, onOpenChange, user, onUpdate }: UserAc
               </div>
 
               <div className="space-y-2">
-                <Label>Username</Label>
-                <Input value={`@${user.username}`} disabled />
+                <Label htmlFor="username">
+                  Username
+                  {!canChangeUsername() && (
+                    <span className="text-xs text-muted-foreground ml-2">
+                      (Disponível em {getDaysUntilUsernameChange()} dia{getDaysUntilUsernameChange() !== 1 ? 's' : ''})
+                    </span>
+                  )}
+                </Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">@</span>
+                  <Input 
+                    id="username"
+                    value={formData.username} 
+                    onChange={(e) => setFormData({ ...formData, username: e.target.value.replace(/[^a-zA-Z0-9_]/g, '') })}
+                    disabled={!canChangeUsername()}
+                    className="pl-7"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="email">
+                  <Mail className="h-4 w-4 inline mr-1" />
+                  Email
+                </Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                />
               </div>
 
               <div className="space-y-2">
@@ -311,8 +427,35 @@ export function UserAccountDialog({ open, onOpenChange, user, onUpdate }: UserAc
               {loading ? 'Salvando...' : 'Salvar Alterações'}
             </Button>
           </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Aviso de alteração de username */}
+      <AlertDialog open={showUsernameWarning} onOpenChange={setShowUsernameWarning}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-amber-500" />
+              Confirmar alteração de username
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              <p>
+                Você está prestes a alterar o username de <strong>@{user.username}</strong> para <strong>@{formData.username}</strong>.
+              </p>
+              <p className="text-amber-600 dark:text-amber-500 font-medium">
+                ⚠️ Após confirmar, você só poderá alterar o username novamente após 7 dias.
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={saveChanges}>
+              Confirmar alteração
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }

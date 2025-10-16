@@ -434,7 +434,7 @@ export default function AdminUsers() {
                           }}
                         >
                           <UserCircle className="mr-2 h-4 w-4" />
-                          Conta
+                          Editar perfil
                         </DropdownMenuItem>
                         {usr.approved_document && (
                           <DropdownMenuItem

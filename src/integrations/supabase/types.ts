@@ -938,6 +938,7 @@ export type Database = {
           filiation: string | null
           full_name: string | null
           id: string
+          last_username_change: string | null
           location: string | null
           nationality: string | null
           place_of_birth: string | null
@@ -960,6 +961,7 @@ export type Database = {
           filiation?: string | null
           full_name?: string | null
           id?: string
+          last_username_change?: string | null
           location?: string | null
           nationality?: string | null
           place_of_birth?: string | null
@@ -982,6 +984,7 @@ export type Database = {
           filiation?: string | null
           full_name?: string | null
           id?: string
+          last_username_change?: string | null
           location?: string | null
           nationality?: string | null
           place_of_birth?: string | null

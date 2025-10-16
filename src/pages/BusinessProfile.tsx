@@ -18,6 +18,7 @@ import { Star, MapPin, Phone, Mail, Globe, Image as ImageIcon, MessageCircle, Fa
 import { Footer } from '@/components/Footer';
 import { SafeImage } from '@/components/ui/safe-image';
 import { useToast } from '@/hooks/use-toast';
+import { formatFullName } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { NegotiationChat } from '@/components/NegotiationChat';
 
@@ -423,11 +424,11 @@ export default function BusinessProfile() {
                                   />
                                 ) : (
                                   <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-semibold">
-                                    {evaluation.profiles.full_name.charAt(0)}
+                                    {formatFullName(evaluation.profiles.full_name).charAt(0)}
                                   </div>
                                 )}
                                 <div>
-                                  <p className="font-semibold">{evaluation.profiles.full_name}</p>
+                                  <p className="font-semibold">{formatFullName(evaluation.profiles.full_name)}</p>
                                   <p className="text-xs text-muted-foreground">
                                     @{evaluation.profiles.username}
                                   </p>

@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Save, User, Mail, Lock, Shield, Camera, LockKeyhole } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { validateCPF } from '@/lib/utils';
+import { validateCPF, formatFullName, formatShortName } from '@/lib/utils';
 import { ProfilePhotoUpload } from '@/components/ProfilePhotoUpload';
 import { useAIAssistant } from '@/contexts/AIAssistantContext';
 
@@ -234,7 +234,7 @@ export default function Account() {
             <CardContent>
               <ProfilePhotoUpload
                 currentPhotoUrl={profile.avatar_url}
-                userName={profile.full_name || profile.username}
+                userName={formatShortName(profile.full_name) || profile.username}
                 userId={user?.id || ''}
                 onPhotoUpdated={loadProfile}
               />
@@ -258,7 +258,7 @@ export default function Account() {
                     {profile.cpf && <LockKeyhole className="h-3 w-3 text-muted-foreground" />}
                   </Label>
                   <Input
-                    value={profile.full_name}
+                    value={formatFullName(profile.full_name)}
                     onChange={(e) => {
                       if (!profile.cpf) {
                         setProfile({ ...profile, full_name: e.target.value });

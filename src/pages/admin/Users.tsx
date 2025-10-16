@@ -38,6 +38,7 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from '@/hooks/use-toast';
 import { Search, Shield, User, Ban, MoreVertical, Coins, ShieldOff, Info, History, FileCheck } from 'lucide-react';
+import { formatShortName } from '@/lib/utils';
 import { ManageWoorkoinsDialog } from '@/components/admin/ManageWoorkoinsDialog';
 import { BlockUserDialog } from '@/components/admin/BlockUserDialog';
 import { BlockDetailsDialog } from '@/components/admin/BlockDetailsDialog';
@@ -283,7 +284,7 @@ export default function AdminUsers() {
                 <TableRow key={usr.id}>
                   <TableCell>
                     <div>
-                      <div className="font-medium">{usr.full_name || usr.username}</div>
+                      <div className="font-medium">{formatShortName(usr.full_name) || usr.username}</div>
                       <div className="text-sm text-muted-foreground">@{usr.username}</div>
                     </div>
                   </TableCell>

@@ -16,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
+import { formatShortName } from '@/lib/utils';
 
 interface Project {
   id: string;
@@ -182,19 +183,6 @@ export default function Projects() {
     return `Há ${diffInMonths} ${diffInMonths === 1 ? 'mês' : 'meses'}`;
   };
 
-  const getInitials = (fullName: string) => {
-    const names = fullName.trim().split(' ').filter(n => n.length > 0);
-    if (names.length === 0) return '';
-    if (names.length === 1) return names[0];
-    
-    // Primeiro nome completo + iniciais dos sobrenomes (exceto preposições)
-    const firstName = names[0];
-    const lastNames = names.slice(1)
-      .filter(name => name.length > 2) // Remove preposições (de, da, do, dos, das, etc)
-      .map(name => name.charAt(0).toUpperCase() + '.')
-      .join(' ');
-    return lastNames ? `${firstName} ${lastNames}` : firstName;
-  };
 
   const toggleFavorite = (projectId: string) => {
     setFavorites(prev => 
@@ -526,10 +514,10 @@ export default function Projects() {
                           {/* Client Avatar + Info */}
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold">
-                              {project.profiles.full_name.charAt(0).toUpperCase()}
+                              {formatShortName(project.profiles.full_name).charAt(0).toUpperCase()}
                             </div>
                             <div className="text-sm">
-                              <p className="font-medium">{getInitials(project.profiles.full_name)}</p>
+                              <p className="font-medium">{formatShortName(project.profiles.full_name)}</p>
                               <div className="flex items-center gap-2 text-muted-foreground">
                                 <span>Última resposta: {getTimeAgo(project.created_at)}</span>
                               </div>

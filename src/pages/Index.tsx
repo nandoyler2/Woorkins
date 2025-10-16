@@ -12,6 +12,7 @@ import { Footer } from "@/components/Footer";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { formatShortName } from "@/lib/utils";
 const Index = () => {
   const {
     language,
@@ -36,7 +37,7 @@ const Index = () => {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="bg-white/10 backdrop-blur-sm hover:bg-white/20 gap-2">
                 <User className="w-5 h-5" />
-                <span className="hidden sm:inline">{profile?.full_name || profile?.username}</span>
+                <span className="hidden sm:inline">{formatShortName(profile?.full_name) || profile?.username}</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">

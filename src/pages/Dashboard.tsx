@@ -12,6 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { formatShortName } from '@/lib/utils';
 interface Profile {
   id: string;
   username: string;
@@ -290,7 +291,7 @@ export default function Dashboard() {
                 <div className="flex items-start justify-between mb-4">
                   <div>
                     <h1 className="text-2xl font-bold text-slate-900 mb-2">
-                      Bem-vindo de volta, {profile?.full_name || profile?.username}! 👋
+                      Bem-vindo de volta, {formatShortName(profile?.full_name) || profile?.username}! 👋
                     </h1>
                     <div className="flex items-center gap-3 mt-2">
                       <Badge variant="secondary" className="text-xs px-3 py-1 bg-primary/10 text-primary border border-primary/20">

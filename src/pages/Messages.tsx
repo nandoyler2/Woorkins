@@ -13,6 +13,7 @@ import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { formatFullName } from '@/lib/utils';
 
 interface Conversation {
   id: string;
@@ -285,7 +286,7 @@ export default function Messages() {
           title: prop.project.title,
           otherUser: {
             id: prop.project.profile_id,
-            name: prop.project.profiles.full_name,
+            name: formatFullName(prop.project.profiles.full_name),
             avatar: prop.project.profiles.avatar_url,
           },
           lastMessage: prop.message.substring(0, 60) + '...',

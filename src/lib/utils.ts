@@ -5,6 +5,54 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+/**
+ * Formata um nome completo seguindo as regras:
+ * - Primeira letra maiúscula de cada palavra
+ * - "de", "da", "do", "dos", "das" ficam em minúsculo
+ */
+export function formatFullName(name: string | null | undefined): string {
+  if (!name) return '';
+  
+  const lowercaseWords = ['de', 'da', 'do', 'dos', 'das'];
+  
+  return name
+    .trim()
+    .toLowerCase()
+    .split(' ')
+    .filter(word => word.length > 0)
+    .map(word => {
+      if (lowercaseWords.includes(word)) {
+        return word;
+      }
+      return word.charAt(0).toUpperCase() + word.slice(1);
+    })
+    .join(' ');
+}
+
+/**
+ * Retorna o nome curto (Nome + Sobrenome)
+ * Se o primeiro sobrenome for "de" ou "da", inclui também o próximo sobrenome
+ */
+export function formatShortName(name: string | null | undefined): string {
+  if (!name) return '';
+  
+  const formatted = formatFullName(name);
+  const parts = formatted.split(' ').filter(word => word.length > 0);
+  
+  if (parts.length === 0) return '';
+  if (parts.length === 1) return parts[0];
+  
+  const firstName = parts[0];
+  const firstLastName = parts[1];
+  
+  // Se o primeiro sobrenome for "de" ou "da", inclui o próximo também
+  if ((firstLastName === 'de' || firstLastName === 'da') && parts.length > 2) {
+    return `${firstName} ${firstLastName} ${parts[2]}`;
+  }
+  
+  return `${firstName} ${firstLastName}`;
+}
+
 export function validateCPF(cpf: string): boolean {
   const cleanCPF = cpf.replace(/\D/g, '');
   

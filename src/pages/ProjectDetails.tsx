@@ -20,6 +20,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
+import { formatShortName } from '@/lib/utils';
 
 interface Project {
   id: string;
@@ -227,18 +228,6 @@ export default function ProjectDetails() {
     return `há ${diffInMonths} ${diffInMonths === 1 ? 'mês' : 'meses'}`;
   };
 
-  const getInitials = (fullName: string) => {
-    const names = fullName.trim().split(' ').filter(n => n.length > 0);
-    if (names.length === 0) return '';
-    if (names.length === 1) return names[0];
-    
-    const firstName = names[0];
-    const lastNames = names.slice(1)
-      .filter(name => name.length > 2)
-      .map(name => name.charAt(0).toUpperCase() + '.')
-      .join(' ');
-    return lastNames ? `${firstName} ${lastNames}` : firstName;
-  };
 
   const formatBudget = (min: number | null, max: number | null) => {
     if (!min && !max) return 'A combinar';
@@ -494,10 +483,10 @@ export default function ProjectDetails() {
                 <div className="space-y-4">
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-lg">
-                      {project.profiles.full_name.charAt(0).toUpperCase()}
+                      {formatShortName(project.profiles.full_name).charAt(0).toUpperCase()}
                     </div>
                     <div>
-                      <p className="font-semibold">{getInitials(project.profiles.full_name)}</p>
+                      <p className="font-semibold">{formatShortName(project.profiles.full_name)}</p>
                       <div className="flex items-center gap-1 mt-1">
                         {[...Array(5)].map((_, i) => (
                           <Star key={i} className="w-3 h-3 fill-yellow-400 text-yellow-400" />

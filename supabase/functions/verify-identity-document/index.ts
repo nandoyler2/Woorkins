@@ -179,38 +179,78 @@ RESPONDA EM JSON:
     const backResult = await backAnalysis.json();
     const backData = JSON.parse(backResult.choices[0].message.content);
 
-    // Validação final
+    // Validação final - Extrair dados
     const extractedName = frontData.extractedData?.fullName || '';
     const extractedCPF = frontData.extractedData?.cpf || '';
     const extractedBirthDate = frontData.extractedData?.birthDate || '';
 
-    console.log('=== CPF COMPARISON DEBUG ===');
-    console.log('Extracted CPF (raw):', extractedCPF);
-    console.log('Registered CPF (raw):', registeredCPF);
+    console.log('=== EXTRACTED DATA DEBUG ===');
+    console.log('Raw Name:', extractedName);
+    console.log('Raw CPF:', extractedCPF);
+    console.log('Raw Birth Date:', extractedBirthDate);
+    console.log('Registered Name:', registeredName);
+    console.log('Registered CPF:', registeredCPF);
     
+    // Normalizar dados extraídos
     const normalizedExtractedCPF = extractedCPF.replace(/[.\-\s]/g, '');
     const normalizedRegisteredCPF = registeredCPF.replace(/[.\-\s]/g, '');
+    const normalizedExtractedName = extractedName.toLowerCase().trim();
+    const normalizedRegisteredName = registeredName.toLowerCase().trim();
     
     console.log('Normalized Extracted CPF:', normalizedExtractedCPF);
     console.log('Normalized Registered CPF:', normalizedRegisteredCPF);
-    
-    const cpfMatches = normalizedExtractedCPF === normalizedRegisteredCPF;
-    console.log('CPF Matches:', cpfMatches);
-    console.log('=== END CPF DEBUG ===');
+    console.log('Normalized Extracted Name:', normalizedExtractedName);
+    console.log('Normalized Registered Name:', normalizedRegisteredName);
+    console.log('=== END EXTRACTED DATA DEBUG ===');
 
-    const normalizedExtractedName = extractedName.toLowerCase().trim();
-    const normalizedRegisteredName = registeredName.toLowerCase().trim();
-    const nameMatches = normalizedExtractedName.includes(normalizedRegisteredName) || 
-                       normalizedRegisteredName.includes(normalizedExtractedName);
+    // Verificar se dados são válidos (não N/A, não vazio, não muito curto)
+    const isValidName = extractedName && 
+                        extractedName.length > 5 && 
+                        extractedName.toLowerCase() !== 'n/a' &&
+                        extractedName.toLowerCase() !== 'não identificado';
+    
+    const isValidCPF = normalizedExtractedCPF && 
+                       normalizedExtractedCPF.length === 11 && 
+                       /^\d{11}$/.test(normalizedExtractedCPF);
+    
+    const isValidBirthDate = extractedBirthDate && 
+                             extractedBirthDate.toLowerCase() !== 'n/a' &&
+                             /^\d{2}\/\d{2}\/\d{4}$/.test(extractedBirthDate);
+
+    console.log('=== VALIDATION FLAGS ===');
+    console.log('Is Valid Name:', isValidName);
+    console.log('Is Valid CPF:', isValidCPF);
+    console.log('Is Valid Birth Date:', isValidBirthDate);
+    console.log('=== END VALIDATION FLAGS ===');
+
+    // Comparar dados quando válidos
+    const cpfMatches = isValidCPF && normalizedExtractedCPF === normalizedRegisteredCPF;
+    const nameMatches = isValidName && (
+      normalizedExtractedName.includes(normalizedRegisteredName) || 
+      normalizedRegisteredName.includes(normalizedExtractedName)
+    );
 
     let verificationStatus = 'rejected';
     let rejectionReasons = [];
 
-    // Validações
-    if (!extractedName || extractedName.length < 3) {
-      rejectionReasons.push('Nome não foi extraído. Envie uma imagem mais nítida.');
+    // ===== VALIDAÇÕES CRÍTICAS OBRIGATÓRIAS =====
+    
+    // 1. Nome DEVE ser extraído e válido
+    if (!isValidName) {
+      rejectionReasons.push('Nome não foi extraído corretamente. Envie foto mais nítida da frente do documento.');
     }
     
+    // 2. CPF DEVE ser extraído e válido
+    if (!isValidCPF) {
+      rejectionReasons.push('CPF não foi extraído corretamente. Verifique se o documento está legível.');
+    }
+    
+    // 3. Data de nascimento DEVE ser extraída e válida
+    if (!isValidBirthDate) {
+      rejectionReasons.push('Data de nascimento não foi extraída. Envie foto mais clara do documento.');
+    }
+    
+    // 4. Validações de qualidade
     if (frontData.quality?.isReadable === false) {
       rejectionReasons.push('Documento ilegível. Tire foto com melhor iluminação.');
     }
@@ -231,14 +271,16 @@ RESPONDA EM JSON:
       rejectionReasons.push('Documento não parece autêntico.');
     }
     
-    // Só rejeita por CPF se extraiu E não dá match (com pelo menos 11 dígitos)
-    if (normalizedExtractedCPF.length === 11 && normalizedRegisteredCPF.length === 11 && !cpfMatches) {
-      rejectionReasons.push('CPF do documento não corresponde ao cadastro.');
+    // ===== VALIDAÇÕES DE CORRESPONDÊNCIA =====
+    
+    // 5. CPF deve corresponder ao cadastro (só valida se ambos são válidos)
+    if (isValidCPF && normalizedRegisteredCPF.length === 11 && !cpfMatches) {
+      rejectionReasons.push('CPF do documento não corresponde ao CPF cadastrado.');
     }
     
-    // Só rejeita por nome se ambos estão preenchidos E não dá match
-    if (normalizedExtractedName.length > 3 && normalizedRegisteredName.length > 3 && !nameMatches) {
-      rejectionReasons.push('Nome do documento não corresponde ao cadastro.');
+    // 6. Nome deve corresponder ao cadastro (só valida se ambos são válidos)
+    if (isValidName && normalizedRegisteredName.length > 3 && !nameMatches) {
+      rejectionReasons.push('Nome do documento não corresponde ao nome cadastrado.');
     }
 
     // Aprovar se não houver motivos para rejeitar

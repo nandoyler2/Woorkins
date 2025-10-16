@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { formatShortName } from '@/lib/utils';
+import { ProfileEditDialog } from '@/components/ProfileEditDialog';
 interface Profile {
   id: string;
   username: string;
@@ -74,6 +75,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [unreadMessages, setUnreadMessages] = useState(5);
   const [woorkoinsBalance, setWoorkoinsBalance] = useState(0);
+  const [showProfileEdit, setShowProfileEdit] = useState(false);
   
   // Mock data for feed posts
   const feedPosts: FeedPost[] = [
@@ -492,11 +494,14 @@ export default function Dashboard() {
                         Ver perfil
                       </Button>
                     </Link>
-                    <Link to="/conta">
-                      <Button variant="default" size="sm" className="text-xs h-7 px-2 bg-blue-500 hover:bg-blue-600">
-                        Editar
-                      </Button>
-                    </Link>
+                    <Button 
+                      variant="default" 
+                      size="sm" 
+                      className="text-xs h-7 px-2 bg-blue-500 hover:bg-blue-600"
+                      onClick={() => setShowProfileEdit(true)}
+                    >
+                      Editar
+                    </Button>
                   </div>
                 </div>
               </CardContent>
@@ -797,6 +802,16 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      {/* Dialog de edição de perfil */}
+      {user && (
+        <ProfileEditDialog
+          open={showProfileEdit}
+          onOpenChange={setShowProfileEdit}
+          userId={user.id}
+          onUpdate={loadProfile}
+        />
+      )}
     </div>
   );
 }

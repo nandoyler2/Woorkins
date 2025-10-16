@@ -66,7 +66,7 @@ export const AIAssistant = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedConversation, setSelectedConversation] = useState<ArchivedConversation | null>(null);
-  const [buttonPosition, setButtonPosition] = useState({ x: 24, y: window.innerHeight - 80 }); // Posição padrão
+  const [buttonPosition, setButtonPosition] = useState({ x: 24, y: window.innerHeight - 50 }); // Posição padrão mais embaixo
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [dragStartPos, setDragStartPos] = useState({ x: 0, y: 0 });

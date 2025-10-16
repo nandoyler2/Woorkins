@@ -55,6 +55,7 @@ export default function DocumentVerifications() {
             user_id
           )
         `)
+        .eq('verification_status', 'pending')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -123,7 +124,7 @@ export default function DocumentVerifications() {
       <div>
         <h1 className="text-3xl font-bold mb-2">Verificações de Documentos</h1>
         <p className="text-muted-foreground">
-          Visualize todas as verificações de identidade submetidas pelos usuários
+          Aprovar, recusar ou excluir solicitações de verificação pendentes
         </p>
       </div>
 

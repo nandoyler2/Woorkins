@@ -327,7 +327,17 @@ export function SupportChatDialog({ open, onOpenChange, documentRejected, profil
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] h-[600px] flex flex-col !fixed !bottom-2 !top-auto !translate-y-0">
+      <DialogContent 
+        className="sm:max-w-[600px] h-[600px] flex flex-col"
+        style={{
+          position: 'fixed',
+          bottom: '8px',
+          top: 'auto',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          marginTop: '0'
+        }}
+      >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 justify-between">
             <div className="flex items-center gap-2">

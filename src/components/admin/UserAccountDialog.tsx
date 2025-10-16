@@ -75,17 +75,33 @@ export function UserAccountDialog({ open, onOpenChange, user, onUpdate }: UserAc
   useEffect(() => {
     const loadUserData = async () => {
       try {
-        // Buscar email do usuário
-        const { data: { user: authUser } } = await supabase.auth.admin.getUserById(user.user_id);
-        if (authUser?.email) {
-          setUserEmail(authUser.email);
-          setFormData(prev => ({ 
-            ...prev, 
-            email: authUser.email,
-            cpf: user.cpf ? user.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4') : '',
-            birth_date: user.birth_date || ''
-          }));
+        // Buscar email do usuário via edge function
+        try {
+          const { data: emailData, error: emailError } = await supabase.functions.invoke('get-user-email', {
+            body: { userId: user.user_id }
+          });
+          
+          if (!emailError && emailData?.email) {
+            setUserEmail(emailData.email);
+            setFormData(prev => ({ ...prev, email: emailData.email }));
+          }
+        } catch (error) {
+          console.error('Error fetching email:', error);
         }
+
+        // Atualizar formData com todos os dados do usuário
+        setFormData(prev => ({ 
+          ...prev,
+          cpf: user.cpf ? user.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4') : '',
+          birth_date: user.birth_date || '',
+          full_name: user.full_name || '',
+          username: user.username || '',
+          location: user.location || '',
+          bio: user.bio || '',
+          filiation: user.filiation || '',
+          nationality: user.nationality || '',
+          place_of_birth: user.place_of_birth || ''
+        }));
 
         // Buscar data da última alteração de username
         const { data: profileData } = await supabase
@@ -105,7 +121,7 @@ export function UserAccountDialog({ open, onOpenChange, user, onUpdate }: UserAc
     if (open) {
       loadUserData();
     }
-  }, [open, user.user_id, user.id]);
+  }, [open, user.user_id, user.id, user.cpf, user.birth_date, user.full_name, user.username, user.location, user.bio, user.filiation, user.nationality, user.place_of_birth]);
 
   const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     try {
@@ -231,17 +247,8 @@ export function UserAccountDialog({ open, onOpenChange, user, onUpdate }: UserAc
   }, [formData.username]);
 
   const handleSave = async () => {
-    // Validar username se mudou
+    // Admin pode editar username sem restrições - validar apenas se mudou
     if (formData.username !== user.username) {
-      if (!canChangeUsername()) {
-        toast({
-          title: 'Não é possível alterar username',
-          description: `Você só pode alterar o username após 7 dias. Aguarde mais ${getDaysUntilUsernameChange()} dia(s).`,
-          variant: 'destructive',
-        });
-        return;
-      }
-
       // Verificar se é um nome reservado
       if (RESERVED_USERNAMES.includes(formData.username.toLowerCase())) {
         toast({
@@ -261,10 +268,6 @@ export function UserAccountDialog({ open, onOpenChange, user, onUpdate }: UserAc
         });
         return;
       }
-
-      // Mostrar aviso de alteração
-      setShowUsernameWarning(true);
-      return;
     }
 
     await saveChanges();
@@ -278,40 +281,45 @@ export function UserAccountDialog({ open, onOpenChange, user, onUpdate }: UserAc
 
       // Atualizar perfil
       const updateData: any = {
-        full_name: formData.full_name,
+        full_name: formData.full_name.trim(),
         cpf: formData.cpf.replace(/[^\d]/g, ''), // Remove formatação
         birth_date: formData.birth_date || null,
-        location: formData.location,
-        bio: formData.bio,
-        filiation: formData.filiation,
-        nationality: formData.nationality,
-        place_of_birth: formData.place_of_birth,
+        location: formData.location?.trim() || null,
+        bio: formData.bio?.trim() || null,
+        filiation: formData.filiation?.trim() || null,
+        nationality: formData.nationality?.trim() || null,
+        place_of_birth: formData.place_of_birth?.trim() || null,
+        updated_at: new Date().toISOString()
       };
 
       if (usernameChanged) {
-        updateData.username = formData.username;
+        updateData.username = formData.username.trim();
         updateData.last_username_change = new Date().toISOString();
       }
 
-      const { error } = await supabase
+      const { error: updateError } = await supabase
         .from('profiles')
         .update(updateData)
         .eq('id', user.id);
 
-      if (error) throw error;
+      if (updateError) throw updateError;
 
-      // Atualizar email se mudou
-      if (formData.email !== userEmail) {
-        const { error: emailError } = await supabase.auth.admin.updateUserById(
-          user.user_id,
-          { email: formData.email }
-        );
-        if (emailError) throw emailError;
+      // Atualizar email se mudou - fazer via edge function
+      if (formData.email && formData.email !== userEmail) {
+        try {
+          const { error: emailError } = await supabase.functions.invoke('update-user-email', {
+            body: { userId: user.user_id, newEmail: formData.email }
+          });
+          if (emailError) throw emailError;
+        } catch (emailErr) {
+          console.error('Error updating email:', emailErr);
+          // Não falhar a operação toda por causa do email
+        }
       }
 
       toast({
         title: 'Sucesso',
-        description: 'Informações atualizadas com sucesso' + (usernameChanged ? '. Próxima alteração de username disponível em 7 dias.' : ''),
+        description: 'Informações atualizadas com sucesso',
       });
 
       onUpdate();
@@ -320,7 +328,7 @@ export function UserAccountDialog({ open, onOpenChange, user, onUpdate }: UserAc
       console.error('Error updating profile:', error);
       toast({
         title: 'Erro ao atualizar',
-        description: error.message,
+        description: error.message || 'Não foi possível salvar as alterações',
         variant: 'destructive',
       });
     } finally {
@@ -433,11 +441,9 @@ export function UserAccountDialog({ open, onOpenChange, user, onUpdate }: UserAc
               <div className="space-y-2">
                 <Label htmlFor="username">
                   Username
-                  {!canChangeUsername() && (
-                    <span className="text-xs text-muted-foreground ml-2">
-                      (Disponível em {getDaysUntilUsernameChange()} dia{getDaysUntilUsernameChange() !== 1 ? 's' : ''})
-                    </span>
-                  )}
+                  <span className="text-xs text-muted-foreground ml-2">
+                    (Admin pode editar sempre)
+                  </span>
                 </Label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">@</span>
@@ -445,7 +451,6 @@ export function UserAccountDialog({ open, onOpenChange, user, onUpdate }: UserAc
                     id="username"
                     value={formData.username} 
                     onChange={(e) => setFormData({ ...formData, username: e.target.value.replace(/[^a-zA-Z0-9_]/g, '').toLowerCase() })}
-                    disabled={!canChangeUsername()}
                     className="pl-7"
                   />
                   {formData.username !== user.username && (

@@ -59,3 +59,9 @@ verify_jwt = true
 
 [functions.fix-verification-status]
 verify_jwt = true
+
+[functions.get-user-email]
+verify_jwt = true
+
+[functions.update-user-email]
+verify_jwt = true

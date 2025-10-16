@@ -421,7 +421,7 @@ export default function UserMessages() {
                             </p>
                           )}
                           
-                          <div className="space-y-3 max-h-[768px] overflow-y-auto">
+                          <div className="space-y-3">
                             {neg.negotiation_messages?.map((msg: any) => {
                               const isUser = msg.sender_type === 'user';
                               const senderAvatar = isUser ? user?.avatar_url : neg.business_profiles?.logo_url;
@@ -498,7 +498,7 @@ export default function UserMessages() {
                             </Badge>
                           </div>
                           
-                          <div className="space-y-3 max-h-[768px] overflow-y-auto">
+                          <div className="space-y-3">
                             {prop.proposal_messages?.map((msg: any) => {
                               const isFreelancer = msg.sender_id === userId;
                               const senderAvatar = isFreelancer ? prop.profiles?.avatar_url : prop.projects?.profiles?.avatar_url;

@@ -332,25 +332,23 @@ export function SupportChatDialog({ open, onOpenChange, documentRejected, profil
           <DialogTitle className="flex items-center gap-2 justify-between">
             <div className="flex items-center gap-2">
               <MessageCircle className="h-5 w-5" />
-              Suporte
+              Assistente Virtual Woorkins
             </div>
-            <div className="flex items-center gap-2">
-              {conversationId && (
-                <>
-                  <div className="text-xs text-muted-foreground">
-                    Encerra em: {formatTime(timeUntilClose)}
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleCloseConversation}
-                    className="h-8 text-xs"
-                  >
-                    Encerrar conversa
-                  </Button>
-                </>
-              )}
-            </div>
+            {!showWelcome && conversationId && (
+              <div className="flex items-center gap-2">
+                <div className="text-xs text-muted-foreground">
+                  Encerra em: {formatTime(timeUntilClose)}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleCloseConversation}
+                  className="h-8 text-xs"
+                >
+                  Encerrar conversa
+                </Button>
+              </div>
+            )}
           </DialogTitle>
         </DialogHeader>
 
@@ -484,18 +482,6 @@ export function SupportChatDialog({ open, onOpenChange, documentRejected, profil
               <div ref={messagesEndRef} />
             </div>
 
-            {conversationId && (
-              <div className="px-4 pb-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleCloseConversation}
-                  className="w-full"
-                >
-                  Encerrar conversa e voltar ao início
-                </Button>
-              </div>
-            )}
 
             {showDocumentUpload && (
               <div className="border rounded-lg p-4 space-y-3 bg-blue-50">

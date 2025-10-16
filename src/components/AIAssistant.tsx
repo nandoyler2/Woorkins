@@ -440,14 +440,14 @@ export const AIAssistant = () => {
 
   return (
     <>
-      {/* Botão flutuante - menor */}
+      {/* Botão flutuante - 30% menor */}
       {!isOpen && (
         <Button
           onClick={() => setInternalOpen(true)}
-          className="fixed bottom-6 left-6 h-12 px-5 rounded-full shadow-2xl z-50 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-white flex items-center gap-2 animate-fade-in hover-scale border border-white/20"
+          className="fixed bottom-6 left-6 h-8 px-3 rounded-full shadow-2xl z-50 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-white flex items-center gap-1.5 animate-fade-in hover-scale border border-white/20"
         >
-          <MessageCircle className="h-4 w-4" />
-          <span className="font-medium text-sm">Precisa de Ajuda?</span>
+          <MessageCircle className="h-3.5 w-3.5" />
+          <span className="font-medium text-xs">Precisa de Ajuda?</span>
         </Button>
       )}
 

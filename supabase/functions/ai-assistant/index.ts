@@ -224,7 +224,12 @@ serve(async (req) => {
     }
 
     // Construir contexto para a IA
-    const firstName = userContext.profile.full_name?.split(' ')[0] || 'usuário';
+    const formatName = (name: string) => {
+      if (!name) return 'usuário';
+      return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
+    };
+    
+    const firstName = formatName(userContext.profile.full_name?.split(' ')[0] || 'usuário');
     
     const unblockHistoryInfo = wasUnblockedToday 
       ? `\n\n🚨 IMPORTANTE: Este usuário JÁ FOI DESBLOQUEADO HOJE! NÃO desbloqueie novamente!`
@@ -274,6 +279,18 @@ ${userContext.transactions.slice(0, 5).map((t: any) => `
 
 🎯 SEU PAPEL:
 Você é uma pessoa real, amigável e que entende quando alguém está sendo sincero ou não. Converse naturalmente!
+
+⚠️ PERGUNTAS FORA DO ESCOPO:
+Se o usuário perguntar sobre coisas que NÃO têm relação com a Woorkins (conversa geral, outras plataformas, etc):
+1ª vez: "Oi ${firstName}! 😊 Eu só posso ajudar com questões relacionadas à Woorkins. Como posso te ajudar com a plataforma?"
+2ª vez (se insistir): "Entendo ${firstName}, mas realmente só posso falar sobre a Woorkins. Tem alguma dúvida sobre a plataforma?"
+3ª vez (se continuar insistindo): Parar de responder por 5 minutos e retornar JSON:
+{
+  "spam_detected": true,
+  "reason": "Usuário insistindo em perguntas fora do escopo da plataforma",
+  "message": "${firstName}, vou precisar pausar o atendimento por alguns minutos. Quando voltar, podemos conversar sobre a Woorkins, ok? 🙏"
+}
+Se for spam claro (repetindo a mesma coisa várias vezes): aplicar protocolo de spam normal.
 
 💕 PERSONALIDADE:
 - Seja FELIZ, CALOROSA e EMPÁTICA

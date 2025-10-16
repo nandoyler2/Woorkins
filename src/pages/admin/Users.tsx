@@ -219,8 +219,18 @@ export default function AdminUsers() {
     }
   };
 
-  const updateUserRole = async (userId: string, role: 'admin' | 'moderator' | 'user') => {
+  const updateUserRole = async (userId: string, profileId: string, role: 'admin' | 'moderator' | 'user') => {
     try {
+      // Impedir alteração do admin master (usuário atual se for admin)
+      if (profileId === currentUserProfileId) {
+        toast({
+          title: 'Ação bloqueada',
+          description: 'Você não pode alterar seu próprio role de admin.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
       const { error } = await supabase
         .from('user_roles')
         .upsert({ user_id: userId, role }, { onConflict: 'user_id' });
@@ -318,7 +328,8 @@ export default function AdminUsers() {
                   <TableCell>
                     <Select 
                       value={usr.user_roles?.[0]?.role || 'user'}
-                      onValueChange={(value) => updateUserRole(usr.user_id, value as any)}
+                      onValueChange={(value) => updateUserRole(usr.user_id, usr.id, value as any)}
+                      disabled={usr.id === currentUserProfileId}
                     >
                       <SelectTrigger className="w-32">
                         <SelectValue />
@@ -344,6 +355,9 @@ export default function AdminUsers() {
                         </SelectItem>
                       </SelectContent>
                     </Select>
+                    {usr.id === currentUserProfileId && (
+                      <p className="text-xs text-muted-foreground mt-1">Admin Master</p>
+                    )}
                   </TableCell>
                   <TableCell>
                     {usr.approved_document ? (

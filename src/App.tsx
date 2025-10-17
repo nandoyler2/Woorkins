@@ -26,6 +26,7 @@ import ProjectDetails from "./pages/ProjectDetails";
 import MyProjects from "./pages/MyProjects";
 import NotFound from "./pages/NotFound";
 import Plans from "./pages/Plans";
+import FAQ from "./pages/FAQ";
 import { AdminLayout } from "./pages/admin/AdminLayout";
 import AdminUsers from "./pages/admin/Users";
 import AdminModeration from "./pages/admin/Moderation";
@@ -78,6 +79,7 @@ function AppContent() {
         <Route path="/feed" element={<Feed />} />
         <Route path="/empresa/:slug" element={<BusinessProfile />} />
         <Route path="/planos" element={<Plans />} />
+        <Route path="/faq" element={<FAQ />} />
         
         <Route path="/painel" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="/conta" element={<ProtectedRoute><Account /></ProtectedRoute>} />

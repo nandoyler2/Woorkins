@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Header } from '@/components/Header';
+import { Footer } from '@/components/Footer';
 
 export default function Feed() {
   const { user, loading } = useAuth();
@@ -19,6 +20,7 @@ export default function Feed() {
         <h1 className="text-3xl font-bold mb-6">{t('feed')}</h1>
         <p className="text-muted-foreground">Feed em desenvolvimento...</p>
       </main>
+      <Footer />
     </div>
   );
 }

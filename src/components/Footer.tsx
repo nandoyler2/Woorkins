@@ -15,16 +15,16 @@ export function Footer() {
           <div>
             <h4 className="font-bold mb-6 text-lg">Plataforma</h4>
             <ul className="space-y-3 text-sm opacity-80">
-              <li><a href="#" className="hover:opacity-100 transition-opacity">Como Funciona</a></li>
-              <li><a href="#" className="hover:opacity-100 transition-opacity">Para Empresas</a></li>
-              <li><a href="#" className="hover:opacity-100 transition-opacity">Para Usuários</a></li>
-              <li><a href="#" className="hover:opacity-100 transition-opacity">Planos</a></li>
+              <li><a href="#como-funciona" className="hover:opacity-100 transition-opacity">Como Funciona</a></li>
+              <li><a href="#para-empresas" className="hover:opacity-100 transition-opacity">Para Empresas</a></li>
+              <li><a href="/projetos" className="hover:opacity-100 transition-opacity">Projetos</a></li>
+              <li><a href="/planos" className="hover:opacity-100 transition-opacity">Planos</a></li>
             </ul>
           </div>
           <div>
             <h4 className="font-bold mb-6 text-lg">Suporte</h4>
             <ul className="space-y-3 text-sm opacity-80">
-              <li><a href="#" className="hover:opacity-100 transition-opacity">Central de Ajuda</a></li>
+              <li><a href="/faq" className="hover:opacity-100 transition-opacity">FAQ</a></li>
               <li><a href="#" className="hover:opacity-100 transition-opacity">Contato</a></li>
               <li><a href="#" className="hover:opacity-100 transition-opacity">Termos de Uso</a></li>
               <li><a href="#" className="hover:opacity-100 transition-opacity">Privacidade</a></li>
@@ -33,10 +33,10 @@ export function Footer() {
           <div>
             <h4 className="font-bold mb-6 text-lg">Redes Sociais</h4>
             <ul className="space-y-3 text-sm opacity-80">
-              <li><a href="#" className="hover:opacity-100 transition-opacity">LinkedIn</a></li>
-              <li><a href="#" className="hover:opacity-100 transition-opacity">Instagram</a></li>
-              <li><a href="#" className="hover:opacity-100 transition-opacity">Twitter</a></li>
-              <li><a href="#" className="hover:opacity-100 transition-opacity">Facebook</a></li>
+              <li><a href="https://www.linkedin.com/company/woorkins" target="_blank" rel="noopener noreferrer" className="hover:opacity-100 transition-opacity">LinkedIn</a></li>
+              <li><a href="https://www.instagram.com/woorkinsbrasil" target="_blank" rel="noopener noreferrer" className="hover:opacity-100 transition-opacity">Instagram</a></li>
+              <li><a href="https://www.youtube.com/@woorkins" target="_blank" rel="noopener noreferrer" className="hover:opacity-100 transition-opacity">YouTube</a></li>
+              <li><a href="https://facebook.com/woorkins" target="_blank" rel="noopener noreferrer" className="hover:opacity-100 transition-opacity">Facebook</a></li>
             </ul>
           </div>
         </div>

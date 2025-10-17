@@ -143,11 +143,14 @@ export default function BusinessEdit() {
   const coverInputRef = useRef<HTMLInputElement>(null);
 
   const menuItems = [
-    { id: 'tools' as Section, label: 'Ferramentas', icon: Zap, color: 'text-yellow-500' },
-    { id: 'profile-cover' as Section, label: 'Perfil e Capa', icon: Eye, color: 'text-blue-500' },
     { id: 'posts' as Section, label: 'Posts', icon: MessagesSquare, color: 'text-orange-500' },
     { id: 'evaluations' as Section, label: 'Avaliações', icon: Users, color: 'text-pink-500' },
     { id: 'settings' as Section, label: 'Configurações', icon: AlertTriangle, color: 'text-red-500' },
+  ];
+
+  const customizationItems = [
+    { id: 'tools' as Section, label: 'Ferramentas', icon: Zap, color: 'text-yellow-500' },
+    { id: 'profile-cover' as Section, label: 'Perfil e Capa', icon: Eye, color: 'text-blue-500' },
   ];
 
   const availableFeatures: Omit<BusinessFeature, 'isActive'>[] = [
@@ -767,7 +770,7 @@ export default function BusinessEdit() {
                 </SidebarGroupContent>
               </SidebarGroup>
 
-              {/* Ferramentas Ativas */}
+            {/* Ferramentas Ativas */}
               {features.filter(f => f.isActive).length > 0 && (
                 <SidebarGroup>
                   <SidebarGroupLabel className="text-xs text-muted-foreground px-2">
@@ -801,9 +804,41 @@ export default function BusinessEdit() {
               </SidebarGroup>
             )}
 
+            {/* Personalização section */}
+            <SidebarGroup>
+              <SidebarGroupLabel className="text-xs text-muted-foreground px-2">
+                Personalização
+              </SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {customizationItems.map((item) => {
+                    const Icon = item.icon;
+                    const isActive = activeSection === item.id && !configuringFeature;
+                    return (
+                      <SidebarMenuItem key={item.id}>
+                        <SidebarMenuButton
+                          onClick={() => {
+                            setActiveSection(item.id);
+                            setConfiguringFeature(null);
+                          }}
+                          className={`
+                            ${isActive ? 'bg-primary/10 text-primary font-medium' : 'hover:bg-muted/50'}
+                            transition-all duration-200
+                          `}
+                        >
+                          <Icon className={`w-5 h-5 mr-3 ${isActive ? item.color : 'text-muted-foreground'}`} />
+                          <span>{item.label}</span>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    );
+                  })}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+
             {/* Admin - separate section */}
             <SidebarGroup>
-              <SidebarGroupLabel className="text-xs text-muted-foreground">
+              <SidebarGroupLabel className="text-xs text-muted-foreground px-2">
                 Administração
               </SidebarGroupLabel>
               <SidebarGroupContent>

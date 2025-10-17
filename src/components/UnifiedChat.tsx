@@ -35,6 +35,8 @@ import { ImageViewer } from './ImageViewer';
 import { RequireProfilePhotoDialog } from './RequireProfilePhotoDialog';
 import { useDocumentVerification } from '@/hooks/useDocumentVerification';
 import { RequireDocumentVerificationDialog } from './RequireDocumentVerificationDialog';
+import { useSpamBlock } from '@/hooks/useSpamBlock';
+import { SpamBlockCountdown } from './SpamBlockCountdown';
 
 interface UnifiedChatProps {
   conversationId: string;
@@ -106,6 +108,10 @@ export function UnifiedChat({
 
   // Check for system-level messaging blocks
   const [systemMessagingBlock, setSystemMessagingBlock] = useState<any>(null);
+  
+  // Check for spam blocks
+  const spamContext = conversationType === 'negotiation' ? 'negotiation' : 'proposal';
+  const { isBlocked: isSpamBlocked, remainingSeconds, spamBlock } = useSpamBlock(currentUserProfile?.id, spamContext as 'negotiation' | 'proposal');
 
   // Load current user profile to check for avatar
   useEffect(() => {
@@ -150,8 +156,8 @@ export function UnifiedChat({
     return () => clearInterval(interval);
   }, [profileId]);
 
-  // Determine final block status (system block takes precedence)
-  const finalIsBlocked = systemMessagingBlock ? true : isBlocked;
+  // Determine final block status (system block and spam block take precedence)
+  const finalIsBlocked = systemMessagingBlock ? true : (isSpamBlocked || isBlocked);
   const finalBlockedUntil = systemMessagingBlock?.blocked_until 
     ? new Date(systemMessagingBlock.blocked_until) 
     : blockedUntil;
@@ -889,7 +895,11 @@ useEffect(() => {
 
       {/* Input - Bottom area (not absolute) */}
       <div className="border-t bg-background">
-        {finalIsBlocked && finalBlockedUntil ? (
+        {isSpamBlocked ? (
+          <div className="p-3">
+            <SpamBlockCountdown remainingSeconds={remainingSeconds} reason={spamBlock?.reason} />
+          </div>
+        ) : finalIsBlocked && finalBlockedUntil ? (
           <div className="p-3">
             <BlockedMessageCountdown blockedUntil={finalBlockedUntil} reason={finalBlockReason} />
           </div>

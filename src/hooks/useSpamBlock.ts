@@ -8,7 +8,7 @@ interface SpamBlock {
   reason?: string;
 }
 
-export function useSpamBlock(profileId: string | undefined, context: 'support_chat' | 'ai_assistant' | 'negotiation') {
+export function useSpamBlock(profileId: string | undefined, context: 'support_chat' | 'ai_assistant' | 'negotiation' | 'proposal') {
   const [spamBlock, setSpamBlock] = useState<SpamBlock | null>(null);
   const [isBlocked, setIsBlocked] = useState(false);
   const [remainingSeconds, setRemainingSeconds] = useState(0);

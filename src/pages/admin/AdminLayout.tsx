@@ -10,7 +10,8 @@ import {
   CreditCard,
   FileCheck,
   MessageCircle,
-  ArrowLeft
+  ArrowLeft,
+  Ban
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -30,6 +31,7 @@ import {
 const adminMenuItems = [
   { title: "Dashboard", url: "/admin", icon: Home },
   { title: "Usuários", url: "/admin/users", icon: Users },
+  { title: "Bloqueios", url: "/admin/system-blocks", icon: Ban },
   { title: "Moderação", url: "/admin/moderation", icon: Flag },
   { title: "Denúncias", url: "/admin/reports", icon: Flag },
   { title: "Negócios", url: "/admin/businesses", icon: Briefcase },

@@ -43,6 +43,7 @@ import UserMessages from "./pages/admin/UserMessages";
 import AISettings from "./pages/admin/AISettings";
 import PlansSettings from "./pages/admin/PlansSettings";
 import LegalPages from "./pages/admin/LegalPages";
+import SystemBlocks from "./pages/admin/SystemBlocks";
 import Account from "./pages/Account";
 import Financeiro from "./pages/Financeiro";
 import Woorkoins from "./pages/Woorkoins";
@@ -100,6 +101,7 @@ function AppContent() {
         <Route path="/admin" element={<ProtectedRoute requireAdmin><AdminLayout /></ProtectedRoute>}>
           <Route index element={<Admin />} />
           <Route path="users" element={<AdminUsers />} />
+          <Route path="system-blocks" element={<SystemBlocks />} />
           <Route path="businesses" element={<AdminBusinesses />} />
           <Route path="analytics" element={<AdminAnalytics />} />
           <Route path="reports" element={<AdminReports />} />

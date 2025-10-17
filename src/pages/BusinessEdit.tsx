@@ -583,8 +583,18 @@ export default function BusinessEdit() {
                             ) : (
                               <div className="w-full h-full bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-pink-500/20" />
                             )}
+                            
+                            {/* Nome da empresa com fundo transparente */}
+                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                              <div className="bg-background/80 backdrop-blur-sm px-6 py-3 rounded-lg">
+                                <h2 className="text-2xl font-bold text-foreground">
+                                  {business.company_name}
+                                </h2>
+                              </div>
+                            </div>
+                            
                             {/* Ícone de edição da capa - sempre visível */}
-                            <div className="absolute top-2 right-2">
+                            <div className="absolute top-2 right-2 pointer-events-auto">
                               <ImageUpload
                                 currentImageUrl={business.cover_url}
                                 onUpload={handleCoverUpload}
@@ -596,8 +606,8 @@ export default function BusinessEdit() {
                           </div>
                           
                           {/* Logo sobreposto */}
-                          <div className="absolute bottom-2 left-4">
-                            <div className="relative w-24 h-24 rounded-lg border-4 border-background overflow-hidden bg-background">
+                          <div className="absolute bottom-2 left-4 pointer-events-auto">
+                            <div className="relative w-24 h-24 rounded-lg border-4 border-background overflow-hidden bg-background shadow-lg">
                               {business.logo_url ? (
                                 <img 
                                   src={business.logo_url} 
@@ -623,7 +633,7 @@ export default function BusinessEdit() {
                           </div>
                         </div>
                         <p className="text-xs text-muted-foreground">
-                          Clique nos ícones para alterar as imagens
+                          Esta é uma prévia de como seu perfil aparecerá para os visitantes
                         </p>
                       </div>
                     </CardContent>

@@ -108,26 +108,51 @@ export default function BusinessAdministrators({ businessId }: BusinessAdministr
     if (!searchQuery.trim()) return;
 
     setLoading(true);
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('id, full_name, username, avatar_url')
-      .or(`username.ilike.%${searchQuery}%,full_name.ilike.%${searchQuery}%`)
-      .limit(10);
+    
+    try {
+      // Buscar por username e full_name
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('id, full_name, username, avatar_url')
+        .or(`username.ilike.%${searchQuery}%,full_name.ilike.%${searchQuery}%`)
+        .limit(10);
 
-    if (!error && data) {
+      let results: SearchedProfile[] = profileData as SearchedProfile[] || [];
+
+      // Se a busca parecer um email, buscar também por email
+      if (searchQuery.includes('@') || searchQuery.includes('.')) {
+        const { data: emailData, error: emailError } = await supabase.functions.invoke(
+          'search-users-by-email',
+          {
+            body: { searchQuery }
+          }
+        );
+
+        if (!emailError && emailData?.users) {
+          // Combinar resultados, removendo duplicados
+          const existingIds = new Set(results.map(r => r.id));
+          const newResults = emailData.users.filter(
+            (user: SearchedProfile) => !existingIds.has(user.id)
+          );
+          results = [...results, ...newResults];
+        }
+      }
+
       // Filter out profiles that are already admins
-      const filtered = data.filter(
+      const filtered = results.filter(
         (profile: SearchedProfile) =>
           !admins.some((admin) => admin.profile_id === profile.id)
       );
-      setSearchResults(filtered as SearchedProfile[]);
-    } else {
+      
+      setSearchResults(filtered);
+    } catch (error) {
       toast({
         title: 'Erro ao buscar',
         description: 'Não foi possível buscar usuários',
         variant: 'destructive',
       });
     }
+    
     setLoading(false);
   };
 
@@ -259,13 +284,13 @@ export default function BusinessAdministrators({ businessId }: BusinessAdministr
               <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
                 <p className="text-sm text-blue-600 dark:text-blue-400">
                   ℹ️ Para adicionar um administrador, a pessoa precisa estar cadastrada no Woorkins primeiro. 
-                  Digite pelo menos 2 caracteres para buscar.
+                  Busque por nome, usuário ou email. Digite pelo menos 2 caracteres.
                 </p>
               </div>
 
               <div className="relative">
                 <Input
-                  placeholder="Buscar por nome ou usuário..."
+                  placeholder="Buscar por nome, usuário ou email..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pr-10"

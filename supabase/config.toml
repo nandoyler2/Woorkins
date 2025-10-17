@@ -80,3 +80,6 @@ verify_jwt = true
 
 [functions.admin-update-profile]
 verify_jwt = true
+
+[functions.search-users-by-email]
+verify_jwt = true

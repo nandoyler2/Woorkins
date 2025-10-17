@@ -27,6 +27,10 @@ import { PublicBusinessCatalog } from '@/components/business/PublicBusinessCatal
 import { PublicBusinessTestimonials } from '@/components/business/PublicBusinessTestimonials';
 import { PublicBusinessCertifications } from '@/components/business/PublicBusinessCertifications';
 import { PublicBusinessJobVacancies } from '@/components/business/PublicBusinessJobVacancies';
+import { PublicBusinessSocial } from '@/components/business/PublicBusinessSocial';
+import { PublicBusinessPortfolio } from '@/components/business/PublicBusinessPortfolio';
+import { PublicBusinessLinktree } from '@/components/business/PublicBusinessLinktree';
+import { PublicBusinessAppointments } from '@/components/business/PublicBusinessAppointments';
 
 interface BusinessData {
   id: string;
@@ -52,14 +56,6 @@ interface BusinessData {
   working_hours: string | null;
 }
 
-interface PortfolioItem {
-  id: string;
-  title: string;
-  media_url: string;
-  media_type: string;
-  description: string | null;
-}
-
 interface Evaluation {
   id: string;
   title: string;
@@ -79,7 +75,6 @@ export default function BusinessProfile() {
   const { toast } = useToast();
   const { user } = useAuth();
   const [business, setBusiness] = useState<BusinessData | null>(null);
-  const [portfolio, setPortfolio] = useState<PortfolioItem[]>([]);
   const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('inicio');
@@ -234,17 +229,6 @@ export default function BusinessProfile() {
           
           setIsAdmin(isOwner || !!adminData);
         }
-      }
-
-      // Load portfolio
-      const { data: portfolioData } = await supabase
-        .from('portfolio_items' as any)
-        .select('*')
-        .eq('business_id', (businessData as any).id)
-        .order('order_index', { ascending: true });
-
-      if (portfolioData) {
-        setPortfolio(portfolioData as unknown as PortfolioItem[]);
       }
 
       // Load evaluations with proper join
@@ -403,12 +387,6 @@ export default function BusinessProfile() {
                       Sobre
                     </TabsTrigger>
                     <TabsTrigger 
-                      value="portfolio"
-                      className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-6 py-3"
-                    >
-                      Portfólio
-                    </TabsTrigger>
-                    <TabsTrigger 
                       value="avaliacoes"
                       className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-6 py-3"
                     >
@@ -421,7 +399,10 @@ export default function BusinessProfile() {
                     {/* Ferramentas ativas do perfil */}
                     <PublicBusinessBanners businessId={business.id} />
                     <PublicBusinessVideo businessId={business.id} />
+                    <PublicBusinessLinktree businessId={business.id} />
                     <PublicBusinessCatalog businessId={business.id} />
+                    <PublicBusinessPortfolio businessId={business.id} />
+                    <PublicBusinessAppointments businessId={business.id} />
                     
                     <div>
                       <h2 className="text-xl font-bold mb-4">Visão Geral</h2>
@@ -465,34 +446,6 @@ export default function BusinessProfile() {
                     </div>
                   </TabsContent>
 
-                  {/* Portfólio Tab */}
-                  <TabsContent value="portfolio" className="p-6">
-                    <h2 className="text-xl font-bold mb-6">Portfólio</h2>
-                    {portfolio.length === 0 ? (
-                      <div className="text-center py-12">
-                        <ImageIcon className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
-                        <p className="text-muted-foreground">Nenhum item no portfólio ainda</p>
-                      </div>
-                    ) : (
-                      <div className="grid md:grid-cols-2 gap-4">
-                        {portfolio.map((item) => (
-                          <div key={item.id} className="group space-y-2">
-                            <div className="relative overflow-hidden rounded-lg border shadow-sm hover:shadow-md transition-all">
-                              <SafeImage
-                                src={item.media_url}
-                                alt={item.title}
-                                className="w-full h-48 object-cover object-center group-hover:scale-105 transition-transform duration-300"
-                              />
-                            </div>
-                            <h3 className="font-semibold">{item.title}</h3>
-                            {item.description && (
-                              <p className="text-sm text-muted-foreground">{item.description}</p>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </TabsContent>
 
                   {/* Avaliações Tab */}
                   <TabsContent value="avaliacoes" className="p-6">
@@ -623,88 +576,8 @@ export default function BusinessProfile() {
                 </CardContent>
               </Card>
 
-              {/* Social Media Card */}
-              {(business.whatsapp || business.facebook || business.instagram || business.linkedin || business.twitter || business.website_url) && (
-                <Card className="bg-card border shadow-sm">
-                  <CardContent className="p-6">
-                    <h2 className="font-bold mb-4">Redes Sociais</h2>
-                    <div className="flex flex-wrap gap-2">
-                      {business.whatsapp && (
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="rounded-full hover:bg-green-500 hover:text-white transition-colors"
-                          asChild
-                        >
-                          <a href={`https://wa.me/${business.whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer">
-                            <MessageCircle className="w-4 h-4" />
-                          </a>
-                        </Button>
-                      )}
-                      {business.facebook && (
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="rounded-full hover:bg-blue-600 hover:text-white transition-colors"
-                          asChild
-                        >
-                          <a href={business.facebook} target="_blank" rel="noopener noreferrer">
-                            <Facebook className="w-4 h-4" />
-                          </a>
-                        </Button>
-                      )}
-                      {business.instagram && (
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="rounded-full hover:bg-pink-600 hover:text-white transition-colors"
-                          asChild
-                        >
-                          <a href={business.instagram} target="_blank" rel="noopener noreferrer">
-                            <Instagram className="w-4 h-4" />
-                          </a>
-                        </Button>
-                      )}
-                      {business.linkedin && (
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="rounded-full hover:bg-blue-700 hover:text-white transition-colors"
-                          asChild
-                        >
-                          <a href={business.linkedin} target="_blank" rel="noopener noreferrer">
-                            <Linkedin className="w-4 h-4" />
-                          </a>
-                        </Button>
-                      )}
-                      {business.twitter && (
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="rounded-full hover:bg-black hover:text-white transition-colors"
-                          asChild
-                        >
-                          <a href={business.twitter} target="_blank" rel="noopener noreferrer">
-                            <Twitter className="w-4 h-4" />
-                          </a>
-                        </Button>
-                      )}
-                      {business.website_url && (
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="rounded-full hover:bg-primary hover:text-primary-foreground transition-colors"
-                          asChild
-                        >
-                          <a href={business.website_url} target="_blank" rel="noopener noreferrer">
-                            <Globe className="w-4 h-4" />
-                          </a>
-                        </Button>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
+              {/* Social Media and Links */}
+              <PublicBusinessSocial businessId={business.id} />
 
               {/* Negotiation Card */}
               {business.enable_negotiation && (
@@ -724,19 +597,6 @@ export default function BusinessProfile() {
                   </CardContent>
                 </Card>
               )}
-
-              {/* Quick Stats Card */}
-              <Card className="bg-card border shadow-sm">
-                <CardContent className="p-6">
-                  <h2 className="font-bold mb-4">Estatísticas</h2>
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">Itens no portfólio</span>
-                      <span className="font-semibold">{portfolio.length}</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
             </div>
           </div>
         </div>

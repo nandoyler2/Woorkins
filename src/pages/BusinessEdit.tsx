@@ -1,15 +1,46 @@
-import { useState } from 'react';
-import { useParams } from 'react-router-dom';
-import {
-  AlertTriangle,
-  Eye,
-  MessagesSquare,
-  Shield,
-  Users,
-  Zap,
+import { useState, useEffect, useRef } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { Header } from '@/components/Header';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
+import { useToast } from '@/hooks/use-toast';
+import { ImageUpload } from '@/components/ImageUpload';
+import { MediaUpload } from '@/components/MediaUpload';
+import { CreatePostDialog } from '@/components/CreatePostDialog';
+import { 
+  ArrowLeft, Save, Star, MessageSquare, Plus, Trash2, Shield,
+  Facebook, Instagram, Linkedin, Twitter, Globe, MessageCircle,
+  AlertTriangle, Info, Image as ImageIcon, Users, MessagesSquare,
+  Eye, EyeOff, ExternalLink, Upload, X, Briefcase, Zap, Play,
+  ShoppingBag, ThumbsUp, Award, Calendar, Link as LinkIcon, Briefcase as BriefcaseIcon, Building2
 } from 'lucide-react';
-import { Card } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
+import { Link } from 'react-router-dom';
+import { BusinessBannersManager } from '@/components/business/BusinessBannersManager';
+import { BusinessVideoManager } from '@/components/business/BusinessVideoManager';
+import { BusinessCatalogManager } from '@/components/business/BusinessCatalogManager';
+import { BusinessTestimonialsManager } from '@/components/business/BusinessTestimonialsManager';
+import { BusinessCertificationsManager } from '@/components/business/BusinessCertificationsManager';
+import { BusinessAppointmentsManager } from '@/components/business/BusinessAppointmentsManager';
+import { BusinessLinktreeManager } from '@/components/business/BusinessLinktreeManager';
+import { BusinessJobVacanciesManager } from '@/components/business/BusinessJobVacanciesManager';
+import BusinessAdministrators from './BusinessAdministrators';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import {
   Sidebar,
   SidebarContent,
@@ -17,166 +48,1837 @@ import {
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarMenu,
-  SidebarMenuItem,
   SidebarMenuButton,
+  SidebarMenuItem,
   SidebarProvider,
-  SidebarInset,
 } from '@/components/ui/sidebar';
-import BusinessAdministrators from './BusinessAdministrators';
 
-type Section = 'posts' | 'evaluations' | 'settings' | 'tools' | 'profile-cover' | 'admin';
+interface BusinessProfile {
+  id: string;
+  profile_id: string;
+  company_name: string;
+  slug: string;
+  logo_url: string | null;
+  cover_url: string | null;
+  description: string | null;
+  category: string | null;
+  phone: string | null;
+  email: string | null;
+  address: string | null;
+  portfolio_description: string | null;
+  whatsapp: string | null;
+  facebook: string | null;
+  instagram: string | null;
+  linkedin: string | null;
+  twitter: string | null;
+  website_url: string | null;
+  enable_negotiation: boolean;
+  working_hours: string | null;
+  services_offered: string[] | null;
+  active: boolean;
+}
 
-const BusinessEdit = () => {
+interface PortfolioItem {
+  id: string;
+  title: string;
+  description: string | null;
+  media_url: string;
+  media_type: string;
+}
+
+interface BusinessPost {
+  id: string;
+  content: string;
+  media_urls: string[] | null;
+  media_types: string[] | null;
+  created_at: string;
+}
+
+interface Evaluation {
+  id: string;
+  user_id: string;
+  title: string;
+  content: string;
+  rating: number;
+  public_response: string | null;
+  created_at: string;
+  profiles: {
+    username: string;
+    full_name: string;
+  };
+}
+
+type Section = 'profile-cover' | 'tools' | 'posts' | 'evaluations' | 'settings' | 'admin';
+
+interface BusinessFeature {
+  key: string;
+  name: string;
+  description: string;
+  icon: any;
+  color: string;
+  isActive: boolean;
+}
+
+export default function BusinessEdit() {
   const { slug } = useParams();
-  const [activeSection, setActiveSection] = useState<Section>('posts');
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  
+  const [business, setBusiness] = useState<BusinessProfile | null>(null);
+  const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
+  const [portfolio, setPortfolio] = useState<PortfolioItem[]>([]);
+  const [posts, setPosts] = useState<BusinessPost[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [responses, setResponses] = useState<{ [key: string]: string }>({});
+  const [newPortfolioItem, setNewPortfolioItem] = useState({ title: '', description: '', url: '', type: '' });
+  const [activeSection, setActiveSection] = useState<Section>('tools');
+  const [features, setFeatures] = useState<BusinessFeature[]>([]);
+  const [configuringFeature, setConfiguringFeature] = useState<string | null>(null);
+  const [deleteConfirmSlug, setDeleteConfirmSlug] = useState('');
+  
+  // Refs para inputs de upload
+  const logoInputRef = useRef<HTMLInputElement>(null);
+  const coverInputRef = useRef<HTMLInputElement>(null);
 
   const menuItems = [
-    { id: 'posts' as Section, label: 'Posts', icon: MessagesSquare },
-    { id: 'evaluations' as Section, label: 'Avaliações', icon: Users },
-    { id: 'settings' as Section, label: 'Configurações', icon: AlertTriangle },
+    { id: 'tools' as Section, label: 'Ferramentas', icon: Zap, color: 'text-yellow-500' },
+    { id: 'profile-cover' as Section, label: 'Perfil e Capa', icon: Eye, color: 'text-blue-500' },
+    { id: 'posts' as Section, label: 'Posts', icon: MessagesSquare, color: 'text-orange-500' },
+    { id: 'evaluations' as Section, label: 'Avaliações', icon: Users, color: 'text-pink-500' },
+    { id: 'settings' as Section, label: 'Configurações', icon: AlertTriangle, color: 'text-red-500' },
   ];
 
-  const customizationItems = [
-    { id: 'tools' as Section, label: 'Ferramentas', icon: Zap },
-    { id: 'profile-cover' as Section, label: 'Perfil e Capa', icon: Eye },
+  const availableFeatures: Omit<BusinessFeature, 'isActive'>[] = [
+    {
+      key: 'negotiation',
+      name: 'Negociação',
+      description: 'Sistema de negociação com clientes',
+      icon: MessageSquare,
+      color: 'bg-gradient-to-br from-emerald-500 to-teal-500'
+    },
+    {
+      key: 'social',
+      name: 'Redes Sociais',
+      description: 'Links para suas redes sociais e contatos',
+      icon: Globe,
+      color: 'bg-gradient-to-br from-purple-500 to-pink-500'
+    },
+    {
+      key: 'portfolio',
+      name: 'Portfólio',
+      description: 'Galeria de trabalhos e projetos realizados',
+      icon: ImageIcon,
+      color: 'bg-gradient-to-br from-green-500 to-teal-500'
+    },
+    {
+      key: 'banner',
+      name: 'Banner Rotativo',
+      description: 'Até 5 banners rotativos no topo do perfil',
+      icon: ImageIcon,
+      color: 'bg-gradient-to-br from-blue-500 to-cyan-500'
+    },
+    {
+      key: 'video',
+      name: 'Vídeo de Apresentação',
+      description: 'Vídeo do YouTube no topo do perfil',
+      icon: Play,
+      color: 'bg-gradient-to-br from-red-500 to-pink-500'
+    },
+    {
+      key: 'catalog',
+      name: 'Catálogo de Serviços',
+      description: 'Venda produtos e serviços diretamente',
+      icon: ShoppingBag,
+      color: 'bg-gradient-to-br from-green-500 to-emerald-500'
+    },
+    {
+      key: 'testimonials',
+      name: 'Depoimentos',
+      description: 'Área para clientes deixarem avaliações',
+      icon: ThumbsUp,
+      color: 'bg-gradient-to-br from-purple-500 to-violet-500'
+    },
+    {
+      key: 'certifications',
+      name: 'Certificações e Prêmios',
+      description: 'Mostre seus certificados e conquistas',
+      icon: Award,
+      color: 'bg-gradient-to-br from-amber-500 to-orange-500'
+    },
+    {
+      key: 'appointments',
+      name: 'Agendamento',
+      description: 'Sistema de agendamento integrado',
+      icon: Calendar,
+      color: 'bg-gradient-to-br from-indigo-500 to-blue-500'
+    },
+    {
+      key: 'linktree',
+      name: 'LinkTree Personalizado',
+      description: 'Múltiplos links externos personalizados',
+      icon: LinkIcon,
+      color: 'bg-gradient-to-br from-teal-500 to-cyan-500'
+    },
+    {
+      key: 'vacancies',
+      name: 'Vagas de Emprego',
+      description: 'Publique e gerencie vagas de trabalho',
+      icon: BriefcaseIcon,
+      color: 'bg-gradient-to-br from-pink-500 to-rose-500'
+    }
   ];
 
-  const adminItems = [
-    { id: 'admin' as Section, label: 'Administradores', icon: Shield },
-  ];
+  useEffect(() => {
+    loadBusiness();
+    loadEvaluations();
+  }, [slug]);
 
-  const renderContent = () => {
-    switch (activeSection) {
-      case 'admin':
-        return <BusinessAdministrators businessId={slug || ''} />;
-      case 'posts':
-        return (
-          <Card className="p-6">
-            <h2 className="text-2xl font-bold mb-4">Posts</h2>
-            <p className="text-muted-foreground">Gerencie os posts do seu negócio</p>
-          </Card>
-        );
-      case 'evaluations':
-        return (
-          <Card className="p-6">
-            <h2 className="text-2xl font-bold mb-4">Avaliações</h2>
-            <p className="text-muted-foreground">Visualize as avaliações do seu negócio</p>
-          </Card>
-        );
-      case 'settings':
-        return (
-          <Card className="p-6">
-            <h2 className="text-2xl font-bold mb-4">Configurações</h2>
-            <p className="text-muted-foreground">Configure seu negócio</p>
-          </Card>
-        );
-      case 'tools':
-        return (
-          <Card className="p-6">
-            <h2 className="text-2xl font-bold mb-4">Ferramentas</h2>
-            <p className="text-muted-foreground">Ferramentas ativas do seu negócio</p>
-          </Card>
-        );
-      case 'profile-cover':
-        return (
-          <Card className="p-6">
-            <h2 className="text-2xl font-bold mb-4">Perfil e Capa</h2>
-            <p className="text-muted-foreground">Personalize o perfil e a capa do seu negócio</p>
-          </Card>
-        );
-      default:
-        return null;
+  useEffect(() => {
+    if (business?.id) {
+      loadPortfolio();
+      loadPosts();
+      loadFeatures();
+    }
+  }, [business?.id]);
+
+  const loadBusiness = async () => {
+    if (!user || !slug) return;
+
+    const { data: profileData } = await supabase
+      .from('profiles' as any)
+      .select('id')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (!profileData) return;
+
+    const { data, error } = await supabase
+      .from('business_profiles' as any)
+      .select('*')
+      .eq('slug', slug)
+      .eq('profile_id', (profileData as any).id)
+      .maybeSingle();
+
+    if (error || !data) {
+      toast({
+        title: 'Erro',
+        description: 'Perfil não encontrado',
+        variant: 'destructive',
+      });
+      navigate('/painel');
+      return;
+    }
+
+    setBusiness(data as unknown as BusinessProfile);
+    setLoading(false);
+  };
+
+  const loadEvaluations = async () => {
+    if (!slug) return;
+
+    const { data: businessData } = await supabase
+      .from('business_profiles' as any)
+      .select('id')
+      .eq('slug', slug)
+      .maybeSingle();
+
+    if (!businessData) return;
+
+    const { data: evaluationsData } = await supabase
+      .from('evaluations' as any)
+      .select('id, title, content, rating, created_at, public_response, user_id')
+      .eq('business_id', (businessData as any).id)
+      .order('created_at', { ascending: false });
+
+    if (evaluationsData) {
+      const userIds = evaluationsData.map((e: any) => e.user_id);
+      const { data: profilesData } = await supabase
+        .from('profiles' as any)
+        .select('user_id, username, full_name')
+        .in('user_id', userIds);
+
+      const evaluationsWithProfiles = evaluationsData.map((evaluation: any) => {
+        const profile = profilesData?.find((p: any) => p.user_id === evaluation.user_id);
+        return {
+          ...evaluation,
+          profiles: profile || { username: 'unknown', full_name: 'Unknown User' }
+        };
+      });
+
+      setEvaluations(evaluationsWithProfiles as any);
     }
   };
 
+  const loadPortfolio = async () => {
+    if (!business?.id) return;
+
+    const { data } = await supabase
+      .from('portfolio_items' as any)
+      .select('*')
+      .eq('business_id', business.id)
+      .order('order_index', { ascending: true });
+
+    if (data) {
+      setPortfolio(data as any);
+    }
+  };
+
+  const loadPosts = async () => {
+    if (!business?.id) return;
+
+    const { data } = await supabase
+      .from('business_posts' as any)
+      .select('*')
+      .eq('business_id', business.id)
+      .order('created_at', { ascending: false });
+
+    if (data) {
+      setPosts(data as any);
+    }
+  };
+
+  const loadFeatures = async () => {
+    if (!business?.id) return;
+
+    const { data } = await supabase
+      .from('business_profile_features' as any)
+      .select('*')
+      .eq('business_id', business.id);
+
+    const featuresMap = new Map(data?.map((f: any) => [f.feature_key, f.is_active]) || []);
+    
+    const allFeatures = availableFeatures.map(f => ({
+      ...f,
+      // Para negotiation, sincronizar com enable_negotiation do business
+      isActive: f.key === 'negotiation' 
+        ? business.enable_negotiation || false
+        : featuresMap.get(f.key) || false
+    }));
+
+    // Ordenar: ativas primeiro
+    allFeatures.sort((a, b) => {
+      if (a.isActive === b.isActive) return 0;
+      return a.isActive ? -1 : 1;
+    });
+
+    setFeatures(allFeatures);
+  };
+
+  const handleToggleFeature = async (featureKey: string) => {
+    if (!business?.id) return;
+
+    const feature = features.find(f => f.key === featureKey);
+    if (!feature) return;
+
+    const newActiveState = !feature.isActive;
+
+    // Atualizar estado local imediatamente
+    setFeatures(prevFeatures => 
+      prevFeatures.map(f => 
+        f.key === featureKey ? { ...f, isActive: newActiveState } : f
+      )
+    );
+
+    // Se ativou uma ferramenta, mudar para a seção de ferramentas
+    if (newActiveState) {
+      setActiveSection('tools');
+    }
+
+    const { error } = await supabase
+      .from('business_profile_features' as any)
+      .upsert({
+        business_id: business.id,
+        feature_key: featureKey,
+        is_active: newActiveState,
+        settings: {}
+      }, {
+        onConflict: 'business_id,feature_key'
+      });
+
+    // Se a feature é negotiation, atualizar também o campo enable_negotiation
+    if (featureKey === 'negotiation') {
+      await supabase
+        .from('business_profiles' as any)
+        .update({ enable_negotiation: newActiveState })
+        .eq('id', business.id);
+      
+      setBusiness({ ...business, enable_negotiation: newActiveState });
+    }
+
+    if (!error) {
+      toast({
+        title: newActiveState ? 'Ferramenta ativada!' : 'Ferramenta desativada',
+        description: `${feature.name} foi ${newActiveState ? 'ativada' : 'desativada'}.`
+      });
+    } else {
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível atualizar a ferramenta',
+        variant: 'destructive'
+      });
+      // Reverter mudança em caso de erro
+      loadFeatures();
+    }
+  };
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!business) return;
+
+    setSaving(true);
+
+    try {
+      const { error } = await supabase
+        .from('business_profiles' as any)
+        .update({
+          company_name: business.company_name,
+          description: business.description,
+          category: business.category,
+          phone: business.phone,
+          email: business.email,
+          address: business.address,
+          portfolio_description: business.portfolio_description,
+          whatsapp: business.whatsapp,
+          facebook: business.facebook,
+          instagram: business.instagram,
+          linkedin: business.linkedin,
+          twitter: business.twitter,
+          website_url: business.website_url,
+          enable_negotiation: business.enable_negotiation,
+          working_hours: business.working_hours,
+          services_offered: business.services_offered,
+          active: business.active,
+        })
+        .eq('id', business.id);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Salvo!',
+        description: 'Alterações salvas com sucesso.',
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Erro ao salvar',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleLogoUpload = async (url: string) => {
+    if (!business) return;
+
+    const { error } = await supabase
+      .from('business_profiles' as any)
+      .update({ logo_url: url })
+      .eq('id', business.id);
+
+    if (!error) {
+      setBusiness({ ...business, logo_url: url });
+      toast({ title: 'Logo atualizado!' });
+    }
+  };
+
+  const handleCoverUpload = async (url: string) => {
+    if (!business) return;
+
+    const { error } = await supabase
+      .from('business_profiles' as any)
+      .update({ cover_url: url })
+      .eq('id', business.id);
+
+    if (!error) {
+      setBusiness({ ...business, cover_url: url });
+      toast({ title: 'Capa atualizada!' });
+    }
+  };
+  
+  const handleLogoDelete = async () => {
+    if (!business) return;
+
+    const { error } = await supabase
+      .from('business_profiles' as any)
+      .update({ logo_url: null })
+      .eq('id', business.id);
+
+    if (!error) {
+      setBusiness({ ...business, logo_url: null });
+      toast({ title: 'Logo removido!' });
+    }
+  };
+
+  const handleCoverDelete = async () => {
+    if (!business) return;
+
+    const { error } = await supabase
+      .from('business_profiles' as any)
+      .update({ cover_url: null })
+      .eq('id', business.id);
+
+    if (!error) {
+      setBusiness({ ...business, cover_url: null });
+      toast({ title: 'Capa removida!' });
+    }
+  };
+
+  const handleResponseSubmit = async (evaluationId: string) => {
+    const response = responses[evaluationId];
+    if (!response?.trim()) return;
+
+    try {
+      const { error } = await supabase
+        .from('evaluations' as any)
+        .update({ public_response: response })
+        .eq('id', evaluationId);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Resposta publicada!',
+        description: 'Sua resposta foi enviada.',
+      });
+
+      setResponses({ ...responses, [evaluationId]: '' });
+      loadEvaluations();
+    } catch (error: any) {
+      toast({
+        title: 'Erro ao responder',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleAddPortfolioItem = async () => {
+    if (!business || !newPortfolioItem.title || !newPortfolioItem.url) {
+      toast({
+        title: 'Campos obrigatórios',
+        description: 'Preencha título e adicione uma mídia',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('portfolio_items' as any)
+        .insert({
+          business_id: business.id,
+          title: newPortfolioItem.title,
+          description: newPortfolioItem.description,
+          media_url: newPortfolioItem.url,
+          media_type: newPortfolioItem.type,
+          order_index: portfolio.length,
+        });
+
+      if (error) throw error;
+
+      toast({ title: 'Item adicionado ao portfólio!' });
+      setNewPortfolioItem({ title: '', description: '', url: '', type: '' });
+      loadPortfolio();
+    } catch (error: any) {
+      toast({
+        title: 'Erro ao adicionar item',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleDeletePortfolioItem = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('portfolio_items' as any)
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast({ title: 'Item removido do portfólio' });
+      loadPortfolio();
+    } catch (error: any) {
+      toast({
+        title: 'Erro ao remover item',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleDeletePost = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('business_posts' as any)
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast({ title: 'Post removido' });
+      loadPosts();
+    } catch (error: any) {
+      toast({
+        title: 'Erro ao remover post',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleToggleActive = async () => {
+    if (!business) return;
+
+    const newActive = !business.active;
+    
+    try {
+      const { error } = await supabase
+        .from('business_profiles' as any)
+        .update({ active: newActive })
+        .eq('id', business.id);
+
+      if (error) throw error;
+
+      setBusiness({ ...business, active: newActive });
+      toast({
+        title: newActive ? 'Perfil ativado!' : 'Perfil desativado',
+        description: newActive 
+          ? 'Seu perfil profissional está visível novamente.' 
+          : 'Seu perfil profissional foi ocultado.',
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Erro',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const confirmDeleteProfile = () => {
+    if (!business?.slug) return;
+    
+    if (deleteConfirmSlug !== `@${business.slug}`) {
+      toast({
+        title: 'Erro',
+        description: 'O @ digitado não corresponde ao perfil que deseja excluir.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    handleDeleteProfile();
+  };
+
+  const handleDeleteProfile = async () => {
+    if (!business) return;
+
+    try {
+      // Soft delete - marca como deletado ao invés de apagar
+      const { error } = await supabase
+        .from('business_profiles')
+        .update({
+          deleted: true,
+          deleted_at: new Date().toISOString(),
+          deleted_by: user?.id || null,
+        })
+        .eq('id', business.id);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Perfil profissional excluído',
+        description: 'Seu perfil profissional foi removido com sucesso.',
+      });
+      
+      setDeleteConfirmSlug('');
+      
+      navigate('/painel');
+    } catch (error: any) {
+      toast({
+        title: 'Erro ao excluir perfil',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-muted/20 to-background">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (!business) return null;
+
   return (
-    <SidebarProvider>
-      <div className="flex min-h-screen w-full">
-        <Sidebar>
-          <SidebarContent>
+    <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background">
+      <Header />
+      
+      <SidebarProvider>
+        <div className="flex w-full min-h-[calc(100vh-64px)] relative">
+          {/* Sidebar */}
+          <Sidebar className="border-r bg-card/50 backdrop-blur-sm z-10" style={{ top: '64px', height: 'calc(100svh - 64px)' }}>
+            <SidebarContent>
+              <div className="p-4 border-b space-y-3">
+                <h2 className="text-lg font-bold px-2">Perfil Profissional</h2>
+                <Button variant="ghost" size="sm" asChild className="w-full justify-start">
+                  <Link to="/painel">
+                    <ArrowLeft className="w-4 h-4 mr-2" />
+                    Voltar ao Painel
+                  </Link>
+                </Button>
+              </div>
+
+              <SidebarGroup>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {menuItems.map((item) => {
+                      const Icon = item.icon;
+                      const isActive = activeSection === item.id;
+                      return (
+                        <SidebarMenuItem key={item.id}>
+                          <SidebarMenuButton
+                            onClick={() => {
+                              setActiveSection(item.id);
+                              // Resetar ferramenta configurando quando clicar em Ferramentas
+                              if (item.id === 'tools') {
+                                setConfiguringFeature(null);
+                              }
+                            }}
+                            className={`
+                              ${isActive ? 'bg-primary/10 text-primary font-medium' : 'hover:bg-muted/50'}
+                              transition-all duration-200
+                            `}
+                          >
+                            <Icon className={`w-5 h-5 mr-3 ${isActive ? item.color : 'text-muted-foreground'}`} />
+                            <span>{item.label}</span>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      );
+                    })}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+
+              {/* Ferramentas Ativas */}
+              {features.filter(f => f.isActive).length > 0 && (
+                <SidebarGroup>
+                  <SidebarGroupLabel className="text-xs text-muted-foreground px-2">
+                    Ferramentas Ativas
+                  </SidebarGroupLabel>
+                  <SidebarGroupContent>
+                    <SidebarMenu>
+                      {features.filter(f => f.isActive).map((feature) => {
+                        const Icon = feature.icon;
+                        const isActive = configuringFeature === feature.key;
+                        return (
+                          <SidebarMenuItem key={feature.key}>
+                            <SidebarMenuButton
+                              onClick={() => {
+                                setActiveSection('tools');
+                                setConfiguringFeature(feature.key);
+                              }}
+                              className={`
+                                ${isActive ? 'bg-primary/10 text-primary font-medium' : 'hover:bg-muted/50'}
+                                transition-all duration-200
+                              `}
+                            >
+                              <Icon className={`w-5 h-5 mr-3 ${isActive ? 'text-primary' : 'text-muted-foreground'}`} />
+                              <span>{feature.name}</span>
+                            </SidebarMenuButton>
+                          </SidebarMenuItem>
+                        );
+                      })}
+                    </SidebarMenu>
+                  </SidebarGroupContent>
+              </SidebarGroup>
+            )}
+
+            {/* Admin - separate section */}
             <SidebarGroup>
-              <SidebarGroupLabel>Menu Principal</SidebarGroupLabel>
+              <SidebarGroupLabel className="text-xs text-muted-foreground">
+                Administração
+              </SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
-                  {menuItems.map((item) => {
-                    const Icon = item.icon;
-                    return (
-                      <SidebarMenuItem key={item.id}>
-                        <SidebarMenuButton
-                          onClick={() => setActiveSection(item.id)}
-                          isActive={activeSection === item.id}
-                        >
-                          <Icon className="h-4 w-4" />
-                          <span>{item.label}</span>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    );
-                  })}
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      onClick={() => setActiveSection('admin')}
+                      className={`
+                        ${activeSection === 'admin' ? 'bg-primary/10 text-primary font-weight' : 'hover:bg-muted/50'}
+                        transition-all duration-200
+                      `}
+                    >
+                      <Shield className={`w-5 h-5 mr-3 ${activeSection === 'admin' ? 'text-purple-500' : 'text-muted-foreground'}`} />
+                      <span>Administradores</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
 
-            <Separator />
-
-            <SidebarGroup>
-              <SidebarGroupLabel>Personalização</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {customizationItems.map((item) => {
-                    const Icon = item.icon;
-                    return (
-                      <SidebarMenuItem key={item.id}>
-                        <SidebarMenuButton
-                          onClick={() => setActiveSection(item.id)}
-                          isActive={activeSection === item.id}
-                        >
-                          <Icon className="h-4 w-4" />
-                          <span>{item.label}</span>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    );
-                  })}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-
-            <Separator />
-
-            <SidebarGroup>
-              <SidebarGroupLabel>Administração</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {adminItems.map((item) => {
-                    const Icon = item.icon;
-                    return (
-                      <SidebarMenuItem key={item.id}>
-                        <SidebarMenuButton
-                          onClick={() => setActiveSection(item.id)}
-                          isActive={activeSection === item.id}
-                        >
-                          <Icon className="h-4 w-4" />
-                          <span>{item.label}</span>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    );
-                  })}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
+            {/* Final closing */}
           </SidebarContent>
         </Sidebar>
 
-        <SidebarInset>
-          <main className="flex-1 p-6">
-            <div className="max-w-7xl mx-auto">
-              <h1 className="text-3xl font-bold mb-6">Editar Negócio</h1>
-              {renderContent()}
+          {/* Main Content */}
+          <main className="flex-1 overflow-auto">
+            <div className="container mx-auto px-6 py-8 max-w-5xl">
+              {/* Header do perfil */}
+              <div className="mb-8">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-3">
+                    {business.logo_url ? (
+                      <img 
+                        src={business.logo_url} 
+                        alt={business.company_name}
+                        className="w-12 h-12 rounded-full object-cover border-2 border-border"
+                      />
+                    ) : (
+                      <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center border-2 border-border">
+                        <Building2 className="w-6 h-6 text-muted-foreground" />
+                      </div>
+                    )}
+                    <div>
+                      <h1 className="text-3xl font-bold">{business.company_name}</h1>
+                      <p className="text-muted-foreground text-sm">@{business.slug}</p>
+                    </div>
+                    {business.active ? (
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
+                        <Eye className="w-4 h-4" />
+                        Ativo
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">
+                        <EyeOff className="w-4 h-4" />
+                        Desativado
+                      </span>
+                    )}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => window.open(`/${business.slug}`, '_blank')}
+                    className="gap-2"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    Ver Perfil
+                  </Button>
+                </div>
+              </div>
+
+              {/* Perfil e Capa */}
+              {activeSection === 'profile-cover' && (
+                <div className="animate-fade-in">
+                  <Card className="bg-card/50 backdrop-blur-sm border-2 overflow-hidden">
+                    <div className="bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 p-6 border-b">
+                      <CardTitle className="flex items-center gap-2 text-blue-600">
+                        <Eye className="w-5 h-5" />
+                        Perfil e Capa
+                      </CardTitle>
+                      <CardDescription>Personalize a aparência do seu perfil</CardDescription>
+                    </div>
+                    <CardContent className="p-6 space-y-6">
+                      {/* Inputs de upload escondidos */}
+                      <input
+                        ref={logoInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const imageUpload = document.querySelector('[data-upload-type="logo"]');
+                            if (imageUpload) {
+                              const input = imageUpload.querySelector('input[type="file"]') as HTMLInputElement;
+                              if (input) {
+                                const dataTransfer = new DataTransfer();
+                                dataTransfer.items.add(file);
+                                input.files = dataTransfer.files;
+                                input.dispatchEvent(new Event('change', { bubbles: true }));
+                              }
+                            }
+                          }
+                        }}
+                      />
+                      <input
+                        ref={coverInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const imageUpload = document.querySelector('[data-upload-type="cover"]');
+                            if (imageUpload) {
+                              const input = imageUpload.querySelector('input[type="file"]') as HTMLInputElement;
+                              if (input) {
+                                const dataTransfer = new DataTransfer();
+                                dataTransfer.items.add(file);
+                                input.files = dataTransfer.files;
+                                input.dispatchEvent(new Event('change', { bubbles: true }));
+                              }
+                            }
+                          }
+                        }}
+                      />
+                      
+                      {/* Prévia do Perfil */}
+                      <div className="space-y-3">
+                        <Label className="text-base font-medium">Prévia do Perfil</Label>
+                        <div className="relative w-full rounded-lg overflow-visible border-2 border-border bg-background">
+                          {/* Capa */}
+                          <div className="relative h-48 w-full overflow-hidden rounded-t-lg">
+                            {business.cover_url ? (
+                              <img 
+                                src={business.cover_url} 
+                                alt="Capa" 
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full bg-gradient-to-br from-primary/20 to-secondary/20" />
+                            )}
+                            
+                            <div className="absolute top-2 right-2 flex gap-2">
+                              <Button
+                                size="icon"
+                                variant="secondary"
+                                className="h-8 w-8 rounded-full shadow-lg bg-green-500 hover:bg-green-600 text-white"
+                                onClick={() => coverInputRef.current?.click()}
+                                title="Alterar capa"
+                              >
+                                <Upload className="h-4 w-4" />
+                              </Button>
+                              {business.cover_url && (
+                                <Button
+                                  size="icon"
+                                  variant="destructive"
+                                  className="h-8 w-8 rounded-full shadow-lg"
+                                  onClick={handleCoverDelete}
+                                  title="Remover capa"
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                          
+                          <div className="relative px-4 pb-4">
+                            <div className="absolute -top-12 left-4">
+                              <div className="relative w-32 h-32 rounded-xl border-4 border-background overflow-hidden bg-background shadow-xl">
+                                {business.logo_url ? (
+                                  <img 
+                                    src={business.logo_url} 
+                                    alt="Logo" 
+                                    className="w-full h-full object-contain"
+                                  />
+                                ) : (
+                                  <div className="w-full h-full bg-muted flex items-center justify-center">
+                                    <ImageIcon className="w-10 h-10 text-muted-foreground" />
+                                  </div>
+                                )}
+                                <div className="absolute bottom-1 right-1 flex gap-1">
+                                  <Button
+                                    size="icon"
+                                    variant="secondary"
+                                    className="h-7 w-7 rounded-full shadow-lg bg-green-500 hover:bg-green-600 text-white"
+                                    onClick={() => logoInputRef.current?.click()}
+                                    title="Alterar logo"
+                                  >
+                                    <Upload className="h-3 w-3" />
+                                  </Button>
+                                  {business.logo_url && (
+                                    <Button
+                                      size="icon"
+                                      variant="destructive"
+                                      className="h-7 w-7 rounded-full shadow-lg"
+                                      onClick={handleLogoDelete}
+                                      title="Remover logo"
+                                    >
+                                      <X className="h-3 w-3" />
+                                    </Button>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                            
+                            <div className="pt-6 pl-40">
+                              <div className="inline-block bg-background/95 backdrop-blur-sm px-6 py-2 rounded-lg shadow-sm border">
+                                <h2 className="text-2xl font-bold whitespace-nowrap">
+                                  {business.company_name}
+                                </h2>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <p className="text-xs text-muted-foreground">
+                          Esta é uma prévia de como seu perfil aparecerá para os visitantes
+                        </p>
+                      </div>
+                      
+                      {/* Componentes de upload escondidos */}
+                      <div className="hidden">
+                        <div data-upload-type="logo">
+                          <ImageUpload
+                            currentImageUrl={business.logo_url}
+                            onUpload={handleLogoUpload}
+                            bucket="business-logos"
+                            folder={business.id}
+                            type="logo"
+                          />
+                        </div>
+                        <div data-upload-type="cover">
+                          <ImageUpload
+                            currentImageUrl={business.cover_url}
+                            onUpload={handleCoverUpload}
+                            bucket="business-covers"
+                            folder={business.id}
+                            type="cover"
+                          />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+
+              {/* Ferramentas */}
+              {activeSection === 'tools' && (
+                <div className="space-y-6 animate-fade-in">
+                  {/* Ferramentas Interativas */}
+                  {configuringFeature ? (
+                    <div className="space-y-6">
+                      {configuringFeature === 'banner' && (
+                        <BusinessBannersManager businessId={business.id} />
+                      )}
+
+                      {configuringFeature === 'video' && (
+                        <BusinessVideoManager businessId={business.id} />
+                      )}
+
+                      {configuringFeature === 'catalog' && (
+                        <BusinessCatalogManager businessId={business.id} />
+                      )}
+
+                      {configuringFeature === 'testimonials' && (
+                        <BusinessTestimonialsManager businessId={business.id} />
+                      )}
+
+                      {configuringFeature === 'certifications' && (
+                        <BusinessCertificationsManager businessId={business.id} />
+                      )}
+
+                      {configuringFeature === 'appointments' && (
+                        <BusinessAppointmentsManager businessId={business.id} />
+                      )}
+
+                      {configuringFeature === 'linktree' && (
+                        <BusinessLinktreeManager businessId={business.id} businessLogo={business.logo_url} />
+                      )}
+
+                      {configuringFeature === 'vacancies' && (
+                        <BusinessJobVacanciesManager businessId={business.id} />
+                      )}
+
+                      {configuringFeature === 'negotiation' && (
+                        <Card className="bg-card/50 backdrop-blur-sm border-2">
+                          <div className="bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-cyan-500/10 p-6 border-b">
+                            <CardTitle className="flex items-center gap-2 text-emerald-600">
+                              <MessageSquare className="w-5 h-5" />
+                              Configurar Negociação
+                            </CardTitle>
+                            <CardDescription>
+                              Personalize como os clientes podem negociar com você
+                            </CardDescription>
+                          </div>
+                          <CardContent className="p-6">
+                            <form onSubmit={handleSave} className="space-y-6">
+                              {/* Status da Negociação */}
+                              <div className="flex items-center justify-between p-4 border-2 rounded-lg bg-muted/30">
+                                <div className="space-y-0.5">
+                                  <Label className="text-base font-medium">Sistema de Negociação</Label>
+                                  <p className="text-sm text-muted-foreground">
+                                    Permitir que clientes negociem diretamente com você
+                                  </p>
+                                </div>
+                                <Switch
+                                  checked={business.enable_negotiation}
+                                  onCheckedChange={(checked) => setBusiness({ ...business, enable_negotiation: checked })}
+                                />
+                              </div>
+
+                              {business.enable_negotiation && (
+                                <>
+                                  {/* Título da Seção de Negociação */}
+                                  <div className="space-y-2">
+                                    <Label className="text-base font-medium">Título da Seção</Label>
+                                    <Input
+                                      placeholder="Ex: Entre em Contato, Solicite um Orçamento"
+                                      className="text-base"
+                                      defaultValue="Negocie Conosco"
+                                    />
+                                    <p className="text-xs text-muted-foreground">
+                                      Título exibido na seção de negociação do seu perfil
+                                    </p>
+                                  </div>
+
+                                  {/* Mensagem de Boas-Vindas */}
+                                  <div className="space-y-2">
+                                    <Label className="text-base font-medium">Mensagem de Boas-Vindas</Label>
+                                    <Textarea
+                                      placeholder="Escreva uma mensagem inicial para seus clientes..."
+                                      className="text-base resize-none"
+                                      rows={3}
+                                      defaultValue="Olá! Estou pronto para negociar e oferecer as melhores condições para você."
+                                    />
+                                    <p className="text-xs text-muted-foreground">
+                                      Primeira mensagem que o cliente verá ao iniciar uma negociação
+                                    </p>
+                                  </div>
+
+                                  {/* Tipos de Serviço */}
+                                  <div className="space-y-2">
+                                    <Label className="text-base font-medium">Tipos de Serviço</Label>
+                                    <Input
+                                      placeholder="Ex: Consultoria, Design, Desenvolvimento"
+                                      className="text-base"
+                                    />
+                                    <p className="text-xs text-muted-foreground">
+                                      Separe por vírgula os tipos de serviço que você oferece
+                                    </p>
+                                  </div>
+
+                                  {/* Tempo de Resposta */}
+                                  <div className="space-y-2">
+                                    <Label className="text-base font-medium">Tempo Médio de Resposta</Label>
+                                    <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background">
+                                      <option value="minutes">Minutos</option>
+                                      <option value="hours">Horas</option>
+                                      <option value="days">Dias</option>
+                                    </select>
+                                    <p className="text-xs text-muted-foreground">
+                                      Informe aos clientes quanto tempo você leva para responder
+                                    </p>
+                                  </div>
+
+                                  {/* Horário de Atendimento */}
+                                  <div className="space-y-2">
+                                    <Label className="text-base font-medium">Horário de Atendimento</Label>
+                                    <Input
+                                      placeholder="Ex: Seg-Sex: 9h-18h, Sáb: 9h-12h"
+                                      className="text-base"
+                                    />
+                                    <p className="text-xs text-muted-foreground">
+                                      Quando você está disponível para negociar
+                                    </p>
+                                  </div>
+
+                                  {/* Aceitar Propostas */}
+                                  <div className="flex items-center justify-between p-4 border-2 rounded-lg bg-muted/30">
+                                    <div className="space-y-0.5">
+                                      <Label className="text-base font-medium">Aceitar Propostas de Valor</Label>
+                                      <p className="text-sm text-muted-foreground">
+                                        Permitir que clientes façam contrapropostas de preço
+                                      </p>
+                                    </div>
+                                    <Switch defaultChecked />
+                                  </div>
+
+                                  {/* Aceitar Anexos */}
+                                  <div className="flex items-center justify-between p-4 border-2 rounded-lg bg-muted/30">
+                                    <div className="space-y-0.5">
+                                      <Label className="text-base font-medium">Permitir Anexos</Label>
+                                      <p className="text-sm text-muted-foreground">
+                                        Clientes podem enviar arquivos durante a negociação
+                                      </p>
+                                    </div>
+                                    <Switch defaultChecked />
+                                  </div>
+
+                                  {/* Notificações */}
+                                  <div className="space-y-3">
+                                    <Label className="text-base font-medium">Notificações</Label>
+                                    <div className="space-y-2">
+                                      <div className="flex items-center justify-between p-3 border rounded-lg">
+                                        <Label className="text-sm font-normal">Novas mensagens</Label>
+                                        <Switch defaultChecked />
+                                      </div>
+                                      <div className="flex items-center justify-between p-3 border rounded-lg">
+                                        <Label className="text-sm font-normal">Novas propostas</Label>
+                                        <Switch defaultChecked />
+                                      </div>
+                                      <div className="flex items-center justify-between p-3 border rounded-lg">
+                                        <Label className="text-sm font-normal">Contrapropostas</Label>
+                                        <Switch defaultChecked />
+                                      </div>
+                                    </div>
+                                  </div>
+                                </>
+                              )}
+
+                              <Button 
+                                type="submit" 
+                                disabled={saving} 
+                                className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:shadow-lg transition-all text-base py-6"
+                              >
+                                <Save className="w-5 h-5 mr-2" />
+                                {saving ? 'Salvando...' : 'Salvar Configurações'}
+                              </Button>
+                            </form>
+                          </CardContent>
+                        </Card>
+                      )}
+
+                      {configuringFeature === 'social' && (
+                        <Card className="bg-card/50 backdrop-blur-sm border-2">
+                          <div className="bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-rose-500/10 p-6 border-b">
+                            <CardTitle className="text-purple-600">Redes Sociais</CardTitle>
+                            <CardDescription>Configure seus links e contatos</CardDescription>
+                          </div>
+                          <CardContent className="p-6">
+                            <form onSubmit={handleSave} className="space-y-4">
+                              <div className="grid md:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                  <Label className="flex items-center gap-2 text-base font-medium">
+                                    <Globe className="w-4 h-4" />
+                                    Website
+                                  </Label>
+                                  <Input
+                                    value={business.website_url || ''}
+                                    onChange={(e) => setBusiness({ ...business, website_url: e.target.value })}
+                                    placeholder="https://seusite.com"
+                                    className="text-base"
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <Label className="flex items-center gap-2 text-base font-medium">
+                                    <MessageCircle className="w-4 h-4" />
+                                    WhatsApp
+                                  </Label>
+                                  <Input
+                                    value={business.whatsapp || ''}
+                                    onChange={(e) => setBusiness({ ...business, whatsapp: e.target.value })}
+                                    placeholder="(00) 00000-0000"
+                                    className="text-base"
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <Label className="flex items-center gap-2 text-base font-medium">
+                                    <Facebook className="w-4 h-4" />
+                                    Facebook
+                                  </Label>
+                                  <Input
+                                    value={business.facebook || ''}
+                                    onChange={(e) => setBusiness({ ...business, facebook: e.target.value })}
+                                    placeholder="facebook.com/seu-perfil"
+                                    className="text-base"
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <Label className="flex items-center gap-2 text-base font-medium">
+                                    <Instagram className="w-4 h-4" />
+                                    Instagram
+                                  </Label>
+                                  <Input
+                                    value={business.instagram || ''}
+                                    onChange={(e) => setBusiness({ ...business, instagram: e.target.value })}
+                                    placeholder="@seu_instagram"
+                                    className="text-base"
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <Label className="flex items-center gap-2 text-base font-medium">
+                                    <Linkedin className="w-4 h-4" />
+                                    LinkedIn
+                                  </Label>
+                                  <Input
+                                    value={business.linkedin || ''}
+                                    onChange={(e) => setBusiness({ ...business, linkedin: e.target.value })}
+                                    placeholder="linkedin.com/in/seu-perfil"
+                                    className="text-base"
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <Label className="flex items-center gap-2 text-base font-medium">
+                                    <Twitter className="w-4 h-4" />
+                                    Twitter/X
+                                  </Label>
+                                  <Input
+                                    value={business.twitter || ''}
+                                    onChange={(e) => setBusiness({ ...business, twitter: e.target.value })}
+                                    placeholder="@seu_twitter"
+                                    className="text-base"
+                                  />
+                                </div>
+                              </div>
+                              <Button type="submit" disabled={saving} className="w-full bg-gradient-to-r from-purple-500 to-pink-500">
+                                <Save className="w-4 h-4 mr-2" />
+                                {saving ? 'Salvando...' : 'Salvar Redes Sociais'}
+                              </Button>
+                            </form>
+                          </CardContent>
+                        </Card>
+                      )}
+
+                      {configuringFeature === 'portfolio' && (
+                        <>
+                          <Card className="bg-card/50 backdrop-blur-sm border-2">
+                            <div className="bg-gradient-to-r from-green-500/10 via-emerald-500/10 to-teal-500/10 p-6 border-b">
+                              <CardTitle className="text-green-600">Adicionar Item ao Portfólio</CardTitle>
+                            </div>
+                            <CardContent className="p-6">
+                              <form onSubmit={handleAddPortfolioItem} className="space-y-4">
+                                <div className="space-y-2">
+                                  <Label className="text-base font-medium">Título</Label>
+                                  <Input
+                                    value={newPortfolioItem.title}
+                                    onChange={(e) => setNewPortfolioItem({ ...newPortfolioItem, title: e.target.value })}
+                                    required
+                                    className="text-base"
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <Label className="text-base font-medium">Descrição (opcional)</Label>
+                                  <Textarea
+                                    value={newPortfolioItem.description}
+                                    onChange={(e) => setNewPortfolioItem({ ...newPortfolioItem, description: e.target.value })}
+                                    rows={3}
+                                    className="text-base resize-none"
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <Label className="text-base font-medium">Imagem ou Vídeo</Label>
+                                  <MediaUpload
+                                    onUpload={(url, type) => {
+                                      setNewPortfolioItem({ 
+                                        ...newPortfolioItem, 
+                                        url,
+                                        type: type.startsWith('image') ? 'image' : 'video'
+                                      });
+                                    }}
+                                    accept="image/*,video/*"
+                                  />
+                                </div>
+                                <Button
+                                  type="submit"
+                                  disabled={!newPortfolioItem.title || !newPortfolioItem.url}
+                                  className="w-full bg-gradient-to-r from-green-500 to-teal-500"
+                                >
+                                  <Plus className="w-5 h-5 mr-2" />
+                                  Adicionar ao Portfólio
+                                </Button>
+                              </form>
+                            </CardContent>
+                          </Card>
+
+                          <Card className="bg-card/50 backdrop-blur-sm border-2">
+                            <div className="bg-gradient-to-r from-green-500/10 via-emerald-500/10 to-teal-500/10 p-6 border-b">
+                              <CardTitle className="text-green-600">Itens do Portfólio ({portfolio.length})</CardTitle>
+                            </div>
+                            <CardContent className="p-6">
+                              {portfolio.length === 0 ? (
+                                <div className="text-center py-12">
+                                  <ImageIcon className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                                  <p className="text-muted-foreground">Nenhum item no portfólio ainda</p>
+                                </div>
+                              ) : (
+                                <div className="grid md:grid-cols-2 gap-4">
+                                  {portfolio.map((item) => (
+                                    <div key={item.id} className="relative group border-2 rounded-lg overflow-hidden hover:shadow-lg transition-all">
+                                      {item.media_type === 'image' ? (
+                                        <img src={item.media_url} alt={item.title} className="w-full h-48 object-cover" />
+                                      ) : (
+                                        <video src={item.media_url} className="w-full h-48 object-cover" />
+                                      )}
+                                      <div className="p-3 bg-card">
+                                        <h4 className="font-medium">{item.title}</h4>
+                                        {item.description && (
+                                          <p className="text-sm text-muted-foreground line-clamp-2">{item.description}</p>
+                                        )}
+                                      </div>
+                                      <Button
+                                        variant="destructive"
+                                        size="icon"
+                                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                                        onClick={() => handleDeletePortfolioItem(item.id)}
+                                      >
+                                        <Trash2 className="w-4 h-4" />
+                                      </Button>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </CardContent>
+                          </Card>
+                        </>
+                      )}
+                    </div>
+                  ) : (
+                    <Card className="bg-card/50 backdrop-blur-sm border-2">
+                      <div className="bg-gradient-to-r from-yellow-500/10 via-amber-500/10 to-orange-500/10 p-6 border-b">
+                        <CardTitle className="flex items-center gap-2 text-yellow-600 dark:text-yellow-500">
+                          <Zap className="w-5 h-5" />
+                          Ferramentas Interativas
+                        </CardTitle>
+                        <CardDescription>
+                          Ative funcionalidades extras para seu perfil profissional
+                        </CardDescription>
+                      </div>
+                      <CardContent className="p-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {features.map((feature) => {
+                            const Icon = feature.icon;
+                            return (
+                              <div
+                                key={feature.key}
+                                className={`relative rounded-lg p-6 transition-all hover:shadow-lg group ${
+                                  feature.isActive
+                                    ? `${feature.color} text-white`
+                                    : 'bg-muted/50 border-2 hover:border-primary/50'
+                                }`}
+                              >
+                                <div className="flex items-start justify-between mb-3">
+                                  <Icon className={`w-8 h-8 ${feature.isActive ? '' : 'text-muted-foreground'}`} />
+                                  <Switch
+                                    checked={feature.isActive}
+                                    onCheckedChange={() => handleToggleFeature(feature.key)}
+                                    className={feature.isActive ? "data-[state=checked]:bg-white/30" : ""}
+                                  />
+                                </div>
+                                <h4 className="font-bold text-lg mb-1">{feature.name}</h4>
+                                <p className={`text-sm mb-4 ${
+                                  feature.isActive ? 'text-white/90' : 'text-muted-foreground'
+                                }`}>
+                                  {feature.description}
+                                </p>
+                                {feature.isActive && (
+                                  <Button
+                                    size="sm"
+                                    variant="secondary"
+                                    onClick={() => setConfiguringFeature(feature.key)}
+                                    className="w-full"
+                                  >
+                                    Configurar
+                                  </Button>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        {/* Info */}
+                        <div className="mt-6 p-4 rounded-lg bg-primary/10 border border-primary/20">
+                          <div className="flex items-start gap-3">
+                            <Info className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                            <p className="text-sm text-muted-foreground">
+                              As ferramentas ativas aparecerão no seu perfil público. 
+                              Ative ou desative conforme necessário.
+                            </p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
+              )}
+
+
+              {/* Posts */}
+              {activeSection === 'posts' && (
+                <div className="space-y-6 animate-fade-in">
+                  <div className="flex justify-end">
+                    <CreatePostDialog businessId={business.id} onPostCreated={loadPosts} />
+                  </div>
+
+                  <Card className="bg-card/50 backdrop-blur-sm border-2">
+                    <div className="bg-gradient-to-r from-orange-500/10 via-red-500/10 to-pink-500/10 p-6 border-b">
+                      <CardTitle className="flex items-center gap-2 text-orange-600">
+                        <MessagesSquare className="w-5 h-5" />
+                        Seus Posts ({posts.length})
+                      </CardTitle>
+                    </div>
+                    <CardContent className="p-6">
+                      {posts.length === 0 ? (
+                        <div className="text-center py-12">
+                          <MessagesSquare className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                          <p className="text-muted-foreground">Nenhum post publicado ainda</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          {posts.map((post) => (
+                            <div key={post.id} className="border-2 rounded-lg p-4 space-y-3 hover:shadow-md transition-all">
+                              <div className="flex justify-between items-start">
+                                <p className="text-sm text-muted-foreground">
+                                  {new Date(post.created_at).toLocaleDateString('pt-BR')}
+                                </p>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => handleDeletePost(post.id)}
+                                >
+                                  <Trash2 className="w-4 h-4 text-destructive" />
+                                </Button>
+                              </div>
+                              <p className="whitespace-pre-wrap text-base">{post.content}</p>
+                              {post.media_urls && post.media_urls.length > 0 && (
+                                <div className="grid grid-cols-2 gap-2">
+                                  {post.media_urls.map((url, i) => (
+                                    post.media_types?.[i] === 'image' ? (
+                                      <img key={i} src={url} alt="" className="w-full h-32 object-cover rounded-lg" />
+                                    ) : (
+                                      <video key={i} src={url} controls className="w-full h-32 rounded-lg" />
+                                    )
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+
+              {/* Avaliações */}
+              {activeSection === 'evaluations' && (
+                <div className="animate-fade-in">
+                  <Card className="bg-card/50 backdrop-blur-sm border-2">
+                    <div className="bg-gradient-to-r from-pink-500/10 via-rose-500/10 to-purple-500/10 p-6 border-b">
+                      <CardTitle className="flex items-center gap-2 text-pink-600">
+                        <Users className="w-5 h-5" />
+                        Avaliações ({evaluations.length})
+                      </CardTitle>
+                      <CardDescription>Gerencie as avaliações da sua marca</CardDescription>
+                    </div>
+                    <CardContent className="p-6">
+                      {evaluations.length === 0 ? (
+                        <div className="text-center py-12">
+                          <Users className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                          <p className="text-muted-foreground">Nenhuma avaliação ainda</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-6">
+                          {evaluations.map((evaluation) => (
+                            <div key={evaluation.id} className="border-2 rounded-lg p-4 space-y-3 hover:shadow-md transition-all">
+                              <div className="flex items-start justify-between">
+                                <div>
+                                  <p className="font-medium text-base">{evaluation.profiles.full_name}</p>
+                                  <p className="text-sm text-muted-foreground">
+                                    @{evaluation.profiles.username}
+                                  </p>
+                                </div>
+                                <div className="flex items-center gap-1 bg-primary/10 px-3 py-1 rounded-full">
+                                  <Star className="w-4 h-4 fill-primary text-primary" />
+                                  <span className="font-bold text-primary">{evaluation.rating}</span>
+                                </div>
+                              </div>
+                              <div>
+                                <p className="font-medium mb-1 text-base">{evaluation.title}</p>
+                                <p className="text-sm text-muted-foreground">{evaluation.content}</p>
+                              </div>
+                              {evaluation.public_response ? (
+                                <div className="bg-muted/50 rounded-lg p-3 border">
+                                  <p className="text-sm font-medium mb-1 text-primary">Sua resposta:</p>
+                                  <p className="text-sm">{evaluation.public_response}</p>
+                                </div>
+                              ) : (
+                                <div className="space-y-2">
+                                  <Textarea
+                                    placeholder="Responder avaliação..."
+                                    value={responses[evaluation.id] || ''}
+                                    onChange={(e) => setResponses({ ...responses, [evaluation.id]: e.target.value })}
+                                    rows={2}
+                                    className="text-base resize-none"
+                                  />
+                                  <Button
+                                    size="sm"
+                                    onClick={() => handleResponseSubmit(evaluation.id)}
+                                    disabled={!responses[evaluation.id]?.trim()}
+                                    className="bg-gradient-to-r from-pink-500 to-purple-500"
+                                  >
+                                    <MessageSquare className="w-4 h-4 mr-2" />
+                                    Responder
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+
+              {/* Admin - Administration */}
+              {activeSection === 'admin' && business && (
+                <div className="animate-fade-in">
+                  <BusinessAdministrators businessId={business.id} />
+                </div>
+              )}
+
+              {/* Configurações */}
+              {activeSection === 'settings' && (
+                <div className="space-y-6 animate-fade-in">
+                  {/* Dados da Empresa */}
+                  <Card className="bg-card/50 backdrop-blur-sm border-2">
+                    <div className="bg-gradient-to-r from-indigo-500/10 via-blue-500/10 to-cyan-500/10 p-6 border-b">
+                      <CardTitle className="flex items-center gap-2 text-indigo-600">
+                        <Briefcase className="w-5 h-5" />
+                        Dados da Empresa
+                      </CardTitle>
+                      <CardDescription>Informações básicas do seu negócio</CardDescription>
+                    </div>
+                    <CardContent className="p-6">
+                      <form onSubmit={handleSave} className="space-y-4">
+                        <div className="space-y-2">
+                          <Label className="text-base font-medium">Nome da Empresa</Label>
+                          <Input
+                            value={business.company_name}
+                            onChange={(e) => setBusiness({ ...business, company_name: e.target.value })}
+                            className="text-base"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-base font-medium">Categoria</Label>
+                          <Input
+                            value={business.category || ''}
+                            onChange={(e) => setBusiness({ ...business, category: e.target.value })}
+                            placeholder="Ex: Tecnologia, Alimentação, etc"
+                            className="text-base"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-base font-medium">Descrição</Label>
+                          <Textarea
+                            value={business.description || ''}
+                            onChange={(e) => setBusiness({ ...business, description: e.target.value })}
+                            rows={4}
+                            placeholder="Descreva sua empresa..."
+                            className="text-base resize-none"
+                          />
+                        </div>
+                        <div className="grid md:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label className="text-base font-medium">Email</Label>
+                            <Input
+                              type="email"
+                              value={business.email || ''}
+                              onChange={(e) => setBusiness({ ...business, email: e.target.value })}
+                              placeholder="contato@empresa.com"
+                              className="text-base"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-base font-medium">Telefone</Label>
+                            <Input
+                              value={business.phone || ''}
+                              onChange={(e) => setBusiness({ ...business, phone: e.target.value })}
+                              placeholder="(00) 00000-0000"
+                              className="text-base"
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-base font-medium">Endereço</Label>
+                          <Input
+                            value={business.address || ''}
+                            onChange={(e) => setBusiness({ ...business, address: e.target.value })}
+                            placeholder="Endereço completo"
+                            className="text-base"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-base font-medium">Horário de Funcionamento</Label>
+                          <Input
+                            value={business.working_hours || ''}
+                            onChange={(e) => setBusiness({ ...business, working_hours: e.target.value })}
+                            placeholder="Ex: Seg-Sex: 9h-18h"
+                            className="text-base"
+                          />
+                        </div>
+                        <Button type="submit" className="w-full bg-gradient-to-r from-indigo-500 to-cyan-500 hover:shadow-lg transition-all text-base py-6" disabled={saving}>
+                          <Save className="w-5 h-5 mr-2" />
+                          {saving ? 'Salvando...' : 'Salvar Alterações'}
+                        </Button>
+                      </form>
+                    </CardContent>
+                  </Card>
+
+                  {/* Mudar URL do Perfil */}
+                  <Card className="bg-card/50 backdrop-blur-sm border-2">
+                    <div className="bg-gradient-to-r from-purple-500/10 via-violet-500/10 to-indigo-500/10 p-6 border-b">
+                      <CardTitle className="flex items-center gap-2 text-purple-600">
+                        <LinkIcon className="w-5 h-5" />
+                        URL do Perfil Profissional
+                      </CardTitle>
+                      <CardDescription>
+                        Altere a URL do seu perfil (permitido a cada 7 dias)
+                      </CardDescription>
+                    </div>
+                    <CardContent className="p-6">
+                      <div className="space-y-4">
+                        <div className="p-4 rounded-lg bg-primary/10 border border-primary/20">
+                          <div className="flex items-start gap-3">
+                            <Info className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                            <p className="text-sm text-muted-foreground">
+                              Por motivos de segurança e SEO, a URL só pode ser alterada uma vez a cada 7 dias.
+                            </p>
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-base font-medium">URL Atual</Label>
+                          <div className="flex gap-2">
+                            <Input
+                              value={`woorkins.com/${business.slug}`}
+                              readOnly
+                              className="text-base bg-muted"
+                            />
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() => {
+                                navigator.clipboard.writeText(`https://woorkins.com/${business.slug}`);
+                                toast({ title: "Link copiado!" });
+                              }}
+                            >
+                              <ExternalLink className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-base font-medium">Nova URL</Label>
+                          <div className="flex gap-2">
+                            <div className="flex-1 flex items-center gap-2 border-2 rounded-md px-3 bg-background">
+                              <span className="text-muted-foreground text-sm">woorkins.com/</span>
+                              <Input
+                                value={business.slug}
+                                onChange={(e) => {
+                                  const value = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '');
+                                  setBusiness({ ...business, slug: value });
+                                }}
+                                placeholder="sua-empresa"
+                                className="border-0 shadow-none focus-visible:ring-0 p-0 text-base"
+                              />
+                            </div>
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            Use apenas letras minúsculas, números e hífens
+                          </p>
+                        </div>
+                        <Button 
+                          onClick={handleSave} 
+                          disabled={saving}
+                          className="w-full bg-gradient-to-r from-purple-500 to-indigo-500"
+                        >
+                          <Save className="w-4 h-4 mr-2" />
+                          {saving ? 'Salvando...' : 'Atualizar URL'}
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Visibilidade do Perfil */}
+                  <Card className="bg-card/50 backdrop-blur-sm border-2">
+                    <div className="bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-red-500/10 p-6 border-b">
+                      <CardTitle className="flex items-center gap-2 text-amber-600">
+                        <Eye className="w-5 h-5" />
+                        Visibilidade do Perfil
+                      </CardTitle>
+                      <CardDescription>
+                        Controle se seu perfil está visível para outros usuários
+                      </CardDescription>
+                    </div>
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between p-4 border-2 rounded-lg bg-muted/30">
+                        <div className="space-y-0.5">
+                          <Label className="text-base font-medium">
+                            {business.active ? 'Perfil Ativo' : 'Perfil Desativado'}
+                          </Label>
+                          <p className="text-sm text-muted-foreground">
+                            {business.active 
+                              ? 'Seu perfil está visível para todos' 
+                              : 'Seu perfil está oculto e não aparece nas buscas'
+                            }
+                          </p>
+                        </div>
+                        <Switch
+                          checked={business.active}
+                          onCheckedChange={handleToggleActive}
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Zona de Perigo */}
+                  <Card className="bg-card/50 backdrop-blur-sm border-2 border-destructive/50">
+                    <div className="bg-gradient-to-r from-red-500/10 via-rose-500/10 to-pink-500/10 p-6 border-b border-destructive/20">
+                      <CardTitle className="flex items-center gap-2 text-destructive">
+                        <AlertTriangle className="w-5 h-5" />
+                        Zona de Perigo
+                      </CardTitle>
+                      <CardDescription>
+                        Ações irreversíveis do perfil profissional
+                      </CardDescription>
+                    </div>
+                    <CardContent className="p-6">
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="destructive" className="w-full text-base py-6">
+                            <Trash2 className="w-5 h-5 mr-2" />
+                            Excluir Perfil Profissional Permanentemente
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Tem certeza absoluta?</AlertDialogTitle>
+                            <AlertDialogDescription className="space-y-3">
+                              <p>Esta ação não pode ser desfeita. Isso excluirá permanentemente seu perfil profissional, 
+                              incluindo todos os posts, portfólio e avaliações associadas.</p>
+                              <p className="font-medium text-foreground">Nota: Seu perfil de interações na plataforma não será afetado.</p>
+                              <div className="pt-2">
+                                <Label htmlFor="confirm-delete" className="text-sm">
+                                  Digite <span className="font-mono">@{business?.slug}</span> para confirmar
+                                </Label>
+                                <Input
+                                  id="confirm-delete"
+                                  placeholder={`@${business?.slug}`}
+                                  value={deleteConfirmSlug}
+                                  onChange={(e) => setDeleteConfirmSlug(e.target.value)}
+                                  className="mt-2"
+                                />
+                              </div>
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel onClick={() => setDeleteConfirmSlug('')}>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction 
+                              onClick={confirmDeleteProfile}
+                              disabled={deleteConfirmSlug !== `@${business?.slug}`}
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            >
+                              Sim, excluir perfil profissional
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
             </div>
           </main>
-        </SidebarInset>
-      </div>
-    </SidebarProvider>
+        </div>
+      </SidebarProvider>
+    </div>
   );
-};
-
-export default BusinessEdit;
+}

@@ -510,7 +510,7 @@ export default function BusinessEdit() {
       <SidebarProvider>
         <div className="flex w-full min-h-[calc(100vh-64px)] relative">
           {/* Sidebar */}
-          <Sidebar className="border-r bg-card/50 backdrop-blur-sm z-10">
+          <Sidebar className="border-r bg-card/50 backdrop-blur-sm z-10" style={{ top: '64px', height: 'calc(100svh - 64px)' }}>
             <SidebarContent>
               <div className="p-4 border-b space-y-3">
                 <h2 className="text-lg font-bold px-2">{business.company_name}</h2>

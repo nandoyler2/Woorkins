@@ -3,21 +3,20 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Search, Star, Building2, User } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { SafeImage } from "@/components/ui/safe-image";
 
 interface SearchResult {
-  id: string;
+  identifier: string;
+  name: string;
   type: 'user' | 'business';
-  identifier: string; // username ou slug
-  name: string; // full_name ou company_name
   category: string | null;
   description: string | null;
-  image_url: string | null; // avatar_url ou logo_url
-  average_rating?: number;
-  total_reviews?: number;
+  image_url: string | null;
+  rating?: number;
+  reviews?: number;
 }
 
 export const SearchBar = () => {
@@ -27,7 +26,7 @@ export const SearchBar = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [placeholder, setPlaceholder] = useState("");
-  const fullPlaceholder = "Buscar pessoas, empresas e negócios...";
+  const fullPlaceholder = "Buscar pessoas, empresas, negócios...";
   const gradId = useId();
 
   // Typing animation for placeholder
@@ -60,44 +59,43 @@ export const SearchBar = () => {
     const timer = setTimeout(async () => {
       try {
         // Buscar perfis de usuários
-        const { data: usersData } = await supabase
+        const { data: userProfiles } = await supabase
           .from('profiles' as any)
-          .select('id, username, full_name, bio, avatar_url')
-          .or(`full_name.ilike.%${searchTerm}%,username.ilike.%${searchTerm}%,bio.ilike.%${searchTerm}%`)
+          .select('username, full_name, bio, avatar_url')
+          .or(`username.ilike.%${searchTerm}%,full_name.ilike.%${searchTerm}%,bio.ilike.%${searchTerm}%`)
           .limit(5);
 
         // Buscar perfis de negócios
-        const { data: businessData } = await supabase
+        const { data: businessProfiles } = await supabase
           .from('business_profiles' as any)
-          .select('id, slug, company_name, category, description, logo_url, average_rating, total_reviews')
+          .select('slug, company_name, category, description, logo_url, average_rating, total_reviews')
           .eq('deleted', false)
           .or(`company_name.ilike.%${searchTerm}%,category.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`)
           .limit(5);
 
-        // Combinar e formatar resultados
-        const userResults: SearchResult[] = (usersData || []).map((user: any) => ({
-          id: user.id,
-          type: 'user' as const,
-          identifier: user.username,
-          name: user.full_name || user.username,
-          category: null,
-          description: user.bio,
-          image_url: user.avatar_url,
-        }));
+        // Combinar resultados
+        const combinedResults: SearchResult[] = [
+          ...(userProfiles || []).map((profile: any) => ({
+            identifier: profile.username,
+            name: profile.full_name || profile.username,
+            type: 'user' as const,
+            category: null,
+            description: profile.bio,
+            image_url: profile.avatar_url,
+          })),
+          ...(businessProfiles || []).map((business: any) => ({
+            identifier: business.slug,
+            name: business.company_name,
+            type: 'business' as const,
+            category: business.category,
+            description: business.description,
+            image_url: business.logo_url,
+            rating: business.average_rating,
+            reviews: business.total_reviews,
+          })),
+        ];
 
-        const businessResults: SearchResult[] = (businessData || []).map((business: any) => ({
-          id: business.id,
-          type: 'business' as const,
-          identifier: business.slug,
-          name: business.company_name,
-          category: business.category,
-          description: business.description,
-          image_url: business.logo_url,
-          average_rating: business.average_rating,
-          total_reviews: business.total_reviews,
-        }));
-
-        setResults([...businessResults, ...userResults]);
+        setResults(combinedResults);
       } catch (err) {
         console.error('Search error:', err);
         setResults([]);
@@ -159,56 +157,6 @@ export const SearchBar = () => {
           <Button
             size="lg"
             disabled={isSearching}
-            onClick={async () => {
-              if (!searchTerm.trim()) return;
-              setIsSearching(true);
-              try {
-                // Buscar perfis de usuários
-                const { data: usersData } = await supabase
-                  .from('profiles' as any)
-                  .select('id, username, full_name, bio, avatar_url')
-                  .or(`full_name.ilike.%${searchTerm}%,username.ilike.%${searchTerm}%,bio.ilike.%${searchTerm}%`)
-                  .limit(5);
-
-                // Buscar perfis de negócios
-                const { data: businessData } = await supabase
-                  .from('business_profiles' as any)
-                  .select('id, slug, company_name, category, description, logo_url, average_rating, total_reviews')
-                  .eq('deleted', false)
-                  .or(`company_name.ilike.%${searchTerm}%,category.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`)
-                  .limit(5);
-
-                // Combinar e formatar resultados
-                const userResults: SearchResult[] = (usersData || []).map((user: any) => ({
-                  id: user.id,
-                  type: 'user' as const,
-                  identifier: user.username,
-                  name: user.full_name || user.username,
-                  category: null,
-                  description: user.bio,
-                  image_url: user.avatar_url,
-                }));
-
-                const businessResults: SearchResult[] = (businessData || []).map((business: any) => ({
-                  id: business.id,
-                  type: 'business' as const,
-                  identifier: business.slug,
-                  name: business.company_name,
-                  category: business.category,
-                  description: business.description,
-                  image_url: business.logo_url,
-                  average_rating: business.average_rating,
-                  total_reviews: business.total_reviews,
-                }));
-
-                setResults([...businessResults, ...userResults]);
-              } catch (err) {
-                console.error('Search error:', err);
-                setResults([]);
-              }
-              setShowResults(true);
-              setIsSearching(false);
-            }}
             className={cn(
               'h-16 md:h-20 px-8 md:px-10 rounded-xl bg-gradient-primary text-white font-semibold text-lg md:text-xl shadow-glow hover:shadow-elegant transition-all relative',
               isSearching && 'pointer-events-none opacity-90'
@@ -226,7 +174,7 @@ export const SearchBar = () => {
             <div className="p-2">
               {results.map((result, index) => (
                 <div
-                  key={`${result.type}-${result.id}`}
+                  key={index}
                   onClick={() => {
                     navigate(`/${result.identifier}`);
                     setShowResults(false);
@@ -235,8 +183,8 @@ export const SearchBar = () => {
                   className="p-4 hover:bg-muted rounded-xl cursor-pointer transition-all hover:shadow-sm"
                 >
                   <div className="flex gap-4 items-start">
-                    {/* Logo/Avatar */}
-                    <div className="flex-shrink-0 relative">
+                    {/* Imagem/Avatar */}
+                    <div className="flex-shrink-0">
                       {result.image_url ? (
                         <SafeImage
                           src={result.image_url}
@@ -252,26 +200,24 @@ export const SearchBar = () => {
                           )}
                         </div>
                       )}
-                      {/* Badge de tipo */}
-                      <Badge 
-                        variant="secondary" 
-                        className="absolute -bottom-2 -right-2 text-xs"
-                      >
-                        {result.type === 'business' ? 'Empresa' : 'Usuário'}
-                      </Badge>
                     </div>
 
-                    {/* Content */}
+                    {/* Conteúdo */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2 mb-1">
-                        <h3 className="text-base md:text-lg font-bold truncate">{result.name}</h3>
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-base md:text-lg font-bold truncate">{result.name}</h3>
+                          <Badge variant={result.type === 'business' ? 'default' : 'secondary'} className="text-xs">
+                            {result.type === 'business' ? 'Empresa' : 'Pessoa'}
+                          </Badge>
+                        </div>
                         
                         {/* Rating (só para negócios) */}
-                        {result.type === 'business' && result.total_reviews && result.total_reviews > 0 && (
+                        {result.type === 'business' && result.reviews && result.reviews > 0 && (
                           <div className="flex items-center gap-1 px-2 py-1 bg-primary/10 rounded-lg flex-shrink-0">
                             <Star className="w-4 h-4 fill-primary text-primary" />
-                            <span className="text-sm font-bold">{Number(result.average_rating).toFixed(1)}</span>
-                            <span className="text-xs text-muted-foreground">({result.total_reviews})</span>
+                            <span className="text-sm font-bold">{Number(result.rating).toFixed(1)}</span>
+                            <span className="text-xs text-muted-foreground">({result.reviews})</span>
                           </div>
                         )}
                       </div>
@@ -290,18 +236,8 @@ export const SearchBar = () => {
             </div>
           ) : (
             <div className="p-6 md:p-8 text-center">
-              <p className="text-base md:text-lg text-muted-foreground mb-4">
-                Não achamos nada para "{searchTerm}"
-              </p>
-              <p className="text-base md:text-lg mb-4">
-                Crie agora a marca ou o produto sobre isso{" "}
-                <Link 
-                  to="/auth?mode=signup"
-                  className="text-primary font-bold hover:underline"
-                  onClick={() => setShowResults(false)}
-                >
-                  clique aqui
-                </Link>
+              <p className="text-base md:text-lg text-muted-foreground mb-2">
+                Não encontramos nada para "{searchTerm}"
               </p>
             </div>
           )}

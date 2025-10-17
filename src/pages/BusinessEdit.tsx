@@ -142,13 +142,21 @@ export default function BusinessEdit() {
   const logoInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
 
-  const menuItems = [
-    { id: 'tools' as Section, label: 'Ferramentas', icon: Zap, color: 'text-yellow-500' },
-    { id: 'profile-cover' as Section, label: 'Perfil e Capa', icon: Eye, color: 'text-blue-500' },
-    { id: 'posts' as Section, label: 'Posts', icon: MessagesSquare, color: 'text-orange-500' },
-    { id: 'evaluations' as Section, label: 'Avaliações', icon: Users, color: 'text-pink-500' },
-    { id: 'settings' as Section, label: 'Configurações', icon: AlertTriangle, color: 'text-red-500' },
-  ];
+  export default'im
+
+'the most'in ...]
+    } }) => {
+            const [isConditional, setIsConditional] = useState('open');
+        return (
+            <>
+                /* Codigo di un componente Realai neste caso */
+            </>;
+        )
+    } 
+
+const useConfigurations = [
+    { id: , item: 'tools', label: 'Ferramentas', icon: 'Zap', group: '' }),, </ PuzzleResources />];
+};
 
   const availableFeatures: Omit<BusinessFeature, 'isActive'>[] = [
     {

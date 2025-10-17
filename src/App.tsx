@@ -30,6 +30,7 @@ import Plans from "./pages/Plans";
 import FAQ from "./pages/FAQ";
 import TermosDeUso from "./pages/TermosDeUso";
 import PoliticaPrivacidade from "./pages/PoliticaPrivacidade";
+import PublicLinktree from "./pages/PublicLinktree";
 import { AdminLayout } from "./pages/admin/AdminLayout";
 import AdminUsers from "./pages/admin/Users";
 import AdminModeration from "./pages/admin/Moderation";
@@ -84,6 +85,9 @@ function AppContent() {
         <Route path="/faq" element={<FAQ />} />
         <Route path="/termos-de-uso" element={<TermosDeUso />} />
         <Route path="/politica-de-privacidade" element={<PoliticaPrivacidade />} />
+        
+        {/* Rota pública do LinkTree */}
+        <Route path="/l/:slug" element={<PublicLinktree />} />
         
         <Route path="/painel" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="/perfil/editar" element={<ProtectedRoute><ProfileEdit /></ProtectedRoute>} />

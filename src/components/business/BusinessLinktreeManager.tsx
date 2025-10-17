@@ -72,6 +72,7 @@ export function BusinessLinktreeManager({ businessId, businessLogo }: BusinessLi
   const [links, setLinks] = useState<CustomLink[]>([]);
   const [editingLink, setEditingLink] = useState<Partial<CustomLink> | null>(null);
   const [loading, setLoading] = useState(false);
+  const [linktreeSlug, setLinktreeSlug] = useState('');
   const [config, setConfig] = useState<LinktreeConfig>({ 
     layout: 'minimal',
     primaryColor: '#000000',
@@ -110,7 +111,7 @@ export function BusinessLinktreeManager({ businessId, businessLogo }: BusinessLi
     try {
       const { data: profile } = await supabase
         .from("business_profiles")
-        .select("linktree_config, linktree_social_links, linktree_logo_url, logo_url")
+        .select("linktree_config, linktree_social_links, linktree_logo_url, logo_url, linktree_slug")
         .eq("id", businessId)
         .single();
 
@@ -122,6 +123,10 @@ export function BusinessLinktreeManager({ businessId, businessLogo }: BusinessLi
           textColor: '#000000',
           logoUrl: profile.linktree_logo_url || profile.logo_url || businessLogo || ''
         };
+        
+        if (profile.linktree_slug) {
+          setLinktreeSlug(profile.linktree_slug);
+        }
         
         if (profile.linktree_config && typeof profile.linktree_config === 'object') {
           setConfig({ ...defaultConfig, ...(profile.linktree_config as unknown as LinktreeConfig) });
@@ -178,6 +183,55 @@ export function BusinessLinktreeManager({ businessId, businessLogo }: BusinessLi
     } catch (error: any) {
       toast({
         title: "Erro ao salvar redes sociais",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const saveSlug = async () => {
+    if (!linktreeSlug.trim()) {
+      toast({
+        title: "Slug obrigatório",
+        description: "Digite um nome para o seu LinkTree",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validar formato (apenas letras, números e hífens)
+    const slugRegex = /^[a-z0-9-]+$/;
+    if (!slugRegex.test(linktreeSlug)) {
+      toast({
+        title: "Formato inválido",
+        description: "Use apenas letras minúsculas, números e hífens",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("business_profiles")
+        .update({ linktree_slug: linktreeSlug.toLowerCase() })
+        .eq("id", businessId);
+
+      if (error) {
+        if (error.code === '23505') {
+          toast({
+            title: "Slug já existe",
+            description: "Este nome já está em uso, escolha outro",
+            variant: "destructive",
+          });
+        } else {
+          throw error;
+        }
+      } else {
+        toast({ title: "Link salvo com sucesso!" });
+      }
+    } catch (error: any) {
+      toast({
+        title: "Erro ao salvar link",
         description: error.message,
         variant: "destructive",
       });
@@ -475,12 +529,50 @@ export function BusinessLinktreeManager({ businessId, businessLogo }: BusinessLi
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="layout" className="space-y-4">
-              <TabsList className="grid w-full grid-cols-3">
+            <Tabs defaultValue="link" className="space-y-4">
+              <TabsList className="grid w-full grid-cols-4">
+                <TabsTrigger value="link">Link</TabsTrigger>
                 <TabsTrigger value="layout">Layout</TabsTrigger>
                 <TabsTrigger value="social">Social</TabsTrigger>
                 <TabsTrigger value="links">Links</TabsTrigger>
               </TabsList>
+
+              {/* Tab: Link URL */}
+              <TabsContent value="link" className="space-y-4">
+                <div>
+                  <Label>Nome do seu LinkTree</Label>
+                  <div className="flex gap-2 items-end mt-2">
+                    <div className="flex-1 flex items-center gap-2">
+                      <span className="text-sm text-muted-foreground">woorkins.com/l/</span>
+                      <Input
+                        value={linktreeSlug}
+                        onChange={(e) => setLinktreeSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                        placeholder="seu-negocio"
+                        className="flex-1"
+                      />
+                    </div>
+                    <Button onClick={saveSlug}>
+                      Salvar
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Use apenas letras minúsculas, números e hífens
+                  </p>
+                  {linktreeSlug && (
+                    <div className="mt-3 p-3 bg-muted rounded-lg">
+                      <p className="text-sm font-medium mb-1">Seu link público:</p>
+                      <a 
+                        href={`/l/${linktreeSlug}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-primary hover:underline break-all"
+                      >
+                        {window.location.origin}/l/{linktreeSlug}
+                      </a>
+                    </div>
+                  )}
+                </div>
+              </TabsContent>
 
               {/* Tab: Layout */}
               <TabsContent value="layout" className="space-y-4">

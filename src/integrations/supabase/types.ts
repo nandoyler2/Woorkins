@@ -637,6 +637,7 @@ export type Database = {
           linkedin: string | null
           linktree_config: Json | null
           linktree_logo_url: string | null
+          linktree_slug: string | null
           linktree_social_links: Json | null
           logo_url: string | null
           phone: string | null
@@ -672,6 +673,7 @@ export type Database = {
           linkedin?: string | null
           linktree_config?: Json | null
           linktree_logo_url?: string | null
+          linktree_slug?: string | null
           linktree_social_links?: Json | null
           logo_url?: string | null
           phone?: string | null
@@ -707,6 +709,7 @@ export type Database = {
           linkedin?: string | null
           linktree_config?: Json | null
           linktree_logo_url?: string | null
+          linktree_slug?: string | null
           linktree_social_links?: Json | null
           logo_url?: string | null
           phone?: string | null

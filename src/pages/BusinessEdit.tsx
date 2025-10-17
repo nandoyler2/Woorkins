@@ -406,28 +406,32 @@ export default function BusinessEdit() {
   };
 
   const loadPostComments = async (postId: string) => {
-    const { data } = await supabase
+    const { data: commentsData } = await supabase
       .from('business_post_comments' as any)
-      .select(`
-        id,
-        post_id,
-        profile_id,
-        content,
-        created_at,
-        profiles:profile_id (
-          full_name,
-          avatar_url
-        )
-      `)
+      .select('id, post_id, profile_id, content, created_at')
       .eq('post_id', postId)
       .order('created_at', { ascending: true });
 
-    if (data) {
-      const comments = data.map((comment: any) => ({
-        ...comment,
-        profile: comment.profiles
-      }));
+    if (commentsData && commentsData.length > 0) {
+      // Buscar perfis dos comentadores
+      const profileIds = commentsData.map((c: any) => c.profile_id);
+      const { data: profilesData } = await supabase
+        .from('profiles' as any)
+        .select('id, full_name, avatar_url')
+        .in('id', profileIds);
+
+      // Mapear comentários com perfis
+      const comments = commentsData.map((comment: any) => {
+        const profile = profilesData?.find((p: any) => p.id === comment.profile_id);
+        return {
+          ...comment,
+          profile: profile || { full_name: 'Usuário', avatar_url: null }
+        };
+      });
+      
       setPostComments(prev => ({ ...prev, [postId]: comments }));
+    } else {
+      setPostComments(prev => ({ ...prev, [postId]: [] }));
     }
   };
 
@@ -438,7 +442,9 @@ export default function BusinessEdit() {
       .eq('post_id', postId);
 
     if (data) {
-      setPostLikes(prev => ({ ...prev, [postId]: data }));
+      setPostLikes(prev => ({ ...prev, [postId]: data as any }));
+    } else {
+      setPostLikes(prev => ({ ...prev, [postId]: [] }));
     }
   };
 

@@ -107,20 +107,20 @@ export default function Plans() {
       return;
     }
 
-    // Se é o plano gratuito
-    if (plan.price === 0) {
+    // Se já está no plano
+    if (currentPlan === plan.slug) {
       toast({
-        title: 'Plano Básico',
-        description: 'Este é o plano gratuito padrão.',
+        title: '✓ Plano já ativo',
+        description: `Você já está utilizando o plano ${plan.name}. Para mudar, escolha outro plano.`,
       });
       return;
     }
 
-    // Se já está no plano
-    if (currentPlan === plan.slug) {
+    // Se é o plano gratuito
+    if (plan.price === 0) {
       toast({
-        title: 'Plano atual',
-        description: 'Você já está neste plano.',
+        title: 'Plano Grátis',
+        description: 'Este é o plano gratuito padrão.',
       });
       return;
     }
@@ -270,7 +270,14 @@ export default function Plans() {
                 <div className="p-6 space-y-6 flex flex-col h-full">
                   {/* Cabeçalho do Plano */}
                   <div className="text-center space-y-3">
-                    <h3 className="text-2xl font-bold">{plan.name}</h3>
+                    <div className="flex items-center justify-center gap-2">
+                      <h3 className="text-2xl font-bold">{plan.name}</h3>
+                      {isCurrentPlan && (
+                        <Badge className="bg-primary text-primary-foreground">
+                          Ativo
+                        </Badge>
+                      )}
+                    </div>
                   </div>
 
                   {/* Taxa de Comissão como primeiro tópico */}
@@ -325,7 +332,7 @@ export default function Plans() {
                     className="w-full"
                     size="lg"
                     variant={isCurrentPlan ? 'secondary' : plan.recommended ? 'default' : 'outline'}
-                    disabled={isCurrentPlan || loadingPayment}
+                    disabled={loadingPayment && selectedPlan?.id === plan.id}
                     onClick={() => handleSelectPlan(plan)}
                   >
                     {loadingPayment && selectedPlan?.id === plan.id ? (
@@ -334,7 +341,10 @@ export default function Plans() {
                         Processando...
                       </>
                     ) : isCurrentPlan ? (
-                      'Seu Plano'
+                      <>
+                        <Check className="w-4 h-4 mr-2" />
+                        Plano Ativo
+                      </>
                     ) : isFree ? (
                       'Plano Grátis'
                     ) : (

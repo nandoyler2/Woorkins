@@ -14,6 +14,8 @@ interface CustomLink {
   url: string;
   order_index: number;
   active: boolean;
+  image_url?: string;
+  youtube_url?: string;
 }
 
 interface LinktreeConfig {
@@ -290,17 +292,52 @@ export default function PublicLinktree() {
                       href = `https://${href}`;
                     }
 
+                    // Extrair ID do vídeo do YouTube
+                    let youtubeId = '';
+                    if (link.youtube_url) {
+                      const match = link.youtube_url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
+                      if (match) youtubeId = match[1];
+                    }
+
                     return (
-                      <a
-                        key={link.id}
-                        href={href}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={`block w-full p-4 text-center font-semibold text-base transition-all hover:scale-[1.02] ${!config.secondaryColor ? styles.button : 'rounded-lg'}`}
-                        style={config.secondaryColor ? customButton : {}}
-                      >
-                        {link.title}
-                      </a>
+                      <div key={link.id} className="space-y-2">
+                        {/* Imagem Banner */}
+                        {link.image_url && (
+                          <div className="rounded-lg overflow-hidden">
+                            <img 
+                              src={link.image_url} 
+                              alt={link.title}
+                              className="w-full h-48 object-cover"
+                            />
+                          </div>
+                        )}
+
+                        {/* Vídeo do YouTube */}
+                        {youtubeId && (
+                          <div className="rounded-lg overflow-hidden aspect-video">
+                            <iframe
+                              width="100%"
+                              height="100%"
+                              src={`https://www.youtube.com/embed/${youtubeId}`}
+                              title={link.title}
+                              frameBorder="0"
+                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                              allowFullScreen
+                            />
+                          </div>
+                        )}
+
+                        {/* Botão do Link */}
+                        <a
+                          href={href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={`block w-full p-4 text-center font-semibold text-base transition-all hover:scale-[1.02] ${!config.secondaryColor ? styles.button : 'rounded-lg'}`}
+                          style={config.secondaryColor ? customButton : {}}
+                        >
+                          {link.title}
+                        </a>
+                      </div>
                     );
                   })}
                 </div>
@@ -439,17 +476,52 @@ export default function PublicLinktree() {
                 href = `https://${href}`;
               }
 
+              // Extrair ID do vídeo do YouTube
+              let youtubeId = '';
+              if (link.youtube_url) {
+                const match = link.youtube_url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
+                if (match) youtubeId = match[1];
+              }
+
               return (
-                <a
-                  key={link.id}
-                  href={href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`block w-full p-4 text-center font-semibold text-lg transition-all hover:scale-[1.02] ${!config.secondaryColor ? styles.button : 'rounded-lg'}`}
-                  style={config.secondaryColor ? customButton : {}}
-                >
-                  {link.title}
-                </a>
+                <div key={link.id} className="space-y-3">
+                  {/* Imagem Banner */}
+                  {link.image_url && (
+                    <div className="rounded-xl overflow-hidden">
+                      <img 
+                        src={link.image_url} 
+                        alt={link.title}
+                        className="w-full h-56 object-cover"
+                      />
+                    </div>
+                  )}
+
+                  {/* Vídeo do YouTube */}
+                  {youtubeId && (
+                    <div className="rounded-xl overflow-hidden aspect-video">
+                      <iframe
+                        width="100%"
+                        height="100%"
+                        src={`https://www.youtube.com/embed/${youtubeId}`}
+                        title={link.title}
+                        frameBorder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
+                    </div>
+                  )}
+
+                  {/* Botão do Link */}
+                  <a
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`block w-full p-4 text-center font-semibold text-lg transition-all hover:scale-[1.02] ${!config.secondaryColor ? styles.button : 'rounded-lg'}`}
+                    style={config.secondaryColor ? customButton : {}}
+                  >
+                    {link.title}
+                  </a>
+                </div>
               );
             })}
           </div>

@@ -27,6 +27,8 @@ interface CustomLink {
   icon_name?: string;
   order_index: number;
   active: boolean;
+  image_url?: string;
+  youtube_url?: string;
 }
 
 interface SocialLink {
@@ -477,16 +479,34 @@ export function BusinessLinktreeManager({ businessId, businessLogo }: BusinessLi
       return;
     }
 
+    // Validar URL do YouTube se fornecida
+    if (editingLink.youtube_url && editingLink.youtube_url.trim()) {
+      const youtubeUrl = editingLink.youtube_url.trim();
+      const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+/;
+      if (!youtubeRegex.test(youtubeUrl)) {
+        toast({
+          title: "URL do YouTube inválida",
+          description: "Por favor, insira uma URL válida do YouTube",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
     setLoading(true);
     try {
+      const linkData = {
+        title: editingLink.title.trim(),
+        url: validUrl,
+        icon_name: editingLink.icon_name,
+        image_url: editingLink.image_url || null,
+        youtube_url: editingLink.youtube_url?.trim() || null,
+      };
+
       if (editingLink.id) {
         const { error } = await supabase
           .from("business_custom_links")
-          .update({
-            title: editingLink.title.trim(),
-            url: validUrl,
-            icon_name: editingLink.icon_name,
-          })
+          .update(linkData)
           .eq("id", editingLink.id);
 
         if (error) throw error;
@@ -494,10 +514,8 @@ export function BusinessLinktreeManager({ businessId, businessLogo }: BusinessLi
         const { error } = await supabase
           .from("business_custom_links")
           .insert({
+            ...linkData,
             business_id: businessId,
-            title: editingLink.title.trim(),
-            url: validUrl,
-            icon_name: editingLink.icon_name,
             order_index: links.length,
             active: true,
           });
@@ -902,6 +920,35 @@ export function BusinessLinktreeManager({ businessId, businessLogo }: BusinessLi
                           }
                           placeholder="https://..."
                         />
+                      </div>
+
+                      <div>
+                        <Label>Imagem do Link (Banner)</Label>
+                        <ImageUpload
+                          currentImageUrl={editingLink.image_url || ''}
+                          onUpload={(url) => setEditingLink({ ...editingLink, image_url: url })}
+                          bucket="business-media"
+                          folder={businessId}
+                          type="cover"
+                        />
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Opcional - Adicione uma imagem que será exibida acima do link
+                        </p>
+                      </div>
+
+                      <div>
+                        <Label htmlFor="link-youtube">Vídeo do YouTube</Label>
+                        <Input
+                          id="link-youtube"
+                          value={editingLink.youtube_url || ""}
+                          onChange={(e) =>
+                            setEditingLink({ ...editingLink, youtube_url: e.target.value })
+                          }
+                          placeholder="https://www.youtube.com/watch?v=..."
+                        />
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Opcional - Cole a URL completa do vídeo do YouTube
+                        </p>
                       </div>
 
                       <div className="flex gap-2">

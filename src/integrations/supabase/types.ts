@@ -396,10 +396,12 @@ export type Database = {
           created_at: string | null
           icon_name: string | null
           id: string
+          image_url: string | null
           order_index: number | null
           title: string
           updated_at: string | null
           url: string
+          youtube_url: string | null
         }
         Insert: {
           active?: boolean | null
@@ -407,10 +409,12 @@ export type Database = {
           created_at?: string | null
           icon_name?: string | null
           id?: string
+          image_url?: string | null
           order_index?: number | null
           title: string
           updated_at?: string | null
           url: string
+          youtube_url?: string | null
         }
         Update: {
           active?: boolean | null
@@ -418,10 +422,12 @@ export type Database = {
           created_at?: string | null
           icon_name?: string | null
           id?: string
+          image_url?: string | null
           order_index?: number | null
           title?: string
           updated_at?: string | null
           url?: string
+          youtube_url?: string | null
         }
         Relationships: [
           {

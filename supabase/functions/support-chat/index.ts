@@ -6,6 +6,181 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Helpers
+function formatName(name?: string) {
+  if (!name) return 'usuário';
+  return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
+}
+
+async function getUserContext(supabase: any, profileId: string) {
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', profileId)
+    .single();
+
+  if (!profile) return null;
+
+  const { data: violations } = await supabase
+    .from('moderation_violations')
+    .select('*')
+    .eq('profile_id', profile.id)
+    .maybeSingle();
+
+  const { data: balance } = await supabase
+    .from('woorkoins_balance')
+    .select('*')
+    .eq('profile_id', profile.id)
+    .maybeSingle();
+
+  const { data: transactions } = await supabase
+    .from('woorkoins_transactions')
+    .select('*')
+    .eq('profile_id', profile.id)
+    .order('created_at', { ascending: false })
+    .limit(20);
+
+  const { data: rejectedNegotiationMessages } = await supabase
+    .from('negotiation_messages')
+    .select('*')
+    .eq('sender_id', profile.id)
+    .eq('moderation_status', 'rejected')
+    .order('created_at', { ascending: false })
+    .limit(5);
+
+  const { data: rejectedProposalMessages } = await supabase
+    .from('proposal_messages')
+    .select('*')
+    .eq('sender_id', profile.id)
+    .eq('moderation_status', 'rejected')
+    .order('created_at', { ascending: false })
+    .limit(5);
+
+  const { data: woorkoinsPayments } = await supabase
+    .from('woorkoins_transactions')
+    .select('*')
+    .eq('profile_id', profile.id)
+    .in('type', ['purchase', 'admin_adjustment'])
+    .order('created_at', { ascending: false })
+    .limit(10);
+
+  return {
+    profile,
+    violations,
+    balance,
+    transactions: transactions || [],
+    rejectedNegotiationMessages: rejectedNegotiationMessages || [],
+    rejectedProposalMessages: rejectedProposalMessages || [],
+    woorkoinsPayments: woorkoinsPayments || []
+  };
+}
+
+async function executeAdminAction(supabase: any, action: string, params: any) {
+  switch (action) {
+    case 'unblock_user':
+      // Registrar que desbloqueou hoje para evitar repetição
+      await supabase
+        .from('ai_assistant_conversations')
+        .upsert({
+          profile_id: params.profileId,
+          messages: JSON.stringify([{ role: 'system', content: `DESBLOQUEIO_REALIZADO_${new Date().toISOString()}` }]),
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'profile_id' });
+
+      await supabase
+        .from('system_blocks')
+        .delete()
+        .eq('profile_id', params.profileId);
+
+      await supabase
+        .from('moderation_violations')
+        .update({ violation_count: 0, blocked_until: null, last_violation_at: null })
+        .eq('profile_id', params.profileId);
+
+      return { success: true, message: 'Desbloqueio realizado com sucesso.' };
+
+    case 'add_woorkoins': {
+      const { data: current } = await supabase
+        .from('woorkoins_balance')
+        .select('balance')
+        .eq('profile_id', params.profileId)
+        .maybeSingle();
+
+      await supabase
+        .from('woorkoins_balance')
+        .upsert({ profile_id: params.profileId, balance: (current?.balance || 0) + params.amount }, { onConflict: 'profile_id' });
+
+      await supabase
+        .from('woorkoins_transactions')
+        .insert({ profile_id: params.profileId, type: 'admin_adjustment', amount: params.amount, description: params.reason || 'Ajuste administrativo' });
+
+      return { success: true, message: `${params.amount} woorkoins adicionados.` };
+    }
+
+    case 'compensate_error': {
+      const { data: current } = await supabase
+        .from('woorkoins_balance')
+        .select('balance')
+        .eq('profile_id', params.profileId)
+        .maybeSingle();
+
+      const total = params.originalAmount + 100;
+      await supabase
+        .from('woorkoins_balance')
+        .upsert({ profile_id: params.profileId, balance: (current?.balance || 0) + total }, { onConflict: 'profile_id' });
+
+      await supabase
+        .from('woorkoins_transactions')
+        .insert({ profile_id: params.profileId, type: 'admin_adjustment', amount: total, description: `Compensação por erro (${params.reason || 'sem motivo'}) + 100 de desculpas` });
+
+      return { success: true, message: `Compensação realizada: ${params.originalAmount} + 100 woorkoins.` };
+    }
+
+    default:
+      return { success: false, message: 'Ação não reconhecida' };
+  }
+}
+
+async function applySupportPause(supabase: any, profileId: string) {
+  const { data: existing } = await supabase
+    .from('message_spam_tracking')
+    .select('*')
+    .eq('profile_id', profileId)
+    .eq('context', 'support_chat')
+    .maybeSingle();
+
+  const newCount = (existing?.spam_count || 0) + 1;
+  const blockMinutes = Math.min(5 * Math.pow(2, newCount - 1), 60); // 5,10,20,40,60
+
+  await supabase
+    .from('message_spam_tracking')
+    .upsert({
+      profile_id: profileId,
+      context: 'support_chat',
+      spam_count: newCount,
+      last_spam_at: new Date().toISOString(),
+      blocked_until: new Date(Date.now() + blockMinutes * 60 * 1000).toISOString(),
+      block_duration_minutes: blockMinutes,
+      updated_at: new Date().toISOString()
+    }, { onConflict: 'profile_id,context' });
+
+  return blockMinutes;
+}
+
+async function wasUnblockedToday(supabase: any, profileId: string) {
+  const start = new Date();
+  start.setHours(0, 0, 0, 0);
+  const { data } = await supabase
+    .from('ai_assistant_conversations')
+    .select('messages, updated_at')
+    .eq('profile_id', profileId)
+    .gte('updated_at', start.toISOString())
+    .maybeSingle();
+  if (!data?.messages) return false;
+  const msgs = typeof data.messages === 'string' ? JSON.parse(data.messages) : data.messages;
+  return msgs.some((m: any) => m.role === 'system' && m.content?.includes('DESBLOQUEIO_REALIZADO_'));
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });

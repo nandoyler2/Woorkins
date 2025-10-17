@@ -403,10 +403,15 @@ export default function Dashboard() {
                       Bem-vindo de volta, {formatShortName(profile?.full_name) || profile?.username}! 👋
                     </h1>
                     <div className="flex items-center gap-3 mt-2">
-                      <Badge variant="secondary" className="text-xs px-3 py-1 bg-primary/10 text-primary border border-primary/20">
-                        <Award className="w-3 h-3 mr-1" />
-                        {accountType}
-                      </Badge>
+                      <Link to="/planos">
+                        <Badge 
+                          variant="secondary" 
+                          className="text-xs px-3 py-1 bg-primary/10 text-primary border border-primary/20 cursor-pointer hover:bg-primary/20 transition-colors"
+                        >
+                          <Award className="w-3 h-3 mr-1" />
+                          {accountType}
+                        </Badge>
+                      </Link>
                       <Link 
                         to="/woorkoins" 
                         className="flex items-center gap-1.5 text-sm text-slate-600 hover:text-primary transition-colors cursor-pointer group"

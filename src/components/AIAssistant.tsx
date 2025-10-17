@@ -239,14 +239,16 @@ export const AIAssistant = () => {
   };
 
   const sendMessage = async () => {
-    if (!input.trim() || loading) return;
+    if ((!input.trim() && !selectedFile) || loading) return;
     setShowTopics(false);
     setShowBlockQuestion(false);
     const userMessage = input.trim();
+    const fileToSend = selectedFile;
+    const filePreview = filePreviewUrl;
     setInput('');
     setSelectedFile(null);
     setFilePreviewUrl(null);
-    sendMessageInternal(userMessage);
+    sendMessageInternal(userMessage, fileToSend, filePreview);
     
     // Restaurar foco no input após enviar
     setTimeout(() => {
@@ -342,17 +344,46 @@ export const AIAssistant = () => {
     return currentMessages;
   };
 
-  const sendMessageInternal = async (messageText: string) => {
+  const sendMessageInternal = async (messageText: string, file?: File | null, filePreview?: string | null) => {
     const newUserMessage = { role: 'user' as const, content: messageText };
     const updatedMessages = [...messages, newUserMessage];
     setMessages(updatedMessages);
     setLoading(true);
 
     try {
+      // Upload file if present
+      let fileUrl: string | undefined;
+      if (file) {
+        try {
+          const fileExt = file.name.split('.').pop();
+          const fileName = `${profileId}/${Date.now()}.${fileExt}`;
+          
+          const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('support-attachments')
+            .upload(fileName, file);
+
+          if (uploadError) throw uploadError;
+
+          const { data: { publicUrl } } = supabase.storage
+            .from('support-attachments')
+            .getPublicUrl(fileName);
+
+          fileUrl = publicUrl;
+        } catch (uploadError) {
+          console.error('Error uploading file:', uploadError);
+          toast({
+            variant: 'destructive',
+            title: 'Erro ao enviar anexo',
+            description: 'Não foi possível fazer upload do arquivo.',
+          });
+        }
+      }
+
       const { data, error } = await supabase.functions.invoke('ai-assistant', {
         body: { 
           message: messageText,
-          conversationHistory: updatedMessages 
+          conversationHistory: updatedMessages,
+          fileUrl: fileUrl
         }
       });
 

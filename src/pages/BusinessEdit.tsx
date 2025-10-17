@@ -18,7 +18,8 @@ import {
   Facebook, Instagram, Linkedin, Twitter, Globe, MessageCircle,
   AlertTriangle, Info, Image as ImageIcon, Users, MessagesSquare,
   Eye, EyeOff, ExternalLink, Upload, X, Briefcase, Zap, Play,
-  ShoppingBag, ThumbsUp, Award, Calendar, Link as LinkIcon, Briefcase as BriefcaseIcon, Building2
+  ShoppingBag, ThumbsUp, Award, Calendar, Link as LinkIcon, Briefcase as BriefcaseIcon, Building2,
+  Heart, Share2, MessageCircleMore
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { BusinessBannersManager } from '@/components/business/BusinessBannersManager';
@@ -1779,32 +1780,115 @@ export default function BusinessEdit() {
                       ) : (
                         <div className="space-y-4">
                           {posts.map((post) => (
-                            <div key={post.id} className="border-2 rounded-lg p-4 space-y-3 hover:shadow-md transition-all">
-                              <div className="flex justify-between items-start">
-                                <p className="text-sm text-muted-foreground">
-                                  {new Date(post.created_at).toLocaleDateString('pt-BR')}
-                                </p>
+                            <Card key={post.id} className="overflow-hidden hover:shadow-lg transition-all">
+                              {/* Header do Post */}
+                              <div className="flex items-center justify-between p-4">
+                                <div className="flex items-center gap-3">
+                                  {business.logo_url ? (
+                                    <img 
+                                      src={business.logo_url} 
+                                      alt={business.company_name}
+                                      className="w-10 h-10 rounded-full object-cover"
+                                    />
+                                  ) : (
+                                    <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+                                      <Building2 className="w-5 h-5 text-muted-foreground" />
+                                    </div>
+                                  )}
+                                  <div>
+                                    <p className="font-semibold text-sm">{business.company_name}</p>
+                                    <p className="text-xs text-muted-foreground">
+                                      {new Date(post.created_at).toLocaleDateString('pt-BR', { 
+                                        day: 'numeric', 
+                                        month: 'long',
+                                        hour: '2-digit',
+                                        minute: '2-digit'
+                                      })}
+                                    </p>
+                                  </div>
+                                </div>
                                 <Button
                                   variant="ghost"
                                   size="icon"
                                   onClick={() => handleDeletePost(post.id)}
                                 >
-                                  <Trash2 className="w-4 h-4 text-destructive" />
+                                  <Trash2 className="w-4 h-4" />
                                 </Button>
                               </div>
-                              <p className="whitespace-pre-wrap text-base">{post.content}</p>
+
+                              {/* Conteúdo do Post */}
+                              <div className="px-4 pb-3">
+                                <p 
+                                  className={`whitespace-pre-wrap ${
+                                    !post.media_urls || post.media_urls.length === 0 
+                                      ? 'text-2xl leading-relaxed' 
+                                      : 'text-base'
+                                  }`}
+                                >
+                                  {post.content}
+                                </p>
+                              </div>
+
+                              {/* Imagens */}
                               {post.media_urls && post.media_urls.length > 0 && (
-                                <div className="grid grid-cols-2 gap-2">
+                                <div className={
+                                  post.media_urls.length === 1 
+                                    ? 'w-full' 
+                                    : 'grid grid-cols-2 gap-1'
+                                }>
                                   {post.media_urls.map((url, i) => (
-                                    post.media_types?.[i] === 'image' ? (
-                                      <img key={i} src={url} alt="" className="w-full h-32 object-cover rounded-lg" />
-                                    ) : (
-                                      <video key={i} src={url} controls className="w-full h-32 rounded-lg" />
-                                    )
+                                    <img 
+                                      key={i} 
+                                      src={url} 
+                                      alt="" 
+                                      className={`w-full object-cover ${
+                                        post.media_urls.length === 1 
+                                          ? 'max-h-[500px]' 
+                                          : 'h-64'
+                                      }`}
+                                    />
                                   ))}
                                 </div>
                               )}
-                            </div>
+
+                              {/* Ações do Post */}
+                              <div className="border-t">
+                                <div className="flex items-center justify-around p-2">
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm"
+                                    className="flex-1 gap-2 hover:bg-muted"
+                                  >
+                                    <ThumbsUp className="w-5 h-5" />
+                                    <span className="font-medium">Curtir</span>
+                                  </Button>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm"
+                                    className="flex-1 gap-2 hover:bg-muted"
+                                  >
+                                    <MessageCircleMore className="w-5 h-5" />
+                                    <span className="font-medium">Comentar</span>
+                                  </Button>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm"
+                                    className="flex-1 gap-2 hover:bg-muted"
+                                    onClick={() => {
+                                      const postUrl = `${window.location.origin}/${business.slug}`;
+                                      navigator.clipboard.writeText(postUrl);
+                                      toast({
+                                        title: 'Link copiado!',
+                                        description: 'O link do perfil foi copiado para a área de transferência.',
+                                      });
+                                    }}
+                                  >
+                                    <Share2 className="w-5 h-5" />
+                                    <span className="font-medium">Compartilhar</span>
+                                  </Button>
+                                </div>
+                              </div>
+                            </Card>
                           ))}
                         </div>
                       )}

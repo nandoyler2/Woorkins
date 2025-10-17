@@ -78,6 +78,8 @@ export const AIAssistant = () => {
   const [isTyping, setIsTyping] = useState(false);
   const [streamingMessage, setStreamingMessage] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
+  const [blockQuestionShown, setBlockQuestionShown] = useState(false);
+  const [isFirstMessage, setIsFirstMessage] = useState(true);
   const [archivedConversations, setArchivedConversations] = useState<ArchivedConversation[]>([]);
   const [filteredConversations, setFilteredConversations] = useState<ArchivedConversation[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -118,7 +120,6 @@ export const AIAssistant = () => {
       if (profile) {
         setProfileId(profile.id);
         const firstName = profile.full_name?.split(' ')[0] || '';
-        // Garantir que apenas a primeira letra seja maiúscula
         const formattedName = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
         setUserName(formattedName);
 
@@ -147,6 +148,10 @@ export const AIAssistant = () => {
         const hasBlock = !!(recentBlocks && recentBlocks.length > 0) || !!systemBlock || !!messagingBlock || hasModeratedBlock;
         setHasRecentBlock(hasBlock);
 
+        // Verificar se já mostrou a mensagem de bloqueio nesta sessão
+        const blockShownKey = `block_question_shown_${profile.id}`;
+        const alreadyShown = sessionStorage.getItem(blockShownKey) === 'true';
+
         // Carregar conversas não arquivadas
         const { data: conversation } = await supabase
           .from('ai_assistant_conversations')
@@ -157,26 +162,21 @@ export const AIAssistant = () => {
 
         if (conversation?.messages && Array.isArray(conversation.messages) && conversation.messages.length > 0) {
           const existing = conversation.messages as unknown as Message[];
-          if (hasBlock) {
-            const blockMsg = { role: 'assistant' as const, content: `Olá, ${formattedName}! 👋\n\nPercebi que você foi bloqueado recentemente. Gostaria de falar sobre isso?` };
-            setMessages([blockMsg, ...existing]);
-            setShowBlockQuestion(true);
-            setShowTopics(false);
-          } else {
-            setMessages(existing);
-            setShowTopics(false);
-            setShowBlockQuestion(false);
-            setViewMode('chat');
-          }
+          setMessages(existing);
+          setShowTopics(false);
+          setShowBlockQuestion(false);
+          setViewMode('chat');
+          setIsFirstMessage(false);
         } else {
-          if (hasBlock) {
+          if (hasBlock && !alreadyShown) {
             const blockMsg = `Olá, ${formattedName}! 👋\n\nPercebi que você foi bloqueado recentemente. Gostaria de falar sobre isso?`;
             setMessages([{ role: 'assistant', content: blockMsg }]);
             setShowBlockQuestion(true);
             setShowTopics(false);
             setViewMode('chat');
+            setBlockQuestionShown(true);
+            sessionStorage.setItem(blockShownKey, 'true');
           } else {
-            // Primeira vez - mostrar mensagem de boas-vindas
             const welcomeMsg = firstName 
               ? `Olá, ${firstName}! 👋\n\nEm que podemos lhe ajudar? Selecione um dos tópicos abaixo ou digite o que precisa:`
               : 'Olá! 👋\n\nEm que podemos lhe ajudar? Selecione um dos tópicos abaixo ou digite o que precisa:';
@@ -184,6 +184,7 @@ export const AIAssistant = () => {
             setMessages([{ role: 'assistant', content: welcomeMsg }]);
             setShowTopics(true);
             setViewMode('welcome');
+            setIsFirstMessage(true);
           }
         }
       }
@@ -345,8 +346,21 @@ export const AIAssistant = () => {
   };
 
   const sendMessageInternal = async (messageText: string, file?: File | null, filePreview?: string | null) => {
+    // Remover mensagem de boas-vindas se for a primeira mensagem real
+    let messagesToSend = messages;
+    if (isFirstMessage && messages.length === 1 && messages[0].role === 'assistant') {
+      messagesToSend = [];
+      setIsFirstMessage(false);
+    }
+    
+    // Remover mensagem de bloqueio se existir
+    if (showBlockQuestion) {
+      messagesToSend = messagesToSend.filter(m => !m.content.includes('bloqueado recentemente'));
+      setShowBlockQuestion(false);
+    }
+    
     const newUserMessage = { role: 'user' as const, content: messageText };
-    const updatedMessages = [...messages, newUserMessage];
+    const updatedMessages = [...messagesToSend, newUserMessage];
     setMessages(updatedMessages);
     setLoading(true);
 
@@ -446,6 +460,7 @@ export const AIAssistant = () => {
     setShowTopics(true);
     setShowBlockQuestion(false);
     setViewMode('welcome');
+    setIsFirstMessage(true);
     toast({ title: 'Conversa arquivada', description: 'Você pode acessá-la no histórico.' });
   };
 

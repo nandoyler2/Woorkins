@@ -180,6 +180,8 @@ export default function BusinessEdit() {
   const [currentProfileId, setCurrentProfileId] = useState<string | null>(null);
   const [profileViews, setProfileViews] = useState<number>(0);
   const [viewsLastWeek, setViewsLastWeek] = useState<number>(0);
+  const [canEditSlug, setCanEditSlug] = useState(true);
+  const [daysUntilSlugEdit, setDaysUntilSlugEdit] = useState(0);
   const imageInputRef = useRef<HTMLInputElement>(null);
   
   // Refs para inputs de upload
@@ -340,7 +342,31 @@ export default function BusinessEdit() {
       return;
     }
 
-    setBusiness(data as unknown as BusinessProfile);
+    const businessData = data as unknown as BusinessProfile;
+    setBusiness(businessData);
+
+    // Verificar se pode editar slug
+    const lastChange = (data as any).last_slug_change_at 
+      ? new Date((data as any).last_slug_change_at) 
+      : null;
+    
+    if (lastChange) {
+      const daysSinceLastChange = Math.floor(
+        (Date.now() - lastChange.getTime()) / (1000 * 60 * 60 * 24)
+      );
+
+      if (daysSinceLastChange < 7) {
+        setCanEditSlug(false);
+        setDaysUntilSlugEdit(7 - daysSinceLastChange);
+      } else {
+        setCanEditSlug(true);
+        setDaysUntilSlugEdit(0);
+      }
+    } else {
+      setCanEditSlug(true);
+      setDaysUntilSlugEdit(0);
+    }
+
     setLoading(false);
   };
 
@@ -2765,27 +2791,7 @@ export default function BusinessEdit() {
                           </div>
                         </div>
                         <div className="space-y-2">
-                          <Label className="text-base font-medium">URL Atual</Label>
-                          <div className="flex gap-2">
-                            <Input
-                              value={`woorkins.com/${business.slug}`}
-                              readOnly
-                              className="text-base bg-muted"
-                            />
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              onClick={() => {
-                                navigator.clipboard.writeText(`https://woorkins.com/${business.slug}`);
-                                toast({ title: "Link copiado!" });
-                              }}
-                            >
-                              <ExternalLink className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="text-base font-medium">Nova URL</Label>
+                          <Label className="text-base font-medium">URL do Perfil</Label>
                           <div className="flex gap-2">
                             <div className="flex-1 flex items-center gap-2 border-2 rounded-md px-3 bg-background">
                               <span className="text-muted-foreground text-sm">woorkins.com/</span>
@@ -2797,19 +2803,37 @@ export default function BusinessEdit() {
                                 }}
                                 placeholder="sua-empresa"
                                 className="border-0 shadow-none focus-visible:ring-0 p-0 text-base"
+                                disabled={!canEditSlug}
                               />
                             </div>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() => {
+                                navigator.clipboard.writeText(`https://woorkins.com/${business.slug}`);
+                                toast({ title: "Link copiado!" });
+                              }}
+                            >
+                              <ExternalLink className="w-4 h-4" />
+                            </Button>
                           </div>
                           <p className="text-xs text-muted-foreground">
                             Use apenas letras minúsculas, números e hífens
                           </p>
-                          <p className="text-xs text-amber-600 mt-2">
-                            ⚠️ A URL só pode ser alterada a cada 7 dias
-                          </p>
+                          {!canEditSlug && (
+                            <p className="text-xs text-amber-600">
+                              ⚠️ Você poderá alterar a URL novamente em {daysUntilSlugEdit} dia{daysUntilSlugEdit > 1 ? 's' : ''}
+                            </p>
+                          )}
+                          {canEditSlug && (
+                            <p className="text-xs text-muted-foreground">
+                              ⚠️ A URL só pode ser alterada a cada 7 dias
+                            </p>
+                          )}
                         </div>
                         <Button 
                           onClick={handleUpdateSlug} 
-                          disabled={saving}
+                          disabled={saving || !canEditSlug}
                           className="w-full bg-gradient-to-r from-purple-500 to-indigo-500"
                         >
                           <Save className="w-4 h-4 mr-2" />

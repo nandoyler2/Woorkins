@@ -64,6 +64,36 @@ const ICON_MAP: Record<string, any> = {
   location: MapPin,
 };
 
+// Utilitário para cor de texto com alto contraste sobre o fundo do botão
+function getContrastColor(color: string): string {
+  try {
+    if (!color) return '#ffffff';
+    let r = 0, g = 0, b = 0;
+    if (color.startsWith('#')) {
+      const hex = color.slice(1);
+      const full = hex.length === 3
+        ? hex.split('').map((c) => c + c).join('')
+        : hex.substring(0, 6);
+      r = parseInt(full.substring(0, 2), 16);
+      g = parseInt(full.substring(2, 4), 16);
+      b = parseInt(full.substring(4, 6), 16);
+    } else if (color.startsWith('rgb')) {
+      const nums = color.match(/\d+/g);
+      if (nums && nums.length >= 3) {
+        r = parseInt(nums[0]);
+        g = parseInt(nums[1]);
+        b = parseInt(nums[2]);
+      }
+    } else {
+      return '#ffffff';
+    }
+    const yiq = (r * 299 + g * 587 + b * 114) / 1000;
+    return yiq >= 186 ? '#000000' : '#ffffff';
+  } catch {
+    return '#ffffff';
+  }
+}
+
 export default function PublicLinktree() {
   const { slug } = useParams();
   const [business, setBusiness] = useState<BusinessProfile | null>(null);
@@ -196,9 +226,10 @@ export default function PublicLinktree() {
   
   const customBg = config.primaryColor ? { backgroundColor: config.primaryColor } : {};
   const customText = config.textColor ? { color: config.textColor } : {};
+const buttonTextColor = config.secondaryColor ? getContrastColor(config.secondaryColor) : undefined;
   const customButton = config.secondaryColor ? { 
     backgroundColor: config.secondaryColor,
-    color: config.textColor 
+    color: buttonTextColor 
   } : {};
 
   return (

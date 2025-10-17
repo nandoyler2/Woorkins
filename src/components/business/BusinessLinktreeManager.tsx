@@ -72,6 +72,37 @@ const ICON_MAP: Record<string, any> = {
   location: MapPin,
 };
 
+// Utilitário para definir cor de texto com contraste adequado ao fundo do botão
+function getContrastColor(color: string): string {
+  try {
+    if (!color) return '#ffffff';
+    let r = 0, g = 0, b = 0;
+    if (color.startsWith('#')) {
+      const hex = color.slice(1);
+      const full = hex.length === 3
+        ? hex.split('').map((c) => c + c).join('')
+        : hex.substring(0, 6);
+      r = parseInt(full.substring(0, 2), 16);
+      g = parseInt(full.substring(2, 4), 16);
+      b = parseInt(full.substring(4, 6), 16);
+    } else if (color.startsWith('rgb')) {
+      const nums = color.match(/\d+/g);
+      if (nums && nums.length >= 3) {
+        r = parseInt(nums[0]);
+        g = parseInt(nums[1]);
+        b = parseInt(nums[2]);
+      }
+    } else {
+      // fallback para cores nomeadas/desconhecidas
+      return '#ffffff';
+    }
+    const yiq = (r * 299 + g * 587 + b * 114) / 1000;
+    return yiq >= 186 ? '#000000' : '#ffffff';
+  } catch {
+    return '#ffffff';
+  }
+}
+
 const LAYOUTS = [
   { 
     id: 'minimal', 
@@ -325,13 +356,26 @@ export function BusinessLinktreeManager({ businessId, businessLogo }: BusinessLi
         }
         validatedLinks[platform] = trimmedUrl;
       } else {
-        // Para outras redes sociais, validar URL
+        // Para outras redes sociais, validar URL com domínio real e TLD válido
         let validUrl = trimmedUrl;
         if (!validUrl.startsWith('http://') && !validUrl.startsWith('https://')) {
           validUrl = 'https://' + validUrl;
         }
-        
-        if (!urlSchema.safeParse(validUrl).success) {
+        try {
+          const parsed = new URL(validUrl);
+          const hostname = parsed.hostname;
+          if (!hostname.includes('.') || hostname.split('.').length < 2) {
+            throw new Error('Domínio inválido');
+          }
+          const tld = hostname.split('.').pop()!.toLowerCase();
+          const validTLDs = ['com','br','org','net','edu','gov','io','co','app','dev','ai','tech','store','site','online','info','me','tv','us','uk','de','fr','es','it','pt','jp','cn','ru'];
+          if (!validTLDs.includes(tld)) {
+            throw new Error('TLD inválido');
+          }
+          if (!urlSchema.safeParse(validUrl).success) {
+            throw new Error('Formato inválido');
+          }
+        } catch {
           toast({
             title: "URL inválida",
             description: `A URL para ${platform} não é válida`,
@@ -692,9 +736,10 @@ export function BusinessLinktreeManager({ businessId, businessLogo }: BusinessLi
     const styles = getLayoutStyles(config.layout);
     const customBg = config.primaryColor ? { backgroundColor: config.primaryColor } : {};
     const customText = config.textColor ? { color: config.textColor } : {};
+const buttonTextColor = config.secondaryColor ? getContrastColor(config.secondaryColor) : undefined;
     const customButton = config.secondaryColor ? { 
       backgroundColor: config.secondaryColor,
-      color: config.textColor 
+      color: buttonTextColor 
     } : {};
     
     return (

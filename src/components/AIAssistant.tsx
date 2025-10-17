@@ -931,97 +931,96 @@ export const AIAssistant = () => {
           {/* Input */}
           {viewMode !== 'history' && (
             <div className="p-4 border-t border-primary/10 bg-gradient-to-r from-transparent to-primary/5 rounded-b-3xl">
-            {/* Spam block alert */}
-            {isSpamBlocked && (
+            {isSpamBlocked ? (
               <div className="mb-3">
                 <SpamBlockCountdown 
                   remainingSeconds={remainingSeconds}
                   reason="Por favor, aguarde alguns minutos antes de enviar mais mensagens."
                 />
               </div>
-            )}
-            
-            {/* File previews */}
-            {selectedFiles.length > 0 && (
-              <div className="mb-2 space-y-2">
-                {selectedFiles.map((file, index) => (
-                  <div key={index} className="flex items-center gap-2 p-2 bg-muted rounded-lg">
-                    {file.type.startsWith('image/') ? (
-                      <img 
-                        src={URL.createObjectURL(file)} 
-                        alt="Preview" 
-                        className="h-12 w-12 object-cover rounded" 
-                      />
-                    ) : (
-                      <div className="h-12 w-12 bg-background rounded flex items-center justify-center">
-                        {getFileIcon(file.type)}
+            ) : (
+              <>
+                {/* File previews */}
+                {selectedFiles.length > 0 && (
+                  <div className="mb-2 space-y-2">
+                    {selectedFiles.map((file, index) => (
+                      <div key={index} className="flex items-center gap-2 p-2 bg-muted rounded-lg">
+                        {file.type.startsWith('image/') ? (
+                          <img 
+                            src={URL.createObjectURL(file)} 
+                            alt="Preview" 
+                            className="h-12 w-12 object-cover rounded" 
+                          />
+                        ) : (
+                          <div className="h-12 w-12 bg-background rounded flex items-center justify-center">
+                            {getFileIcon(file.type)}
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{file.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {(file.size / 1024 / 1024).toFixed(1)} MB
+                          </p>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleRemoveFile(index)}
+                          className="flex-shrink-0"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
                       </div>
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{file.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {(file.size / 1024 / 1024).toFixed(1)} MB
-                      </p>
-                    </div>
+                    ))}
+                  </div>
+                )}
+                
+                <div className="flex gap-2">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    onChange={handleFileSelect}
+                    className="hidden"
+                    accept="image/*,.pdf,.doc,.docx,.txt"
+                  />
+                  <Textarea
+                    ref={inputRef}
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        sendMessage();
+                      }
+                    }}
+                    placeholder="Digite sua dúvida ou selecione um tópico acima..."
+                    className="resize-none border-primary/20 focus:border-primary/40 bg-background/50"
+                    rows={2}
+                  />
+                  <div className="flex flex-col gap-2">
                     <Button
-                      type="button"
-                      variant="ghost"
+                      onClick={sendMessage}
+                      disabled={selectedFiles.length === 0 && !input.trim()}
                       size="icon"
-                      onClick={() => handleRemoveFile(index)}
-                      className="flex-shrink-0"
+                      className="shrink-0 bg-gradient-to-br from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-md"
                     >
-                      <X className="h-4 w-4" />
+                      {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                    </Button>
+                    <Button 
+                      type="button" 
+                      variant="ghost" 
+                      size="icon"
+                      className="flex-shrink-0"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      <Paperclip className="h-5 w-5" />
                     </Button>
                   </div>
-                ))}
-              </div>
+                </div>
+              </>
             )}
-            
-            <div className="flex gap-2">
-              <input
-                ref={fileInputRef}
-                type="file"
-                multiple
-                onChange={handleFileSelect}
-                className="hidden"
-                accept="image/*,.pdf,.doc,.docx,.txt"
-              />
-              <Textarea
-                ref={inputRef}
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey && !isSpamBlocked) {
-                    e.preventDefault();
-                    sendMessage();
-                  }
-                }}
-                placeholder={isSpamBlocked ? "Aguarde o desbloqueio..." : "Digite sua dúvida ou selecione um tópico acima..."}
-                className="resize-none border-primary/20 focus:border-primary/40 bg-background/50"
-                rows={2}
-                disabled={isSpamBlocked}
-              />
-              <div className="flex flex-col gap-2">
-                <Button
-                  onClick={sendMessage}
-                  disabled={isSpamBlocked || (selectedFiles.length === 0 && !input.trim())}
-                  size="icon"
-                  className="shrink-0 bg-gradient-to-br from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-md"
-                >
-                  {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                </Button>
-                <Button 
-                  type="button" 
-                  variant="ghost" 
-                  size="icon"
-                  className="flex-shrink-0"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={isSpamBlocked}
-                >
-                  <Paperclip className="h-5 w-5" />
-                </Button>
-              </div>
-            </div>
           </div>
           )}
         </div>

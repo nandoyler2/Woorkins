@@ -27,6 +27,7 @@ export function SpamBlockCountdown({ remainingSeconds, reason }: SpamBlockCountd
             <li>Evite enviar mensagens muito rápidas</li>
             <li>Mantenha o respeito na comunicação</li>
             <li>Seja claro e objetivo nas mensagens</li>
+            <li>Evite enviar mensagens que não têm a ver com as funcionalidades do Woorkins</li>
           </ul>
         </div>
       </AlertDescription>

@@ -587,52 +587,50 @@ export function SupportChatDialog({ open, onOpenChange, documentRejected, profil
             )}
 
             {/* Spam block alert */}
-            {isBlocked && (
+            {isBlocked ? (
               <div className="mb-4">
                 <SpamBlockCountdown 
                   remainingSeconds={remainingSeconds}
                   reason="Por favor, aguarde alguns minutos antes de enviar mais mensagens."
                 />
               </div>
+            ) : (
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setShowDocumentUpload(!showDocumentUpload)}
+                >
+                  <Paperclip className="h-4 w-4" />
+                </Button>
+
+                <Textarea
+                  ref={messageInputRef}
+                  placeholder="Digite sua mensagem..."
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSendMessage();
+                    }
+                  }}
+                  rows={2}
+                  className="resize-none flex-1"
+                />
+
+                <Button
+                  onClick={() => handleSendMessage()}
+                  disabled={!message.trim() && !showDocumentUpload}
+                >
+                  {isSending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Send className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
             )}
-
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setShowDocumentUpload(!showDocumentUpload)}
-                disabled={isBlocked}
-              >
-                <Paperclip className="h-4 w-4" />
-              </Button>
-
-              <Textarea
-                ref={messageInputRef}
-                disabled={isBlocked}
-                placeholder={isBlocked ? "Aguarde o desbloqueio..." : "Digite sua mensagem..."}
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey && !isBlocked) {
-                    e.preventDefault();
-                    handleSendMessage();
-                  }
-                }}
-                rows={2}
-                className="resize-none flex-1"
-              />
-
-              <Button
-                onClick={() => handleSendMessage()}
-                disabled={isBlocked || (!message.trim() && !showDocumentUpload)}
-              >
-                {isSending ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Send className="h-4 w-4" />
-                )}
-              </Button>
-            </div>
 
             {documentRejected && messages.length === 1 && (
               <div className="flex gap-2">

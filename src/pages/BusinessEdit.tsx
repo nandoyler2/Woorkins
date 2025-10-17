@@ -573,7 +573,7 @@ export default function BusinessEdit() {
                         <Label className="text-base font-medium">Prévia do Perfil</Label>
                         <div className="relative w-full rounded-lg overflow-hidden border-2 border-border bg-muted">
                           {/* Capa */}
-                          <div className="relative h-40 w-full group">
+                          <div className="relative h-40 w-full">
                             {business.cover_url ? (
                               <img 
                                 src={business.cover_url} 
@@ -583,8 +583,8 @@ export default function BusinessEdit() {
                             ) : (
                               <div className="w-full h-full bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-pink-500/20" />
                             )}
-                            {/* Ícone de edição da capa */}
-                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            {/* Ícone de edição da capa - sempre visível */}
+                            <div className="absolute top-2 right-2">
                               <ImageUpload
                                 currentImageUrl={business.cover_url}
                                 onUpload={handleCoverUpload}
@@ -596,7 +596,7 @@ export default function BusinessEdit() {
                           </div>
                           
                           {/* Logo sobreposto */}
-                          <div className="absolute bottom-2 left-4 group">
+                          <div className="absolute bottom-2 left-4">
                             <div className="relative w-24 h-24 rounded-lg border-4 border-background overflow-hidden bg-background">
                               {business.logo_url ? (
                                 <img 
@@ -609,8 +609,8 @@ export default function BusinessEdit() {
                                   <ImageIcon className="w-8 h-8 text-muted-foreground" />
                                 </div>
                               )}
-                              {/* Ícone de edição do logo */}
-                              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                              {/* Ícone de edição do logo - sempre visível */}
+                              <div className="absolute bottom-1 right-1">
                                 <ImageUpload
                                   currentImageUrl={business.logo_url}
                                   onUpload={handleLogoUpload}
@@ -623,7 +623,7 @@ export default function BusinessEdit() {
                           </div>
                         </div>
                         <p className="text-xs text-muted-foreground">
-                          Passe o mouse sobre as imagens para alterá-las
+                          Clique nos ícones para alterar as imagens
                         </p>
                       </div>
                     </CardContent>

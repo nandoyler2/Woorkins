@@ -568,25 +568,63 @@ export default function BusinessEdit() {
                       <CardDescription>Logo e capa do perfil profissional</CardDescription>
                     </div>
                     <CardContent className="p-6 space-y-6">
-                      <div className="space-y-2">
-                        <Label className="text-base font-medium">Logo</Label>
-                        <ImageUpload
-                          currentImageUrl={business.logo_url}
-                          onUpload={handleLogoUpload}
-                          bucket="business-logos"
-                          folder={business.id}
-                          type="logo"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-base font-medium">Capa</Label>
-                        <ImageUpload
-                          currentImageUrl={business.cover_url}
-                          onUpload={handleCoverUpload}
-                          bucket="business-covers"
-                          folder={business.id}
-                          type="cover"
-                        />
+                      {/* Prévia do Perfil */}
+                      <div className="space-y-3">
+                        <Label className="text-base font-medium">Prévia do Perfil</Label>
+                        <div className="relative w-full rounded-lg overflow-hidden border-2 border-border bg-muted">
+                          {/* Capa */}
+                          <div className="relative h-40 w-full group">
+                            {business.cover_url ? (
+                              <img 
+                                src={business.cover_url} 
+                                alt="Capa" 
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-pink-500/20" />
+                            )}
+                            {/* Ícone de edição da capa */}
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                              <ImageUpload
+                                currentImageUrl={business.cover_url}
+                                onUpload={handleCoverUpload}
+                                bucket="business-covers"
+                                folder={business.id}
+                                type="cover"
+                              />
+                            </div>
+                          </div>
+                          
+                          {/* Logo sobreposto */}
+                          <div className="absolute bottom-2 left-4 group">
+                            <div className="relative w-24 h-24 rounded-lg border-4 border-background overflow-hidden bg-background">
+                              {business.logo_url ? (
+                                <img 
+                                  src={business.logo_url} 
+                                  alt="Logo" 
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-full h-full bg-muted flex items-center justify-center">
+                                  <ImageIcon className="w-8 h-8 text-muted-foreground" />
+                                </div>
+                              )}
+                              {/* Ícone de edição do logo */}
+                              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                <ImageUpload
+                                  currentImageUrl={business.logo_url}
+                                  onUpload={handleLogoUpload}
+                                  bucket="business-logos"
+                                  folder={business.id}
+                                  type="logo"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Passe o mouse sobre as imagens para alterá-las
+                        </p>
                       </div>
                     </CardContent>
                   </Card>

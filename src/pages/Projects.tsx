@@ -429,17 +429,27 @@ export default function Projects() {
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
               </div>
             ) : projects.length === 0 ? (
-              <Card className="p-12">
+              <Card className="p-12 bg-gradient-to-br from-card to-muted/20">
                 <div className="text-center space-y-4">
-                  <Briefcase className="w-16 h-16 mx-auto text-muted-foreground" />
+                  <div className="w-20 h-20 mx-auto rounded-full bg-gradient-primary/10 flex items-center justify-center">
+                    <Briefcase className="w-10 h-10 text-primary" />
+                  </div>
                   <div>
-                    <h3 className="text-xl font-bold mb-2">Nenhum projeto encontrado</h3>
-                    <p className="text-muted-foreground">
+                    <h3 className="text-2xl font-bold mb-2">Nenhum projeto encontrado</h3>
+                    <p className="text-muted-foreground text-lg">
                       {filter === 'my' 
                         ? 'Você ainda não criou nenhum projeto' 
                         : 'Tente ajustar os filtros ou volte mais tarde'}
                     </p>
                   </div>
+                  {user && filter === 'my' && (
+                    <Button asChild className="bg-gradient-primary mt-4">
+                      <Link to="/projetos/novo">
+                        <Plus className="w-4 h-4 mr-2" />
+                        Criar Primeiro Projeto
+                      </Link>
+                    </Button>
+                  )}
                 </div>
               </Card>
             ) : (
@@ -447,15 +457,18 @@ export default function Projects() {
                 {projects.map((project) => (
                   <Card 
                     key={project.id} 
-                    className="hover:shadow-elegant transition-all duration-300 hover:border-primary/50 bg-card/50 backdrop-blur-sm"
+                    className="group hover:shadow-elegant transition-all duration-300 hover:border-primary/50 bg-gradient-to-br from-card/80 to-card/50 backdrop-blur-sm overflow-hidden relative"
                   >
-                    <CardContent className="p-6">
+                    {/* Efeito de brilho no hover */}
+                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-r from-transparent via-primary/5 to-transparent" />
+                    
+                    <CardContent className="p-6 relative">
                       {/* Header Row: Title + Action Button */}
                       <div className="flex items-start justify-between gap-4 mb-4">
                         <div className="flex-1">
                           <Link 
                             to={`/projetos/${project.id}`}
-                            className="text-xl font-bold hover:text-primary transition-colors block mb-2"
+                            className="text-xl font-bold hover:text-primary transition-colors block mb-2 group-hover:translate-x-1 duration-300"
                           >
                             {project.title}
                           </Link>
@@ -463,8 +476,7 @@ export default function Projects() {
                         <Button 
                           asChild 
                           size="sm" 
-                          variant="outline"
-                          className="border-primary text-primary hover:bg-primary hover:text-white flex-shrink-0"
+                          className="bg-gradient-primary hover:shadow-glow flex-shrink-0 transition-all duration-300"
                         >
                           <Link to={`/projetos/${project.id}`}>
                             Fazer uma proposta
@@ -474,61 +486,56 @@ export default function Projects() {
 
                       {/* Meta Info Row */}
                       <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground mb-4">
-                        <span>Publicado: {getTimeAgo(project.created_at)}</span>
-                        <span>Propostas: {project.proposals_count}</span>
+                        <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20">
+                          <Clock className="w-3 h-3 mr-1" />
+                          {getTimeAgo(project.created_at)}
+                        </Badge>
+                        <Badge variant="outline" className="border-muted-foreground/20">
+                          <MessageSquare className="w-3 h-3 mr-1" />
+                          {project.proposals_count} proposta{project.proposals_count !== 1 ? 's' : ''}
+                        </Badge>
                         {project.deadline && (
-                          <span>Prazo: {formatDate(project.deadline)}</span>
+                          <Badge variant="outline" className="border-muted-foreground/20">
+                            <Calendar className="w-3 h-3 mr-1" />
+                            {formatDate(project.deadline)}
+                          </Badge>
                         )}
-                        <div className="ml-auto flex items-center gap-2 text-primary font-semibold text-base">
+                        <div className="ml-auto flex items-center gap-2 bg-gradient-primary/10 px-3 py-1 rounded-full font-semibold text-primary">
                           <DollarSign className="w-4 h-4" />
                           {formatBudget(project.budget_min, project.budget_max)}
                         </div>
                       </div>
 
                       {/* Description */}
-                      <p className="text-sm text-foreground mb-4 leading-relaxed line-clamp-3">
+                      <p className="text-sm text-foreground/80 mb-4 leading-relaxed line-clamp-3">
                         {project.description}
                       </p>
 
                       {/* Category */}
                       {project.category && (
-                        <div className="mb-4">
-                          <p className="text-sm mb-1">
-                            <span className="font-semibold">Categoria:</span> {project.category}
-                          </p>
+                        <div className="flex flex-wrap gap-2 mb-4">
+                          <Badge variant="secondary" className="bg-gradient-to-r from-primary/20 to-secondary/20 border-primary/30">
+                            <Briefcase className="w-3 h-3 mr-1" />
+                            {project.category}
+                          </Badge>
                         </div>
                       )}
 
-                      {/* Tags/Skills - Placeholder */}
-                      <div className="flex flex-wrap gap-2 mb-4">
-                        {project.category && (
-                          <Badge variant="secondary" className="bg-muted">
-                            {project.category}
-                          </Badge>
-                        )}
-                      </div>
-
                       {/* Footer Row: Client Info + Report Button */}
-                      <div className="flex items-center justify-between pt-4 border-t">
+                      <div className="flex items-center justify-between pt-4 border-t border-border/50">
                         <div className="flex items-center gap-4">
                           {/* Client Avatar + Info */}
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold">
+                            <div className="w-10 h-10 rounded-full bg-gradient-primary/20 flex items-center justify-center text-primary font-bold text-lg ring-2 ring-primary/20">
                               {formatShortName(project.profiles.full_name).charAt(0).toUpperCase()}
                             </div>
                             <div className="text-sm">
-                              <p className="font-medium">{formatShortName(project.profiles.full_name)}</p>
-                              <div className="flex items-center gap-2 text-muted-foreground">
-                                <span>Última resposta: {getTimeAgo(project.created_at)}</span>
+                              <p className="font-semibold text-foreground">{formatShortName(project.profiles.full_name)}</p>
+                              <div className="flex items-center gap-1 text-muted-foreground">
+                                <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                                <span className="text-xs">5.0</span>
                               </div>
                             </div>
-                          </div>
-
-                          {/* Star Rating - Placeholder */}
-                          <div className="flex items-center gap-1">
-                            {[...Array(5)].map((_, i) => (
-                              <Star key={i} className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                            ))}
                           </div>
                         </div>
 

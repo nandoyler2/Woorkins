@@ -27,6 +27,15 @@ verify_jwt = false
 [functions.buy-woorkoins]
 verify_jwt = true
 
+[functions.buy-plan]
+verify_jwt = true
+
+[functions.confirm-woorkoins-payment]
+verify_jwt = true
+
+[functions.confirm-plan-payment]
+verify_jwt = true
+
 [functions.efi-create-pix-charge]
 verify_jwt = true
 

@@ -69,7 +69,6 @@ function AppContent() {
 
   return (
     <>
-      {isBlocked && <SystemBlockAlert profileId={profileId} />}
       <Routes>
         <Route path="/" element={<Index />} />
         <Route path="/auth" element={<Auth />} />

@@ -253,6 +253,65 @@ serve(async (req) => {
       throw new Error('Usuário não autenticado');
     }
 
+    // Buscar perfil
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('user_id', user.id)
+      .single();
+
+    if (!profile) {
+      throw new Error('Perfil não encontrado');
+    }
+
+    // Buscar FAQs do banco
+    const { data: faqs } = await supabase
+      .from('ai_faq')
+      .select('*')
+      .eq('active', true)
+      .order('priority', { ascending: false });
+
+    // Função para detectar FAQ
+    const detectFAQ = (message: string) => {
+      const msgLower = message.toLowerCase();
+      
+      for (const faq of faqs || []) {
+        const matchedKeywords = faq.keywords.filter((keyword: string) => 
+          msgLower.includes(keyword.toLowerCase())
+        );
+        
+        if (matchedKeywords.length >= Math.ceil(faq.keywords.length * 0.4)) {
+          return {
+            match: true,
+            response: faq.response,
+            link: faq.link,
+            shouldUseAI: false
+          };
+        }
+      }
+      
+      return { match: false, shouldUseAI: true };
+    };
+
+    // Verificar se é uma FAQ antes de chamar a IA
+    const faqResult = detectFAQ(message);
+    
+    if (faqResult.match && !faqResult.shouldUseAI) {
+      console.log('[AI-ASSISTANT] FAQ match encontrado, respondendo sem IA');
+      
+      return new Response(JSON.stringify({
+        response: faqResult.response,
+        usedAI: false,
+        link: faqResult.link
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    if (!user) {
+      throw new Error('Usuário não autenticado');
+    }
+
     // Buscar contexto do usuário
     const userContext = await getUserContext(supabase, user.id);
 

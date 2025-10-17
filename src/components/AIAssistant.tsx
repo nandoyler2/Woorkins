@@ -885,16 +885,6 @@ export const AIAssistant = () => {
                 className="hidden"
                 accept="image/*,.pdf,.doc,.docx,.txt"
               />
-              <Button 
-                type="button" 
-                variant="ghost" 
-                size="icon"
-                className="flex-shrink-0"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={loading || isSpamBlocked}
-              >
-                <Paperclip className="h-5 w-5" />
-              </Button>
               <Textarea
                 ref={inputRef}
                 value={input}
@@ -910,14 +900,26 @@ export const AIAssistant = () => {
                 rows={2}
                 disabled={loading || isSpamBlocked}
               />
-              <Button
-                onClick={sendMessage}
-                disabled={!input.trim() || loading || isSpamBlocked}
-                size="icon"
-                className="shrink-0 bg-gradient-to-br from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-md"
-              >
-                <Send className="h-4 w-4" />
-              </Button>
+              <div className="flex flex-col gap-2">
+                <Button
+                  onClick={sendMessage}
+                  disabled={!input.trim() || loading || isSpamBlocked}
+                  size="icon"
+                  className="shrink-0 bg-gradient-to-br from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-md"
+                >
+                  <Send className="h-4 w-4" />
+                </Button>
+                <Button 
+                  type="button" 
+                  variant="ghost" 
+                  size="icon"
+                  className="flex-shrink-0"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={loading || isSpamBlocked}
+                >
+                  <Paperclip className="h-5 w-5" />
+                </Button>
+              </div>
             </div>
           </div>
           )}

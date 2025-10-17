@@ -21,6 +21,7 @@ import {
 interface BusinessAdmin {
   id: string;
   profile_id: string;
+  status: 'pending' | 'accepted' | 'rejected';
   permissions: {
     edit_profile: boolean;
     manage_posts: boolean;
@@ -63,6 +64,7 @@ export default function BusinessAdministrators({ businessId }: BusinessAdministr
   });
   const [adminToRemove, setAdminToRemove] = useState<string | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
   useEffect(() => {
     loadAdmins();
@@ -88,12 +90,14 @@ export default function BusinessAdministrators({ businessId }: BusinessAdministr
         id,
         profile_id,
         permissions,
+        status,
         profiles:profile_id (
           full_name,
           username
         )
       `)
-      .eq('business_id', businessId);
+      .eq('business_id', businessId)
+      .order('created_at', { ascending: false });
 
     if (!error && data) {
       setAdmins(data as any);
@@ -130,18 +134,29 @@ export default function BusinessAdministrators({ businessId }: BusinessAdministr
   const handleAddAdmin = async () => {
     if (!selectedProfile) return;
 
+    setLoading(true);
     const { error } = await supabase
       .from('business_admins')
       .insert({
         business_id: businessId,
         profile_id: selectedProfile.id,
         permissions,
+        status: 'pending',
       });
 
     if (!error) {
+      // Criar notificação para o usuário convidado
+      await supabase.from('notifications').insert({
+        user_id: selectedProfile.id,
+        type: 'admin_invite',
+        title: 'Convite para Administrador',
+        message: 'Você foi convidado para gerenciar um perfil de negócio',
+        link: `/admin-invites`,
+      });
+
       toast({
-        title: 'Administrador adicionado!',
-        description: `${selectedProfile.full_name} foi adicionado como administrador.`,
+        title: 'Convite enviado!',
+        description: `Convite enviado para ${selectedProfile.full_name}. Aguardando resposta.`,
       });
       setSelectedProfile(null);
       setSearchQuery('');
@@ -155,14 +170,16 @@ export default function BusinessAdministrators({ businessId }: BusinessAdministr
         manage_team: false,
       });
       setShowAddForm(false);
+      setShowConfirmDialog(false);
       loadAdmins();
     } else {
       toast({
         title: 'Erro',
-        description: 'Não foi possível adicionar o administrador',
+        description: 'Não foi possível enviar o convite',
         variant: 'destructive',
       });
     }
+    setLoading(false);
   };
 
   const handleRemoveAdmin = async (adminId: string) => {
@@ -344,7 +361,7 @@ export default function BusinessAdministrators({ businessId }: BusinessAdministr
                   </div>
 
                   <div className="flex gap-2 pt-4">
-                    <Button onClick={handleAddAdmin} className="flex-1">
+                    <Button onClick={() => setShowConfirmDialog(true)} className="flex-1">
                       <UserPlus className="w-4 h-4 mr-2" />
                       Adicionar Administrador
                     </Button>
@@ -383,7 +400,24 @@ export default function BusinessAdministrators({ businessId }: BusinessAdministr
                   className="flex items-start justify-between p-4 bg-muted rounded-lg"
                 >
                   <div className="flex-1">
-                    <p className="font-medium">{admin.profiles.full_name}</p>
+                    <div className="flex items-center gap-2 mb-2">
+                      <p className="font-medium">{admin.profiles.full_name}</p>
+                      {admin.status === 'pending' && (
+                        <span className="text-xs px-2 py-1 bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 rounded-full">
+                          Pendente
+                        </span>
+                      )}
+                      {admin.status === 'accepted' && (
+                        <span className="text-xs px-2 py-1 bg-green-500/10 text-green-600 dark:text-green-400 rounded-full">
+                          Ativo
+                        </span>
+                      )}
+                      {admin.status === 'rejected' && (
+                        <span className="text-xs px-2 py-1 bg-red-500/10 text-red-600 dark:text-red-400 rounded-full">
+                          Recusado
+                        </span>
+                      )}
+                    </div>
                     <p className="text-sm text-muted-foreground mb-2">
                       @{admin.profiles.username}
                     </p>
@@ -414,6 +448,48 @@ export default function BusinessAdministrators({ businessId }: BusinessAdministr
           )}
         </CardContent>
       </Card>
+
+      {/* Confirm Add Admin Dialog */}
+      <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar Convite</AlertDialogTitle>
+            <AlertDialogDescription>
+              Você está prestes a enviar um convite de administrador para:
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          {selectedProfile && (
+            <div className="flex items-center gap-4 p-4 bg-muted rounded-lg">
+              {selectedProfile.avatar_url ? (
+                <img
+                  src={selectedProfile.avatar_url}
+                  alt={selectedProfile.full_name}
+                  className="w-16 h-16 rounded-full object-cover border-2 border-border"
+                />
+              ) : (
+                <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center border-2 border-border">
+                  <span className="text-primary font-medium text-xl">
+                    {selectedProfile.full_name.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+              )}
+              <div>
+                <p className="font-medium text-lg">{selectedProfile.full_name}</p>
+                <p className="text-sm text-muted-foreground">@{selectedProfile.username}</p>
+              </div>
+            </div>
+          )}
+          <p className="text-sm text-muted-foreground">
+            O usuário receberá uma notificação e poderá aceitar ou recusar o convite.
+          </p>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleAddAdmin} disabled={loading}>
+              {loading ? 'Enviando...' : 'Enviar Convite'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Remove Confirmation Dialog */}
       <AlertDialog open={!!adminToRemove} onOpenChange={() => setAdminToRemove(null)}>

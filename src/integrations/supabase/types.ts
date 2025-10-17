@@ -153,8 +153,11 @@ export type Database = {
           created_at: string
           created_by_profile_id: string | null
           id: string
+          invited_at: string | null
           permissions: Json
           profile_id: string
+          responded_at: string | null
+          status: string | null
           updated_at: string
         }
         Insert: {
@@ -162,8 +165,11 @@ export type Database = {
           created_at?: string
           created_by_profile_id?: string | null
           id?: string
+          invited_at?: string | null
           permissions?: Json
           profile_id: string
+          responded_at?: string | null
+          status?: string | null
           updated_at?: string
         }
         Update: {
@@ -171,8 +177,11 @@ export type Database = {
           created_at?: string
           created_by_profile_id?: string | null
           id?: string
+          invited_at?: string | null
           permissions?: Json
           profile_id?: string
+          responded_at?: string | null
+          status?: string | null
           updated_at?: string
         }
         Relationships: [

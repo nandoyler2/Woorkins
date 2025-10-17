@@ -50,6 +50,7 @@ import Woorkoins from "./pages/Woorkoins";
 import Messages from "./pages/Messages";
 import PaymentSettings from "./pages/PaymentSettings";
 import BusinessProfile from "./pages/BusinessProfile";
+import AdminInvites from "./pages/AdminInvites";
 
 const queryClient = new QueryClient();
 
@@ -97,6 +98,7 @@ function AppContent() {
         <Route path="/financeiro" element={<ProtectedRoute><Financeiro /></ProtectedRoute>} />
         <Route path="/woorkoins" element={<ProtectedRoute><Woorkoins /></ProtectedRoute>} />
         <Route path="/payment-settings" element={<ProtectedRoute><PaymentSettings /></ProtectedRoute>} />
+        <Route path="/admin-invites" element={<ProtectedRoute><AdminInvites /></ProtectedRoute>} />
         <Route path="/empresa/financeiro" element={<ProtectedRoute><BusinessFinances /></ProtectedRoute>} />
         
         {/* Rotas dinâmicas devem vir por último */}

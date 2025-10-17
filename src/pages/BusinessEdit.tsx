@@ -14,8 +14,8 @@ import { ImageUpload } from '@/components/ImageUpload';
 import { MediaUpload } from '@/components/MediaUpload';
 import { CreatePostDialog } from '@/components/CreatePostDialog';
 import { 
-  ArrowLeft, Save, Star, MessageSquare, Plus, Trash2, 
-  Facebook, Instagram, Linkedin, Twitter, Globe, MessageCircle, 
+  ArrowLeft, Save, Star, MessageSquare, Plus, Trash2, Shield,
+  Facebook, Instagram, Linkedin, Twitter, Globe, MessageCircle,
   AlertTriangle, Info, Image as ImageIcon, Users, MessagesSquare,
   Eye, EyeOff, ExternalLink, Upload, X, Briefcase, Zap, Play,
   ShoppingBag, ThumbsUp, Award, Calendar, Link as LinkIcon, Briefcase as BriefcaseIcon, Building2
@@ -29,6 +29,7 @@ import { BusinessCertificationsManager } from '@/components/business/BusinessCer
 import { BusinessAppointmentsManager } from '@/components/business/BusinessAppointmentsManager';
 import { BusinessLinktreeManager } from '@/components/business/BusinessLinktreeManager';
 import { BusinessJobVacanciesManager } from '@/components/business/BusinessJobVacanciesManager';
+import BusinessAdministrators from './BusinessAdministrators';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -1591,6 +1592,13 @@ export default function BusinessEdit() {
                       )}
                     </CardContent>
                   </Card>
+                </div>
+              )}
+
+              {/* Admin - Administration */}
+              {activeSection === 'admin' && business && (
+                <div className="animate-fade-in">
+                  <BusinessAdministrators businessId={business.id} />
                 </div>
               )}
 

@@ -1,9 +1,8 @@
 import { useState, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Upload, X } from 'lucide-react';
+import { Upload } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { SafeImage } from '@/components/ui/safe-image';
 import { ImageCropDialog } from './ImageCropDialog';
 
 interface ImageUploadProps {
@@ -16,7 +15,6 @@ interface ImageUploadProps {
 
 export function ImageUpload({ currentImageUrl, onUpload, bucket, folder, type = 'logo' }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false);
-  const [preview, setPreview] = useState<string | null>(currentImageUrl);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [tempPreview, setTempPreview] = useState<string | null>(null);
   const [showCropDialog, setShowCropDialog] = useState(false);
@@ -24,20 +22,8 @@ export function ImageUpload({ currentImageUrl, onUpload, bucket, folder, type = 
   const { toast } = useToast();
 
   const config = type === 'logo' 
-    ? { 
-        aspect: 1, 
-        width: 'w-32', 
-        height: 'h-32', 
-        text: '200x200px (quadrado)',
-        outputSize: 200
-      }
-    : { 
-        aspect: 3,
-        width: 'w-full max-w-2xl', 
-        height: 'h-48', 
-        text: '1200x400px (horizontal)',
-        outputSize: 1200
-      };
+    ? { aspect: 1, outputSize: 200 }
+    : { aspect: 3, outputSize: 1200 };
 
   const createImage = (url: string): Promise<HTMLImageElement> =>
     new Promise((resolve, reject) => {
@@ -140,7 +126,6 @@ export function ImageUpload({ currentImageUrl, onUpload, bucket, folder, type = 
         .from(bucket)
         .getPublicUrl(data.path);
 
-      setPreview(publicUrl);
       onUpload(publicUrl);
 
       toast({
@@ -160,81 +145,25 @@ export function ImageUpload({ currentImageUrl, onUpload, bucket, folder, type = 
     }
   };
 
-  const handleRemove = () => {
-    setPreview(null);
-    onUpload('');
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
-
   return (
     <>
-      <div className="space-y-4">
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          onChange={handleFileSelect}
-          className="hidden"
-        />
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleFileSelect}
+        className="hidden"
+      />
 
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <span>Tamanho recomendado: {config.text}</span>
-        </div>
-
-        {preview ? (
-          <div className="relative">
-            <div className="border rounded-lg overflow-hidden bg-muted">
-              <SafeImage
-                src={preview}
-                alt="Preview"
-                className={`${config.width} ${config.height} object-cover`}
-              />
-            </div>
-            <div className="absolute top-2 right-2 flex gap-2">
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploading}
-              >
-                <Upload className="w-4 h-4 mr-2" />
-                Trocar
-              </Button>
-              <Button
-                type="button"
-                variant="destructive"
-                size="sm"
-                onClick={handleRemove}
-              >
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
-            <p className="text-xs text-muted-foreground mt-2">
-              Preview: Como ficará no perfil
-            </p>
-          </div>
-        ) : (
-          <div className={`border-2 border-dashed rounded-lg ${config.height} flex items-center justify-center`}>
-            <div className="text-center p-8">
-              <Upload className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground mb-4">
-                {type === 'logo' ? 'Logo quadrado (1:1)' : 'Capa horizontal (3:1)'}
-              </p>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploading}
-              >
-                {uploading ? 'Enviando...' : 'Selecionar Imagem'}
-              </Button>
-            </div>
-          </div>
-        )}
-      </div>
+      <Button
+        type="button"
+        variant="outline"
+        onClick={() => fileInputRef.current?.click()}
+        disabled={uploading}
+      >
+        <Upload className="w-4 h-4 mr-2" />
+        {uploading ? 'Enviando...' : 'Trocar'}
+      </Button>
 
       {tempPreview && (
         <ImageCropDialog

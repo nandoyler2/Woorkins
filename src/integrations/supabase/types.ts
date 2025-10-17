@@ -560,6 +560,36 @@ export type Database = {
           },
         ]
       }
+      legal_pages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          last_updated: string
+          slug: string
+          title: string
+          updated_by: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          last_updated?: string
+          slug: string
+          title: string
+          updated_by?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          last_updated?: string
+          slug?: string
+          title?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       manual_document_submissions: {
         Row: {
           admin_notes: string | null

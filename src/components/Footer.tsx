@@ -1,6 +1,7 @@
 import { SafeImage } from '@/components/ui/safe-image';
 import logoWoorkins from '@/assets/woorkins.png';
 import { Linkedin, Instagram, Youtube, Facebook } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export function Footer() {
   return (
@@ -26,9 +27,8 @@ export function Footer() {
             <h4 className="font-bold mb-6 text-lg">Suporte</h4>
             <ul className="space-y-3 text-sm opacity-80">
               <li><a href="/faq" className="hover:opacity-100 transition-opacity">FAQ</a></li>
-              <li><a href="#" className="hover:opacity-100 transition-opacity">Contato</a></li>
-              <li><a href="#" className="hover:opacity-100 transition-opacity">Termos de Uso</a></li>
-              <li><a href="#" className="hover:opacity-100 transition-opacity">Privacidade</a></li>
+              <li><a href="mailto:suporte@woorkins.com" className="hover:opacity-100 transition-opacity">Contato</a></li>
+              <li><a href="#" className="hover:opacity-100 transition-opacity">Ajuda</a></li>
             </ul>
           </div>
           <div>
@@ -63,6 +63,15 @@ export function Footer() {
         </div>
         <div className="border-t border-white/20 pt-8 text-center text-sm opacity-80">
           <p>© 2025 Woorkins. Todos os direitos reservados.</p>
+          <div className="flex items-center justify-center gap-4 mt-2">
+            <Link to="/termos-de-uso" className="hover:opacity-100 transition-opacity">
+              Termos de Uso
+            </Link>
+            <span>•</span>
+            <Link to="/politica-de-privacidade" className="hover:opacity-100 transition-opacity">
+              Política de Privacidade
+            </Link>
+          </div>
         </div>
       </div>
     </footer>

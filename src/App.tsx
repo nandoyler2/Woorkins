@@ -27,6 +27,8 @@ import MyProjects from "./pages/MyProjects";
 import NotFound from "./pages/NotFound";
 import Plans from "./pages/Plans";
 import FAQ from "./pages/FAQ";
+import TermosDeUso from "./pages/TermosDeUso";
+import PoliticaPrivacidade from "./pages/PoliticaPrivacidade";
 import { AdminLayout } from "./pages/admin/AdminLayout";
 import AdminUsers from "./pages/admin/Users";
 import AdminModeration from "./pages/admin/Moderation";
@@ -40,6 +42,7 @@ import AdminSupport from "./pages/admin/Support";
 import UserMessages from "./pages/admin/UserMessages";
 import AISettings from "./pages/admin/AISettings";
 import PlansSettings from "./pages/admin/PlansSettings";
+import LegalPages from "./pages/admin/LegalPages";
 import Account from "./pages/Account";
 import Financeiro from "./pages/Financeiro";
 import Woorkoins from "./pages/Woorkoins";
@@ -79,7 +82,9 @@ function AppContent() {
         <Route path="/feed" element={<Feed />} />
         <Route path="/empresa/:slug" element={<BusinessProfile />} />
         <Route path="/planos" element={<Plans />} />
-        <Route path="/faq" element={<FAQ />} />
+          <Route path="/faq" element={<FAQ />} />
+          <Route path="/termos-de-uso" element={<TermosDeUso />} />
+          <Route path="/politica-de-privacidade" element={<PoliticaPrivacidade />} />
         
         <Route path="/painel" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="/conta" element={<ProtectedRoute><Account /></ProtectedRoute>} />
@@ -106,6 +111,7 @@ function AppContent() {
           <Route path="payment-gateway" element={<AdminPaymentGateway />} />
           <Route path="ai-settings" element={<AISettings />} />
           <Route path="plans-settings" element={<PlansSettings />} />
+          <Route path="legal-pages" element={<LegalPages />} />
         </Route>
 
         <Route path="*" element={<NotFound />} />

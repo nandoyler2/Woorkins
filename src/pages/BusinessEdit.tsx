@@ -1151,48 +1151,50 @@ export default function BusinessEdit() {
           {/* Main Content */}
           <main className="flex-1 overflow-auto">
             <div className="container mx-auto px-6 py-8 max-w-5xl">
-              {/* Header do perfil */}
-              <div className="mb-8">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-3">
-                    {business.logo_url ? (
-                      <img 
-                        src={business.logo_url} 
-                        alt={business.company_name}
-                        className="w-12 h-12 rounded-full object-cover border-2 border-border"
-                      />
-                    ) : (
-                      <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center border-2 border-border">
-                        <Building2 className="w-6 h-6 text-muted-foreground" />
+              {/* Header do perfil - não mostrar no dashboard */}
+              {activeSection !== 'dashboard' && (
+                <div className="mb-8">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-3">
+                      {business.logo_url ? (
+                        <img 
+                          src={business.logo_url} 
+                          alt={business.company_name}
+                          className="w-12 h-12 rounded-full object-cover border-2 border-border"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center border-2 border-border">
+                          <Building2 className="w-6 h-6 text-muted-foreground" />
+                        </div>
+                      )}
+                      <div>
+                        <h1 className="text-3xl font-bold">{business.company_name}</h1>
+                        <p className="text-muted-foreground text-sm">@{business.slug}</p>
                       </div>
-                    )}
-                    <div>
-                      <h1 className="text-3xl font-bold">{business.company_name}</h1>
-                      <p className="text-muted-foreground text-sm">@{business.slug}</p>
+                      {business.active ? (
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
+                          <Eye className="w-4 h-4" />
+                          Ativo
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">
+                          <EyeOff className="w-4 h-4" />
+                          Desativado
+                        </span>
+                      )}
                     </div>
-                    {business.active ? (
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
-                        <Eye className="w-4 h-4" />
-                        Ativo
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">
-                        <EyeOff className="w-4 h-4" />
-                        Desativado
-                      </span>
-                    )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => window.open(`/${business.slug}`, '_blank')}
+                      className="gap-2"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                      Ver Perfil
+                    </Button>
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => window.open(`/${business.slug}`, '_blank')}
-                    className="gap-2"
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                    Ver Perfil
-                  </Button>
                 </div>
-              </div>
+              )}
 
               {/* Perfil e Capa */}
               {activeSection === 'profile-cover' && (

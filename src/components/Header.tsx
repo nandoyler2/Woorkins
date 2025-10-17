@@ -119,7 +119,7 @@ export const Header = () => {
               </DropdownMenuTrigger>
               <DropdownMenuContent 
                 align="start" 
-                className="w-[220px]"
+                className="w-[220px] z-[110] bg-background"
                 onMouseEnter={() => setProjectsOpen(true)}
                 onMouseLeave={() => setProjectsOpen(false)}
               >

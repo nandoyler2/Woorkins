@@ -107,7 +107,7 @@ interface Evaluation {
   };
 }
 
-type Section = 'profile-cover' | 'tools' | 'company-data' | 'posts' | 'evaluations' | 'settings';
+type Section = 'profile-cover' | 'tools' | 'posts' | 'evaluations' | 'settings';
 
 interface BusinessFeature {
   key: string;
@@ -143,7 +143,6 @@ export default function BusinessEdit() {
   const menuItems = [
     { id: 'tools' as Section, label: 'Ferramentas', icon: Zap, color: 'text-yellow-500' },
     { id: 'profile-cover' as Section, label: 'Perfil e Capa', icon: Eye, color: 'text-blue-500' },
-    { id: 'company-data' as Section, label: 'Dados da Empresa', icon: Briefcase, color: 'text-indigo-500' },
     { id: 'posts' as Section, label: 'Posts', icon: MessagesSquare, color: 'text-orange-500' },
     { id: 'evaluations' as Section, label: 'Avaliações', icon: Users, color: 'text-pink-500' },
     { id: 'settings' as Section, label: 'Configurações', icon: AlertTriangle, color: 'text-red-500' },
@@ -1267,103 +1266,6 @@ export default function BusinessEdit() {
                 </div>
               )}
 
-              {/* Dados da Empresa */}
-              {activeSection === 'company-data' && (
-                <div className="animate-fade-in">
-                  <Card className="bg-card/50 backdrop-blur-sm border-2">
-                    <div className="bg-gradient-to-r from-indigo-500/10 via-blue-500/10 to-cyan-500/10 p-6 border-b">
-                      <CardTitle className="text-indigo-600">Dados da Empresa</CardTitle>
-                      <CardDescription>Informações básicas do seu negócio</CardDescription>
-                    </div>
-                    <CardContent className="p-6">
-                      <form onSubmit={handleSave} className="space-y-4">
-                        <div className="space-y-2">
-                          <Label className="text-base font-medium">Nome da Empresa</Label>
-                          <Input
-                            value={business.company_name}
-                            onChange={(e) => setBusiness({ ...business, company_name: e.target.value })}
-                            className="text-base"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="text-base font-medium">Categoria</Label>
-                          <Input
-                            value={business.category || ''}
-                            onChange={(e) => setBusiness({ ...business, category: e.target.value })}
-                            placeholder="Ex: Tecnologia, Alimentação, etc"
-                            className="text-base"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="text-base font-medium">Descrição</Label>
-                          <Textarea
-                            value={business.description || ''}
-                            onChange={(e) => setBusiness({ ...business, description: e.target.value })}
-                            rows={4}
-                            placeholder="Descreva sua empresa..."
-                            className="text-base resize-none"
-                          />
-                        </div>
-                        <div className="grid md:grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label className="text-base font-medium">Email</Label>
-                            <Input
-                              type="email"
-                              value={business.email || ''}
-                              onChange={(e) => setBusiness({ ...business, email: e.target.value })}
-                              placeholder="contato@empresa.com"
-                              className="text-base"
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label className="text-base font-medium">Telefone</Label>
-                            <Input
-                              value={business.phone || ''}
-                              onChange={(e) => setBusiness({ ...business, phone: e.target.value })}
-                              placeholder="(00) 00000-0000"
-                              className="text-base"
-                            />
-                          </div>
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="text-base font-medium">Endereço</Label>
-                          <Input
-                            value={business.address || ''}
-                            onChange={(e) => setBusiness({ ...business, address: e.target.value })}
-                            placeholder="Endereço completo"
-                            className="text-base"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="text-base font-medium">Horário de Funcionamento</Label>
-                          <Input
-                            value={business.working_hours || ''}
-                            onChange={(e) => setBusiness({ ...business, working_hours: e.target.value })}
-                            placeholder="Ex: Seg-Sex: 9h-18h"
-                            className="text-base"
-                          />
-                        </div>
-                        <div className="flex items-center justify-between p-4 border-2 rounded-lg bg-muted/30">
-                          <div className="space-y-0.5">
-                            <Label className="text-base font-medium">Ativar Negociação</Label>
-                            <p className="text-sm text-muted-foreground">
-                              Permitir que clientes negociem diretamente com você
-                            </p>
-                          </div>
-                          <Switch
-                            checked={business.enable_negotiation}
-                            onCheckedChange={(checked) => setBusiness({ ...business, enable_negotiation: checked })}
-                          />
-                        </div>
-                        <Button type="submit" className="w-full bg-gradient-to-r from-indigo-500 to-cyan-500 hover:shadow-lg transition-all text-base py-6" disabled={saving}>
-                          <Save className="w-5 h-5 mr-2" />
-                          {saving ? 'Salvando...' : 'Salvar Alterações'}
-                        </Button>
-                      </form>
-                    </CardContent>
-                  </Card>
-                </div>
-              )}
 
               {/* Posts */}
               {activeSection === 'posts' && (
@@ -1493,9 +1395,180 @@ export default function BusinessEdit() {
                 </div>
               )}
 
-              {/* Configurações/Zona de Perigo */}
+              {/* Configurações */}
               {activeSection === 'settings' && (
                 <div className="space-y-6 animate-fade-in">
+                  {/* Dados da Empresa */}
+                  <Card className="bg-card/50 backdrop-blur-sm border-2">
+                    <div className="bg-gradient-to-r from-indigo-500/10 via-blue-500/10 to-cyan-500/10 p-6 border-b">
+                      <CardTitle className="flex items-center gap-2 text-indigo-600">
+                        <Briefcase className="w-5 h-5" />
+                        Dados da Empresa
+                      </CardTitle>
+                      <CardDescription>Informações básicas do seu negócio</CardDescription>
+                    </div>
+                    <CardContent className="p-6">
+                      <form onSubmit={handleSave} className="space-y-4">
+                        <div className="space-y-2">
+                          <Label className="text-base font-medium">Nome da Empresa</Label>
+                          <Input
+                            value={business.company_name}
+                            onChange={(e) => setBusiness({ ...business, company_name: e.target.value })}
+                            className="text-base"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-base font-medium">Categoria</Label>
+                          <Input
+                            value={business.category || ''}
+                            onChange={(e) => setBusiness({ ...business, category: e.target.value })}
+                            placeholder="Ex: Tecnologia, Alimentação, etc"
+                            className="text-base"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-base font-medium">Descrição</Label>
+                          <Textarea
+                            value={business.description || ''}
+                            onChange={(e) => setBusiness({ ...business, description: e.target.value })}
+                            rows={4}
+                            placeholder="Descreva sua empresa..."
+                            className="text-base resize-none"
+                          />
+                        </div>
+                        <div className="grid md:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label className="text-base font-medium">Email</Label>
+                            <Input
+                              type="email"
+                              value={business.email || ''}
+                              onChange={(e) => setBusiness({ ...business, email: e.target.value })}
+                              placeholder="contato@empresa.com"
+                              className="text-base"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-base font-medium">Telefone</Label>
+                            <Input
+                              value={business.phone || ''}
+                              onChange={(e) => setBusiness({ ...business, phone: e.target.value })}
+                              placeholder="(00) 00000-0000"
+                              className="text-base"
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-base font-medium">Endereço</Label>
+                          <Input
+                            value={business.address || ''}
+                            onChange={(e) => setBusiness({ ...business, address: e.target.value })}
+                            placeholder="Endereço completo"
+                            className="text-base"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-base font-medium">Horário de Funcionamento</Label>
+                          <Input
+                            value={business.working_hours || ''}
+                            onChange={(e) => setBusiness({ ...business, working_hours: e.target.value })}
+                            placeholder="Ex: Seg-Sex: 9h-18h"
+                            className="text-base"
+                          />
+                        </div>
+                        <div className="flex items-center justify-between p-4 border-2 rounded-lg bg-muted/30">
+                          <div className="space-y-0.5">
+                            <Label className="text-base font-medium">Ativar Negociação</Label>
+                            <p className="text-sm text-muted-foreground">
+                              Permitir que clientes negociem diretamente com você
+                            </p>
+                          </div>
+                          <Switch
+                            checked={business.enable_negotiation}
+                            onCheckedChange={(checked) => setBusiness({ ...business, enable_negotiation: checked })}
+                          />
+                        </div>
+                        <Button type="submit" className="w-full bg-gradient-to-r from-indigo-500 to-cyan-500 hover:shadow-lg transition-all text-base py-6" disabled={saving}>
+                          <Save className="w-5 h-5 mr-2" />
+                          {saving ? 'Salvando...' : 'Salvar Alterações'}
+                        </Button>
+                      </form>
+                    </CardContent>
+                  </Card>
+
+                  {/* Mudar URL do Perfil */}
+                  <Card className="bg-card/50 backdrop-blur-sm border-2">
+                    <div className="bg-gradient-to-r from-purple-500/10 via-violet-500/10 to-indigo-500/10 p-6 border-b">
+                      <CardTitle className="flex items-center gap-2 text-purple-600">
+                        <LinkIcon className="w-5 h-5" />
+                        URL do Perfil Profissional
+                      </CardTitle>
+                      <CardDescription>
+                        Altere a URL do seu perfil (permitido a cada 7 dias)
+                      </CardDescription>
+                    </div>
+                    <CardContent className="p-6">
+                      <div className="space-y-4">
+                        <div className="p-4 rounded-lg bg-primary/10 border border-primary/20">
+                          <div className="flex items-start gap-3">
+                            <Info className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                            <p className="text-sm text-muted-foreground">
+                              Por motivos de segurança e SEO, a URL só pode ser alterada uma vez a cada 7 dias.
+                            </p>
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-base font-medium">URL Atual</Label>
+                          <div className="flex gap-2">
+                            <Input
+                              value={`woorkins.com/${business.slug}`}
+                              readOnly
+                              className="text-base bg-muted"
+                            />
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() => {
+                                navigator.clipboard.writeText(`https://woorkins.com/${business.slug}`);
+                                toast({ title: "Link copiado!" });
+                              }}
+                            >
+                              <ExternalLink className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-base font-medium">Nova URL</Label>
+                          <div className="flex gap-2">
+                            <div className="flex-1 flex items-center gap-2 border-2 rounded-md px-3 bg-background">
+                              <span className="text-muted-foreground text-sm">woorkins.com/</span>
+                              <Input
+                                value={business.slug}
+                                onChange={(e) => {
+                                  const value = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '');
+                                  setBusiness({ ...business, slug: value });
+                                }}
+                                placeholder="sua-empresa"
+                                className="border-0 shadow-none focus-visible:ring-0 p-0 text-base"
+                              />
+                            </div>
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            Use apenas letras minúsculas, números e hífens
+                          </p>
+                        </div>
+                        <Button 
+                          onClick={handleSave} 
+                          disabled={saving}
+                          className="w-full bg-gradient-to-r from-purple-500 to-indigo-500"
+                        >
+                          <Save className="w-4 h-4 mr-2" />
+                          {saving ? 'Salvando...' : 'Atualizar URL'}
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Visibilidade do Perfil */}
                   <Card className="bg-card/50 backdrop-blur-sm border-2">
                     <div className="bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-red-500/10 p-6 border-b">
                       <CardTitle className="flex items-center gap-2 text-amber-600">
@@ -1527,6 +1600,7 @@ export default function BusinessEdit() {
                     </CardContent>
                   </Card>
 
+                  {/* Zona de Perigo */}
                   <Card className="bg-card/50 backdrop-blur-sm border-2 border-destructive/50">
                     <div className="bg-gradient-to-r from-red-500/10 via-rose-500/10 to-pink-500/10 p-6 border-b border-destructive/20">
                       <CardTitle className="flex items-center gap-2 text-destructive">

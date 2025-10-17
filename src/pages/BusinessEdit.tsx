@@ -1653,7 +1653,7 @@ export default function BusinessEdit() {
                             <div 
                               className="flex-1 bg-muted hover:bg-muted/80 rounded-full px-4 py-3 text-muted-foreground transition-colors"
                             >
-                              No que você está pensando?
+                              Compartilhe algo no perfil profissional de {business.company_name}
                             </div>
                           </div>
                           <div className="flex items-center gap-2 mt-3 pt-3 border-t">
@@ -1685,7 +1685,7 @@ export default function BusinessEdit() {
                               </div>
                             )}
                             <Textarea
-                              placeholder="No que você está pensando?"
+                              placeholder={`Compartilhe algo no perfil profissional de ${business.company_name}`}
                               value={postContent}
                               onChange={(e) => setPostContent(e.target.value)}
                               rows={3}

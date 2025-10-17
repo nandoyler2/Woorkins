@@ -135,6 +135,8 @@ export default function BusinessAdministrators({ businessId }: BusinessAdministr
         edit_profile: false,
         manage_posts: false,
         manage_appointments: false,
+        manage_products: false,
+        view_finances: false,
         manage_team: false,
       });
       loadAdmins();

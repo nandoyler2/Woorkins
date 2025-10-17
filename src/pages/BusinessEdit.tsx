@@ -107,7 +107,7 @@ interface Evaluation {
   };
 }
 
-type Section = 'profile-cover' | 'tools' | 'posts' | 'evaluations' | 'settings';
+type Section = 'profile-cover' | 'tools' | 'posts' | 'evaluations' | 'settings' | 'admin';
 
 interface BusinessFeature {
   key: string;

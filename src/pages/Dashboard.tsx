@@ -5,7 +5,7 @@ import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Star, Search, Briefcase, MessageSquare, CheckCircle2, Phone, Building2, Users, UserPlus, ThumbsUp, MessageCircle, Award, Activity, TrendingUp, Bell, Clock, Trophy, Share2, Heart, Bookmark, Camera, Mail, FileCheck } from 'lucide-react';
+import { Star, Search, Briefcase, MessageSquare, CheckCircle2, Phone, Building2, Users, UserPlus, ThumbsUp, MessageCircle, Award, Activity, TrendingUp, Bell, Clock, Trophy, Share2, Heart, Bookmark, Camera, Mail, FileCheck, Settings } from 'lucide-react';
 import woorkoinsIcon from '@/assets/woorkoins-icon-latest.png';
 import { Link } from 'react-router-dom';
 import { Progress } from '@/components/ui/progress';
@@ -733,7 +733,8 @@ export default function Dashboard() {
                           </Link>
                           <Link to={`/${business.slug || business.id}/editar`}>
                             <Button variant="default" size="sm" className="text-xs h-7 px-2">
-                              Editar
+                              <Settings className="w-3 h-3 mr-1" />
+                              Gerenciar
                             </Button>
                           </Link>
                         </div>

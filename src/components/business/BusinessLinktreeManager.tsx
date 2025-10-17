@@ -149,6 +149,8 @@ export function BusinessLinktreeManager({ businessId, businessLogo }: BusinessLi
   const [editingLink, setEditingLink] = useState<Partial<CustomLink> | null>(null);
   const [loading, setLoading] = useState(false);
   const [linktreeSlug, setLinktreeSlug] = useState('');
+  const [slugAvailable, setSlugAvailable] = useState<boolean | null>(null);
+  const [checkingSlug, setCheckingSlug] = useState(false);
   const [businessData, setBusinessData] = useState<BusinessData>({ company_name: 'Seu Negócio' });
   const [config, setConfig] = useState<LinktreeConfig>({ 
     layout: 'minimal',
@@ -287,11 +289,64 @@ export function BusinessLinktreeManager({ businessId, businessLogo }: BusinessLi
     }
   };
 
+  const checkSlugAvailability = async (slug: string) => {
+    if (!slug || slug.length < 3) {
+      setSlugAvailable(null);
+      return;
+    }
+
+    const slugRegex = /^[a-z0-9-]+$/;
+    if (!slugRegex.test(slug)) {
+      setSlugAvailable(false);
+      return;
+    }
+
+    setCheckingSlug(true);
+    try {
+      const { data, error } = await supabase
+        .from("business_profiles")
+        .select("id, linktree_slug")
+        .eq("linktree_slug", slug)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      // Disponível se não existe OU se é o próprio business atual
+      setSlugAvailable(!data || data.id === businessId);
+    } catch (error) {
+      console.error("Erro ao verificar slug:", error);
+      setSlugAvailable(null);
+    } finally {
+      setCheckingSlug(false);
+    }
+  };
+
+  const handleSlugChange = (value: string) => {
+    const formattedSlug = value.toLowerCase().replace(/[^a-z0-9-]/g, '');
+    setLinktreeSlug(formattedSlug);
+    
+    // Debounce da verificação
+    const timeoutId = setTimeout(() => {
+      checkSlugAvailability(formattedSlug);
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  };
+
   const saveSlug = async () => {
     if (!linktreeSlug.trim()) {
       toast({
         title: "Slug obrigatório",
         description: "Digite um nome para o seu LinkTree",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (slugAvailable === false) {
+      toast({
+        title: "Nome indisponível",
+        description: "Este nome já está em uso, escolha outro",
         variant: "destructive",
       });
       return;
@@ -914,32 +969,60 @@ export function BusinessLinktreeManager({ businessId, businessLogo }: BusinessLi
                 <div>
                   <Label>Nome do seu LinkTree</Label>
                   <div className="flex gap-2 items-end mt-2">
-                    <div className="flex-1 flex items-center gap-2">
-                      <span className="text-sm text-muted-foreground">woorkins.com/l/</span>
-                      <Input
-                        value={linktreeSlug}
-                        onChange={(e) => setLinktreeSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
-                        placeholder="seu-negocio"
-                        className="flex-1"
-                      />
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-muted-foreground whitespace-nowrap">woorkins.com/l/</span>
+                        <div className="flex-1 relative">
+                          <Input
+                            value={linktreeSlug}
+                            onChange={(e) => handleSlugChange(e.target.value)}
+                            placeholder="seu-negocio"
+                            className="pr-8"
+                          />
+                          {checkingSlug && (
+                            <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                              <div className="animate-spin rounded-full h-4 w-4 border-2 border-primary border-t-transparent"></div>
+                            </div>
+                          )}
+                          {!checkingSlug && slugAvailable !== null && linktreeSlug.length >= 3 && (
+                            <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                              {slugAvailable ? (
+                                <span className="text-green-600 text-xl">✓</span>
+                              ) : (
+                                <span className="text-red-600 text-xl">✗</span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      {slugAvailable === false && linktreeSlug.length >= 3 && (
+                        <p className="text-xs text-red-600 mt-1">
+                          Este nome já está em uso
+                        </p>
+                      )}
+                      {slugAvailable === true && linktreeSlug.length >= 3 && (
+                        <p className="text-xs text-green-600 mt-1">
+                          Nome disponível!
+                        </p>
+                      )}
                     </div>
-                    <Button onClick={saveSlug}>
+                    <Button onClick={saveSlug} disabled={slugAvailable === false || !linktreeSlug}>
                       Salvar
                     </Button>
                   </div>
                   <p className="text-xs text-muted-foreground mt-2">
-                    Use apenas letras minúsculas, números e hífens
+                    Use apenas letras minúsculas, números e hífens (mínimo 3 caracteres)
                   </p>
-                  {linktreeSlug && (
-                    <div className="mt-3 p-3 bg-muted rounded-lg">
-                      <p className="text-sm font-medium mb-1">Seu link público:</p>
+                  {linktreeSlug && slugAvailable !== false && (
+                    <div className="mt-3 p-4 bg-muted rounded-lg">
+                      <p className="text-sm font-medium mb-2">Seu link público:</p>
                       <a 
-                        href={`/l/${linktreeSlug}`}
+                        href={`https://woorkins.com/l/${linktreeSlug}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-sm text-primary hover:underline break-all"
+                        className="text-sm text-primary hover:underline break-all font-mono"
                       >
-                        {window.location.origin}/l/{linktreeSlug}
+                        https://woorkins.com/l/{linktreeSlug}
                       </a>
                     </div>
                   )}

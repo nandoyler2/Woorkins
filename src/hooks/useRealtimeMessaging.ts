@@ -278,66 +278,90 @@ export const useRealtimeMessaging = ({
       }
     }
 
-    // Check for spam (messages sent within 3 seconds)
+
+    // Check for spam using AI to analyze context
     const threeSecondsAgo = new Date(Date.now() - 3000).toISOString();
     const table = conversationType === 'negotiation' ? 'negotiation_messages' : 'proposal_messages';
     const idField = conversationType === 'negotiation' ? 'negotiation_id' : 'proposal_id';
     
     const { data: recentMessages } = await (supabase
       .from(table) as any)
-      .select('created_at')
+      .select('content, created_at')
       .eq(idField, conversationId)
       .eq('sender_id', currentUserId)
       .gte('created_at', threeSecondsAgo);
 
     if (recentMessages && recentMessages.length > 0) {
-      // Spam detected
-      const currentCount = spamData?.spam_count || 0;
-      const newCount = currentCount + 1;
-      
-      if (newCount === 1) {
-        // First warning
-        toast({
-          variant: 'default',
-          title: '⚠️ Atenção',
-          description: 'Evite enviar mensagens muito rápidas.',
-          duration: 4000,
-        });
-        
-        await supabase
-          .from('message_spam_tracking')
-          .upsert({
-            profile_id: currentUserId,
-            context: spamContext,
-            spam_count: newCount,
-            last_spam_at: new Date().toISOString(),
-          });
-      } else {
-        // Block user progressively (5min, 15min, 30min, 1h)
-        const blockDurations = [5, 15, 30, 60];
-        const blockMinutes = blockDurations[Math.min(newCount - 2, blockDurations.length - 1)];
-        const blockedUntil = new Date(Date.now() + blockMinutes * 60 * 1000);
-        
-        await supabase
-          .from('message_spam_tracking')
-          .upsert({
-            profile_id: currentUserId,
-            context: spamContext,
-            spam_count: newCount,
-            last_spam_at: new Date().toISOString(),
-            blocked_until: blockedUntil.toISOString(),
-            block_duration_minutes: blockMinutes,
-          });
+      // Use AI to analyze if this is a real conversation or spam
+      // Get last 5 messages for context
+      const conversationContext = messages
+        .slice(-5)
+        .map(m => `${m.sender_id === currentUserId ? 'Usuário' : 'Outro'}: ${m.content}`)
+        .join('\n');
 
-        toast({
-          variant: 'destructive',
-          title: '🚫 Bloqueio Temporário',
-          description: `Você foi bloqueado por ${blockMinutes} minutos por spam.`,
-          duration: 5000,
+      try {
+        const { data: spamAnalysis } = await supabase.functions.invoke('analyze-spam', {
+          body: {
+            currentMessage: content.trim(),
+            recentMessages: conversationContext,
+            messagesInLast3Seconds: recentMessages.length,
+          }
         });
-        return;
+
+        // Only block if AI confirms it's spam
+        if (spamAnalysis?.isSpam) {
+          const currentCount = spamData?.spam_count || 0;
+          const newCount = currentCount + 1;
+          
+          if (newCount === 1) {
+            // First warning
+            toast({
+              variant: 'default',
+              title: '⚠️ Atenção',
+              description: 'Evite enviar mensagens muito rápidas ou repetitivas.',
+              duration: 4000,
+            });
+            
+            await supabase
+              .from('message_spam_tracking')
+              .upsert({
+                profile_id: currentUserId,
+                context: spamContext,
+                spam_count: newCount,
+                last_spam_at: new Date().toISOString(),
+              });
+          } else {
+            // Block user progressively (5min, 15min, 30min, 1h)
+            const blockDurations = [5, 15, 30, 60];
+            const blockMinutes = blockDurations[Math.min(newCount - 2, blockDurations.length - 1)];
+            const blockedUntil = new Date(Date.now() + blockMinutes * 60 * 1000);
+            
+            await supabase
+              .from('message_spam_tracking')
+              .upsert({
+                profile_id: currentUserId,
+                context: spamContext,
+                spam_count: newCount,
+                last_spam_at: new Date().toISOString(),
+                blocked_until: blockedUntil.toISOString(),
+                block_duration_minutes: blockMinutes,
+              });
+
+            toast({
+              variant: 'destructive',
+              title: '🚫 Bloqueio Temporário',
+              description: `Você foi bloqueado por ${blockMinutes} minutos por spam.`,
+              duration: 5000,
+            });
+            return;
+          }
+        }
+      } catch (aiError) {
+        // If AI analysis fails, allow the message to go through
+        console.error('AI spam analysis failed, allowing message:', aiError);
       }
     }
+
 
     const tempId = `temp-${Date.now()}`;
     setIsSending(true);

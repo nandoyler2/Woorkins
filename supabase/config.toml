@@ -48,6 +48,9 @@ verify_jwt = true
 [functions.support-chat]
 verify_jwt = false
 
+[functions.analyze-spam]
+verify_jwt = true
+
 [functions.send-confirmation-email]
 verify_jwt = false
 

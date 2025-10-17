@@ -721,7 +721,13 @@ export default function BusinessEdit() {
                       return (
                         <SidebarMenuItem key={item.id}>
                           <SidebarMenuButton
-                            onClick={() => setActiveSection(item.id)}
+                            onClick={() => {
+                              setActiveSection(item.id);
+                              // Resetar ferramenta configurando quando clicar em Ferramentas
+                              if (item.id === 'tools') {
+                                setConfiguringFeature(null);
+                              }
+                            }}
                             className={`
                               ${isActive ? 'bg-primary/10 text-primary font-medium' : 'hover:bg-muted/50'}
                               transition-all duration-200

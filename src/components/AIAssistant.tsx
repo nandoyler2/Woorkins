@@ -242,7 +242,7 @@ export const AIAssistant = () => {
   };
 
   const sendMessage = async () => {
-    if ((!input.trim() && selectedFiles.length === 0) || loading) return;
+    if (loading || (selectedFiles.length === 0 && !input.trim())) return;
     setShowTopics(false);
     setShowBlockQuestion(false);
     const userMessage = input.trim();
@@ -1004,7 +1004,7 @@ export const AIAssistant = () => {
               <div className="flex flex-col gap-2">
                 <Button
                   onClick={sendMessage}
-                  disabled={(!input.trim() && selectedFiles.length === 0) || isSpamBlocked}
+                  disabled={isSpamBlocked || (selectedFiles.length === 0 && !input.trim())}
                   size="icon"
                   className="shrink-0 bg-gradient-to-br from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-md"
                 >

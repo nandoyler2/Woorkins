@@ -998,7 +998,7 @@ useEffect(() => {
               />
               <Button 
                 type="submit" 
-                disabled={isSending || (!messageInput.trim() && !selectedFile)}
+                disabled={isSending || (selectedFiles.length === 0 && !messageInput.trim())}
                 size="icon"
                 className="flex-shrink-0"
               >

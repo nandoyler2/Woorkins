@@ -269,20 +269,27 @@ Responda APENAS em JSON:
       };
     }
 
+    const requestBody: any = {
+      model: 'google/gemini-2.5-flash',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        userMessage
+      ],
+      temperature: 0.1, // Temperatura muito baixa para detecção mais consistente e rigorosa
+    };
+
+    // Add modalities for image processing
+    if (imageUrl) {
+      requestBody.modalities = ["image", "text"];
+    }
+
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${LOVABLE_API_KEY}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          userMessage
-        ],
-        temperature: 0.1, // Temperatura muito baixa para detecção mais consistente e rigorosa
-      }),
+      body: JSON.stringify(requestBody),
     });
 
     if (!response.ok) {

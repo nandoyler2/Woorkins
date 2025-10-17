@@ -366,6 +366,12 @@ export const useRealtimeMessaging = ({
     const tempId = `temp-${Date.now()}`;
     setIsSending(true);
 
+    // Upload attachment variables - declare here to be available in all scopes
+    let uploadedMediaUrl: string | undefined;
+    let mediaType: string | undefined;
+    let mediaName: string | undefined;
+    let uploadedFileName: string | undefined;
+
     try {
       // Check if moderation should be applied based on payment status
       let shouldModerate = false;
@@ -410,16 +416,64 @@ export const useRealtimeMessaging = ({
           isPaid = negotiation?.payment_status === 'paid';
         }
 
+        // Upload attachment FIRST if present (before moderation) to get public URL
+        if (attachment) {
+          try {
+            const fileExt = attachment.file.name.split('.').pop();
+            const fileName = `${currentUserId}/${Date.now()}.${fileExt}`;
+            uploadedFileName = fileName;
+            
+            const { data: uploadData, error: uploadError } = await supabase.storage
+              .from('message-attachments')
+              .upload(fileName, attachment.file);
+
+            if (uploadError) throw uploadError;
+
+            const { data: { publicUrl } } = supabase.storage
+              .from('message-attachments')
+              .getPublicUrl(fileName);
+
+            uploadedMediaUrl = publicUrl;
+            mediaType = attachment.file.type;
+            mediaName = attachment.file.name;
+          } catch (uploadError) {
+            console.error('Error uploading attachment:', uploadError);
+            
+            // More detailed error message
+            let errorDescription = 'Não foi possível fazer upload do arquivo. ';
+            if (uploadError instanceof Error) {
+              if (uploadError.message.includes('size')) {
+                errorDescription += 'O arquivo excede o limite de 49MB.';
+              } else {
+                errorDescription += uploadError.message;
+              }
+            }
+            
+            toast({
+              variant: 'destructive',
+              title: 'Erro ao enviar anexo',
+              description: errorDescription,
+            });
+            setIsSending(false);
+            return;
+          }
+        }
+
         // Call moderation function with context (including image if present)
         const moderationBody: any = { 
           content: content.trim(),
           recentMessages: recentUserMessages,
-          isPaid
+          isPaid,
+          profileId: currentUserId,
+          conversationType,
+          conversationId,
+          fileName: mediaName,
+          fileType: mediaType
         };
 
-        // If there's an attachment and it's an image, include it in moderation
-        if (attachment && attachment.file.type.startsWith('image/')) {
-          moderationBody.imageUrl = attachment.url;
+        // If there's an attachment and it's an image, include PUBLIC url in moderation
+        if (uploadedMediaUrl && attachment && attachment.file.type.startsWith('image/')) {
+          moderationBody.imageUrl = uploadedMediaUrl;
         }
 
         const { data: moderationResult, error: moderationError } = await supabase.functions.invoke(
@@ -431,6 +485,13 @@ export const useRealtimeMessaging = ({
 
         // Check if message was rejected
         if (moderationResult && !moderationResult.approved) {
+          // Delete uploaded file if moderation failed
+          if (uploadedFileName) {
+            await supabase.storage
+              .from('message-attachments')
+              .remove([uploadedFileName]);
+          }
+
           const violationResult = await trackViolation(moderationResult.reason || 'Violação das regras de moderação');
           
           let description = 'Você está tentando enviar uma forma de contato. Informações de contato só poderão ser passadas após o pagamento ser feito dentro do Woorkins.';
@@ -463,51 +524,47 @@ export const useRealtimeMessaging = ({
             duration: 8000,
           });
         }
-      }
+      } else {
+        // If not moderating, still need to upload attachment
+        if (attachment) {
+          try {
+            const fileExt = attachment.file.name.split('.').pop();
+            const fileName = `${currentUserId}/${Date.now()}.${fileExt}`;
+            uploadedFileName = fileName;
+            
+            const { data: uploadData, error: uploadError } = await supabase.storage
+              .from('message-attachments')
+              .upload(fileName, attachment.file);
 
-      // Upload attachment if present
-      let uploadedMediaUrl: string | undefined;
-      let mediaType: string | undefined;
-      let mediaName: string | undefined;
+            if (uploadError) throw uploadError;
 
-      if (attachment) {
-        try {
-          const fileExt = attachment.file.name.split('.').pop();
-          const fileName = `${currentUserId}/${Date.now()}.${fileExt}`;
-          
-          const { data: uploadData, error: uploadError } = await supabase.storage
-            .from('message-attachments')
-            .upload(fileName, attachment.file);
+            const { data: { publicUrl } } = supabase.storage
+              .from('message-attachments')
+              .getPublicUrl(fileName);
 
-          if (uploadError) throw uploadError;
-
-          const { data: { publicUrl } } = supabase.storage
-            .from('message-attachments')
-            .getPublicUrl(fileName);
-
-          uploadedMediaUrl = publicUrl;
-          mediaType = attachment.file.type;
-          mediaName = attachment.file.name;
-        } catch (uploadError) {
-          console.error('Error uploading attachment:', uploadError);
-          
-          // More detailed error message
-          let errorDescription = 'Não foi possível fazer upload do arquivo. ';
-          if (uploadError instanceof Error) {
-            if (uploadError.message.includes('size')) {
-              errorDescription += 'O arquivo excede o limite de 49MB.';
-            } else {
-              errorDescription += uploadError.message;
+            uploadedMediaUrl = publicUrl;
+            mediaType = attachment.file.type;
+            mediaName = attachment.file.name;
+          } catch (uploadError) {
+            console.error('Error uploading attachment:', uploadError);
+            
+            let errorDescription = 'Não foi possível fazer upload do arquivo. ';
+            if (uploadError instanceof Error) {
+              if (uploadError.message.includes('size')) {
+                errorDescription += 'O arquivo excede o limite de 49MB.';
+              } else {
+                errorDescription += uploadError.message;
+              }
             }
+            
+            toast({
+              variant: 'destructive',
+              title: 'Erro ao enviar anexo',
+              description: errorDescription,
+            });
+            setIsSending(false);
+            return;
           }
-          
-          toast({
-            variant: 'destructive',
-            title: 'Erro ao enviar anexo',
-            description: errorDescription,
-          });
-          setIsSending(false);
-          return;
         }
       }
 

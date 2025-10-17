@@ -14,7 +14,7 @@ import {
   DialogTrigger,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { Star, MapPin, Phone, Mail, Globe, Image as ImageIcon, MessageCircle, Facebook, Instagram, Linkedin, Twitter, Clock } from 'lucide-react';
+import { Star, MapPin, Phone, Mail, Globe, Image as ImageIcon, MessageCircle, Facebook, Instagram, Linkedin, Twitter, Clock, Shield } from 'lucide-react';
 import { Footer } from '@/components/Footer';
 import { SafeImage } from '@/components/ui/safe-image';
 import { useToast } from '@/hooks/use-toast';
@@ -85,6 +85,7 @@ export default function BusinessProfile() {
   const [activeTab, setActiveTab] = useState('inicio');
   const [showNegotiationDialog, setShowNegotiationDialog] = useState(false);
   const [currentNegotiation, setCurrentNegotiation] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     loadBusinessData();
@@ -207,6 +208,33 @@ export default function BusinessProfile() {
       }
 
       setBusiness(businessData as unknown as BusinessData);
+
+      // Check if current user is admin/owner
+      if (user) {
+        const { data: currentProfile } = await supabase
+          .from('profiles' as any)
+          .select('id')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (currentProfile) {
+          const profileId = (currentProfile as any).id;
+          
+          // Check if user is the owner
+          const isOwner = (businessData as any).profile_id === profileId;
+          
+          // Check if user is an admin
+          const { data: adminData } = await supabase
+            .from('business_admins' as any)
+            .select('id')
+            .eq('business_id', (businessData as any).id)
+            .eq('profile_id', profileId)
+            .eq('status', 'accepted')
+            .maybeSingle();
+          
+          setIsAdmin(isOwner || !!adminData);
+        }
+      }
 
       // Load portfolio
       const { data: portfolioData } = await supabase
@@ -343,9 +371,16 @@ export default function BusinessProfile() {
                         )}
                       </div>
 
-                      <Button variant="outline" className="rounded-full">
-                        Seguir
-                      </Button>
+                      {isAdmin ? (
+                        <Badge variant="secondary" className="px-4 py-2 text-sm font-medium">
+                          <Shield className="w-4 h-4 mr-2" />
+                          Você administra esse perfil
+                        </Badge>
+                      ) : (
+                        <Button variant="outline" className="rounded-full">
+                          Seguir
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </CardContent>

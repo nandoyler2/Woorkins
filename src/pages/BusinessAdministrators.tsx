@@ -39,6 +39,7 @@ interface SearchedProfile {
   id: string;
   full_name: string;
   username: string;
+  avatar_url: string | null;
 }
 
 interface BusinessAdministratorsProps {
@@ -67,6 +68,19 @@ export default function BusinessAdministrators({ businessId }: BusinessAdministr
     loadAdmins();
   }, [businessId]);
 
+  // Busca ao vivo com debounce
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (searchQuery.trim().length >= 2) {
+        handleSearch();
+      } else {
+        setSearchResults([]);
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
   const loadAdmins = async () => {
     const { data, error } = await supabase
       .from('business_admins')
@@ -92,7 +106,7 @@ export default function BusinessAdministrators({ businessId }: BusinessAdministr
     setLoading(true);
     const { data, error } = await supabase
       .from('profiles')
-      .select('id, full_name, username')
+      .select('id, full_name, username, avatar_url')
       .or(`username.ilike.%${searchQuery}%,full_name.ilike.%${searchQuery}%`)
       .limit(10);
 
@@ -228,36 +242,61 @@ export default function BusinessAdministrators({ businessId }: BusinessAdministr
               <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
                 <p className="text-sm text-blue-600 dark:text-blue-400">
                   ℹ️ Para adicionar um administrador, a pessoa precisa estar cadastrada no Woorkins primeiro. 
-                  Procure pelo nome de usuário ou nome completo.
+                  Digite pelo menos 2 caracteres para buscar.
                 </p>
               </div>
 
-              <div className="flex gap-2">
-                <div className="flex-1">
-                  <Input
-                    placeholder="Buscar por nome ou usuário..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                  />
-                </div>
-                <Button onClick={handleSearch} disabled={loading}>
-                  <Search className="w-4 h-4 mr-2" />
-                  Buscar
-                </Button>
+              <div className="relative">
+                <Input
+                  placeholder="Buscar por nome ou usuário..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pr-10"
+                />
+                {loading && (
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                  </div>
+                )}
+                {!loading && searchQuery && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8"
+                    onClick={() => {
+                      setSearchQuery('');
+                      setSearchResults([]);
+                    }}
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                )}
               </div>
 
               {/* Search Results */}
               {searchResults.length > 0 && (
                 <div className="space-y-2">
-                  <Label>Resultados da busca:</Label>
-                  <div className="space-y-2">
+                  <Label>Resultados ({searchResults.length}):</Label>
+                  <div className="space-y-2 max-h-[300px] overflow-y-auto">
                     {searchResults.map((profile) => (
                       <div
                         key={profile.id}
-                        className="flex items-center justify-between p-3 bg-muted rounded-lg"
+                        className="flex items-center gap-3 p-3 bg-muted rounded-lg hover:bg-muted/80 transition-colors"
                       >
-                        <div>
+                        {profile.avatar_url ? (
+                          <img
+                            src={profile.avatar_url}
+                            alt={profile.full_name}
+                            className="w-10 h-10 rounded-full object-cover border-2 border-border"
+                          />
+                        ) : (
+                          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center border-2 border-border">
+                            <span className="text-primary font-medium">
+                              {profile.full_name.charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                        )}
+                        <div className="flex-1">
                           <p className="font-medium">{profile.full_name}</p>
                           <p className="text-sm text-muted-foreground">@{profile.username}</p>
                         </div>

@@ -105,6 +105,47 @@ All colors MUST be HSL.
     @apply relative inline-block after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-primary after:origin-bottom-right after:transition-transform after:duration-300 hover:after:scale-x-100 hover:after:origin-bottom-left;
   }
 
+  /* Scrollbar customization - fina e clean para scrollbars secundárias */
+  .overflow-auto:not(body),
+  .overflow-y-auto:not(body),
+  .overflow-x-auto:not(body),
+  [data-radix-scroll-area-viewport] {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted-foreground) / 0.3) transparent;
+  }
+
+  .overflow-auto:not(body)::-webkit-scrollbar,
+  .overflow-y-auto:not(body)::-webkit-scrollbar,
+  .overflow-x-auto:not(body)::-webkit-scrollbar,
+  [data-radix-scroll-area-viewport]::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .overflow-auto:not(body)::-webkit-scrollbar-track,
+  .overflow-y-auto:not(body)::-webkit-scrollbar-track,
+  .overflow-x-auto:not(body)::-webkit-scrollbar-track,
+  [data-radix-scroll-area-viewport]::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 10px;
+  }
+
+  .overflow-auto:not(body)::-webkit-scrollbar-thumb,
+  .overflow-y-auto:not(body)::-webkit-scrollbar-thumb,
+  .overflow-x-auto:not(body)::-webkit-scrollbar-thumb,
+  [data-radix-scroll-area-viewport]::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.3);
+    border-radius: 10px;
+    transition: background 0.2s ease;
+  }
+
+  .overflow-auto:not(body)::-webkit-scrollbar-thumb:hover,
+  .overflow-y-auto:not(body)::-webkit-scrollbar-thumb:hover,
+  .overflow-x-auto:not(body)::-webkit-scrollbar-thumb:hover,
+  [data-radix-scroll-area-viewport]::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.5);
+  }
+
   @keyframes spin-slow {
     from {
       transform: rotate(0deg);

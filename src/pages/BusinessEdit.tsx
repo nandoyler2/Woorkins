@@ -596,7 +596,7 @@ export default function BusinessEdit() {
                     <div className="bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 p-6 border-b">
                       <CardTitle className="flex items-center gap-2 text-blue-600">
                         <ImageIcon className="w-5 h-5" />
-                        Imagens da Marca
+                        Personalize seu perfil
                       </CardTitle>
                       <CardDescription>Logo e capa do perfil profissional</CardDescription>
                     </div>

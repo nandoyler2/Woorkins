@@ -108,6 +108,7 @@ export const AIAssistant = () => {
   // Verificar se está em áreas onde o botão deve ser escondido
   const isAdminArea = location.pathname.startsWith('/admin');
   const isLinktree = location.pathname.startsWith('/l/'); // Linktree público
+  const isEditingProfile = location.pathname.endsWith('/editar'); // Páginas de edição de perfil
   const isBusinessPublicProfile = !location.pathname.startsWith('/admin') && 
                                   !location.pathname.startsWith('/l/') &&
                                   !location.pathname.startsWith('/dashboard') &&
@@ -123,10 +124,10 @@ export const AIAssistant = () => {
                                   !location.pathname.startsWith('/feed') &&
                                   !location.pathname.startsWith('/payment-settings') &&
                                   !location.pathname.startsWith('/my-projects') &&
-                                  !location.pathname.endsWith('/editar') && // Permitir em páginas de edição
+                                  !location.pathname.endsWith('/editar') &&
                                   location.pathname !== '/' &&
                                   location.pathname !== '/auth';
-  const shouldHideButton = isAdminArea || isLinktree || isBusinessPublicProfile;
+  const shouldHideButton = isAdminArea || isLinktree || isEditingProfile || isBusinessPublicProfile;
 
   // Sincronizar isOpen do contexto com o estado interno
   const isOpen = contextIsOpen || internalOpen;

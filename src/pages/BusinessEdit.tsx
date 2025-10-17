@@ -43,6 +43,13 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
   Sidebar,
   SidebarContent,
   SidebarGroup,
@@ -142,6 +149,11 @@ export default function BusinessEdit() {
   const [postContent, setPostContent] = useState('');
   const [postImages, setPostImages] = useState<string[]>([]);
   const [posting, setPosting] = useState(false);
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [sharePostUrl, setSharePostUrl] = useState('');
+  const [showComments, setShowComments] = useState<{ [key: string]: boolean }>({});
+  const [commentText, setCommentText] = useState<{ [key: string]: string }>({});
+  const [likedPosts, setLikedPosts] = useState<{ [key: string]: boolean }>({});
   const imageInputRef = useRef<HTMLInputElement>(null);
   
   // Refs para inputs de upload
@@ -1857,15 +1869,17 @@ export default function BusinessEdit() {
                                   <Button 
                                     variant="ghost" 
                                     size="sm"
-                                    className="flex-1 gap-2 hover:bg-muted"
+                                    className={`flex-1 gap-2 hover:bg-muted ${likedPosts[post.id] ? 'text-blue-600' : ''}`}
+                                    onClick={() => setLikedPosts({ ...likedPosts, [post.id]: !likedPosts[post.id] })}
                                   >
-                                    <ThumbsUp className="w-5 h-5" />
+                                    <ThumbsUp className={`w-5 h-5 ${likedPosts[post.id] ? 'fill-current' : ''}`} />
                                     <span className="font-medium">Curtir</span>
                                   </Button>
                                   <Button 
                                     variant="ghost" 
                                     size="sm"
                                     className="flex-1 gap-2 hover:bg-muted"
+                                    onClick={() => setShowComments({ ...showComments, [post.id]: !showComments[post.id] })}
                                   >
                                     <MessageCircleMore className="w-5 h-5" />
                                     <span className="font-medium">Comentar</span>
@@ -1876,17 +1890,58 @@ export default function BusinessEdit() {
                                     className="flex-1 gap-2 hover:bg-muted"
                                     onClick={() => {
                                       const postUrl = `${window.location.origin}/${business.slug}`;
-                                      navigator.clipboard.writeText(postUrl);
-                                      toast({
-                                        title: 'Link copiado!',
-                                        description: 'O link do perfil foi copiado para a área de transferência.',
-                                      });
+                                      setSharePostUrl(postUrl);
+                                      setShareDialogOpen(true);
                                     }}
                                   >
                                     <Share2 className="w-5 h-5" />
                                     <span className="font-medium">Compartilhar</span>
                                   </Button>
                                 </div>
+
+                                {/* Campo de Comentário */}
+                                {showComments[post.id] && (
+                                  <div className="p-4 border-t bg-muted/20">
+                                    <div className="flex gap-2">
+                                      {business.logo_url ? (
+                                        <img 
+                                          src={business.logo_url} 
+                                          alt={business.company_name}
+                                          className="w-8 h-8 rounded-full object-cover"
+                                        />
+                                      ) : (
+                                        <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+                                          <Building2 className="w-4 h-4 text-muted-foreground" />
+                                        </div>
+                                      )}
+                                      <div className="flex-1">
+                                        <Textarea
+                                          placeholder="Escreva um comentário..."
+                                          value={commentText[post.id] || ''}
+                                          onChange={(e) => setCommentText({ ...commentText, [post.id]: e.target.value })}
+                                          rows={2}
+                                          className="resize-none"
+                                        />
+                                        <div className="flex justify-end mt-2">
+                                          <Button 
+                                            size="sm"
+                                            onClick={() => {
+                                              toast({
+                                                title: 'Comentário publicado!',
+                                                description: 'Seu comentário foi adicionado ao post.',
+                                              });
+                                              setCommentText({ ...commentText, [post.id]: '' });
+                                              setShowComments({ ...showComments, [post.id]: false });
+                                            }}
+                                            disabled={!commentText[post.id]?.trim()}
+                                          >
+                                            Comentar
+                                          </Button>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
                               </div>
                             </Card>
                           ))}
@@ -1894,6 +1949,43 @@ export default function BusinessEdit() {
                       )}
                     </CardContent>
                   </Card>
+
+                  {/* Dialog de Compartilhamento */}
+                  <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
+                    <DialogContent className="sm:max-w-md">
+                      <DialogHeader>
+                        <DialogTitle>Compartilhar perfil</DialogTitle>
+                        <DialogDescription>
+                          Copie o link abaixo para compartilhar este perfil
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="flex items-center space-x-2">
+                        <div className="grid flex-1 gap-2">
+                          <Input
+                            id="link"
+                            value={sharePostUrl}
+                            readOnly
+                            className="h-10"
+                          />
+                        </div>
+                        <Button
+                          size="sm"
+                          className="px-3"
+                          onClick={() => {
+                            navigator.clipboard.writeText(sharePostUrl);
+                            toast({
+                              title: 'Link copiado!',
+                              description: 'O link foi copiado para a área de transferência.',
+                            });
+                            setShareDialogOpen(false);
+                          }}
+                        >
+                          <LinkIcon className="h-4 w-4 mr-2" />
+                          Copiar
+                        </Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
                 </div>
               )}
 

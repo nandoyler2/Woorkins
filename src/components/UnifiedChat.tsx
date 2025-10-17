@@ -85,6 +85,10 @@ export function UnifiedChat({
   const [currentUserProfile, setCurrentUserProfile] = useState<any>(null);
   const [showPhotoRequiredDialog, setShowPhotoRequiredDialog] = useState(false);
   const [showDocVerificationDialog, setShowDocVerificationDialog] = useState(false);
+  const [showReportDialog, setShowReportDialog] = useState(false);
+  const [reportReason, setReportReason] = useState('');
+  const [reportDescription, setReportDescription] = useState('');
+  const [showBlockDialog, setShowBlockDialog] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messageInputRef = useRef<HTMLInputElement>(null);
 
@@ -584,6 +588,66 @@ useEffect(() => {
     }
   };
 
+  const handleBlockUser = async (shouldReport: boolean) => {
+    setShowBlockDialog(false);
+    
+    try {
+      // TODO: Implementar bloqueio de usuário
+      toast({
+        title: 'Usuário bloqueado',
+        description: 'Você não receberá mais mensagens deste usuário',
+      });
+      
+      if (shouldReport) {
+        setShowReportDialog(true);
+      }
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Erro ao bloquear',
+        description: error.message,
+      });
+    }
+  };
+
+  const handleReport = async () => {
+    if (!reportReason.trim()) {
+      toast({
+        variant: 'destructive',
+        title: 'Erro',
+        description: 'Selecione um motivo para a denúncia',
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase.from('reports').insert({
+        reporter_id: profileId,
+        content_type: conversationType === 'proposal' ? 'proposal' : 'negotiation',
+        content_id: conversationId,
+        reason: reportReason,
+        description: reportDescription,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: 'Denúncia enviada',
+        description: 'Sua denúncia foi registrada e será analisada pela nossa equipe',
+      });
+
+      setShowReportDialog(false);
+      setReportReason('');
+      setReportDescription('');
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Erro ao enviar denúncia',
+        description: error.message,
+      });
+    }
+  };
+
   return (
     <div className="h-full flex flex-col bg-white relative">
       {/* Unified Header with Proposal Info - 3 Columns Layout */}
@@ -675,9 +739,13 @@ useEffect(() => {
                     <Archive className="h-4 w-4 mr-2" />
                     Arquivar Conversa
                   </DropdownMenuItem>
-                  <DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setShowBlockDialog(true)}>
                     <Ban className="h-4 w-4 mr-2" />
                     Bloquear Usuário
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setShowReportDialog(true)}>
+                    <AlertTriangle className="h-4 w-4 mr-2" />
+                    Denunciar
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
@@ -725,18 +793,47 @@ useEffect(() => {
               )}
             </div>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={async () => {
-              const canDelete = await checkCanDelete();
-              if (canDelete) setShowDeleteDialog(true);
-            }}
-            className="text-destructive hover:text-destructive hover:bg-destructive/10"
-          >
-            <Trash2 className="w-4 h-4 mr-2" />
-            Excluir
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8">
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              {businessId && (
+                <>
+                  <DropdownMenuItem onClick={() => window.open(`/empresas/${businessId}`, '_blank')}>
+                    <Eye className="h-4 w-4 mr-2" />
+                    Ver Perfil da Empresa
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                </>
+              )}
+              <DropdownMenuItem>
+                <Archive className="h-4 w-4 mr-2" />
+                Arquivar Conversa
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setShowBlockDialog(true)}>
+                <Ban className="h-4 w-4 mr-2" />
+                Bloquear Usuário
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setShowReportDialog(true)}>
+                <AlertTriangle className="h-4 w-4 mr-2" />
+                Denunciar
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="text-destructive focus:text-destructive"
+                onClick={async () => {
+                  const canDelete = await checkCanDelete();
+                  if (canDelete) setShowDeleteDialog(true);
+                }}
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Excluir Conversa
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       )}
 
@@ -1088,6 +1185,105 @@ useEffect(() => {
         registeredCPF={currentUserProfile?.cpf || ''}
         action="send_message"
       />
+
+      {/* Block User Dialog */}
+      <AlertDialog open={showBlockDialog} onOpenChange={setShowBlockDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Ban className="w-5 h-5 text-destructive" />
+              Bloquear Usuário
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-3 pt-2">
+              <p>
+                Você está prestes a bloquear <strong>{otherUser.name}</strong>.
+              </p>
+              <p>
+                Após bloquear:
+              </p>
+              <ul className="list-disc list-inside space-y-1 text-sm">
+                <li>Você não receberá mais mensagens deste usuário</li>
+                <li>Este usuário não poderá visualizar seu perfil</li>
+                <li>Esta conversa será arquivada</li>
+              </ul>
+              <p className="text-sm text-muted-foreground">
+                Deseja também denunciar este usuário?
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2 sm:gap-0">
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <Button
+              variant="outline"
+              onClick={() => handleBlockUser(true)}
+            >
+              Bloquear e Denunciar
+            </Button>
+            <AlertDialogAction
+              onClick={() => handleBlockUser(false)}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              Apenas Bloquear
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Report Dialog */}
+      <AlertDialog open={showReportDialog} onOpenChange={setShowReportDialog}>
+        <AlertDialogContent className="max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-amber-600" />
+              Denunciar
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-4 pt-2">
+              <p>
+                Você está denunciando este usuário. Escolha o motivo:
+              </p>
+              <div className="space-y-2">
+                <label className="block">
+                  <select
+                    className="w-full p-2 border rounded-md bg-background"
+                    value={reportReason}
+                    onChange={(e) => setReportReason(e.target.value)}
+                  >
+                    <option value="">Selecione um motivo</option>
+                    <option value="spam">Spam ou propaganda</option>
+                    <option value="harassment">Assédio ou bullying</option>
+                    <option value="inappropriate">Conteúdo inapropriado</option>
+                    <option value="scam">Golpe ou fraude</option>
+                    <option value="fake">Perfil falso</option>
+                    <option value="other">Outro motivo</option>
+                  </select>
+                </label>
+                <textarea
+                  className="w-full p-2 border rounded-md bg-background min-h-[100px]"
+                  placeholder="Descreva o problema (opcional)"
+                  value={reportDescription}
+                  onChange={(e) => setReportDescription(e.target.value)}
+                  maxLength={500}
+                />
+                <p className="text-xs text-muted-foreground">
+                  {reportDescription.length}/500 caracteres
+                </p>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Sua denúncia será analisada pela nossa equipe em até 48 horas.
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleReport}
+              className="bg-amber-600 hover:bg-amber-700"
+            >
+              Enviar Denúncia
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

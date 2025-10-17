@@ -373,8 +373,7 @@ export default function Plans() {
           <Card className="bg-gradient-to-br from-primary/5 to-transparent border-primary/20">
             <div className="p-6 text-center space-y-2">
               <p className="text-lg">
-                💡 <strong>Importante:</strong> A taxa de recebimento é cobrada apenas quando você{' '}
-                <strong className="text-primary">recebe pagamentos</strong> pelos seus serviços.
+                💡 <strong>Importante:</strong> A taxa de recebimento é cobrada apenas quando você recebe pagamentos pelos seus serviços.
               </p>
               <p className="text-muted-foreground">
                 Criar projetos e contratar freelancers é totalmente grátis!

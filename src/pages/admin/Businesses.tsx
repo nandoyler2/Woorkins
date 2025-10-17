@@ -22,15 +22,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface Business {
   id: string;
@@ -367,23 +361,50 @@ export default function AdminBusinesses() {
             <div className="space-y-2">
               <Label htmlFor="profile-select">Restaurar para (opcional)</Label>
               <Input
-                placeholder="Buscar usuário..."
+                placeholder="Buscar usuário por nome ou @username..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="mb-2"
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  if (e.target.value === '') setSelectedProfileId('');
+                }}
               />
-              <Select value={selectedProfileId} onValueChange={setSelectedProfileId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione um usuário" />
-                </SelectTrigger>
-                <SelectContent>
-                  {filteredProfiles.map((profile) => (
-                    <SelectItem key={profile.id} value={profile.id}>
-                      {profile.full_name} (@{profile.username})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {searchTerm && (
+                <ScrollArea className="h-[200px] border rounded-md">
+                  {filteredProfiles.length > 0 ? (
+                    <div className="p-2">
+                      {filteredProfiles.map((profile) => (
+                        <div
+                          key={profile.id}
+                          onClick={() => {
+                            setSelectedProfileId(profile.id);
+                            setSearchTerm('');
+                          }}
+                          className={`p-3 rounded-md cursor-pointer hover:bg-accent transition-colors ${
+                            selectedProfileId === profile.id ? 'bg-accent' : ''
+                          }`}
+                        >
+                          <div className="font-medium">{profile.full_name}</div>
+                          <div className="text-sm text-muted-foreground">@{profile.username}</div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="p-4 text-center text-muted-foreground">
+                      Nenhum usuário encontrado
+                    </div>
+                  )}
+                </ScrollArea>
+              )}
+              {selectedProfileId && !searchTerm && (
+                <div className="p-3 bg-accent rounded-md">
+                  <div className="text-sm font-medium">
+                    Selecionado: {profiles.find(p => p.id === selectedProfileId)?.full_name}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    @{profiles.find(p => p.id === selectedProfileId)?.username}
+                  </div>
+                </div>
+              )}
               <p className="text-xs text-muted-foreground">
                 Deixe em branco para restaurar para o usuário original
               </p>
@@ -422,23 +443,50 @@ export default function AdminBusinesses() {
             <div className="space-y-2">
               <Label htmlFor="new-owner">Novo proprietário</Label>
               <Input
-                placeholder="Buscar usuário..."
+                placeholder="Buscar usuário por nome ou @username..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="mb-2"
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  if (e.target.value === '') setSelectedProfileId('');
+                }}
               />
-              <Select value={selectedProfileId} onValueChange={setSelectedProfileId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione um usuário" />
-                </SelectTrigger>
-                <SelectContent>
-                  {filteredProfiles.map((profile) => (
-                    <SelectItem key={profile.id} value={profile.id}>
-                      {profile.full_name} (@{profile.username})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {searchTerm && (
+                <ScrollArea className="h-[200px] border rounded-md">
+                  {filteredProfiles.length > 0 ? (
+                    <div className="p-2">
+                      {filteredProfiles.map((profile) => (
+                        <div
+                          key={profile.id}
+                          onClick={() => {
+                            setSelectedProfileId(profile.id);
+                            setSearchTerm('');
+                          }}
+                          className={`p-3 rounded-md cursor-pointer hover:bg-accent transition-colors ${
+                            selectedProfileId === profile.id ? 'bg-accent' : ''
+                          }`}
+                        >
+                          <div className="font-medium">{profile.full_name}</div>
+                          <div className="text-sm text-muted-foreground">@{profile.username}</div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="p-4 text-center text-muted-foreground">
+                      Nenhum usuário encontrado
+                    </div>
+                  )}
+                </ScrollArea>
+              )}
+              {selectedProfileId && !searchTerm && (
+                <div className="p-3 bg-accent rounded-md">
+                  <div className="text-sm font-medium">
+                    Selecionado: {profiles.find(p => p.id === selectedProfileId)?.full_name}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    @{profiles.find(p => p.id === selectedProfileId)?.username}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
           <DialogFooter>

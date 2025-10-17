@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAIAssistant } from '@/contexts/AIAssistantContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
@@ -152,6 +153,7 @@ export default function BusinessEdit() {
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { openWithMessage } = useAIAssistant();
   
   const [business, setBusiness] = useState<BusinessProfile | null>(null);
   const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
@@ -1140,6 +1142,23 @@ export default function BusinessEdit() {
                       </SidebarMenuItem>
                     );
                   })}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+
+            {/* Botão de Ajuda */}
+            <SidebarGroup className="mt-auto">
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      onClick={() => openWithMessage('')}
+                      className="hover:bg-muted/50 transition-all duration-200"
+                    >
+                      <MessageCircle className="w-5 h-5 mr-3 text-muted-foreground" />
+                      <span>Precisa de ajuda?</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>

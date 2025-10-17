@@ -87,13 +87,16 @@ export default function Plans() {
         .limit(1)
         .maybeSingle();
 
-      if (subscription) {
+      if (subscription?.plan_type) {
         setCurrentPlan(subscription.plan_type);
       } else {
+        // Se não tem plano pago, está no plano grátis/básico
         setCurrentPlan('basico');
       }
     } catch (error: any) {
       console.error('Error loading current plan:', error);
+      // Em caso de erro, assume plano básico
+      setCurrentPlan('basico');
     }
   };
 
@@ -107,8 +110,12 @@ export default function Plans() {
       return;
     }
 
-    // Se já está no plano
-    if (currentPlan === plan.slug) {
+    // Verificar se já está no plano (incluindo plano grátis)
+    const isCurrentlyOnPlan = currentPlan === plan.slug || 
+                              (currentPlan === 'basico' && plan.price === 0) ||
+                              (currentPlan === 'free' && plan.price === 0);
+    
+    if (isCurrentlyOnPlan) {
       toast({
         title: '✓ Plano já ativo',
         description: `Você já está utilizando o plano ${plan.name}. Para mudar, escolha outro plano.`,
@@ -228,7 +235,10 @@ export default function Plans() {
         <div className="flex justify-center">
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl w-full mb-12">
           {plans.map((plan) => {
-            const isCurrentPlan = currentPlan === plan.slug;
+            // Comparar tanto pelo slug quanto verificar se é o plano grátis
+            const isCurrentPlan = currentPlan === plan.slug || 
+                                  (currentPlan === 'basico' && plan.price === 0) ||
+                                  (currentPlan === 'free' && plan.price === 0);
             const isFree = plan.price === 0;
             
             return (

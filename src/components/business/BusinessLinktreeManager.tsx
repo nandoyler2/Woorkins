@@ -723,6 +723,45 @@ export function BusinessLinktreeManager({ businessId, businessLogo }: BusinessLi
 
               {/* Tab: Links */}
               <TabsContent value="links" className="space-y-4">
+                {/* Logo e Bio */}
+                <div className="space-y-4 pb-4 border-b">
+                  <div>
+                    <Label>Logo</Label>
+                    <div className="flex gap-2 items-end">
+                      <Input
+                        value={config.logoUrl || ''}
+                        onChange={(e) => setConfig({ ...config, logoUrl: e.target.value })}
+                        placeholder="URL da logo (deixe vazio para usar a logo do perfil)"
+                        className="flex-1"
+                      />
+                      <Button 
+                        size="sm"
+                        onClick={() => saveConfig({ logoUrl: config.logoUrl })}
+                      >
+                        Salvar
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label>Bio</Label>
+                    <Textarea
+                      value={config.bio || ''}
+                      onChange={(e) => setConfig({ ...config, bio: e.target.value })}
+                      placeholder="Descreva seu negócio em poucas palavras..."
+                      className="resize-none"
+                      rows={3}
+                    />
+                    <Button 
+                      size="sm" 
+                      className="mt-2"
+                      onClick={() => saveConfig({ bio: config.bio })}
+                    >
+                      Salvar Bio
+                    </Button>
+                  </div>
+                </div>
+
                 {editingLink && (
                   <Card className="p-4 border-primary">
                     <div className="space-y-4">

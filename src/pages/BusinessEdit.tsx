@@ -17,7 +17,7 @@ import {
   ArrowLeft, Save, Star, MessageSquare, Plus, Trash2, 
   Facebook, Instagram, Linkedin, Twitter, Globe, MessageCircle, 
   AlertTriangle, Info, Image as ImageIcon, Users, MessagesSquare,
-  Eye, EyeOff
+  Eye, EyeOff, ExternalLink
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import {
@@ -528,19 +528,30 @@ export default function BusinessEdit() {
             <div className="container mx-auto px-6 py-8 max-w-5xl">
               {/* Header do perfil */}
               <div className="mb-8">
-                <div className="flex items-center gap-3 mb-2">
-                  <h1 className="text-3xl font-bold">{business.company_name}</h1>
-                  {business.active ? (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
-                      <Eye className="w-4 h-4" />
-                      Ativo
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">
-                      <EyeOff className="w-4 h-4" />
-                      Desativado
-                    </span>
-                  )}
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-3">
+                    <h1 className="text-3xl font-bold">{business.company_name}</h1>
+                    {business.active ? (
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
+                        <Eye className="w-4 h-4" />
+                        Ativo
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">
+                        <EyeOff className="w-4 h-4" />
+                        Desativado
+                      </span>
+                    )}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => window.open(`/empresa/${business.slug}`, '_blank')}
+                    className="gap-2"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    Ver Perfil
+                  </Button>
                 </div>
                 <p className="text-muted-foreground">@{business.slug}</p>
               </div>

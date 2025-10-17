@@ -137,6 +137,7 @@ export default function BusinessEdit() {
   const [features, setFeatures] = useState<BusinessFeature[]>([]);
   const [configuringFeature, setConfiguringFeature] = useState<string | null>(null);
   const [deleteConfirmSlug, setDeleteConfirmSlug] = useState('');
+  const [createPostOpen, setCreatePostOpen] = useState(false);
   
   // Refs para inputs de upload
   const logoInputRef = useRef<HTMLInputElement>(null);
@@ -1543,9 +1544,50 @@ export default function BusinessEdit() {
               {/* Posts */}
               {activeSection === 'posts' && (
                 <div className="space-y-6 animate-fade-in">
-                  <div className="flex justify-end">
-                    <CreatePostDialog businessId={business.id} onPostCreated={loadPosts} />
-                  </div>
+                  {/* Create Post Area - Facebook Style */}
+                  <Card className="bg-card/50 backdrop-blur-sm border-2 hover:shadow-md transition-all">
+                    <CardContent className="p-4">
+                      <div 
+                        className="flex items-center gap-3 cursor-pointer"
+                        onClick={() => setCreatePostOpen(true)}
+                      >
+                        {business.logo_url ? (
+                          <img 
+                            src={business.logo_url} 
+                            alt={business.company_name}
+                            className="w-10 h-10 rounded-full object-cover border-2 border-border"
+                          />
+                        ) : (
+                          <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center border-2 border-border">
+                            <Building2 className="w-5 h-5 text-muted-foreground" />
+                          </div>
+                        )}
+                        <div 
+                          className="flex-1 bg-muted hover:bg-muted/80 rounded-full px-4 py-3 text-muted-foreground transition-colors"
+                        >
+                          No que você está pensando?
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 mt-3 pt-3 border-t">
+                        <Button 
+                          variant="ghost" 
+                          className="flex-1 gap-2 hover:bg-muted/50"
+                          onClick={() => setCreatePostOpen(true)}
+                        >
+                          <ImageIcon className="w-5 h-5 text-green-500" />
+                          <span className="text-muted-foreground">Foto/vídeo</span>
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Hidden Dialog Controller */}
+                  <CreatePostDialog 
+                    businessId={business.id} 
+                    onPostCreated={loadPosts}
+                    open={createPostOpen}
+                    onOpenChange={setCreatePostOpen}
+                  />
 
                   <Card className="bg-card/50 backdrop-blur-sm border-2">
                     <div className="bg-gradient-to-r from-orange-500/10 via-red-500/10 to-pink-500/10 p-6 border-b">

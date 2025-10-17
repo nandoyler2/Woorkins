@@ -10,10 +10,15 @@ import { Plus, Send } from 'lucide-react';
 interface CreatePostDialogProps {
   businessId: string;
   onPostCreated: () => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  trigger?: React.ReactNode;
 }
 
-export function CreatePostDialog({ businessId, onPostCreated }: CreatePostDialogProps) {
-  const [open, setOpen] = useState(false);
+export function CreatePostDialog({ businessId, onPostCreated, open: controlledOpen, onOpenChange, trigger }: CreatePostDialogProps) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
+  const setOpen = onOpenChange || setInternalOpen;
   const [content, setContent] = useState('');
   const [mediaUrls, setMediaUrls] = useState<string[]>([]);
   const [mediaTypes, setMediaTypes] = useState<string[]>([]);
@@ -71,12 +76,11 @@ export function CreatePostDialog({ businessId, onPostCreated }: CreatePostDialog
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button className="bg-gradient-primary hover:shadow-glow transition-all">
-          <Plus className="w-4 h-4 mr-2" />
-          Criar Post
-        </Button>
-      </DialogTrigger>
+      {trigger && (
+        <DialogTrigger asChild>
+          {trigger}
+        </DialogTrigger>
+      )}
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Criar Novo Post</DialogTitle>

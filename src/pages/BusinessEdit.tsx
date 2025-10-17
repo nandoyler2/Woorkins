@@ -135,6 +135,7 @@ export default function BusinessEdit() {
   const [activeSection, setActiveSection] = useState<Section>('tools');
   const [features, setFeatures] = useState<BusinessFeature[]>([]);
   const [configuringFeature, setConfiguringFeature] = useState<string | null>(null);
+  const [deleteConfirmSlug, setDeleteConfirmSlug] = useState('');
   
   // Refs para inputs de upload
   const logoInputRef = useRef<HTMLInputElement>(null);
@@ -657,6 +658,21 @@ export default function BusinessEdit() {
     }
   };
 
+  const confirmDeleteProfile = () => {
+    if (!business?.slug) return;
+    
+    if (deleteConfirmSlug !== `@${business.slug}`) {
+      toast({
+        title: 'Erro',
+        description: 'O @ digitado não corresponde ao perfil que deseja excluir.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    handleDeleteProfile();
+  };
+
   const handleDeleteProfile = async () => {
     if (!business) return;
 
@@ -677,6 +693,8 @@ export default function BusinessEdit() {
         title: 'Perfil profissional excluído',
         description: 'Seu perfil profissional foi removido com sucesso.',
       });
+      
+      setDeleteConfirmSlug('');
       
       navigate('/painel');
     } catch (error: any) {
@@ -1790,16 +1808,29 @@ export default function BusinessEdit() {
                         <AlertDialogContent>
                           <AlertDialogHeader>
                             <AlertDialogTitle>Tem certeza absoluta?</AlertDialogTitle>
-                            <AlertDialogDescription className="space-y-2">
+                            <AlertDialogDescription className="space-y-3">
                               <p>Esta ação não pode ser desfeita. Isso excluirá permanentemente seu perfil profissional, 
                               incluindo todos os posts, portfólio e avaliações associadas.</p>
                               <p className="font-medium text-foreground">Nota: Seu perfil de interações na plataforma não será afetado.</p>
+                              <div className="pt-2">
+                                <Label htmlFor="confirm-delete" className="text-sm">
+                                  Digite <span className="font-mono">@{business?.slug}</span> para confirmar
+                                </Label>
+                                <Input
+                                  id="confirm-delete"
+                                  placeholder={`@${business?.slug}`}
+                                  value={deleteConfirmSlug}
+                                  onChange={(e) => setDeleteConfirmSlug(e.target.value)}
+                                  className="mt-2"
+                                />
+                              </div>
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
-                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogCancel onClick={() => setDeleteConfirmSlug('')}>Cancelar</AlertDialogCancel>
                             <AlertDialogAction 
-                              onClick={handleDeleteProfile}
+                              onClick={confirmDeleteProfile}
+                              disabled={deleteConfirmSlug !== `@${business?.slug}`}
                               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                             >
                               Sim, excluir perfil profissional

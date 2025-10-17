@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { Check, X, Eye, RotateCcw, UserCog, Trash2, Ban } from 'lucide-react';
+import { Check, X, Eye, RotateCcw, UserCog, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -58,7 +58,6 @@ export default function AdminBusinesses() {
   const [selectedProfileId, setSelectedProfileId] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState('');
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [showDeactivateDialog, setShowDeactivateDialog] = useState(false);
   const [confirmSlug, setConfirmSlug] = useState('');
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -202,6 +201,16 @@ export default function AdminBusinesses() {
   const handleDelete = async () => {
     if (!selectedBusiness) return;
 
+    // Verificar se o perfil já está marcado como deletado
+    if (!selectedBusiness.deleted) {
+      toast({
+        title: "Erro",
+        description: "Apenas perfis já excluídos podem ser removidos permanentemente.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (confirmSlug !== `@${selectedBusiness.slug}`) {
       toast({
         title: "Erro",
@@ -212,19 +221,17 @@ export default function AdminBusinesses() {
     }
 
     try {
+      // Exclusão permanente do banco de dados
       const { error } = await supabase
         .from('business_profiles')
-        .update({
-          deleted: true,
-          deleted_at: new Date().toISOString(),
-        })
+        .delete()
         .eq('id', selectedBusiness.id);
 
       if (error) throw error;
 
       toast({
-        title: "Perfil excluído",
-        description: "O perfil foi excluído com sucesso.",
+        title: "Perfil removido permanentemente",
+        description: "O perfil foi excluído definitivamente do sistema.",
       });
 
       setShowDeleteDialog(false);
@@ -234,44 +241,6 @@ export default function AdminBusinesses() {
     } catch (error: any) {
       toast({
         title: "Erro ao excluir",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleDeactivate = async () => {
-    if (!selectedBusiness) return;
-
-    if (confirmSlug !== `@${selectedBusiness.slug}`) {
-      toast({
-        title: "Erro",
-        description: "O @ digitado não corresponde ao perfil selecionado.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      const { error } = await supabase
-        .from('business_profiles')
-        .update({ active: false })
-        .eq('id', selectedBusiness.id);
-
-      if (error) throw error;
-
-      toast({
-        title: "Perfil desativado",
-        description: "O perfil foi desativado com sucesso.",
-      });
-
-      setShowDeactivateDialog(false);
-      setSelectedBusiness(null);
-      setConfirmSlug('');
-      loadBusinesses();
-    } catch (error: any) {
-      toast({
-        title: "Erro ao desativar",
         description: error.message,
         variant: "destructive",
       });
@@ -356,6 +325,17 @@ export default function AdminBusinesses() {
                     <Button
                       variant="ghost"
                       size="sm"
+                      onClick={() => {
+                        setSelectedBusiness(business);
+                        setShowDeleteDialog(true);
+                      }}
+                      title="Excluir permanentemente"
+                    >
+                      <Trash2 className="h-4 w-4 text-red-500" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={() => navigate(`/${business.slug}`)}
                       title="Ver perfil"
                     >
@@ -371,28 +351,6 @@ export default function AdminBusinesses() {
                       title={business.active ? 'Desativar' : 'Ativar'}
                     >
                       {business.active ? <X className="h-4 w-4" /> : <Check className="h-4 w-4" />}
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        setSelectedBusiness(business);
-                        setShowDeactivateDialog(true);
-                      }}
-                      title="Desativar perfil"
-                    >
-                      <Ban className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        setSelectedBusiness(business);
-                        setShowDeleteDialog(true);
-                      }}
-                      title="Excluir perfil"
-                    >
-                      <Trash2 className="h-4 w-4" />
                     </Button>
                     <Button
                       variant="ghost"
@@ -532,20 +490,22 @@ export default function AdminBusinesses() {
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Excluir Perfil Profissional</DialogTitle>
+            <DialogTitle>Excluir Permanentemente</DialogTitle>
             <DialogDescription>
-              Esta ação marcará o perfil como excluído. Ele ficará oculto para o público mas poderá ser restaurado.
+              <span className="text-destructive font-medium">ATENÇÃO: Esta ação é irreversível!</span> 
+              <br />
+              O perfil será removido permanentemente do banco de dados, incluindo todos os dados associados.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>Perfil a ser excluído</Label>
+              <Label>Perfil a ser excluído permanentemente</Label>
               <p className="text-sm font-medium">{selectedBusiness?.company_name}</p>
               <p className="text-xs text-muted-foreground font-mono">@{selectedBusiness?.slug}</p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="confirm-delete">
-                Digite <span className="font-mono">@{selectedBusiness?.slug}</span> para confirmar
+                Digite <span className="font-mono">@{selectedBusiness?.slug}</span> para confirmar a exclusão permanente
               </Label>
               <Input
                 id="confirm-delete"
@@ -567,51 +527,7 @@ export default function AdminBusinesses() {
               onClick={handleDelete}
               disabled={confirmSlug !== `@${selectedBusiness?.slug}`}
             >
-              Excluir Perfil
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={showDeactivateDialog} onOpenChange={setShowDeactivateDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Desativar Perfil Profissional</DialogTitle>
-            <DialogDescription>
-              Esta ação desativará o perfil. Ele ficará oculto mas poderá ser reativado.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label>Perfil a ser desativado</Label>
-              <p className="text-sm font-medium">{selectedBusiness?.company_name}</p>
-              <p className="text-xs text-muted-foreground font-mono">@{selectedBusiness?.slug}</p>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="confirm-deactivate">
-                Digite <span className="font-mono">@{selectedBusiness?.slug}</span> para confirmar
-              </Label>
-              <Input
-                id="confirm-deactivate"
-                placeholder={`@${selectedBusiness?.slug}`}
-                value={confirmSlug}
-                onChange={(e) => setConfirmSlug(e.target.value)}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => {
-              setShowDeactivateDialog(false);
-              setConfirmSlug('');
-            }}>
-              Cancelar
-            </Button>
-            <Button 
-              variant="destructive" 
-              onClick={handleDeactivate}
-              disabled={confirmSlug !== `@${selectedBusiness?.slug}`}
-            >
-              Desativar Perfil
+              Excluir Permanentemente
             </Button>
           </DialogFooter>
         </DialogContent>

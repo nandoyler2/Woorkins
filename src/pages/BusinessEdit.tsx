@@ -656,13 +656,13 @@ export default function BusinessEdit() {
 
       try {
         const { data, error } = await supabase.storage
-          .from('business_media')
+          .from('business-media')
           .upload(fileName, file);
 
         if (error) throw error;
 
         const { data: { publicUrl } } = supabase.storage
-          .from('business_media')
+          .from('business-media')
           .getPublicUrl(fileName);
 
         uploadedUrls.push(publicUrl);
@@ -1733,7 +1733,7 @@ export default function BusinessEdit() {
                               onClick={() => imageInputRef.current?.click()}
                             >
                               <ImageIcon className="w-5 h-5 text-green-500" />
-                              <span>Adicionar fotos</span>
+                              <span>Adicionar imagens</span>
                             </Button>
 
                             <div className="flex gap-2">

@@ -148,32 +148,6 @@ export default function BusinessEdit() {
 
     if (!profileData) return;
 
-    if (slug === 'novo') {
-      const newSlug = `perfil-${Math.random().toString(36).slice(2, 8)}`;
-      const { data: inserted, error: insertError } = await supabase
-        .from('business_profiles' as any)
-        .insert({
-          profile_id: (profileData as any).id,
-          company_name: 'Novo Perfil',
-          slug: newSlug,
-        })
-        .select('*')
-        .single();
-
-      if (insertError || !inserted) {
-        toast({
-          title: 'Erro',
-          description: 'Não foi possível criar o perfil',
-          variant: 'destructive',
-        });
-        navigate('/painel');
-        return;
-      }
-
-      navigate(`/empresa/${(inserted as any).slug}/editar`, { replace: true });
-      return;
-    }
-
     const { data, error } = await supabase
       .from('business_profiles' as any)
       .select('*')
@@ -184,7 +158,7 @@ export default function BusinessEdit() {
     if (error || !data) {
       toast({
         title: 'Erro',
-        description: 'Marca não encontrada',
+        description: 'Perfil não encontrado',
         variant: 'destructive',
       });
       navigate('/painel');

@@ -16,6 +16,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { formatShortName } from '@/lib/utils';
 import { ProfileEditDialog } from '@/components/ProfileEditDialog';
 import { IdentityVerificationDialog } from '@/components/IdentityVerificationDialog';
+import { CreateBusinessProfileDialog } from '@/components/CreateBusinessProfileDialog';
 import confetti from 'canvas-confetti';
 interface Profile {
   id: string;
@@ -82,6 +83,7 @@ export default function Dashboard() {
   const [woorkoinsBalance, setWoorkoinsBalance] = useState(0);
   const [showProfileEdit, setShowProfileEdit] = useState(false);
   const [showVerificationDialog, setShowVerificationDialog] = useState(false);
+  const [showCreateBusinessDialog, setShowCreateBusinessDialog] = useState(false);
   const [emailConfirmed, setEmailConfirmed] = useState(false);
   const [profileCompleted, setProfileCompleted] = useState(() => {
     // Se já foi mostrado, considerar como completo para não exibir novamente
@@ -671,11 +673,9 @@ export default function Dashboard() {
                     </div>
                     <h3 className="text-base font-bold text-slate-900">Perfis Profissionais</h3>
                   </div>
-                  <Link to="/empresa/novo/editar">
-                    <Button variant="outline" size="sm" className="text-xs h-7">
-                      + Criar Perfil
-                    </Button>
-                  </Link>
+                  <Button variant="outline" size="sm" className="text-xs h-7" onClick={() => setShowCreateBusinessDialog(true)}>
+                    + Criar Perfil
+                  </Button>
                 </div>
               </CardHeader>
               <CardContent className="p-4">
@@ -683,11 +683,9 @@ export default function Dashboard() {
                   <div className="text-center py-6">
                     <Building2 className="w-12 h-12 text-slate-300 mx-auto mb-2" />
                     <p className="text-sm text-slate-600 mb-3">Você ainda não criou nenhum perfil profissional</p>
-                    <Link to="/empresa/novo/editar">
-                      <Button variant="default" size="sm">
-                        Criar Primeiro Perfil
-                      </Button>
-                    </Link>
+                    <Button variant="default" size="sm" onClick={() => setShowCreateBusinessDialog(true)}>
+                      Criar Primeiro Perfil
+                    </Button>
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -972,6 +970,11 @@ export default function Dashboard() {
             profileId={profile.id}
             registeredName={profile.full_name || ''}
             registeredCPF={profile.cpf || ''}
+          />
+          <CreateBusinessProfileDialog
+            open={showCreateBusinessDialog}
+            onOpenChange={setShowCreateBusinessDialog}
+            onSuccess={() => profile && loadBusinessProfiles(profile.id)}
           />
         </>
       )}

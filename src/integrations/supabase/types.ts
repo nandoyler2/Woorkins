@@ -52,6 +52,59 @@ export type Database = {
           },
         ]
       }
+      blocked_messages: {
+        Row: {
+          blocked_at: string
+          conversation_id: string | null
+          conversation_type: string
+          created_at: string
+          file_name: string | null
+          file_type: string | null
+          file_url: string | null
+          id: string
+          moderation_category: string | null
+          moderation_reason: string
+          original_content: string | null
+          profile_id: string
+        }
+        Insert: {
+          blocked_at?: string
+          conversation_id?: string | null
+          conversation_type: string
+          created_at?: string
+          file_name?: string | null
+          file_type?: string | null
+          file_url?: string | null
+          id?: string
+          moderation_category?: string | null
+          moderation_reason: string
+          original_content?: string | null
+          profile_id: string
+        }
+        Update: {
+          blocked_at?: string
+          conversation_id?: string | null
+          conversation_type?: string
+          created_at?: string
+          file_name?: string | null
+          file_type?: string | null
+          file_url?: string | null
+          id?: string
+          moderation_category?: string | null
+          moderation_reason?: string
+          original_content?: string | null
+          profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blocked_messages_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       business_posts: {
         Row: {
           business_id: string

@@ -9,7 +9,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { content, recentMessages = [], imageUrl, isPaid = false } = await req.json();
+    const { content, recentMessages = [], imageUrl, isPaid = false, profileId, conversationType, conversationId, fileName, fileType } = await req.json();
     
     if (!content && !imageUrl) {
       return new Response(
@@ -328,35 +328,57 @@ Responda APENAS em JSON:
       // Keep flagged status to warn user
     }
 
-    // If message is rejected, mark it as deleted
+    // If message is rejected, save to blocked_messages table for admin review
     if (!moderationResult.approved) {
       const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
       const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
       
-      if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+      if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY && profileId) {
         try {
-          const { messageId } = await req.json();
+          // Determine moderation category
+          const reason = moderationResult.reason || '';
+          let category = 'other';
           
-          if (messageId) {
-            // Update the message to mark it as deleted
-            const updateResponse = await fetch(
-              `${SUPABASE_URL}/rest/v1/negotiation_messages?id=eq.${messageId}`,
-              {
-                method: 'PATCH',
-                headers: {
-                  'apikey': SUPABASE_SERVICE_ROLE_KEY,
-                  'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-                  'Content-Type': 'application/json',
-                  'Prefer': 'return=minimal'
-                },
-                body: JSON.stringify({ is_deleted: true })
-              }
-            );
-            
-            console.log('Message marked as deleted:', updateResponse.ok);
+          if (reason.toLowerCase().includes('palavrão') || reason.toLowerCase().includes('ofensiv')) {
+            category = 'profanity';
+          } else if (reason.toLowerCase().includes('sexual') || reason.toLowerCase().includes('pornográf')) {
+            category = 'explicit_content';
+          } else if (reason.toLowerCase().includes('contato') || reason.toLowerCase().includes('telefone') || reason.toLowerCase().includes('email')) {
+            category = 'contact_sharing';
+          } else if (reason.toLowerCase().includes('assédio') || reason.toLowerCase().includes('ataque')) {
+            category = 'harassment';
           }
+          
+          // Save blocked message
+          const blockedMessageData = {
+            profile_id: profileId,
+            conversation_type: conversationType || 'unknown',
+            conversation_id: conversationId || null,
+            original_content: content || null,
+            file_url: imageUrl || null,
+            file_name: fileName || null,
+            file_type: fileType || null,
+            moderation_reason: moderationResult.reason,
+            moderation_category: category
+          };
+          
+          const saveResponse = await fetch(
+            `${SUPABASE_URL}/rest/v1/blocked_messages`,
+            {
+              method: 'POST',
+              headers: {
+                'apikey': SUPABASE_SERVICE_ROLE_KEY,
+                'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+                'Content-Type': 'application/json',
+                'Prefer': 'return=minimal'
+              },
+              body: JSON.stringify(blockedMessageData)
+            }
+          );
+          
+          console.log('Blocked message saved:', saveResponse.ok);
         } catch (error) {
-          console.error('Error marking message as deleted:', error);
+          console.error('Error saving blocked message:', error);
         }
       }
     }

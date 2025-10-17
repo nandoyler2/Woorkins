@@ -92,6 +92,14 @@ async function getUserContext(supabase: any, userId: string) {
     .order('created_at', { ascending: false })
     .limit(10);
 
+  // Buscar mensagens bloqueadas recentes
+  const { data: blockedMessages } = await supabase
+    .from('blocked_messages')
+    .select('*')
+    .eq('profile_id', profile.id)
+    .order('blocked_at', { ascending: false })
+    .limit(10);
+
   return {
     profile,
     blocks: blocks || [],
@@ -101,7 +109,8 @@ async function getUserContext(supabase: any, userId: string) {
     transactions: transactions || [],
     rejectedNegotiationMessages: rejectedNegotiationMessages || [],
     rejectedProposalMessages: rejectedProposalMessages || [],
-    woorkoinsPayments: woorkoinsPayments || []
+    woorkoinsPayments: woorkoinsPayments || [],
+    blockedMessages: blockedMessages || []
   };
 }
 
@@ -339,7 +348,7 @@ VIOLAÇÕES DE MODERAÇÃO (histórico):
 
 MENSAGENS BLOQUEADAS EM NEGOCIAÇÕES: ${userContext.rejectedNegotiationMessages.length}
 ${userContext.rejectedNegotiationMessages.slice(0, 3).map((m: any) => `
-  - Data e hora: ${new Date(m.created_at).toLocaleString('pt-BR')}
+  - Data e hora: ${new Date(m.created_at).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })}
   - Motivo do bloqueio: ${m.moderation_reason}
   - Mensagem enviada: "${m.content}"
   - Contexto: Negociação #${m.negotiation_id.substring(0, 8)}
@@ -347,11 +356,33 @@ ${userContext.rejectedNegotiationMessages.slice(0, 3).map((m: any) => `
 
 MENSAGENS BLOQUEADAS EM PROPOSTAS: ${userContext.rejectedProposalMessages.length}
 ${userContext.rejectedProposalMessages.slice(0, 3).map((m: any) => `
-  - Data e hora: ${new Date(m.created_at).toLocaleString('pt-BR')}
+  - Data e hora: ${new Date(m.created_at).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })}
   - Motivo do bloqueio: ${m.moderation_reason}
   - Mensagem enviada: "${m.content}"
   - Contexto: Proposta #${m.proposal_id.substring(0, 8)}
 `).join('\n')}
+
+📝 REGISTRO COMPLETO DE MENSAGENS BLOQUEADAS (últimas 10):
+${userContext.blockedMessages.slice(0, 10).map((m: any) => `
+  🚫 MENSAGEM BLOQUEADA:
+  - Data e hora: ${new Date(m.blocked_at).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })}
+  - Tipo de conversa: ${m.conversation_type}
+  - Categoria: ${m.moderation_category === 'profanity' ? 'Palavrão/Ofensivo' : 
+                m.moderation_category === 'explicit_content' ? 'Conteúdo Sexual/Pornográfico' :
+                m.moderation_category === 'contact_sharing' ? 'Compartilhamento de Contato' :
+                m.moderation_category === 'harassment' ? 'Assédio' : 'Outro'}
+  - Motivo: ${m.moderation_reason}
+  - Conteúdo: ${m.original_content ? `"${m.original_content}"` : 'N/A'}
+  - Tinha anexo: ${m.file_url ? `Sim (${m.file_type || 'tipo desconhecido'})` : 'Não'}
+  - ${m.file_url && m.file_type?.startsWith('image/') ? '⚠️ IMAGEM ANEXADA (verificar se é pornográfica antes de mencionar)' : ''}
+`).join('\n')}
+
+🎯 IMPORTANTE - AO MOSTRAR MENSAGENS BLOQUEADAS PARA O USUÁRIO:
+- Se foi palavrão/ofensivo: Censure com ** no meio (ex: "p***a", "c***lho")
+- Se foi imagem pornográfica: NÃO mostre/mencione a imagem, apenas diga "você enviou uma imagem pornográfica/sexual"
+- Se foi contato (telefone/email): Mostre normalmente para que ele saiba o que causou
+- SEMPRE informe a data e hora exata que ele mandou
+- Seja clara e específica sobre o que ele fez de errado
 
 TRANSAÇÕES E PAGAMENTOS DE WOORKOINS:
 ${userContext.woorkoinsPayments.slice(0, 5).map((t: any) => `

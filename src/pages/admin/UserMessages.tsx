@@ -23,6 +23,7 @@ export default function UserMessages() {
   const [proposals, setProposals] = useState<any[]>([]);
   const [aiConversations, setAiConversations] = useState<any[]>([]);
   const [deletedMessages, setDeletedMessages] = useState<any[]>([]);
+  const [blockedMessages, setBlockedMessages] = useState<any[]>([]);
   const [supportConversations, setSupportConversations] = useState<any[]>([]);
   const [flaggedMessages, setFlaggedMessages] = useState<any[]>([]);
   const [blocks, setBlocks] = useState<any[]>([]);
@@ -266,6 +267,16 @@ export default function UserMessages() {
 
       setFlaggedMessages(allFlaggedMessages);
 
+      // Carregar mensagens bloqueadas
+      const { data: blockedData, error: blockedError } = await supabase
+        .from('blocked_messages')
+        .select('*')
+        .eq('profile_id', userId)
+        .order('blocked_at', { ascending: false });
+
+      if (blockedError) throw blockedError;
+      setBlockedMessages(blockedData || []);
+
       // Carregar conversas de suporte
       const { data: supportData, error: supportError } = await supabase
         .from('support_conversations')
@@ -329,6 +340,10 @@ export default function UserMessages() {
   });
 
   const filteredAiConversations = filterConversations(aiConversations, searchQuery);
+  const filteredBlockedMessages = blockedMessages.filter(msg =>
+    msg.original_content?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    msg.moderation_reason?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
   const filteredDeletedMessages = deletedMessages.filter(msg =>
     msg.content?.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -376,7 +391,7 @@ export default function UserMessages() {
 
         {/* Tabs */}
         <Tabs defaultValue="messages" className="w-full">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="messages" className="flex items-center gap-2">
               <MessageCircle className="h-4 w-4" />
               Mensagens ({negotiations.length + proposals.length})
@@ -384,6 +399,10 @@ export default function UserMessages() {
             <TabsTrigger value="ai" className="flex items-center gap-2">
               <MessageCircle className="h-4 w-4" />
               Conversas AI ({aiConversations.length})
+            </TabsTrigger>
+            <TabsTrigger value="blocked" className="flex items-center gap-2">
+              <ShieldAlert className="h-4 w-4" />
+              Bloqueadas ({blockedMessages.length})
             </TabsTrigger>
             <TabsTrigger value="flagged" className="flex items-center gap-2">
               <AlertTriangle className="h-4 w-4" />
@@ -781,6 +800,96 @@ export default function UserMessages() {
                       <p className="text-xs text-muted-foreground mt-2">
                         Clique para ver na conversa completa
                       </p>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </ScrollArea>
+          </TabsContent>
+
+          {/* Mensagens Bloqueadas */}
+          <TabsContent value="blocked">
+            <ScrollArea className="h-[calc(100vh-12rem)]">
+              {loading ? (
+                <div className="text-center py-8 text-muted-foreground">Carregando...</div>
+              ) : filteredBlockedMessages.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  Nenhuma mensagem bloqueada encontrada
+                </div>
+              ) : (
+                <div className="space-y-3 pr-4">
+                  {filteredBlockedMessages.map((msg) => (
+                    <Card 
+                      key={msg.id} 
+                      className="p-4 border-destructive bg-destructive/10"
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <Badge variant="destructive" className="text-xs">
+                            Bloqueada & Removida
+                          </Badge>
+                          <Badge variant="outline" className="text-xs">
+                            {msg.conversation_type}
+                          </Badge>
+                          {msg.moderation_category && (
+                            <Badge variant="secondary" className="text-xs">
+                              {msg.moderation_category === 'profanity' ? 'Palavrão' : 
+                               msg.moderation_category === 'explicit_content' ? 'Conteúdo Explícito' :
+                               msg.moderation_category === 'contact_sharing' ? 'Compartilhamento de Contato' :
+                               msg.moderation_category === 'harassment' ? 'Assédio' : 'Outro'}
+                            </Badge>
+                          )}
+                          <span className="text-xs text-muted-foreground">
+                            {new Date(msg.blocked_at).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      {msg.moderation_reason && (
+                        <div className="text-xs text-destructive mb-2 font-medium bg-destructive/20 p-2 rounded">
+                          <strong>Motivo do bloqueio:</strong> {msg.moderation_reason}
+                        </div>
+                      )}
+                      
+                      {/* Conteúdo bloqueado */}
+                      {msg.original_content && (
+                        <div className="bg-background border-2 border-destructive rounded-lg p-3 text-sm mb-2">
+                          <div className="text-xs text-destructive font-semibold mb-1">MENSAGEM BLOQUEADA:</div>
+                          <p className="whitespace-pre-wrap break-words text-destructive font-medium">{msg.original_content}</p>
+                        </div>
+                      )}
+                      
+                      {/* Anexo bloqueado */}
+                      {msg.file_url && (
+                        <div className="bg-background border-2 border-destructive rounded-lg p-3 mb-2">
+                          <div className="text-xs text-destructive font-semibold mb-2">ANEXO BLOQUEADO:</div>
+                          {msg.file_type?.startsWith('image/') ? (
+                            <div className="space-y-2">
+                              <img 
+                                src={msg.file_url} 
+                                alt={msg.file_name || 'Imagem bloqueada'} 
+                                className="max-w-xs rounded border-2 border-destructive cursor-pointer hover:opacity-80 transition-opacity"
+                                onClick={() => window.open(msg.file_url, '_blank')}
+                                title="Clique para ver em tamanho maior"
+                              />
+                              <div className="text-xs text-muted-foreground">
+                                Clique na imagem para visualizar em tamanho maior
+                              </div>
+                            </div>
+                          ) : (
+                            <a 
+                              href={msg.file_url} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              download={msg.file_name}
+                              className="flex items-center gap-2 text-sm text-primary hover:underline"
+                            >
+                              <Badge variant="outline">{msg.file_type || 'arquivo'}</Badge>
+                              <span>{msg.file_name || 'Baixar anexo'}</span>
+                            </a>
+                          )}
+                        </div>
+                      )}
                     </Card>
                   ))}
                 </div>

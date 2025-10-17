@@ -512,7 +512,8 @@ export default function BusinessEdit() {
           {/* Sidebar */}
           <Sidebar className="border-r bg-card/50 backdrop-blur-sm">
             <SidebarContent>
-              <div className="p-4 border-b">
+              <div className="p-4 border-b space-y-3">
+                <h2 className="text-lg font-bold px-2">{business.company_name}</h2>
                 <Button variant="ghost" size="sm" asChild className="w-full justify-start">
                   <Link to="/painel">
                     <ArrowLeft className="w-4 h-4 mr-2" />
@@ -522,9 +523,6 @@ export default function BusinessEdit() {
               </div>
 
               <SidebarGroup>
-                <SidebarGroupLabel className="text-xs font-semibold uppercase text-muted-foreground px-4 py-2">
-                  {business.company_name}
-                </SidebarGroupLabel>
                 <SidebarGroupContent>
                   <SidebarMenu>
                     {menuItems.map((item) => {

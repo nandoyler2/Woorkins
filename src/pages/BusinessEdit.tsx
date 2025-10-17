@@ -143,14 +143,26 @@ export default function BusinessEdit() {
   const menuItems = [
     { id: 'info' as Section, label: 'Personalização', icon: Info, color: 'text-blue-500' },
     { id: 'company-data' as Section, label: 'Dados da Empresa', icon: Briefcase, color: 'text-indigo-500' },
-    { id: 'social' as Section, label: 'Redes Sociais', icon: Globe, color: 'text-purple-500' },
-    { id: 'portfolio' as Section, label: 'Portfólio', icon: ImageIcon, color: 'text-green-500' },
     { id: 'posts' as Section, label: 'Posts', icon: MessagesSquare, color: 'text-orange-500' },
     { id: 'evaluations' as Section, label: 'Avaliações', icon: Users, color: 'text-pink-500' },
     { id: 'settings' as Section, label: 'Configurações', icon: AlertTriangle, color: 'text-red-500' },
   ];
 
   const availableFeatures: Omit<BusinessFeature, 'isActive'>[] = [
+    {
+      key: 'social',
+      name: 'Redes Sociais',
+      description: 'Links para suas redes sociais e contatos',
+      icon: Globe,
+      color: 'bg-gradient-to-br from-purple-500 to-pink-500'
+    },
+    {
+      key: 'portfolio',
+      name: 'Portfólio',
+      description: 'Galeria de trabalhos e projetos realizados',
+      icon: ImageIcon,
+      color: 'bg-gradient-to-br from-green-500 to-teal-500'
+    },
     {
       key: 'banner',
       name: 'Banner Rotativo',
@@ -962,6 +974,190 @@ export default function BusinessEdit() {
                       {configuringFeature === 'vacancies' && (
                         <BusinessJobVacanciesManager businessId={business.id} />
                       )}
+
+                      {configuringFeature === 'social' && (
+                        <Card className="bg-card/50 backdrop-blur-sm border-2">
+                          <div className="bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-rose-500/10 p-6 border-b">
+                            <CardTitle className="text-purple-600">Redes Sociais</CardTitle>
+                            <CardDescription>Configure seus links e contatos</CardDescription>
+                          </div>
+                          <CardContent className="p-6">
+                            <form onSubmit={handleSave} className="space-y-4">
+                              <div className="grid md:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                  <Label className="flex items-center gap-2 text-base font-medium">
+                                    <Globe className="w-4 h-4" />
+                                    Website
+                                  </Label>
+                                  <Input
+                                    value={business.website_url || ''}
+                                    onChange={(e) => setBusiness({ ...business, website_url: e.target.value })}
+                                    placeholder="https://seusite.com"
+                                    className="text-base"
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <Label className="flex items-center gap-2 text-base font-medium">
+                                    <MessageCircle className="w-4 h-4" />
+                                    WhatsApp
+                                  </Label>
+                                  <Input
+                                    value={business.whatsapp || ''}
+                                    onChange={(e) => setBusiness({ ...business, whatsapp: e.target.value })}
+                                    placeholder="(00) 00000-0000"
+                                    className="text-base"
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <Label className="flex items-center gap-2 text-base font-medium">
+                                    <Facebook className="w-4 h-4" />
+                                    Facebook
+                                  </Label>
+                                  <Input
+                                    value={business.facebook || ''}
+                                    onChange={(e) => setBusiness({ ...business, facebook: e.target.value })}
+                                    placeholder="facebook.com/seu-perfil"
+                                    className="text-base"
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <Label className="flex items-center gap-2 text-base font-medium">
+                                    <Instagram className="w-4 h-4" />
+                                    Instagram
+                                  </Label>
+                                  <Input
+                                    value={business.instagram || ''}
+                                    onChange={(e) => setBusiness({ ...business, instagram: e.target.value })}
+                                    placeholder="@seu_instagram"
+                                    className="text-base"
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <Label className="flex items-center gap-2 text-base font-medium">
+                                    <Linkedin className="w-4 h-4" />
+                                    LinkedIn
+                                  </Label>
+                                  <Input
+                                    value={business.linkedin || ''}
+                                    onChange={(e) => setBusiness({ ...business, linkedin: e.target.value })}
+                                    placeholder="linkedin.com/in/seu-perfil"
+                                    className="text-base"
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <Label className="flex items-center gap-2 text-base font-medium">
+                                    <Twitter className="w-4 h-4" />
+                                    Twitter/X
+                                  </Label>
+                                  <Input
+                                    value={business.twitter || ''}
+                                    onChange={(e) => setBusiness({ ...business, twitter: e.target.value })}
+                                    placeholder="@seu_twitter"
+                                    className="text-base"
+                                  />
+                                </div>
+                              </div>
+                              <Button type="submit" disabled={saving} className="w-full bg-gradient-to-r from-purple-500 to-pink-500">
+                                <Save className="w-4 h-4 mr-2" />
+                                {saving ? 'Salvando...' : 'Salvar Redes Sociais'}
+                              </Button>
+                            </form>
+                          </CardContent>
+                        </Card>
+                      )}
+
+                      {configuringFeature === 'portfolio' && (
+                        <>
+                          <Card className="bg-card/50 backdrop-blur-sm border-2">
+                            <div className="bg-gradient-to-r from-green-500/10 via-emerald-500/10 to-teal-500/10 p-6 border-b">
+                              <CardTitle className="text-green-600">Adicionar Item ao Portfólio</CardTitle>
+                            </div>
+                            <CardContent className="p-6">
+                              <form onSubmit={handleAddPortfolioItem} className="space-y-4">
+                                <div className="space-y-2">
+                                  <Label className="text-base font-medium">Título</Label>
+                                  <Input
+                                    value={newPortfolioItem.title}
+                                    onChange={(e) => setNewPortfolioItem({ ...newPortfolioItem, title: e.target.value })}
+                                    required
+                                    className="text-base"
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <Label className="text-base font-medium">Descrição (opcional)</Label>
+                                  <Textarea
+                                    value={newPortfolioItem.description}
+                                    onChange={(e) => setNewPortfolioItem({ ...newPortfolioItem, description: e.target.value })}
+                                    rows={3}
+                                    className="text-base resize-none"
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <Label className="text-base font-medium">Imagem ou Vídeo</Label>
+                                  <MediaUpload
+                                    onUpload={(url, type) => {
+                                      setNewPortfolioItem({ 
+                                        ...newPortfolioItem, 
+                                        url,
+                                        type: type.startsWith('image') ? 'image' : 'video'
+                                      });
+                                    }}
+                                    accept="image/*,video/*"
+                                  />
+                                </div>
+                                <Button
+                                  type="submit"
+                                  disabled={!newPortfolioItem.title || !newPortfolioItem.url}
+                                  className="w-full bg-gradient-to-r from-green-500 to-teal-500"
+                                >
+                                  <Plus className="w-5 h-5 mr-2" />
+                                  Adicionar ao Portfólio
+                                </Button>
+                              </form>
+                            </CardContent>
+                          </Card>
+
+                          <Card className="bg-card/50 backdrop-blur-sm border-2">
+                            <div className="bg-gradient-to-r from-green-500/10 via-emerald-500/10 to-teal-500/10 p-6 border-b">
+                              <CardTitle className="text-green-600">Itens do Portfólio ({portfolio.length})</CardTitle>
+                            </div>
+                            <CardContent className="p-6">
+                              {portfolio.length === 0 ? (
+                                <div className="text-center py-12">
+                                  <ImageIcon className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                                  <p className="text-muted-foreground">Nenhum item no portfólio ainda</p>
+                                </div>
+                              ) : (
+                                <div className="grid md:grid-cols-2 gap-4">
+                                  {portfolio.map((item) => (
+                                    <div key={item.id} className="relative group border-2 rounded-lg overflow-hidden hover:shadow-lg transition-all">
+                                      {item.media_type === 'image' ? (
+                                        <img src={item.media_url} alt={item.title} className="w-full h-48 object-cover" />
+                                      ) : (
+                                        <video src={item.media_url} className="w-full h-48 object-cover" />
+                                      )}
+                                      <div className="p-3 bg-card">
+                                        <h4 className="font-medium">{item.title}</h4>
+                                        {item.description && (
+                                          <p className="text-sm text-muted-foreground line-clamp-2">{item.description}</p>
+                                        )}
+                                      </div>
+                                      <Button
+                                        variant="destructive"
+                                        size="icon"
+                                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                                        onClick={() => handleDeletePortfolioItem(item.id)}
+                                      >
+                                        <Trash2 className="w-4 h-4" />
+                                      </Button>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </CardContent>
+                          </Card>
+                        </>
+                      )}
                     </div>
                   ) : (
                     <Card className="bg-card/50 backdrop-blur-sm border-2">
@@ -1125,191 +1321,6 @@ export default function BusinessEdit() {
                           {saving ? 'Salvando...' : 'Salvar Alterações'}
                         </Button>
                       </form>
-                    </CardContent>
-                  </Card>
-                </div>
-              )}
-
-              {/* Redes Sociais */}
-              {activeSection === 'social' && (
-                <div className="animate-fade-in">
-                  <Card className="bg-card/50 backdrop-blur-sm border-2">
-                    <div className="bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-orange-500/10 p-6 border-b">
-                      <CardTitle className="flex items-center gap-2 text-purple-600">
-                        <Globe className="w-5 h-5" />
-                        Redes Sociais
-                      </CardTitle>
-                      <CardDescription>Links para suas redes sociais e site</CardDescription>
-                    </div>
-                    <CardContent className="p-6">
-                      <form onSubmit={handleSave} className="space-y-4">
-                        <div className="space-y-2">
-                          <Label className="flex items-center gap-2 text-base font-medium">
-                            <MessageCircle className="w-4 h-4 text-green-500" />
-                            WhatsApp
-                          </Label>
-                          <Input
-                            value={business.whatsapp || ''}
-                            onChange={(e) => setBusiness({ ...business, whatsapp: e.target.value })}
-                            placeholder="5511999999999"
-                            className="text-base"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="flex items-center gap-2 text-base font-medium">
-                            <Facebook className="w-4 h-4 text-blue-600" />
-                            Facebook
-                          </Label>
-                          <Input
-                            value={business.facebook || ''}
-                            onChange={(e) => setBusiness({ ...business, facebook: e.target.value })}
-                            placeholder="https://facebook.com/..."
-                            className="text-base"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="flex items-center gap-2 text-base font-medium">
-                            <Instagram className="w-4 h-4 text-pink-500" />
-                            Instagram
-                          </Label>
-                          <Input
-                            value={business.instagram || ''}
-                            onChange={(e) => setBusiness({ ...business, instagram: e.target.value })}
-                            placeholder="https://instagram.com/..."
-                            className="text-base"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="flex items-center gap-2 text-base font-medium">
-                            <Linkedin className="w-4 h-4 text-blue-700" />
-                            LinkedIn
-                          </Label>
-                          <Input
-                            value={business.linkedin || ''}
-                            onChange={(e) => setBusiness({ ...business, linkedin: e.target.value })}
-                            placeholder="https://linkedin.com/company/..."
-                            className="text-base"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="flex items-center gap-2 text-base font-medium">
-                            <Twitter className="w-4 h-4 text-blue-400" />
-                            Twitter/X
-                          </Label>
-                          <Input
-                            value={business.twitter || ''}
-                            onChange={(e) => setBusiness({ ...business, twitter: e.target.value })}
-                            placeholder="https://twitter.com/..."
-                            className="text-base"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="flex items-center gap-2 text-base font-medium">
-                            <Globe className="w-4 h-4 text-indigo-500" />
-                            Website
-                          </Label>
-                          <Input
-                            value={business.website_url || ''}
-                            onChange={(e) => setBusiness({ ...business, website_url: e.target.value })}
-                            placeholder="https://seusite.com"
-                            className="text-base"
-                          />
-                        </div>
-                        <Button type="submit" className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:shadow-lg transition-all text-base py-6" disabled={saving}>
-                          <Save className="w-5 h-5 mr-2" />
-                          {saving ? 'Salvando...' : 'Salvar Redes Sociais'}
-                        </Button>
-                      </form>
-                    </CardContent>
-                  </Card>
-                </div>
-              )}
-
-              {/* Portfólio */}
-              {activeSection === 'portfolio' && (
-                <div className="space-y-6 animate-fade-in">
-                  <Card className="bg-card/50 backdrop-blur-sm border-2">
-                    <div className="bg-gradient-to-r from-green-500/10 via-emerald-500/10 to-teal-500/10 p-6 border-b">
-                      <CardTitle className="flex items-center gap-2 text-green-600">
-                        <ImageIcon className="w-5 h-5" />
-                        Adicionar ao Portfólio
-                      </CardTitle>
-                      <CardDescription>Imagens e vídeos dos seus trabalhos</CardDescription>
-                    </div>
-                    <CardContent className="p-6 space-y-4">
-                      <div className="space-y-2">
-                        <Label className="text-base font-medium">Título</Label>
-                        <Input
-                          value={newPortfolioItem.title}
-                          onChange={(e) => setNewPortfolioItem({ ...newPortfolioItem, title: e.target.value })}
-                          placeholder="Nome do projeto"
-                          className="text-base"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-base font-medium">Descrição</Label>
-                        <Textarea
-                          value={newPortfolioItem.description}
-                          onChange={(e) => setNewPortfolioItem({ ...newPortfolioItem, description: e.target.value })}
-                          placeholder="Descreva o projeto..."
-                          rows={3}
-                          className="text-base resize-none"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-base font-medium">Mídia</Label>
-                        <MediaUpload
-                          onUpload={(url, type) => setNewPortfolioItem({ ...newPortfolioItem, url, type })}
-                        />
-                      </div>
-                      <Button
-                        onClick={handleAddPortfolioItem}
-                        className="w-full bg-gradient-to-r from-green-500 to-teal-500 hover:shadow-lg text-base py-6"
-                        disabled={!newPortfolioItem.title || !newPortfolioItem.url}
-                      >
-                        <Plus className="w-5 h-5 mr-2" />
-                        Adicionar ao Portfólio
-                      </Button>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="bg-card/50 backdrop-blur-sm border-2">
-                    <div className="bg-gradient-to-r from-green-500/10 via-emerald-500/10 to-teal-500/10 p-6 border-b">
-                      <CardTitle className="text-green-600">Itens do Portfólio ({portfolio.length})</CardTitle>
-                    </div>
-                    <CardContent className="p-6">
-                      {portfolio.length === 0 ? (
-                        <div className="text-center py-12">
-                          <ImageIcon className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-                          <p className="text-muted-foreground">Nenhum item no portfólio ainda</p>
-                        </div>
-                      ) : (
-                        <div className="grid md:grid-cols-2 gap-4">
-                          {portfolio.map((item) => (
-                            <div key={item.id} className="relative group border-2 rounded-lg overflow-hidden hover:shadow-lg transition-all">
-                              {item.media_type === 'image' ? (
-                                <img src={item.media_url} alt={item.title} className="w-full h-48 object-cover" />
-                              ) : (
-                                <video src={item.media_url} className="w-full h-48 object-cover" />
-                              )}
-                              <div className="p-3 bg-card">
-                                <h4 className="font-medium">{item.title}</h4>
-                                {item.description && (
-                                  <p className="text-sm text-muted-foreground line-clamp-2">{item.description}</p>
-                                )}
-                              </div>
-                              <Button
-                                variant="destructive"
-                                size="icon"
-                                className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
-                                onClick={() => handleDeletePortfolioItem(item.id)}
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
-                            </div>
-                          ))}
-                        </div>
-                      )}
                     </CardContent>
                   </Card>
                 </div>

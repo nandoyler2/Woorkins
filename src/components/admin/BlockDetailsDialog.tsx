@@ -28,7 +28,11 @@ export function BlockDetailsDialog({
 }: BlockDetailsDialogProps) {
   if (!block) return null;
 
-  const blockTypeLabel = block.block_type === 'messaging' ? 'Mensagens' : 'Sistema';
+  const blockTypeLabel = block.block_type === 'messaging' 
+    ? 'Mensagens' 
+    : block.block_type === 'ai_assistant' 
+      ? 'Chat de Ajuda' 
+      : 'Sistema';
   const isExpired = block.blocked_until && new Date(block.blocked_until) < new Date();
 
   return (

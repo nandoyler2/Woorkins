@@ -114,6 +114,14 @@ export default function AdminUsers() {
             .eq('profile_id', profile.id)
             .maybeSingle();
 
+          // Buscar bloqueios de spam do AI Assistant
+          const { data: aiSpamBlock } = await supabase
+            .from('message_spam_tracking')
+            .select('*')
+            .eq('profile_id', profile.id)
+            .eq('context', 'ai_assistant')
+            .maybeSingle();
+
           // Buscar documentos aprovados
           const { data: approvedDocuments } = await supabase
             .from('document_verifications')
@@ -153,6 +161,27 @@ export default function AdminUsers() {
               });
             }
           }
+
+          // Adicionar bloqueio de spam do AI Assistant se ativo
+          let aiAssistantBlock = null;
+          if (aiSpamBlock?.blocked_until) {
+            const blockedUntil = new Date(aiSpamBlock.blocked_until);
+            const now = new Date();
+            
+            if (blockedUntil > now) {
+              aiAssistantBlock = {
+                id: aiSpamBlock.id,
+                profile_id: profile.id,
+                block_type: 'ai_assistant',
+                reason: `Spam detectado (${aiSpamBlock.spam_count} vezes)`,
+                blocked_until: aiSpamBlock.blocked_until,
+                is_permanent: false,
+                created_at: aiSpamBlock.last_spam_at || aiSpamBlock.created_at,
+                blocked_by: null,
+                updated_at: aiSpamBlock.updated_at
+              };
+            }
+          }
           
           return {
             ...profile,
@@ -160,6 +189,7 @@ export default function AdminUsers() {
             woorkoins_balance: woorkoins?.balance || 0,
             blocks: blocks,
             violations: violations,
+            ai_assistant_block: aiAssistantBlock,
             approved_document: approvedDocuments?.[0] || null,
             subscription_plan: subscription?.plan_type || 'free'
           };
@@ -178,10 +208,22 @@ export default function AdminUsers() {
     }
   };
 
-  const handleUnblockUser = async (profileId: string, blockId: string, isViolation: boolean = false) => {
+  const handleUnblockUser = async (profileId: string, blockId: string, isViolation: boolean = false, isAiAssistant: boolean = false) => {
     setUnblockLoading(true);
     try {
-      if (isViolation) {
+      if (isAiAssistant) {
+        // Se for um bloqueio de spam do AI Assistant, resetar
+        const { error } = await supabase
+          .from('message_spam_tracking')
+          .update({ 
+            spam_count: 0,
+            blocked_until: null,
+            last_spam_at: null
+          })
+          .eq('id', blockId);
+
+        if (error) throw error;
+      } else if (isViolation) {
         // Se for um bloqueio de violação, resetar a contagem
         const { error } = await supabase
           .from('moderation_violations')
@@ -325,7 +367,8 @@ export default function AdminUsers() {
             {filteredUsers.map((usr) => {
               const messagingBlock = usr.blocks.find((b: any) => b.block_type === 'messaging');
               const systemBlock = usr.blocks.find((b: any) => b.block_type === 'system');
-              const hasActiveBlock = messagingBlock || systemBlock;
+              const aiAssistantBlock = usr.ai_assistant_block;
+              const hasActiveBlock = messagingBlock || systemBlock || aiAssistantBlock;
 
               return (
                 <TableRow key={usr.id}>
@@ -429,6 +472,22 @@ export default function AdminUsers() {
                             </Badge>
                           </Button>
                         )}
+                        {aiAssistantBlock && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-auto p-0 hover:bg-transparent"
+                            onClick={() => {
+                              setSelectedBlock(aiAssistantBlock);
+                              setBlockDetailsDialogOpen(true);
+                            }}
+                          >
+                            <Badge variant="destructive" className="text-xs cursor-pointer hover:bg-destructive/90">
+                              🚫 Bloqueado (Ajuda)
+                              <Info className="ml-1 h-3 w-3" />
+                            </Badge>
+                          </Button>
+                        )}
                       </div>
                     ) : (
                       <Badge variant="outline" className="text-xs">Ativo</Badge>
@@ -516,6 +575,14 @@ export default function AdminUsers() {
                             Ver Detalhes do Bloqueio
                           </DropdownMenuItem>
                         )}
+                        {aiAssistantBlock && (
+                          <DropdownMenuItem
+                            onClick={() => handleUnblockUser(usr.id, aiAssistantBlock.id, false, true)}
+                          >
+                            <ShieldOff className="mr-2 h-4 w-4" />
+                            Desbloquear Chat de Ajuda
+                          </DropdownMenuItem>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
@@ -551,7 +618,8 @@ export default function AdminUsers() {
             onUnblock={() => {
               const user = users.find(u => u.id === selectedBlock.profile_id);
               const isViolation = user?.violations?.id === selectedBlock.id;
-              handleUnblockUser(selectedBlock.profile_id, selectedBlock.id, isViolation);
+              const isAiAssistant = selectedBlock.block_type === 'ai_assistant';
+              handleUnblockUser(selectedBlock.profile_id, selectedBlock.id, isViolation, isAiAssistant);
             }}
             loading={unblockLoading}
           />

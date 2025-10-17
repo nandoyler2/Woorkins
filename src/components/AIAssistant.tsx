@@ -114,7 +114,9 @@ export const AIAssistant = () => {
       if (profile) {
         setProfileId(profile.id);
         const firstName = profile.full_name?.split(' ')[0] || '';
-        setUserName(firstName);
+        // Garantir que apenas a primeira letra seja maiúscula
+        const formattedName = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
+        setUserName(formattedName);
 
         // Verificar bloqueios recentes (últimas 24 horas)
         const oneDayAgo = new Date();
@@ -152,7 +154,7 @@ export const AIAssistant = () => {
         if (conversation?.messages && Array.isArray(conversation.messages) && conversation.messages.length > 0) {
           const existing = conversation.messages as unknown as Message[];
           if (hasBlock) {
-            const blockMsg = { role: 'assistant' as const, content: `Olá, ${firstName}! 👋\n\nPercebi que você foi bloqueado recentemente. Gostaria de falar sobre isso?` };
+            const blockMsg = { role: 'assistant' as const, content: `Olá, ${formattedName}! 👋\n\nPercebi que você foi bloqueado recentemente. Gostaria de falar sobre isso?` };
             setMessages([blockMsg, ...existing]);
             setShowBlockQuestion(true);
             setShowTopics(false);
@@ -164,7 +166,7 @@ export const AIAssistant = () => {
           }
         } else {
           if (hasBlock) {
-            const blockMsg = `Olá, ${firstName}! 👋\n\nPercebi que você foi bloqueado recentemente. Gostaria de falar sobre isso?`;
+            const blockMsg = `Olá, ${formattedName}! 👋\n\nPercebi que você foi bloqueado recentemente. Gostaria de falar sobre isso?`;
             setMessages([{ role: 'assistant', content: blockMsg }]);
             setShowBlockQuestion(true);
             setShowTopics(false);
@@ -172,8 +174,8 @@ export const AIAssistant = () => {
           } else {
             // Primeira vez - mostrar mensagem de boas-vindas
             const welcomeMsg = firstName 
-              ? `Olá, ${firstName}! 👋\n\nSou o assistente virtual da Woorkins e estou aqui para ajudá-lo(a) no que precisar.\n\nSelecione um dos tópicos abaixo ou digite sua dúvida diretamente:`
-              : 'Olá! 👋\n\nSou o assistente virtual da Woorkins e estou aqui para ajudá-lo(a) no que precisar.\n\nSelecione um dos tópicos abaixo ou digite sua dúvida diretamente:';
+              ? `Olá, ${firstName}! 👋\n\nEm que podemos lhe ajudar? Selecione um dos tópicos abaixo ou digite o que precisa:`
+              : 'Olá! 👋\n\nEm que podemos lhe ajudar? Selecione um dos tópicos abaixo ou digite o que precisa:';
             
             setMessages([{ role: 'assistant', content: welcomeMsg }]);
             setShowTopics(true);

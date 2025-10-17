@@ -363,12 +363,20 @@ export default function BusinessEdit() {
 
     const newActiveState = !feature.isActive;
 
-    // Atualizar estado local imediatamente SEM reordenar
-    setFeatures(prevFeatures => 
-      prevFeatures.map(f => 
+    // Atualizar estado local imediatamente E reordenar
+    setFeatures(prevFeatures => {
+      const updatedFeatures = prevFeatures.map(f => 
         f.key === featureKey ? { ...f, isActive: newActiveState } : f
-      )
-    );
+      );
+      
+      // Ordenar: ativas primeiro
+      updatedFeatures.sort((a, b) => {
+        if (a.isActive === b.isActive) return 0;
+        return a.isActive ? -1 : 1;
+      });
+      
+      return updatedFeatures;
+    });
 
     // Se ativou uma ferramenta, mudar para a seção de ferramentas
     if (newActiveState) {

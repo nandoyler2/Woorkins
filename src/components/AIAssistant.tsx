@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { MessageCircle, X, Send, HelpCircle, Shield, Coins, AlertCircle, History, GripVertical } from 'lucide-react';
+import { MessageCircle, X, Send, HelpCircle, Shield, Coins, AlertCircle, History, GripVertical, Paperclip, FileText, File, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
@@ -87,11 +87,15 @@ export const AIAssistant = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [dragStartPos, setDragStartPos] = useState({ x: 0, y: 0 });
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [filePreviewUrl, setFilePreviewUrl] = useState<string | null>(null);
   const conversationsPerPage = 10;
   const { toast } = useToast();
   const { session } = useAuth();
   const location = useLocation();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { systemBlock, messagingBlock } = useSystemBlock(profileId || '');
 
   // Verificar se está na área admin
@@ -240,7 +244,14 @@ export const AIAssistant = () => {
     setShowBlockQuestion(false);
     const userMessage = input.trim();
     setInput('');
+    setSelectedFile(null);
+    setFilePreviewUrl(null);
     sendMessageInternal(userMessage);
+    
+    // Restaurar foco no input após enviar
+    setTimeout(() => {
+      inputRef.current?.focus();
+    }, 100);
   };
 
   // Função auxiliar para converter **texto** em negrito
@@ -467,6 +478,52 @@ export const AIAssistant = () => {
     setSelectedConversation(null);
     setSearchQuery('');
     setCurrentPage(1);
+    // Restaurar foco no input
+    setTimeout(() => {
+      inputRef.current?.focus();
+    }, 100);
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Check file size (10MB limit for support)
+    if (file.size > 10 * 1024 * 1024) {
+      toast({
+        variant: 'destructive',
+        title: 'Arquivo muito grande',
+        description: 'O arquivo deve ter no máximo 10MB',
+      });
+      return;
+    }
+
+    setSelectedFile(file);
+
+    // Create preview URL for images
+    if (file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFilePreviewUrl(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      setFilePreviewUrl(null);
+    }
+  };
+
+  const handleRemoveFile = () => {
+    setSelectedFile(null);
+    setFilePreviewUrl(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const getFileIcon = (type: string) => {
+    if (type.startsWith('image/')) return <ImageIcon className="h-4 w-4" />;
+    if (type === 'application/pdf') return <FileText className="h-4 w-4" />;
+    return <File className="h-4 w-4" />;
   };
 
   // Paginação
@@ -791,8 +848,55 @@ export const AIAssistant = () => {
                 />
               </div>
             )}
+            
+            {/* File preview */}
+            {selectedFile && (
+              <div className="mb-2 flex items-center gap-2 p-2 bg-muted rounded-lg">
+                {filePreviewUrl && selectedFile.type.startsWith('image/') ? (
+                  <img src={filePreviewUrl} alt="Preview" className="h-12 w-12 object-cover rounded" />
+                ) : (
+                  <div className="h-12 w-12 bg-background rounded flex items-center justify-center">
+                    {getFileIcon(selectedFile.type)}
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{selectedFile.name}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {(selectedFile.size / 1024).toFixed(1)} KB
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleRemoveFile}
+                  className="flex-shrink-0"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+            
             <div className="flex gap-2">
+              <input
+                ref={fileInputRef}
+                type="file"
+                onChange={handleFileSelect}
+                className="hidden"
+                accept="image/*,.pdf,.doc,.docx,.txt"
+              />
+              <Button 
+                type="button" 
+                variant="ghost" 
+                size="icon"
+                className="flex-shrink-0"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={loading || isSpamBlocked}
+              >
+                <Paperclip className="h-5 w-5" />
+              </Button>
               <Textarea
+                ref={inputRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => {

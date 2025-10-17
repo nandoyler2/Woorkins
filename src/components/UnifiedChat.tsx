@@ -85,6 +85,7 @@ export function UnifiedChat({
   const [showPhotoRequiredDialog, setShowPhotoRequiredDialog] = useState(false);
   const [showDocVerificationDialog, setShowDocVerificationDialog] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const messageInputRef = useRef<HTMLInputElement>(null);
 
   const { isVerified } = useDocumentVerification(profileId);
 
@@ -373,6 +374,11 @@ useEffect(() => {
     setMessageInput('');
     setSelectedFile(null);
     setFilePreviewUrl(null);
+    
+    // Restaurar foco no input após enviar
+    setTimeout(() => {
+      messageInputRef.current?.focus();
+    }, 100);
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -949,6 +955,7 @@ useEffect(() => {
                 <Paperclip className="h-5 w-5" />
               </Button>
               <Input
+                ref={messageInputRef}
                 value={messageInput}
                 onChange={handleInputChange}
                 placeholder="Digite sua mensagem..."

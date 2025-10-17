@@ -150,6 +150,13 @@ export default function BusinessEdit() {
 
   const availableFeatures: Omit<BusinessFeature, 'isActive'>[] = [
     {
+      key: 'negotiation',
+      name: 'Negociação',
+      description: 'Sistema de negociação com clientes',
+      icon: MessageSquare,
+      color: 'bg-gradient-to-br from-emerald-500 to-teal-500'
+    },
+    {
       key: 'social',
       name: 'Redes Sociais',
       description: 'Links para suas redes sociais e contatos',
@@ -342,7 +349,10 @@ export default function BusinessEdit() {
     
     const allFeatures = availableFeatures.map(f => ({
       ...f,
-      isActive: featuresMap.get(f.key) || false
+      // Para negotiation, sincronizar com enable_negotiation do business
+      isActive: f.key === 'negotiation' 
+        ? business.enable_negotiation || false
+        : featuresMap.get(f.key) || false
     }));
 
     // Ordenar: ativas primeiro
@@ -384,6 +394,16 @@ export default function BusinessEdit() {
       }, {
         onConflict: 'business_id,feature_key'
       });
+
+    // Se a feature é negotiation, atualizar também o campo enable_negotiation
+    if (featureKey === 'negotiation') {
+      await supabase
+        .from('business_profiles' as any)
+        .update({ enable_negotiation: newActiveState })
+        .eq('id', business.id);
+      
+      setBusiness({ ...business, enable_negotiation: newActiveState });
+    }
 
     if (!error) {
       toast({
@@ -1013,6 +1033,155 @@ export default function BusinessEdit() {
                         <BusinessJobVacanciesManager businessId={business.id} />
                       )}
 
+                      {configuringFeature === 'negotiation' && (
+                        <Card className="bg-card/50 backdrop-blur-sm border-2">
+                          <div className="bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-cyan-500/10 p-6 border-b">
+                            <CardTitle className="flex items-center gap-2 text-emerald-600">
+                              <MessageSquare className="w-5 h-5" />
+                              Configurar Negociação
+                            </CardTitle>
+                            <CardDescription>
+                              Personalize como os clientes podem negociar com você
+                            </CardDescription>
+                          </div>
+                          <CardContent className="p-6">
+                            <form onSubmit={handleSave} className="space-y-6">
+                              {/* Status da Negociação */}
+                              <div className="flex items-center justify-between p-4 border-2 rounded-lg bg-muted/30">
+                                <div className="space-y-0.5">
+                                  <Label className="text-base font-medium">Sistema de Negociação</Label>
+                                  <p className="text-sm text-muted-foreground">
+                                    Permitir que clientes negociem diretamente com você
+                                  </p>
+                                </div>
+                                <Switch
+                                  checked={business.enable_negotiation}
+                                  onCheckedChange={(checked) => setBusiness({ ...business, enable_negotiation: checked })}
+                                />
+                              </div>
+
+                              {business.enable_negotiation && (
+                                <>
+                                  {/* Título da Seção de Negociação */}
+                                  <div className="space-y-2">
+                                    <Label className="text-base font-medium">Título da Seção</Label>
+                                    <Input
+                                      placeholder="Ex: Entre em Contato, Solicite um Orçamento"
+                                      className="text-base"
+                                      defaultValue="Negocie Conosco"
+                                    />
+                                    <p className="text-xs text-muted-foreground">
+                                      Título exibido na seção de negociação do seu perfil
+                                    </p>
+                                  </div>
+
+                                  {/* Mensagem de Boas-Vindas */}
+                                  <div className="space-y-2">
+                                    <Label className="text-base font-medium">Mensagem de Boas-Vindas</Label>
+                                    <Textarea
+                                      placeholder="Escreva uma mensagem inicial para seus clientes..."
+                                      className="text-base resize-none"
+                                      rows={3}
+                                      defaultValue="Olá! Estou pronto para negociar e oferecer as melhores condições para você."
+                                    />
+                                    <p className="text-xs text-muted-foreground">
+                                      Primeira mensagem que o cliente verá ao iniciar uma negociação
+                                    </p>
+                                  </div>
+
+                                  {/* Tipos de Serviço */}
+                                  <div className="space-y-2">
+                                    <Label className="text-base font-medium">Tipos de Serviço</Label>
+                                    <Input
+                                      placeholder="Ex: Consultoria, Design, Desenvolvimento"
+                                      className="text-base"
+                                    />
+                                    <p className="text-xs text-muted-foreground">
+                                      Separe por vírgula os tipos de serviço que você oferece
+                                    </p>
+                                  </div>
+
+                                  {/* Tempo de Resposta */}
+                                  <div className="space-y-2">
+                                    <Label className="text-base font-medium">Tempo Médio de Resposta</Label>
+                                    <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background">
+                                      <option value="minutes">Minutos</option>
+                                      <option value="hours">Horas</option>
+                                      <option value="days">Dias</option>
+                                    </select>
+                                    <p className="text-xs text-muted-foreground">
+                                      Informe aos clientes quanto tempo você leva para responder
+                                    </p>
+                                  </div>
+
+                                  {/* Horário de Atendimento */}
+                                  <div className="space-y-2">
+                                    <Label className="text-base font-medium">Horário de Atendimento</Label>
+                                    <Input
+                                      placeholder="Ex: Seg-Sex: 9h-18h, Sáb: 9h-12h"
+                                      className="text-base"
+                                    />
+                                    <p className="text-xs text-muted-foreground">
+                                      Quando você está disponível para negociar
+                                    </p>
+                                  </div>
+
+                                  {/* Aceitar Propostas */}
+                                  <div className="flex items-center justify-between p-4 border-2 rounded-lg bg-muted/30">
+                                    <div className="space-y-0.5">
+                                      <Label className="text-base font-medium">Aceitar Propostas de Valor</Label>
+                                      <p className="text-sm text-muted-foreground">
+                                        Permitir que clientes façam contrapropostas de preço
+                                      </p>
+                                    </div>
+                                    <Switch defaultChecked />
+                                  </div>
+
+                                  {/* Aceitar Anexos */}
+                                  <div className="flex items-center justify-between p-4 border-2 rounded-lg bg-muted/30">
+                                    <div className="space-y-0.5">
+                                      <Label className="text-base font-medium">Permitir Anexos</Label>
+                                      <p className="text-sm text-muted-foreground">
+                                        Clientes podem enviar arquivos durante a negociação
+                                      </p>
+                                    </div>
+                                    <Switch defaultChecked />
+                                  </div>
+
+                                  {/* Notificações */}
+                                  <div className="space-y-3">
+                                    <Label className="text-base font-medium">Notificações</Label>
+                                    <div className="space-y-2">
+                                      <div className="flex items-center justify-between p-3 border rounded-lg">
+                                        <Label className="text-sm font-normal">Novas mensagens</Label>
+                                        <Switch defaultChecked />
+                                      </div>
+                                      <div className="flex items-center justify-between p-3 border rounded-lg">
+                                        <Label className="text-sm font-normal">Novas propostas</Label>
+                                        <Switch defaultChecked />
+                                      </div>
+                                      <div className="flex items-center justify-between p-3 border rounded-lg">
+                                        <Label className="text-sm font-normal">Contrapropostas</Label>
+                                        <Switch defaultChecked />
+                                      </div>
+                                    </div>
+                                  </div>
+                                </>
+                              )}
+
+                              <Button 
+                                type="submit" 
+                                disabled={saving} 
+                                className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:shadow-lg transition-all text-base py-6"
+                              >
+                                <Save className="w-5 h-5 mr-2" />
+                                {saving ? 'Salvando...' : 'Salvar Configurações'}
+                              </Button>
+                            </form>
+                          </CardContent>
+                        </Card>
+                      )}
+
                       {configuringFeature === 'social' && (
                         <Card className="bg-card/50 backdrop-blur-sm border-2">
                           <div className="bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-rose-500/10 p-6 border-b">
@@ -1473,18 +1642,6 @@ export default function BusinessEdit() {
                             onChange={(e) => setBusiness({ ...business, working_hours: e.target.value })}
                             placeholder="Ex: Seg-Sex: 9h-18h"
                             className="text-base"
-                          />
-                        </div>
-                        <div className="flex items-center justify-between p-4 border-2 rounded-lg bg-muted/30">
-                          <div className="space-y-0.5">
-                            <Label className="text-base font-medium">Ativar Negociação</Label>
-                            <p className="text-sm text-muted-foreground">
-                              Permitir que clientes negociem diretamente com você
-                            </p>
-                          </div>
-                          <Switch
-                            checked={business.enable_negotiation}
-                            onCheckedChange={(checked) => setBusiness({ ...business, enable_negotiation: checked })}
                           />
                         </div>
                         <Button type="submit" className="w-full bg-gradient-to-r from-indigo-500 to-cyan-500 hover:shadow-lg transition-all text-base py-6" disabled={saving}>

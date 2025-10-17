@@ -47,7 +47,9 @@ export const useUnreadMessages = (profileId: string) => {
               .select('*', { count: 'exact', head: true })
               .in('negotiation_id', negotiationIds)
               .neq('sender_id', profileId)
-              .in('status', ['sent', 'delivered']);
+              .in('status', ['sent', 'delivered'])
+              .eq('moderation_status', 'approved')
+              .neq('is_deleted', true);
             negUnread = count || 0;
           }
 
@@ -77,7 +79,8 @@ export const useUnreadMessages = (profileId: string) => {
               .select('*', { count: 'exact', head: true })
               .in('proposal_id', proposalIds)
               .neq('sender_id', profileId)
-              .in('status', ['sent', 'delivered']);
+              .in('status', ['sent', 'delivered'])
+              .eq('moderation_status', 'approved');
             propUnread = count || 0;
           }
 

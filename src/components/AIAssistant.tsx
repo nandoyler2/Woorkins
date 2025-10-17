@@ -94,6 +94,7 @@ export const AIAssistant = () => {
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [dragStartPos, setDragStartPos] = useState({ x: 0, y: 0 });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [filePreviewUrl, setFilePreviewUrl] = useState<string | null>(null);
   const conversationsPerPage = 10;
   const { toast } = useToast();
@@ -241,16 +242,15 @@ export const AIAssistant = () => {
   };
 
   const sendMessage = async () => {
-    if ((!input.trim() && !selectedFile) || loading) return;
+    if ((!input.trim() && selectedFiles.length === 0) || loading) return;
     setShowTopics(false);
     setShowBlockQuestion(false);
     const userMessage = input.trim();
-    const fileToSend = selectedFile;
-    const filePreview = filePreviewUrl;
+    const filesToSend = [...selectedFiles];
     setInput('');
-    setSelectedFile(null);
+    setSelectedFiles([]);
     setFilePreviewUrl(null);
-    sendMessageInternal(userMessage, fileToSend, filePreview);
+    sendMessageInternal(userMessage, filesToSend);
     
     // Restaurar foco no input após enviar
     setTimeout(() => {
@@ -346,7 +346,7 @@ export const AIAssistant = () => {
     return currentMessages;
   };
 
-  const sendMessageInternal = async (messageText: string, file?: File | null, filePreview?: string | null) => {
+  const sendMessageInternal = async (messageText: string, files?: File[]) => {
     // Remover mensagem de boas-vindas se for a primeira mensagem real
     let messagesToSend = messages;
     if (isFirstMessage && messages.length === 1 && messages[0].role === 'assistant') {
@@ -366,31 +366,38 @@ export const AIAssistant = () => {
     setLoading(true);
 
     try {
-      // Upload file if present
-      let fileUrl: string | undefined;
-      if (file) {
-        try {
-          const fileExt = file.name.split('.').pop();
-          const fileName = `${profileId}/${Date.now()}.${fileExt}`;
-          
-          const { data: uploadData, error: uploadError } = await supabase.storage
-            .from('support-attachments')
-            .upload(fileName, file);
+      // Upload files if present
+      const uploadedFiles: Array<{ url: string; name: string; type: string }> = [];
+      
+      if (files && files.length > 0) {
+        for (const file of files) {
+          try {
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${profileId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+            
+            const { data: uploadData, error: uploadError } = await supabase.storage
+              .from('support-attachments')
+              .upload(fileName, file);
 
-          if (uploadError) throw uploadError;
+            if (uploadError) throw uploadError;
 
-          const { data: { publicUrl } } = supabase.storage
-            .from('support-attachments')
-            .getPublicUrl(fileName);
+            const { data: { publicUrl } } = supabase.storage
+              .from('support-attachments')
+              .getPublicUrl(fileName);
 
-          fileUrl = publicUrl;
-        } catch (uploadError) {
-          console.error('Error uploading file:', uploadError);
-          toast({
-            variant: 'destructive',
-            title: 'Erro ao enviar anexo',
-            description: 'Não foi possível fazer upload do arquivo.',
-          });
+            uploadedFiles.push({
+              url: publicUrl,
+              name: file.name,
+              type: file.type
+            });
+          } catch (uploadError) {
+            console.error('Error uploading file:', uploadError);
+            toast({
+              variant: 'destructive',
+              title: 'Erro ao enviar anexo',
+              description: `Não foi possível fazer upload do arquivo ${file.name}`,
+            });
+          }
         }
       }
 
@@ -398,7 +405,7 @@ export const AIAssistant = () => {
         body: { 
           message: messageText,
           conversationHistory: updatedMessages,
-          fileUrl: fileUrl
+          files: uploadedFiles
         }
       });
 
@@ -532,39 +539,55 @@ export const AIAssistant = () => {
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
 
-    // Check file size (10MB limit for support)
-    if (file.size > 10 * 1024 * 1024) {
+    // Check total files limit (10 files max)
+    const currentCount = selectedFiles.length;
+    if (currentCount + files.length > 10) {
       toast({
         variant: 'destructive',
-        title: 'Arquivo muito grande',
-        description: 'O arquivo deve ter no máximo 10MB',
+        title: 'Limite de arquivos',
+        description: 'Você pode enviar no máximo 10 arquivos por vez',
       });
       return;
     }
 
-    setSelectedFile(file);
+    // Validate each file
+    const invalidFiles: string[] = [];
+    const validFiles: File[] = [];
+    const maxSizeMB = 49;
+    const maxSizeBytes = maxSizeMB * 1024 * 1024;
 
-    // Create preview URL for images
-    if (file.type.startsWith('image/')) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFilePreviewUrl(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    } else {
-      setFilePreviewUrl(null);
+    files.forEach(file => {
+      if (file.size > maxSizeBytes) {
+        invalidFiles.push(`${file.name} (${(file.size / 1024 / 1024).toFixed(1)}MB)`);
+      } else {
+        validFiles.push(file);
+      }
+    });
+
+    if (invalidFiles.length > 0) {
+      toast({
+        variant: 'destructive',
+        title: 'Arquivos muito grandes',
+        description: `Os seguintes arquivos ultrapassam ${maxSizeMB}MB e não podem ser enviados:\n${invalidFiles.join('\n')}`,
+        duration: 8000,
+      });
     }
-  };
 
-  const handleRemoveFile = () => {
-    setSelectedFile(null);
-    setFilePreviewUrl(null);
+    if (validFiles.length > 0) {
+      setSelectedFiles(prev => [...prev, ...validFiles]);
+    }
+
+    // Clear input
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
+  };
+
+  const handleRemoveFile = (index: number) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
   };
 
   const getFileIcon = (type: string) => {
@@ -918,31 +941,39 @@ export const AIAssistant = () => {
               </div>
             )}
             
-            {/* File preview */}
-            {selectedFile && (
-              <div className="mb-2 flex items-center gap-2 p-2 bg-muted rounded-lg">
-                {filePreviewUrl && selectedFile.type.startsWith('image/') ? (
-                  <img src={filePreviewUrl} alt="Preview" className="h-12 w-12 object-cover rounded" />
-                ) : (
-                  <div className="h-12 w-12 bg-background rounded flex items-center justify-center">
-                    {getFileIcon(selectedFile.type)}
+            {/* File previews */}
+            {selectedFiles.length > 0 && (
+              <div className="mb-2 space-y-2">
+                {selectedFiles.map((file, index) => (
+                  <div key={index} className="flex items-center gap-2 p-2 bg-muted rounded-lg">
+                    {file.type.startsWith('image/') ? (
+                      <img 
+                        src={URL.createObjectURL(file)} 
+                        alt="Preview" 
+                        className="h-12 w-12 object-cover rounded" 
+                      />
+                    ) : (
+                      <div className="h-12 w-12 bg-background rounded flex items-center justify-center">
+                        {getFileIcon(file.type)}
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{file.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {(file.size / 1024 / 1024).toFixed(1)} MB
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleRemoveFile(index)}
+                      className="flex-shrink-0"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
                   </div>
-                )}
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{selectedFile.name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {(selectedFile.size / 1024).toFixed(1)} KB
-                  </p>
-                </div>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  onClick={handleRemoveFile}
-                  className="flex-shrink-0"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
+                ))}
               </div>
             )}
             
@@ -950,6 +981,7 @@ export const AIAssistant = () => {
               <input
                 ref={fileInputRef}
                 type="file"
+                multiple
                 onChange={handleFileSelect}
                 className="hidden"
                 accept="image/*,.pdf,.doc,.docx,.txt"
@@ -972,7 +1004,7 @@ export const AIAssistant = () => {
               <div className="flex flex-col gap-2">
                 <Button
                   onClick={sendMessage}
-                  disabled={!input.trim() || isSpamBlocked}
+                  disabled={(!input.trim() && selectedFiles.length === 0) || isSpamBlocked}
                   size="icon"
                   className="shrink-0 bg-gradient-to-br from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-md"
                 >

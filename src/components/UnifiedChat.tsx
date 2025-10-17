@@ -79,6 +79,7 @@ export function UnifiedChat({
   const [isLoadingProposal, setIsLoadingProposal] = useState(true);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [filePreviewUrl, setFilePreviewUrl] = useState<string | null>(null);
   const [viewingImage, setViewingImage] = useState<{ url: string; name: string } | null>(null);
   const [currentUserProfile, setCurrentUserProfile] = useState<any>(null);
@@ -353,7 +354,7 @@ useEffect(() => {
       return;
     }
 
-    if ((!messageInput.trim() && !selectedFile) || isSending) return;
+    if ((!messageInput.trim() && selectedFiles.length === 0) || isSending) return;
 
     // If it's a proposal and owner sends first message, unlock it
     if (conversationType === 'proposal' && isOwner && !proposalData?.is_unlocked) {
@@ -366,13 +367,14 @@ useEffect(() => {
         .eq('id', conversationId);
     }
 
-    const attachment = selectedFile && filePreviewUrl 
-      ? { file: selectedFile, url: filePreviewUrl }
+    // Send message with first file only (for now, hook supports single attachment)
+    const attachment = selectedFiles[0]
+      ? { file: selectedFiles[0], url: URL.createObjectURL(selectedFiles[0]) }
       : undefined;
 
     await sendMessageHook(messageInput, attachment);
     setMessageInput('');
-    setSelectedFile(null);
+    setSelectedFiles([]);
     setFilePreviewUrl(null);
     
     // Restaurar foco no input após enviar
@@ -382,39 +384,56 @@ useEffect(() => {
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
 
-    // Check file size (49MB limit)
-    if (file.size > 49 * 1024 * 1024) {
+    // Check total files limit (10 files max)
+    const currentCount = selectedFiles.length;
+    if (currentCount + files.length > 10) {
       toast({
         variant: 'destructive',
-        title: 'Arquivo muito grande',
-        description: 'O arquivo deve ter no máximo 49MB',
+        title: 'Limite de arquivos',
+        description: 'Você pode enviar no máximo 10 arquivos por vez',
+        duration: 5000
       });
       return;
     }
 
-    setSelectedFile(file);
+    // Validate each file
+    const invalidFiles: string[] = [];
+    const validFiles: File[] = [];
+    const maxSizeMB = 49;
+    const maxSizeBytes = maxSizeMB * 1024 * 1024;
 
-    // Create preview URL for images
-    if (file.type.startsWith('image/')) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFilePreviewUrl(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    } else {
-      setFilePreviewUrl(null);
+    files.forEach(file => {
+      if (file.size > maxSizeBytes) {
+        invalidFiles.push(`${file.name} (${(file.size / 1024 / 1024).toFixed(1)}MB)`);
+      } else {
+        validFiles.push(file);
+      }
+    });
+
+    if (invalidFiles.length > 0) {
+      toast({
+        variant: 'destructive',
+        title: 'Arquivos muito grandes',
+        description: `Os seguintes arquivos ultrapassam ${maxSizeMB}MB e não podem ser enviados:\n${invalidFiles.join('\n')}`,
+        duration: 8000,
+      });
     }
-  };
 
-  const handleRemoveFile = () => {
-    setSelectedFile(null);
-    setFilePreviewUrl(null);
+    if (validFiles.length > 0) {
+      setSelectedFiles(prev => [...prev, ...validFiles]);
+    }
+
+    // Clear input
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
+  };
+
+  const handleRemoveFile = (index: number) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
   };
 
   const getFileIcon = (type: string) => {
@@ -911,36 +930,45 @@ useEffect(() => {
           </div>
         ) : (
           <form onSubmit={handleSendMessage} className="p-3 space-y-2">
-            {selectedFile && (
-              <div className="flex items-center gap-2 p-2 bg-muted rounded-lg">
-                {filePreviewUrl && selectedFile.type.startsWith('image/') ? (
-                  <img src={filePreviewUrl} alt="Preview" className="h-12 w-12 object-cover rounded" />
-                ) : (
-                  <div className="h-12 w-12 bg-background rounded flex items-center justify-center">
-                    {getFileIcon(selectedFile.type)}
+            {selectedFiles.length > 0 && (
+              <div className="space-y-2 max-h-32 overflow-y-auto">
+                {selectedFiles.map((file, index) => (
+                  <div key={index} className="flex items-center gap-2 p-2 bg-muted rounded-lg">
+                    {file.type.startsWith('image/') ? (
+                      <img 
+                        src={URL.createObjectURL(file)} 
+                        alt="Preview" 
+                        className="h-12 w-12 object-cover rounded" 
+                      />
+                    ) : (
+                      <div className="h-12 w-12 bg-background rounded flex items-center justify-center">
+                        {getFileIcon(file.type)}
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{file.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {(file.size / 1024 / 1024).toFixed(1)} MB
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleRemoveFile(index)}
+                      className="flex-shrink-0"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
                   </div>
-                )}
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{selectedFile.name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {(selectedFile.size / 1024).toFixed(1)} KB
-                  </p>
-                </div>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  onClick={handleRemoveFile}
-                  className="flex-shrink-0"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
+                ))}
               </div>
             )}
             <div className="flex gap-2">
               <input
                 ref={fileInputRef}
                 type="file"
+                multiple
                 onChange={handleFileSelect}
                 className="hidden"
                 accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.zip"

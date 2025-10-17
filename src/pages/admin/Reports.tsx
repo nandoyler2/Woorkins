@@ -42,10 +42,10 @@ export default function Reports() {
   const loadReports = async () => {
     try {
       let query = supabase
-        .from('reports' as any)
+        .from('reports')
         .select(`
           *,
-          reporter:reporter_id (
+          reporter:profiles!reports_reporter_id_fkey (
             username,
             full_name
           )
@@ -75,7 +75,7 @@ export default function Reports() {
   const updateReportStatus = async (reportId: string, status: string) => {
     try {
       const { error } = await supabase
-        .from('reports' as any)
+        .from('reports')
         .update({
           status,
           admin_notes: adminNotes,

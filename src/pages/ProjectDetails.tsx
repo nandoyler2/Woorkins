@@ -78,6 +78,9 @@ export default function ProjectDetails() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [proposalDialogOpen, setProposalDialogOpen] = useState(false);
+  const [reportDialogOpen, setReportDialogOpen] = useState(false);
+  const [reportReason, setReportReason] = useState('');
+  const [reportDescription, setReportDescription] = useState('');
   
   const [message, setMessage] = useState('');
   const [budget, setBudget] = useState('');
@@ -226,6 +229,64 @@ export default function ProjectDetails() {
     if (diffInDays < 30) return `há ${diffInDays} dias`;
     const diffInMonths = Math.floor(diffInDays / 30);
     return `há ${diffInMonths} ${diffInMonths === 1 ? 'mês' : 'meses'}`;
+  };
+
+  const handleReport = async () => {
+    if (!user || !project) {
+      toast({
+        title: 'Erro',
+        description: 'Você precisa estar logado para denunciar',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!reportReason.trim()) {
+      toast({
+        title: 'Erro',
+        description: 'Selecione um motivo para a denúncia',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (!profileData) throw new Error('Profile not found');
+
+      const { error } = await supabase
+        .from('reports')
+        .insert({
+          reporter_id: profileData.id,
+          content_type: 'project',
+          content_id: project.id,
+          reason: reportReason,
+          description: reportDescription.trim() || null
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: 'Denúncia enviada',
+        description: 'Obrigado por nos ajudar a manter a comunidade segura.',
+      });
+
+      setReportDialogOpen(false);
+      setReportReason('');
+      setReportDescription('');
+    } catch (error) {
+      console.error('Error reporting project:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível enviar a denúncia',
+        variant: 'destructive',
+      });
+    }
   };
 
 
@@ -536,10 +597,72 @@ export default function ProjectDetails() {
                 <Separator />
 
                 {/* Report */}
-                <Button variant="ghost" size="sm" className="w-full text-muted-foreground hover:text-destructive">
-                  <AlertCircle className="w-4 h-4 mr-2" />
-                  Denunciar como inadequado
-                </Button>
+                <Dialog open={reportDialogOpen} onOpenChange={setReportDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="ghost" size="sm" className="w-full text-muted-foreground hover:text-destructive">
+                      <AlertCircle className="w-4 h-4 mr-2" />
+                      Denunciar como inadequado
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Denunciar Conteúdo Inadequado</DialogTitle>
+                      <DialogDescription>
+                        Ajude-nos a manter a comunidade segura. Sua denúncia será analisada pela nossa equipe.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 pt-4">
+                      <div className="space-y-2">
+                        <Label>Motivo da denúncia *</Label>
+                        <Select value={reportReason} onValueChange={setReportReason}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione o motivo" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="spam">Spam ou propaganda</SelectItem>
+                            <SelectItem value="inappropriate">Conteúdo inadequado</SelectItem>
+                            <SelectItem value="fraud">Fraude ou golpe</SelectItem>
+                            <SelectItem value="harassment">Assédio ou bullying</SelectItem>
+                            <SelectItem value="fake">Informações falsas</SelectItem>
+                            <SelectItem value="other">Outro motivo</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Descrição adicional (opcional)</Label>
+                        <Textarea
+                          placeholder="Forneça mais detalhes sobre o problema..."
+                          value={reportDescription}
+                          onChange={(e) => setReportDescription(e.target.value)}
+                          rows={4}
+                        />
+                      </div>
+
+                      <div className="flex gap-2 pt-2">
+                        <Button
+                          variant="outline"
+                          className="flex-1"
+                          onClick={() => {
+                            setReportDialogOpen(false);
+                            setReportReason('');
+                            setReportDescription('');
+                          }}
+                        >
+                          Cancelar
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          className="flex-1"
+                          onClick={handleReport}
+                          disabled={!reportReason}
+                        >
+                          Enviar Denúncia
+                        </Button>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
               </CardContent>
             </Card>
           </div>

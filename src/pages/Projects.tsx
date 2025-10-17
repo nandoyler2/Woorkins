@@ -230,7 +230,7 @@ export default function Projects() {
       if (!profileData) throw new Error('Profile not found');
 
       const { error } = await supabase
-        .from('reports' as any)
+        .from('reports')
         .insert({
           reporter_id: (profileData as any).id,
           content_type: 'project',

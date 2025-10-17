@@ -2854,22 +2854,32 @@ export default function BusinessEdit() {
                     </Card>
 
                     {/* Zona de Perigo */}
-                    <Card className="bg-card/50 backdrop-blur-sm border-2 border-destructive/50">
-                      <div className="bg-gradient-to-r from-red-500/10 via-rose-500/10 to-pink-500/10 p-6 border-b border-destructive/20">
-                        <CardTitle className="flex items-center gap-2 text-destructive">
-                          <AlertTriangle className="w-5 h-5" />
-                          Zona de Perigo
-                        </CardTitle>
-                        <CardDescription>
-                          Ações irreversíveis do perfil profissional
-                        </CardDescription>
-                      </div>
-                      <CardContent className="p-6">
+                    <Card className="border-2 border-destructive/20 bg-destructive/5">
+                      <CardHeader className="pb-3">
+                        <div className="flex items-start gap-3">
+                          <div className="p-2 rounded-lg bg-destructive/10">
+                            <AlertTriangle className="w-5 h-5 text-destructive" />
+                          </div>
+                          <div className="flex-1">
+                            <CardTitle className="text-destructive text-lg">
+                              Zona de Perigo
+                            </CardTitle>
+                            <CardDescription className="mt-1">
+                              Ações irreversíveis do perfil profissional
+                            </CardDescription>
+                          </div>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="pt-0">
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <Button variant="destructive" className="w-full text-base py-6">
-                              <Trash2 className="w-5 h-5 mr-2" />
-                              Excluir Perfil Profissional Permanentemente
+                            <Button 
+                              variant="destructive" 
+                              className="w-full justify-center gap-2"
+                              size="lg"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                              Excluir perfil "{business?.company_name}"
                             </Button>
                           </AlertDialogTrigger>
                           <AlertDialogContent>

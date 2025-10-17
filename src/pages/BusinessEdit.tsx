@@ -520,22 +520,6 @@ export default function BusinessEdit() {
                   </SidebarMenu>
                 </SidebarGroupContent>
               </SidebarGroup>
-
-              <div className="mt-auto p-4 border-t">
-                <div className="flex items-center gap-2 text-sm">
-                  {business.active ? (
-                    <>
-                      <Eye className="w-4 h-4 text-green-500" />
-                      <span className="text-muted-foreground">Perfil Ativo</span>
-                    </>
-                  ) : (
-                    <>
-                      <EyeOff className="w-4 h-4 text-red-500" />
-                      <span className="text-muted-foreground">Perfil Desativado</span>
-                    </>
-                  )}
-                </div>
-              </div>
             </SidebarContent>
           </Sidebar>
 
@@ -544,7 +528,20 @@ export default function BusinessEdit() {
             <div className="container mx-auto px-6 py-8 max-w-5xl">
               {/* Header do perfil */}
               <div className="mb-8">
-                <h1 className="text-3xl font-bold mb-2">{business.company_name}</h1>
+                <div className="flex items-center gap-3 mb-2">
+                  <h1 className="text-3xl font-bold">{business.company_name}</h1>
+                  {business.active ? (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
+                      <Eye className="w-4 h-4" />
+                      Ativo
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">
+                      <EyeOff className="w-4 h-4" />
+                      Desativado
+                    </span>
+                  )}
+                </div>
                 <p className="text-muted-foreground">@{business.slug}</p>
               </div>
 

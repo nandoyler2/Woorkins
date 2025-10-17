@@ -661,9 +661,14 @@ export default function BusinessEdit() {
     if (!business) return;
 
     try {
+      // Soft delete - marca como deletado ao invés de apagar
       const { error } = await supabase
-        .from('business_profiles' as any)
-        .delete()
+        .from('business_profiles')
+        .update({
+          deleted: true,
+          deleted_at: new Date().toISOString(),
+          deleted_by: user?.id || null,
+        })
         .eq('id', business.id);
 
       if (error) throw error;

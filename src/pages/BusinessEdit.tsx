@@ -1658,19 +1658,19 @@ export default function BusinessEdit() {
               {/* Informações */}
               {activeSection === 'info' && (
                 <div className="space-y-6 animate-fade-in">
-                  {/* Dados da Empresa */}
+                  {/* Informações do Perfil */}
                   <Card className="bg-card/50 backdrop-blur-sm border-2">
                     <div className="bg-gradient-to-r from-indigo-500/10 via-blue-500/10 to-cyan-500/10 p-6 border-b">
                       <CardTitle className="flex items-center gap-2 text-indigo-600">
                         <Briefcase className="w-5 h-5" />
-                        Dados da Empresa
+                        Informações do Perfil
                       </CardTitle>
                       <CardDescription>Informações básicas do seu negócio</CardDescription>
                     </div>
                     <CardContent className="p-6">
                       <form onSubmit={handleSave} className="space-y-4">
                         <div className="space-y-2">
-                          <Label className="text-base font-medium">Nome da Empresa</Label>
+                          <Label className="text-base font-medium">Nome do Perfil</Label>
                           <Input
                             value={business.company_name}
                             onChange={(e) => setBusiness({ ...business, company_name: e.target.value })}

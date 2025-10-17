@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { 
   Link as LinkIcon, Plus, Trash2, MoveUp, MoveDown, 
   Instagram, Facebook, Twitter, Linkedin, Youtube, 
-  Globe, Mail, Phone, MapPin, Smartphone
+  Globe, Mail, MessageCircle, MapPin, Smartphone
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -139,8 +139,8 @@ const SOCIAL_PLATFORMS: SocialLink[] = [
   { platform: 'twitter', url: '', icon: Twitter, placeholder: 'https://twitter.com/seu_perfil' },
   { platform: 'linkedin', url: '', icon: Linkedin, placeholder: 'https://linkedin.com/in/seu_perfil' },
   { platform: 'youtube', url: '', icon: Youtube, placeholder: 'https://youtube.com/@seu_canal' },
+  { platform: 'whatsapp', url: '', icon: MessageCircle, placeholder: '+5511999999999' },
   { platform: 'email', url: '', icon: Mail, placeholder: 'seu@email.com' },
-  { platform: 'phone', url: '', icon: Phone, placeholder: '+55 (11) 99999-9999' },
   { platform: 'website', url: '', icon: Globe, placeholder: 'https://seusite.com' },
 ];
 
@@ -841,7 +841,7 @@ export function BusinessLinktreeManager({ businessId, businessLogo }: BusinessLi
                       <div key={social.platform}>
                         <Label className="flex items-center gap-2 mb-2">
                           <Icon className="w-4 h-4" />
-                          {social.platform.charAt(0).toUpperCase() + social.platform.slice(1)}
+                          {social.platform === 'whatsapp' ? 'WhatsApp' : social.platform.charAt(0).toUpperCase() + social.platform.slice(1)}
                         </Label>
                         <Input
                           value={socialLinks[social.platform] || ''}

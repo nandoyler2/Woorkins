@@ -3,7 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { 
   Instagram, Facebook, Twitter, Linkedin, Youtube, 
-  Globe, Mail, Phone, Smartphone, ArrowLeft 
+  Globe, Mail, Phone, Smartphone, ArrowLeft, MessageCircle 
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { QRCodeSVG } from 'qrcode.react';
@@ -40,6 +40,7 @@ const SOCIAL_PLATFORMS = [
   { platform: 'twitter', icon: Twitter },
   { platform: 'linkedin', icon: Linkedin },
   { platform: 'youtube', icon: Youtube },
+  { platform: 'whatsapp', icon: MessageCircle },
   { platform: 'email', icon: Mail },
   { platform: 'phone', icon: Phone },
   { platform: 'website', icon: Globe },
@@ -255,6 +256,10 @@ export default function PublicLinktree() {
 
                       if (social.platform === 'email') {
                         href = `mailto:${url}`;
+                      } else if (social.platform === 'whatsapp') {
+                        // Formatar número do WhatsApp removendo caracteres especiais
+                        const cleanNumber = url.replace(/\D/g, '');
+                        href = `https://wa.me/${cleanNumber}`;
                       } else if (social.platform === 'phone') {
                         href = `tel:${url.replace(/\D/g, '')}`;
                       } else if (!url.startsWith('http')) {
@@ -400,6 +405,10 @@ export default function PublicLinktree() {
 
                 if (social.platform === 'email') {
                   href = `mailto:${url}`;
+                } else if (social.platform === 'whatsapp') {
+                  // Formatar número do WhatsApp removendo caracteres especiais
+                  const cleanNumber = url.replace(/\D/g, '');
+                  href = `https://wa.me/${cleanNumber}`;
                 } else if (social.platform === 'phone') {
                   href = `tel:${url.replace(/\D/g, '')}`;
                 } else if (!url.startsWith('http')) {

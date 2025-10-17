@@ -58,6 +58,20 @@ interface BusinessData {
   logo_url?: string;
 }
 
+const ICON_MAP: Record<string, any> = {
+  link: LinkIcon,
+  instagram: Instagram,
+  facebook: Facebook,
+  twitter: Twitter,
+  linkedin: Linkedin,
+  youtube: Youtube,
+  globe: Globe,
+  mail: Mail,
+  phone: Smartphone,
+  whatsapp: MessageCircle,
+  location: MapPin,
+};
+
 const LAYOUTS = [
   { 
     id: 'minimal', 
@@ -467,13 +481,33 @@ export function BusinessLinktreeManager({ businessId, businessLogo }: BusinessLi
       validUrl = 'https://' + validUrl;
     }
 
-    // Validar formato da URL
+    // Validar formato da URL e domínio real
     try {
+      const url = new URL(validUrl);
+      
+      // Verificar se tem domínio válido (precisa ter pelo menos um ponto)
+      const hostname = url.hostname;
+      if (!hostname.includes('.') || hostname.split('.').length < 2) {
+        throw new Error('Domínio inválido');
+      }
+      
+      // Verificar se não é apenas números ou caracteres aleatórios
+      const parts = hostname.split('.');
+      const tld = parts[parts.length - 1];
+      
+      // Lista mínima de TLDs válidos comuns
+      const validTLDs = ['com', 'br', 'org', 'net', 'edu', 'gov', 'io', 'co', 'app', 'dev', 'ai', 'tech', 'store', 'site', 'online', 'info', 'me', 'tv', 'us', 'uk', 'de', 'fr', 'es', 'it', 'pt', 'jp', 'cn', 'ru'];
+      
+      if (!validTLDs.includes(tld.toLowerCase())) {
+        throw new Error('Extensão de domínio inválida');
+      }
+      
+      // Validar com o schema original também
       urlSchema.parse(validUrl);
     } catch (error) {
       toast({
         title: "URL inválida",
-        description: "Por favor, insira uma URL válida (ex: https://exemplo.com)",
+        description: "Por favor, insira uma URL válida com um domínio real (ex: https://exemplo.com)",
         variant: "destructive",
       });
       return;
@@ -612,17 +646,17 @@ export function BusinessLinktreeManager({ businessId, businessLogo }: BusinessLi
       },
       gradient: {
         bg: 'bg-gradient-to-br from-purple-500 via-pink-500 to-orange-500',
-        button: 'bg-white/90 hover:bg-white text-purple-900 rounded-xl backdrop-blur-sm',
+        button: 'bg-white hover:bg-gray-100 text-purple-900 rounded-xl backdrop-blur-sm shadow-md',
         text: 'text-white'
       },
       glass: {
         bg: 'bg-gradient-to-br from-blue-400 to-purple-500',
-        button: 'bg-white/20 hover:bg-white/30 text-white rounded-2xl backdrop-blur-md border border-white/30',
+        button: 'bg-white/20 hover:bg-white/30 text-white rounded-2xl backdrop-blur-md border border-white/30 shadow-lg',
         text: 'text-white'
       },
       neon: {
         bg: 'bg-gray-900',
-        button: 'bg-transparent hover:bg-cyan-500/20 text-cyan-400 rounded-lg border-2 border-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.5)]',
+        button: 'bg-cyan-500 hover:bg-cyan-400 text-gray-900 rounded-lg border-2 border-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.5)] font-bold',
         text: 'text-cyan-400'
       },
       elegant: {
@@ -632,17 +666,17 @@ export function BusinessLinktreeManager({ businessId, businessLogo }: BusinessLi
       },
       tech: {
         bg: 'bg-black',
-        button: 'bg-gradient-to-r from-green-400 to-blue-500 hover:from-green-500 hover:to-blue-600 text-white rounded-md font-mono',
+        button: 'bg-gradient-to-r from-green-400 to-blue-500 hover:from-green-500 hover:to-blue-600 text-black rounded-md font-mono font-bold',
         text: 'text-green-400'
       },
       creative: {
         bg: 'bg-gradient-to-tr from-rose-400 via-fuchsia-500 to-indigo-500',
-        button: 'bg-white hover:bg-yellow-300 text-purple-900 rounded-[2rem] transform hover:rotate-1 transition-transform font-bold',
+        button: 'bg-white hover:bg-yellow-300 text-purple-900 rounded-[2rem] transform hover:rotate-1 transition-transform font-bold shadow-lg',
         text: 'text-white'
       },
       modern: {
         bg: 'bg-zinc-100',
-        button: 'bg-zinc-900 hover:bg-zinc-800 text-white rounded-xl border-l-4 border-blue-500',
+        button: 'bg-zinc-900 hover:bg-zinc-800 text-white rounded-xl border-l-4 border-blue-500 shadow-md',
         text: 'text-zinc-900'
       },
       bold: {
@@ -918,8 +952,43 @@ export function BusinessLinktreeManager({ businessId, businessLogo }: BusinessLi
                           onChange={(e) =>
                             setEditingLink({ ...editingLink, url: e.target.value })
                           }
-                          placeholder="https://..."
+                          placeholder="https://exemplo.com"
                         />
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Digite um domínio válido (ex: https://instagram.com)
+                        </p>
+                      </div>
+
+                      <div>
+                        <Label>Ícone do Link</Label>
+                        <div className="grid grid-cols-6 gap-2 mt-2">
+                          {[
+                            { name: 'link', Icon: LinkIcon },
+                            { name: 'instagram', Icon: Instagram },
+                            { name: 'facebook', Icon: Facebook },
+                            { name: 'twitter', Icon: Twitter },
+                            { name: 'linkedin', Icon: Linkedin },
+                            { name: 'youtube', Icon: Youtube },
+                            { name: 'globe', Icon: Globe },
+                            { name: 'mail', Icon: Mail },
+                            { name: 'phone', Icon: Smartphone },
+                            { name: 'whatsapp', Icon: MessageCircle },
+                            { name: 'location', Icon: MapPin },
+                          ].map(({ name, Icon }) => (
+                            <button
+                              key={name}
+                              type="button"
+                              onClick={() => setEditingLink({ ...editingLink, icon_name: name })}
+                              className={`p-3 rounded-lg border-2 transition-all ${
+                                editingLink.icon_name === name
+                                  ? 'border-primary bg-primary/10'
+                                  : 'border-border hover:border-primary/50'
+                              }`}
+                            >
+                              <Icon className="w-5 h-5 mx-auto" />
+                            </button>
+                          ))}
+                        </div>
                       </div>
 
                       <div>
@@ -978,18 +1047,21 @@ export function BusinessLinktreeManager({ businessId, businessLogo }: BusinessLi
                 )}
 
                 <div className="space-y-2">
-                  {links.map((link) => (
-                    <Card key={link.id} className="p-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3 flex-1 min-w-0">
-                          <LinkIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                          <div className="min-w-0 flex-1">
-                            <p className="font-medium truncate">{link.title}</p>
-                            <p className="text-xs text-muted-foreground truncate">
-                              {link.url}
-                            </p>
+                  {links.map((link) => {
+                    const IconComponent = link.icon_name && ICON_MAP[link.icon_name] ? ICON_MAP[link.icon_name] : LinkIcon;
+                    
+                    return (
+                      <Card key={link.id} className="p-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3 flex-1 min-w-0">
+                            <IconComponent className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                            <div className="min-w-0 flex-1">
+                              <p className="font-medium truncate">{link.title}</p>
+                              <p className="text-xs text-muted-foreground truncate">
+                                {link.url}
+                              </p>
+                            </div>
                           </div>
-                        </div>
 
                         <div className="flex gap-1 flex-shrink-0">
                           <Button
@@ -1029,7 +1101,8 @@ export function BusinessLinktreeManager({ businessId, businessLogo }: BusinessLi
                         </div>
                       </div>
                     </Card>
-                  ))}
+                    );
+                  })}
                 </div>
               </TabsContent>
 

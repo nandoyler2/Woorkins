@@ -3,7 +3,8 @@ import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { 
   Instagram, Facebook, Twitter, Linkedin, Youtube, 
-  Globe, Mail, Phone, Smartphone, ArrowLeft, MessageCircle 
+  Globe, Mail, Phone, Smartphone, ArrowLeft, MessageCircle,
+  Link as LinkIcon, MapPin
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { QRCodeSVG } from 'qrcode.react';
@@ -16,6 +17,7 @@ interface CustomLink {
   active: boolean;
   image_url?: string;
   youtube_url?: string;
+  icon_name?: string;
 }
 
 interface LinktreeConfig {
@@ -47,6 +49,20 @@ const SOCIAL_PLATFORMS = [
   { platform: 'phone', icon: Phone },
   { platform: 'website', icon: Globe },
 ];
+
+const ICON_MAP: Record<string, any> = {
+  link: LinkIcon,
+  instagram: Instagram,
+  facebook: Facebook,
+  twitter: Twitter,
+  linkedin: Linkedin,
+  youtube: Youtube,
+  globe: Globe,
+  mail: Mail,
+  phone: Smartphone,
+  whatsapp: MessageCircle,
+  location: MapPin,
+};
 
 export default function PublicLinktree() {
   const { slug } = useParams();
@@ -106,17 +122,17 @@ export default function PublicLinktree() {
       },
       gradient: {
         bg: 'bg-gradient-to-br from-purple-500 via-pink-500 to-orange-500',
-        button: 'bg-white/90 hover:bg-white text-purple-900 rounded-xl backdrop-blur-sm',
+        button: 'bg-white hover:bg-gray-100 text-purple-900 rounded-xl backdrop-blur-sm shadow-md',
         text: 'text-white'
       },
       glass: {
         bg: 'bg-gradient-to-br from-blue-400 to-purple-500',
-        button: 'bg-white/20 hover:bg-white/30 text-white rounded-2xl backdrop-blur-md border border-white/30',
+        button: 'bg-white/20 hover:bg-white/30 text-white rounded-2xl backdrop-blur-md border border-white/30 shadow-lg',
         text: 'text-white'
       },
       neon: {
         bg: 'bg-gray-900',
-        button: 'bg-transparent hover:bg-cyan-500/20 text-cyan-400 rounded-lg border-2 border-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.5)]',
+        button: 'bg-cyan-500 hover:bg-cyan-400 text-gray-900 rounded-lg border-2 border-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.5)] font-bold',
         text: 'text-cyan-400'
       },
       elegant: {
@@ -126,17 +142,17 @@ export default function PublicLinktree() {
       },
       tech: {
         bg: 'bg-black',
-        button: 'bg-gradient-to-r from-green-400 to-blue-500 hover:from-green-500 hover:to-blue-600 text-white rounded-md font-mono',
+        button: 'bg-gradient-to-r from-green-400 to-blue-500 hover:from-green-500 hover:to-blue-600 text-black rounded-md font-mono font-bold',
         text: 'text-green-400'
       },
       creative: {
         bg: 'bg-gradient-to-tr from-rose-400 via-fuchsia-500 to-indigo-500',
-        button: 'bg-white hover:bg-yellow-300 text-purple-900 rounded-[2rem] transform hover:rotate-1 transition-transform font-bold',
+        button: 'bg-white hover:bg-yellow-300 text-purple-900 rounded-[2rem] transform hover:rotate-1 transition-transform font-bold shadow-lg',
         text: 'text-white'
       },
       modern: {
         bg: 'bg-zinc-100',
-        button: 'bg-zinc-900 hover:bg-zinc-800 text-white rounded-xl border-l-4 border-blue-500',
+        button: 'bg-zinc-900 hover:bg-zinc-800 text-white rounded-xl border-l-4 border-blue-500 shadow-md',
         text: 'text-zinc-900'
       },
       bold: {
@@ -332,10 +348,16 @@ export default function PublicLinktree() {
                           href={href}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className={`block w-full p-4 text-center font-semibold text-base transition-all hover:scale-[1.02] ${!config.secondaryColor ? styles.button : 'rounded-lg'}`}
+                          className={`flex items-center justify-center gap-2 w-full p-4 text-center font-semibold text-base transition-all hover:scale-[1.02] ${!config.secondaryColor ? styles.button : 'rounded-lg'}`}
                           style={config.secondaryColor ? customButton : {}}
                         >
-                          {link.title}
+                          {link.icon_name && ICON_MAP[link.icon_name] && (
+                            (() => {
+                              const IconComponent = ICON_MAP[link.icon_name];
+                              return <IconComponent className="w-5 h-5" />;
+                            })()
+                          )}
+                          <span>{link.title}</span>
                         </a>
                       </div>
                     );
@@ -516,10 +538,16 @@ export default function PublicLinktree() {
                     href={href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`block w-full p-4 text-center font-semibold text-lg transition-all hover:scale-[1.02] ${!config.secondaryColor ? styles.button : 'rounded-lg'}`}
+                    className={`flex items-center justify-center gap-3 w-full p-4 text-center font-semibold text-lg transition-all hover:scale-[1.02] ${!config.secondaryColor ? styles.button : 'rounded-lg'}`}
                     style={config.secondaryColor ? customButton : {}}
                   >
-                    {link.title}
+                    {link.icon_name && ICON_MAP[link.icon_name] && (
+                      (() => {
+                        const IconComponent = ICON_MAP[link.icon_name];
+                        return <IconComponent className="w-6 h-6" />;
+                      })()
+                    )}
+                    <span>{link.title}</span>
                   </a>
                 </div>
               );

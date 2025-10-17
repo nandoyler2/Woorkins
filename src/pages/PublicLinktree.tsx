@@ -6,6 +6,7 @@ import {
   Globe, Mail, Phone, Smartphone, ArrowLeft 
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { QRCodeSVG } from 'qrcode.react';
 
 interface CustomLink {
   id: string;
@@ -172,6 +173,7 @@ export default function PublicLinktree() {
   const config = business.linktree_config || { layout: 'minimal' };
   const socialLinks = business.linktree_social_links || {};
   const styles = getLayoutStyles(config.layout);
+  const currentUrl = window.location.href;
   
   const customBg = config.primaryColor ? { backgroundColor: config.primaryColor } : {};
   const customText = config.textColor ? { color: config.textColor } : {};
@@ -181,13 +183,166 @@ export default function PublicLinktree() {
   } : {};
 
   return (
-    <div 
-      className={`min-h-screen flex items-center justify-center p-4 md:p-0 ${!config.primaryColor ? styles.bg : ''}`}
-      style={config.primaryColor ? customBg : {}}
-    >
-      {/* Container centralizado para desktop */}
-      <div className="w-full md:max-w-[680px] md:min-h-screen md:flex md:items-center md:justify-center md:py-12">
-        <div className="w-full space-y-8 py-8 md:py-0">
+    <>
+      {/* View Desktop - Mockup de celular com QR Code */}
+      <div className="hidden md:block min-h-screen bg-gradient-to-br from-slate-100 to-slate-200 relative">
+        <div className="flex items-center justify-center min-h-screen py-12">
+          {/* Moldura do celular */}
+          <div className="relative bg-gray-900 rounded-[3rem] p-4 shadow-2xl" style={{ width: '400px', height: '820px' }}>
+            {/* Notch */}
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-40 h-7 bg-gray-900 rounded-b-3xl z-10"></div>
+            
+            {/* Tela com scroll */}
+            <div 
+              className={`relative rounded-[2.5rem] overflow-y-auto h-full scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent ${!config.primaryColor ? styles.bg : ''}`}
+              style={config.primaryColor ? customBg : {}}
+            >
+              <div className="w-full space-y-8 py-12 px-6">
+                {/* Logo, Nome e @ */}
+                <div className="text-center space-y-3">
+                  <a 
+                    href={business.slug ? `https://woorkins.com/${business.slug}` : 'https://woorkins.com'}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-block"
+                  >
+                    {(business.linktree_logo_url || business.logo_url) ? (
+                      <img 
+                        src={business.linktree_logo_url || business.logo_url} 
+                        alt={business.company_name}
+                        className="w-24 h-24 rounded-full mx-auto object-cover shadow-lg hover:scale-105 transition-transform"
+                      />
+                    ) : (
+                      <div className="w-24 h-24 rounded-full bg-white/20 mx-auto flex items-center justify-center shadow-lg hover:scale-105 transition-transform">
+                        <Smartphone className="w-12 h-12" style={config.textColor ? customText : {}} />
+                      </div>
+                    )}
+                  </a>
+                  <h1 
+                    className={`text-2xl font-bold ${!config.textColor ? styles.text : ''}`}
+                    style={config.textColor ? customText : {}}
+                  >
+                    {business.company_name}
+                  </h1>
+                  {business.slug && (
+                    <a 
+                      href={business.slug ? `https://woorkins.com/${business.slug}` : 'https://woorkins.com'}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`text-sm opacity-75 hover:opacity-100 transition-opacity ${!config.textColor ? styles.text : ''}`}
+                      style={config.textColor ? customText : {}}
+                    >
+                      @{business.slug}
+                    </a>
+                  )}
+                  {config.bio && (
+                    <p 
+                      className={`text-base ${!config.textColor ? styles.text : ''}`}
+                      style={config.textColor ? customText : {}}
+                    >
+                      {config.bio}
+                    </p>
+                  )}
+                </div>
+
+                {/* Redes Sociais em Destaque */}
+                {Object.keys(socialLinks).filter(k => socialLinks[k]).length > 0 && (
+                  <div className="flex justify-center gap-4 flex-wrap">
+                    {SOCIAL_PLATFORMS.filter(p => socialLinks[p.platform]).map((social) => {
+                      const Icon = social.icon;
+                      const url = socialLinks[social.platform];
+                      let href = url;
+
+                      if (social.platform === 'email') {
+                        href = `mailto:${url}`;
+                      } else if (social.platform === 'phone') {
+                        href = `tel:${url.replace(/\D/g, '')}`;
+                      } else if (!url.startsWith('http')) {
+                        href = `https://${url}`;
+                      }
+
+                      return (
+                        <a
+                          key={social.platform}
+                          href={href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={`w-14 h-14 rounded-full flex items-center justify-center transition-all hover:scale-110 shadow-lg ${!config.secondaryColor ? styles.button : ''}`}
+                          style={config.secondaryColor ? customButton : {}}
+                        >
+                          <Icon className="w-6 h-6" />
+                        </a>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Links Customizados */}
+                <div className="space-y-3">
+                  {links.map((link) => {
+                    let href = link.url;
+                    if (!href.startsWith('http') && !href.startsWith('mailto:') && !href.startsWith('tel:')) {
+                      href = `https://${href}`;
+                    }
+
+                    return (
+                      <a
+                        key={link.id}
+                        href={href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`block w-full p-4 text-center font-semibold text-base transition-all hover:scale-[1.02] ${!config.secondaryColor ? styles.button : 'rounded-lg'}`}
+                        style={config.secondaryColor ? customButton : {}}
+                      >
+                        {link.title}
+                      </a>
+                    );
+                  })}
+                </div>
+
+                {/* Rodapé */}
+                <div className="text-center pt-6 border-t border-current/10">
+                  <a 
+                    href="https://woorkins.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`text-[0.6rem] opacity-60 hover:opacity-100 transition-opacity ${!config.textColor ? styles.text : ''}`}
+                    style={config.textColor ? customText : {}}
+                  >
+                    Gerado por Woorkins - Crie o seu
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            {/* Botão home */}
+            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-32 h-1 bg-gray-700 rounded-full"></div>
+          </div>
+        </div>
+
+        {/* QR Code no canto inferior direito */}
+        <div className="fixed bottom-8 right-8 bg-white rounded-2xl p-6 shadow-2xl">
+          <div className="text-center space-y-3">
+            <p className="text-sm font-semibold text-gray-900">View on mobile</p>
+            <div className="bg-white p-2 rounded-lg">
+              <QRCodeSVG 
+                value={currentUrl}
+                size={140}
+                level="H"
+                includeMargin={false}
+              />
+            </div>
+            <p className="text-xs text-gray-600">woorkins.com/l/{slug}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* View Mobile - Tela cheia */}
+      <div 
+        className={`md:hidden min-h-screen flex items-center justify-center p-4 ${!config.primaryColor ? styles.bg : ''}`}
+        style={config.primaryColor ? customBg : {}}
+      >
+        <div className="w-full space-y-8 py-8">
           {/* Logo, Nome e @ */}
           <div className="text-center space-y-3">
             <a 
@@ -243,7 +398,6 @@ export default function PublicLinktree() {
                 const url = socialLinks[social.platform];
                 let href = url;
 
-                // Formatar URLs especiais
                 if (social.platform === 'email') {
                   href = `mailto:${url}`;
                 } else if (social.platform === 'phone') {
@@ -269,7 +423,7 @@ export default function PublicLinktree() {
           )}
 
           {/* Links Customizados */}
-          <div className="space-y-4 max-w-xl mx-auto px-4 md:px-0">
+          <div className="space-y-4 max-w-xl mx-auto">
             {links.map((link) => {
               let href = link.url;
               if (!href.startsWith('http') && !href.startsWith('mailto:') && !href.startsWith('tel:')) {
@@ -305,6 +459,6 @@ export default function PublicLinktree() {
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }

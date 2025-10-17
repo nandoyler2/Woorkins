@@ -145,13 +145,17 @@ export default function BusinessEdit() {
   const menuItems = [
     { id: 'posts' as Section, label: 'Posts', icon: MessagesSquare, color: 'text-orange-500' },
     { id: 'evaluations' as Section, label: 'Avaliações', icon: Users, color: 'text-pink-500' },
-    { id: 'settings' as Section, label: 'Configurações', icon: AlertTriangle, color: 'text-red-500' },
   ];
 
   const customizationItems = [
     { id: 'tools' as Section, label: 'Ferramentas', icon: Zap, color: 'text-yellow-500' },
     { id: 'profile-cover' as Section, label: 'Perfil e Capa', icon: Eye, color: 'text-blue-500' },
     { id: 'info' as Section, label: 'Informações', icon: Info, color: 'text-indigo-500' },
+  ];
+
+  const adminItems = [
+    { id: 'admin' as Section, label: 'Administradores', icon: Shield, color: 'text-purple-500' },
+    { id: 'settings' as Section, label: 'Configurações', icon: AlertTriangle, color: 'text-red-500' },
   ];
 
   const availableFeatures: Omit<BusinessFeature, 'isActive'>[] = [
@@ -844,18 +848,27 @@ export default function BusinessEdit() {
               </SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      onClick={() => setActiveSection('admin')}
-                      className={`
-                        ${activeSection === 'admin' ? 'bg-primary/10 text-primary font-weight' : 'hover:bg-muted/50'}
-                        transition-all duration-200
-                      `}
-                    >
-                      <Shield className={`w-5 h-5 mr-3 ${activeSection === 'admin' ? 'text-purple-500' : 'text-muted-foreground'}`} />
-                      <span>Administradores</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
+                  {adminItems.map((item) => {
+                    const Icon = item.icon;
+                    const isActive = activeSection === item.id;
+                    return (
+                      <SidebarMenuItem key={item.id}>
+                        <SidebarMenuButton
+                          onClick={() => {
+                            setActiveSection(item.id);
+                            setConfiguringFeature(null);
+                          }}
+                          className={`
+                            ${isActive ? 'bg-primary/10 text-primary font-medium' : 'hover:bg-muted/50'}
+                            transition-all duration-200
+                          `}
+                        >
+                          <Icon className={`w-5 h-5 mr-3 ${isActive ? item.color : 'text-muted-foreground'}`} />
+                          <span>{item.label}</span>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    );
+                  })}
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>

@@ -107,7 +107,7 @@ interface Evaluation {
   };
 }
 
-type Section = 'info' | 'company-data' | 'social' | 'portfolio' | 'posts' | 'evaluations' | 'settings';
+type Section = 'profile-cover' | 'tools' | 'company-data' | 'posts' | 'evaluations' | 'settings';
 
 interface BusinessFeature {
   key: string;
@@ -132,7 +132,7 @@ export default function BusinessEdit() {
   const [saving, setSaving] = useState(false);
   const [responses, setResponses] = useState<{ [key: string]: string }>({});
   const [newPortfolioItem, setNewPortfolioItem] = useState({ title: '', description: '', url: '', type: '' });
-  const [activeSection, setActiveSection] = useState<Section>('info');
+  const [activeSection, setActiveSection] = useState<Section>('profile-cover');
   const [features, setFeatures] = useState<BusinessFeature[]>([]);
   const [configuringFeature, setConfiguringFeature] = useState<string | null>(null);
   
@@ -141,7 +141,8 @@ export default function BusinessEdit() {
   const coverInputRef = useRef<HTMLInputElement>(null);
 
   const menuItems = [
-    { id: 'info' as Section, label: 'Personalização', icon: Info, color: 'text-blue-500' },
+    { id: 'profile-cover' as Section, label: 'Perfil e Capa', icon: Eye, color: 'text-blue-500' },
+    { id: 'tools' as Section, label: 'Ferramentas', icon: Zap, color: 'text-yellow-500' },
     { id: 'company-data' as Section, label: 'Dados da Empresa', icon: Briefcase, color: 'text-indigo-500' },
     { id: 'posts' as Section, label: 'Posts', icon: MessagesSquare, color: 'text-orange-500' },
     { id: 'evaluations' as Section, label: 'Avaliações', icon: Users, color: 'text-pink-500' },
@@ -345,6 +346,12 @@ export default function BusinessEdit() {
       isActive: featuresMap.get(f.key) || false
     }));
 
+    // Ordenar: ativas primeiro
+    allFeatures.sort((a, b) => {
+      if (a.isActive === b.isActive) return 0;
+      return a.isActive ? -1 : 1;
+    });
+
     setFeatures(allFeatures);
   };
 
@@ -356,17 +363,12 @@ export default function BusinessEdit() {
 
     const newActiveState = !feature.isActive;
 
-    // Atualizar estado local imediatamente
-    setFeatures(prevFeatures => {
-      const updatedFeatures = prevFeatures.map(f => 
+    // Atualizar estado local imediatamente SEM reordenar
+    setFeatures(prevFeatures => 
+      prevFeatures.map(f => 
         f.key === featureKey ? { ...f, isActive: newActiveState } : f
-      );
-      // Ordenar: ativas primeiro
-      return updatedFeatures.sort((a, b) => {
-        if (a.isActive === b.isActive) return 0;
-        return a.isActive ? -1 : 1;
-      });
-    });
+      )
+    );
 
     const { error } = await supabase
       .from('business_profile_features' as any)
@@ -746,16 +748,16 @@ export default function BusinessEdit() {
                 <p className="text-muted-foreground">@{business.slug}</p>
               </div>
 
-              {/* Personalização */}
-              {activeSection === 'info' && (
-                <div className="space-y-6 animate-fade-in">
+              {/* Perfil e Capa */}
+              {activeSection === 'profile-cover' && (
+                <div className="animate-fade-in">
                   <Card className="bg-card/50 backdrop-blur-sm border-2 overflow-hidden">
                     <div className="bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 p-6 border-b">
                       <CardTitle className="flex items-center gap-2 text-blue-600">
-                        <ImageIcon className="w-5 h-5" />
-                        Personalize seu perfil
+                        <Eye className="w-5 h-5" />
+                        Perfil e Capa
                       </CardTitle>
-                      <CardDescription>Ferramentas para deixar seu perfil incrível</CardDescription>
+                      <CardDescription>Personalize a aparência do seu perfil</CardDescription>
                     </div>
                     <CardContent className="p-6 space-y-6">
                       {/* Inputs de upload escondidos */}
@@ -767,7 +769,6 @@ export default function BusinessEdit() {
                         onChange={(e) => {
                           const file = e.target.files?.[0];
                           if (file) {
-                            // Dispatch event para o ImageUpload component processar
                             const imageUpload = document.querySelector('[data-upload-type="logo"]');
                             if (imageUpload) {
                               const input = imageUpload.querySelector('input[type="file"]') as HTMLInputElement;
@@ -789,7 +790,6 @@ export default function BusinessEdit() {
                         onChange={(e) => {
                           const file = e.target.files?.[0];
                           if (file) {
-                            // Dispatch event para o ImageUpload component processar
                             const imageUpload = document.querySelector('[data-upload-type="cover"]');
                             if (imageUpload) {
                               const input = imageUpload.querySelector('input[type="file"]') as HTMLInputElement;
@@ -820,7 +820,6 @@ export default function BusinessEdit() {
                               <div className="w-full h-full bg-gradient-to-br from-primary/20 to-secondary/20" />
                             )}
                             
-                            {/* Botões de editar e deletar capa */}
                             <div className="absolute top-2 right-2 flex gap-2">
                               <Button
                                 size="icon"
@@ -845,9 +844,7 @@ export default function BusinessEdit() {
                             </div>
                           </div>
                           
-                          {/* Container do logo e nome */}
                           <div className="relative px-4 pb-4">
-                            {/* Logo posicionado no canto */}
                             <div className="absolute -top-12 left-4">
                               <div className="relative w-32 h-32 rounded-xl border-4 border-background overflow-hidden bg-background shadow-xl">
                                 {business.logo_url ? (
@@ -861,7 +858,6 @@ export default function BusinessEdit() {
                                     <ImageIcon className="w-10 h-10 text-muted-foreground" />
                                   </div>
                                 )}
-                                {/* Botões de editar e deletar logo */}
                                 <div className="absolute bottom-1 right-1 flex gap-1">
                                   <Button
                                     size="icon"
@@ -887,7 +883,6 @@ export default function BusinessEdit() {
                               </div>
                             </div>
                             
-                            {/* Nome da empresa à esquerda, após o logo */}
                             <div className="pt-6 pl-40">
                               <div className="inline-block bg-background/95 backdrop-blur-sm px-6 py-2 rounded-lg shadow-sm border">
                                 <h2 className="text-2xl font-bold whitespace-nowrap">
@@ -903,7 +898,7 @@ export default function BusinessEdit() {
                         </p>
                       </div>
                       
-                      {/* Componentes de upload escondidos para processar as imagens */}
+                      {/* Componentes de upload escondidos */}
                       <div className="hidden">
                         <div data-upload-type="logo">
                           <ImageUpload
@@ -926,7 +921,12 @@ export default function BusinessEdit() {
                       </div>
                     </CardContent>
                   </Card>
+                </div>
+              )}
 
+              {/* Ferramentas */}
+              {activeSection === 'tools' && (
+                <div className="space-y-6 animate-fade-in">
                   {/* Ferramentas Interativas */}
                   {configuringFeature ? (
                     <div className="space-y-6">

@@ -557,7 +557,7 @@ export const AIAssistant = () => {
               <div className="flex-1 min-w-0">
                 <h3 className="font-bold text-lg flex items-center gap-2">
                   <MessageCircle className="h-5 w-5 text-primary" />
-                  Assistente Virtual Woorkins
+                  Central de Ajuda
                 </h3>
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">

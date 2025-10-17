@@ -84,6 +84,8 @@ interface BusinessProfile {
   working_hours: string | null;
   services_offered: string[] | null;
   active: boolean;
+  average_rating: number;
+  total_reviews: number;
 }
 
 interface PortfolioItem {
@@ -134,7 +136,7 @@ interface Evaluation {
   };
 }
 
-type Section = 'profile-cover' | 'tools' | 'posts' | 'evaluations' | 'settings' | 'admin' | 'info';
+type Section = 'dashboard' | 'profile-cover' | 'tools' | 'posts' | 'evaluations' | 'settings' | 'admin' | 'info';
 
 interface BusinessFeature {
   key: string;
@@ -159,7 +161,7 @@ export default function BusinessEdit() {
   const [saving, setSaving] = useState(false);
   const [responses, setResponses] = useState<{ [key: string]: string }>({});
   const [newPortfolioItem, setNewPortfolioItem] = useState({ title: '', description: '', url: '', type: '' });
-  const [activeSection, setActiveSection] = useState<Section>('tools');
+  const [activeSection, setActiveSection] = useState<Section>('dashboard');
   const [features, setFeatures] = useState<BusinessFeature[]>([]);
   const [configuringFeature, setConfiguringFeature] = useState<string | null>(null);
   const [deleteConfirmSlug, setDeleteConfirmSlug] = useState('');
@@ -174,6 +176,8 @@ export default function BusinessEdit() {
   const [postComments, setPostComments] = useState<{ [key: string]: PostComment[] }>({});
   const [postLikes, setPostLikes] = useState<{ [key: string]: PostLike[] }>({});
   const [currentProfileId, setCurrentProfileId] = useState<string | null>(null);
+  const [profileViews, setProfileViews] = useState<number>(0);
+  const [viewsLastWeek, setViewsLastWeek] = useState<number>(0);
   const imageInputRef = useRef<HTMLInputElement>(null);
   
   // Refs para inputs de upload
@@ -181,6 +185,7 @@ export default function BusinessEdit() {
   const coverInputRef = useRef<HTMLInputElement>(null);
 
   const menuItems = [
+    { id: 'dashboard' as Section, label: 'Dashboard', icon: Building2, color: 'text-blue-500' },
     { id: 'posts' as Section, label: 'Posts', icon: MessagesSquare, color: 'text-orange-500' },
     { id: 'evaluations' as Section, label: 'Avaliações', icon: Users, color: 'text-pink-500' },
   ];
@@ -287,6 +292,7 @@ export default function BusinessEdit() {
       loadPortfolio();
       loadPosts();
       loadFeatures();
+      loadProfileViews();
     }
   }, [business?.id]);
 
@@ -532,6 +538,29 @@ export default function BusinessEdit() {
     });
 
     setFeatures(allFeatures);
+  };
+
+  const loadProfileViews = async () => {
+    if (!business?.id) return;
+
+    // Total de visualizações
+    const { count: totalViews } = await supabase
+      .from('business_profile_views' as any)
+      .select('*', { count: 'exact', head: true })
+      .eq('business_id', business.id);
+
+    // Visualizações da última semana
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+    const { count: weekViews } = await supabase
+      .from('business_profile_views' as any)
+      .select('*', { count: 'exact', head: true })
+      .eq('business_id', business.id)
+      .gte('viewed_at', oneWeekAgo.toISOString());
+
+    setProfileViews(totalViews || 0);
+    setViewsLastWeek(weekViews || 0);
   };
 
   const handleToggleFeature = async (featureKey: string) => {
@@ -1778,6 +1807,261 @@ export default function BusinessEdit() {
                       </CardContent>
                     </Card>
                   )}
+                </div>
+              )}
+
+
+              {/* Dashboard */}
+              {activeSection === 'dashboard' && (
+                <div className="space-y-6 animate-fade-in">
+                  {/* Welcome Card */}
+                  <Card className="bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-pink-500/10 border-2">
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h2 className="text-2xl font-bold mb-2">
+                            Bem-vindo, {business.company_name}! 👋
+                          </h2>
+                          <p className="text-muted-foreground">
+                            Gerencie seu perfil profissional e acompanhe suas estatísticas
+                          </p>
+                        </div>
+                        <Link to={`/${business.slug}`} target="_blank">
+                          <Button variant="outline" size="lg" className="gap-2">
+                            <ExternalLink className="w-4 h-4" />
+                            Ver Perfil Público
+                          </Button>
+                        </Link>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Stats Cards */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {/* Total Views */}
+                    <Card className="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border-2 hover:shadow-lg transition-all">
+                      <CardContent className="p-6">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="p-3 bg-blue-500/10 rounded-lg">
+                            <Eye className="w-6 h-6 text-blue-500" />
+                          </div>
+                          <span className="text-sm text-muted-foreground">Total</span>
+                        </div>
+                        <h3 className="text-3xl font-bold mb-1">{profileViews.toLocaleString()}</h3>
+                        <p className="text-sm text-muted-foreground">Visualizações do Perfil</p>
+                        {viewsLastWeek > 0 && (
+                          <p className="text-xs text-green-500 mt-2">
+                            +{viewsLastWeek} esta semana
+                          </p>
+                        )}
+                      </CardContent>
+                    </Card>
+
+                    {/* Total Posts */}
+                    <Card className="bg-gradient-to-br from-orange-500/10 to-red-500/10 border-2 hover:shadow-lg transition-all">
+                      <CardContent className="p-6">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="p-3 bg-orange-500/10 rounded-lg">
+                            <MessagesSquare className="w-6 h-6 text-orange-500" />
+                          </div>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => setActiveSection('posts')}
+                            className="text-xs"
+                          >
+                            Ver todos
+                          </Button>
+                        </div>
+                        <h3 className="text-3xl font-bold mb-1">{posts.length}</h3>
+                        <p className="text-sm text-muted-foreground">Posts Publicados</p>
+                      </CardContent>
+                    </Card>
+
+                    {/* Total Evaluations */}
+                    <Card className="bg-gradient-to-br from-pink-500/10 to-rose-500/10 border-2 hover:shadow-lg transition-all">
+                      <CardContent className="p-6">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="p-3 bg-pink-500/10 rounded-lg">
+                            <Star className="w-6 h-6 text-pink-500" />
+                          </div>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => setActiveSection('evaluations')}
+                            className="text-xs"
+                          >
+                            Ver todas
+                          </Button>
+                        </div>
+                        <h3 className="text-3xl font-bold mb-1">{evaluations.length}</h3>
+                        <p className="text-sm text-muted-foreground">Avaliações Recebidas</p>
+                        {business.average_rating > 0 && (
+                          <div className="flex items-center gap-1 mt-2">
+                            <Star className="w-4 h-4 fill-yellow-500 text-yellow-500" />
+                            <span className="text-sm font-medium">{business.average_rating.toFixed(1)}</span>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+
+                    {/* Active Tools */}
+                    <Card className="bg-gradient-to-br from-purple-500/10 to-violet-500/10 border-2 hover:shadow-lg transition-all">
+                      <CardContent className="p-6">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="p-3 bg-purple-500/10 rounded-lg">
+                            <Zap className="w-6 h-6 text-purple-500" />
+                          </div>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => setActiveSection('tools')}
+                            className="text-xs"
+                          >
+                            Gerenciar
+                          </Button>
+                        </div>
+                        <h3 className="text-3xl font-bold mb-1">
+                          {features.filter(f => f.isActive).length}
+                        </h3>
+                        <p className="text-sm text-muted-foreground">Ferramentas Ativas</p>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Profile Info Card */}
+                  <Card className="bg-card/50 backdrop-blur-sm border-2">
+                    <div className="bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10 p-6 border-b">
+                      <CardTitle className="flex items-center gap-2">
+                        <Info className="w-5 h-5" />
+                        Informações do Perfil
+                      </CardTitle>
+                    </div>
+                    <CardContent className="p-6">
+                      <div className="grid md:grid-cols-2 gap-6">
+                        <div className="space-y-4">
+                          <div>
+                            <Label className="text-muted-foreground">Nome da Empresa</Label>
+                            <p className="text-lg font-medium mt-1">{business.company_name}</p>
+                          </div>
+                          <div>
+                            <Label className="text-muted-foreground">Categoria</Label>
+                            <p className="text-lg font-medium mt-1">{business.category || 'Não definida'}</p>
+                          </div>
+                          <div>
+                            <Label className="text-muted-foreground">Telefone</Label>
+                            <p className="text-lg font-medium mt-1">{business.phone || 'Não informado'}</p>
+                          </div>
+                        </div>
+                        <div className="space-y-4">
+                          <div>
+                            <Label className="text-muted-foreground">Email</Label>
+                            <p className="text-lg font-medium mt-1">{business.email || 'Não informado'}</p>
+                          </div>
+                          <div>
+                            <Label className="text-muted-foreground">Endereço</Label>
+                            <p className="text-lg font-medium mt-1">{business.address || 'Não informado'}</p>
+                          </div>
+                          <div>
+                            <Label className="text-muted-foreground">Status</Label>
+                            <div className="flex items-center gap-2 mt-1">
+                              <div className={`w-2 h-2 rounded-full ${business.active ? 'bg-green-500' : 'bg-red-500'}`} />
+                              <p className="text-lg font-medium">{business.active ? 'Ativo' : 'Inativo'}</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="mt-6 pt-6 border-t">
+                        <Button 
+                          onClick={() => setActiveSection('info')}
+                          className="w-full"
+                          variant="outline"
+                        >
+                          Editar Informações
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Active Tools Card */}
+                  <Card className="bg-card/50 backdrop-blur-sm border-2">
+                    <div className="bg-gradient-to-r from-yellow-500/10 via-orange-500/10 to-red-500/10 p-6 border-b">
+                      <CardTitle className="flex items-center gap-2">
+                        <Zap className="w-5 h-5" />
+                        Ferramentas Ativas ({features.filter(f => f.isActive).length})
+                      </CardTitle>
+                    </div>
+                    <CardContent className="p-6">
+                      {features.filter(f => f.isActive).length === 0 ? (
+                        <div className="text-center py-8">
+                          <Zap className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                          <p className="text-muted-foreground mb-4">Nenhuma ferramenta ativa ainda</p>
+                          <Button onClick={() => setActiveSection('tools')}>
+                            Ativar Ferramentas
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                          {features.filter(f => f.isActive).map((feature) => (
+                            <div
+                              key={feature.key}
+                              className={`${feature.color} p-4 rounded-lg cursor-pointer hover:opacity-80 transition-all`}
+                              onClick={() => {
+                                setActiveSection('tools');
+                                setConfiguringFeature(feature.key);
+                              }}
+                            >
+                              <feature.icon className="w-8 h-8 text-white mb-2" />
+                              <p className="text-sm font-medium text-white">{feature.name}</p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {/* Quick Actions */}
+                  <Card className="bg-card/50 backdrop-blur-sm border-2">
+                    <div className="bg-gradient-to-r from-green-500/10 via-emerald-500/10 to-teal-500/10 p-6 border-b">
+                      <CardTitle>Ações Rápidas</CardTitle>
+                    </div>
+                    <CardContent className="p-6">
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <Button
+                          variant="outline"
+                          className="h-auto flex-col gap-2 py-6"
+                          onClick={() => setActiveSection('posts')}
+                        >
+                          <Plus className="w-6 h-6" />
+                          <span>Criar Post</span>
+                        </Button>
+                        <Button
+                          variant="outline"
+                          className="h-auto flex-col gap-2 py-6"
+                          onClick={() => setActiveSection('profile-cover')}
+                        >
+                          <ImageIcon className="w-6 h-6" />
+                          <span>Atualizar Fotos</span>
+                        </Button>
+                        <Button
+                          variant="outline"
+                          className="h-auto flex-col gap-2 py-6"
+                          onClick={() => setActiveSection('tools')}
+                        >
+                          <Zap className="w-6 h-6" />
+                          <span>Ferramentas</span>
+                        </Button>
+                        <Button
+                          variant="outline"
+                          className="h-auto flex-col gap-2 py-6"
+                          onClick={() => setActiveSection('info')}
+                        >
+                          <Info className="w-6 h-6" />
+                          <span>Editar Info</span>
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
               )}
 

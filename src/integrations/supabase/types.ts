@@ -738,6 +738,41 @@ export type Database = {
           },
         ]
       }
+      business_profile_views: {
+        Row: {
+          business_id: string
+          id: string
+          ip_address: string | null
+          user_agent: string | null
+          viewed_at: string
+          viewer_profile_id: string | null
+        }
+        Insert: {
+          business_id: string
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+          viewed_at?: string
+          viewer_profile_id?: string | null
+        }
+        Update: {
+          business_id?: string
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+          viewed_at?: string
+          viewer_profile_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_profile_views_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "business_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       business_profiles: {
         Row: {
           active: boolean | null

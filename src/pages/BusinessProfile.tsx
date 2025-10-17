@@ -88,6 +88,7 @@ export default function BusinessProfile() {
 
   useEffect(() => {
     loadBusinessData();
+    recordProfileView();
   }, [slug]);
 
   const startNegotiation = async () => {
@@ -141,6 +142,47 @@ export default function BusinessProfile() {
         title: 'Negociação iniciada!',
         description: 'Comece a conversar com a empresa',
       });
+    }
+  };
+
+  const recordProfileView = async () => {
+    if (!slug) return;
+
+    try {
+      // Get business ID first
+      const { data: businessData } = await supabase
+        .from('business_profiles' as any)
+        .select('id')
+        .eq('slug', slug)
+        .maybeSingle();
+
+      if (!businessData) return;
+
+      // Get current user profile if logged in
+      let viewerProfileId = null;
+      if (user) {
+        const { data: profileData } = await supabase
+          .from('profiles' as any)
+          .select('id')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        
+        if (profileData) {
+          viewerProfileId = (profileData as any).id;
+        }
+      }
+
+      // Record the view
+      await supabase
+        .from('business_profile_views' as any)
+        .insert({
+          business_id: (businessData as any).id,
+          viewer_profile_id: viewerProfileId,
+          user_agent: navigator.userAgent
+        });
+    } catch (error) {
+      // Silently fail - don't show errors for view tracking
+      console.log('Failed to record profile view:', error);
     }
   };
 

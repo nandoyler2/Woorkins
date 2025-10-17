@@ -108,7 +108,7 @@ interface Evaluation {
   };
 }
 
-type Section = 'profile-cover' | 'tools' | 'posts' | 'evaluations' | 'settings' | 'admin';
+type Section = 'profile-cover' | 'tools' | 'posts' | 'evaluations' | 'settings' | 'admin' | 'info';
 
 interface BusinessFeature {
   key: string;
@@ -151,6 +151,7 @@ export default function BusinessEdit() {
   const customizationItems = [
     { id: 'tools' as Section, label: 'Ferramentas', icon: Zap, color: 'text-yellow-500' },
     { id: 'profile-cover' as Section, label: 'Perfil e Capa', icon: Eye, color: 'text-blue-500' },
+    { id: 'info' as Section, label: 'Informações', icon: Info, color: 'text-indigo-500' },
   ];
 
   const availableFeatures: Omit<BusinessFeature, 'isActive'>[] = [
@@ -1654,15 +1655,8 @@ export default function BusinessEdit() {
                 </div>
               )}
 
-              {/* Admin - Administration */}
-              {activeSection === 'admin' && business && (
-                <div className="animate-fade-in">
-                  <BusinessAdministrators businessId={business.id} />
-                </div>
-              )}
-
-              {/* Configurações */}
-              {activeSection === 'settings' && (
+              {/* Informações */}
+              {activeSection === 'info' && (
                 <div className="space-y-6 animate-fade-in">
                   {/* Dados da Empresa */}
                   <Card className="bg-card/50 backdrop-blur-sm border-2">
@@ -1748,6 +1742,19 @@ export default function BusinessEdit() {
                       </form>
                     </CardContent>
                   </Card>
+                </div>
+              )}
+
+              {/* Admin - Administration */}
+              {activeSection === 'admin' && business && (
+                <div className="animate-fade-in">
+                  <BusinessAdministrators businessId={business.id} />
+                </div>
+              )}
+
+              {/* Configurações */}
+              {activeSection === 'settings' && (
+                <div className="space-y-6 animate-fade-in">
 
                   {/* Mudar URL do Perfil */}
                   <Card className="bg-card/50 backdrop-blur-sm border-2">

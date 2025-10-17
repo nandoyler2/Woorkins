@@ -5,7 +5,7 @@ import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Star, Search, Briefcase, MessageSquare, CheckCircle2, Phone, Building2, Users, UserPlus, ThumbsUp, MessageCircle, Award, Activity, TrendingUp, Bell, Clock, Trophy, Share2, Heart, Bookmark, Camera, Mail, FileCheck, Settings } from 'lucide-react';
+import { Star, Search, Briefcase, MessageSquare, CheckCircle2, Phone, Building2, Users, UserPlus, ThumbsUp, MessageCircle, Award, Activity, TrendingUp, Bell, Clock, Trophy, Share2, Heart, Bookmark, Camera, Mail, FileCheck, Settings, Eye } from 'lucide-react';
 import woorkoinsIcon from '@/assets/woorkoins-icon-latest.png';
 import { Link } from 'react-router-dom';
 import { Progress } from '@/components/ui/progress';
@@ -725,14 +725,14 @@ export default function Dashboard() {
                             <p className="text-xs text-slate-600 truncate">{business.category}</p>
                           )}
                         </div>
-                        <div className="flex flex-col gap-2 flex-shrink-0">
+                        <div className="flex gap-2 flex-shrink-0">
                           <Link to={`/${business.slug || business.id}`}>
-                            <Button variant="outline" size="sm" className="text-xs h-7 px-2 w-full">
-                              Ver perfil
+                            <Button variant="outline" size="sm" className="h-7 w-7 p-0">
+                              <Eye className="w-3.5 h-3.5" />
                             </Button>
                           </Link>
                           <Link to={`/${business.slug || business.id}/editar`}>
-                            <Button variant="default" size="sm" className="text-xs h-7 px-2 w-full">
+                            <Button variant="default" size="sm" className="text-xs h-7 px-3">
                               <Settings className="w-3 h-3 mr-1" />
                               Gerenciar
                             </Button>

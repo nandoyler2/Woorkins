@@ -534,7 +534,7 @@ export default function ProjectDetails() {
 
                 {!user && project.status === 'open' && (
                   <Button asChild className="w-full bg-gradient-primary">
-                    <Link to="/autenticacao">Fazer Login para Propor</Link>
+                    <Link to="/auth">Fazer Login para Propor</Link>
                   </Button>
                 )}
 

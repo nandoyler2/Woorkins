@@ -146,7 +146,7 @@ export default function ProjectCreate() {
             Você precisa estar logado para criar um projeto
           </p>
           <Button asChild className="bg-gradient-primary">
-            <Link to="/autenticacao">Fazer Login</Link>
+            <Link to="/auth">Fazer Login</Link>
           </Button>
         </div>
       </div>

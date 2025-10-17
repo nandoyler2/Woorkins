@@ -261,7 +261,7 @@ export default function Account() {
 
       // Fazer logout
       await supabase.auth.signOut();
-      navigate('/autenticacao');
+      navigate('/auth');
     } catch (error: any) {
       toast({
         title: 'Erro ao verificar código',

@@ -227,10 +227,10 @@ export const Header = () => {
           ) : (
             <>
               <Button variant="ghost" asChild>
-                <Link to="/autenticacao?mode=signin">{t('login')}</Link>
+                <Link to="/auth?mode=signin">{t('login')}</Link>
               </Button>
               <Button asChild>
-                <Link to="/autenticacao?mode=signup">{t('signup')}</Link>
+                <Link to="/auth?mode=signup">{t('signup')}</Link>
               </Button>
             </>
           )}

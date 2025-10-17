@@ -226,7 +226,7 @@ export const SearchBar = () => {
               <p className="text-base md:text-lg mb-4">
                 Crie agora a marca ou o produto sobre isso{" "}
                 <Link 
-                  to="/autenticacao?mode=signup" 
+                  to="/auth?mode=signup"
                   className="text-primary font-bold hover:underline"
                   onClick={() => setShowResults(false)}
                 >

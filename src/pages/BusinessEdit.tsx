@@ -132,7 +132,7 @@ export default function BusinessEdit() {
   const [saving, setSaving] = useState(false);
   const [responses, setResponses] = useState<{ [key: string]: string }>({});
   const [newPortfolioItem, setNewPortfolioItem] = useState({ title: '', description: '', url: '', type: '' });
-  const [activeSection, setActiveSection] = useState<Section>('profile-cover');
+  const [activeSection, setActiveSection] = useState<Section>('tools');
   const [features, setFeatures] = useState<BusinessFeature[]>([]);
   const [configuringFeature, setConfiguringFeature] = useState<string | null>(null);
   
@@ -141,8 +141,8 @@ export default function BusinessEdit() {
   const coverInputRef = useRef<HTMLInputElement>(null);
 
   const menuItems = [
-    { id: 'profile-cover' as Section, label: 'Perfil e Capa', icon: Eye, color: 'text-blue-500' },
     { id: 'tools' as Section, label: 'Ferramentas', icon: Zap, color: 'text-yellow-500' },
+    { id: 'profile-cover' as Section, label: 'Perfil e Capa', icon: Eye, color: 'text-blue-500' },
     { id: 'company-data' as Section, label: 'Dados da Empresa', icon: Briefcase, color: 'text-indigo-500' },
     { id: 'posts' as Section, label: 'Posts', icon: MessagesSquare, color: 'text-orange-500' },
     { id: 'evaluations' as Section, label: 'Avaliações', icon: Users, color: 'text-pink-500' },
@@ -369,6 +369,11 @@ export default function BusinessEdit() {
         f.key === featureKey ? { ...f, isActive: newActiveState } : f
       )
     );
+
+    // Se ativou uma ferramenta, mudar para a seção de ferramentas
+    if (newActiveState) {
+      setActiveSection('tools');
+    }
 
     const { error } = await supabase
       .from('business_profile_features' as any)

@@ -94,7 +94,7 @@ function AppContent() {
         <Route path="/financeiro" element={<ProtectedRoute><Financeiro /></ProtectedRoute>} />
         <Route path="/woorkoins" element={<ProtectedRoute><Woorkoins /></ProtectedRoute>} />
         <Route path="/payment-settings" element={<ProtectedRoute><PaymentSettings /></ProtectedRoute>} />
-        <Route path="/empresa/editar" element={<ProtectedRoute><BusinessEdit /></ProtectedRoute>} />
+        <Route path="/empresa/:slug/editar" element={<ProtectedRoute><BusinessEdit /></ProtectedRoute>} />
         <Route path="/empresa/financeiro" element={<ProtectedRoute><BusinessFinances /></ProtectedRoute>} />
 
         <Route path="/admin" element={<ProtectedRoute requireAdmin><AdminLayout /></ProtectedRoute>}>

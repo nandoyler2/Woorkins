@@ -45,16 +45,86 @@ interface BusinessLinktreeManagerProps {
 }
 
 const LAYOUTS = [
-  { id: 'minimal', name: 'Minimal', description: 'Limpo e elegante' },
-  { id: 'corporate', name: 'Corporativo', description: 'Profissional e sério' },
-  { id: 'gradient', name: 'Gradient', description: 'Gradiente moderno' },
-  { id: 'glass', name: 'Glass', description: 'Efeito glassmorphism' },
-  { id: 'neon', name: 'Neon', description: 'Vibrante e chamativo' },
-  { id: 'elegant', name: 'Elegante', description: 'Sofisticado e refinado' },
-  { id: 'tech', name: 'Tech', description: 'Tecnológico e futurista' },
-  { id: 'creative', name: 'Criativo', description: 'Artístico e único' },
-  { id: 'modern', name: 'Moderno', description: 'Contemporâneo e clean' },
-  { id: 'bold', name: 'Bold', description: 'Ousado e impactante' },
+  { 
+    id: 'minimal', 
+    name: 'Minimal', 
+    description: 'Limpo e elegante',
+    primaryColor: '#FFFFFF',
+    secondaryColor: '#1A1A1A',
+    textColor: '#1A1A1A'
+  },
+  { 
+    id: 'corporate', 
+    name: 'Corporativo', 
+    description: 'Profissional e sério',
+    primaryColor: '#F8FAFC',
+    secondaryColor: '#1E3A8A',
+    textColor: '#0F172A'
+  },
+  { 
+    id: 'gradient', 
+    name: 'Gradient', 
+    description: 'Gradiente moderno',
+    primaryColor: '#A855F7',
+    secondaryColor: '#FFFFFF',
+    textColor: '#FFFFFF'
+  },
+  { 
+    id: 'glass', 
+    name: 'Glass', 
+    description: 'Efeito glassmorphism',
+    primaryColor: '#60A5FA',
+    secondaryColor: '#FFFFFF',
+    textColor: '#FFFFFF'
+  },
+  { 
+    id: 'neon', 
+    name: 'Neon', 
+    description: 'Vibrante e chamativo',
+    primaryColor: '#111827',
+    secondaryColor: '#22D3EE',
+    textColor: '#22D3EE'
+  },
+  { 
+    id: 'elegant', 
+    name: 'Elegante', 
+    description: 'Sofisticado e refinado',
+    primaryColor: '#FEF3C7',
+    secondaryColor: '#78350F',
+    textColor: '#78350F'
+  },
+  { 
+    id: 'tech', 
+    name: 'Tech', 
+    description: 'Tecnológico e futurista',
+    primaryColor: '#000000',
+    secondaryColor: '#10B981',
+    textColor: '#10B981'
+  },
+  { 
+    id: 'creative', 
+    name: 'Criativo', 
+    description: 'Artístico e único',
+    primaryColor: '#FB7185',
+    secondaryColor: '#FFFFFF',
+    textColor: '#FFFFFF'
+  },
+  { 
+    id: 'modern', 
+    name: 'Moderno', 
+    description: 'Contemporâneo e clean',
+    primaryColor: '#F4F4F5',
+    secondaryColor: '#18181B',
+    textColor: '#18181B'
+  },
+  { 
+    id: 'bold', 
+    name: 'Bold', 
+    description: 'Ousado e impactante',
+    primaryColor: '#DC2626',
+    secondaryColor: '#FACC15',
+    textColor: '#FFFFFF'
+  },
 ];
 
 const SOCIAL_PLATFORMS: SocialLink[] = [
@@ -75,9 +145,9 @@ export function BusinessLinktreeManager({ businessId, businessLogo }: BusinessLi
   const [linktreeSlug, setLinktreeSlug] = useState('');
   const [config, setConfig] = useState<LinktreeConfig>({ 
     layout: 'minimal',
-    primaryColor: '#000000',
-    secondaryColor: '#ffffff',
-    textColor: '#000000',
+    primaryColor: '#FFFFFF',
+    secondaryColor: '#1A1A1A',
+    textColor: '#1A1A1A',
     logoUrl: businessLogo || ''
   });
   const [socialLinks, setSocialLinks] = useState<Record<string, string>>({});
@@ -118,9 +188,9 @@ export function BusinessLinktreeManager({ businessId, businessLogo }: BusinessLi
       if (profile) {
         const defaultConfig = {
           layout: 'minimal',
-          primaryColor: '#000000',
-          secondaryColor: '#ffffff',
-          textColor: '#000000',
+          primaryColor: '#FFFFFF',
+          secondaryColor: '#1A1A1A',
+          textColor: '#1A1A1A',
           logoUrl: profile.linktree_logo_url || profile.logo_url || businessLogo || ''
         };
         
@@ -167,6 +237,21 @@ export function BusinessLinktreeManager({ businessId, businessLogo }: BusinessLi
         description: error.message,
         variant: "destructive",
       });
+    }
+  };
+
+  const handleLayoutChange = (layoutId: string) => {
+    const selectedLayout = LAYOUTS.find(l => l.id === layoutId);
+    if (selectedLayout) {
+      const newConfig = {
+        ...config,
+        layout: layoutId,
+        primaryColor: selectedLayout.primaryColor,
+        secondaryColor: selectedLayout.secondaryColor,
+        textColor: selectedLayout.textColor
+      };
+      setConfig(newConfig);
+      saveConfig(newConfig);
     }
   };
 
@@ -529,182 +614,13 @@ export function BusinessLinktreeManager({ businessId, businessLogo }: BusinessLi
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="link" className="space-y-4">
+            <Tabs defaultValue="links" className="space-y-4">
               <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="link">Link</TabsTrigger>
-                <TabsTrigger value="layout">Layout</TabsTrigger>
-                <TabsTrigger value="social">Social</TabsTrigger>
                 <TabsTrigger value="links">Links</TabsTrigger>
+                <TabsTrigger value="social">Social</TabsTrigger>
+                <TabsTrigger value="layout">Layout</TabsTrigger>
+                <TabsTrigger value="config">Config</TabsTrigger>
               </TabsList>
-
-              {/* Tab: Link URL */}
-              <TabsContent value="link" className="space-y-4">
-                <div>
-                  <Label>Nome do seu LinkTree</Label>
-                  <div className="flex gap-2 items-end mt-2">
-                    <div className="flex-1 flex items-center gap-2">
-                      <span className="text-sm text-muted-foreground">woorkins.com/l/</span>
-                      <Input
-                        value={linktreeSlug}
-                        onChange={(e) => setLinktreeSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
-                        placeholder="seu-negocio"
-                        className="flex-1"
-                      />
-                    </div>
-                    <Button onClick={saveSlug}>
-                      Salvar
-                    </Button>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-2">
-                    Use apenas letras minúsculas, números e hífens
-                  </p>
-                  {linktreeSlug && (
-                    <div className="mt-3 p-3 bg-muted rounded-lg">
-                      <p className="text-sm font-medium mb-1">Seu link público:</p>
-                      <a 
-                        href={`/l/${linktreeSlug}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm text-primary hover:underline break-all"
-                      >
-                        {window.location.origin}/l/{linktreeSlug}
-                      </a>
-                    </div>
-                  )}
-                </div>
-              </TabsContent>
-
-              {/* Tab: Layout */}
-              <TabsContent value="layout" className="space-y-4">
-                <div>
-                  <Label>Logo</Label>
-                  <div className="flex gap-2 items-end">
-                    <Input
-                      value={config.logoUrl || ''}
-                      onChange={(e) => setConfig({ ...config, logoUrl: e.target.value })}
-                      placeholder="URL da logo (deixe vazio para usar a logo do perfil)"
-                      className="flex-1"
-                    />
-                    <Button 
-                      size="sm"
-                      onClick={() => saveConfig({ logoUrl: config.logoUrl })}
-                    >
-                      Salvar
-                    </Button>
-                  </div>
-                </div>
-
-                <div>
-                  <Label>Bio</Label>
-                  <Textarea
-                    value={config.bio || ''}
-                    onChange={(e) => setConfig({ ...config, bio: e.target.value })}
-                    placeholder="Descreva seu negócio em poucas palavras..."
-                    className="resize-none"
-                    rows={3}
-                  />
-                  <Button 
-                    size="sm" 
-                    className="mt-2"
-                    onClick={() => saveConfig({ bio: config.bio })}
-                  >
-                    Salvar Bio
-                  </Button>
-                </div>
-
-                <div className="grid grid-cols-3 gap-3">
-                  <div>
-                    <Label>Cor Primária</Label>
-                    <Input
-                      type="color"
-                      value={config.primaryColor || '#000000'}
-                      onChange={(e) => setConfig({ ...config, primaryColor: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <Label>Cor Secundária</Label>
-                    <Input
-                      type="color"
-                      value={config.secondaryColor || '#ffffff'}
-                      onChange={(e) => setConfig({ ...config, secondaryColor: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <Label>Cor do Texto</Label>
-                    <Input
-                      type="color"
-                      value={config.textColor || '#000000'}
-                      onChange={(e) => setConfig({ ...config, textColor: e.target.value })}
-                    />
-                  </div>
-                </div>
-                <Button 
-                  size="sm"
-                  onClick={() => saveConfig({ 
-                    primaryColor: config.primaryColor,
-                    secondaryColor: config.secondaryColor,
-                    textColor: config.textColor
-                  })}
-                >
-                  Salvar Cores
-                </Button>
-
-                <div>
-                  <Label className="mb-3 block">Escolha o Layout</Label>
-                  <RadioGroup
-                    value={config.layout}
-                    onValueChange={(value) => saveConfig({ layout: value })}
-                  >
-                    <div className="grid grid-cols-2 gap-3">
-                      {LAYOUTS.map((layout) => (
-                        <div key={layout.id} className="relative">
-                          <RadioGroupItem
-                            value={layout.id}
-                            id={layout.id}
-                            className="peer sr-only"
-                          />
-                          <Label
-                            htmlFor={layout.id}
-                            className="flex flex-col p-4 rounded-lg border-2 border-muted cursor-pointer hover:border-primary peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 transition-all"
-                          >
-                            <span className="font-semibold">{layout.name}</span>
-                            <span className="text-xs text-muted-foreground">
-                              {layout.description}
-                            </span>
-                          </Label>
-                        </div>
-                      ))}
-                    </div>
-                  </RadioGroup>
-                </div>
-              </TabsContent>
-
-              {/* Tab: Social */}
-              <TabsContent value="social" className="space-y-4">
-                <div className="space-y-3">
-                  {SOCIAL_PLATFORMS.map((social) => {
-                    const Icon = social.icon;
-                    return (
-                      <div key={social.platform}>
-                        <Label className="flex items-center gap-2 mb-2">
-                          <Icon className="w-4 h-4" />
-                          {social.platform.charAt(0).toUpperCase() + social.platform.slice(1)}
-                        </Label>
-                        <Input
-                          value={socialLinks[social.platform] || ''}
-                          onChange={(e) => 
-                            setSocialLinks({ ...socialLinks, [social.platform]: e.target.value })
-                          }
-                          placeholder={social.placeholder}
-                        />
-                      </div>
-                    );
-                  })}
-                </div>
-                <Button onClick={() => saveSocialLinks(socialLinks)} className="w-full">
-                  Salvar Redes Sociais
-                </Button>
-              </TabsContent>
 
               {/* Tab: Links */}
               <TabsContent value="links" className="space-y-4">
@@ -814,6 +730,175 @@ export function BusinessLinktreeManager({ businessId, businessLogo }: BusinessLi
                       </div>
                     </Card>
                   ))}
+                </div>
+              </TabsContent>
+
+              {/* Tab: Social */}
+              <TabsContent value="social" className="space-y-4">
+                <div className="space-y-3">
+                  {SOCIAL_PLATFORMS.map((social) => {
+                    const Icon = social.icon;
+                    return (
+                      <div key={social.platform}>
+                        <Label className="flex items-center gap-2 mb-2">
+                          <Icon className="w-4 h-4" />
+                          {social.platform.charAt(0).toUpperCase() + social.platform.slice(1)}
+                        </Label>
+                        <Input
+                          value={socialLinks[social.platform] || ''}
+                          onChange={(e) => 
+                            setSocialLinks({ ...socialLinks, [social.platform]: e.target.value })
+                          }
+                          placeholder={social.placeholder}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+                <Button onClick={() => saveSocialLinks(socialLinks)} className="w-full">
+                  Salvar Redes Sociais
+                </Button>
+              </TabsContent>
+
+              {/* Tab: Layout */}
+              <TabsContent value="layout" className="space-y-4">
+                <div>
+                  <Label className="mb-3 block">Escolha o Layout</Label>
+                  <RadioGroup
+                    value={config.layout}
+                    onValueChange={handleLayoutChange}
+                  >
+                    <div className="grid grid-cols-2 gap-3">
+                      {LAYOUTS.map((layout) => (
+                        <div key={layout.id} className="relative">
+                          <RadioGroupItem
+                            value={layout.id}
+                            id={layout.id}
+                            className="peer sr-only"
+                          />
+                          <Label
+                            htmlFor={layout.id}
+                            className="flex flex-col p-4 rounded-lg border-2 border-muted cursor-pointer hover:border-primary peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 transition-all"
+                          >
+                            <span className="font-semibold">{layout.name}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {layout.description}
+                            </span>
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                  </RadioGroup>
+                </div>
+
+                <div>
+                  <Label>Logo</Label>
+                  <div className="flex gap-2 items-end">
+                    <Input
+                      value={config.logoUrl || ''}
+                      onChange={(e) => setConfig({ ...config, logoUrl: e.target.value })}
+                      placeholder="URL da logo (deixe vazio para usar a logo do perfil)"
+                      className="flex-1"
+                    />
+                    <Button 
+                      size="sm"
+                      onClick={() => saveConfig({ logoUrl: config.logoUrl })}
+                    >
+                      Salvar
+                    </Button>
+                  </div>
+                </div>
+
+                <div>
+                  <Label>Bio</Label>
+                  <Textarea
+                    value={config.bio || ''}
+                    onChange={(e) => setConfig({ ...config, bio: e.target.value })}
+                    placeholder="Descreva seu negócio em poucas palavras..."
+                    className="resize-none"
+                    rows={3}
+                  />
+                  <Button 
+                    size="sm" 
+                    className="mt-2"
+                    onClick={() => saveConfig({ bio: config.bio })}
+                  >
+                    Salvar Bio
+                  </Button>
+                </div>
+
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <Label>Cor Primária</Label>
+                    <Input
+                      type="color"
+                      value={config.primaryColor || '#FFFFFF'}
+                      onChange={(e) => setConfig({ ...config, primaryColor: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label>Cor Secundária</Label>
+                    <Input
+                      type="color"
+                      value={config.secondaryColor || '#1A1A1A'}
+                      onChange={(e) => setConfig({ ...config, secondaryColor: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label>Cor do Texto</Label>
+                    <Input
+                      type="color"
+                      value={config.textColor || '#1A1A1A'}
+                      onChange={(e) => setConfig({ ...config, textColor: e.target.value })}
+                    />
+                  </div>
+                </div>
+                <Button 
+                  size="sm"
+                  onClick={() => saveConfig({ 
+                    primaryColor: config.primaryColor,
+                    secondaryColor: config.secondaryColor,
+                    textColor: config.textColor
+                  })}
+                >
+                  Salvar Cores
+                </Button>
+              </TabsContent>
+
+              {/* Tab: Config */}
+              <TabsContent value="config" className="space-y-4">
+                <div>
+                  <Label>Nome do seu LinkTree</Label>
+                  <div className="flex gap-2 items-end mt-2">
+                    <div className="flex-1 flex items-center gap-2">
+                      <span className="text-sm text-muted-foreground">woorkins.com/l/</span>
+                      <Input
+                        value={linktreeSlug}
+                        onChange={(e) => setLinktreeSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                        placeholder="seu-negocio"
+                        className="flex-1"
+                      />
+                    </div>
+                    <Button onClick={saveSlug}>
+                      Salvar
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Use apenas letras minúsculas, números e hífens
+                  </p>
+                  {linktreeSlug && (
+                    <div className="mt-3 p-3 bg-muted rounded-lg">
+                      <p className="text-sm font-medium mb-1">Seu link público:</p>
+                      <a 
+                        href={`/l/${linktreeSlug}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-primary hover:underline break-all"
+                      >
+                        {window.location.origin}/l/{linktreeSlug}
+                      </a>
+                    </div>
+                  )}
                 </div>
               </TabsContent>
             </Tabs>

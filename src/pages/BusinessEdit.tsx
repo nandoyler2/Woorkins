@@ -2793,8 +2793,8 @@ export default function BusinessEdit() {
                         <div className="space-y-2">
                           <Label className="text-base font-medium">URL do Perfil</Label>
                           <div className="flex gap-2">
-                            <div className="flex-1 flex items-center border-2 rounded-md px-3 bg-background">
-                              <span className="text-muted-foreground text-sm">woorkins.com/</span>
+                            <div className="flex-1 flex items-center border-2 rounded-md bg-background overflow-hidden">
+                              <span className="text-muted-foreground text-sm pl-3">woorkins.com/</span>
                               <Input
                                 value={business.slug}
                                 onChange={(e) => {
@@ -2802,7 +2802,7 @@ export default function BusinessEdit() {
                                   setBusiness({ ...business, slug: value });
                                 }}
                                 placeholder="sua-empresa"
-                                className="border-0 shadow-none focus-visible:ring-0 p-0 text-base -ml-1"
+                                className="border-0 shadow-none focus-visible:ring-0 px-0 py-2 text-base"
                                 disabled={!canEditSlug}
                               />
                             </div>

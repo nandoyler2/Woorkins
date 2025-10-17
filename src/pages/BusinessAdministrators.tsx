@@ -61,6 +61,7 @@ export default function BusinessAdministrators({ businessId }: BusinessAdministr
     manage_team: false,
   });
   const [adminToRemove, setAdminToRemove] = useState<string | null>(null);
+  const [showAddForm, setShowAddForm] = useState(false);
 
   useEffect(() => {
     loadAdmins();
@@ -139,6 +140,7 @@ export default function BusinessAdministrators({ businessId }: BusinessAdministr
         view_finances: false,
         manage_team: false,
       });
+      setShowAddForm(false);
       loadAdmins();
     } else {
       toast({
@@ -182,118 +184,147 @@ export default function BusinessAdministrators({ businessId }: BusinessAdministr
 
   return (
     <div className="space-y-6">
-      <Card className="bg-card/50 backdrop-blur-sm border-2">
-        <CardHeader className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 border-b">
-          <CardTitle className="flex items-center gap-2 text-purple-600">
-            <Shield className="w-5 h-5" />
-            Administradores
-          </CardTitle>
-          <CardDescription>
-            Adicione outros usuários como administradores do seu perfil de negócios
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="p-6 space-y-6">
-          {/* Search Section */}
-          <div className="space-y-4">
-            <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-              <p className="text-sm text-blue-600 dark:text-blue-400">
-                ℹ️ Para adicionar um administrador, a pessoa precisa estar cadastrada no Woorkins primeiro. 
-                Procure pelo nome de usuário ou nome completo.
-              </p>
-            </div>
+      {/* Botão Novo Administrador */}
+      {!showAddForm && (
+        <div className="flex justify-end">
+          <Button onClick={() => setShowAddForm(true)} className="gap-2">
+            <UserPlus className="w-4 h-4" />
+            Novo Administrador
+          </Button>
+        </div>
+      )}
 
-            <div className="flex gap-2">
-              <div className="flex-1">
-                <Input
-                  placeholder="Buscar por nome ou usuário..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                />
+      {/* Add Admin Form */}
+      {showAddForm && (
+        <Card className="bg-card/50 backdrop-blur-sm border-2">
+          <CardHeader className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 border-b">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2 text-purple-600">
+                  <Shield className="w-5 h-5" />
+                  Adicionar Administrador
+                </CardTitle>
+                <CardDescription>
+                  Procure e adicione um usuário como administrador do perfil
+                </CardDescription>
               </div>
-              <Button onClick={handleSearch} disabled={loading}>
-                <Search className="w-4 h-4 mr-2" />
-                Buscar
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  setShowAddForm(false);
+                  setSelectedProfile(null);
+                  setSearchQuery('');
+                  setSearchResults([]);
+                }}
+              >
+                <X className="w-4 h-4" />
               </Button>
             </div>
+          </CardHeader>
+          <CardContent className="p-6 space-y-6">
+            {/* Search Section */}
+            <div className="space-y-4">
+              <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                <p className="text-sm text-blue-600 dark:text-blue-400">
+                  ℹ️ Para adicionar um administrador, a pessoa precisa estar cadastrada no Woorkins primeiro. 
+                  Procure pelo nome de usuário ou nome completo.
+                </p>
+              </div>
 
-            {/* Search Results */}
-            {searchResults.length > 0 && (
-              <div className="space-y-2">
-                <Label>Resultados da busca:</Label>
+              <div className="flex gap-2">
+                <div className="flex-1">
+                  <Input
+                    placeholder="Buscar por nome ou usuário..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                  />
+                </div>
+                <Button onClick={handleSearch} disabled={loading}>
+                  <Search className="w-4 h-4 mr-2" />
+                  Buscar
+                </Button>
+              </div>
+
+              {/* Search Results */}
+              {searchResults.length > 0 && (
                 <div className="space-y-2">
-                  {searchResults.map((profile) => (
-                    <div
-                      key={profile.id}
-                      className="flex items-center justify-between p-3 bg-muted rounded-lg"
-                    >
-                      <div>
-                        <p className="font-medium">{profile.full_name}</p>
-                        <p className="text-sm text-muted-foreground">@{profile.username}</p>
-                      </div>
-                      <Button
-                        size="sm"
-                        onClick={() => setSelectedProfile(profile)}
-                        variant={selectedProfile?.id === profile.id ? 'default' : 'outline'}
+                  <Label>Resultados da busca:</Label>
+                  <div className="space-y-2">
+                    {searchResults.map((profile) => (
+                      <div
+                        key={profile.id}
+                        className="flex items-center justify-between p-3 bg-muted rounded-lg"
                       >
-                        {selectedProfile?.id === profile.id ? 'Selecionado' : 'Selecionar'}
-                      </Button>
-                    </div>
-                  ))}
+                        <div>
+                          <p className="font-medium">{profile.full_name}</p>
+                          <p className="text-sm text-muted-foreground">@{profile.username}</p>
+                        </div>
+                        <Button
+                          size="sm"
+                          onClick={() => setSelectedProfile(profile)}
+                          variant={selectedProfile?.id === profile.id ? 'default' : 'outline'}
+                        >
+                          {selectedProfile?.id === profile.id ? 'Selecionado' : 'Selecionar'}
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {/* Permissions Selection */}
-            {selectedProfile && (
-              <div className="space-y-4 p-4 bg-muted rounded-lg">
-                <div>
-                  <h3 className="font-medium mb-2">Adicionar: {selectedProfile.full_name}</h3>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Selecione as permissões que deseja conceder:
-                  </p>
-                </div>
+              {/* Permissions Selection */}
+              {selectedProfile && (
+                <div className="space-y-4 p-4 bg-muted rounded-lg">
+                  <div>
+                    <h3 className="font-medium mb-2">Adicionar: {selectedProfile.full_name}</h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Selecione as permissões que deseja conceder:
+                    </p>
+                  </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {Object.entries(permissionLabels).map(([key, label]) => (
-                    <div key={key} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={key}
-                        checked={permissions[key as keyof typeof permissions]}
-                        onCheckedChange={(checked) =>
-                          setPermissions((prev) => ({
-                            ...prev,
-                            [key]: checked,
-                          }))
-                        }
-                      />
-                      <Label htmlFor={key} className="cursor-pointer">
-                        {label}
-                      </Label>
-                    </div>
-                  ))}
-                </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {Object.entries(permissionLabels).map(([key, label]) => (
+                      <div key={key} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={key}
+                          checked={permissions[key as keyof typeof permissions]}
+                          onCheckedChange={(checked) =>
+                            setPermissions((prev) => ({
+                              ...prev,
+                              [key]: checked,
+                            }))
+                          }
+                        />
+                        <Label htmlFor={key} className="cursor-pointer">
+                          {label}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
 
-                <div className="flex gap-2 pt-4">
-                  <Button onClick={handleAddAdmin} className="flex-1">
-                    <UserPlus className="w-4 h-4 mr-2" />
-                    Adicionar Administrador
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setSelectedProfile(null);
-                      setSearchResults([]);
-                    }}
-                  >
-                    Cancelar
-                  </Button>
+                  <div className="flex gap-2 pt-4">
+                    <Button onClick={handleAddAdmin} className="flex-1">
+                      <UserPlus className="w-4 h-4 mr-2" />
+                      Adicionar Administrador
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setSelectedProfile(null);
+                        setSearchResults([]);
+                      }}
+                    >
+                      Cancelar
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Current Admins List */}
       <Card className="bg-card/50 backdrop-blur-sm border-2">

@@ -14,7 +14,18 @@ import { useToast } from '@/hooks/use-toast';
 import { ImageUpload } from '@/components/ImageUpload';
 import { MediaUpload } from '@/components/MediaUpload';
 import { CreatePostDialog } from '@/components/CreatePostDialog';
-import { ArrowLeft, Save, Star, MessageSquare, Plus, Trash2, Facebook, Instagram, Linkedin, Twitter, Globe, MessageCircle } from 'lucide-react';
+import { ArrowLeft, Save, Star, MessageSquare, Plus, Trash2, Facebook, Instagram, Linkedin, Twitter, Globe, MessageCircle, AlertTriangle } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { Link } from 'react-router-dom';
 
 interface BusinessProfile {
@@ -400,6 +411,32 @@ export default function BusinessEdit() {
     }
   };
 
+  const handleDeleteProfile = async () => {
+    if (!business) return;
+
+    try {
+      const { error } = await supabase
+        .from('business_profiles' as any)
+        .delete()
+        .eq('id', business.id);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Perfil profissional excluído',
+        description: 'Seu perfil profissional foi removido com sucesso.',
+      });
+      
+      navigate('/painel');
+    } catch (error: any) {
+      toast({
+        title: 'Erro ao excluir perfil',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -550,6 +587,48 @@ export default function BusinessEdit() {
                       {saving ? 'Salvando...' : 'Salvar Alterações'}
                     </Button>
                   </form>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-card/50 backdrop-blur-sm border-2 border-destructive/20">
+                <CardHeader>
+                  <CardTitle className="text-destructive flex items-center gap-2">
+                    <AlertTriangle className="w-5 h-5" />
+                    Zona de Perigo
+                  </CardTitle>
+                  <CardDescription>
+                    Ações irreversíveis do perfil profissional
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="destructive" className="w-full">
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Excluir Perfil Profissional
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Tem certeza?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Esta ação não pode ser desfeita. Isso excluirá permanentemente seu perfil profissional, 
+                          incluindo todos os posts, portfólio e avaliações associadas.
+                          <br /><br />
+                          <strong>Nota:</strong> Seu perfil de interações na plataforma não será afetado.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction 
+                          onClick={handleDeleteProfile}
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                          Sim, excluir perfil profissional
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </CardContent>
               </Card>
             </TabsContent>

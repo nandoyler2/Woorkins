@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -17,7 +17,7 @@ import {
   ArrowLeft, Save, Star, MessageSquare, Plus, Trash2, 
   Facebook, Instagram, Linkedin, Twitter, Globe, MessageCircle, 
   AlertTriangle, Info, Image as ImageIcon, Users, MessagesSquare,
-  Eye, EyeOff, ExternalLink
+  Eye, EyeOff, ExternalLink, Upload, X
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import {
@@ -115,6 +115,10 @@ export default function BusinessEdit() {
   const [responses, setResponses] = useState<{ [key: string]: string }>({});
   const [newPortfolioItem, setNewPortfolioItem] = useState({ title: '', description: '', url: '', type: '' });
   const [activeSection, setActiveSection] = useState<Section>('info');
+  
+  // Refs para inputs de upload
+  const logoInputRef = useRef<HTMLInputElement>(null);
+  const coverInputRef = useRef<HTMLInputElement>(null);
 
   const menuItems = [
     { id: 'info' as Section, label: 'Informações', icon: Info, color: 'text-blue-500' },
@@ -305,6 +309,34 @@ export default function BusinessEdit() {
     if (!error) {
       setBusiness({ ...business, cover_url: url });
       toast({ title: 'Capa atualizada!' });
+    }
+  };
+  
+  const handleLogoDelete = async () => {
+    if (!business) return;
+
+    const { error } = await supabase
+      .from('business_profiles' as any)
+      .update({ logo_url: null })
+      .eq('id', business.id);
+
+    if (!error) {
+      setBusiness({ ...business, logo_url: null });
+      toast({ title: 'Logo removido!' });
+    }
+  };
+
+  const handleCoverDelete = async () => {
+    if (!business) return;
+
+    const { error } = await supabase
+      .from('business_profiles' as any)
+      .update({ cover_url: null })
+      .eq('id', business.id);
+
+    if (!error) {
+      setBusiness({ ...business, cover_url: null });
+      toast({ title: 'Capa removida!' });
     }
   };
 
@@ -568,6 +600,52 @@ export default function BusinessEdit() {
                       <CardDescription>Logo e capa do perfil profissional</CardDescription>
                     </div>
                     <CardContent className="p-6 space-y-6">
+                      {/* Inputs de upload escondidos */}
+                      <input
+                        ref={logoInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            // Dispatch event para o ImageUpload component processar
+                            const imageUpload = document.querySelector('[data-upload-type="logo"]');
+                            if (imageUpload) {
+                              const input = imageUpload.querySelector('input[type="file"]') as HTMLInputElement;
+                              if (input) {
+                                const dataTransfer = new DataTransfer();
+                                dataTransfer.items.add(file);
+                                input.files = dataTransfer.files;
+                                input.dispatchEvent(new Event('change', { bubbles: true }));
+                              }
+                            }
+                          }
+                        }}
+                      />
+                      <input
+                        ref={coverInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            // Dispatch event para o ImageUpload component processar
+                            const imageUpload = document.querySelector('[data-upload-type="cover"]');
+                            if (imageUpload) {
+                              const input = imageUpload.querySelector('input[type="file"]') as HTMLInputElement;
+                              if (input) {
+                                const dataTransfer = new DataTransfer();
+                                dataTransfer.items.add(file);
+                                input.files = dataTransfer.files;
+                                input.dispatchEvent(new Event('change', { bubbles: true }));
+                              }
+                            }
+                          }
+                        }}
+                      />
+                      
                       {/* Prévia do Perfil */}
                       <div className="space-y-3">
                         <Label className="text-base font-medium">Prévia do Perfil</Label>
@@ -584,15 +662,29 @@ export default function BusinessEdit() {
                               <div className="w-full h-full bg-gradient-to-br from-primary/20 to-secondary/20" />
                             )}
                             
-                            {/* Botão de editar capa */}
-                            <Button
-                              size="icon"
-                              variant="secondary"
-                              className="absolute top-2 right-2 h-8 w-8 rounded-full shadow-lg bg-background/80 backdrop-blur-sm hover:bg-background"
-                              onClick={() => document.getElementById('cover-upload-trigger')?.click()}
-                            >
-                              <ImageIcon className="h-4 w-4" />
-                            </Button>
+                            {/* Botões de editar e deletar capa */}
+                            <div className="absolute top-2 right-2 flex gap-2">
+                              <Button
+                                size="icon"
+                                variant="secondary"
+                                className="h-8 w-8 rounded-full shadow-lg bg-background/80 backdrop-blur-sm hover:bg-background"
+                                onClick={() => coverInputRef.current?.click()}
+                                title="Alterar capa"
+                              >
+                                <Upload className="h-4 w-4" />
+                              </Button>
+                              {business.cover_url && (
+                                <Button
+                                  size="icon"
+                                  variant="destructive"
+                                  className="h-8 w-8 rounded-full shadow-lg"
+                                  onClick={handleCoverDelete}
+                                  title="Remover capa"
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              )}
+                            </div>
                           </div>
                           
                           {/* Container do logo e nome */}
@@ -611,15 +703,29 @@ export default function BusinessEdit() {
                                     <ImageIcon className="w-10 h-10 text-muted-foreground" />
                                   </div>
                                 )}
-                                {/* Botão de editar logo */}
-                                <Button
-                                  size="icon"
-                                  variant="secondary"
-                                  className="absolute bottom-1 right-1 h-7 w-7 rounded-full shadow-lg bg-background/80 backdrop-blur-sm hover:bg-background"
-                                  onClick={() => document.getElementById('logo-upload-trigger')?.click()}
-                                >
-                                  <ImageIcon className="h-3 w-3" />
-                                </Button>
+                                {/* Botões de editar e deletar logo */}
+                                <div className="absolute bottom-1 right-1 flex gap-1">
+                                  <Button
+                                    size="icon"
+                                    variant="secondary"
+                                    className="h-7 w-7 rounded-full shadow-lg bg-background/80 backdrop-blur-sm hover:bg-background"
+                                    onClick={() => logoInputRef.current?.click()}
+                                    title="Alterar logo"
+                                  >
+                                    <Upload className="h-3 w-3" />
+                                  </Button>
+                                  {business.logo_url && (
+                                    <Button
+                                      size="icon"
+                                      variant="destructive"
+                                      className="h-7 w-7 rounded-full shadow-lg"
+                                      onClick={handleLogoDelete}
+                                      title="Remover logo"
+                                    >
+                                      <X className="h-3 w-3" />
+                                    </Button>
+                                  )}
+                                </div>
                               </div>
                             </div>
                             
@@ -639,31 +745,25 @@ export default function BusinessEdit() {
                         </p>
                       </div>
                       
-                      {/* Inputs de upload */}
-                      <div className="space-y-4">
-                        <div className="space-y-2">
-                          <Label className="text-base font-medium">Upload de Logo</Label>
-                          <div id="logo-upload-trigger">
-                            <ImageUpload
-                              currentImageUrl={business.logo_url}
-                              onUpload={handleLogoUpload}
-                              bucket="business-logos"
-                              folder={business.id}
-                              type="logo"
-                            />
-                          </div>
+                      {/* Componentes de upload escondidos para processar as imagens */}
+                      <div className="hidden">
+                        <div data-upload-type="logo">
+                          <ImageUpload
+                            currentImageUrl={business.logo_url}
+                            onUpload={handleLogoUpload}
+                            bucket="business-logos"
+                            folder={business.id}
+                            type="logo"
+                          />
                         </div>
-                        <div className="space-y-2">
-                          <Label className="text-base font-medium">Upload de Capa</Label>
-                          <div id="cover-upload-trigger">
-                            <ImageUpload
-                              currentImageUrl={business.cover_url}
-                              onUpload={handleCoverUpload}
-                              bucket="business-covers"
-                              folder={business.id}
-                              type="cover"
-                            />
-                          </div>
+                        <div data-upload-type="cover">
+                          <ImageUpload
+                            currentImageUrl={business.cover_url}
+                            onUpload={handleCoverUpload}
+                            bucket="business-covers"
+                            folder={business.id}
+                            type="cover"
+                          />
                         </div>
                       </div>
                     </CardContent>

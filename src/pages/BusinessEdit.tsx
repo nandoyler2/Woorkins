@@ -598,7 +598,7 @@ export default function BusinessEdit() {
                         <ImageIcon className="w-5 h-5" />
                         Personalize seu perfil
                       </CardTitle>
-                      <CardDescription>Logo e capa do perfil profissional</CardDescription>
+                      <CardDescription>Ferramentas para deixar seu perfil incrível</CardDescription>
                     </div>
                     <CardContent className="p-6 space-y-6">
                       {/* Inputs de upload escondidos */}

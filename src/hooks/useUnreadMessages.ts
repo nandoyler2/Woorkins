@@ -9,17 +9,67 @@ export const useUnreadMessages = (profileId: string) => {
 
     const loadUnreadCount = async () => {
       try {
-        // 1) Fonte primária: tabela agregada (fonte da verdade)
+        // 1) Fonte primária: tabela agregada (fonte da verdade) + reconciliação
         const { data: aggRows, error } = await supabase
           .from('message_unread_counts')
-          .select('unread_count')
+          .select('conversation_id, conversation_type, unread_count, last_read_at')
           .eq('user_id', profileId);
 
         if (error) throw error;
 
         if (aggRows && aggRows.length > 0) {
-          const totalAgg = aggRows.reduce((sum, r: any) => sum + (r.unread_count || 0), 0) || 0;
-          setUnreadCount(Number.isFinite(totalAgg) && totalAgg > 0 ? totalAgg : 0);
+          // Recalcular contagens reais por conversa e reconciliar divergências
+          const perConvCounts = await Promise.all(
+            aggRows.map(async (r: any) => {
+              if (!r?.conversation_id || !r?.conversation_type) return 0;
+              const isNegotiation = r.conversation_type === 'negotiation';
+              const table = isNegotiation ? 'negotiation_messages' : 'proposal_messages';
+              const idColumn = isNegotiation ? 'negotiation_id' : 'proposal_id';
+
+              let q = supabase
+                .from(table as any)
+                .select('*', { count: 'exact', head: true })
+                .eq(idColumn, r.conversation_id)
+                .neq('sender_id', profileId)
+                .in('status', ['sent', 'delivered'])
+                .eq('moderation_status', 'approved');
+
+              if (isNegotiation) {
+                q = (q as any).neq('is_deleted', true);
+              }
+
+              if (r.last_read_at) {
+                q = (q as any).gt('created_at', r.last_read_at as string);
+              } else {
+                q = (q as any).is('read_at', null);
+              }
+
+              const { count } = (await q) as any;
+              return count || 0;
+            })
+          );
+
+          const computedTotal = perConvCounts.reduce((s, c) => s + c, 0);
+
+          // Preparar updates quando houver divergência
+          const updates = aggRows
+            .map((r: any, idx: number) => ({ row: r, real: perConvCounts[idx] || 0 }))
+            .filter(({ row, real }) => (row.unread_count || 0) !== real)
+            .map(({ row, real }) => ({
+              user_id: profileId,
+              conversation_id: row.conversation_id,
+              conversation_type: row.conversation_type,
+              unread_count: real,
+              last_read_at: real === 0 ? new Date().toISOString() : row.last_read_at,
+            }));
+
+          if (updates.length) {
+            await supabase
+              .from('message_unread_counts')
+              .upsert(updates, { onConflict: 'user_id,conversation_id,conversation_type' });
+          }
+
+          setUnreadCount(Number.isFinite(computedTotal) && computedTotal > 0 ? computedTotal : 0);
           return;
         }
 

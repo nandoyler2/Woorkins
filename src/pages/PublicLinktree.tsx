@@ -328,7 +328,7 @@ export default function PublicLinktree() {
         {/* QR Code no canto inferior direito */}
         <div className="fixed bottom-8 right-8 bg-white rounded-2xl p-6 shadow-2xl">
           <div className="text-center space-y-3">
-            <p className="text-sm font-semibold text-gray-900">View on mobile</p>
+            <p className="text-sm font-semibold text-gray-900">Ver no celular</p>
             <div className="bg-white p-2 rounded-lg">
               <QRCodeSVG 
                 value={currentUrl}

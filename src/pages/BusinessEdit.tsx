@@ -18,7 +18,7 @@ import {
   Facebook, Instagram, Linkedin, Twitter, Globe, MessageCircle, 
   AlertTriangle, Info, Image as ImageIcon, Users, MessagesSquare,
   Eye, EyeOff, ExternalLink, Upload, X, Briefcase, Zap, Play,
-  ShoppingBag, ThumbsUp, Award, Calendar, Link as LinkIcon, Briefcase as BriefcaseIcon
+  ShoppingBag, ThumbsUp, Award, Calendar, Link as LinkIcon, Briefcase as BriefcaseIcon, Building2
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { BusinessBannersManager } from '@/components/business/BusinessBannersManager';
@@ -761,7 +761,21 @@ export default function BusinessEdit() {
               <div className="mb-8">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-3">
-                    <h1 className="text-3xl font-bold">{business.company_name}</h1>
+                    {business.logo_url ? (
+                      <img 
+                        src={business.logo_url} 
+                        alt={business.company_name}
+                        className="w-12 h-12 rounded-full object-cover border-2 border-border"
+                      />
+                    ) : (
+                      <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center border-2 border-border">
+                        <Building2 className="w-6 h-6 text-muted-foreground" />
+                      </div>
+                    )}
+                    <div>
+                      <h1 className="text-3xl font-bold">{business.company_name}</h1>
+                      <p className="text-muted-foreground text-sm">@{business.slug}</p>
+                    </div>
                     {business.active ? (
                       <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
                         <Eye className="w-4 h-4" />
@@ -784,7 +798,6 @@ export default function BusinessEdit() {
                     Ver Perfil
                   </Button>
                 </div>
-                <p className="text-muted-foreground">@{business.slug}</p>
               </div>
 
               {/* Perfil e Capa */}

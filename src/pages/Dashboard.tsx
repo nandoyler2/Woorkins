@@ -725,14 +725,14 @@ export default function Dashboard() {
                             <p className="text-xs text-slate-600 truncate">{business.category}</p>
                           )}
                         </div>
-                        <div className="flex items-center gap-2 flex-shrink-0">
+                        <div className="flex flex-col gap-2 flex-shrink-0">
                           <Link to={`/${business.slug || business.id}`}>
-                            <Button variant="outline" size="sm" className="text-xs h-7 px-2">
+                            <Button variant="outline" size="sm" className="text-xs h-7 px-2 w-full">
                               Ver perfil
                             </Button>
                           </Link>
                           <Link to={`/${business.slug || business.id}/editar`}>
-                            <Button variant="default" size="sm" className="text-xs h-7 px-2">
+                            <Button variant="default" size="sm" className="text-xs h-7 px-2 w-full">
                               <Settings className="w-3 h-3 mr-1" />
                               Gerenciar
                             </Button>

@@ -1,4 +1,4 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -23,11 +23,19 @@ export const Header = () => {
   const { language, setLanguage, t } = useLanguage();
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [isAdmin, setIsAdmin] = useState(false);
   const [profileId, setProfileId] = useState<string>('');
   const [searchOpen, setSearchOpen] = useState(false);
   const [projectsOpen, setProjectsOpen] = useState(false);
   const unreadCount = useUnreadMessages(profileId);
+
+  // Helper to check if current route matches
+  const isActiveRoute = (path: string) => location.pathname === path;
+  const isProjectsRoute = () => 
+    location.pathname === '/projetos' || 
+    location.pathname === '/meus-projetos' || 
+    location.pathname.startsWith('/projetos/');
 
   const handleSignOut = async () => {
     await signOut();
@@ -81,7 +89,14 @@ export const Header = () => {
 
         {user && (
           <nav className="hidden md:flex items-center gap-6">
-            <Link to="/painel" className="flex items-center gap-2 text-foreground/80 hover:text-foreground transition-colors">
+            <Link 
+              to="/painel" 
+              className={`flex items-center gap-2 transition-colors pb-1 border-b-2 ${
+                isActiveRoute('/painel')
+                  ? 'text-primary border-primary'
+                  : 'text-foreground/80 hover:text-foreground border-transparent'
+              }`}
+            >
               <Home className="w-5 h-5" />
               <span>Painel</span>
             </Link>
@@ -90,7 +105,11 @@ export const Header = () => {
               <DropdownMenuTrigger asChild>
                 <Link 
                   to="/projetos"
-                  className="flex items-center gap-2 text-foreground/80 hover:text-foreground transition-colors"
+                  className={`flex items-center gap-2 transition-colors pb-1 border-b-2 ${
+                    isProjectsRoute()
+                      ? 'text-primary border-primary'
+                      : 'text-foreground/80 hover:text-foreground border-transparent'
+                  }`}
                   onMouseEnter={() => setProjectsOpen(true)}
                   onMouseLeave={() => setProjectsOpen(false)}
                 >
@@ -125,7 +144,14 @@ export const Header = () => {
               </DropdownMenuContent>
             </DropdownMenu>
             
-            <Link to="/mensagens" className="flex items-center gap-2 text-foreground/80 hover:text-foreground transition-colors relative">
+            <Link 
+              to="/mensagens" 
+              className={`flex items-center gap-2 transition-colors relative pb-1 border-b-2 ${
+                isActiveRoute('/mensagens')
+                  ? 'text-primary border-primary'
+                  : 'text-foreground/80 hover:text-foreground border-transparent'
+              }`}
+            >
               <MessageCircle className="w-5 h-5" />
               <span>Mensagens</span>
               {unreadCount > 0 && (
@@ -137,7 +163,7 @@ export const Header = () => {
             
             <button 
               onClick={() => setSearchOpen(true)}
-              className="flex items-center gap-2 text-foreground/80 hover:text-foreground transition-colors"
+              className="flex items-center gap-2 text-foreground/80 hover:text-foreground transition-colors pb-1 border-b-2 border-transparent"
             >
               <Search className="w-5 h-5" />
               <span>{t('discover')}</span>

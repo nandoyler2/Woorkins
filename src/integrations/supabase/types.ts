@@ -187,6 +187,7 @@ export type Database = {
       }
       business_profiles: {
         Row: {
+          active: boolean | null
           address: string | null
           average_rating: number | null
           category: string | null
@@ -215,6 +216,7 @@ export type Database = {
           working_hours: string | null
         }
         Insert: {
+          active?: boolean | null
           address?: string | null
           average_rating?: number | null
           category?: string | null
@@ -243,6 +245,7 @@ export type Database = {
           working_hours?: string | null
         }
         Update: {
+          active?: boolean | null
           address?: string | null
           average_rating?: number | null
           category?: string | null

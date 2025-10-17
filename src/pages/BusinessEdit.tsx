@@ -9,12 +9,17 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { ImageUpload } from '@/components/ImageUpload';
 import { MediaUpload } from '@/components/MediaUpload';
 import { CreatePostDialog } from '@/components/CreatePostDialog';
-import { ArrowLeft, Save, Star, MessageSquare, Plus, Trash2, Facebook, Instagram, Linkedin, Twitter, Globe, MessageCircle, AlertTriangle } from 'lucide-react';
+import { 
+  ArrowLeft, Save, Star, MessageSquare, Plus, Trash2, 
+  Facebook, Instagram, Linkedin, Twitter, Globe, MessageCircle, 
+  AlertTriangle, Info, Image as ImageIcon, Users, MessagesSquare,
+  Eye, EyeOff
+} from 'lucide-react';
+import { Link } from 'react-router-dom';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,7 +31,17 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { Link } from 'react-router-dom';
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+} from '@/components/ui/sidebar';
 
 interface BusinessProfile {
   id: string;
@@ -50,6 +65,7 @@ interface BusinessProfile {
   enable_negotiation: boolean;
   working_hours: string | null;
   services_offered: string[] | null;
+  active: boolean;
 }
 
 interface PortfolioItem {
@@ -82,6 +98,8 @@ interface Evaluation {
   };
 }
 
+type Section = 'info' | 'social' | 'portfolio' | 'posts' | 'evaluations' | 'settings';
+
 export default function BusinessEdit() {
   const { slug } = useParams();
   const { user } = useAuth();
@@ -96,6 +114,16 @@ export default function BusinessEdit() {
   const [saving, setSaving] = useState(false);
   const [responses, setResponses] = useState<{ [key: string]: string }>({});
   const [newPortfolioItem, setNewPortfolioItem] = useState({ title: '', description: '', url: '', type: '' });
+  const [activeSection, setActiveSection] = useState<Section>('info');
+
+  const menuItems = [
+    { id: 'info' as Section, label: 'Informações', icon: Info, color: 'text-blue-500' },
+    { id: 'social' as Section, label: 'Redes Sociais', icon: Globe, color: 'text-purple-500' },
+    { id: 'portfolio' as Section, label: 'Portfólio', icon: ImageIcon, color: 'text-green-500' },
+    { id: 'posts' as Section, label: 'Posts', icon: MessagesSquare, color: 'text-orange-500' },
+    { id: 'evaluations' as Section, label: 'Avaliações', icon: Users, color: 'text-pink-500' },
+    { id: 'settings' as Section, label: 'Configurações', icon: AlertTriangle, color: 'text-red-500' },
+  ];
 
   useEffect(() => {
     loadBusiness();
@@ -120,7 +148,6 @@ export default function BusinessEdit() {
 
     if (!profileData) return;
 
-    // Handle creation flow when slug === 'novo'
     if (slug === 'novo') {
       const newSlug = `perfil-${Math.random().toString(36).slice(2, 8)}`;
       const { data: inserted, error: insertError } = await supabase
@@ -167,6 +194,7 @@ export default function BusinessEdit() {
     setBusiness(data as unknown as BusinessProfile);
     setLoading(false);
   };
+
   const loadEvaluations = async () => {
     if (!slug) return;
 
@@ -185,14 +213,12 @@ export default function BusinessEdit() {
       .order('created_at', { ascending: false });
 
     if (evaluationsData) {
-      // Fetch user profiles separately
       const userIds = evaluationsData.map((e: any) => e.user_id);
       const { data: profilesData } = await supabase
         .from('profiles' as any)
         .select('user_id, username, full_name')
         .in('user_id', userIds);
 
-      // Combine data
       const evaluationsWithProfiles = evaluationsData.map((evaluation: any) => {
         const profile = profilesData?.find((p: any) => p.user_id === evaluation.user_id);
         return {
@@ -259,6 +285,7 @@ export default function BusinessEdit() {
           enable_negotiation: business.enable_negotiation,
           working_hours: business.working_hours,
           services_offered: business.services_offered,
+          active: business.active,
         })
         .eq('id', business.id);
 
@@ -411,6 +438,35 @@ export default function BusinessEdit() {
     }
   };
 
+  const handleToggleActive = async () => {
+    if (!business) return;
+
+    const newActive = !business.active;
+    
+    try {
+      const { error } = await supabase
+        .from('business_profiles' as any)
+        .update({ active: newActive })
+        .eq('id', business.id);
+
+      if (error) throw error;
+
+      setBusiness({ ...business, active: newActive });
+      toast({
+        title: newActive ? 'Perfil ativado!' : 'Perfil desativado',
+        description: newActive 
+          ? 'Seu perfil profissional está visível novamente.' 
+          : 'Seu perfil profissional foi ocultado.',
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Erro',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  };
+
   const handleDeleteProfile = async () => {
     if (!business) return;
 
@@ -439,7 +495,7 @@ export default function BusinessEdit() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-muted/20 to-background">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
       </div>
     );
@@ -451,466 +507,597 @@ export default function BusinessEdit() {
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background">
       <Header />
       
-      <div className="container mx-auto px-4 py-8 max-w-woorkins">
-        <div className="space-y-8">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" asChild>
-              <Link to="/painel">
-                <ArrowLeft className="w-5 h-5" />
-              </Link>
-            </Button>
-            <div>
-              <h1 className="text-4xl font-bold">{business.company_name}</h1>
-              <p className="text-muted-foreground">@{business.slug}</p>
-            </div>
-          </div>
-
-          <Tabs defaultValue="info" className="w-full">
-            <TabsList className="grid w-full grid-cols-5">
-              <TabsTrigger value="info">Informações</TabsTrigger>
-              <TabsTrigger value="social">Redes Sociais</TabsTrigger>
-              <TabsTrigger value="portfolio">Portfólio</TabsTrigger>
-              <TabsTrigger value="posts">Posts</TabsTrigger>
-              <TabsTrigger value="evaluations">Avaliações</TabsTrigger>
-            </TabsList>
-
-            {/* Informações */}
-            <TabsContent value="info" className="space-y-6">
-              <Card className="bg-card/50 backdrop-blur-sm border-2">
-                <CardHeader>
-                  <CardTitle>Imagens da Marca</CardTitle>
-                  <CardDescription>Logo e capa do perfil</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="space-y-2">
-                    <Label>Logo</Label>
-                    <ImageUpload
-                      currentImageUrl={business.logo_url}
-                      onUpload={handleLogoUpload}
-                      bucket="business-logos"
-                      folder={business.id}
-                      type="logo"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Capa</Label>
-                    <ImageUpload
-                      currentImageUrl={business.cover_url}
-                      onUpload={handleCoverUpload}
-                      bucket="business-covers"
-                      folder={business.id}
-                      type="cover"
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-card/50 backdrop-blur-sm border-2">
-                <CardHeader>
-                  <CardTitle>Dados da Empresa</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <form onSubmit={handleSave} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label>Nome da Empresa</Label>
-                      <Input
-                        value={business.company_name}
-                        onChange={(e) => setBusiness({ ...business, company_name: e.target.value })}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Categoria</Label>
-                      <Input
-                        value={business.category || ''}
-                        onChange={(e) => setBusiness({ ...business, category: e.target.value })}
-                        placeholder="Ex: Tecnologia, Alimentação, etc"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Descrição</Label>
-                      <Textarea
-                        value={business.description || ''}
-                        onChange={(e) => setBusiness({ ...business, description: e.target.value })}
-                        rows={4}
-                        placeholder="Descreva sua empresa..."
-                      />
-                    </div>
-                    <div className="grid md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label>Email</Label>
-                        <Input
-                          type="email"
-                          value={business.email || ''}
-                          onChange={(e) => setBusiness({ ...business, email: e.target.value })}
-                          placeholder="contato@empresa.com"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Telefone</Label>
-                        <Input
-                          value={business.phone || ''}
-                          onChange={(e) => setBusiness({ ...business, phone: e.target.value })}
-                          placeholder="(00) 00000-0000"
-                        />
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Endereço</Label>
-                      <Input
-                        value={business.address || ''}
-                        onChange={(e) => setBusiness({ ...business, address: e.target.value })}
-                        placeholder="Endereço completo"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Horário de Funcionamento</Label>
-                      <Input
-                        value={business.working_hours || ''}
-                        onChange={(e) => setBusiness({ ...business, working_hours: e.target.value })}
-                        placeholder="Ex: Seg-Sex: 9h-18h"
-                      />
-                    </div>
-                    <div className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="space-y-0.5">
-                        <Label className="text-base">Ativar Negociação</Label>
-                        <p className="text-sm text-muted-foreground">
-                          Permitir que clientes negociem diretamente com você
-                        </p>
-                      </div>
-                      <Switch
-                        checked={business.enable_negotiation}
-                        onCheckedChange={(checked) => setBusiness({ ...business, enable_negotiation: checked })}
-                      />
-                    </div>
-                    <Button type="submit" className="w-full bg-gradient-primary hover:shadow-glow transition-all" disabled={saving}>
-                      <Save className="w-4 h-4 mr-2" />
-                      {saving ? 'Salvando...' : 'Salvar Alterações'}
-                    </Button>
-                  </form>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-card/50 backdrop-blur-sm border-2 border-destructive/20">
-                <CardHeader>
-                  <CardTitle className="text-destructive flex items-center gap-2">
-                    <AlertTriangle className="w-5 h-5" />
-                    Zona de Perigo
-                  </CardTitle>
-                  <CardDescription>
-                    Ações irreversíveis do perfil profissional
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="destructive" className="w-full">
-                        <Trash2 className="w-4 h-4 mr-2" />
-                        Excluir Perfil Profissional
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Tem certeza?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Esta ação não pode ser desfeita. Isso excluirá permanentemente seu perfil profissional, 
-                          incluindo todos os posts, portfólio e avaliações associadas.
-                          <br /><br />
-                          <strong>Nota:</strong> Seu perfil de interações na plataforma não será afetado.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                        <AlertDialogAction 
-                          onClick={handleDeleteProfile}
-                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                        >
-                          Sim, excluir perfil profissional
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* Redes Sociais */}
-            <TabsContent value="social">
-              <Card className="bg-card/50 backdrop-blur-sm border-2">
-                <CardHeader>
-                  <CardTitle>Redes Sociais</CardTitle>
-                  <CardDescription>Links para suas redes sociais</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <form onSubmit={handleSave} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-2">
-                        <MessageCircle className="w-4 h-4" />
-                        WhatsApp
-                      </Label>
-                      <Input
-                        value={business.whatsapp || ''}
-                        onChange={(e) => setBusiness({ ...business, whatsapp: e.target.value })}
-                        placeholder="5511999999999"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-2">
-                        <Facebook className="w-4 h-4" />
-                        Facebook
-                      </Label>
-                      <Input
-                        value={business.facebook || ''}
-                        onChange={(e) => setBusiness({ ...business, facebook: e.target.value })}
-                        placeholder="https://facebook.com/..."
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-2">
-                        <Instagram className="w-4 h-4" />
-                        Instagram
-                      </Label>
-                      <Input
-                        value={business.instagram || ''}
-                        onChange={(e) => setBusiness({ ...business, instagram: e.target.value })}
-                        placeholder="https://instagram.com/..."
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-2">
-                        <Linkedin className="w-4 h-4" />
-                        LinkedIn
-                      </Label>
-                      <Input
-                        value={business.linkedin || ''}
-                        onChange={(e) => setBusiness({ ...business, linkedin: e.target.value })}
-                        placeholder="https://linkedin.com/company/..."
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-2">
-                        <Twitter className="w-4 h-4" />
-                        Twitter/X
-                      </Label>
-                      <Input
-                        value={business.twitter || ''}
-                        onChange={(e) => setBusiness({ ...business, twitter: e.target.value })}
-                        placeholder="https://twitter.com/..."
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-2">
-                        <Globe className="w-4 h-4" />
-                        Website
-                      </Label>
-                      <Input
-                        value={business.website_url || ''}
-                        onChange={(e) => setBusiness({ ...business, website_url: e.target.value })}
-                        placeholder="https://seusite.com"
-                      />
-                    </div>
-                    <Button type="submit" className="w-full bg-gradient-primary hover:shadow-glow transition-all" disabled={saving}>
-                      <Save className="w-4 h-4 mr-2" />
-                      {saving ? 'Salvando...' : 'Salvar Redes Sociais'}
-                    </Button>
-                  </form>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* Portfólio */}
-            <TabsContent value="portfolio" className="space-y-6">
-              <Card className="bg-card/50 backdrop-blur-sm border-2">
-                <CardHeader>
-                  <CardTitle>Adicionar ao Portfólio</CardTitle>
-                  <CardDescription>Imagens e vídeos dos seus trabalhos</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>Título</Label>
-                    <Input
-                      value={newPortfolioItem.title}
-                      onChange={(e) => setNewPortfolioItem({ ...newPortfolioItem, title: e.target.value })}
-                      placeholder="Nome do projeto"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Descrição</Label>
-                    <Textarea
-                      value={newPortfolioItem.description}
-                      onChange={(e) => setNewPortfolioItem({ ...newPortfolioItem, description: e.target.value })}
-                      placeholder="Descreva o projeto..."
-                      rows={3}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Mídia</Label>
-                    <MediaUpload
-                      onUpload={(url, type) => setNewPortfolioItem({ ...newPortfolioItem, url, type })}
-                    />
-                  </div>
-                  <Button
-                    onClick={handleAddPortfolioItem}
-                    className="w-full bg-gradient-primary hover:shadow-glow"
-                    disabled={!newPortfolioItem.title || !newPortfolioItem.url}
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Adicionar ao Portfólio
-                  </Button>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-card/50 backdrop-blur-sm border-2">
-                <CardHeader>
-                  <CardTitle>Itens do Portfólio ({portfolio.length})</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {portfolio.length === 0 ? (
-                    <p className="text-center text-muted-foreground py-8">
-                      Nenhum item no portfólio ainda
-                    </p>
-                  ) : (
-                    <div className="grid md:grid-cols-2 gap-4">
-                      {portfolio.map((item) => (
-                        <div key={item.id} className="relative group border rounded-lg overflow-hidden">
-                          {item.media_type === 'image' ? (
-                            <img src={item.media_url} alt={item.title} className="w-full h-48 object-cover" />
-                          ) : (
-                            <video src={item.media_url} className="w-full h-48 object-cover" />
-                          )}
-                          <div className="p-3">
-                            <h4 className="font-medium">{item.title}</h4>
-                            {item.description && (
-                              <p className="text-sm text-muted-foreground line-clamp-2">{item.description}</p>
-                            )}
-                          </div>
-                          <Button
-                            variant="destructive"
-                            size="icon"
-                            className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                            onClick={() => handleDeletePortfolioItem(item.id)}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* Posts */}
-            <TabsContent value="posts" className="space-y-6">
-              <div className="flex justify-end">
-                <CreatePostDialog businessId={business.id} onPostCreated={loadPosts} />
+      <SidebarProvider>
+        <div className="flex w-full min-h-[calc(100vh-64px)]">
+          {/* Sidebar */}
+          <Sidebar className="border-r bg-card/50 backdrop-blur-sm">
+            <SidebarContent>
+              <div className="p-4 border-b">
+                <Button variant="ghost" size="sm" asChild className="w-full justify-start">
+                  <Link to="/painel">
+                    <ArrowLeft className="w-4 h-4 mr-2" />
+                    Voltar ao Painel
+                  </Link>
+                </Button>
               </div>
 
-              <Card className="bg-card/50 backdrop-blur-sm border-2">
-                <CardHeader>
-                  <CardTitle>Seus Posts ({posts.length})</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {posts.length === 0 ? (
-                    <p className="text-center text-muted-foreground py-8">
-                      Nenhum post publicado ainda
-                    </p>
-                  ) : (
-                    posts.map((post) => (
-                      <div key={post.id} className="border rounded-lg p-4 space-y-3">
-                        <div className="flex justify-between items-start">
-                          <p className="text-sm text-muted-foreground">
-                            {new Date(post.created_at).toLocaleDateString('pt-BR')}
-                          </p>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDeletePost(post.id)}
+              <SidebarGroup>
+                <SidebarGroupLabel className="text-xs font-semibold uppercase text-muted-foreground px-4 py-2">
+                  {business.company_name}
+                </SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {menuItems.map((item) => {
+                      const Icon = item.icon;
+                      const isActive = activeSection === item.id;
+                      return (
+                        <SidebarMenuItem key={item.id}>
+                          <SidebarMenuButton
+                            onClick={() => setActiveSection(item.id)}
+                            className={`
+                              ${isActive ? 'bg-primary/10 text-primary font-medium' : 'hover:bg-muted/50'}
+                              transition-all duration-200
+                            `}
                           >
-                            <Trash2 className="w-4 h-4 text-destructive" />
-                          </Button>
-                        </div>
-                        <p className="whitespace-pre-wrap">{post.content}</p>
-                        {post.media_urls && post.media_urls.length > 0 && (
-                          <div className="grid grid-cols-2 gap-2">
-                            {post.media_urls.map((url, i) => (
-                              post.media_types?.[i] === 'image' ? (
-                                <img key={i} src={url} alt="" className="w-full h-32 object-cover rounded" />
-                              ) : (
-                                <video key={i} src={url} controls className="w-full h-32 rounded" />
-                              )
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    ))
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
+                            <Icon className={`w-5 h-5 mr-3 ${isActive ? item.color : 'text-muted-foreground'}`} />
+                            <span>{item.label}</span>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      );
+                    })}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
 
-            {/* Avaliações */}
-            <TabsContent value="evaluations">
-              <Card className="bg-card/50 backdrop-blur-sm border-2">
-                <CardHeader>
-                  <CardTitle>Avaliações ({evaluations.length})</CardTitle>
-                  <CardDescription>Gerencie as avaliações da sua marca</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  {evaluations.length === 0 ? (
-                    <p className="text-center text-muted-foreground py-8">
-                      Nenhuma avaliação ainda
-                    </p>
+              <div className="mt-auto p-4 border-t">
+                <div className="flex items-center gap-2 text-sm">
+                  {business.active ? (
+                    <>
+                      <Eye className="w-4 h-4 text-green-500" />
+                      <span className="text-muted-foreground">Perfil Ativo</span>
+                    </>
                   ) : (
-                    evaluations.map((evaluation) => (
-                      <div key={evaluation.id} className="border rounded-lg p-4 space-y-3">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <p className="font-medium">{evaluation.profiles.full_name}</p>
+                    <>
+                      <EyeOff className="w-4 h-4 text-red-500" />
+                      <span className="text-muted-foreground">Perfil Desativado</span>
+                    </>
+                  )}
+                </div>
+              </div>
+            </SidebarContent>
+          </Sidebar>
+
+          {/* Main Content */}
+          <main className="flex-1 overflow-auto">
+            <div className="container mx-auto px-6 py-8 max-w-5xl">
+              {/* Header do perfil */}
+              <div className="mb-8">
+                <h1 className="text-3xl font-bold mb-2">{business.company_name}</h1>
+                <p className="text-muted-foreground">@{business.slug}</p>
+              </div>
+
+              {/* Informações */}
+              {activeSection === 'info' && (
+                <div className="space-y-6 animate-fade-in">
+                  <Card className="bg-card/50 backdrop-blur-sm border-2 overflow-hidden">
+                    <div className="bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 p-6 border-b">
+                      <CardTitle className="flex items-center gap-2 text-blue-600">
+                        <ImageIcon className="w-5 h-5" />
+                        Imagens da Marca
+                      </CardTitle>
+                      <CardDescription>Logo e capa do perfil profissional</CardDescription>
+                    </div>
+                    <CardContent className="p-6 space-y-6">
+                      <div className="space-y-2">
+                        <Label className="text-base font-medium">Logo</Label>
+                        <ImageUpload
+                          currentImageUrl={business.logo_url}
+                          onUpload={handleLogoUpload}
+                          bucket="business-logos"
+                          folder={business.id}
+                          type="logo"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-base font-medium">Capa</Label>
+                        <ImageUpload
+                          currentImageUrl={business.cover_url}
+                          onUpload={handleCoverUpload}
+                          bucket="business-covers"
+                          folder={business.id}
+                          type="cover"
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="bg-card/50 backdrop-blur-sm border-2">
+                    <div className="bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 p-6 border-b">
+                      <CardTitle className="text-blue-600">Dados da Empresa</CardTitle>
+                    </div>
+                    <CardContent className="p-6">
+                      <form onSubmit={handleSave} className="space-y-4">
+                        <div className="space-y-2">
+                          <Label className="text-base font-medium">Nome da Empresa</Label>
+                          <Input
+                            value={business.company_name}
+                            onChange={(e) => setBusiness({ ...business, company_name: e.target.value })}
+                            className="text-base"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-base font-medium">Categoria</Label>
+                          <Input
+                            value={business.category || ''}
+                            onChange={(e) => setBusiness({ ...business, category: e.target.value })}
+                            placeholder="Ex: Tecnologia, Alimentação, etc"
+                            className="text-base"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-base font-medium">Descrição</Label>
+                          <Textarea
+                            value={business.description || ''}
+                            onChange={(e) => setBusiness({ ...business, description: e.target.value })}
+                            rows={4}
+                            placeholder="Descreva sua empresa..."
+                            className="text-base resize-none"
+                          />
+                        </div>
+                        <div className="grid md:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label className="text-base font-medium">Email</Label>
+                            <Input
+                              type="email"
+                              value={business.email || ''}
+                              onChange={(e) => setBusiness({ ...business, email: e.target.value })}
+                              placeholder="contato@empresa.com"
+                              className="text-base"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-base font-medium">Telefone</Label>
+                            <Input
+                              value={business.phone || ''}
+                              onChange={(e) => setBusiness({ ...business, phone: e.target.value })}
+                              placeholder="(00) 00000-0000"
+                              className="text-base"
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-base font-medium">Endereço</Label>
+                          <Input
+                            value={business.address || ''}
+                            onChange={(e) => setBusiness({ ...business, address: e.target.value })}
+                            placeholder="Endereço completo"
+                            className="text-base"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-base font-medium">Horário de Funcionamento</Label>
+                          <Input
+                            value={business.working_hours || ''}
+                            onChange={(e) => setBusiness({ ...business, working_hours: e.target.value })}
+                            placeholder="Ex: Seg-Sex: 9h-18h"
+                            className="text-base"
+                          />
+                        </div>
+                        <div className="flex items-center justify-between p-4 border-2 rounded-lg bg-muted/30">
+                          <div className="space-y-0.5">
+                            <Label className="text-base font-medium">Ativar Negociação</Label>
                             <p className="text-sm text-muted-foreground">
-                              @{evaluation.profiles.username}
+                              Permitir que clientes negociem diretamente com você
                             </p>
                           </div>
-                          <div className="flex items-center gap-1">
-                            <Star className="w-4 h-4 fill-primary text-primary" />
-                            <span className="font-bold">{evaluation.rating}</span>
-                          </div>
+                          <Switch
+                            checked={business.enable_negotiation}
+                            onCheckedChange={(checked) => setBusiness({ ...business, enable_negotiation: checked })}
+                          />
                         </div>
-                        <div>
-                          <p className="font-medium mb-1">{evaluation.title}</p>
-                          <p className="text-sm text-muted-foreground">{evaluation.content}</p>
+                        <Button type="submit" className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:shadow-lg transition-all text-base py-6" disabled={saving}>
+                          <Save className="w-5 h-5 mr-2" />
+                          {saving ? 'Salvando...' : 'Salvar Alterações'}
+                        </Button>
+                      </form>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+
+              {/* Redes Sociais */}
+              {activeSection === 'social' && (
+                <div className="animate-fade-in">
+                  <Card className="bg-card/50 backdrop-blur-sm border-2">
+                    <div className="bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-orange-500/10 p-6 border-b">
+                      <CardTitle className="flex items-center gap-2 text-purple-600">
+                        <Globe className="w-5 h-5" />
+                        Redes Sociais
+                      </CardTitle>
+                      <CardDescription>Links para suas redes sociais e site</CardDescription>
+                    </div>
+                    <CardContent className="p-6">
+                      <form onSubmit={handleSave} className="space-y-4">
+                        <div className="space-y-2">
+                          <Label className="flex items-center gap-2 text-base font-medium">
+                            <MessageCircle className="w-4 h-4 text-green-500" />
+                            WhatsApp
+                          </Label>
+                          <Input
+                            value={business.whatsapp || ''}
+                            onChange={(e) => setBusiness({ ...business, whatsapp: e.target.value })}
+                            placeholder="5511999999999"
+                            className="text-base"
+                          />
                         </div>
-                        {evaluation.public_response ? (
-                          <div className="bg-muted rounded-lg p-3">
-                            <p className="text-sm font-medium mb-1">Sua resposta:</p>
-                            <p className="text-sm">{evaluation.public_response}</p>
-                          </div>
-                        ) : (
-                          <div className="space-y-2">
-                            <Textarea
-                              placeholder="Responder avaliação..."
-                              value={responses[evaluation.id] || ''}
-                              onChange={(e) => setResponses({ ...responses, [evaluation.id]: e.target.value })}
-                              rows={2}
-                            />
-                            <Button
-                              size="sm"
-                              onClick={() => handleResponseSubmit(evaluation.id)}
-                              disabled={!responses[evaluation.id]?.trim()}
-                            >
-                              <MessageSquare className="w-4 h-4 mr-2" />
-                              Responder
-                            </Button>
-                          </div>
-                        )}
+                        <div className="space-y-2">
+                          <Label className="flex items-center gap-2 text-base font-medium">
+                            <Facebook className="w-4 h-4 text-blue-600" />
+                            Facebook
+                          </Label>
+                          <Input
+                            value={business.facebook || ''}
+                            onChange={(e) => setBusiness({ ...business, facebook: e.target.value })}
+                            placeholder="https://facebook.com/..."
+                            className="text-base"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="flex items-center gap-2 text-base font-medium">
+                            <Instagram className="w-4 h-4 text-pink-500" />
+                            Instagram
+                          </Label>
+                          <Input
+                            value={business.instagram || ''}
+                            onChange={(e) => setBusiness({ ...business, instagram: e.target.value })}
+                            placeholder="https://instagram.com/..."
+                            className="text-base"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="flex items-center gap-2 text-base font-medium">
+                            <Linkedin className="w-4 h-4 text-blue-700" />
+                            LinkedIn
+                          </Label>
+                          <Input
+                            value={business.linkedin || ''}
+                            onChange={(e) => setBusiness({ ...business, linkedin: e.target.value })}
+                            placeholder="https://linkedin.com/company/..."
+                            className="text-base"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="flex items-center gap-2 text-base font-medium">
+                            <Twitter className="w-4 h-4 text-blue-400" />
+                            Twitter/X
+                          </Label>
+                          <Input
+                            value={business.twitter || ''}
+                            onChange={(e) => setBusiness({ ...business, twitter: e.target.value })}
+                            placeholder="https://twitter.com/..."
+                            className="text-base"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="flex items-center gap-2 text-base font-medium">
+                            <Globe className="w-4 h-4 text-indigo-500" />
+                            Website
+                          </Label>
+                          <Input
+                            value={business.website_url || ''}
+                            onChange={(e) => setBusiness({ ...business, website_url: e.target.value })}
+                            placeholder="https://seusite.com"
+                            className="text-base"
+                          />
+                        </div>
+                        <Button type="submit" className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:shadow-lg transition-all text-base py-6" disabled={saving}>
+                          <Save className="w-5 h-5 mr-2" />
+                          {saving ? 'Salvando...' : 'Salvar Redes Sociais'}
+                        </Button>
+                      </form>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+
+              {/* Portfólio */}
+              {activeSection === 'portfolio' && (
+                <div className="space-y-6 animate-fade-in">
+                  <Card className="bg-card/50 backdrop-blur-sm border-2">
+                    <div className="bg-gradient-to-r from-green-500/10 via-emerald-500/10 to-teal-500/10 p-6 border-b">
+                      <CardTitle className="flex items-center gap-2 text-green-600">
+                        <ImageIcon className="w-5 h-5" />
+                        Adicionar ao Portfólio
+                      </CardTitle>
+                      <CardDescription>Imagens e vídeos dos seus trabalhos</CardDescription>
+                    </div>
+                    <CardContent className="p-6 space-y-4">
+                      <div className="space-y-2">
+                        <Label className="text-base font-medium">Título</Label>
+                        <Input
+                          value={newPortfolioItem.title}
+                          onChange={(e) => setNewPortfolioItem({ ...newPortfolioItem, title: e.target.value })}
+                          placeholder="Nome do projeto"
+                          className="text-base"
+                        />
                       </div>
-                    ))
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
+                      <div className="space-y-2">
+                        <Label className="text-base font-medium">Descrição</Label>
+                        <Textarea
+                          value={newPortfolioItem.description}
+                          onChange={(e) => setNewPortfolioItem({ ...newPortfolioItem, description: e.target.value })}
+                          placeholder="Descreva o projeto..."
+                          rows={3}
+                          className="text-base resize-none"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-base font-medium">Mídia</Label>
+                        <MediaUpload
+                          onUpload={(url, type) => setNewPortfolioItem({ ...newPortfolioItem, url, type })}
+                        />
+                      </div>
+                      <Button
+                        onClick={handleAddPortfolioItem}
+                        className="w-full bg-gradient-to-r from-green-500 to-teal-500 hover:shadow-lg text-base py-6"
+                        disabled={!newPortfolioItem.title || !newPortfolioItem.url}
+                      >
+                        <Plus className="w-5 h-5 mr-2" />
+                        Adicionar ao Portfólio
+                      </Button>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="bg-card/50 backdrop-blur-sm border-2">
+                    <div className="bg-gradient-to-r from-green-500/10 via-emerald-500/10 to-teal-500/10 p-6 border-b">
+                      <CardTitle className="text-green-600">Itens do Portfólio ({portfolio.length})</CardTitle>
+                    </div>
+                    <CardContent className="p-6">
+                      {portfolio.length === 0 ? (
+                        <div className="text-center py-12">
+                          <ImageIcon className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                          <p className="text-muted-foreground">Nenhum item no portfólio ainda</p>
+                        </div>
+                      ) : (
+                        <div className="grid md:grid-cols-2 gap-4">
+                          {portfolio.map((item) => (
+                            <div key={item.id} className="relative group border-2 rounded-lg overflow-hidden hover:shadow-lg transition-all">
+                              {item.media_type === 'image' ? (
+                                <img src={item.media_url} alt={item.title} className="w-full h-48 object-cover" />
+                              ) : (
+                                <video src={item.media_url} className="w-full h-48 object-cover" />
+                              )}
+                              <div className="p-3 bg-card">
+                                <h4 className="font-medium">{item.title}</h4>
+                                {item.description && (
+                                  <p className="text-sm text-muted-foreground line-clamp-2">{item.description}</p>
+                                )}
+                              </div>
+                              <Button
+                                variant="destructive"
+                                size="icon"
+                                className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                                onClick={() => handleDeletePortfolioItem(item.id)}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+
+              {/* Posts */}
+              {activeSection === 'posts' && (
+                <div className="space-y-6 animate-fade-in">
+                  <div className="flex justify-end">
+                    <CreatePostDialog businessId={business.id} onPostCreated={loadPosts} />
+                  </div>
+
+                  <Card className="bg-card/50 backdrop-blur-sm border-2">
+                    <div className="bg-gradient-to-r from-orange-500/10 via-red-500/10 to-pink-500/10 p-6 border-b">
+                      <CardTitle className="flex items-center gap-2 text-orange-600">
+                        <MessagesSquare className="w-5 h-5" />
+                        Seus Posts ({posts.length})
+                      </CardTitle>
+                    </div>
+                    <CardContent className="p-6">
+                      {posts.length === 0 ? (
+                        <div className="text-center py-12">
+                          <MessagesSquare className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                          <p className="text-muted-foreground">Nenhum post publicado ainda</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          {posts.map((post) => (
+                            <div key={post.id} className="border-2 rounded-lg p-4 space-y-3 hover:shadow-md transition-all">
+                              <div className="flex justify-between items-start">
+                                <p className="text-sm text-muted-foreground">
+                                  {new Date(post.created_at).toLocaleDateString('pt-BR')}
+                                </p>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => handleDeletePost(post.id)}
+                                >
+                                  <Trash2 className="w-4 h-4 text-destructive" />
+                                </Button>
+                              </div>
+                              <p className="whitespace-pre-wrap text-base">{post.content}</p>
+                              {post.media_urls && post.media_urls.length > 0 && (
+                                <div className="grid grid-cols-2 gap-2">
+                                  {post.media_urls.map((url, i) => (
+                                    post.media_types?.[i] === 'image' ? (
+                                      <img key={i} src={url} alt="" className="w-full h-32 object-cover rounded-lg" />
+                                    ) : (
+                                      <video key={i} src={url} controls className="w-full h-32 rounded-lg" />
+                                    )
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+
+              {/* Avaliações */}
+              {activeSection === 'evaluations' && (
+                <div className="animate-fade-in">
+                  <Card className="bg-card/50 backdrop-blur-sm border-2">
+                    <div className="bg-gradient-to-r from-pink-500/10 via-rose-500/10 to-purple-500/10 p-6 border-b">
+                      <CardTitle className="flex items-center gap-2 text-pink-600">
+                        <Users className="w-5 h-5" />
+                        Avaliações ({evaluations.length})
+                      </CardTitle>
+                      <CardDescription>Gerencie as avaliações da sua marca</CardDescription>
+                    </div>
+                    <CardContent className="p-6">
+                      {evaluations.length === 0 ? (
+                        <div className="text-center py-12">
+                          <Users className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                          <p className="text-muted-foreground">Nenhuma avaliação ainda</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-6">
+                          {evaluations.map((evaluation) => (
+                            <div key={evaluation.id} className="border-2 rounded-lg p-4 space-y-3 hover:shadow-md transition-all">
+                              <div className="flex items-start justify-between">
+                                <div>
+                                  <p className="font-medium text-base">{evaluation.profiles.full_name}</p>
+                                  <p className="text-sm text-muted-foreground">
+                                    @{evaluation.profiles.username}
+                                  </p>
+                                </div>
+                                <div className="flex items-center gap-1 bg-primary/10 px-3 py-1 rounded-full">
+                                  <Star className="w-4 h-4 fill-primary text-primary" />
+                                  <span className="font-bold text-primary">{evaluation.rating}</span>
+                                </div>
+                              </div>
+                              <div>
+                                <p className="font-medium mb-1 text-base">{evaluation.title}</p>
+                                <p className="text-sm text-muted-foreground">{evaluation.content}</p>
+                              </div>
+                              {evaluation.public_response ? (
+                                <div className="bg-muted/50 rounded-lg p-3 border">
+                                  <p className="text-sm font-medium mb-1 text-primary">Sua resposta:</p>
+                                  <p className="text-sm">{evaluation.public_response}</p>
+                                </div>
+                              ) : (
+                                <div className="space-y-2">
+                                  <Textarea
+                                    placeholder="Responder avaliação..."
+                                    value={responses[evaluation.id] || ''}
+                                    onChange={(e) => setResponses({ ...responses, [evaluation.id]: e.target.value })}
+                                    rows={2}
+                                    className="text-base resize-none"
+                                  />
+                                  <Button
+                                    size="sm"
+                                    onClick={() => handleResponseSubmit(evaluation.id)}
+                                    disabled={!responses[evaluation.id]?.trim()}
+                                    className="bg-gradient-to-r from-pink-500 to-purple-500"
+                                  >
+                                    <MessageSquare className="w-4 h-4 mr-2" />
+                                    Responder
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+
+              {/* Configurações/Zona de Perigo */}
+              {activeSection === 'settings' && (
+                <div className="space-y-6 animate-fade-in">
+                  <Card className="bg-card/50 backdrop-blur-sm border-2">
+                    <div className="bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-red-500/10 p-6 border-b">
+                      <CardTitle className="flex items-center gap-2 text-amber-600">
+                        <Eye className="w-5 h-5" />
+                        Visibilidade do Perfil
+                      </CardTitle>
+                      <CardDescription>
+                        Controle se seu perfil está visível para outros usuários
+                      </CardDescription>
+                    </div>
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between p-4 border-2 rounded-lg bg-muted/30">
+                        <div className="space-y-0.5">
+                          <Label className="text-base font-medium">
+                            {business.active ? 'Perfil Ativo' : 'Perfil Desativado'}
+                          </Label>
+                          <p className="text-sm text-muted-foreground">
+                            {business.active 
+                              ? 'Seu perfil está visível para todos' 
+                              : 'Seu perfil está oculto e não aparece nas buscas'
+                            }
+                          </p>
+                        </div>
+                        <Switch
+                          checked={business.active}
+                          onCheckedChange={handleToggleActive}
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="bg-card/50 backdrop-blur-sm border-2 border-destructive/50">
+                    <div className="bg-gradient-to-r from-red-500/10 via-rose-500/10 to-pink-500/10 p-6 border-b border-destructive/20">
+                      <CardTitle className="flex items-center gap-2 text-destructive">
+                        <AlertTriangle className="w-5 h-5" />
+                        Zona de Perigo
+                      </CardTitle>
+                      <CardDescription>
+                        Ações irreversíveis do perfil profissional
+                      </CardDescription>
+                    </div>
+                    <CardContent className="p-6">
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="destructive" className="w-full text-base py-6">
+                            <Trash2 className="w-5 h-5 mr-2" />
+                            Excluir Perfil Profissional Permanentemente
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Tem certeza absoluta?</AlertDialogTitle>
+                            <AlertDialogDescription className="space-y-2">
+                              <p>Esta ação não pode ser desfeita. Isso excluirá permanentemente seu perfil profissional, 
+                              incluindo todos os posts, portfólio e avaliações associadas.</p>
+                              <p className="font-medium text-foreground">Nota: Seu perfil de interações na plataforma não será afetado.</p>
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction 
+                              onClick={handleDeleteProfile}
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            >
+                              Sim, excluir perfil profissional
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+            </div>
+          </main>
         </div>
-      </div>
+      </SidebarProvider>
     </div>
   );
 }

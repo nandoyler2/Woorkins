@@ -635,6 +635,9 @@ export type Database = {
           id: string
           instagram: string | null
           linkedin: string | null
+          linktree_config: Json | null
+          linktree_logo_url: string | null
+          linktree_social_links: Json | null
           logo_url: string | null
           phone: string | null
           portfolio_description: string | null
@@ -667,6 +670,9 @@ export type Database = {
           id?: string
           instagram?: string | null
           linkedin?: string | null
+          linktree_config?: Json | null
+          linktree_logo_url?: string | null
+          linktree_social_links?: Json | null
           logo_url?: string | null
           phone?: string | null
           portfolio_description?: string | null
@@ -699,6 +705,9 @@ export type Database = {
           id?: string
           instagram?: string | null
           linkedin?: string | null
+          linktree_config?: Json | null
+          linktree_logo_url?: string | null
+          linktree_social_links?: Json | null
           logo_url?: string | null
           phone?: string | null
           portfolio_description?: string | null

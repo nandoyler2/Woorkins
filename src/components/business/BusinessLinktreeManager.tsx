@@ -33,13 +33,15 @@ interface SocialLink {
 interface LinktreeConfig {
   layout: string;
   bio?: string;
-  backgroundColor?: string;
+  primaryColor?: string;
+  secondaryColor?: string;
   textColor?: string;
-  buttonStyle?: string;
+  logoUrl?: string;
 }
 
 interface BusinessLinktreeManagerProps {
   businessId: string;
+  businessLogo?: string;
 }
 
 const LAYOUTS = [
@@ -66,11 +68,17 @@ const SOCIAL_PLATFORMS: SocialLink[] = [
   { platform: 'website', url: '', icon: Globe, placeholder: 'https://seusite.com' },
 ];
 
-export function BusinessLinktreeManager({ businessId }: BusinessLinktreeManagerProps) {
+export function BusinessLinktreeManager({ businessId, businessLogo }: BusinessLinktreeManagerProps) {
   const [links, setLinks] = useState<CustomLink[]>([]);
   const [editingLink, setEditingLink] = useState<Partial<CustomLink> | null>(null);
   const [loading, setLoading] = useState(false);
-  const [config, setConfig] = useState<LinktreeConfig>({ layout: 'minimal' });
+  const [config, setConfig] = useState<LinktreeConfig>({ 
+    layout: 'minimal',
+    primaryColor: '#000000',
+    secondaryColor: '#ffffff',
+    textColor: '#000000',
+    logoUrl: businessLogo || ''
+  });
   const [socialLinks, setSocialLinks] = useState<Record<string, string>>({});
   const { toast } = useToast();
 
@@ -102,16 +110,27 @@ export function BusinessLinktreeManager({ businessId }: BusinessLinktreeManagerP
     try {
       const { data: profile } = await supabase
         .from("business_profiles")
-        .select("linktree_config, linktree_social_links")
+        .select("linktree_config, linktree_social_links, linktree_logo_url, logo_url")
         .eq("id", businessId)
         .single();
 
       if (profile) {
-        if (profile.linktree_config) {
-          setConfig(profile.linktree_config);
+        const defaultConfig = {
+          layout: 'minimal',
+          primaryColor: '#000000',
+          secondaryColor: '#ffffff',
+          textColor: '#000000',
+          logoUrl: profile.linktree_logo_url || profile.logo_url || businessLogo || ''
+        };
+        
+        if (profile.linktree_config && typeof profile.linktree_config === 'object') {
+          setConfig({ ...defaultConfig, ...(profile.linktree_config as unknown as LinktreeConfig) });
+        } else {
+          setConfig(defaultConfig);
         }
-        if (profile.linktree_social_links) {
-          setSocialLinks(profile.linktree_social_links);
+        
+        if (profile.linktree_social_links && typeof profile.linktree_social_links === 'object') {
+          setSocialLinks(profile.linktree_social_links as unknown as Record<string, string>);
         }
       }
     } catch (error: any) {
@@ -122,9 +141,16 @@ export function BusinessLinktreeManager({ businessId }: BusinessLinktreeManagerP
   const saveConfig = async (newConfig: Partial<LinktreeConfig>) => {
     try {
       const updatedConfig = { ...config, ...newConfig };
+      const updateData: any = { linktree_config: updatedConfig };
+      
+      // Se a logo foi alterada, salvar também em linktree_logo_url
+      if (newConfig.logoUrl !== undefined) {
+        updateData.linktree_logo_url = newConfig.logoUrl;
+      }
+      
       const { error } = await supabase
         .from("business_profiles")
-        .update({ linktree_config: updatedConfig })
+        .update(updateData)
         .eq("id", businessId);
 
       if (error) throw error;
@@ -329,6 +355,12 @@ export function BusinessLinktreeManager({ businessId }: BusinessLinktreeManagerP
 
   const renderPreview = () => {
     const styles = getLayoutStyles(config.layout);
+    const customBg = config.primaryColor ? { backgroundColor: config.primaryColor } : {};
+    const customText = config.textColor ? { color: config.textColor } : {};
+    const customButton = config.secondaryColor ? { 
+      backgroundColor: config.secondaryColor,
+      color: config.textColor 
+    } : {};
     
     return (
       <div className="sticky top-6">
@@ -341,16 +373,38 @@ export function BusinessLinktreeManager({ businessId }: BusinessLinktreeManagerP
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-gray-900 rounded-b-2xl z-10"></div>
             
             {/* Tela */}
-            <div className={`relative rounded-[2rem] overflow-hidden ${styles.bg} h-[580px]`}>
+            <div 
+              className={`relative rounded-[2rem] overflow-hidden h-[580px]`}
+              style={{ 
+                ...(config.primaryColor ? customBg : {}),
+                background: !config.primaryColor ? styles.bg : undefined
+              }}
+            >
               <div className="overflow-y-auto h-full p-6 space-y-6">
                 {/* Avatar e nome */}
                 <div className="text-center space-y-3">
-                  <div className="w-20 h-20 rounded-full bg-white/20 mx-auto flex items-center justify-center">
-                    <Smartphone className={`w-10 h-10 ${styles.text}`} />
-                  </div>
-                  <h3 className={`font-bold text-lg ${styles.text}`}>Seu Negócio</h3>
+                  {config.logoUrl ? (
+                    <img 
+                      src={config.logoUrl} 
+                      alt="Logo"
+                      className="w-20 h-20 rounded-full mx-auto object-cover"
+                    />
+                  ) : (
+                    <div className="w-20 h-20 rounded-full bg-white/20 mx-auto flex items-center justify-center">
+                      <Smartphone className={`w-10 h-10`} style={config.textColor ? customText : {}} />
+                    </div>
+                  )}
+                  <h3 
+                    className={`font-bold text-lg ${!config.textColor ? styles.text : ''}`}
+                    style={config.textColor ? customText : {}}
+                  >
+                    Seu Negócio
+                  </h3>
                   {config.bio && (
-                    <p className={`text-sm ${styles.text} opacity-90`}>
+                    <p 
+                      className={`text-sm opacity-90 ${!config.textColor ? styles.text : ''}`}
+                      style={config.textColor ? customText : {}}
+                    >
                       {config.bio}
                     </p>
                   )}
@@ -364,7 +418,8 @@ export function BusinessLinktreeManager({ businessId }: BusinessLinktreeManagerP
                       return (
                         <div
                           key={social.platform}
-                          className={`w-10 h-10 rounded-full ${styles.button} flex items-center justify-center`}
+                          className={`w-10 h-10 rounded-full flex items-center justify-center ${!config.secondaryColor ? styles.button : ''}`}
+                          style={config.secondaryColor ? customButton : {}}
                         >
                           <Icon className="w-5 h-5" />
                         </div>
@@ -378,14 +433,18 @@ export function BusinessLinktreeManager({ businessId }: BusinessLinktreeManagerP
                   {links.filter(l => l.active).map((link) => (
                     <div
                       key={link.id}
-                      className={`w-full p-3 ${styles.button} text-center font-medium transition-all`}
+                      className={`w-full p-3 text-center font-medium transition-all ${!config.secondaryColor ? styles.button : 'rounded-lg'}`}
+                      style={config.secondaryColor ? customButton : {}}
                     >
                       {link.title}
                     </div>
                   ))}
                   
                   {links.filter(l => l.active).length === 0 && (
-                    <div className={`text-center text-sm ${styles.text} opacity-60`}>
+                    <div 
+                      className={`text-center text-sm opacity-60 ${!config.textColor ? styles.text : ''}`}
+                      style={config.textColor ? customText : {}}
+                    >
                       Adicione links para ver aqui
                     </div>
                   )}
@@ -426,6 +485,24 @@ export function BusinessLinktreeManager({ businessId }: BusinessLinktreeManagerP
               {/* Tab: Layout */}
               <TabsContent value="layout" className="space-y-4">
                 <div>
+                  <Label>Logo</Label>
+                  <div className="flex gap-2 items-end">
+                    <Input
+                      value={config.logoUrl || ''}
+                      onChange={(e) => setConfig({ ...config, logoUrl: e.target.value })}
+                      placeholder="URL da logo (deixe vazio para usar a logo do perfil)"
+                      className="flex-1"
+                    />
+                    <Button 
+                      size="sm"
+                      onClick={() => saveConfig({ logoUrl: config.logoUrl })}
+                    >
+                      Salvar
+                    </Button>
+                  </div>
+                </div>
+
+                <div>
                   <Label>Bio</Label>
                   <Textarea
                     value={config.bio || ''}
@@ -442,6 +519,43 @@ export function BusinessLinktreeManager({ businessId }: BusinessLinktreeManagerP
                     Salvar Bio
                   </Button>
                 </div>
+
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <Label>Cor Primária</Label>
+                    <Input
+                      type="color"
+                      value={config.primaryColor || '#000000'}
+                      onChange={(e) => setConfig({ ...config, primaryColor: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label>Cor Secundária</Label>
+                    <Input
+                      type="color"
+                      value={config.secondaryColor || '#ffffff'}
+                      onChange={(e) => setConfig({ ...config, secondaryColor: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label>Cor do Texto</Label>
+                    <Input
+                      type="color"
+                      value={config.textColor || '#000000'}
+                      onChange={(e) => setConfig({ ...config, textColor: e.target.value })}
+                    />
+                  </div>
+                </div>
+                <Button 
+                  size="sm"
+                  onClick={() => saveConfig({ 
+                    primaryColor: config.primaryColor,
+                    secondaryColor: config.secondaryColor,
+                    textColor: config.textColor
+                  })}
+                >
+                  Salvar Cores
+                </Button>
 
                 <div>
                   <Label className="mb-3 block">Escolha o Layout</Label>

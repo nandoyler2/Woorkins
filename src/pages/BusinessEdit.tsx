@@ -1007,7 +1007,7 @@ export default function BusinessEdit() {
                       )}
 
                       {configuringFeature === 'linktree' && (
-                        <BusinessLinktreeManager businessId={business.id} />
+                        <BusinessLinktreeManager businessId={business.id} businessLogo={business.logo_url} />
                       )}
 
                       {configuringFeature === 'vacancies' && (

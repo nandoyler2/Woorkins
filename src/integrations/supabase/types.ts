@@ -147,6 +147,399 @@ export type Database = {
           },
         ]
       }
+      business_appointments: {
+        Row: {
+          appointment_date: string
+          appointment_time: string
+          business_id: string
+          client_profile_id: string
+          created_at: string | null
+          duration_minutes: number | null
+          google_calendar_event_id: string | null
+          id: string
+          notes: string | null
+          service_description: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          appointment_date: string
+          appointment_time: string
+          business_id: string
+          client_profile_id: string
+          created_at?: string | null
+          duration_minutes?: number | null
+          google_calendar_event_id?: string | null
+          id?: string
+          notes?: string | null
+          service_description?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          appointment_date?: string
+          appointment_time?: string
+          business_id?: string
+          client_profile_id?: string
+          created_at?: string | null
+          duration_minutes?: number | null
+          google_calendar_event_id?: string | null
+          id?: string
+          notes?: string | null
+          service_description?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_appointments_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "business_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_appointments_client_profile_id_fkey"
+            columns: ["client_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_availability: {
+        Row: {
+          active: boolean | null
+          business_id: string
+          created_at: string | null
+          day_of_week: number | null
+          end_time: string
+          id: string
+          start_time: string
+          updated_at: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          business_id: string
+          created_at?: string | null
+          day_of_week?: number | null
+          end_time: string
+          id?: string
+          start_time: string
+          updated_at?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          business_id?: string
+          created_at?: string | null
+          day_of_week?: number | null
+          end_time?: string
+          id?: string
+          start_time?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_availability_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "business_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_banners: {
+        Row: {
+          active: boolean | null
+          business_id: string
+          created_at: string | null
+          id: string
+          image_url: string
+          link_url: string | null
+          order_index: number | null
+          title: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          business_id: string
+          created_at?: string | null
+          id?: string
+          image_url: string
+          link_url?: string | null
+          order_index?: number | null
+          title?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          business_id?: string
+          created_at?: string | null
+          id?: string
+          image_url?: string
+          link_url?: string | null
+          order_index?: number | null
+          title?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_banners_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "business_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_catalog_items: {
+        Row: {
+          active: boolean | null
+          business_id: string
+          category: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          image_url: string | null
+          name: string
+          price: number
+          updated_at: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          business_id: string
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          name: string
+          price: number
+          updated_at?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          business_id?: string
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          name?: string
+          price?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_catalog_items_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "business_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_certifications: {
+        Row: {
+          business_id: string
+          created_at: string | null
+          description: string | null
+          file_type: string | null
+          file_url: string
+          id: string
+          issued_by: string | null
+          issued_date: string | null
+          order_index: number | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          business_id: string
+          created_at?: string | null
+          description?: string | null
+          file_type?: string | null
+          file_url: string
+          id?: string
+          issued_by?: string | null
+          issued_date?: string | null
+          order_index?: number | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          business_id?: string
+          created_at?: string | null
+          description?: string | null
+          file_type?: string | null
+          file_url?: string
+          id?: string
+          issued_by?: string | null
+          issued_date?: string | null
+          order_index?: number | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_certifications_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "business_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_custom_links: {
+        Row: {
+          active: boolean | null
+          business_id: string
+          created_at: string | null
+          icon_name: string | null
+          id: string
+          order_index: number | null
+          title: string
+          updated_at: string | null
+          url: string
+        }
+        Insert: {
+          active?: boolean | null
+          business_id: string
+          created_at?: string | null
+          icon_name?: string | null
+          id?: string
+          order_index?: number | null
+          title: string
+          updated_at?: string | null
+          url: string
+        }
+        Update: {
+          active?: boolean | null
+          business_id?: string
+          created_at?: string | null
+          icon_name?: string | null
+          id?: string
+          order_index?: number | null
+          title?: string
+          updated_at?: string | null
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_custom_links_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "business_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_job_applications: {
+        Row: {
+          applicant_profile_id: string
+          cover_letter: string | null
+          created_at: string | null
+          id: string
+          resume_url: string | null
+          reviewed_at: string | null
+          status: string | null
+          updated_at: string | null
+          vacancy_id: string
+        }
+        Insert: {
+          applicant_profile_id: string
+          cover_letter?: string | null
+          created_at?: string | null
+          id?: string
+          resume_url?: string | null
+          reviewed_at?: string | null
+          status?: string | null
+          updated_at?: string | null
+          vacancy_id: string
+        }
+        Update: {
+          applicant_profile_id?: string
+          cover_letter?: string | null
+          created_at?: string | null
+          id?: string
+          resume_url?: string | null
+          reviewed_at?: string | null
+          status?: string | null
+          updated_at?: string | null
+          vacancy_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_job_applications_applicant_profile_id_fkey"
+            columns: ["applicant_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_job_applications_vacancy_id_fkey"
+            columns: ["vacancy_id"]
+            isOneToOne: false
+            referencedRelation: "business_job_vacancies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_job_vacancies: {
+        Row: {
+          area: string | null
+          business_id: string
+          created_at: string | null
+          deadline: string | null
+          description: string
+          id: string
+          requirements: string | null
+          salary_max: number | null
+          salary_min: number | null
+          status: string | null
+          title: string
+          updated_at: string | null
+          work_mode: string | null
+        }
+        Insert: {
+          area?: string | null
+          business_id: string
+          created_at?: string | null
+          deadline?: string | null
+          description: string
+          id?: string
+          requirements?: string | null
+          salary_max?: number | null
+          salary_min?: number | null
+          status?: string | null
+          title: string
+          updated_at?: string | null
+          work_mode?: string | null
+        }
+        Update: {
+          area?: string | null
+          business_id?: string
+          created_at?: string | null
+          deadline?: string | null
+          description?: string
+          id?: string
+          requirements?: string | null
+          salary_max?: number | null
+          salary_min?: number | null
+          status?: string | null
+          title?: string
+          updated_at?: string | null
+          work_mode?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_job_vacancies_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "business_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       business_posts: {
         Row: {
           business_id: string
@@ -178,6 +571,44 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "business_posts_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "business_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_profile_features: {
+        Row: {
+          business_id: string
+          created_at: string | null
+          feature_key: string
+          id: string
+          is_active: boolean | null
+          settings: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          business_id: string
+          created_at?: string | null
+          feature_key: string
+          id?: string
+          is_active?: boolean | null
+          settings?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          business_id?: string
+          created_at?: string | null
+          feature_key?: string
+          id?: string
+          is_active?: boolean | null
+          settings?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_profile_features_business_id_fkey"
             columns: ["business_id"]
             isOneToOne: false
             referencedRelation: "business_profiles"
@@ -288,6 +719,108 @@ export type Database = {
             columns: ["profile_id"]
             isOneToOne: true
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_testimonials: {
+        Row: {
+          business_id: string
+          client_name: string
+          client_profile_id: string | null
+          content: string
+          created_at: string | null
+          id: string
+          moderated_at: string | null
+          moderated_by: string | null
+          rating: number | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          business_id: string
+          client_name: string
+          client_profile_id?: string | null
+          content: string
+          created_at?: string | null
+          id?: string
+          moderated_at?: string | null
+          moderated_by?: string | null
+          rating?: number | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          business_id?: string
+          client_name?: string
+          client_profile_id?: string | null
+          content?: string
+          created_at?: string | null
+          id?: string
+          moderated_at?: string | null
+          moderated_by?: string | null
+          rating?: number | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_testimonials_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "business_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_testimonials_client_profile_id_fkey"
+            columns: ["client_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_testimonials_moderated_by_fkey"
+            columns: ["moderated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_videos: {
+        Row: {
+          active: boolean | null
+          business_id: string
+          created_at: string | null
+          id: string
+          title: string | null
+          updated_at: string | null
+          youtube_url: string
+        }
+        Insert: {
+          active?: boolean | null
+          business_id: string
+          created_at?: string | null
+          id?: string
+          title?: string | null
+          updated_at?: string | null
+          youtube_url: string
+        }
+        Update: {
+          active?: boolean | null
+          business_id?: string
+          created_at?: string | null
+          id?: string
+          title?: string | null
+          updated_at?: string | null
+          youtube_url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_videos_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: true
+            referencedRelation: "business_profiles"
             referencedColumns: ["id"]
           },
         ]

@@ -728,14 +728,14 @@ export function BusinessLinktreeManager({ businessId, businessLogo }: BusinessLi
                 <div className="space-y-4 pb-4 border-b">
                   <div>
                     <Label className="mb-2">Logo do LinkTree</Label>
-                    <div className="flex gap-4 items-start">
+                    <div className="flex gap-3 items-start">
                       {/* Logo atual */}
                       <div className="flex-shrink-0">
-                        <div className="w-24 h-24 rounded-lg border-2 border-border overflow-hidden bg-muted flex items-center justify-center">
+                        <div className="w-20 h-20 rounded-lg border-2 border-border overflow-hidden bg-muted flex items-center justify-center">
                           {config.logoUrl ? (
                             <img 
                               src={config.logoUrl} 
-                              alt="Logo atual"
+                              alt="Logo"
                               className="w-full h-full object-contain"
                             />
                           ) : (
@@ -745,7 +745,7 @@ export function BusinessLinktreeManager({ businessId, businessLogo }: BusinessLi
                         <p className="text-xs text-muted-foreground mt-1 text-center">Atual</p>
                       </div>
                       
-                      {/* Upload de nova logo */}
+                      {/* Upload */}
                       <div className="flex-1">
                         <ImageUpload
                           currentImageUrl={config.logoUrl}
@@ -757,9 +757,6 @@ export function BusinessLinktreeManager({ businessId, businessLogo }: BusinessLi
                           folder={businessId}
                           type="logo"
                         />
-                        <p className="text-xs text-muted-foreground mt-2">
-                          Envie uma nova logo ou deixe vazio para usar a logo do perfil
-                        </p>
                       </div>
                     </div>
                   </div>

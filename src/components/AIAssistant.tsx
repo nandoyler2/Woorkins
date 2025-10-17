@@ -559,7 +559,6 @@ export const AIAssistant = () => {
                   <MessageCircle className="h-5 w-5 text-primary" />
                   Assistente Virtual Woorkins
                 </h3>
-                <p className="text-sm text-muted-foreground mt-1">Estou aqui para ajudar você{userName && `, ${userName}`}!</p>
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">
                 {viewMode === 'welcome' && (

@@ -635,7 +635,7 @@ export default function Dashboard() {
                   <div className="w-7 h-7 bg-blue-500 rounded-lg flex items-center justify-center">
                     <Users className="w-4 h-4 text-white" />
                   </div>
-                  <h3 className="text-base font-bold text-slate-900">Perfil de interações no Woorkins</h3>
+                  <h3 className="text-base font-bold text-slate-900">Seu Perfil</h3>
                 </div>
               </CardHeader>
               <CardContent className="p-4">

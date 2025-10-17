@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -13,7 +13,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2, Building2 } from 'lucide-react';
+import { Loader2, Building2, CheckCircle2, XCircle } from 'lucide-react';
 
 interface CreateBusinessProfileDialogProps {
   open: boolean;
@@ -26,13 +26,79 @@ export function CreateBusinessProfileDialog({ open, onOpenChange, onSuccess }: C
   const { toast } = useToast();
   const navigate = useNavigate();
   const [companyName, setCompanyName] = useState('');
+  const [slug, setSlug] = useState('');
+  const [checkingSlug, setCheckingSlug] = useState(false);
+  const [slugAvailable, setSlugAvailable] = useState<boolean | null>(null);
   const [creating, setCreating] = useState(false);
+
+  const generateSlug = (name: string) => {
+    return name
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 50);
+  };
+
+  const checkSlugAvailability = async (slugToCheck: string) => {
+    if (!slugToCheck) {
+      setSlugAvailable(null);
+      return;
+    }
+
+    setCheckingSlug(true);
+    try {
+      const { data, error } = await supabase
+        .from('business_profiles')
+        .select('slug')
+        .eq('slug', slugToCheck)
+        .maybeSingle();
+
+      if (error) throw error;
+      setSlugAvailable(!data);
+    } catch (error) {
+      console.error('Error checking slug:', error);
+      setSlugAvailable(null);
+    } finally {
+      setCheckingSlug(false);
+    }
+  };
+
+  useEffect(() => {
+    if (companyName) {
+      const newSlug = generateSlug(companyName);
+      setSlug(newSlug);
+    } else {
+      setSlug('');
+      setSlugAvailable(null);
+    }
+  }, [companyName]);
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (slug) {
+        checkSlugAvailability(slug);
+      }
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [slug]);
 
   const handleCreate = async () => {
     if (!user || !companyName.trim()) {
       toast({
         title: 'Nome obrigatório',
         description: 'Por favor, insira o nome do seu perfil profissional',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!slugAvailable) {
+      toast({
+        title: 'Slug indisponível',
+        description: 'Por favor, escolha um @ diferente',
         variant: 'destructive',
       });
       return;
@@ -52,24 +118,13 @@ export function CreateBusinessProfileDialog({ open, onOpenChange, onSuccess }: C
         throw new Error('Perfil não encontrado');
       }
 
-      // Generate unique slug
-      const baseSlug = companyName
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-+|-+$/g, '');
-      
-      const randomSuffix = Math.random().toString(36).slice(2, 8);
-      const newSlug = `${baseSlug}-${randomSuffix}`;
-
       // Create business profile
       const { data: newBusiness, error: createError } = await supabase
         .from('business_profiles')
         .insert({
           profile_id: profileData.id,
           company_name: companyName.trim(),
-          slug: newSlug,
+          slug: slug,
           active: true,
         })
         .select('*')
@@ -87,6 +142,8 @@ export function CreateBusinessProfileDialog({ open, onOpenChange, onSuccess }: C
       onSuccess?.();
       onOpenChange(false);
       setCompanyName('');
+      setSlug('');
+      setSlugAvailable(null);
       navigate(`/empresa/${newBusiness.slug}/editar`);
       
     } catch (error: any) {
@@ -123,7 +180,7 @@ export function CreateBusinessProfileDialog({ open, onOpenChange, onSuccess }: C
               value={companyName}
               onChange={(e) => setCompanyName(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === 'Enter' && !creating) {
+                if (e.key === 'Enter' && !creating && slugAvailable) {
                   handleCreate();
                 }
               }}
@@ -132,6 +189,51 @@ export function CreateBusinessProfileDialog({ open, onOpenChange, onSuccess }: C
             />
             <p className="text-xs text-muted-foreground">
               Este nome será exibido no seu perfil público
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="slug">@ do Perfil *</Label>
+            <div className="relative">
+              <Input
+                id="slug"
+                value={slug}
+                onChange={(e) => {
+                  const newSlug = e.target.value
+                    .toLowerCase()
+                    .replace(/[^a-z0-9-]/g, '')
+                    .slice(0, 50);
+                  setSlug(newSlug);
+                }}
+                placeholder="seu-perfil"
+                className="font-mono"
+                disabled={creating}
+              />
+              <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                {checkingSlug && (
+                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                )}
+                {!checkingSlug && slugAvailable === true && (
+                  <CheckCircle2 className="h-4 w-4 text-green-500" />
+                )}
+                {!checkingSlug && slugAvailable === false && (
+                  <XCircle className="h-4 w-4 text-red-500" />
+                )}
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {slugAvailable === false && (
+                <span className="text-red-500">Este @ já está em uso. Escolha outro.</span>
+              )}
+              {slugAvailable === true && (
+                <span className="text-green-500">Este @ está disponível!</span>
+              )}
+              {slugAvailable === null && slug && (
+                <span>Seu perfil ficará disponível em: woorkins.com/empresa/@{slug}</span>
+              )}
+              {!slug && (
+                <span>O @ é gerado automaticamente baseado no nome</span>
+              )}
             </p>
           </div>
         </div>
@@ -147,7 +249,7 @@ export function CreateBusinessProfileDialog({ open, onOpenChange, onSuccess }: C
           </Button>
           <Button
             onClick={handleCreate}
-            disabled={creating || !companyName.trim()}
+            disabled={creating || !companyName.trim() || !slugAvailable || checkingSlug}
             className="flex-1"
           >
             {creating ? (

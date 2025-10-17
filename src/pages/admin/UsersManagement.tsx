@@ -1,8 +1,9 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Users, Ban, FileCheck } from 'lucide-react';
+import { Users, Ban, FileCheck, Briefcase } from 'lucide-react';
 import AdminUsers from './Users';
 import SystemBlocks from './SystemBlocks';
 import AdminDocumentVerifications from './DocumentVerifications';
+import AdminBusinesses from './Businesses';
 
 export default function UsersManagement() {
   return (
@@ -15,10 +16,14 @@ export default function UsersManagement() {
       </div>
 
       <Tabs defaultValue="users" className="space-y-6">
-        <TabsList className="grid w-full max-w-md grid-cols-3">
+        <TabsList className="grid w-full max-w-2xl grid-cols-4">
           <TabsTrigger value="users" className="gap-2">
             <Users className="h-4 w-4" />
             Usuários
+          </TabsTrigger>
+          <TabsTrigger value="businesses" className="gap-2">
+            <Briefcase className="h-4 w-4" />
+            Perfis Profissionais
           </TabsTrigger>
           <TabsTrigger value="blocks" className="gap-2">
             <Ban className="h-4 w-4" />
@@ -32,6 +37,10 @@ export default function UsersManagement() {
 
         <TabsContent value="users" className="space-y-6">
           <AdminUsers />
+        </TabsContent>
+
+        <TabsContent value="businesses" className="space-y-6">
+          <AdminBusinesses />
         </TabsContent>
 
         <TabsContent value="blocks" className="space-y-6">

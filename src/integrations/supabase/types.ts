@@ -194,6 +194,9 @@ export type Database = {
           company_name: string
           cover_url: string | null
           created_at: string
+          deleted: boolean | null
+          deleted_at: string | null
+          deleted_by: string | null
           description: string | null
           email: string | null
           enable_negotiation: boolean | null
@@ -223,6 +226,9 @@ export type Database = {
           company_name: string
           cover_url?: string | null
           created_at?: string
+          deleted?: boolean | null
+          deleted_at?: string | null
+          deleted_by?: string | null
           description?: string | null
           email?: string | null
           enable_negotiation?: boolean | null
@@ -252,6 +258,9 @@ export type Database = {
           company_name?: string
           cover_url?: string | null
           created_at?: string
+          deleted?: boolean | null
+          deleted_at?: string | null
+          deleted_by?: string | null
           description?: string | null
           email?: string | null
           enable_negotiation?: boolean | null

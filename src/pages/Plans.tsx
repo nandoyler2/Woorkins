@@ -52,9 +52,8 @@ export default function Plans() {
       // Definir preços dos planos
       const planPrices: Record<string, number> = {
         'basico': 0,
-        'prata': 29.90,
-        'ouro': 49.90,
-        'diamante': 99.90
+        'pro': 49.90,
+        'premium': 99.90
       };
 
       setPlans((data || []).map(p => ({
@@ -224,7 +223,8 @@ export default function Plans() {
           )}
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto mb-12">
+        <div className="flex justify-center">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl w-full mb-12">
           {plans.map((plan) => {
             const isCurrentPlan = currentPlan === plan.slug;
             const isFree = plan.price === 0;
@@ -265,37 +265,24 @@ export default function Plans() {
                   <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-transparent pointer-events-none" />
                 )}
 
-                <div className="p-6 space-y-6">
+                <div className="p-6 space-y-6 flex flex-col h-full">
                   {/* Cabeçalho do Plano */}
                   <div className="text-center space-y-3">
                     <h3 className="text-2xl font-bold">{plan.name}</h3>
-                    
-                    {/* Preço */}
-                    <div className="space-y-1">
-                      {isFree ? (
-                        <div className="text-4xl font-bold text-primary">Grátis</div>
-                      ) : (
-                        <>
-                          <div className="flex items-baseline justify-center gap-1">
-                            <span className="text-sm text-muted-foreground">R$</span>
-                            <span className="text-4xl font-bold">{plan.price.toFixed(2)}</span>
-                            <span className="text-sm text-muted-foreground">/mês</span>
-                          </div>
-                        </>
-                      )}
-                    </div>
+                  </div>
 
-                    {/* Taxa de Comissão */}
-                    <div className="flex items-center justify-center gap-2 text-lg">
-                      <span className="text-3xl font-bold text-primary">
-                        {plan.commission_percentage}%
+                  {/* Taxa de Comissão como primeiro tópico */}
+                  <div className="space-y-2">
+                    <div className="flex items-start gap-3">
+                      <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
+                      <span className="text-sm text-foreground">
+                        Taxa de recebimento: <span className="font-semibold">{plan.commission_percentage}%</span>
                       </span>
-                      <span className="text-sm text-muted-foreground">de taxa</span>
                     </div>
                   </div>
 
                   {/* Features */}
-                  <ul className="space-y-3 min-h-[280px]">
+                  <ul className="space-y-3 flex-1">
                     {plan.features.map((feature, idx) => (
                       <li key={idx} className="flex items-start gap-3">
                         {feature.included ? (
@@ -315,6 +302,21 @@ export default function Plans() {
                       </li>
                     ))}
                   </ul>
+
+                  {/* Preço no Final */}
+                  <div className="pt-4 border-t border-border">
+                    <div className="text-center space-y-1">
+                      {isFree ? (
+                        <div className="text-3xl font-bold">Grátis</div>
+                      ) : (
+                        <div className="flex items-baseline justify-center gap-1">
+                          <span className="text-sm text-muted-foreground">R$</span>
+                          <span className="text-3xl font-bold">{plan.price.toFixed(2)}</span>
+                          <span className="text-sm text-muted-foreground">/mês</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
 
                   {/* Botão de Ação */}
                   <Button
@@ -341,6 +343,7 @@ export default function Plans() {
               </Card>
             );
           })}
+          </div>
         </div>
 
         {/* Informações Adicionais */}

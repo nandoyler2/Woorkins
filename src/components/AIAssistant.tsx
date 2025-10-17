@@ -772,24 +772,33 @@ export const AIAssistant = () => {
           {/* Input */}
           {viewMode !== 'history' && (
             <div className="p-4 border-t border-primary/10 bg-gradient-to-r from-transparent to-primary/5 rounded-b-3xl">
+            {/* Spam block alert */}
+            {isSpamBlocked && (
+              <div className="mb-3">
+                <SpamBlockCountdown 
+                  remainingSeconds={remainingSeconds}
+                  reason="Por favor, aguarde alguns minutos antes de enviar mais mensagens."
+                />
+              </div>
+            )}
             <div className="flex gap-2">
               <Textarea
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
+                  if (e.key === 'Enter' && !e.shiftKey && !isSpamBlocked) {
                     e.preventDefault();
                     sendMessage();
                   }
                 }}
-                placeholder="Digite sua dúvida ou selecione um tópico acima..."
+                placeholder={isSpamBlocked ? "Aguarde o desbloqueio..." : "Digite sua dúvida ou selecione um tópico acima..."}
                 className="resize-none border-primary/20 focus:border-primary/40 bg-background/50"
                 rows={2}
-                disabled={loading}
+                disabled={loading || isSpamBlocked}
               />
               <Button
                 onClick={sendMessage}
-                disabled={!input.trim() || loading}
+                disabled={!input.trim() || loading || isSpamBlocked}
                 size="icon"
                 className="shrink-0 bg-gradient-to-br from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-md"
               >

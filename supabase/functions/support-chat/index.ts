@@ -292,40 +292,93 @@ serve(async (req) => {
       });
     }
 
-    // Construir contexto de status atual do usuário (bloqueios)
-    let statusContext = '';
-    try {
-      const nowIso = new Date().toISOString();
-      const { data: sbBlocks } = await supabase
-        .from('system_blocks')
-        .select('id, blocked_until, is_permanent, block_type, reason')
-        .eq('profile_id', profileId)
-        .or(`is_permanent.eq.true,blocked_until.gt.${nowIso}`)
-        .order('created_at', { ascending: false })
-        .limit(1);
-      const activeBlock = sbBlocks && sbBlocks.length > 0 ? sbBlocks[0] : null;
-      if (activeBlock) {
-        statusContext = `STATUS DO USUÁRIO: BLOQUEIO ATIVO (${activeBlock.is_permanent ? 'permanente' : `até ${activeBlock.blocked_until}`}) – motivo: ${activeBlock.reason || 'não informado'}. Antes de dizer que está desbloqueado, verifique esse contexto.`;
-      } else {
-        const { data: mv } = await supabase
-          .from('moderation_violations')
-          .select('blocked_until')
-          .eq('profile_id', profileId)
-          .gt('blocked_until', nowIso)
-          .order('blocked_until', { ascending: false })
-          .limit(1);
-        if (mv && mv.length > 0) {
-          statusContext = `STATUS DO USUÁRIO: BLOQUEIO TEMPORÁRIO ATIVO até ${mv[0].blocked_until}.`;
-        } else {
-          statusContext = 'STATUS DO USUÁRIO: SEM BLOQUEIO ATIVO. Se o histórico mencionar bloqueio, informe que o acesso já foi liberado e siga com o novo assunto.';
-        }
-      }
-    } catch (e) {
-      // Falha ao buscar status — não interromper o fluxo
-      statusContext = 'STATUS DO USUÁRIO: (indisponível). Baseie-se no diálogo atual e evite assumir bloqueio sem confirmação.';
-    }
+    // Buscar contexto completo do usuário
+    const userContext = await getUserContext(supabase, profileId);
+    if (!userContext) throw new Error('Perfil não encontrado');
 
-    // Resposta da IA
+    // Formatar nome
+    const firstName = formatName(userContext.profile.full_name?.split(' ')[0]);
+
+    // Verificar se já desbloqueou hoje
+    const alreadyUnblocked = await wasUnblockedToday(supabase, profileId);
+
+    // Construir contexto de status
+    const nowIso = new Date().toISOString();
+    const { data: sbBlocks } = await supabase
+      .from('system_blocks')
+      .select('*')
+      .eq('profile_id', profileId)
+      .or(`is_permanent.eq.true,blocked_until.gt.${nowIso}`)
+      .limit(1);
+    const activeBlock = sbBlocks?.[0];
+    
+    const statusContext = activeBlock
+      ? `BLOQUEIO ATIVO (${activeBlock.is_permanent ? 'permanente' : `até ${activeBlock.blocked_until}`}): ${activeBlock.reason || 'sem motivo'}.`
+      : `SEM BLOQUEIO ATIVO.`;
+
+    // Construir prompt da IA com lógica curta e objetiva
+    const systemPrompt = `Você é uma assistente virtual ALEGRE e HUMANIZADA da Woorkins! 😊
+
+💕 PERSONALIDADE:
+- BREVE (máximo 2-3 frases curtas)
+- Use emojis (😊 ✨ 💪)
+- **Negrito** para destaques
+- Seja EMPÁTICA e OBJETIVA
+
+🚑 PEDIDOS PESSOAIS/SENSÍVEIS (saúde mental, não quer viver, etc.):
+1ª vez: "Sinto muito. Procure ajuda imediata no CVV (188) ou Bombeiros (193). 💙"
+2ª vez: "Realmente não posso ajudar com isso. Busque o CVV (188) agora. Vou me ausentar."
+→ Retorne JSON para pausar:
+{
+  "spam_detected": true,
+  "reason": "Tema sensível fora do escopo",
+  "message": "Procure o CVV (188). 💙 Vou pausar alguns minutos."
+}
+
+⚠️ PERGUNTAS FORA DO ESCOPO (não relacionadas à Woorkins):
+1ª vez: "Oi ${firstName}! 😊 Só posso ajudar com a Woorkins. Como posso te ajudar?"
+2ª vez: "Realmente só falo sobre a Woorkins. Tem alguma dúvida sobre a plataforma?"
+3ª vez: Retorne JSON:
+{
+  "spam_detected": true,
+  "reason": "Insistência em tópico fora do escopo",
+  "message": "${firstName}, vou pausar uns minutos. Depois falamos sobre a Woorkins, ok? 🙏"
+}
+
+🚨 BLOQUEIOS:
+- Se ${alreadyUnblocked ? 'JÁ FOI DESBLOQUEADO HOJE, NÃO desbloqueie novamente!' : 'primeira vez hoje que pede desbloqueio, pode considerar'}
+- 1ª msg: "Vou verificar sua conta... 🔍"
+- Verifique os dados de ${statusContext}
+- 2ª msg: Se for convincente e ${!alreadyUnblocked ? 'primeira vez hoje' : 'MAS JÁ DESBLOQUEOU HOJE'} → decida
+- Se NÃO convincente ou já desbloqueado: "Entendo ${firstName} ❤️, mas precisa aguardar o bloqueio. Você é importante! 💪"
+- Se insistir após decisão: Retorne JSON:
+{
+  "spam_detected": true,
+  "reason": "Insistência após decisão tomada",
+  "message": "Já expliquei, ${firstName}. Vou pausar uns minutos. 🙏"
+}
+
+📄 DOCUMENTOS REJEITADOS:
+"Vamos resolver! 😊 Preciso: **Frente**, **Verso**, **Selfie**. Clique no **📎**!"
+
+🔧 OUTRAS DÚVIDAS:
+- Seja específica: "Clique **Configurações** > **Pagamentos**"
+- Mude de assunto se o usuário mudar
+- Nunca repita perguntas
+
+AÇÕES ADMIN (use JSON quando necessário):
+Desbloqueio (primeira vez hoje): { "action": "unblock_user", "params": { "profileId": "${profileId}" } }
+Compensar erro: { "action": "compensate_error", "params": { "profileId": "${profileId}", "originalAmount": X, "reason": "motivo" } }
+Adicionar woorkoins: { "action": "add_woorkoins", "params": { "profileId": "${profileId}", "amount": 100, "reason": "compensação" } }
+
+CONTEXTO DO USUÁRIO:
+- Nome: ${firstName}
+- Saldo: ${userContext.balance?.balance || 0} woorkoins
+- Status: ${statusContext}
+- Desbloqueado hoje: ${alreadyUnblocked ? 'SIM ⚠️ NÃO DESBLOQUEAR NOVAMENTE' : 'Não'}
+${userContext.rejectedNegotiationMessages.length > 0 ? `- Msgs bloqueadas (negociação): ${userContext.rejectedNegotiationMessages.length}` : ''}
+${userContext.rejectedProposalMessages.length > 0 ? `- Msgs bloqueadas (proposta): ${userContext.rejectedProposalMessages.length}` : ''}`;
+
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -335,43 +388,13 @@ serve(async (req) => {
       body: JSON.stringify({
         model: 'google/gemini-2.5-flash',
         messages: [
-          {
-            role: 'system',
-            content: `Você é uma assistente virtual ALEGRE e HUMANIZADA de suporte da Woorkins! 😊
-
-🎯 SEU PAPEL:
-Você é uma pessoa real, amigável e gentil que entende quando alguém está sendo sincero.
-
-💕 PERSONALIDADE:
-- Seja FELIZ, CALOROSA e EMPÁTICA
-- Use emojis moderadamente (😊 ✨ 💪)
-- Seja BREVE e DIRETA
-- Use **negrito** para destacar
-- Mostre que ENTENDE os sentimentos
-
-🗣️ COMO CONVERSAR:
-- NÃO pergunte a mesma coisa várias vezes
-- Se o usuário mudar de assunto, MUDE também
-- Seja específica: "Clique em **Configurações** > **Pagamentos**"
-- Nunca seja genérica ou robotizada
-
-DOCUMENTOS REJEITADOS:
-1. "Entendo sua frustração! 😔 Vamos resolver?"
-2. "Preciso de: **Frente**, **Verso**, **Selfie** e **Link de rede social**"
-3. "Clique no **📎** para anexar!"
-
-ATENDENTE HUMANO:
-- 1ª vez: "Me conta rapidamente o que precisa? 😊"
-- 2ª vez: "Ok! Te transferindo agora! ✨"`
-          },
-          { role: 'system', content: `Contexto de status do usuário: ${statusContext}` },
+          { role: 'system', content: systemPrompt },
           ...(messages?.map(m => ({
             role: m.sender_type === 'user' ? 'user' : 'assistant',
             content: m.content
           })) || [])
         ],
-        temperature: 0.7,
-        max_tokens: 500
+        max_tokens: 600
       })
     });
 
@@ -380,7 +403,34 @@ ATENDENTE HUMANO:
     }
 
     const aiData = await aiResponse.json();
-    const aiMessage = aiData.choices[0].message.content;
+    let aiMessage = aiData.choices[0].message.content;
+
+    // Verificar se a IA detectou spam/insistência ou retornou ação
+    let spamDetected = false;
+    let spamReason = '';
+    let actionResult = null;
+    
+    try {
+      const jsonMatch = aiMessage.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]);
+        
+        // Spam detectado
+        if (parsed.spam_detected) {
+          spamDetected = true;
+          spamReason = parsed.reason || 'Comportamento inadequado';
+          const blockMinutes = await applySupportPause(supabase, profileId);
+          aiMessage = parsed.message || 'Por favor, mantenha o respeito para que eu possa te ajudar melhor.';
+        }
+        // Ação administrativa
+        else if (parsed.action) {
+          actionResult = await executeAdminAction(supabase, parsed.action, parsed.params);
+          aiMessage = parsed.message + '\n\n✅ ' + actionResult.message;
+        }
+      }
+    } catch (e) {
+      console.log('Resposta não contém JSON:', e);
+    }
 
     // Save AI response
     await supabase
@@ -395,7 +445,10 @@ ATENDENTE HUMANO:
     return new Response(JSON.stringify({
       conversationId: convId,
       response: aiMessage,
-      escalated: false
+      escalated: false,
+      spamDetected,
+      spamReason,
+      actionExecuted: actionResult?.success || false
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });

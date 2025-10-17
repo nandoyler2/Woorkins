@@ -282,6 +282,24 @@ export function SupportChatDialog({ open, onOpenChange, documentRejected, profil
       };
       setMessages(prev => [...prev, aiMsg]);
 
+      // Se spam detectado, a edge function já aplicou o bloqueio em message_spam_tracking
+      // O hook useSpamBlock vai detectar automaticamente e bloquear o input
+      if (data.spamDetected) {
+        toast({
+          title: 'Aguarde alguns minutos',
+          description: data.spamReason || 'Por favor, aguarde antes de continuar.',
+          variant: 'destructive'
+        });
+      }
+
+      // Se ação executada (desbloqueio, compensação), recarregar após 2s
+      if (data.actionExecuted) {
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
+      }
+
+
     } catch (error) {
       console.error('Error sending message:', error);
       toast({

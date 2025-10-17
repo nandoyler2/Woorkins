@@ -2723,92 +2723,95 @@ export default function BusinessEdit() {
                     </CardContent>
                   </Card>
 
-                  {/* Visibilidade do Perfil */}
-                  <Card className="bg-card/50 backdrop-blur-sm border-2">
-                    <div className="bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-red-500/10 p-6 border-b">
-                      <CardTitle className="flex items-center gap-2 text-amber-600">
-                        <Eye className="w-5 h-5" />
-                        Visibilidade do Perfil
-                      </CardTitle>
-                      <CardDescription>
-                        Controle se seu perfil está visível para outros usuários
-                      </CardDescription>
-                    </div>
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between p-4 border-2 rounded-lg bg-muted/30">
-                        <div className="space-y-0.5">
-                          <Label className="text-base font-medium">
-                            {business.active ? 'Perfil Ativo' : 'Perfil Desativado'}
-                          </Label>
-                          <p className="text-sm text-muted-foreground">
-                            {business.active 
-                              ? 'Seu perfil está visível para todos' 
-                              : 'Seu perfil está oculto e não aparece nas buscas'
-                            }
-                          </p>
-                        </div>
-                        <Switch
-                          checked={business.active}
-                          onCheckedChange={handleToggleActive}
-                        />
+                  {/* Grid com 2 colunas */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Visibilidade do Perfil */}
+                    <Card className="bg-card/50 backdrop-blur-sm border-2">
+                      <div className="bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-red-500/10 p-6 border-b">
+                        <CardTitle className="flex items-center gap-2 text-amber-600">
+                          <Eye className="w-5 h-5" />
+                          Visibilidade do Perfil
+                        </CardTitle>
+                        <CardDescription>
+                          Controle se seu perfil está visível para outros usuários
+                        </CardDescription>
                       </div>
-                    </CardContent>
-                  </Card>
+                      <CardContent className="p-6">
+                        <div className="flex items-center justify-between p-4 border-2 rounded-lg bg-muted/30">
+                          <div className="space-y-0.5">
+                            <Label className="text-base font-medium">
+                              {business.active ? 'Perfil Ativo' : 'Perfil Desativado'}
+                            </Label>
+                            <p className="text-sm text-muted-foreground">
+                              {business.active 
+                                ? 'Seu perfil está visível para todos' 
+                                : 'Seu perfil está oculto e não aparece nas buscas'
+                              }
+                            </p>
+                          </div>
+                          <Switch
+                            checked={business.active}
+                            onCheckedChange={handleToggleActive}
+                          />
+                        </div>
+                      </CardContent>
+                    </Card>
 
-                  {/* Zona de Perigo */}
-                  <Card className="bg-card/50 backdrop-blur-sm border-2 border-destructive/50">
-                    <div className="bg-gradient-to-r from-red-500/10 via-rose-500/10 to-pink-500/10 p-6 border-b border-destructive/20">
-                      <CardTitle className="flex items-center gap-2 text-destructive">
-                        <AlertTriangle className="w-5 h-5" />
-                        Zona de Perigo
-                      </CardTitle>
-                      <CardDescription>
-                        Ações irreversíveis do perfil profissional
-                      </CardDescription>
-                    </div>
-                    <CardContent className="p-6">
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="destructive" className="w-full text-base py-6">
-                            <Trash2 className="w-5 h-5 mr-2" />
-                            Excluir Perfil Profissional Permanentemente
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Tem certeza absoluta?</AlertDialogTitle>
-                            <AlertDialogDescription className="space-y-3">
-                              <p>Esta ação não pode ser desfeita. Isso excluirá permanentemente seu perfil profissional, 
-                              incluindo todos os posts, portfólio e avaliações associadas.</p>
-                              <p className="font-medium text-foreground">Nota: Seu perfil de interações na plataforma não será afetado.</p>
-                              <div className="pt-2">
-                                <Label htmlFor="confirm-delete" className="text-sm">
-                                  Digite <span className="font-mono">@{business?.slug}</span> para confirmar
-                                </Label>
-                                <Input
-                                  id="confirm-delete"
-                                  placeholder={`@${business?.slug}`}
-                                  value={deleteConfirmSlug}
-                                  onChange={(e) => setDeleteConfirmSlug(e.target.value)}
-                                  className="mt-2"
-                                />
-                              </div>
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel onClick={() => setDeleteConfirmSlug('')}>Cancelar</AlertDialogCancel>
-                            <AlertDialogAction 
-                              onClick={confirmDeleteProfile}
-                              disabled={deleteConfirmSlug !== `@${business?.slug}`}
-                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                            >
-                              Sim, excluir perfil profissional
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </CardContent>
-                  </Card>
+                    {/* Zona de Perigo */}
+                    <Card className="bg-card/50 backdrop-blur-sm border-2 border-destructive/50">
+                      <div className="bg-gradient-to-r from-red-500/10 via-rose-500/10 to-pink-500/10 p-6 border-b border-destructive/20">
+                        <CardTitle className="flex items-center gap-2 text-destructive">
+                          <AlertTriangle className="w-5 h-5" />
+                          Zona de Perigo
+                        </CardTitle>
+                        <CardDescription>
+                          Ações irreversíveis do perfil profissional
+                        </CardDescription>
+                      </div>
+                      <CardContent className="p-6">
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="destructive" className="w-full text-base py-6">
+                              <Trash2 className="w-5 h-5 mr-2" />
+                              Excluir Perfil Profissional Permanentemente
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Tem certeza absoluta?</AlertDialogTitle>
+                              <AlertDialogDescription className="space-y-3">
+                                <p>Esta ação não pode ser desfeita. Isso excluirá permanentemente seu perfil profissional, 
+                                incluindo todos os posts, portfólio e avaliações associadas.</p>
+                                <p className="font-medium text-foreground">Nota: Seu perfil de interações na plataforma não será afetado.</p>
+                                <div className="pt-2">
+                                  <Label htmlFor="confirm-delete" className="text-sm">
+                                    Digite <span className="font-mono">@{business?.slug}</span> para confirmar
+                                  </Label>
+                                  <Input
+                                    id="confirm-delete"
+                                    placeholder={`@${business?.slug}`}
+                                    value={deleteConfirmSlug}
+                                    onChange={(e) => setDeleteConfirmSlug(e.target.value)}
+                                    className="mt-2"
+                                  />
+                                </div>
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel onClick={() => setDeleteConfirmSlug('')}>Cancelar</AlertDialogCancel>
+                              <AlertDialogAction 
+                                onClick={confirmDeleteProfile}
+                                disabled={deleteConfirmSlug !== `@${business?.slug}`}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              >
+                                Sim, excluir perfil profissional
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </CardContent>
+                    </Card>
+                  </div>
                 </div>
               )}
             </div>

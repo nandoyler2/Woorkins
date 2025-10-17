@@ -384,6 +384,53 @@ Responda APENAS em JSON:
           );
           
           console.log('Blocked message saved:', saveResponse.ok);
+          
+          // Aplicar bloqueio progressivo do sistema para violações graves
+          if (category === 'profanity' || category === 'explicit_content' || category === 'harassment') {
+            try {
+              const blockResponse = await fetch(
+                `${SUPABASE_URL}/rest/v1/rpc/apply_progressive_system_block`,
+                {
+                  method: 'POST',
+                  headers: {
+                    'apikey': SUPABASE_SERVICE_ROLE_KEY,
+                    'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+                    'Content-Type': 'application/json'
+                  },
+                  body: JSON.stringify({
+                    p_profile_id: profileId,
+                    p_violation_category: category,
+                    p_reason: moderationResult.reason
+                  })
+                }
+              );
+              
+              if (blockResponse.ok) {
+                const blockResult = await blockResponse.json();
+                console.log('Progressive system block applied:', blockResult);
+                
+                // Adicionar informação de bloqueio ao resultado da moderação
+                if (blockResult && blockResult.length > 0) {
+                  const blockInfo = blockResult[0];
+                  if (blockInfo.blocked) {
+                    moderationResult.systemBlocked = true;
+                    moderationResult.blockDurationHours = blockInfo.block_duration_hours;
+                    moderationResult.blockedUntil = blockInfo.blocked_until;
+                    moderationResult.violationCount = blockInfo.violation_count;
+                    moderationResult.blockMessage = blockInfo.block_message;
+                  } else if (blockInfo.block_message) {
+                    // Mesmo sem bloqueio, adicionar mensagem de aviso
+                    moderationResult.warningMessage = blockInfo.block_message;
+                    moderationResult.violationCount = blockInfo.violation_count;
+                  }
+                }
+              } else {
+                console.error('Failed to apply progressive block:', await blockResponse.text());
+              }
+            } catch (blockError) {
+              console.error('Error applying progressive block:', blockError);
+            }
+          }
         } catch (error) {
           console.error('Error saving blocked message:', error);
         }

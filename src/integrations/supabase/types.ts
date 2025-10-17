@@ -2023,6 +2023,20 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      apply_progressive_system_block: {
+        Args: {
+          p_profile_id: string
+          p_reason: string
+          p_violation_category: string
+        }
+        Returns: {
+          block_duration_hours: number
+          block_message: string
+          blocked: boolean
+          blocked_until: string
+          violation_count: number
+        }[]
+      }
       calculate_payment_split: {
         Args: { _amount: number; _platform_commission_percent?: number }
         Returns: {

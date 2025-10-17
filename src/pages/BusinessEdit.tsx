@@ -344,6 +344,18 @@ export default function BusinessEdit() {
 
     const newActiveState = !feature.isActive;
 
+    // Atualizar estado local imediatamente
+    setFeatures(prevFeatures => {
+      const updatedFeatures = prevFeatures.map(f => 
+        f.key === featureKey ? { ...f, isActive: newActiveState } : f
+      );
+      // Ordenar: ativas primeiro
+      return updatedFeatures.sort((a, b) => {
+        if (a.isActive === b.isActive) return 0;
+        return a.isActive ? -1 : 1;
+      });
+    });
+
     const { error } = await supabase
       .from('business_profile_features' as any)
       .upsert({
@@ -356,10 +368,9 @@ export default function BusinessEdit() {
       });
 
     if (!error) {
-      // Não atualizar o estado local - apenas mostrar toast
       toast({
         title: newActiveState ? 'Ferramenta ativada!' : 'Ferramenta desativada',
-        description: `${feature.name} foi ${newActiveState ? 'ativada' : 'desativada'}. Recarregue a página para ver as mudanças.`
+        description: `${feature.name} foi ${newActiveState ? 'ativada' : 'desativada'}.`
       });
     } else {
       toast({
@@ -367,6 +378,8 @@ export default function BusinessEdit() {
         description: 'Não foi possível atualizar a ferramenta',
         variant: 'destructive'
       });
+      // Reverter mudança em caso de erro
+      loadFeatures();
     }
   };
 
@@ -962,69 +975,45 @@ export default function BusinessEdit() {
                         </CardDescription>
                       </div>
                       <CardContent className="p-6">
-                        {/* Ferramentas ativas */}
-                        {features.some(f => f.isActive) && (
-                          <div className="mb-8">
-                            <h3 className="text-lg font-semibold mb-4">Ferramentas Ativas</h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                              {features.filter(f => f.isActive).map((feature) => {
-                                const Icon = feature.icon;
-                                return (
-                                  <div
-                                    key={feature.key}
-                                    className={`relative rounded-lg p-6 ${feature.color} text-white transition-all hover:shadow-lg group`}
-                                  >
-                                    <div className="flex items-start justify-between mb-3">
-                                      <Icon className="w-8 h-8" />
-                                      <Switch
-                                        checked={feature.isActive}
-                                        onCheckedChange={() => handleToggleFeature(feature.key)}
-                                        className="data-[state=checked]:bg-white/30"
-                                      />
-                                    </div>
-                                    <h4 className="font-bold text-lg mb-1">{feature.name}</h4>
-                                    <p className="text-sm text-white/90 mb-4">{feature.description}</p>
-                                    <Button
-                                      size="sm"
-                                      variant="secondary"
-                                      onClick={() => setConfiguringFeature(feature.key)}
-                                      className="w-full"
-                                    >
-                                      Configurar
-                                    </Button>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Ferramentas disponíveis */}
-                        <div>
-                          <h3 className="text-lg font-semibold mb-4">
-                            {features.some(f => f.isActive) ? 'Mais Ferramentas' : 'Ferramentas Disponíveis'}
-                          </h3>
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {features.filter(f => !f.isActive).map((feature) => {
-                              const Icon = feature.icon;
-                              return (
-                                <div
-                                  key={feature.key}
-                                  className="relative rounded-lg p-6 bg-muted/50 border-2 hover:border-primary/50 transition-all hover:shadow-md group"
-                                >
-                                  <div className="flex items-start justify-between mb-3">
-                                    <Icon className="w-8 h-8 text-muted-foreground" />
-                                    <Switch
-                                      checked={feature.isActive}
-                                      onCheckedChange={() => handleToggleFeature(feature.key)}
-                                    />
-                                  </div>
-                                  <h4 className="font-bold text-lg mb-1">{feature.name}</h4>
-                                  <p className="text-sm text-muted-foreground">{feature.description}</p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {features.map((feature) => {
+                            const Icon = feature.icon;
+                            return (
+                              <div
+                                key={feature.key}
+                                className={`relative rounded-lg p-6 transition-all hover:shadow-lg group ${
+                                  feature.isActive
+                                    ? `${feature.color} text-white`
+                                    : 'bg-muted/50 border-2 hover:border-primary/50'
+                                }`}
+                              >
+                                <div className="flex items-start justify-between mb-3">
+                                  <Icon className={`w-8 h-8 ${feature.isActive ? '' : 'text-muted-foreground'}`} />
+                                  <Switch
+                                    checked={feature.isActive}
+                                    onCheckedChange={() => handleToggleFeature(feature.key)}
+                                    className={feature.isActive ? "data-[state=checked]:bg-white/30" : ""}
+                                  />
                                 </div>
-                              );
-                            })}
-                          </div>
+                                <h4 className="font-bold text-lg mb-1">{feature.name}</h4>
+                                <p className={`text-sm mb-4 ${
+                                  feature.isActive ? 'text-white/90' : 'text-muted-foreground'
+                                }`}>
+                                  {feature.description}
+                                </p>
+                                {feature.isActive && (
+                                  <Button
+                                    size="sm"
+                                    variant="secondary"
+                                    onClick={() => setConfiguringFeature(feature.key)}
+                                    className="w-full"
+                                  >
+                                    Configurar
+                                  </Button>
+                                )}
+                              </div>
+                            );
+                          })}
                         </div>
 
                         {/* Info */}
@@ -1033,7 +1022,7 @@ export default function BusinessEdit() {
                             <Info className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
                             <p className="text-sm text-muted-foreground">
                               As ferramentas ativas aparecerão no seu perfil público. 
-                              Ative ou desative conforme necessário - as mudanças aparecerão após recarregar a página.
+                              Ative ou desative conforme necessário.
                             </p>
                           </div>
                         </div>

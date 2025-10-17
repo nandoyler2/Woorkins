@@ -97,6 +97,7 @@ export default function Dashboard() {
   const [showVerificationDialog, setShowVerificationDialog] = useState(false);
   const [showCreateBusinessDialog, setShowCreateBusinessDialog] = useState(false);
   const [emailConfirmed, setEmailConfirmed] = useState(false);
+  const [pendingInvitesCount, setPendingInvitesCount] = useState(0);
   const [profileCompleted, setProfileCompleted] = useState(() => {
     // Se já foi mostrado, considerar como completo para não exibir novamente
     return localStorage.getItem('woorkins_confetti_shown') === 'true';
@@ -256,6 +257,26 @@ export default function Dashboard() {
       checkEmailConfirmation();
     }
   }, [user]);
+
+  useEffect(() => {
+    if (profile) {
+      loadPendingInvites();
+    }
+  }, [profile]);
+
+  const loadPendingInvites = async () => {
+    if (!profile) return;
+    
+    const { count, error } = await supabase
+      .from('business_admins')
+      .select('*', { count: 'exact', head: true })
+      .eq('profile_id', profile.id)
+      .eq('status', 'pending');
+    
+    if (!error && count !== null) {
+      setPendingInvitesCount(count);
+    }
+  };
 
   const checkEmailConfirmation = async () => {
     if (!user) return;
@@ -509,6 +530,36 @@ export default function Dashboard() {
                 )}
               </CardContent>
             </Card>
+
+            {/* Pending Admin Invites Alert */}
+            {pendingInvitesCount > 0 && (
+              <Card className="bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-200 shadow-md animate-fade-in">
+                <CardContent className="p-5">
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center flex-shrink-0">
+                      <UserPlus className="w-6 h-6 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-bold text-purple-900 mb-1">
+                        {pendingInvitesCount === 1 
+                          ? '1 Convite Pendente' 
+                          : `${pendingInvitesCount} Convites Pendentes`}
+                      </h3>
+                      <p className="text-sm text-purple-700 mb-3">
+                        Você foi convidado para administrar {pendingInvitesCount === 1 ? 'um perfil de negócio' : 'perfis de negócios'}. 
+                        Revise e responda aos convites.
+                      </p>
+                      <Link to="/admin-invites">
+                        <Button size="sm" className="bg-purple-600 hover:bg-purple-700 text-white">
+                          Ver Convites
+                          <Bell className="w-4 h-4 ml-2" />
+                        </Button>
+                      </Link>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Action Cards Grid */}
             <div className="grid grid-cols-2 gap-4">

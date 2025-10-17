@@ -571,9 +571,9 @@ export default function BusinessEdit() {
                       {/* Prévia do Perfil */}
                       <div className="space-y-3">
                         <Label className="text-base font-medium">Prévia do Perfil</Label>
-                        <div className="relative w-full rounded-lg overflow-hidden border-2 border-border">
-                          {/* Capa com nome sobreposto */}
-                          <div className="relative h-40 w-full">
+                        <div className="relative w-full rounded-lg overflow-visible border-2 border-border bg-background">
+                          {/* Capa */}
+                          <div className="relative h-48 w-full overflow-hidden rounded-t-lg">
                             {business.cover_url ? (
                               <img 
                                 src={business.cover_url} 
@@ -584,82 +584,86 @@ export default function BusinessEdit() {
                               <div className="w-full h-full bg-gradient-to-br from-primary/20 to-secondary/20" />
                             )}
                             
-                            {/* Nome da empresa com fundo transparente - centralizado */}
-                            <div className="absolute inset-0 flex items-center justify-center">
-                              <div className="bg-background/80 backdrop-blur-sm px-8 py-3 rounded-lg shadow-lg">
-                                <h2 className="text-2xl font-bold">
-                                  {business.company_name}
-                                </h2>
-                              </div>
-                            </div>
-                            
-                            {/* Botão de editar capa - pequeno e discreto */}
+                            {/* Botão de editar capa */}
                             <Button
                               size="icon"
                               variant="secondary"
-                              className="absolute top-2 right-2 h-8 w-8 rounded-full shadow-lg"
-                              onClick={() => document.getElementById('cover-upload-input')?.click()}
+                              className="absolute top-2 right-2 h-8 w-8 rounded-full shadow-lg bg-background/80 backdrop-blur-sm hover:bg-background"
+                              onClick={() => document.getElementById('cover-upload-trigger')?.click()}
                             >
                               <ImageIcon className="h-4 w-4" />
                             </Button>
                           </div>
                           
-                          {/* Logo sobreposto no canto inferior esquerdo */}
-                          <div className="absolute -bottom-12 left-4">
-                            <div className="relative w-24 h-24 rounded-lg border-4 border-background overflow-hidden bg-card shadow-xl">
-                              {business.logo_url ? (
-                                <img 
-                                  src={business.logo_url} 
-                                  alt="Logo" 
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                <div className="w-full h-full bg-muted flex items-center justify-center">
-                                  <ImageIcon className="w-8 h-8 text-muted-foreground" />
-                                </div>
-                              )}
-                              {/* Botão de editar logo - pequeno e discreto */}
-                              <Button
-                                size="icon"
-                                variant="secondary"
-                                className="absolute bottom-1 right-1 h-6 w-6 rounded-full shadow-lg"
-                                onClick={() => document.getElementById('logo-upload-input')?.click()}
-                              >
-                                <ImageIcon className="h-3 w-3" />
-                              </Button>
+                          {/* Container do logo e nome */}
+                          <div className="relative px-4 pb-4">
+                            {/* Logo posicionado no canto */}
+                            <div className="absolute -top-12 left-4">
+                              <div className="relative w-32 h-32 rounded-xl border-4 border-background overflow-hidden bg-background shadow-xl">
+                                {business.logo_url ? (
+                                  <img 
+                                    src={business.logo_url} 
+                                    alt="Logo" 
+                                    className="w-full h-full object-contain"
+                                  />
+                                ) : (
+                                  <div className="w-full h-full bg-muted flex items-center justify-center">
+                                    <ImageIcon className="w-10 h-10 text-muted-foreground" />
+                                  </div>
+                                )}
+                                {/* Botão de editar logo */}
+                                <Button
+                                  size="icon"
+                                  variant="secondary"
+                                  className="absolute bottom-1 right-1 h-7 w-7 rounded-full shadow-lg bg-background/80 backdrop-blur-sm hover:bg-background"
+                                  onClick={() => document.getElementById('logo-upload-trigger')?.click()}
+                                >
+                                  <ImageIcon className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            </div>
+                            
+                            {/* Nome da empresa à esquerda, após o logo */}
+                            <div className="pt-6 pl-40">
+                              <div className="inline-block bg-background/95 backdrop-blur-sm px-6 py-2 rounded-lg shadow-sm border">
+                                <h2 className="text-2xl font-bold whitespace-nowrap">
+                                  {business.company_name}
+                                </h2>
+                              </div>
                             </div>
                           </div>
                         </div>
-                        
-                        {/* Espaço extra para o logo não sobrepor o conteúdo abaixo */}
-                        <div className="h-12"></div>
                         
                         <p className="text-xs text-muted-foreground">
                           Esta é uma prévia de como seu perfil aparecerá para os visitantes
                         </p>
                       </div>
                       
-                      {/* Inputs de upload escondidos */}
+                      {/* Inputs de upload */}
                       <div className="space-y-4">
                         <div className="space-y-2">
                           <Label className="text-base font-medium">Upload de Logo</Label>
-                          <ImageUpload
-                            currentImageUrl={business.logo_url}
-                            onUpload={handleLogoUpload}
-                            bucket="business-logos"
-                            folder={business.id}
-                            type="logo"
-                          />
+                          <div id="logo-upload-trigger">
+                            <ImageUpload
+                              currentImageUrl={business.logo_url}
+                              onUpload={handleLogoUpload}
+                              bucket="business-logos"
+                              folder={business.id}
+                              type="logo"
+                            />
+                          </div>
                         </div>
                         <div className="space-y-2">
                           <Label className="text-base font-medium">Upload de Capa</Label>
-                          <ImageUpload
-                            currentImageUrl={business.cover_url}
-                            onUpload={handleCoverUpload}
-                            bucket="business-covers"
-                            folder={business.id}
-                            type="cover"
-                          />
+                          <div id="cover-upload-trigger">
+                            <ImageUpload
+                              currentImageUrl={business.cover_url}
+                              onUpload={handleCoverUpload}
+                              bucket="business-covers"
+                              folder={business.id}
+                              type="cover"
+                            />
+                          </div>
                         </div>
                       </div>
                     </CardContent>

@@ -107,7 +107,7 @@ interface Evaluation {
   };
 }
 
-type Section = 'info' | 'company-data' | 'social' | 'portfolio' | 'posts' | 'evaluations' | 'features' | 'settings';
+type Section = 'info' | 'company-data' | 'social' | 'portfolio' | 'posts' | 'evaluations' | 'settings';
 
 interface BusinessFeature {
   key: string;
@@ -134,6 +134,7 @@ export default function BusinessEdit() {
   const [newPortfolioItem, setNewPortfolioItem] = useState({ title: '', description: '', url: '', type: '' });
   const [activeSection, setActiveSection] = useState<Section>('info');
   const [features, setFeatures] = useState<BusinessFeature[]>([]);
+  const [configuringFeature, setConfiguringFeature] = useState<string | null>(null);
   
   // Refs para inputs de upload
   const logoInputRef = useRef<HTMLInputElement>(null);
@@ -146,7 +147,6 @@ export default function BusinessEdit() {
     { id: 'portfolio' as Section, label: 'Portfólio', icon: ImageIcon, color: 'text-green-500' },
     { id: 'posts' as Section, label: 'Posts', icon: MessagesSquare, color: 'text-orange-500' },
     { id: 'evaluations' as Section, label: 'Avaliações', icon: Users, color: 'text-pink-500' },
-    { id: 'features' as Section, label: 'Ferramentas do Perfil', icon: Zap, color: 'text-yellow-500' },
     { id: 'settings' as Section, label: 'Configurações', icon: AlertTriangle, color: 'text-red-500' },
   ];
 
@@ -356,12 +356,10 @@ export default function BusinessEdit() {
       });
 
     if (!error) {
-      setFeatures(features.map(f => 
-        f.key === featureKey ? { ...f, isActive: newActiveState } : f
-      ));
+      // Não atualizar o estado local - apenas mostrar toast
       toast({
         title: newActiveState ? 'Ferramenta ativada!' : 'Ferramenta desativada',
-        description: `${feature.name} foi ${newActiveState ? 'ativada' : 'desativada'} com sucesso.`
+        description: `${feature.name} foi ${newActiveState ? 'ativada' : 'desativada'}. Recarregue a página para ver as mudanças.`
       });
     } else {
       toast({
@@ -903,6 +901,145 @@ export default function BusinessEdit() {
                       </div>
                     </CardContent>
                   </Card>
+
+                  {/* Ferramentas Interativas */}
+                  {configuringFeature ? (
+                    <div className="space-y-6">
+                      <Card className="bg-card/50 backdrop-blur-sm border-2">
+                        <CardContent className="p-6">
+                          <Button
+                            variant="ghost"
+                            onClick={() => setConfiguringFeature(null)}
+                            className="mb-4"
+                          >
+                            <ArrowLeft className="w-4 h-4 mr-2" />
+                            Voltar para ferramentas
+                          </Button>
+                        </CardContent>
+                      </Card>
+
+                      {configuringFeature === 'banner' && (
+                        <BusinessBannersManager businessId={business.id} />
+                      )}
+
+                      {configuringFeature === 'video' && (
+                        <BusinessVideoManager businessId={business.id} />
+                      )}
+
+                      {configuringFeature === 'catalog' && (
+                        <BusinessCatalogManager businessId={business.id} />
+                      )}
+
+                      {configuringFeature === 'testimonials' && (
+                        <BusinessTestimonialsManager businessId={business.id} />
+                      )}
+
+                      {configuringFeature === 'certifications' && (
+                        <BusinessCertificationsManager businessId={business.id} />
+                      )}
+
+                      {configuringFeature === 'appointments' && (
+                        <BusinessAppointmentsManager businessId={business.id} />
+                      )}
+
+                      {configuringFeature === 'linktree' && (
+                        <BusinessLinktreeManager businessId={business.id} />
+                      )}
+
+                      {configuringFeature === 'vacancies' && (
+                        <BusinessJobVacanciesManager businessId={business.id} />
+                      )}
+                    </div>
+                  ) : (
+                    <Card className="bg-card/50 backdrop-blur-sm border-2">
+                      <div className="bg-gradient-to-r from-yellow-500/10 via-amber-500/10 to-orange-500/10 p-6 border-b">
+                        <CardTitle className="flex items-center gap-2 text-yellow-600 dark:text-yellow-500">
+                          <Zap className="w-5 h-5" />
+                          Ferramentas Interativas
+                        </CardTitle>
+                        <CardDescription>
+                          Ative funcionalidades extras para seu perfil profissional
+                        </CardDescription>
+                      </div>
+                      <CardContent className="p-6">
+                        {/* Ferramentas ativas */}
+                        {features.some(f => f.isActive) && (
+                          <div className="mb-8">
+                            <h3 className="text-lg font-semibold mb-4">Ferramentas Ativas</h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                              {features.filter(f => f.isActive).map((feature) => {
+                                const Icon = feature.icon;
+                                return (
+                                  <div
+                                    key={feature.key}
+                                    className={`relative rounded-lg p-6 ${feature.color} text-white transition-all hover:shadow-lg group`}
+                                  >
+                                    <div className="flex items-start justify-between mb-3">
+                                      <Icon className="w-8 h-8" />
+                                      <Switch
+                                        checked={feature.isActive}
+                                        onCheckedChange={() => handleToggleFeature(feature.key)}
+                                        className="data-[state=checked]:bg-white/30"
+                                      />
+                                    </div>
+                                    <h4 className="font-bold text-lg mb-1">{feature.name}</h4>
+                                    <p className="text-sm text-white/90 mb-4">{feature.description}</p>
+                                    <Button
+                                      size="sm"
+                                      variant="secondary"
+                                      onClick={() => setConfiguringFeature(feature.key)}
+                                      className="w-full"
+                                    >
+                                      Configurar
+                                    </Button>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Ferramentas disponíveis */}
+                        <div>
+                          <h3 className="text-lg font-semibold mb-4">
+                            {features.some(f => f.isActive) ? 'Mais Ferramentas' : 'Ferramentas Disponíveis'}
+                          </h3>
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {features.filter(f => !f.isActive).map((feature) => {
+                              const Icon = feature.icon;
+                              return (
+                                <div
+                                  key={feature.key}
+                                  className="relative rounded-lg p-6 bg-muted/50 border-2 hover:border-primary/50 transition-all hover:shadow-md group"
+                                >
+                                  <div className="flex items-start justify-between mb-3">
+                                    <Icon className="w-8 h-8 text-muted-foreground" />
+                                    <Switch
+                                      checked={feature.isActive}
+                                      onCheckedChange={() => handleToggleFeature(feature.key)}
+                                    />
+                                  </div>
+                                  <h4 className="font-bold text-lg mb-1">{feature.name}</h4>
+                                  <p className="text-sm text-muted-foreground">{feature.description}</p>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        {/* Info */}
+                        <div className="mt-6 p-4 rounded-lg bg-primary/10 border border-primary/20">
+                          <div className="flex items-start gap-3">
+                            <Info className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                            <p className="text-sm text-muted-foreground">
+                              As ferramentas ativas aparecerão no seu perfil público. 
+                              Ative ou desative conforme necessário - as mudanças aparecerão após recarregar a página.
+                            </p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
                 </div>
               )}
 
@@ -1312,140 +1449,6 @@ export default function BusinessEdit() {
                           ))}
                         </div>
                       )}
-                    </CardContent>
-                  </Card>
-                </div>
-              )}
-
-              {/* Ferramentas do Perfil */}
-              {activeSection === 'features' && (
-                <div className="animate-fade-in space-y-6">
-                  <Card className="bg-card/50 backdrop-blur-sm border-2">
-                    <div className="bg-gradient-to-r from-yellow-500/10 via-amber-500/10 to-orange-500/10 p-6 border-b">
-                      <CardTitle className="flex items-center gap-2 text-yellow-600 dark:text-yellow-500">
-                        <Zap className="w-5 h-5" />
-                        Ferramentas do Perfil
-                      </CardTitle>
-                      <CardDescription>
-                        Ative ou desative funcionalidades interativas para seu perfil profissional
-                      </CardDescription>
-                    </div>
-                    <CardContent className="p-6">
-                      {/* Ferramentas ativas */}
-                      <div className="mb-8">
-                        <h3 className="text-lg font-semibold mb-4">Ferramentas Ativas</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                          {features.filter(f => f.isActive).map((feature) => {
-                            const Icon = feature.icon;
-                            return (
-                              <div
-                                key={feature.key}
-                                className={`relative rounded-lg p-6 ${feature.color} text-white transition-all hover:shadow-lg cursor-pointer group`}
-                              >
-                                <div className="flex items-start justify-between mb-3">
-                                  <Icon className="w-8 h-8" />
-                                  <Switch
-                                    checked={feature.isActive}
-                                    onCheckedChange={() => handleToggleFeature(feature.key)}
-                                    className="data-[state=checked]:bg-white/30"
-                                  />
-                                </div>
-                                <h4 className="font-bold text-lg mb-1">{feature.name}</h4>
-                                <p className="text-sm text-white/90">{feature.description}</p>
-                              </div>
-                            );
-                          })}
-                        </div>
-                        {features.filter(f => f.isActive).length === 0 && (
-                          <div className="text-center py-8 text-muted-foreground">
-                            <Zap className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                            <p>Nenhuma ferramenta ativada ainda</p>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Ferramentas disponíveis */}
-                      <div>
-                        <h3 className="text-lg font-semibold mb-4">Ferramentas Disponíveis</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                          {features.filter(f => !f.isActive).map((feature) => {
-                            const Icon = feature.icon;
-                            return (
-                              <div
-                                key={feature.key}
-                                className="relative rounded-lg p-6 bg-muted/50 border-2 hover:border-primary/50 transition-all hover:shadow-md cursor-pointer group"
-                              >
-                                <div className="flex items-start justify-between mb-3">
-                                  <Icon className="w-8 h-8 text-muted-foreground" />
-                                  <Switch
-                                    checked={feature.isActive}
-                                    onCheckedChange={() => handleToggleFeature(feature.key)}
-                                  />
-                                </div>
-                                <h4 className="font-bold text-lg mb-1">{feature.name}</h4>
-                                <p className="text-sm text-muted-foreground">{feature.description}</p>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  {/* Gerenciamento detalhado de cada ferramenta ativa */}
-                  {features.some(f => f.isActive) && (
-                    <div className="space-y-6">
-                      {features.find(f => f.key === 'banner' && f.isActive) && (
-                        <BusinessBannersManager businessId={business.id} />
-                      )}
-
-                      {features.find(f => f.key === 'video' && f.isActive) && (
-                        <BusinessVideoManager businessId={business.id} />
-                      )}
-
-                      {features.find(f => f.key === 'catalog' && f.isActive) && (
-                        <BusinessCatalogManager businessId={business.id} />
-                      )}
-
-                      {features.find(f => f.key === 'testimonials' && f.isActive) && (
-                        <BusinessTestimonialsManager businessId={business.id} />
-                      )}
-
-                      {features.find(f => f.key === 'certifications' && f.isActive) && (
-                        <BusinessCertificationsManager businessId={business.id} />
-                      )}
-
-                      {features.find(f => f.key === 'appointments' && f.isActive) && (
-                        <BusinessAppointmentsManager businessId={business.id} />
-                      )}
-
-                      {features.find(f => f.key === 'linktree' && f.isActive) && (
-                        <BusinessLinktreeManager businessId={business.id} />
-                      )}
-
-                      {features.find(f => f.key === 'vacancies' && f.isActive) && (
-                        <BusinessJobVacanciesManager businessId={business.id} />
-                      )}
-                    </div>
-                  )}
-
-                  {/* Info sobre ferramentas */}
-                  <Card className="bg-card/50 backdrop-blur-sm border-2 border-primary/20">
-                    <CardContent className="p-6">
-                      <div className="flex items-start gap-4">
-                        <div className="p-3 rounded-full bg-primary/10">
-                          <Info className="w-6 h-6 text-primary" />
-                        </div>
-                        <div>
-                          <h4 className="font-semibold mb-2">Sobre as Ferramentas</h4>
-                          <p className="text-sm text-muted-foreground">
-                            As ferramentas ativas aparecerão no seu perfil público e no menu lateral.
-                            Você pode ativar ou desativar qualquer ferramenta a qualquer momento.
-                            Cada ferramenta oferece funcionalidades específicas para engajar seus clientes
-                            e melhorar a experiência no seu perfil profissional.
-                          </p>
-                        </div>
-                      </div>
                     </CardContent>
                   </Card>
                 </div>

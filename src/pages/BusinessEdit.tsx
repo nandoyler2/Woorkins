@@ -2793,7 +2793,7 @@ export default function BusinessEdit() {
                         <div className="space-y-2">
                           <Label className="text-base font-medium">URL do Perfil</Label>
                           <div className="flex gap-2">
-                            <div className="flex-1 flex items-center gap-2 border-2 rounded-md px-3 bg-background">
+                            <div className="flex-1 flex items-center border-2 rounded-md px-3 bg-background">
                               <span className="text-muted-foreground text-sm">woorkins.com/</span>
                               <Input
                                 value={business.slug}
@@ -2802,7 +2802,7 @@ export default function BusinessEdit() {
                                   setBusiness({ ...business, slug: value });
                                 }}
                                 placeholder="sua-empresa"
-                                className="border-0 shadow-none focus-visible:ring-0 p-0 text-base"
+                                className="border-0 shadow-none focus-visible:ring-0 p-0 text-base -ml-1"
                                 disabled={!canEditSlug}
                               />
                             </div>

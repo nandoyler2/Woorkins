@@ -76,27 +76,28 @@ function AppContent() {
       <Routes>
         <Route path="/" element={<Index />} />
         <Route path="/auth" element={<Auth />} />
-        <Route path="/profile/:username" element={<ProfileRouter />} />
         <Route path="/projetos" element={<Projects />} />
         <Route path="/projetos/:id" element={<ProjectDetails />} />
+        <Route path="/projetos/novo" element={<ProtectedRoute><ProjectCreate /></ProtectedRoute>} />
         <Route path="/feed" element={<Feed />} />
-        <Route path="/empresa/:slug" element={<BusinessProfile />} />
         <Route path="/planos" element={<Plans />} />
-          <Route path="/faq" element={<FAQ />} />
-          <Route path="/termos-de-uso" element={<TermosDeUso />} />
-          <Route path="/politica-de-privacidade" element={<PoliticaPrivacidade />} />
+        <Route path="/faq" element={<FAQ />} />
+        <Route path="/termos-de-uso" element={<TermosDeUso />} />
+        <Route path="/politica-de-privacidade" element={<PoliticaPrivacidade />} />
         
         <Route path="/painel" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="/perfil/editar" element={<ProtectedRoute><ProfileEdit /></ProtectedRoute>} />
         <Route path="/conta" element={<ProtectedRoute><Account /></ProtectedRoute>} />
         <Route path="/mensagens" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
-        <Route path="/projetos/novo" element={<ProtectedRoute><ProjectCreate /></ProtectedRoute>} />
         <Route path="/meus-projetos" element={<ProtectedRoute><MyProjects /></ProtectedRoute>} />
         <Route path="/financeiro" element={<ProtectedRoute><Financeiro /></ProtectedRoute>} />
         <Route path="/woorkoins" element={<ProtectedRoute><Woorkoins /></ProtectedRoute>} />
         <Route path="/payment-settings" element={<ProtectedRoute><PaymentSettings /></ProtectedRoute>} />
-        <Route path="/empresa/:slug/editar" element={<ProtectedRoute><BusinessEdit /></ProtectedRoute>} />
         <Route path="/empresa/financeiro" element={<ProtectedRoute><BusinessFinances /></ProtectedRoute>} />
+        
+        {/* Rotas dinâmicas devem vir por último */}
+        <Route path="/:slug/editar" element={<ProtectedRoute><BusinessEdit /></ProtectedRoute>} />
+        <Route path="/:slug" element={<ProfileRouter />} />
 
         <Route path="/admin" element={<ProtectedRoute requireAdmin><AdminLayout /></ProtectedRoute>}>
           <Route index element={<Admin />} />

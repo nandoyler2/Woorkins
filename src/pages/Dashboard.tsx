@@ -731,7 +731,7 @@ export default function Dashboard() {
                               Ver perfil
                             </Button>
                           </Link>
-                          <Link to={`/empresa/${business.slug || business.id}/editar`}>
+                          <Link to={`/${business.slug || business.id}/editar`}>
                             <Button variant="default" size="sm" className="text-xs h-7 px-2">
                               Editar
                             </Button>

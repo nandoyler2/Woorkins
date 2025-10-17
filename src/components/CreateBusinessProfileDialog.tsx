@@ -144,7 +144,7 @@ export function CreateBusinessProfileDialog({ open, onOpenChange, onSuccess }: C
       setCompanyName('');
       setSlug('');
       setSlugAvailable(null);
-      navigate(`/empresa/${newBusiness.slug}/editar`);
+      navigate(`/${newBusiness.slug}/editar`);
       
     } catch (error: any) {
       console.error('Error creating business profile:', error);
@@ -229,7 +229,7 @@ export function CreateBusinessProfileDialog({ open, onOpenChange, onSuccess }: C
                 <span className="text-green-500">Este @ está disponível!</span>
               )}
               {slugAvailable === null && slug && (
-                <span>Seu perfil ficará disponível em: woorkins.com/empresa/@{slug}</span>
+                <span>Seu perfil ficará disponível em: woorkins.com/@{slug}</span>
               )}
               {!slug && (
                 <span>O @ é gerado automaticamente baseado no nome</span>

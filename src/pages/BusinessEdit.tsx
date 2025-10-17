@@ -546,7 +546,7 @@ export default function BusinessEdit() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => window.open(`/empresa/${business.slug}`, '_blank')}
+                    onClick={() => window.open(`/${business.slug}`, '_blank')}
                     className="gap-2"
                   >
                     <ExternalLink className="w-4 h-4" />

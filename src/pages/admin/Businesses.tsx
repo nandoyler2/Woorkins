@@ -356,7 +356,7 @@ export default function AdminBusinesses() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => navigate(`/empresa/${business.slug}`)}
+                      onClick={() => navigate(`/${business.slug}`)}
                       title="Ver perfil"
                     >
                       <Eye className="h-4 w-4" />
@@ -408,7 +408,7 @@ export default function AdminBusinesses() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => navigate(`/empresa/${business.slug}`)}
+                      onClick={() => navigate(`/${business.slug}`)}
                       title="Ver perfil"
                     >
                       <Eye className="h-4 w-4" />

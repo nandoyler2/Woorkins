@@ -18,6 +18,7 @@ import Feed from "./pages/Feed";
 import Admin from "./pages/Admin";
 import Dashboard from "./pages/Dashboard";
 import BusinessEdit from "./pages/BusinessEdit";
+import ProfileEdit from "./pages/ProfileEdit";
 import ProfileRouter from "./pages/ProfileRouter";
 import BusinessFinances from "./pages/BusinessFinances";
 import Projects from "./pages/Projects";
@@ -86,6 +87,7 @@ function AppContent() {
           <Route path="/politica-de-privacidade" element={<PoliticaPrivacidade />} />
         
         <Route path="/painel" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+        <Route path="/perfil/editar" element={<ProtectedRoute><ProfileEdit /></ProtectedRoute>} />
         <Route path="/conta" element={<ProtectedRoute><Account /></ProtectedRoute>} />
         <Route path="/mensagens" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
         <Route path="/projetos/novo" element={<ProtectedRoute><ProjectCreate /></ProtectedRoute>} />

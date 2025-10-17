@@ -647,14 +647,15 @@ export default function Dashboard() {
                         Ver perfil
                       </Button>
                     </Link>
-                    <Button 
-                      variant="default" 
-                      size="sm" 
-                      className="text-xs h-7 px-2 bg-blue-500 hover:bg-blue-600"
-                      onClick={() => setShowProfileEdit(true)}
-                    >
-                      Editar
-                    </Button>
+                    <Link to="/perfil/editar">
+                      <Button 
+                        variant="default" 
+                        size="sm" 
+                        className="text-xs h-7 px-2 bg-blue-500 hover:bg-blue-600"
+                      >
+                        Editar
+                      </Button>
+                    </Link>
                   </div>
                 </div>
               </CardContent>

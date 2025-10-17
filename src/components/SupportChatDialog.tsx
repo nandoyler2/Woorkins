@@ -49,6 +49,7 @@ export function SupportChatDialog({ open, onOpenChange, documentRejected, profil
   const [lastActivity, setLastActivity] = useState<Date>(new Date());
   const [timeUntilClose, setTimeUntilClose] = useState<number>(600); // 10 minutos em segundos
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messageInputRef = useRef<HTMLTextAreaElement>(null);
   const inactivityTimerRef = useRef<NodeJS.Timeout | null>(null);
   const countdownTimerRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
@@ -317,6 +318,10 @@ export function SupportChatDialog({ open, onOpenChange, documentRejected, profil
       });
     } finally {
       setIsSending(false);
+      // Restaurar foco no input após enviar
+      setTimeout(() => {
+        messageInputRef.current?.focus();
+      }, 100);
     }
   };
 
@@ -596,13 +601,14 @@ export function SupportChatDialog({ open, onOpenChange, documentRejected, profil
                 variant="outline"
                 size="icon"
                 onClick={() => setShowDocumentUpload(!showDocumentUpload)}
-                disabled={isSending || isBlocked}
+                disabled={isBlocked}
               >
                 <Paperclip className="h-4 w-4" />
               </Button>
 
               <Textarea
-                disabled={isBlocked || isSending}
+                ref={messageInputRef}
+                disabled={isBlocked}
                 placeholder={isBlocked ? "Aguarde o desbloqueio..." : "Digite sua mensagem..."}
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
@@ -618,7 +624,7 @@ export function SupportChatDialog({ open, onOpenChange, documentRejected, profil
 
               <Button
                 onClick={() => handleSendMessage()}
-                disabled={isSending || isBlocked || (!message.trim() && !showDocumentUpload)}
+                disabled={isBlocked || (!message.trim() && !showDocumentUpload)}
               >
                 {isSending ? (
                   <Loader2 className="h-4 w-4 animate-spin" />

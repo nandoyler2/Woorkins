@@ -959,7 +959,6 @@ useEffect(() => {
                 value={messageInput}
                 onChange={handleInputChange}
                 placeholder="Digite sua mensagem..."
-                disabled={isSending}
                 className="flex-1 bg-background/50"
                 autoComplete="off"
                 onKeyDown={(e) => {

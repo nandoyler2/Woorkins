@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { MessageCircle, X, Send, HelpCircle, Shield, Coins, AlertCircle, History, GripVertical, Paperclip, FileText, File, Image as ImageIcon } from 'lucide-react';
+import { MessageCircle, X, Send, HelpCircle, Shield, Coins, AlertCircle, History, GripVertical, Paperclip, FileText, File, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
@@ -898,16 +898,16 @@ export const AIAssistant = () => {
                 placeholder={isSpamBlocked ? "Aguarde o desbloqueio..." : "Digite sua dúvida ou selecione um tópico acima..."}
                 className="resize-none border-primary/20 focus:border-primary/40 bg-background/50"
                 rows={2}
-                disabled={loading || isSpamBlocked}
+                disabled={isSpamBlocked}
               />
               <div className="flex flex-col gap-2">
                 <Button
                   onClick={sendMessage}
-                  disabled={!input.trim() || loading || isSpamBlocked}
+                  disabled={!input.trim() || isSpamBlocked}
                   size="icon"
                   className="shrink-0 bg-gradient-to-br from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-md"
                 >
-                  <Send className="h-4 w-4" />
+                  {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                 </Button>
                 <Button 
                   type="button" 
@@ -915,7 +915,7 @@ export const AIAssistant = () => {
                   size="icon"
                   className="flex-shrink-0"
                   onClick={() => fileInputRef.current?.click()}
-                  disabled={loading || isSpamBlocked}
+                  disabled={isSpamBlocked}
                 >
                   <Paperclip className="h-5 w-5" />
                 </Button>

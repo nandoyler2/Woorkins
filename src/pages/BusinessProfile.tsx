@@ -21,6 +21,12 @@ import { useToast } from '@/hooks/use-toast';
 import { formatFullName } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { NegotiationChat } from '@/components/NegotiationChat';
+import { PublicBusinessBanners } from '@/components/business/PublicBusinessBanners';
+import { PublicBusinessVideo } from '@/components/business/PublicBusinessVideo';
+import { PublicBusinessCatalog } from '@/components/business/PublicBusinessCatalog';
+import { PublicBusinessTestimonials } from '@/components/business/PublicBusinessTestimonials';
+import { PublicBusinessCertifications } from '@/components/business/PublicBusinessCertifications';
+import { PublicBusinessJobVacancies } from '@/components/business/PublicBusinessJobVacancies';
 
 interface BusinessData {
   id: string;
@@ -335,6 +341,11 @@ export default function BusinessProfile() {
 
                   {/* Início Tab */}
                   <TabsContent value="inicio" className="p-6 space-y-6">
+                    {/* Ferramentas ativas do perfil */}
+                    <PublicBusinessBanners businessId={business.id} />
+                    <PublicBusinessVideo businessId={business.id} />
+                    <PublicBusinessCatalog businessId={business.id} />
+                    
                     <div>
                       <h2 className="text-xl font-bold mb-4">Visão Geral</h2>
                       <div className="space-y-4">
@@ -355,6 +366,10 @@ export default function BusinessProfile() {
                         )}
                       </div>
                     </div>
+
+                    <PublicBusinessTestimonials businessId={business.id} />
+                    <PublicBusinessCertifications businessId={business.id} />
+                    <PublicBusinessJobVacancies businessId={business.id} />
                   </TabsContent>
 
                   {/* Sobre Tab */}

@@ -21,6 +21,14 @@ import {
   ShoppingBag, ThumbsUp, Award, Calendar, Link as LinkIcon, Briefcase as BriefcaseIcon
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { BusinessBannersManager } from '@/components/business/BusinessBannersManager';
+import { BusinessVideoManager } from '@/components/business/BusinessVideoManager';
+import { BusinessCatalogManager } from '@/components/business/BusinessCatalogManager';
+import { BusinessTestimonialsManager } from '@/components/business/BusinessTestimonialsManager';
+import { BusinessCertificationsManager } from '@/components/business/BusinessCertificationsManager';
+import { BusinessAppointmentsManager } from '@/components/business/BusinessAppointmentsManager';
+import { BusinessLinktreeManager } from '@/components/business/BusinessLinktreeManager';
+import { BusinessJobVacanciesManager } from '@/components/business/BusinessJobVacanciesManager';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -1383,6 +1391,43 @@ export default function BusinessEdit() {
                       </div>
                     </CardContent>
                   </Card>
+
+                  {/* Gerenciamento detalhado de cada ferramenta ativa */}
+                  {features.some(f => f.isActive) && (
+                    <div className="space-y-6">
+                      {features.find(f => f.key === 'banner' && f.isActive) && (
+                        <BusinessBannersManager businessId={business.id} />
+                      )}
+
+                      {features.find(f => f.key === 'video' && f.isActive) && (
+                        <BusinessVideoManager businessId={business.id} />
+                      )}
+
+                      {features.find(f => f.key === 'catalog' && f.isActive) && (
+                        <BusinessCatalogManager businessId={business.id} />
+                      )}
+
+                      {features.find(f => f.key === 'testimonials' && f.isActive) && (
+                        <BusinessTestimonialsManager businessId={business.id} />
+                      )}
+
+                      {features.find(f => f.key === 'certifications' && f.isActive) && (
+                        <BusinessCertificationsManager businessId={business.id} />
+                      )}
+
+                      {features.find(f => f.key === 'appointments' && f.isActive) && (
+                        <BusinessAppointmentsManager businessId={business.id} />
+                      )}
+
+                      {features.find(f => f.key === 'linktree' && f.isActive) && (
+                        <BusinessLinktreeManager businessId={business.id} />
+                      )}
+
+                      {features.find(f => f.key === 'vacancies' && f.isActive) && (
+                        <BusinessJobVacanciesManager businessId={business.id} />
+                      )}
+                    </div>
+                  )}
 
                   {/* Info sobre ferramentas */}
                   <Card className="bg-card/50 backdrop-blur-sm border-2 border-primary/20">

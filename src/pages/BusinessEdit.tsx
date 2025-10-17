@@ -1153,10 +1153,10 @@ export default function BusinessEdit() {
                   <SidebarMenuItem>
                     <SidebarMenuButton
                       onClick={() => openWithMessage('')}
-                      className="hover:bg-muted/50 transition-all duration-200"
+                      className="hover:bg-muted/50 transition-all duration-200 text-sm py-2"
                     >
-                      <MessageCircle className="w-5 h-5 mr-3 text-muted-foreground" />
-                      <span>Precisa de ajuda?</span>
+                      <MessageCircle className="w-4 h-4 mr-2 text-muted-foreground" />
+                      <span className="text-sm">Precisa de ajuda?</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 </SidebarMenu>

@@ -147,7 +147,6 @@ export default function BusinessEdit() {
     { id: 'profile-cover' as Section, label: 'Perfil e Capa', icon: Eye, color: 'text-blue-500' },
     { id: 'posts' as Section, label: 'Posts', icon: MessagesSquare, color: 'text-orange-500' },
     { id: 'evaluations' as Section, label: 'Avaliações', icon: Users, color: 'text-pink-500' },
-    { id: 'admin' as Section, label: 'Administração', icon: Shield, color: 'text-purple-500' },
     { id: 'settings' as Section, label: 'Configurações', icon: AlertTriangle, color: 'text-red-500' },
   ];
 
@@ -799,10 +798,35 @@ export default function BusinessEdit() {
                       })}
                     </SidebarMenu>
                   </SidebarGroupContent>
-                </SidebarGroup>
-              )}
-            </SidebarContent>
-          </Sidebar>
+              </SidebarGroup>
+            )}
+
+            {/* Admin - separate section */}
+            <SidebarGroup>
+              <SidebarGroupLabel className="text-xs text-muted-foreground">
+                Administração
+              </SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      onClick={() => setActiveSection('admin')}
+                      className={`
+                        ${activeSection === 'admin' ? 'bg-primary/10 text-primary font-weight' : 'hover:bg-muted/50'}
+                        transition-all duration-200
+                      `}
+                    >
+                      <Shield className={`w-5 h-5 mr-3 ${activeSection === 'admin' ? 'text-purple-500' : 'text-muted-foreground'}`} />
+                      <span>Administradores</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+
+            {/* Final closing */}
+          </SidebarContent>
+        </Sidebar>
 
           {/* Main Content */}
           <main className="flex-1 overflow-auto">

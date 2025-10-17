@@ -111,19 +111,22 @@ export const AIAssistant = () => {
   const isEditingProfile = location.pathname.endsWith('/editar'); // Páginas de edição de perfil
   const isBusinessPublicProfile = !location.pathname.startsWith('/admin') && 
                                   !location.pathname.startsWith('/l/') &&
-                                  !location.pathname.startsWith('/dashboard') &&
-                                  !location.pathname.startsWith('/account') &&
-                                  !location.pathname.startsWith('/projects') &&
-                                  !location.pathname.startsWith('/messages') &&
-                                  !location.pathname.startsWith('/plans') &&
+                                  !location.pathname.startsWith('/painel') &&
+                                  !location.pathname.startsWith('/conta') &&
+                                  !location.pathname.startsWith('/perfil') &&
+                                  !location.pathname.startsWith('/projetos') &&
+                                  !location.pathname.startsWith('/mensagens') &&
+                                  !location.pathname.startsWith('/planos') &&
                                   !location.pathname.startsWith('/woorkoins') &&
                                   !location.pathname.startsWith('/financeiro') &&
+                                  !location.pathname.startsWith('/empresa') &&
                                   !location.pathname.startsWith('/faq') &&
                                   !location.pathname.startsWith('/politica') &&
                                   !location.pathname.startsWith('/termos') &&
                                   !location.pathname.startsWith('/feed') &&
                                   !location.pathname.startsWith('/payment-settings') &&
-                                  !location.pathname.startsWith('/my-projects') &&
+                                  !location.pathname.startsWith('/meus-projetos') &&
+                                  !location.pathname.startsWith('/admin-invites') &&
                                   !location.pathname.endsWith('/editar') &&
                                   location.pathname !== '/' &&
                                   location.pathname !== '/auth';

@@ -102,6 +102,24 @@ interface BusinessPost {
   created_at: string;
 }
 
+interface PostComment {
+  id: string;
+  post_id: string;
+  profile_id: string;
+  content: string;
+  created_at: string;
+  profile: {
+    full_name: string;
+    avatar_url: string | null;
+  };
+}
+
+interface PostLike {
+  id: string;
+  post_id: string;
+  profile_id: string;
+}
+
 interface Evaluation {
   id: string;
   user_id: string;
@@ -153,7 +171,9 @@ export default function BusinessEdit() {
   const [sharePostUrl, setSharePostUrl] = useState('');
   const [showComments, setShowComments] = useState<{ [key: string]: boolean }>({});
   const [commentText, setCommentText] = useState<{ [key: string]: string }>({});
-  const [likedPosts, setLikedPosts] = useState<{ [key: string]: boolean }>({});
+  const [postComments, setPostComments] = useState<{ [key: string]: PostComment[] }>({});
+  const [postLikes, setPostLikes] = useState<{ [key: string]: PostLike[] }>({});
+  const [currentProfileId, setCurrentProfileId] = useState<string | null>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
   
   // Refs para inputs de upload
@@ -259,6 +279,7 @@ export default function BusinessEdit() {
   useEffect(() => {
     loadBusiness();
     loadEvaluations();
+    loadCurrentProfile();
   }, [slug]);
 
   useEffect(() => {
@@ -268,6 +289,20 @@ export default function BusinessEdit() {
       loadFeatures();
     }
   }, [business?.id]);
+
+  const loadCurrentProfile = async () => {
+    if (!user) return;
+    
+    const { data } = await supabase
+      .from('profiles' as any)
+      .select('id')
+      .eq('user_id', user.id)
+      .maybeSingle();
+    
+    if (data) {
+      setCurrentProfileId((data as any).id);
+    }
+  };
 
   const loadBusiness = async () => {
     if (!user || !slug) return;
@@ -362,6 +397,107 @@ export default function BusinessEdit() {
 
     if (data) {
       setPosts(data as any);
+      // Carregar comentários e curtidas para cada post
+      data.forEach((post: any) => {
+        loadPostComments(post.id);
+        loadPostLikes(post.id);
+      });
+    }
+  };
+
+  const loadPostComments = async (postId: string) => {
+    const { data } = await supabase
+      .from('business_post_comments' as any)
+      .select(`
+        id,
+        post_id,
+        profile_id,
+        content,
+        created_at,
+        profiles:profile_id (
+          full_name,
+          avatar_url
+        )
+      `)
+      .eq('post_id', postId)
+      .order('created_at', { ascending: true });
+
+    if (data) {
+      const comments = data.map((comment: any) => ({
+        ...comment,
+        profile: comment.profiles
+      }));
+      setPostComments(prev => ({ ...prev, [postId]: comments }));
+    }
+  };
+
+  const loadPostLikes = async (postId: string) => {
+    const { data } = await supabase
+      .from('business_post_likes' as any)
+      .select('id, post_id, profile_id')
+      .eq('post_id', postId);
+
+    if (data) {
+      setPostLikes(prev => ({ ...prev, [postId]: data }));
+    }
+  };
+
+  const handleToggleLike = async (postId: string) => {
+    if (!currentProfileId) return;
+
+    const currentLikes = postLikes[postId] || [];
+    const isLiked = currentLikes.some(like => like.profile_id === currentProfileId);
+
+    if (isLiked) {
+      // Remove like
+      const { error } = await supabase
+        .from('business_post_likes' as any)
+        .delete()
+        .eq('post_id', postId)
+        .eq('profile_id', currentProfileId);
+
+      if (!error) {
+        loadPostLikes(postId);
+      }
+    } else {
+      // Add like
+      const { error } = await supabase
+        .from('business_post_likes' as any)
+        .insert({
+          post_id: postId,
+          profile_id: currentProfileId
+        });
+
+      if (!error) {
+        loadPostLikes(postId);
+      }
+    }
+  };
+
+  const handleAddComment = async (postId: string) => {
+    if (!currentProfileId || !commentText[postId]?.trim()) return;
+
+    const { error } = await supabase
+      .from('business_post_comments' as any)
+      .insert({
+        post_id: postId,
+        profile_id: currentProfileId,
+        content: commentText[postId].trim()
+      });
+
+    if (!error) {
+      toast({
+        title: 'Comentário publicado!',
+        description: 'Seu comentário foi adicionado ao post.',
+      });
+      setCommentText({ ...commentText, [postId]: '' });
+      loadPostComments(postId);
+    } else {
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível adicionar o comentário.',
+        variant: 'destructive'
+      });
     }
   };
 
@@ -1869,11 +2005,21 @@ export default function BusinessEdit() {
                                   <Button 
                                     variant="ghost" 
                                     size="sm"
-                                    className={`flex-1 gap-2 hover:bg-muted ${likedPosts[post.id] ? 'text-blue-600' : ''}`}
-                                    onClick={() => setLikedPosts({ ...likedPosts, [post.id]: !likedPosts[post.id] })}
+                                    className={`flex-1 gap-2 hover:bg-muted ${
+                                      postLikes[post.id]?.some(like => like.profile_id === currentProfileId) 
+                                        ? 'text-blue-600' 
+                                        : ''
+                                    }`}
+                                    onClick={() => handleToggleLike(post.id)}
                                   >
-                                    <ThumbsUp className={`w-5 h-5 ${likedPosts[post.id] ? 'fill-current' : ''}`} />
-                                    <span className="font-medium">Curtir</span>
+                                    <ThumbsUp className={`w-5 h-5 ${
+                                      postLikes[post.id]?.some(like => like.profile_id === currentProfileId) 
+                                        ? 'fill-current' 
+                                        : ''
+                                    }`} />
+                                    <span className="font-medium">
+                                      Curtir {postLikes[post.id]?.length > 0 && `(${postLikes[post.id].length})`}
+                                    </span>
                                   </Button>
                                   <Button 
                                     variant="ghost" 
@@ -1882,7 +2028,9 @@ export default function BusinessEdit() {
                                     onClick={() => setShowComments({ ...showComments, [post.id]: !showComments[post.id] })}
                                   >
                                     <MessageCircleMore className="w-5 h-5" />
-                                    <span className="font-medium">Comentar</span>
+                                    <span className="font-medium">
+                                      Comentar {postComments[post.id]?.length > 0 && `(${postComments[post.id].length})`}
+                                    </span>
                                   </Button>
                                   <Button 
                                     variant="ghost" 
@@ -1898,6 +2046,41 @@ export default function BusinessEdit() {
                                     <span className="font-medium">Compartilhar</span>
                                   </Button>
                                 </div>
+
+                                {/* Comentários Existentes */}
+                                {postComments[post.id]?.length > 0 && (
+                                  <div className="border-t p-4 space-y-3 bg-muted/10">
+                                    {postComments[post.id].map((comment) => (
+                                      <div key={comment.id} className="flex gap-3">
+                                        {comment.profile.avatar_url ? (
+                                          <img 
+                                            src={comment.profile.avatar_url} 
+                                            alt={comment.profile.full_name}
+                                            className="w-8 h-8 rounded-full object-cover"
+                                          />
+                                        ) : (
+                                          <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+                                            <Building2 className="w-4 h-4 text-muted-foreground" />
+                                          </div>
+                                        )}
+                                        <div className="flex-1">
+                                          <div className="bg-muted rounded-lg p-3">
+                                            <p className="font-semibold text-sm">{comment.profile.full_name}</p>
+                                            <p className="text-sm mt-1">{comment.content}</p>
+                                          </div>
+                                          <p className="text-xs text-muted-foreground mt-1 ml-1">
+                                            {new Date(comment.created_at).toLocaleDateString('pt-BR', {
+                                              day: 'numeric',
+                                              month: 'short',
+                                              hour: '2-digit',
+                                              minute: '2-digit'
+                                            })}
+                                          </p>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
 
                                 {/* Campo de Comentário */}
                                 {showComments[post.id] && (
@@ -1925,14 +2108,7 @@ export default function BusinessEdit() {
                                         <div className="flex justify-end mt-2">
                                           <Button 
                                             size="sm"
-                                            onClick={() => {
-                                              toast({
-                                                title: 'Comentário publicado!',
-                                                description: 'Seu comentário foi adicionado ao post.',
-                                              });
-                                              setCommentText({ ...commentText, [post.id]: '' });
-                                              setShowComments({ ...showComments, [post.id]: false });
-                                            }}
+                                            onClick={() => handleAddComment(post.id)}
                                             disabled={!commentText[post.id]?.trim()}
                                           >
                                             Comentar

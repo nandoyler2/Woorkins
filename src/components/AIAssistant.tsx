@@ -14,6 +14,9 @@ import { SpamBlockCountdown } from './SpamBlockCountdown';
 interface Message {
   role: 'user' | 'assistant';
   content: string;
+  fileUrl?: string;
+  fileName?: string;
+  fileType?: string;
 }
 
 const helpTopics = [
@@ -797,15 +800,37 @@ export const AIAssistant = () => {
                     key={idx}
                     className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                   >
-                    <div
-                      className={`max-w-[80%] rounded-2xl px-4 py-3 shadow-sm ${
-                        msg.role === 'user'
-                          ? 'bg-gradient-to-br from-primary to-primary/80 text-primary-foreground'
-                          : 'bg-gradient-to-br from-muted to-muted/50 border border-primary/10'
-                      }`}
-                    >
-                      <p className="text-sm whitespace-pre-wrap leading-relaxed">{formatMessageContent(msg.content)}</p>
-                    </div>
+                  <div
+                    className={`max-w-[80%] rounded-2xl px-4 py-3 shadow-sm ${
+                      msg.role === 'user'
+                        ? 'bg-gradient-to-br from-primary to-primary/80 text-primary-foreground'
+                        : 'bg-gradient-to-br from-muted to-muted/50 border border-primary/10'
+                    }`}
+                  >
+                    {msg.fileUrl && (
+                      <div className="mb-2">
+                        {msg.fileType?.startsWith('image/') ? (
+                          <img 
+                            src={msg.fileUrl} 
+                            alt={msg.fileName || 'Anexo'} 
+                            className="max-w-full rounded-lg mb-2"
+                            style={{ maxHeight: '200px' }}
+                          />
+                        ) : (
+                          <a 
+                            href={msg.fileUrl} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 text-sm underline mb-2"
+                          >
+                            {getFileIcon(msg.fileType || '')}
+                            <span>{msg.fileName || 'Anexo'}</span>
+                          </a>
+                        )}
+                      </div>
+                    )}
+                    <p className="text-sm whitespace-pre-wrap leading-relaxed">{formatMessageContent(msg.content)}</p>
+                  </div>
                   </div>
                 ))}
               </div>

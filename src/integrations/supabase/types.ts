@@ -1286,6 +1286,33 @@ export type Database = {
           },
         ]
       }
+      global_identifiers: {
+        Row: {
+          created_at: string | null
+          id: string
+          identifier: string
+          identifier_type: string
+          owner_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          identifier: string
+          identifier_type: string
+          owner_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          identifier?: string
+          identifier_type?: string
+          owner_id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       legal_pages: {
         Row: {
           content: string
@@ -2788,6 +2815,10 @@ export type Database = {
           stripe_fee: number
           total_fees: number
         }[]
+      }
+      check_identifier_available: {
+        Args: { p_identifier: string }
+        Returns: boolean
       }
       cleanup_expired_email_verifications: {
         Args: Record<PropertyKey, never>

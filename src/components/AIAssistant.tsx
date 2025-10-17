@@ -105,8 +105,25 @@ export const AIAssistant = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { systemBlock, messagingBlock } = useSystemBlock(profileId || '');
 
-  // Verificar se está na área admin
+  // Verificar se está na área admin ou em páginas públicas
   const isAdminArea = location.pathname.startsWith('/admin');
+  const isPublicProfile = !location.pathname.startsWith('/admin') && 
+                          !location.pathname.startsWith('/dashboard') &&
+                          !location.pathname.startsWith('/account') &&
+                          !location.pathname.startsWith('/projects') &&
+                          !location.pathname.startsWith('/messages') &&
+                          !location.pathname.startsWith('/plans') &&
+                          !location.pathname.startsWith('/woorkoins') &&
+                          !location.pathname.startsWith('/financeiro') &&
+                          !location.pathname.startsWith('/faq') &&
+                          !location.pathname.startsWith('/politica') &&
+                          !location.pathname.startsWith('/termos') &&
+                          !location.pathname.startsWith('/feed') &&
+                          !location.pathname.startsWith('/payment-settings') &&
+                          !location.pathname.startsWith('/my-projects') &&
+                          location.pathname !== '/' &&
+                          location.pathname !== '/auth';
+  const shouldHideButton = isAdminArea || isPublicProfile;
 
   // Sincronizar isOpen do contexto com o estado interno
   const isOpen = contextIsOpen || internalOpen;
@@ -656,8 +673,8 @@ export const AIAssistant = () => {
 
   return (
     <>
-      {/* Botão flutuante - 30% menor - oculto na área admin */}
-      {!isOpen && !isAdminArea && (
+      {/* Botão flutuante - 30% menor - oculto na área admin e perfis públicos */}
+      {!isOpen && !shouldHideButton && (
         <div
           style={{
             position: 'fixed',

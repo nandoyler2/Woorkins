@@ -728,36 +728,31 @@ export function BusinessLinktreeManager({ businessId, businessLogo }: BusinessLi
                 <div className="space-y-4 pb-4 border-b">
                   <div>
                     <Label className="mb-2">Logo do LinkTree</Label>
-                    <div className="flex gap-3 items-start">
+                    <div className="flex gap-4 items-center">
                       {/* Logo atual */}
-                      <div className="flex-shrink-0">
-                        <div className="w-20 h-20 rounded-lg border-2 border-border overflow-hidden bg-muted flex items-center justify-center">
-                          {config.logoUrl ? (
-                            <img 
-                              src={config.logoUrl} 
-                              alt="Logo"
-                              className="w-full h-full object-contain"
-                            />
-                          ) : (
-                            <ImageIcon className="w-8 h-8 text-muted-foreground" />
-                          )}
-                        </div>
-                        <p className="text-xs text-muted-foreground mt-1 text-center">Atual</p>
+                      <div className="w-24 h-24 rounded-lg border-2 border-border overflow-hidden bg-muted flex items-center justify-center flex-shrink-0">
+                        {config.logoUrl ? (
+                          <img 
+                            src={config.logoUrl} 
+                            alt="Logo"
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <ImageIcon className="w-10 h-10 text-muted-foreground" />
+                        )}
                       </div>
                       
-                      {/* Upload */}
-                      <div className="flex-1">
-                        <ImageUpload
-                          currentImageUrl={config.logoUrl}
-                          onUpload={async (url) => {
-                            setConfig({ ...config, logoUrl: url });
-                            await saveConfig({ logoUrl: url });
-                          }}
-                          bucket="business-logos"
-                          folder={businessId}
-                          type="logo"
-                        />
-                      </div>
+                      {/* Botão trocar */}
+                      <ImageUpload
+                        currentImageUrl={config.logoUrl}
+                        onUpload={async (url) => {
+                          setConfig({ ...config, logoUrl: url });
+                          await saveConfig({ logoUrl: url });
+                        }}
+                        bucket="business-logos"
+                        folder={businessId}
+                        type="logo"
+                      />
                     </div>
                   </div>
 

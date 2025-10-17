@@ -969,19 +969,6 @@ export default function BusinessEdit() {
                   {/* Ferramentas Interativas */}
                   {configuringFeature ? (
                     <div className="space-y-6">
-                      <Card className="bg-card/50 backdrop-blur-sm border-2">
-                        <CardContent className="p-6">
-                          <Button
-                            variant="ghost"
-                            onClick={() => setConfiguringFeature(null)}
-                            className="mb-4"
-                          >
-                            <ArrowLeft className="w-4 h-4 mr-2" />
-                            Voltar para ferramentas
-                          </Button>
-                        </CardContent>
-                      </Card>
-
                       {configuringFeature === 'banner' && (
                         <BusinessBannersManager businessId={business.id} />
                       )}

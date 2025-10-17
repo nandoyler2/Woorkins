@@ -487,7 +487,7 @@ export default function BusinessEdit() {
           <Sidebar className="border-r bg-card/50 backdrop-blur-sm z-10" style={{ top: '64px', height: 'calc(100svh - 64px)' }}>
             <SidebarContent>
               <div className="p-4 border-b space-y-3">
-                <h2 className="text-lg font-bold px-2">{business.company_name}</h2>
+                <h2 className="text-lg font-bold px-2">Perfil Profissional</h2>
                 <Button variant="ghost" size="sm" asChild className="w-full justify-start">
                   <Link to="/painel">
                     <ArrowLeft className="w-4 h-4 mr-2" />

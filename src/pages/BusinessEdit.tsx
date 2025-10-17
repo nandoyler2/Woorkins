@@ -137,7 +137,11 @@ export default function BusinessEdit() {
   const [features, setFeatures] = useState<BusinessFeature[]>([]);
   const [configuringFeature, setConfiguringFeature] = useState<string | null>(null);
   const [deleteConfirmSlug, setDeleteConfirmSlug] = useState('');
-  const [createPostOpen, setCreatePostOpen] = useState(false);
+  const [postExpanded, setPostExpanded] = useState(false);
+  const [postContent, setPostContent] = useState('');
+  const [postImages, setPostImages] = useState<string[]>([]);
+  const [posting, setPosting] = useState(false);
+  const imageInputRef = useRef<HTMLInputElement>(null);
   
   // Refs para inputs de upload
   const logoInputRef = useRef<HTMLInputElement>(null);
@@ -636,6 +640,88 @@ export default function BusinessEdit() {
         description: error.message,
         variant: 'destructive',
       });
+    }
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || !business?.id) return;
+
+    const uploadedUrls: string[] = [];
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${business.id}/${Date.now()}_${i}.${fileExt}`;
+
+      try {
+        const { data, error } = await supabase.storage
+          .from('business_media')
+          .upload(fileName, file);
+
+        if (error) throw error;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('business_media')
+          .getPublicUrl(fileName);
+
+        uploadedUrls.push(publicUrl);
+      } catch (error: any) {
+        toast({
+          title: 'Erro ao fazer upload',
+          description: error.message,
+          variant: 'destructive',
+        });
+      }
+    }
+
+    setPostImages([...postImages, ...uploadedUrls]);
+  };
+
+  const handleRemoveImage = (index: number) => {
+    setPostImages(postImages.filter((_, i) => i !== index));
+  };
+
+  const handleCreatePost = async () => {
+    if (!postContent.trim() && postImages.length === 0) {
+      toast({
+        title: 'Post vazio',
+        description: 'Adicione texto ou imagem ao post',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setPosting(true);
+    try {
+      const { error } = await supabase
+        .from('business_posts' as any)
+        .insert({
+          business_id: business?.id,
+          content: postContent.trim(),
+          media_urls: postImages.length > 0 ? postImages : null,
+          media_types: postImages.length > 0 ? postImages.map(() => 'image') : null,
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: 'Post publicado!',
+        description: 'Seu post foi compartilhado.',
+      });
+
+      setPostContent('');
+      setPostImages([]);
+      setPostExpanded(false);
+      loadPosts();
+    } catch (error: any) {
+      toast({
+        title: 'Erro ao publicar',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setPosting(false);
     }
   };
 
@@ -1547,47 +1633,135 @@ export default function BusinessEdit() {
                   {/* Create Post Area - Facebook Style */}
                   <Card className="bg-card/50 backdrop-blur-sm border-2 hover:shadow-md transition-all">
                     <CardContent className="p-4">
-                      <div 
-                        className="flex items-center gap-3 cursor-pointer"
-                        onClick={() => setCreatePostOpen(true)}
-                      >
-                        {business.logo_url ? (
-                          <img 
-                            src={business.logo_url} 
-                            alt={business.company_name}
-                            className="w-10 h-10 rounded-full object-cover border-2 border-border"
-                          />
-                        ) : (
-                          <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center border-2 border-border">
-                            <Building2 className="w-5 h-5 text-muted-foreground" />
+                      {!postExpanded ? (
+                        <>
+                          <div 
+                            className="flex items-center gap-3 cursor-pointer"
+                            onClick={() => setPostExpanded(true)}
+                          >
+                            {business.logo_url ? (
+                              <img 
+                                src={business.logo_url} 
+                                alt={business.company_name}
+                                className="w-10 h-10 rounded-full object-cover border-2 border-border"
+                              />
+                            ) : (
+                              <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center border-2 border-border">
+                                <Building2 className="w-5 h-5 text-muted-foreground" />
+                              </div>
+                            )}
+                            <div 
+                              className="flex-1 bg-muted hover:bg-muted/80 rounded-full px-4 py-3 text-muted-foreground transition-colors"
+                            >
+                              No que você está pensando?
+                            </div>
                           </div>
-                        )}
-                        <div 
-                          className="flex-1 bg-muted hover:bg-muted/80 rounded-full px-4 py-3 text-muted-foreground transition-colors"
-                        >
-                          No que você está pensando?
+                          <div className="flex items-center gap-2 mt-3 pt-3 border-t">
+                            <Button 
+                              variant="ghost" 
+                              className="flex-1 gap-2 hover:bg-muted/50"
+                              onClick={() => {
+                                setPostExpanded(true);
+                                setTimeout(() => imageInputRef.current?.click(), 100);
+                              }}
+                            >
+                              <ImageIcon className="w-5 h-5 text-green-500" />
+                              <span className="text-muted-foreground">Foto</span>
+                            </Button>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="space-y-4">
+                          <div className="flex items-start gap-3">
+                            {business.logo_url ? (
+                              <img 
+                                src={business.logo_url} 
+                                alt={business.company_name}
+                                className="w-10 h-10 rounded-full object-cover border-2 border-border"
+                              />
+                            ) : (
+                              <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center border-2 border-border">
+                                <Building2 className="w-5 h-5 text-muted-foreground" />
+                              </div>
+                            )}
+                            <Textarea
+                              placeholder="No que você está pensando?"
+                              value={postContent}
+                              onChange={(e) => setPostContent(e.target.value)}
+                              rows={3}
+                              className="flex-1 resize-none border-0 focus-visible:ring-0 p-0"
+                              autoFocus
+                            />
+                          </div>
+
+                          {postImages.length > 0 && (
+                            <div className="grid grid-cols-2 gap-2">
+                              {postImages.map((url, i) => (
+                                <div key={i} className="relative group">
+                                  <img 
+                                    src={url} 
+                                    alt="" 
+                                    className="w-full h-48 object-cover rounded-lg" 
+                                  />
+                                  <Button
+                                    variant="destructive"
+                                    size="icon"
+                                    className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                                    onClick={() => handleRemoveImage(i)}
+                                  >
+                                    <X className="w-4 h-4" />
+                                  </Button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          <input
+                            ref={imageInputRef}
+                            type="file"
+                            accept="image/*"
+                            multiple
+                            onChange={handleImageUpload}
+                            className="hidden"
+                          />
+
+                          <div className="flex items-center justify-between pt-3 border-t">
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              className="gap-2"
+                              onClick={() => imageInputRef.current?.click()}
+                            >
+                              <ImageIcon className="w-5 h-5 text-green-500" />
+                              <span>Adicionar fotos</span>
+                            </Button>
+
+                            <div className="flex gap-2">
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => {
+                                  setPostExpanded(false);
+                                  setPostContent('');
+                                  setPostImages([]);
+                                }}
+                              >
+                                Cancelar
+                              </Button>
+                              <Button 
+                                size="sm"
+                                onClick={handleCreatePost}
+                                disabled={posting || (!postContent.trim() && postImages.length === 0)}
+                                className="bg-gradient-primary hover:shadow-glow"
+                              >
+                                {posting ? 'Publicando...' : 'Publicar'}
+                              </Button>
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex items-center gap-2 mt-3 pt-3 border-t">
-                        <Button 
-                          variant="ghost" 
-                          className="flex-1 gap-2 hover:bg-muted/50"
-                          onClick={() => setCreatePostOpen(true)}
-                        >
-                          <ImageIcon className="w-5 h-5 text-green-500" />
-                          <span className="text-muted-foreground">Foto/vídeo</span>
-                        </Button>
-                      </div>
+                      )}
                     </CardContent>
                   </Card>
-
-                  {/* Hidden Dialog Controller */}
-                  <CreatePostDialog 
-                    businessId={business.id} 
-                    onPostCreated={loadPosts}
-                    open={createPostOpen}
-                    onOpenChange={setCreatePostOpen}
-                  />
 
                   <Card className="bg-card/50 backdrop-blur-sm border-2">
                     <div className="bg-gradient-to-r from-orange-500/10 via-red-500/10 to-pink-500/10 p-6 border-b">

@@ -17,7 +17,7 @@ import {
   ArrowLeft, Save, Star, MessageSquare, Plus, Trash2, 
   Facebook, Instagram, Linkedin, Twitter, Globe, MessageCircle, 
   AlertTriangle, Info, Image as ImageIcon, Users, MessagesSquare,
-  Eye, EyeOff, ExternalLink, Upload, X
+  Eye, EyeOff, ExternalLink, Upload, X, Briefcase
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import {
@@ -98,7 +98,7 @@ interface Evaluation {
   };
 }
 
-type Section = 'info' | 'social' | 'portfolio' | 'posts' | 'evaluations' | 'settings';
+type Section = 'info' | 'company-data' | 'social' | 'portfolio' | 'posts' | 'evaluations' | 'settings';
 
 export default function BusinessEdit() {
   const { slug } = useParams();
@@ -121,7 +121,8 @@ export default function BusinessEdit() {
   const coverInputRef = useRef<HTMLInputElement>(null);
 
   const menuItems = [
-    { id: 'info' as Section, label: 'Informações', icon: Info, color: 'text-blue-500' },
+    { id: 'info' as Section, label: 'Personalização', icon: Info, color: 'text-blue-500' },
+    { id: 'company-data' as Section, label: 'Dados da Empresa', icon: Briefcase, color: 'text-indigo-500' },
     { id: 'social' as Section, label: 'Redes Sociais', icon: Globe, color: 'text-purple-500' },
     { id: 'portfolio' as Section, label: 'Portfólio', icon: ImageIcon, color: 'text-green-500' },
     { id: 'posts' as Section, label: 'Posts', icon: MessagesSquare, color: 'text-orange-500' },
@@ -588,7 +589,7 @@ export default function BusinessEdit() {
                 <p className="text-muted-foreground">@{business.slug}</p>
               </div>
 
-              {/* Informações */}
+              {/* Personalização */}
               {activeSection === 'info' && (
                 <div className="space-y-6 animate-fade-in">
                   <Card className="bg-card/50 backdrop-blur-sm border-2 overflow-hidden">
@@ -768,10 +769,16 @@ export default function BusinessEdit() {
                       </div>
                     </CardContent>
                   </Card>
+                </div>
+              )}
 
+              {/* Dados da Empresa */}
+              {activeSection === 'company-data' && (
+                <div className="animate-fade-in">
                   <Card className="bg-card/50 backdrop-blur-sm border-2">
-                    <div className="bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 p-6 border-b">
-                      <CardTitle className="text-blue-600">Dados da Empresa</CardTitle>
+                    <div className="bg-gradient-to-r from-indigo-500/10 via-blue-500/10 to-cyan-500/10 p-6 border-b">
+                      <CardTitle className="text-indigo-600">Dados da Empresa</CardTitle>
+                      <CardDescription>Informações básicas do seu negócio</CardDescription>
                     </div>
                     <CardContent className="p-6">
                       <form onSubmit={handleSave} className="space-y-4">
@@ -853,7 +860,7 @@ export default function BusinessEdit() {
                             onCheckedChange={(checked) => setBusiness({ ...business, enable_negotiation: checked })}
                           />
                         </div>
-                        <Button type="submit" className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:shadow-lg transition-all text-base py-6" disabled={saving}>
+                        <Button type="submit" className="w-full bg-gradient-to-r from-indigo-500 to-cyan-500 hover:shadow-lg transition-all text-base py-6" disabled={saving}>
                           <Save className="w-5 h-5 mr-2" />
                           {saving ? 'Salvando...' : 'Salvar Alterações'}
                         </Button>

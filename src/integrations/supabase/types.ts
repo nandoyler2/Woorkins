@@ -147,6 +147,58 @@ export type Database = {
           },
         ]
       }
+      business_admins: {
+        Row: {
+          business_id: string
+          created_at: string
+          created_by_profile_id: string | null
+          id: string
+          permissions: Json
+          profile_id: string
+          updated_at: string
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          created_by_profile_id?: string | null
+          id?: string
+          permissions?: Json
+          profile_id: string
+          updated_at?: string
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          created_by_profile_id?: string | null
+          id?: string
+          permissions?: Json
+          profile_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_admins_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "business_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_admins_created_by_profile_id_fkey"
+            columns: ["created_by_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_admins_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       business_appointments: {
         Row: {
           appointment_date: string

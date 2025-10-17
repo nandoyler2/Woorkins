@@ -212,12 +212,14 @@ export default function Plans() {
             Escolha seu Plano
           </h1>
           <p className="text-muted-foreground text-xl max-w-2xl mx-auto">
-            Quanto melhor o plano, menor a taxa de serviço e mais recursos você tem acesso!
+            Quanto melhor o plano, menor a taxa e mais recursos você tem!
           </p>
           {user && currentPlan && (
             <div className="flex items-center justify-center gap-2">
               <Badge variant="secondary" className="text-sm py-1 px-3">
-                Seu plano atual: <span className="font-bold ml-1 capitalize">{currentPlan}</span>
+                Seu plano atual: <span className="font-bold ml-1 capitalize">
+                  {currentPlan === 'basico' ? 'Grátis' : currentPlan}
+                </span>
               </Badge>
             </div>
           )}
@@ -238,11 +240,11 @@ export default function Plans() {
                     : plan.recommended
                     ? 'border-primary/60 border-2 shadow-lg'
                     : 'border-border hover:border-primary/30'
-                }`}
+                } ${plan.recommended || isCurrentPlan ? 'pt-8' : ''}`}
               >
                 {/* Badge de Plano Atual */}
                 {isCurrentPlan && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
+                  <div className="absolute top-3 left-1/2 -translate-x-1/2 z-10">
                     <Badge className="bg-gradient-primary shadow-glow">
                       <Crown className="w-3 h-3 mr-1" />
                       Seu Plano
@@ -252,8 +254,8 @@ export default function Plans() {
 
                 {/* Badge Recomendado */}
                 {plan.recommended && !isCurrentPlan && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
-                    <Badge variant="secondary" className="shadow-md">
+                  <div className="absolute top-3 left-1/2 -translate-x-1/2 z-10">
+                    <Badge className="bg-primary text-primary-foreground shadow-md">
                       <Sparkles className="w-3 h-3 mr-1" />
                       Recomendado
                     </Badge>
@@ -332,11 +334,11 @@ export default function Plans() {
                         Processando...
                       </>
                     ) : isCurrentPlan ? (
-                      'Plano Atual'
+                      'Seu Plano'
                     ) : isFree ? (
-                      'Plano Básico'
+                      'Plano Grátis'
                     ) : (
-                      `Assinar ${plan.name}`
+                      `Assinar Plano ${plan.name}`
                     )}
                   </Button>
                 </div>
@@ -351,17 +353,17 @@ export default function Plans() {
           <Card className="bg-gradient-to-br from-primary/5 to-transparent border-primary/20">
             <div className="p-6 text-center space-y-2">
               <p className="text-lg">
-                💡 <strong>Dica:</strong> A taxa é cobrada apenas quando você{' '}
-                <strong className="text-primary">recebe</strong> pagamentos.
+                💡 <strong>Importante:</strong> A taxa de recebimento é cobrada apenas quando você{' '}
+                <strong className="text-primary">recebe pagamentos</strong> pelos seus serviços.
               </p>
               <p className="text-muted-foreground">
-                Para contratar freelancers, não há taxas adicionais!
+                Criar projetos e contratar freelancers é totalmente grátis!
               </p>
             </div>
           </Card>
 
           <div className="text-center text-sm text-muted-foreground">
-            <p>Cancele ou faça upgrade do seu plano a qualquer momento.</p>
+            <p>Cancele ou altere seu plano a qualquer momento, sem burocracia.</p>
           </div>
         </div>
       </main>

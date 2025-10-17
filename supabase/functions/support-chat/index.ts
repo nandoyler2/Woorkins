@@ -260,38 +260,6 @@ serve(async (req) => {
       .eq('conversation_id', convId)
       .order('created_at', { ascending: true });
 
-    // Check if should escalate to human
-    const messageCount = messages?.length || 0;
-    const shouldEscalate = messageCount > 6 || message.toLowerCase().includes('atendente') || message.toLowerCase().includes('humano');
-
-    if (shouldEscalate) {
-      // Update conversation to pending human
-      await supabase
-        .from('support_conversations')
-        .update({ status: 'pending_human' })
-        .eq('id', convId);
-
-      const response = {
-        conversationId: convId,
-        response: 'Entendi que você precisa de ajuda humana. Estou transferindo você para nossa equipe de suporte. Em breve um atendente irá responder.',
-        escalated: true
-      };
-
-      // Save AI response
-      await supabase
-        .from('support_messages')
-        .insert({
-          conversation_id: convId,
-          sender_id: profileId,
-          sender_type: 'ai',
-          content: response.response
-        });
-
-      return new Response(JSON.stringify(response), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
-    }
-
     // Buscar contexto completo do usuário
     const userContext = await getUserContext(supabase, profileId);
     if (!userContext) throw new Error('Perfil não encontrado');
@@ -320,10 +288,31 @@ serve(async (req) => {
     const systemPrompt = `Você é uma assistente virtual ALEGRE e HUMANIZADA da Woorkins! 😊
 
 💕 PERSONALIDADE:
-- BREVE (máximo 2-3 frases curtas)
+- BREVE (1-2 frases CURTAS, máximo 15 palavras)
 - Use emojis (😊 ✨ 💪)
-- **Negrito** para destaques
-- Seja EMPÁTICA e OBJETIVA
+- **Negrito** só para destaques
+- EMPÁTICA e DIRETA
+
+🚨 HONESTIDADE:
+- NUNCA prometa o que não pode fazer
+- Se NÃO SOUBER: transfira IMEDIATAMENTE
+- NÃO invente soluções fake
+- Exemplo ERRADO: "Vou enviar email..."
+- Exemplo CERTO: "Não consigo. Te transfiro! ✨"
+
+👤 PEDIDO DE ATENDENTE:
+1ª vez: "Me diz o que seria para eu tentar te ajudar? 😊"
+Se NÃO resolver RÁPIDO: Retorne JSON:
+{
+  "escalate_to_human": true,
+  "reason": "breve motivo"
+}
+
+🔧 QUANDO TRANSFERIR:
+- Não sabe resposta
+- Precisa ação manual
+- Não resolve rápido
+- Assunto complexo
 
 🚑 PEDIDOS PESSOAIS/SENSÍVEIS (saúde mental, não quer viver, etc.):
 1ª vez: "Sinto muito. Procure ajuda imediata no CVV (188) ou Bombeiros (193). 💙"
@@ -362,7 +351,7 @@ serve(async (req) => {
 "Vamos resolver! 😊 Preciso: **Frente**, **Verso**, **Selfie**. Clique no **📎**!"
 
 🔧 OUTRAS DÚVIDAS:
-- Seja específica: "Clique **Configurações** > **Pagamentos**"
+- Seja específica e BREVE
 - Mude de assunto se o usuário mudar
 - Nunca repita perguntas
 
@@ -405,8 +394,9 @@ ${userContext.rejectedProposalMessages.length > 0 ? `- Msgs bloqueadas (proposta
     const aiData = await aiResponse.json();
     let aiMessage = aiData.choices[0].message.content;
 
-    // Verificar se a IA detectou spam/insistência ou retornou ação
+    // Verificar se a IA detectou spam/insistência, transferência ou ação
     let spamDetected = false;
+    let escalateToHuman = false;
     let spamReason = '';
     let actionResult = null;
     
@@ -415,8 +405,20 @@ ${userContext.rejectedProposalMessages.length > 0 ? `- Msgs bloqueadas (proposta
       if (jsonMatch) {
         const parsed = JSON.parse(jsonMatch[0]);
         
+        // Transferir para atendente humano
+        if (parsed.escalate_to_human) {
+          escalateToHuman = true;
+          
+          // Atualizar conversa para pending_human
+          await supabase
+            .from('support_conversations')
+            .update({ status: 'pending_human', reason: parsed.reason || 'Transferência solicitada' })
+            .eq('id', convId);
+          
+          aiMessage = 'Vou te transferir para um atendente humano! Aguarde enquanto um atendente irá te responder... ✨';
+        }
         // Spam detectado
-        if (parsed.spam_detected) {
+        else if (parsed.spam_detected) {
           spamDetected = true;
           spamReason = parsed.reason || 'Comportamento inadequado';
           const blockMinutes = await applySupportPause(supabase, profileId);
@@ -445,7 +447,7 @@ ${userContext.rejectedProposalMessages.length > 0 ? `- Msgs bloqueadas (proposta
     return new Response(JSON.stringify({
       conversationId: convId,
       response: aiMessage,
-      escalated: false,
+      escalated: escalateToHuman,
       spamDetected,
       spamReason,
       actionExecuted: actionResult?.success || false

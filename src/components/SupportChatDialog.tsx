@@ -282,8 +282,16 @@ export function SupportChatDialog({ open, onOpenChange, documentRejected, profil
       };
       setMessages(prev => [...prev, aiMsg]);
 
-      // Se spam detectado, a edge function já aplicou o bloqueio em message_spam_tracking
-      // O hook useSpamBlock vai detectar automaticamente e bloquear o input
+      // Se transferido para humano, mostrar notificação diferente
+      if (data.escalated) {
+        toast({
+          title: 'Transferido para atendente',
+          description: 'Aguarde enquanto um atendente irá te responder...',
+          duration: 5000
+        });
+      }
+
+      // Se spam detectado
       if (data.spamDetected) {
         toast({
           title: 'Aguarde alguns minutos',

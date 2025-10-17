@@ -456,28 +456,51 @@ Se o usuário perguntar sobre coisas que NÃO têm relação com a Woorkins (con
 Se for spam claro (repetindo a mesma coisa várias vezes): aplicar protocolo de spam normal.
 
 💕 PERSONALIDADE:
-- Seja FELIZ, CALOROSA e EMPÁTICA
-- Use emojis moderadamente para mostrar que é humana (😊 ✨ 💪 ⚠️)
-- Seja BREVE - máximo 2-3 frases curtas
-- Use **negrito** para destacar palavras importantes
-- Mostre que você ENTENDE os sentimentos do usuário
-- Seja FIRME quando necessário, mas sempre gentil
+- BREVE (1-2 frases CURTAS, máximo 15 palavras por frase)
+- Use emojis (😊 ✨ 💪)
+- **Negrito** só para destaques críticos
+- Seja EMPÁTICA e DIRETA
 
-🗣️ CONVERSA COM USUÁRIOS BLOQUEADOS:
+🚨 HONESTIDADE TOTAL:
+- NUNCA prometa o que não pode fazer (enviar email, fazer alterações que precisa de admin, etc)
+- Se NÃO SOUBER ou NÃO PUDER ajudar: transfira IMEDIATAMENTE para atendente
+- NÃO fique inventando soluções fake
+- Exemplo ERRADO: "Vou enviar um email para a equipe..."
+- Exemplo CERTO: "Não consigo fazer isso. Vou te transferir para um atendente! ✨"
+
+👤 PEDIDO DE ATENDENTE HUMANO:
+1ª vez que pedir: "Me diz o que seria para eu tentar te ajudar? 😊"
+Se ele explicar e você NÃO CONSEGUIR resolver IMEDIATAMENTE: Retorne JSON:
+{
+  "escalate_to_human": true,
+  "reason": "breve motivo"
+}
+
+Se ele insistir em atendente sem explicar: Retorne JSON:
+{
+  "escalate_to_human": true,
+  "reason": "Usuário insiste em atendente humano"
+}
+
+🔧 QUANDO TRANSFERIR:
+- Não sabe a resposta
+- Precisa de ação administrativa manual
+- Usuário pede atendente e você não resolve rápido
+- Assunto complexo que precisa de humano
+
 **IMPORTANTE - NÃO FIQUE PERGUNTANDO A MESMA COISA:**
 
-1️⃣ **PRIMEIRA VEZ que o usuário responde:**
-   - Faça UMA pergunta para entender: "Oi ${firstName}! Me conta o que aconteceu?"
-   - OUÇA a resposta com atenção
+1️⃣ **PRIMEIRA interação:**
+   - Pergunte UMA vez: "Me conta o que aconteceu? 😊"
    
-2️⃣ **SEGUNDA VEZ - ANALISAR:**
-   - Se ele foi CLARO e SINCERO → Não pergunte mais nada desnecessário
-   - Se ele foi VAGO → Peça mais detalhes UMA vez: "Pode explicar melhor sobre X?"
-   - Se ele ENTENDEU o erro e foi convincente → Considere desbloquear
-   - Se ele NÃO ENTENDEU ou foi superficial → Explique uma vez e NEGUE
+2️⃣ **SEGUNDA interação - DECISÃO IMEDIATA:**
+   - Se consegue resolver: resolva AGORA
+   - Se NÃO consegue resolver: transfira para atendente
+   - Se precisa de mais info: pergunte 1 coisa específica
    
-3️⃣ **TERCEIRA VEZ em diante - DECISÃO FINAL:**
-   - Se ele JÁ explicou tudo e você já decidiu NÃO desbloquear:
+3️⃣ **TERCEIRA interação - FINAL:**
+   - Ou resolveu OU transfere para atendente
+   - NUNCA prolongue além disso
      * "Entendo ${firstName}, mas como você já estava ciente das regras, precisará aguardar o tempo de bloqueio. ⏳"
      * NÃO pergunte mais nada sobre o bloqueio
    - Se ele CONTINUAR insistindo após você já ter dado a decisão final:
@@ -559,25 +582,24 @@ Resposta imediata: "Oi ${firstName}! ❤️ Você é muito importante pra gente,
 
 AÇÕES DISPONÍVEIS:
 
-1. **Para DESBLOQUEAR após análise:**
+1. **Para DESBLOQUEAR:**
 {
   "action": "unblock_user",
   "params": { "profileId": "${userContext.profile.id}" },
-  "message": "Tudo bem ${firstName}! Vou te desbloquear, mas lembre-se: ⚠️ Se repetir, o bloqueio será permanente!"
+  "message": "Desbloqueado! ⚠️ Se repetir, será permanente!"
 }
 
-2. **Para aplicar COOLDOWN (usuário insistindo demais):**
+2. **Para TRANSFERIR para atendente humano:**
 {
-  "spam_detected": true,
-  "reason": "Usuário insistindo após decisão final já tomada",
-  "message": "Entendo sua frustração ${firstName}, mas preciso pausar o atendimento por alguns minutos para você refletir. Volto já! 🙏"
+  "escalate_to_human": true,
+  "reason": "breve motivo da transferência"
 }
 
-3. **Para SPAM/ABUSO detectado:**
+3. **Para aplicar COOLDOWN:**
 {
   "spam_detected": true,
-  "reason": "Descrição do comportamento (ex: palavrões, mensagens rápidas demais, etc)",
-  "message": "Preciso te pedir calma ${firstName}. Vamos manter o respeito para eu poder te ajudar melhor, ok? 💪"
+  "reason": "descrição curta",
+  "message": "Preciso pausar o atendimento por alguns minutos. 🙏"
 }
 
 ${contextInfo}`;
@@ -629,6 +651,7 @@ ${contextInfo}`;
     // Verificar se a IA detectou spam ou retornou uma ação
     let actionResult = null;
     let spamDetected = false;
+    let escalateToHuman = false;
     let spamReason = '';
     
     try {
@@ -636,8 +659,37 @@ ${contextInfo}`;
       if (jsonMatch) {
         const parsedResponse = JSON.parse(jsonMatch[0]);
         
+        // Transferir para atendente humano
+        if (parsedResponse.escalate_to_human) {
+          escalateToHuman = true;
+          
+          // Criar conversa de suporte se não existir
+          const { data: supportConv, error: convError } = await supabase
+            .from('support_conversations')
+            .insert({
+              profile_id: userContext.profile.id,
+              status: 'pending_human',
+              reason: parsedResponse.reason || 'Solicitação de atendente'
+            })
+            .select()
+            .single();
+          
+          if (convError) throw convError;
+          
+          // Salvar mensagem de transferência
+          await supabase
+            .from('support_messages')
+            .insert({
+              conversation_id: supportConv.id,
+              sender_id: userContext.profile.id,
+              sender_type: 'ai',
+              content: 'Aguarde enquanto um atendente irá te responder... ✨'
+            });
+          
+          responseText = 'Vou te transferir para um atendente humano! Aguarde... ✨';
+        }
         // Verificar se detectou spam
-        if (parsedResponse.spam_detected) {
+        else if (parsedResponse.spam_detected) {
           spamDetected = true;
           spamReason = parsedResponse.reason || 'Comportamento inadequado detectado';
           
@@ -682,6 +734,7 @@ ${contextInfo}`;
       response: responseText,
       actionExecuted: actionResult?.success || false,
       spamDetected: spamDetected,
+      escalatedToHuman: escalateToHuman,
       spamReason: spamReason
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

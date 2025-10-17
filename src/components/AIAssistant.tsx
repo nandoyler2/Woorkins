@@ -348,6 +348,15 @@ export const AIAssistant = () => {
       // Usar streaming para mensagens longas
       const finalMessages = await streamLongMessage(data.response, updatedMessages);
 
+      // Se transferido para atendente humano
+      if (data.escalatedToHuman) {
+        toast({
+          title: 'Transferido para atendente',
+          description: 'Aguarde enquanto um atendente irá te responder...',
+          duration: 5000
+        });
+      }
+
       // Se foi desbloqueado, recarregar a página após 2 segundos
       if (data.actionExecuted) {
         setTimeout(() => {

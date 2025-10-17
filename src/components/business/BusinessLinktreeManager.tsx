@@ -681,7 +681,7 @@ export function BusinessLinktreeManager({ businessId, businessLogo }: BusinessLi
                     href="https://woorkins.com"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`text-xs opacity-60 hover:opacity-100 transition-opacity ${!config.textColor ? styles.text : ''}`}
+                    className={`text-[0.6rem] opacity-60 hover:opacity-100 transition-opacity ${!config.textColor ? styles.text : ''}`}
                     style={config.textColor ? customText : {}}
                   >
                     Gerado por Woorkins - Crie o seu

@@ -33,6 +33,8 @@ const adminMenuItems = [
   { title: "Moderação", url: "/admin/moderation", icon: Flag },
   { title: "Denúncias", url: "/admin/reports", icon: Flag },
   { title: "Negócios", url: "/admin/businesses", icon: Briefcase },
+  { title: "IA & FAQ", url: "/admin/ai-settings", icon: MessageCircle },
+  { title: "Planos", url: "/admin/plans-settings", icon: CreditCard },
   { title: "Analytics", url: "/admin/analytics", icon: BarChart3 },
   { title: "Gateway de Pagamento", url: "/admin/payment-gateway", icon: CreditCard },
   { title: "Verificação de Documentos", url: "/admin/document-verifications", icon: FileCheck },

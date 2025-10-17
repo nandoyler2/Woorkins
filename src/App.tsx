@@ -25,6 +25,7 @@ import ProjectCreate from "./pages/ProjectCreate";
 import ProjectDetails from "./pages/ProjectDetails";
 import MyProjects from "./pages/MyProjects";
 import NotFound from "./pages/NotFound";
+import Plans from "./pages/Plans";
 import { AdminLayout } from "./pages/admin/AdminLayout";
 import AdminUsers from "./pages/admin/Users";
 import AdminModeration from "./pages/admin/Moderation";
@@ -36,10 +37,14 @@ import AdminPaymentGateway from "./pages/admin/PaymentGateway";
 import AdminDocumentVerifications from "./pages/admin/DocumentVerifications";
 import AdminSupport from "./pages/admin/Support";
 import UserMessages from "./pages/admin/UserMessages";
+import AISettings from "./pages/admin/AISettings";
+import PlansSettings from "./pages/admin/PlansSettings";
 import Account from "./pages/Account";
 import Financeiro from "./pages/Financeiro";
 import Woorkoins from "./pages/Woorkoins";
 import Messages from "./pages/Messages";
+import PaymentSettings from "./pages/PaymentSettings";
+import BusinessProfile from "./pages/BusinessProfile";
 
 const queryClient = new QueryClient();
 
@@ -48,65 +53,60 @@ function AppContent() {
   const [profileId, setProfileId] = useState<string | null>(null);
 
   useEffect(() => {
-    const loadProfile = async () => {
-      if (!user) {
-        setProfileId(null);
-        return;
-      }
-
-      const { data } = await supabase
+    if (user) {
+      supabase
         .from('profiles')
         .select('id')
         .eq('user_id', user.id)
-        .single();
-
-      if (data) setProfileId(data.id);
-    };
-
-    loadProfile();
+        .single()
+        .then(({ data }) => {
+          if (data) setProfileId(data.id);
+        });
+    }
   }, [user]);
 
-  const { systemBlock } = useSystemBlock(profileId);
+  const { isBlocked } = useSystemBlock(profileId);
 
   return (
     <>
-      {systemBlock && (
-        <SystemBlockAlert
-          blockType={systemBlock.block_type}
-          reason={systemBlock.reason}
-          blockedUntil={systemBlock.blocked_until ? new Date(systemBlock.blocked_until) : null}
-          isPermanent={systemBlock.is_permanent}
-        />
-      )}
+      {isBlocked && <SystemBlockAlert profileId={profileId} />}
       <Routes>
         <Route path="/" element={<Index />} />
-        <Route path="/autenticacao" element={<Auth />} />
+        <Route path="/auth" element={<Auth />} />
+        <Route path="/profile/:username" element={<ProfileRouter />} />
+        <Route path="/projetos" element={<Projects />} />
+        <Route path="/projetos/:id" element={<ProjectDetails />} />
+        <Route path="/feed" element={<Feed />} />
+        <Route path="/empresa/:slug" element={<BusinessProfile />} />
+        <Route path="/planos" element={<Plans />} />
+        
         <Route path="/painel" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="/conta" element={<ProtectedRoute><Account /></ProtectedRoute>} />
+        <Route path="/mensagens" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
+        <Route path="/projetos/novo" element={<ProtectedRoute><ProjectCreate /></ProtectedRoute>} />
+        <Route path="/meus-projetos" element={<ProtectedRoute><MyProjects /></ProtectedRoute>} />
         <Route path="/financeiro" element={<ProtectedRoute><Financeiro /></ProtectedRoute>} />
         <Route path="/woorkoins" element={<ProtectedRoute><Woorkoins /></ProtectedRoute>} />
-        <Route path="/empresa/:slug/editar" element={<ProtectedRoute><BusinessEdit /></ProtectedRoute>} />
-        <Route path="/empresa/financas" element={<ProtectedRoute><BusinessFinances /></ProtectedRoute>} />
-        <Route path="/mensagens" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
-        <Route path="/projetos" element={<Projects />} />
-        <Route path="/projetos/novo" element={<ProtectedRoute><ProjectCreate /></ProtectedRoute>} />
-        <Route path="/projetos/:id" element={<ProjectDetails />} />
-        <Route path="/meus-projetos" element={<ProtectedRoute><MyProjects /></ProtectedRoute>} />
-        <Route path="/feed" element={<ProtectedRoute><Feed /></ProtectedRoute>} />
+        <Route path="/payment-settings" element={<ProtectedRoute><PaymentSettings /></ProtectedRoute>} />
+        <Route path="/empresa/editar" element={<ProtectedRoute><BusinessEdit /></ProtectedRoute>} />
+        <Route path="/empresa/financeiro" element={<ProtectedRoute><BusinessFinances /></ProtectedRoute>} />
+
         <Route path="/admin" element={<ProtectedRoute requireAdmin><AdminLayout /></ProtectedRoute>}>
           <Route index element={<Admin />} />
           <Route path="users" element={<AdminUsers />} />
-          <Route path="users/:userId/messages" element={<UserMessages />} />
-          <Route path="moderation" element={<AdminModeration />} />
-          <Route path="reports" element={<AdminReports />} />
           <Route path="businesses" element={<AdminBusinesses />} />
           <Route path="analytics" element={<AdminAnalytics />} />
+          <Route path="reports" element={<AdminReports />} />
           <Route path="settings" element={<AdminSettings />} />
-          <Route path="payment-gateway" element={<AdminPaymentGateway />} />
-          <Route path="document-verifications" element={<AdminDocumentVerifications />} />
           <Route path="support" element={<AdminSupport />} />
+          <Route path="document-verifications" element={<AdminDocumentVerifications />} />
+          <Route path="moderation" element={<AdminModeration />} />
+          <Route path="user-messages" element={<UserMessages />} />
+          <Route path="payment-gateway" element={<AdminPaymentGateway />} />
+          <Route path="ai-settings" element={<AISettings />} />
+          <Route path="plans-settings" element={<PlansSettings />} />
         </Route>
-        <Route path="/:slug" element={<ProfileRouter />} />
+
         <Route path="*" element={<NotFound />} />
       </Routes>
       <AIAssistant />
@@ -114,13 +114,10 @@ function AppContent() {
   );
 }
 
-const App = () => {
+function App() {
   useEffect(() => {
-    // Redirect from Lovable domain to custom domain
-    const currentHost = window.location.hostname;
-    if (currentHost.includes('lovable.app')) {
-      const newUrl = `https://woorkins.com${window.location.pathname}${window.location.search}${window.location.hash}`;
-      window.location.replace(newUrl);
+    if (window.location.hostname.includes('lovable.app')) {
+      window.location.href = window.location.href.replace('lovable.app', 'woorkins.com');
     }
   }, []);
 
@@ -141,6 +138,7 @@ const App = () => {
       </TooltipProvider>
     </QueryClientProvider>
   );
-};
+}
 
 export default App;
+

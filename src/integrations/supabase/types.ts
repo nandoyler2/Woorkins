@@ -52,6 +52,48 @@ export type Database = {
           },
         ]
       }
+      ai_faq: {
+        Row: {
+          active: boolean
+          category: string
+          created_at: string
+          created_by: string | null
+          id: string
+          keywords: string[]
+          link: string | null
+          priority: number
+          question_pattern: string
+          response: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          keywords: string[]
+          link?: string | null
+          priority?: number
+          question_pattern: string
+          response: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          keywords?: string[]
+          link?: string | null
+          priority?: number
+          question_pattern?: string
+          response?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       blocked_messages: {
         Row: {
           blocked_at: string
@@ -1390,6 +1432,45 @@ export type Database = {
           reviewed_at?: string | null
           reviewed_by?: string | null
           status?: string
+        }
+        Relationships: []
+      }
+      subscription_plans: {
+        Row: {
+          active: boolean
+          commission_percentage: number
+          created_at: string
+          display_order: number
+          features: Json
+          id: string
+          name: string
+          recommended: boolean
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          commission_percentage: number
+          created_at?: string
+          display_order?: number
+          features?: Json
+          id?: string
+          name: string
+          recommended?: boolean
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          commission_percentage?: number
+          created_at?: string
+          display_order?: number
+          features?: Json
+          id?: string
+          name?: string
+          recommended?: boolean
+          slug?: string
+          updated_at?: string
         }
         Relationships: []
       }

@@ -736,6 +736,9 @@ export function BusinessLinktreeManager({ businessId, businessLogo }: BusinessLi
                             src={config.logoUrl} 
                             alt="Logo"
                             className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                            }}
                           />
                         ) : (
                           <ImageIcon className="w-10 h-10 text-muted-foreground" />

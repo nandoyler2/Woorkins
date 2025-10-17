@@ -44,6 +44,12 @@ interface BusinessLinktreeManagerProps {
   businessLogo?: string;
 }
 
+interface BusinessData {
+  company_name: string;
+  slug?: string;
+  logo_url?: string;
+}
+
 const LAYOUTS = [
   { 
     id: 'minimal', 
@@ -143,6 +149,7 @@ export function BusinessLinktreeManager({ businessId, businessLogo }: BusinessLi
   const [editingLink, setEditingLink] = useState<Partial<CustomLink> | null>(null);
   const [loading, setLoading] = useState(false);
   const [linktreeSlug, setLinktreeSlug] = useState('');
+  const [businessData, setBusinessData] = useState<BusinessData>({ company_name: 'Seu Negócio' });
   const [config, setConfig] = useState<LinktreeConfig>({ 
     layout: 'minimal',
     primaryColor: '#FFFFFF',
@@ -181,11 +188,17 @@ export function BusinessLinktreeManager({ businessId, businessLogo }: BusinessLi
     try {
       const { data: profile } = await supabase
         .from("business_profiles")
-        .select("linktree_config, linktree_social_links, linktree_logo_url, logo_url, linktree_slug")
+        .select("linktree_config, linktree_social_links, linktree_logo_url, logo_url, linktree_slug, company_name, slug")
         .eq("id", businessId)
         .single();
 
       if (profile) {
+        setBusinessData({
+          company_name: profile.company_name || 'Seu Negócio',
+          slug: profile.slug,
+          logo_url: profile.linktree_logo_url || profile.logo_url
+        });
+
         const defaultConfig = {
           layout: 'minimal',
           primaryColor: '#FFFFFF',
@@ -519,26 +532,44 @@ export function BusinessLinktreeManager({ businessId, businessLogo }: BusinessLi
                 background: !config.primaryColor ? styles.bg : undefined
               }}
             >
-              <div className="overflow-y-auto h-full p-6 space-y-6">
-                {/* Avatar e nome */}
-                <div className="text-center space-y-3">
-                  {config.logoUrl ? (
-                    <img 
-                      src={config.logoUrl} 
-                      alt="Logo"
-                      className="w-20 h-20 rounded-full mx-auto object-cover"
-                    />
-                  ) : (
-                    <div className="w-20 h-20 rounded-full bg-white/20 mx-auto flex items-center justify-center">
-                      <Smartphone className={`w-10 h-10`} style={config.textColor ? customText : {}} />
-                    </div>
-                  )}
+              <div className="overflow-y-auto h-full p-6 space-y-6 flex flex-col">
+                {/* Avatar, nome e @ */}
+                <div className="text-center space-y-2">
+                  <a 
+                    href={businessData.slug ? `https://woorkins.com/${businessData.slug}` : '#'}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block"
+                  >
+                    {businessData.logo_url ? (
+                      <img 
+                        src={businessData.logo_url} 
+                        alt="Logo"
+                        className="w-20 h-20 rounded-full mx-auto object-cover border-2 border-white/30"
+                      />
+                    ) : (
+                      <div className="w-20 h-20 rounded-full bg-white/20 mx-auto flex items-center justify-center border-2 border-white/30">
+                        <Smartphone className={`w-10 h-10`} style={config.textColor ? customText : {}} />
+                      </div>
+                    )}
+                  </a>
                   <h3 
                     className={`font-bold text-lg ${!config.textColor ? styles.text : ''}`}
                     style={config.textColor ? customText : {}}
                   >
-                    Seu Negócio
+                    {businessData.company_name}
                   </h3>
+                  {businessData.slug && (
+                    <a 
+                      href={businessData.slug ? `https://woorkins.com/${businessData.slug}` : '#'}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`text-xs opacity-75 hover:opacity-100 transition-opacity ${!config.textColor ? styles.text : ''}`}
+                      style={config.textColor ? customText : {}}
+                    >
+                      @{businessData.slug}
+                    </a>
+                  )}
                   {config.bio && (
                     <p 
                       className={`text-sm opacity-90 ${!config.textColor ? styles.text : ''}`}
@@ -549,18 +580,18 @@ export function BusinessLinktreeManager({ businessId, businessLogo }: BusinessLi
                   )}
                 </div>
 
-                {/* Redes sociais */}
+                {/* Redes sociais em destaque */}
                 {Object.keys(socialLinks).filter(k => socialLinks[k]).length > 0 && (
-                  <div className="flex justify-center gap-3 flex-wrap">
+                  <div className="flex justify-center gap-4 flex-wrap">
                     {SOCIAL_PLATFORMS.filter(p => socialLinks[p.platform]).map((social) => {
                       const Icon = social.icon;
                       return (
                         <div
                           key={social.platform}
-                          className={`w-10 h-10 rounded-full flex items-center justify-center ${!config.secondaryColor ? styles.button : ''}`}
+                          className={`w-12 h-12 rounded-full flex items-center justify-center shadow-lg ${!config.secondaryColor ? styles.button : ''}`}
                           style={config.secondaryColor ? customButton : {}}
                         >
-                          <Icon className="w-5 h-5" />
+                          <Icon className="w-6 h-6" />
                         </div>
                       );
                     })}
@@ -568,7 +599,7 @@ export function BusinessLinktreeManager({ businessId, businessLogo }: BusinessLi
                 )}
 
                 {/* Links */}
-                <div className="space-y-3">
+                <div className="space-y-3 flex-1">
                   {links.filter(l => l.active).map((link) => (
                     <div
                       key={link.id}
@@ -587,6 +618,19 @@ export function BusinessLinktreeManager({ businessId, businessLogo }: BusinessLi
                       Adicione links para ver aqui
                     </div>
                   )}
+                </div>
+
+                {/* Rodapé */}
+                <div className="text-center pt-4 border-t border-white/10">
+                  <a 
+                    href="https://woorkins.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`text-xs opacity-60 hover:opacity-100 transition-opacity ${!config.textColor ? styles.text : ''}`}
+                    style={config.textColor ? customText : {}}
+                  >
+                    Gerado por Woorkins - Crie o seu
+                  </a>
                 </div>
               </div>
             </div>

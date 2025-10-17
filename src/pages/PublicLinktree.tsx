@@ -26,6 +26,7 @@ interface LinktreeConfig {
 
 interface BusinessProfile {
   company_name: string;
+  slug?: string;
   logo_url?: string;
   linktree_config?: LinktreeConfig;
   linktree_social_links?: Record<string, string>;
@@ -58,7 +59,7 @@ export default function PublicLinktree() {
     try {
       const { data: profile, error: profileError } = await supabase
         .from("business_profiles")
-        .select("company_name, logo_url, linktree_config, linktree_social_links, linktree_logo_url, id")
+        .select("company_name, slug, logo_url, linktree_config, linktree_social_links, linktree_logo_url, id")
         .eq("linktree_slug", slug)
         .eq("active", true)
         .single();
@@ -185,25 +186,43 @@ export default function PublicLinktree() {
       style={config.primaryColor ? customBg : {}}
     >
       <div className="w-full max-w-2xl space-y-8 py-8">
-        {/* Logo e Bio */}
-        <div className="text-center space-y-4">
-          {(business.linktree_logo_url || business.logo_url) ? (
-            <img 
-              src={business.linktree_logo_url || business.logo_url} 
-              alt={business.company_name}
-              className="w-24 h-24 rounded-full mx-auto object-cover shadow-lg"
-            />
-          ) : (
-            <div className="w-24 h-24 rounded-full bg-white/20 mx-auto flex items-center justify-center shadow-lg">
-              <Smartphone className="w-12 h-12" style={config.textColor ? customText : {}} />
-            </div>
-          )}
+        {/* Logo, Nome e @ */}
+        <div className="text-center space-y-3">
+          <a 
+            href={business.slug ? `https://woorkins.com/${business.slug}` : 'https://woorkins.com'}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block"
+          >
+            {(business.linktree_logo_url || business.logo_url) ? (
+              <img 
+                src={business.linktree_logo_url || business.logo_url} 
+                alt={business.company_name}
+                className="w-28 h-28 rounded-full mx-auto object-cover shadow-lg hover:scale-105 transition-transform"
+              />
+            ) : (
+              <div className="w-28 h-28 rounded-full bg-white/20 mx-auto flex items-center justify-center shadow-lg hover:scale-105 transition-transform">
+                <Smartphone className="w-14 h-14" style={config.textColor ? customText : {}} />
+              </div>
+            )}
+          </a>
           <h1 
             className={`text-3xl font-bold ${!config.textColor ? styles.text : ''}`}
             style={config.textColor ? customText : {}}
           >
             {business.company_name}
           </h1>
+          {business.slug && (
+            <a 
+              href={business.slug ? `https://woorkins.com/${business.slug}` : 'https://woorkins.com'}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`text-sm opacity-75 hover:opacity-100 transition-opacity ${!config.textColor ? styles.text : ''}`}
+              style={config.textColor ? customText : {}}
+            >
+              @{business.slug}
+            </a>
+          )}
           {config.bio && (
             <p 
               className={`text-lg max-w-lg mx-auto ${!config.textColor ? styles.text : ''}`}
@@ -214,9 +233,9 @@ export default function PublicLinktree() {
           )}
         </div>
 
-        {/* Redes Sociais */}
+        {/* Redes Sociais em Destaque */}
         {Object.keys(socialLinks).filter(k => socialLinks[k]).length > 0 && (
-          <div className="flex justify-center gap-4 flex-wrap">
+          <div className="flex justify-center gap-5 flex-wrap">
             {SOCIAL_PLATFORMS.filter(p => socialLinks[p.platform]).map((social) => {
               const Icon = social.icon;
               const url = socialLinks[social.platform];
@@ -237,10 +256,10 @@ export default function PublicLinktree() {
                   href={href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className={`w-14 h-14 rounded-full flex items-center justify-center transition-all ${!config.secondaryColor ? styles.button : ''}`}
+                  className={`w-16 h-16 rounded-full flex items-center justify-center transition-all hover:scale-110 shadow-lg ${!config.secondaryColor ? styles.button : ''}`}
                   style={config.secondaryColor ? customButton : {}}
                 >
-                  <Icon className="w-6 h-6" />
+                  <Icon className="w-7 h-7" />
                 </a>
               );
             })}
@@ -261,7 +280,7 @@ export default function PublicLinktree() {
                 href={href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={`block w-full p-4 text-center font-semibold text-lg transition-all ${!config.secondaryColor ? styles.button : 'rounded-lg'}`}
+                className={`block w-full p-4 text-center font-semibold text-lg transition-all hover:scale-[1.02] ${!config.secondaryColor ? styles.button : 'rounded-lg'}`}
                 style={config.secondaryColor ? customButton : {}}
               >
                 {link.title}
@@ -270,15 +289,17 @@ export default function PublicLinktree() {
           })}
         </div>
 
-        {/* Footer */}
-        <div className="text-center pt-8">
-          <Link 
-            to="/"
+        {/* Rodapé */}
+        <div className="text-center pt-8 border-t border-current/10">
+          <a 
+            href="https://woorkins.com"
+            target="_blank"
+            rel="noopener noreferrer"
             className={`text-sm opacity-60 hover:opacity-100 transition-opacity ${!config.textColor ? styles.text : ''}`}
             style={config.textColor ? customText : {}}
           >
-            Criado com Woorkins
-          </Link>
+            Gerado por Woorkins - Crie o seu
+          </a>
         </div>
       </div>
     </div>

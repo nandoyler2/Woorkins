@@ -8,6 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useSystemBlock } from '@/hooks/useSystemBlock';
 import { useAIAssistant } from '@/contexts/AIAssistantContext';
 import { useLocation } from 'react-router-dom';
+import { formatShortName, formatTimeSaoPaulo } from '@/lib/utils';
 import { useSpamBlock } from '@/hooks/useSpamBlock';
 import { SpamBlockCountdown } from './SpamBlockCountdown';
 
@@ -122,8 +123,7 @@ export const AIAssistant = () => {
 
       if (profile) {
         setProfileId(profile.id);
-        const firstName = profile.full_name?.split(' ')[0] || '';
-        const formattedName = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
+        const formattedName = formatShortName(profile.full_name) || 'usuário';
         setUserName(formattedName);
 
         // Verificar bloqueios recentes (últimas 24 horas)
@@ -172,7 +172,7 @@ export const AIAssistant = () => {
           setIsFirstMessage(false);
         } else {
           if (hasBlock && !alreadyShown) {
-            const blockMsg = `Olá, ${formattedName}! 👋\n\nPercebi que você foi bloqueado recentemente. Gostaria de falar sobre isso?`;
+            const blockMsg = `Olá ${formattedName}! 👋\n\nPercebi que você foi bloqueado recentemente. Gostaria de falar sobre isso?`;
             setMessages([{ role: 'assistant', content: blockMsg }]);
             setShowBlockQuestion(true);
             setShowTopics(false);
@@ -180,9 +180,7 @@ export const AIAssistant = () => {
             setBlockQuestionShown(true);
             sessionStorage.setItem(blockShownKey, 'true');
           } else {
-            const welcomeMsg = firstName 
-              ? `Olá, ${firstName}! 👋\n\nEm que podemos lhe ajudar? Selecione um dos tópicos abaixo ou digite o que precisa:`
-              : 'Olá! 👋\n\nEm que podemos lhe ajudar? Selecione um dos tópicos abaixo ou digite o que precisa:';
+            const welcomeMsg = `Olá ${formattedName}! 👋\n\nEm que podemos lhe ajudar? Selecione um dos tópicos abaixo ou digite o que precisa:`;
             
             setMessages([{ role: 'assistant', content: welcomeMsg }]);
             setShowTopics(true);
@@ -743,8 +741,8 @@ export const AIAssistant = () => {
                       >
                         <div className="flex justify-between items-start mb-2">
                           <span className="font-medium text-sm">
-                            {new Date(conv.archived_at).toLocaleDateString('pt-BR')} às{' '}
-                            {new Date(conv.archived_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                            {new Date(conv.archived_at).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })} às{' '}
+                            {new Date(conv.archived_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' })}
                           </span>
                         </div>
                         <p className="text-xs text-muted-foreground line-clamp-2">

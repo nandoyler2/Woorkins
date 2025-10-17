@@ -155,6 +155,7 @@ export const ProposalChat = ({ proposalId, currentUserId }: ProposalChatProps) =
               </div>
               <span className="text-xs text-muted-foreground">
                 {new Date(message.created_at).toLocaleTimeString('pt-BR', {
+                  timeZone: 'America/Sao_Paulo',
                   hour: '2-digit',
                   minute: '2-digit',
                 })}

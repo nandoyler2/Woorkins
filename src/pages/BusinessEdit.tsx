@@ -1147,21 +1147,23 @@ export default function BusinessEdit() {
             </SidebarGroup>
 
             {/* Botão de Ajuda */}
-            <SidebarGroup className="mt-auto">
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      onClick={() => openWithMessage('')}
-                      className="hover:bg-muted/50 transition-all duration-200 text-sm py-2"
-                    >
-                      <MessageCircle className="w-4 h-4 mr-2 text-muted-foreground" />
-                      <span className="text-sm">Precisa de ajuda?</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
+            {user && (
+              <SidebarGroup className="mt-auto">
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        onClick={() => openWithMessage('')}
+                        className="hover:bg-muted/50 transition-all duration-200 text-sm py-2"
+                      >
+                        <MessageCircle className="w-4 h-4 mr-2 text-muted-foreground" />
+                        <span className="text-sm">Precisa de ajuda?</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            )}
 
             {/* Final closing */}
           </SidebarContent>

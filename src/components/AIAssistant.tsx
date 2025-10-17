@@ -678,7 +678,7 @@ export const AIAssistant = () => {
   return (
     <>
       {/* Botão flutuante - 30% menor - oculto na área admin e perfis públicos */}
-      {!isOpen && !shouldHideButton && (
+      {!isOpen && !shouldHideButton && user && (
         <div
           style={{
             position: 'fixed',

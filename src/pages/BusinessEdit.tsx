@@ -1,3 +1,5 @@
+import { useState } from 'react';
+import { useParams } from 'react-router-dom';
 import {
   AlertTriangle,
   Eye,
@@ -6,100 +8,174 @@ import {
   Users,
   Zap,
 } from 'lucide-react';
-import { useRouter } from 'next/router';
-import React, { useState } from 'react';
-
-import BusinessFeature from '@/components/business/BusinessFeature';
-import BusinessForm from '@/components/business/BusinessForm';
-import SectionHeader from '@/components/SectionHeader';
+import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { useToast } from '@/components/ui/use-toast';
-import { Business } from '@/types';
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+  SidebarProvider,
+  SidebarInset,
+} from '@/components/ui/sidebar';
+import BusinessAdministrators from './BusinessAdministrators';
 
 type Section = 'posts' | 'evaluations' | 'settings' | 'tools' | 'profile-cover' | 'admin';
 
-interface BusinessEditProps {
-  business: Business;
-  features: Omit<BusinessFeature, 'isActive'>[];
-}
-
-const BusinessEdit: React.FC<BusinessEditProps> = ({ business, features }) => {
-  const router = useRouter();
-  const { toast } = useToast();
-  const [section, setSection] = useState<Section>('posts');
+const BusinessEdit = () => {
+  const { slug } = useParams();
+  const [activeSection, setActiveSection] = useState<Section>('posts');
 
   const menuItems = [
-    { id: 'posts' as Section, label: 'Posts', icon: MessagesSquare, color: 'text-orange-500' },
-    { id: 'evaluations' as Section, label: 'Avaliações', icon: Users, color: 'text-pink-500' },
-    { id: 'settings' as Section, label: 'Configurações', icon: AlertTriangle, color: 'text-red-500' },
+    { id: 'posts' as Section, label: 'Posts', icon: MessagesSquare },
+    { id: 'evaluations' as Section, label: 'Avaliações', icon: Users },
+    { id: 'settings' as Section, label: 'Configurações', icon: AlertTriangle },
   ];
 
   const customizationItems = [
-    { id: 'tools' as Section, label: 'Ferramentas', icon: Zap, color: 'text-yellow-500' },
-    { id: 'profile-cover' as Section, label: 'Perfile Capa', icon: Eye, color: 'text-blue-500' },
+    { id: 'tools' as Section, label: 'Ferramentas', icon: Zap },
+    { id: 'profile-cover' as Section, label: 'Perfil e Capa', icon: Eye },
   ];
 
   const adminItems = [
-    { id: 'admin' as Section, label: 'Administradores', icon: Shield, color: 'text-purple-500' },
+    { id: 'admin' as Section, label: 'Administradores', icon: Shield },
   ];
 
-  const availableFeatures: Omit<BusinessFeature, 'isActive'>[] = [
-    {
-      id: 'blog',
-      label: 'Blog',
-      description: 'Crie posts para o seu negócio',
-      price: 0,
-    },
-    {
-      id: 'online_store',
-      label: 'Loja Online',
-      description: 'Venda seus produtos online',
-      price: 29.90,
-    },
-    {
-      id: 'scheduling',
-      label: 'Agendamento',
-      description: 'Agende horários com seus clientes',
-      price: 19.90,
-    },
-    {
-      id: 'menu',
-      label: 'Cardápio Digital',
-      description: 'Mostre seu cardápio online',
-      price: 9.90,
-    },
-  ];
+  const renderContent = () => {
+    switch (activeSection) {
+      case 'admin':
+        return <BusinessAdministrators businessId={slug || ''} />;
+      case 'posts':
+        return (
+          <Card className="p-6">
+            <h2 className="text-2xl font-bold mb-4">Posts</h2>
+            <p className="text-muted-foreground">Gerencie os posts do seu negócio</p>
+          </Card>
+        );
+      case 'evaluations':
+        return (
+          <Card className="p-6">
+            <h2 className="text-2xl font-bold mb-4">Avaliações</h2>
+            <p className="text-muted-foreground">Visualize as avaliações do seu negócio</p>
+          </Card>
+        );
+      case 'settings':
+        return (
+          <Card className="p-6">
+            <h2 className="text-2xl font-bold mb-4">Configurações</h2>
+            <p className="text-muted-foreground">Configure seu negócio</p>
+          </Card>
+        );
+      case 'tools':
+        return (
+          <Card className="p-6">
+            <h2 className="text-2xl font-bold mb-4">Ferramentas</h2>
+            <p className="text-muted-foreground">Ferramentas ativas do seu negócio</p>
+          </Card>
+        );
+      case 'profile-cover':
+        return (
+          <Card className="p-6">
+            <h2 className="text-2xl font-bold mb-4">Perfil e Capa</h2>
+            <p className="text-muted-foreground">Personalize o perfil e a capa do seu negócio</p>
+          </Card>
+        );
+      default:
+        return null;
+    }
+  };
 
   return (
-    <div className="w-full">
-      <SectionHeader
-        title="Editar negócio"
-        description="Altere as informações do seu negócio"
-      />
-      <Separator />
+    <SidebarProvider>
+      <div className="flex min-h-screen w-full">
+        <Sidebar>
+          <SidebarContent>
+            <SidebarGroup>
+              <SidebarGroupLabel>Menu Principal</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {menuItems.map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <SidebarMenuItem key={item.id}>
+                        <SidebarMenuButton
+                          onClick={() => setActiveSection(item.id)}
+                          isActive={activeSection === item.id}
+                        >
+                          <Icon className="h-4 w-4" />
+                          <span>{item.label}</span>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    );
+                  })}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
 
-      <BusinessForm business={business} />
+            <Separator />
 
-      <Separator />
+            <SidebarGroup>
+              <SidebarGroupLabel>Personalização</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {customizationItems.map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <SidebarMenuItem key={item.id}>
+                        <SidebarMenuButton
+                          onClick={() => setActiveSection(item.id)}
+                          isActive={activeSection === item.id}
+                        >
+                          <Icon className="h-4 w-4" />
+                          <span>{item.label}</span>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    );
+                  })}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
 
-      <SectionHeader
-        title="Funcionalidades"
-        description="Adicione funcionalidades ao seu negócio"
-      />
+            <Separator />
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {availableFeatures.map((feature) => (
-          <BusinessFeature
-            key={feature.id}
-            id={feature.id}
-            label={feature.label}
-            description={feature.description}
-            price={feature.price}
-            isActive={false}
-          />
-        ))}
+            <SidebarGroup>
+              <SidebarGroupLabel>Administração</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {adminItems.map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <SidebarMenuItem key={item.id}>
+                        <SidebarMenuButton
+                          onClick={() => setActiveSection(item.id)}
+                          isActive={activeSection === item.id}
+                        >
+                          <Icon className="h-4 w-4" />
+                          <span>{item.label}</span>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    );
+                  })}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          </SidebarContent>
+        </Sidebar>
+
+        <SidebarInset>
+          <main className="flex-1 p-6">
+            <div className="max-w-7xl mx-auto">
+              <h1 className="text-3xl font-bold mb-6">Editar Negócio</h1>
+              {renderContent()}
+            </div>
+          </main>
+        </SidebarInset>
       </div>
-    </div>
+    </SidebarProvider>
   );
 };
 

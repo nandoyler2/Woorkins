@@ -667,7 +667,7 @@ export default function BusinessEdit() {
                               <Button
                                 size="icon"
                                 variant="secondary"
-                                className="h-8 w-8 rounded-full shadow-lg bg-background/80 backdrop-blur-sm hover:bg-background"
+                                className="h-8 w-8 rounded-full shadow-lg bg-green-500 hover:bg-green-600 text-white"
                                 onClick={() => coverInputRef.current?.click()}
                                 title="Alterar capa"
                               >
@@ -708,7 +708,7 @@ export default function BusinessEdit() {
                                   <Button
                                     size="icon"
                                     variant="secondary"
-                                    className="h-7 w-7 rounded-full shadow-lg bg-background/80 backdrop-blur-sm hover:bg-background"
+                                    className="h-7 w-7 rounded-full shadow-lg bg-green-500 hover:bg-green-600 text-white"
                                     onClick={() => logoInputRef.current?.click()}
                                     title="Alterar logo"
                                   >

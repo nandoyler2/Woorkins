@@ -8,11 +8,12 @@ import { useToast } from "@/hooks/use-toast";
 import { 
   Link as LinkIcon, Plus, Trash2, MoveUp, MoveDown, 
   Instagram, Facebook, Twitter, Linkedin, Youtube, 
-  Globe, Mail, MessageCircle, MapPin, Smartphone
+  Globe, Mail, MessageCircle, MapPin, Smartphone, Upload, Image as ImageIcon
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
+import { ImageUpload } from "@/components/ImageUpload";
 
 interface CustomLink {
   id: string;
@@ -726,20 +727,40 @@ export function BusinessLinktreeManager({ businessId, businessLogo }: BusinessLi
                 {/* Logo e Bio */}
                 <div className="space-y-4 pb-4 border-b">
                   <div>
-                    <Label>Logo</Label>
-                    <div className="flex gap-2 items-end">
-                      <Input
-                        value={config.logoUrl || ''}
-                        onChange={(e) => setConfig({ ...config, logoUrl: e.target.value })}
-                        placeholder="URL da logo (deixe vazio para usar a logo do perfil)"
-                        className="flex-1"
-                      />
-                      <Button 
-                        size="sm"
-                        onClick={() => saveConfig({ logoUrl: config.logoUrl })}
-                      >
-                        Salvar
-                      </Button>
+                    <Label className="mb-2">Logo do LinkTree</Label>
+                    <div className="flex gap-4 items-start">
+                      {/* Logo atual */}
+                      <div className="flex-shrink-0">
+                        <div className="w-24 h-24 rounded-lg border-2 border-border overflow-hidden bg-muted flex items-center justify-center">
+                          {config.logoUrl ? (
+                            <img 
+                              src={config.logoUrl} 
+                              alt="Logo atual"
+                              className="w-full h-full object-contain"
+                            />
+                          ) : (
+                            <ImageIcon className="w-8 h-8 text-muted-foreground" />
+                          )}
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1 text-center">Atual</p>
+                      </div>
+                      
+                      {/* Upload de nova logo */}
+                      <div className="flex-1">
+                        <ImageUpload
+                          currentImageUrl={config.logoUrl}
+                          onUpload={async (url) => {
+                            setConfig({ ...config, logoUrl: url });
+                            await saveConfig({ logoUrl: url });
+                          }}
+                          bucket="business-logos"
+                          folder={businessId}
+                          type="logo"
+                        />
+                        <p className="text-xs text-muted-foreground mt-2">
+                          Envie uma nova logo ou deixe vazio para usar a logo do perfil
+                        </p>
+                      </div>
                     </div>
                   </div>
 
@@ -929,66 +950,36 @@ export function BusinessLinktreeManager({ businessId, businessLogo }: BusinessLi
                   </RadioGroup>
                 </div>
 
-                <div>
-                  <Label>Logo</Label>
-                  <div className="flex gap-2 items-end">
-                    <Input
-                      value={config.logoUrl || ''}
-                      onChange={(e) => setConfig({ ...config, logoUrl: e.target.value })}
-                      placeholder="URL da logo (deixe vazio para usar a logo do perfil)"
-                      className="flex-1"
-                    />
-                    <Button 
-                      size="sm"
-                      onClick={() => saveConfig({ logoUrl: config.logoUrl })}
-                    >
-                      Salvar
-                    </Button>
-                  </div>
-                </div>
-
-                <div>
-                  <Label>Bio</Label>
-                  <Textarea
-                    value={config.bio || ''}
-                    onChange={(e) => setConfig({ ...config, bio: e.target.value })}
-                    placeholder="Descreva seu negócio em poucas palavras..."
-                    className="resize-none"
-                    rows={3}
-                  />
-                  <Button 
-                    size="sm" 
-                    className="mt-2"
-                    onClick={() => saveConfig({ bio: config.bio })}
-                  >
-                    Salvar Bio
-                  </Button>
-                </div>
-
-                <div className="grid grid-cols-3 gap-3">
-                  <div>
-                    <Label>Cor Primária</Label>
-                    <Input
-                      type="color"
-                      value={config.primaryColor || '#FFFFFF'}
-                      onChange={(e) => setConfig({ ...config, primaryColor: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <Label>Cor Secundária</Label>
-                    <Input
-                      type="color"
-                      value={config.secondaryColor || '#1A1A1A'}
-                      onChange={(e) => setConfig({ ...config, secondaryColor: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <Label>Cor do Texto</Label>
-                    <Input
-                      type="color"
-                      value={config.textColor || '#1A1A1A'}
-                      onChange={(e) => setConfig({ ...config, textColor: e.target.value })}
-                    />
+                <div className="space-y-3">
+                  <Label className="text-base font-medium">Cores do LinkTree</Label>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div>
+                      <Label className="text-sm">Cor de Fundo</Label>
+                      <Input
+                        type="color"
+                        value={config.primaryColor || '#FFFFFF'}
+                        onChange={(e) => setConfig({ ...config, primaryColor: e.target.value })}
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">Fundo da página</p>
+                    </div>
+                    <div>
+                      <Label className="text-sm">Cor dos Botões</Label>
+                      <Input
+                        type="color"
+                        value={config.secondaryColor || '#1A1A1A'}
+                        onChange={(e) => setConfig({ ...config, secondaryColor: e.target.value })}
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">Cor dos links</p>
+                    </div>
+                    <div>
+                      <Label className="text-sm">Cor do Texto</Label>
+                      <Input
+                        type="color"
+                        value={config.textColor || '#1A1A1A'}
+                        onChange={(e) => setConfig({ ...config, textColor: e.target.value })}
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">Texto geral</p>
+                    </div>
                   </div>
                 </div>
                 <Button 

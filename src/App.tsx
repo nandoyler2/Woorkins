@@ -35,15 +35,13 @@ import AdminModeration from "./pages/admin/Moderation";
 import AdminReports from "./pages/admin/Reports";
 import AdminBusinesses from "./pages/admin/Businesses";
 import AdminAnalytics from "./pages/admin/Analytics";
-import AdminSettings from "./pages/admin/Settings";
-import AdminPaymentGateway from "./pages/admin/PaymentGateway";
-import AdminDocumentVerifications from "./pages/admin/DocumentVerifications";
 import AdminSupport from "./pages/admin/Support";
 import UserMessages from "./pages/admin/UserMessages";
-import AISettings from "./pages/admin/AISettings";
-import PlansSettings from "./pages/admin/PlansSettings";
-import LegalPages from "./pages/admin/LegalPages";
-import SystemBlocks from "./pages/admin/SystemBlocks";
+import UsersManagement from "./pages/admin/UsersManagement";
+import ModerationManagement from "./pages/admin/ModerationManagement";
+import ContentManagement from "./pages/admin/ContentManagement";
+import FinancialManagement from "./pages/admin/FinancialManagement";
+import SettingsManagement from "./pages/admin/SettingsManagement";
 import Account from "./pages/Account";
 import Financeiro from "./pages/Financeiro";
 import Woorkoins from "./pages/Woorkoins";
@@ -100,20 +98,14 @@ function AppContent() {
 
         <Route path="/admin" element={<ProtectedRoute requireAdmin><AdminLayout /></ProtectedRoute>}>
           <Route index element={<Admin />} />
-          <Route path="users" element={<AdminUsers />} />
-          <Route path="system-blocks" element={<SystemBlocks />} />
+          <Route path="users" element={<UsersManagement />} />
+          <Route path="moderation" element={<ModerationManagement />} />
           <Route path="businesses" element={<AdminBusinesses />} />
-          <Route path="analytics" element={<AdminAnalytics />} />
-          <Route path="reports" element={<AdminReports />} />
-          <Route path="settings" element={<AdminSettings />} />
+          <Route path="content" element={<ContentManagement />} />
+          <Route path="financial" element={<FinancialManagement />} />
           <Route path="support" element={<AdminSupport />} />
-          <Route path="document-verifications" element={<AdminDocumentVerifications />} />
-          <Route path="moderation" element={<AdminModeration />} />
+          <Route path="settings" element={<SettingsManagement />} />
           <Route path="user-messages" element={<UserMessages />} />
-          <Route path="payment-gateway" element={<AdminPaymentGateway />} />
-          <Route path="ai-settings" element={<AISettings />} />
-          <Route path="plans-settings" element={<PlansSettings />} />
-          <Route path="legal-pages" element={<LegalPages />} />
         </Route>
 
         <Route path="*" element={<NotFound />} />

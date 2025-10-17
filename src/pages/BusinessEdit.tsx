@@ -669,6 +669,99 @@ export default function BusinessEdit() {
     }
   };
 
+  const handleUpdateSlug = async () => {
+    if (!business) return;
+
+    // Buscar dados atuais incluindo last_slug_change_at
+    const { data: currentBusiness } = await supabase
+      .from('business_profiles' as any)
+      .select('slug, last_slug_change_at')
+      .eq('id', business.id)
+      .single();
+
+    if (currentBusiness) {
+      const currentData = currentBusiness as any;
+      
+      // Se o slug não mudou, apenas salvar outras alterações
+      if (currentData.slug === business.slug) {
+        handleSave(new Event('submit') as any);
+        return;
+      }
+
+      // Verificar se passaram 7 dias desde a última mudança
+      const lastChange = currentData.last_slug_change_at 
+        ? new Date(currentData.last_slug_change_at) 
+        : null;
+      
+      if (lastChange) {
+        const daysSinceLastChange = Math.floor(
+          (Date.now() - lastChange.getTime()) / (1000 * 60 * 60 * 24)
+        );
+
+        if (daysSinceLastChange < 7) {
+          const daysRemaining = 7 - daysSinceLastChange;
+          toast({
+            title: 'Alteração não permitida',
+            description: `Você só pode alterar a URL a cada 7 dias. Aguarde mais ${daysRemaining} dia${daysRemaining > 1 ? 's' : ''}.`,
+            variant: 'destructive',
+          });
+          return;
+        }
+      }
+    }
+
+    // Se passou na validação, atualizar o slug
+    setSaving(true);
+
+    try {
+      // Verificar se o slug já existe
+      const { data: existingBusiness } = await supabase
+        .from('business_profiles' as any)
+        .select('id')
+        .eq('slug', business.slug)
+        .neq('id', business.id)
+        .maybeSingle();
+
+      if (existingBusiness) {
+        toast({
+          title: 'URL já em uso',
+          description: 'Esta URL já está sendo usada por outro perfil. Escolha outra.',
+          variant: 'destructive',
+        });
+        setSaving(false);
+        return;
+      }
+
+      const { error } = await supabase
+        .from('business_profiles' as any)
+        .update({
+          slug: business.slug,
+          last_slug_change_at: new Date().toISOString(),
+        })
+        .eq('id', business.id);
+
+      if (error) throw error;
+
+      toast({
+        title: 'URL atualizada!',
+        description: 'A URL do seu perfil foi atualizada com sucesso.',
+      });
+
+      // Recarregar página com nova URL
+      setTimeout(() => {
+        window.location.href = `/${business.slug}/editar`;
+      }, 1000);
+    } catch (error: any) {
+      toast({
+        title: 'Erro ao atualizar URL',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleLogoUpload = async (url: string) => {
     if (!business) return;
 
@@ -2710,9 +2803,12 @@ export default function BusinessEdit() {
                           <p className="text-xs text-muted-foreground">
                             Use apenas letras minúsculas, números e hífens
                           </p>
+                          <p className="text-xs text-amber-600 mt-2">
+                            ⚠️ A URL só pode ser alterada a cada 7 dias
+                          </p>
                         </div>
                         <Button 
-                          onClick={handleSave} 
+                          onClick={handleUpdateSlug} 
                           disabled={saving}
                           className="w-full bg-gradient-to-r from-purple-500 to-indigo-500"
                         >

@@ -800,6 +800,7 @@ export type Database = {
           facebook: string | null
           id: string
           instagram: string | null
+          last_slug_change_at: string | null
           linkedin: string | null
           linktree_config: Json | null
           linktree_logo_url: string | null
@@ -836,6 +837,7 @@ export type Database = {
           facebook?: string | null
           id?: string
           instagram?: string | null
+          last_slug_change_at?: string | null
           linkedin?: string | null
           linktree_config?: Json | null
           linktree_logo_url?: string | null
@@ -872,6 +874,7 @@ export type Database = {
           facebook?: string | null
           id?: string
           instagram?: string | null
+          last_slug_change_at?: string | null
           linkedin?: string | null
           linktree_config?: Json | null
           linktree_logo_url?: string | null

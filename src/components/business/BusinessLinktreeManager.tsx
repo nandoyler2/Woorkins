@@ -14,6 +14,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
 import { ImageUpload } from "@/components/ImageUpload";
+import { z } from "zod";
+
+// Schemas de validação
+const urlSchema = z.string().url("URL inválida. Use o formato: https://exemplo.com").trim();
+const bioSchema = z.string().max(80, "A bio deve ter no máximo 80 caracteres").trim();
 
 interface CustomLink {
   id: string;
@@ -272,14 +277,64 @@ export function BusinessLinktreeManager({ businessId, businessLogo }: BusinessLi
   };
 
   const saveSocialLinks = async (newLinks: Record<string, string>) => {
+    // Validar URLs das redes sociais
+    const validatedLinks: Record<string, string> = {};
+    
+    for (const [platform, url] of Object.entries(newLinks)) {
+      if (!url || url.trim() === '') continue;
+      
+      const trimmedUrl = url.trim();
+      
+      // Validação específica por plataforma
+      if (platform === 'email') {
+        if (!z.string().email().safeParse(trimmedUrl).success) {
+          toast({
+            title: "Email inválido",
+            description: `O email para ${platform} não é válido`,
+            variant: "destructive",
+          });
+          return;
+        }
+        validatedLinks[platform] = trimmedUrl;
+      } else if (platform === 'phone' || platform === 'whatsapp') {
+        // Permitir apenas números e alguns caracteres especiais
+        const cleanNumber = trimmedUrl.replace(/[\s()-]/g, '');
+        if (!/^\+?[\d]{10,15}$/.test(cleanNumber)) {
+          toast({
+            title: "Telefone inválido",
+            description: `O número para ${platform} deve ter entre 10 e 15 dígitos`,
+            variant: "destructive",
+          });
+          return;
+        }
+        validatedLinks[platform] = trimmedUrl;
+      } else {
+        // Para outras redes sociais, validar URL
+        let validUrl = trimmedUrl;
+        if (!validUrl.startsWith('http://') && !validUrl.startsWith('https://')) {
+          validUrl = 'https://' + validUrl;
+        }
+        
+        if (!urlSchema.safeParse(validUrl).success) {
+          toast({
+            title: "URL inválida",
+            description: `A URL para ${platform} não é válida`,
+            variant: "destructive",
+          });
+          return;
+        }
+        validatedLinks[platform] = validUrl;
+      }
+    }
+    
     try {
       const { error } = await supabase
         .from("business_profiles")
-        .update({ linktree_social_links: newLinks })
+        .update({ linktree_social_links: validatedLinks })
         .eq("id", businessId);
 
       if (error) throw error;
-      setSocialLinks(newLinks);
+      setSocialLinks(validatedLinks);
       toast({ title: "Redes sociais salvas!" });
     } catch (error: any) {
       toast({
@@ -402,14 +457,34 @@ export function BusinessLinktreeManager({ businessId, businessLogo }: BusinessLi
       return;
     }
 
+    // Validar URL
+    let validUrl = editingLink.url.trim();
+    
+    // Adicionar https:// se não tiver protocolo
+    if (!validUrl.startsWith('http://') && !validUrl.startsWith('https://')) {
+      validUrl = 'https://' + validUrl;
+    }
+
+    // Validar formato da URL
+    try {
+      urlSchema.parse(validUrl);
+    } catch (error) {
+      toast({
+        title: "URL inválida",
+        description: "Por favor, insira uma URL válida (ex: https://exemplo.com)",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
     try {
       if (editingLink.id) {
         const { error } = await supabase
           .from("business_custom_links")
           .update({
-            title: editingLink.title,
-            url: editingLink.url,
+            title: editingLink.title.trim(),
+            url: validUrl,
             icon_name: editingLink.icon_name,
           })
           .eq("id", editingLink.id);
@@ -420,8 +495,8 @@ export function BusinessLinktreeManager({ businessId, businessLogo }: BusinessLi
           .from("business_custom_links")
           .insert({
             business_id: businessId,
-            title: editingLink.title,
-            url: editingLink.url,
+            title: editingLink.title.trim(),
+            url: validUrl,
             icon_name: editingLink.icon_name,
             order_index: links.length,
             active: true,
@@ -760,18 +835,42 @@ export function BusinessLinktreeManager({ businessId, businessLogo }: BusinessLi
                   </div>
 
                   <div>
-                    <Label>Bio</Label>
+                    <div className="flex items-center justify-between mb-2">
+                      <Label>Bio</Label>
+                      <span className="text-xs text-muted-foreground">
+                        {(config.bio || '').length}/80
+                      </span>
+                    </div>
                     <Textarea
                       value={config.bio || ''}
-                      onChange={(e) => setConfig({ ...config, bio: e.target.value })}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (value.length <= 80) {
+                          setConfig({ ...config, bio: value });
+                        }
+                      }}
                       placeholder="Descreva seu negócio em poucas palavras..."
                       className="resize-none"
                       rows={3}
+                      maxLength={80}
                     />
                     <Button 
                       size="sm" 
                       className="mt-2"
-                      onClick={() => saveConfig({ bio: config.bio })}
+                      onClick={async () => {
+                        try {
+                          bioSchema.parse(config.bio || '');
+                          await saveConfig({ bio: config.bio });
+                        } catch (error) {
+                          if (error instanceof z.ZodError) {
+                            toast({
+                              title: "Erro na bio",
+                              description: error.errors[0].message,
+                              variant: "destructive",
+                            });
+                          }
+                        }
+                      }}
                     >
                       Salvar Bio
                     </Button>

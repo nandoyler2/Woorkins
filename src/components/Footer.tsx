@@ -1,5 +1,6 @@
 import { SafeImage } from '@/components/ui/safe-image';
 import logoWoorkins from '@/assets/woorkins.png';
+import { Linkedin, Instagram, Youtube, Facebook } from 'lucide-react';
 
 export function Footer() {
   return (
@@ -33,10 +34,30 @@ export function Footer() {
           <div>
             <h4 className="font-bold mb-6 text-lg">Redes Sociais</h4>
             <ul className="space-y-3 text-sm opacity-80">
-              <li><a href="https://www.linkedin.com/company/woorkins" target="_blank" rel="noopener noreferrer" className="hover:opacity-100 transition-opacity">LinkedIn</a></li>
-              <li><a href="https://www.instagram.com/woorkinsbrasil" target="_blank" rel="noopener noreferrer" className="hover:opacity-100 transition-opacity">Instagram</a></li>
-              <li><a href="https://www.youtube.com/@woorkins" target="_blank" rel="noopener noreferrer" className="hover:opacity-100 transition-opacity">YouTube</a></li>
-              <li><a href="https://facebook.com/woorkins" target="_blank" rel="noopener noreferrer" className="hover:opacity-100 transition-opacity">Facebook</a></li>
+              <li>
+                <a href="https://www.linkedin.com/company/woorkins" target="_blank" rel="noopener noreferrer" className="hover:opacity-100 transition-opacity flex items-center gap-2">
+                  <Linkedin className="w-4 h-4" />
+                  LinkedIn
+                </a>
+              </li>
+              <li>
+                <a href="https://www.instagram.com/woorkinsbrasil" target="_blank" rel="noopener noreferrer" className="hover:opacity-100 transition-opacity flex items-center gap-2">
+                  <Instagram className="w-4 h-4" />
+                  Instagram
+                </a>
+              </li>
+              <li>
+                <a href="https://www.youtube.com/@woorkins" target="_blank" rel="noopener noreferrer" className="hover:opacity-100 transition-opacity flex items-center gap-2">
+                  <Youtube className="w-4 h-4" />
+                  YouTube
+                </a>
+              </li>
+              <li>
+                <a href="https://facebook.com/woorkins" target="_blank" rel="noopener noreferrer" className="hover:opacity-100 transition-opacity flex items-center gap-2">
+                  <Facebook className="w-4 h-4" />
+                  Facebook
+                </a>
+              </li>
             </ul>
           </div>
         </div>

@@ -173,18 +173,9 @@ export default function AdminBusinesses() {
     }
 
     try {
-      // Verificar plano do usuário e quantos perfis profissionais já possui
-      const { data: targetProfile, error: profileError } = await supabase
-        .from('profiles')
-        .select('user_id')
-        .eq('id', selectedProfileId)
-        .single();
-
-      if (profileError) throw profileError;
-
-      // Obter o plano do usuário
+      // Obter plano do usuário alvo sem consultar perfis (evita RLS)
       const { data: planData, error: planError } = await supabase
-        .rpc('get_user_plan', { _user_id: targetProfile.user_id });
+        .rpc('get_user_plan_by_profile', { _profile_id: selectedProfileId });
 
       if (planError) throw planError;
 

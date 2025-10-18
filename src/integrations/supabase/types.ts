@@ -898,7 +898,7 @@ export type Database = {
           {
             foreignKeyName: "business_profiles_profile_id_fkey"
             columns: ["profile_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -2847,6 +2847,10 @@ export type Database = {
       }
       get_user_plan: {
         Args: { _user_id: string }
+        Returns: string
+      }
+      get_user_plan_by_profile: {
+        Args: { _profile_id: string }
         Returns: string
       }
       has_role: {

@@ -112,6 +112,7 @@ export default function PublicLinktree() {
         .select("company_name, slug, logo_url, linktree_config, linktree_social_links, linktree_logo_url, id")
         .eq("linktree_slug", slug)
         .eq("active", true)
+        .or('deleted.is.null,deleted.eq.false')
         .single();
 
       if (profileError || !profile) {

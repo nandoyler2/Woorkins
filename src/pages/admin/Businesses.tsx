@@ -173,19 +173,50 @@ export default function AdminBusinesses() {
     }
 
     try {
-      // Verificar se o usuário destino já tem um perfil profissional
-      const { data: existingBusiness, error: checkError } = await supabase
+      // Verificar plano do usuário e quantos perfis profissionais já possui
+      const { data: targetProfile, error: profileError } = await supabase
+        .from('profiles')
+        .select('user_id')
+        .eq('id', selectedProfileId)
+        .single();
+
+      if (profileError) throw profileError;
+
+      // Obter o plano do usuário
+      const { data: planData, error: planError } = await supabase
+        .rpc('get_user_plan', { _user_id: targetProfile.user_id });
+
+      if (planError) throw planError;
+
+      const userPlan = planData || 'free';
+
+      // Contar perfis profissionais existentes do usuário
+      const { count: businessCount, error: countError } = await supabase
         .from('business_profiles')
-        .select('id, company_name')
-        .eq('profile_id', selectedProfileId)
-        .maybeSingle();
+        .select('*', { count: 'exact', head: true })
+        .eq('profile_id', selectedProfileId);
 
-      if (checkError) throw checkError;
+      if (countError) throw countError;
 
-      if (existingBusiness) {
+      // Verificar limites por plano
+      const planLimits: { [key: string]: number | null } = {
+        free: 5,
+        pro: 10,
+        premium: null, // ilimitado
+      };
+
+      const limit = planLimits[userPlan] ?? 5; // Default para free se plano não reconhecido
+
+      if (limit !== null && (businessCount || 0) >= limit) {
+        const planNames: { [key: string]: string } = {
+          free: 'Grátis',
+          pro: 'Pro',
+          premium: 'Premium',
+        };
+
         toast({
-          title: "Erro ao transferir",
-          description: `Este usuário já possui um perfil profissional (${existingBusiness.company_name}). Um usuário não pode ter mais de um perfil profissional.`,
+          title: "Limite atingido",
+          description: `Este usuário já atingiu o limite de ${limit} perfis profissionais do plano ${planNames[userPlan] || userPlan}. ${userPlan === 'free' ? 'Upgrade para Pro (10 perfis) ou Premium (ilimitado).' : userPlan === 'pro' ? 'Upgrade para Premium para perfis ilimitados.' : ''}`,
           variant: "destructive",
         });
         return;

@@ -114,7 +114,6 @@ export default function PublicLinktree() {
         .from('business_profiles')
         .select('company_name, slug, logo_url, linktree_config, linktree_social_links, linktree_logo_url, id')
         .ilike('linktree_slug', cleanSlug)
-        .eq('active', true)
         .or('deleted.is.null,deleted.eq.false')
         .maybeSingle();
 
@@ -124,7 +123,6 @@ export default function PublicLinktree() {
           .from('business_profiles')
           .select('company_name, slug, logo_url, linktree_config, linktree_social_links, linktree_logo_url, id')
           .ilike('slug', cleanSlug)
-          .eq('active', true)
           .or('deleted.is.null,deleted.eq.false')
           .maybeSingle();
         profile = fallback as any;

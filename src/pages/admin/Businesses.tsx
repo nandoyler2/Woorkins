@@ -173,6 +173,24 @@ export default function AdminBusinesses() {
     }
 
     try {
+      // Verificar se o usuário destino já tem um perfil profissional
+      const { data: existingBusiness, error: checkError } = await supabase
+        .from('business_profiles')
+        .select('id, company_name')
+        .eq('profile_id', selectedProfileId)
+        .maybeSingle();
+
+      if (checkError) throw checkError;
+
+      if (existingBusiness) {
+        toast({
+          title: "Erro ao transferir",
+          description: `Este usuário já possui um perfil profissional (${existingBusiness.company_name}). Um usuário não pode ter mais de um perfil profissional.`,
+          variant: "destructive",
+        });
+        return;
+      }
+
       const { error } = await supabase
         .from('business_profiles')
         .update({ profile_id: selectedProfileId })

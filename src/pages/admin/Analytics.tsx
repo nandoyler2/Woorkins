@@ -18,7 +18,7 @@ export default function AdminAnalytics() {
     try {
       const [users, businesses, projects, evaluations, negotiations, transactions] = await Promise.all([
         supabase.from('profiles').select('id', { count: 'exact', head: true }),
-        supabase.from('business_profiles').select('id', { count: 'exact', head: true }),
+        supabase.from('business_profiles').select('id', { count: 'exact', head: true }).or('deleted.is.null,deleted.eq.false'),
         supabase.from('projects').select('id', { count: 'exact', head: true }),
         supabase.from('evaluations').select('id', { count: 'exact', head: true }),
         supabase.from('negotiations').select('id', { count: 'exact', head: true }).eq('status', 'open'),

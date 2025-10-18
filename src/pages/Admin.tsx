@@ -30,7 +30,7 @@ export default function Admin() {
     try {
       const [usersRes, businessRes, evaluationsRes, postsRes] = await Promise.all([
         supabase.from('profiles' as any).select('id', { count: 'exact', head: true }),
-        supabase.from('business_profiles' as any).select('id', { count: 'exact', head: true }),
+        supabase.from('business_profiles' as any).select('id', { count: 'exact', head: true }).or('deleted.is.null,deleted.eq.false'),
         supabase.from('evaluations' as any).select('id', { count: 'exact', head: true }),
         supabase.from('posts' as any).select('id', { count: 'exact', head: true }),
       ]);

@@ -403,7 +403,8 @@ export default function Dashboard() {
     const { data, error } = await supabase
       .from('business_profiles' as any)
       .select('id, company_name, category, logo_url, slug')
-      .eq('profile_id', profileId);
+      .eq('profile_id', profileId)
+      .or('deleted.is.null,deleted.eq.false');
     
     if (!error && data) {
       setBusinessProfiles(data as unknown as BusinessProfile[]);

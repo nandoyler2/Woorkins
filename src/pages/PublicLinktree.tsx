@@ -107,15 +107,30 @@ export default function PublicLinktree() {
 
   const loadLinktree = async () => {
     try {
-      const { data: profile, error: profileError } = await supabase
-        .from("business_profiles")
-        .select("company_name, slug, logo_url, linktree_config, linktree_social_links, linktree_logo_url, id")
-        .eq("linktree_slug", slug)
-        .eq("active", true)
-        .or('deleted.is.null,deleted.eq.false')
-        .single();
+      const cleanSlug = decodeURIComponent(slug || '').replace(/^@/, '').trim();
 
-      if (profileError || !profile) {
+      // 1) Buscar por linktree_slug (case-insensitive)
+      let { data: profile } = await supabase
+        .from('business_profiles')
+        .select('company_name, slug, logo_url, linktree_config, linktree_social_links, linktree_logo_url, id')
+        .ilike('linktree_slug', cleanSlug)
+        .eq('active', true)
+        .or('deleted.is.null,deleted.eq.false')
+        .maybeSingle();
+
+      // 2) Se não encontrar, tentar pelo slug público do perfil
+      if (!profile) {
+        const { data: fallback } = await supabase
+          .from('business_profiles')
+          .select('company_name, slug, logo_url, linktree_config, linktree_social_links, linktree_logo_url, id')
+          .ilike('slug', cleanSlug)
+          .eq('active', true)
+          .or('deleted.is.null,deleted.eq.false')
+          .maybeSingle();
+        profile = fallback as any;
+      }
+
+      if (!profile) {
         setNotFound(true);
         setLoading(false);
         return;
@@ -124,15 +139,15 @@ export default function PublicLinktree() {
       setBusiness(profile as unknown as BusinessProfile);
 
       const { data: linksData } = await supabase
-        .from("business_custom_links")
-        .select("*")
-        .eq("business_id", profile.id)
-        .eq("active", true)
-        .order("order_index");
+        .from('business_custom_links')
+        .select('*')
+        .eq('business_id', (profile as any).id)
+        .eq('active', true)
+        .order('order_index');
 
       setLinks(linksData || []);
     } catch (error) {
-      console.error("Erro ao carregar linktree:", error);
+      console.error('Erro ao carregar linktree:', error);
       setNotFound(true);
     } finally {
       setLoading(false);

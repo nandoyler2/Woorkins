@@ -132,7 +132,8 @@ function App() {
                       window.location.port === '8080';
     
     if (!isPreview && window.location.hostname.includes('lovable.app')) {
-      window.location.href = window.location.href.replace('lovable.app', 'woorkins.com');
+      const newUrl = `https://woorkins.com${window.location.pathname}${window.location.search}${window.location.hash}`;
+      window.location.href = newUrl;
     }
   }, []);
 

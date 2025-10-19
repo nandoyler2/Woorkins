@@ -126,7 +126,12 @@ function AppContent() {
 
 function App() {
   useEffect(() => {
-    if (window.location.hostname.includes('lovable.app')) {
+    // Não redireciona no preview do Lovable
+    const isPreview = window.location.hostname.includes('localhost') || 
+                      window.location.hostname.includes('127.0.0.1') ||
+                      window.location.port === '8080';
+    
+    if (!isPreview && window.location.hostname.includes('lovable.app')) {
       window.location.href = window.location.href.replace('lovable.app', 'woorkins.com');
     }
   }, []);

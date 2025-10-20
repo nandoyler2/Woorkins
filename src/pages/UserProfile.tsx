@@ -671,6 +671,57 @@ export default function UserProfile() {
 
             {/* Right Column - Info Sidebar */}
             <div className="space-y-4">
+              {/* Rating Highlight Card */}
+              <Card className="bg-gradient-to-br from-primary/10 to-secondary/10 border-2 border-primary/20 shadow-glow">
+                <CardContent className="p-6">
+                  <div className="text-center">
+                    <div className="flex items-center justify-center gap-2 mb-2">
+                      <Star className="w-8 h-8 text-primary fill-primary" />
+                      <span className="text-5xl font-bold text-primary">
+                        {averageRating > 0 ? averageRating.toFixed(1) : '0.0'}
+                      </span>
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-1">
+                      Baseado em <span className="font-semibold text-foreground">{evaluations.length}</span> avaliações
+                    </p>
+                    <div className="flex items-center justify-center gap-1 mt-3 mb-4">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <Star
+                          key={star}
+                          className={`w-5 h-5 ${
+                            star <= Math.round(averageRating)
+                              ? 'text-primary fill-primary'
+                              : 'text-muted-foreground'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                    <Button 
+                      onClick={() => setShowEvaluationForm(!showEvaluationForm)}
+                      className="w-full"
+                      variant={showEvaluationForm ? "outline" : "default"}
+                    >
+                      {showEvaluationForm ? 'Cancelar' : 'Avaliar Usuário'}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Formulário de Avaliação */}
+              {showEvaluationForm && profile && (
+                <Card className="bg-card/50 backdrop-blur-sm border-2 shadow-lg">
+                  <CardContent className="p-6">
+                    <ProfileEvaluationForm
+                      profileId={profile.id}
+                      onSuccess={() => {
+                        setShowEvaluationForm(false);
+                        loadUserProfile();
+                      }}
+                    />
+                  </CardContent>
+                </Card>
+              )}
+
               <Card className="bg-card/50 backdrop-blur-sm border-2 shadow-lg">
                 <CardContent className="p-6">
                   <h3 className="font-bold mb-4">Estatísticas</h3>

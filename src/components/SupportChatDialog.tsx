@@ -47,7 +47,8 @@ export function SupportChatDialog({ open, onOpenChange, documentRejected, profil
   const [showWelcome, setShowWelcome] = useState(true);
   const [activeConversations, setActiveConversations] = useState<any[]>([]);
   const [lastActivity, setLastActivity] = useState<Date>(new Date());
-  const [timeUntilClose, setTimeUntilClose] = useState<number>(600); // 10 minutos em segundos
+  const [timeUntilClose, setTimeUntilClose] = useState<number>(360); // 6 minutos em segundos (5 minutos + 1 minuto de aviso)
+  const [showInactivityWarning, setShowInactivityWarning] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messageInputRef = useRef<HTMLTextAreaElement>(null);
   const inactivityTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -100,16 +101,17 @@ export function SupportChatDialog({ open, onOpenChange, documentRejected, profil
     // Resetar timer de inatividade
     const resetInactivityTimer = () => {
       setLastActivity(new Date());
-      setTimeUntilClose(600);
+      setTimeUntilClose(360);
+      setShowInactivityWarning(false);
       
       if (inactivityTimerRef.current) {
         clearTimeout(inactivityTimerRef.current);
       }
 
       inactivityTimerRef.current = setTimeout(() => {
-        // Encerrar conversa após 10 minutos
+        // Encerrar conversa após 6 minutos
         handleCloseConversation();
-      }, 600000); // 10 minutos
+      }, 360000); // 6 minutos
     };
 
     // Countdown a cada segundo
@@ -120,6 +122,12 @@ export function SupportChatDialog({ open, onOpenChange, documentRejected, profil
     countdownTimerRef.current = setInterval(() => {
       setTimeUntilClose(prev => {
         const newTime = prev - 1;
+        
+        // Mostrar aviso quando faltar 1 minuto (60 segundos)
+        if (newTime === 60) {
+          setShowInactivityWarning(true);
+        }
+        
         if (newTime <= 0) {
           return 0;
         }
@@ -157,7 +165,8 @@ export function SupportChatDialog({ open, onOpenChange, documentRejected, profil
       setConversationId(null);
       setMessages([]);
       setShowWelcome(true);
-      setTimeUntilClose(600);
+      setTimeUntilClose(360);
+      setShowInactivityWarning(false);
     } catch (error) {
       console.error('Erro ao encerrar conversa:', error);
     }
@@ -486,7 +495,7 @@ export function SupportChatDialog({ open, onOpenChange, documentRejected, profil
 
               <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs">
                 <p className="text-amber-800">
-                  ⏱️ <strong>Importante:</strong> As conversas são encerradas automaticamente após 10 minutos de inatividade.
+                  ⏱️ <strong>Importante:</strong> As conversas são encerradas automaticamente após 5 minutos de inatividade.
                 </p>
               </div>
             </div>
@@ -501,6 +510,18 @@ export function SupportChatDialog({ open, onOpenChange, documentRejected, profil
         ) : (
           <>
             <div className="flex-1 overflow-y-auto space-y-4 p-4 bg-muted/30 rounded-lg">
+              {/* Aviso de inatividade */}
+              {showInactivityWarning && timeUntilClose <= 60 && (
+                <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-3 text-center animate-pulse">
+                  <p className="text-destructive font-semibold text-sm">
+                    ⚠️ Esta conversa será encerrada em {timeUntilClose} segundos por inatividade
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Envie uma mensagem para continuar
+                  </p>
+                </div>
+              )}
+              
               {messages.map((msg) => (
                 <div
                   key={msg.id}

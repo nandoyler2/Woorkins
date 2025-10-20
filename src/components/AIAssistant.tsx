@@ -691,14 +691,33 @@ export const AIAssistant = () => {
           }}
           className="z-50 group"
         >
-          <Button
-            onMouseDown={handleMouseDown}
-            className="h-8 px-3 rounded-full shadow-2xl bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-white flex items-center gap-1.5 animate-fade-in hover-scale border border-white/20 transition-all"
-          >
-            <GripVertical className="h-3 w-3 opacity-50 group-hover:opacity-100 transition-opacity" />
-            <MessageCircle className="h-3.5 w-3.5" />
-            <span className="font-medium text-xs">Precisa de Ajuda?</span>
-          </Button>
+          <div className="relative">
+            <Button
+              onMouseDown={handleMouseDown}
+              className="h-8 px-3 rounded-full shadow-2xl bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-white flex items-center gap-1.5 animate-fade-in hover-scale border border-white/20 transition-all"
+            >
+              <GripVertical className="h-3 w-3 opacity-50 group-hover:opacity-100 transition-opacity" />
+              <MessageCircle className="h-3.5 w-3.5" />
+              <span className="font-medium text-xs">Precisa de Ajuda?</span>
+            </Button>
+            
+            {/* Badge de mensagens não lidas */}
+            {unreadCount > 0 && (
+              <Badge 
+                variant="destructive" 
+                className="absolute -top-1 -right-1 h-4 min-w-4 flex items-center justify-center p-0 px-1 text-[9px] animate-pulse"
+              >
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </Badge>
+            )}
+            
+            {/* Aviso de inatividade fora do chat */}
+            {hasActiveConversation && unreadCount === 0 && !supportDialogOpen && (
+              <div className="absolute top-full mt-2 left-0 right-0 bg-amber-100 border border-amber-300 rounded-lg p-2 text-xs text-amber-800 shadow-lg whitespace-nowrap animate-fade-in">
+                ⚠️ Conversa ativa - responda para não ser encerrada
+              </div>
+            )}
+          </div>
         </div>
       )}
 

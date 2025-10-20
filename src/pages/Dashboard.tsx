@@ -449,9 +449,11 @@ export default function Dashboard() {
 
           return {
             id: post.id,
-            author_name: profile?.full_name || profile?.username || businessProfile?.company_name || 'Usuário',
+            // Priorizar nome da empresa para posts de business
+            author_name: businessProfile?.company_name || profile?.full_name || profile?.username || 'Usuário',
             author_role: businessProfile?.category || 'Profissional',
-            author_avatar: profile?.avatar_url || businessProfile?.logo_url || '',
+            // Priorizar logo da empresa para posts de business
+            author_avatar: businessProfile?.logo_url || profile?.avatar_url || '',
             time_ago: timeAgo,
             content: post.content,
             image_url: post.media_urls?.[0] || undefined,
@@ -459,10 +461,12 @@ export default function Dashboard() {
             comments: commentsData.count || 0,
             business_id: businessProfile?.profile_id || '',
             author_username: profile?.username,
-            // Sempre usar o username do perfil PESSOAL, não o slug do business
-            author_profile_link: profile?.username 
-              ? `/${profile.username}` 
-              : '#'
+            // Link vai para o perfil business (slug) quando disponível
+            author_profile_link: businessProfile?.slug 
+              ? `/${businessProfile.slug}` 
+              : profile?.username 
+                ? `/${profile.username}` 
+                : '#'
           };
         })
       );

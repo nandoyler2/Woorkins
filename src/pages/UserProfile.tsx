@@ -78,6 +78,8 @@ export default function UserProfile() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('sobre');
   const [showEvaluationForm, setShowEvaluationForm] = useState(false);
+  const [showAllPositive, setShowAllPositive] = useState(false);
+  const [showAllComplaints, setShowAllComplaints] = useState(false);
 
   useEffect(() => {
     loadUserProfile();
@@ -301,10 +303,18 @@ export default function UserProfile() {
                       Atividade
                     </TabsTrigger>
                     <TabsTrigger 
-                      value="avaliacoes"
-                      className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-6 py-3"
+                      value="positivas"
+                      className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-6 py-3 flex items-center gap-2"
                     >
-                      Avaliações ({evaluations.length})
+                      <ThumbsUp className="w-4 h-4" />
+                      Avaliações Positivas ({positiveEvaluations.length})
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="reclamacoes"
+                      className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-6 py-3 flex items-center gap-2"
+                    >
+                      <AlertCircle className="w-4 h-4" />
+                      Reclamações ({complaintEvaluations.length})
                     </TabsTrigger>
                   </TabsList>
 
@@ -412,32 +422,19 @@ export default function UserProfile() {
                     )}
                   </TabsContent>
 
-                  {/* Avaliações Tab */}
-                  <TabsContent value="avaliacoes" className="p-6">
-                    <div className="space-y-6">
-                      {/* Header com estatísticas */}
-                      <div className="flex items-center justify-between">
+                  {/* Avaliações Positivas Tab */}
+                  <TabsContent value="positivas" className="p-6">
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between mb-4">
                         <div>
-                          <h2 className="text-xl font-bold mb-2">Avaliações</h2>
-                          {evaluations.length > 0 && (
-                            <div className="flex items-center gap-2">
-                              <div className="flex">
-                                {[1, 2, 3, 4, 5].map((star) => (
-                                  <Star
-                                    key={star}
-                                    className={`w-5 h-5 ${
-                                      star <= Math.round(averageRating)
-                                        ? 'fill-yellow-400 text-yellow-400'
-                                        : 'text-muted-foreground'
-                                    }`}
-                                  />
-                                ))}
-                              </div>
-                              <span className="font-semibold">{averageRating.toFixed(1)}</span>
-                              <span className="text-sm text-muted-foreground">
-                                ({evaluations.length} {evaluations.length === 1 ? 'avaliação' : 'avaliações'})
-                              </span>
-                            </div>
+                          <h2 className="text-xl font-bold flex items-center gap-2">
+                            <ThumbsUp className="w-5 h-5" />
+                            Avaliações Positivas
+                          </h2>
+                          {positiveEvaluations.length > 0 && (
+                            <p className="text-sm text-muted-foreground mt-1">
+                              {positiveEvaluations.length} {positiveEvaluations.length === 1 ? 'avaliação' : 'avaliações'}
+                            </p>
                           )}
                         </div>
                         <Button onClick={() => setShowEvaluationForm(!showEvaluationForm)}>
@@ -445,7 +442,6 @@ export default function UserProfile() {
                         </Button>
                       </div>
 
-                      {/* Formulário de avaliação */}
                       {showEvaluationForm && profile && (
                         <ProfileEvaluationForm
                           profileId={profile.id}
@@ -456,27 +452,15 @@ export default function UserProfile() {
                         />
                       )}
 
-                      {/* Abas de avaliações */}
-                      <Tabs defaultValue="positivas" className="w-full">
-                        <TabsList className="grid w-full grid-cols-2">
-                          <TabsTrigger value="positivas" className="gap-2">
-                            <ThumbsUp className="w-4 h-4" />
-                            Avaliações Positivas ({positiveEvaluations.length})
-                          </TabsTrigger>
-                          <TabsTrigger value="reclamacoes" className="gap-2">
-                            <AlertCircle className="w-4 h-4" />
-                            Reclamações ({complaintEvaluations.length})
-                          </TabsTrigger>
-                        </TabsList>
-
-                        <TabsContent value="positivas" className="space-y-4 mt-4">
-                          {positiveEvaluations.length === 0 ? (
-                            <div className="text-center py-12">
-                              <ThumbsUp className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
-                              <p className="text-muted-foreground">Nenhuma avaliação positiva ainda</p>
-                            </div>
-                          ) : (
-                            positiveEvaluations.map((evaluation) => (
+                      {positiveEvaluations.length === 0 ? (
+                        <div className="text-center py-12">
+                          <ThumbsUp className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
+                          <p className="text-muted-foreground">Nenhuma avaliação positiva ainda</p>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="space-y-4">
+                            {positiveEvaluations.slice(0, showAllPositive ? undefined : 5).map((evaluation) => (
                               <Card key={evaluation.id}>
                                 <CardContent className="p-4">
                                   <div className="flex items-start gap-4">
@@ -544,18 +528,61 @@ export default function UserProfile() {
                                   </div>
                                 </CardContent>
                               </Card>
-                            ))
+                            ))}
+                          </div>
+                          {positiveEvaluations.length > 5 && (
+                            <Button
+                              variant="outline"
+                              onClick={() => setShowAllPositive(!showAllPositive)}
+                              className="w-full"
+                            >
+                              {showAllPositive ? 'Ver menos' : `Ver mais (${positiveEvaluations.length - 5} restantes)`}
+                            </Button>
                           )}
-                        </TabsContent>
+                        </>
+                      )}
+                    </div>
+                  </TabsContent>
 
-                        <TabsContent value="reclamacoes" className="space-y-4 mt-4">
-                          {complaintEvaluations.length === 0 ? (
-                            <div className="text-center py-12">
-                              <AlertCircle className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
-                              <p className="text-muted-foreground">Nenhuma reclamação ainda</p>
-                            </div>
-                          ) : (
-                            complaintEvaluations.map((evaluation) => (
+                  {/* Reclamações Tab */}
+                  <TabsContent value="reclamacoes" className="p-6">
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between mb-4">
+                        <div>
+                          <h2 className="text-xl font-bold flex items-center gap-2">
+                            <AlertCircle className="w-5 h-5" />
+                            Reclamações
+                          </h2>
+                          {complaintEvaluations.length > 0 && (
+                            <p className="text-sm text-muted-foreground mt-1">
+                              {complaintEvaluations.length} {complaintEvaluations.length === 1 ? 'reclamação' : 'reclamações'}
+                            </p>
+                          )}
+                        </div>
+                        <Button onClick={() => setShowEvaluationForm(!showEvaluationForm)}>
+                          {showEvaluationForm ? 'Cancelar' : 'Avaliar'}
+                        </Button>
+                      </div>
+
+                      {showEvaluationForm && profile && (
+                        <ProfileEvaluationForm
+                          profileId={profile.id}
+                          onSuccess={() => {
+                            setShowEvaluationForm(false);
+                            loadEvaluations(profile.id);
+                          }}
+                        />
+                      )}
+
+                      {complaintEvaluations.length === 0 ? (
+                        <div className="text-center py-12">
+                          <AlertCircle className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
+                          <p className="text-muted-foreground">Nenhuma reclamação ainda</p>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="space-y-4">
+                            {complaintEvaluations.slice(0, showAllComplaints ? undefined : 5).map((evaluation) => (
                               <Card key={evaluation.id}>
                                 <CardContent className="p-4">
                                   <div className="flex items-start gap-4">
@@ -623,10 +650,19 @@ export default function UserProfile() {
                                   </div>
                                 </CardContent>
                               </Card>
-                            ))
+                            ))}
+                          </div>
+                          {complaintEvaluations.length > 5 && (
+                            <Button
+                              variant="outline"
+                              onClick={() => setShowAllComplaints(!showAllComplaints)}
+                              className="w-full"
+                            >
+                              {showAllComplaints ? 'Ver menos' : `Ver mais (${complaintEvaluations.length - 5} restantes)`}
+                            </Button>
                           )}
-                        </TabsContent>
-                      </Tabs>
+                        </>
+                      )}
                     </div>
                   </TabsContent>
                 </Tabs>

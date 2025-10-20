@@ -14,7 +14,7 @@ import {
   DialogTrigger,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { Star, MapPin, Phone, Mail, Globe, Image as ImageIcon, MessageCircle, Facebook, Instagram, Linkedin, Twitter, Clock, Shield } from 'lucide-react';
+import { Star, MapPin, Phone, Mail, Globe, Image as ImageIcon, MessageCircle, Facebook, Instagram, Linkedin, Twitter, Clock, Shield, User as UserIcon } from 'lucide-react';
 import { Footer } from '@/components/Footer';
 import { SafeImage } from '@/components/ui/safe-image';
 import { useToast } from '@/hooks/use-toast';
@@ -31,6 +31,9 @@ import { PublicBusinessSocial } from '@/components/business/PublicBusinessSocial
 import { PublicBusinessPortfolio } from '@/components/business/PublicBusinessPortfolio';
 import { PublicBusinessLinktree } from '@/components/business/PublicBusinessLinktree';
 import { PublicBusinessAppointments } from '@/components/business/PublicBusinessAppointments';
+
+import { ProfileEvaluationForm } from '@/components/ProfileEvaluationForm';
+import { ThumbsUp, AlertCircle } from 'lucide-react';
 
 interface BusinessData {
   id: string;
@@ -63,6 +66,9 @@ interface Evaluation {
   rating: number;
   created_at: string;
   public_response: string | null;
+  evaluation_category: 'positive' | 'complaint';
+  media_urls: string[] | null;
+  media_types: string[] | null;
   profiles: {
     username: string;
     full_name: string;
@@ -76,11 +82,17 @@ export default function BusinessProfile() {
   const { user } = useAuth();
   const [business, setBusiness] = useState<BusinessData | null>(null);
   const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
+  const [positiveEvaluations, setPositiveEvaluations] = useState<Evaluation[]>([]);
+  const [complaintEvaluations, setComplaintEvaluations] = useState<Evaluation[]>([]);
+  const [averageRating, setAverageRating] = useState(0);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('inicio');
   const [showNegotiationDialog, setShowNegotiationDialog] = useState(false);
   const [currentNegotiation, setCurrentNegotiation] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [showEvaluationForm, setShowEvaluationForm] = useState(false);
+  const [showAllPositive, setShowAllPositive] = useState(false);
+  const [showAllComplaints, setShowAllComplaints] = useState(false);
 
   useEffect(() => {
     loadBusinessData();
@@ -241,6 +253,9 @@ export default function BusinessProfile() {
           rating,
           created_at,
           public_response,
+          evaluation_category,
+          media_urls,
+          media_types,
           user_id
         `)
         .eq('business_id', (businessData as any).id)
@@ -263,7 +278,18 @@ export default function BusinessProfile() {
           };
         });
 
-        setEvaluations(evaluationsWithProfiles as any);
+        const evals = evaluationsWithProfiles as unknown as Evaluation[];
+        setEvaluations(evals);
+        
+        // Separar por categoria
+        setPositiveEvaluations(evals.filter(e => e.evaluation_category === 'positive'));
+        setComplaintEvaluations(evals.filter(e => e.evaluation_category === 'complaint'));
+        
+        // Calcular média
+        const avg = evals.length > 0 
+          ? evals.reduce((acc, curr) => acc + curr.rating, 0) / evals.length 
+          : 0;
+        setAverageRating(avg);
       }
     } catch (error) {
       console.error('Error loading business:', error);
@@ -387,10 +413,18 @@ export default function BusinessProfile() {
                       Sobre
                     </TabsTrigger>
                     <TabsTrigger 
-                      value="avaliacoes"
-                      className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-6 py-3"
+                      value="positivas"
+                      className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-6 py-3 flex items-center gap-2"
                     >
-                      Avaliações
+                      <ThumbsUp className="w-4 h-4" />
+                      Avaliações Positivas ({positiveEvaluations.length})
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="reclamacoes"
+                      className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-6 py-3 flex items-center gap-2"
+                    >
+                      <AlertCircle className="w-4 h-4" />
+                      Reclamações ({complaintEvaluations.length})
                     </TabsTrigger>
                   </TabsList>
 
@@ -446,63 +480,260 @@ export default function BusinessProfile() {
                     </div>
                   </TabsContent>
 
-
-                  {/* Avaliações Tab */}
-                  <TabsContent value="avaliacoes" className="p-6">
-                    <h2 className="text-xl font-bold mb-6">Avaliações ({evaluations.length})</h2>
-                    {evaluations.length === 0 ? (
-                      <div className="text-center py-12">
-                        <Star className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
-                        <p className="text-muted-foreground">Nenhuma avaliação ainda</p>
-                      </div>
-                    ) : (
-                      <div className="space-y-4">
-                        {evaluations.map((evaluation) => (
-                          <div key={evaluation.id} className="p-4 rounded-lg border bg-card">
-                            <div className="flex items-start justify-between mb-3">
-                              <div className="flex items-center gap-3">
-                                {evaluation.profiles.avatar_url ? (
-                                  <SafeImage
-                                    src={evaluation.profiles.avatar_url}
-                                    alt={evaluation.profiles.full_name}
-                                    className="w-10 h-10 rounded-full"
-                                  />
-                                ) : (
-                                  <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-semibold">
-                                    {formatFullName(evaluation.profiles.full_name).charAt(0)}
-                                  </div>
-                                )}
-                                <div>
-                                  <p className="font-semibold">{formatFullName(evaluation.profiles.full_name)}</p>
-                                  <p className="text-xs text-muted-foreground">
-                                    @{evaluation.profiles.username}
-                                  </p>
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-1 px-2 py-1 bg-primary rounded-md">
-                                <Star className="w-3 h-3 text-primary-foreground fill-current" />
-                                <span className="text-sm font-semibold text-primary-foreground">{evaluation.rating}</span>
-                              </div>
-                            </div>
-                            <h3 className="font-semibold mb-1">{evaluation.title}</h3>
-                            <p className="text-sm text-muted-foreground mb-2">{evaluation.content}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {new Date(evaluation.created_at).toLocaleDateString('pt-BR', {
-                                day: '2-digit',
-                                month: 'long',
-                                year: 'numeric'
-                              })}
+                  {/* Avaliações Positivas Tab */}
+                  <TabsContent value="positivas" className="p-6">
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between mb-4">
+                        <div>
+                          <h2 className="text-xl font-bold flex items-center gap-2">
+                            <ThumbsUp className="w-5 h-5" />
+                            Avaliações Positivas
+                          </h2>
+                          {positiveEvaluations.length > 0 && (
+                            <p className="text-sm text-muted-foreground mt-1">
+                              {positiveEvaluations.length} {positiveEvaluations.length === 1 ? 'avaliação' : 'avaliações'}
                             </p>
-                            {evaluation.public_response && (
-                              <div className="mt-3 p-3 bg-muted/50 rounded-lg">
-                                <p className="text-xs font-semibold mb-1">Resposta da empresa:</p>
-                                <p className="text-sm">{evaluation.public_response}</p>
-                              </div>
-                            )}
-                          </div>
-                        ))}
+                          )}
+                        </div>
+                        <Button onClick={() => setShowEvaluationForm(!showEvaluationForm)}>
+                          {showEvaluationForm ? 'Cancelar' : 'Avaliar'}
+                        </Button>
                       </div>
-                    )}
+
+                      {showEvaluationForm && (
+                        <ProfileEvaluationForm
+                          profileId={business.id}
+                          onSuccess={() => {
+                            setShowEvaluationForm(false);
+                            loadBusinessData();
+                          }}
+                        />
+                      )}
+
+                      {positiveEvaluations.length === 0 ? (
+                        <div className="text-center py-12">
+                          <ThumbsUp className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
+                          <p className="text-muted-foreground">Nenhuma avaliação positiva ainda</p>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="space-y-4">
+                            {positiveEvaluations.slice(0, showAllPositive ? undefined : 5).map((evaluation) => (
+                              <Card key={evaluation.id}>
+                                <CardContent className="p-4">
+                                  <div className="flex items-start gap-4">
+                                    {evaluation.profiles.avatar_url ? (
+                                      <SafeImage
+                                        src={evaluation.profiles.avatar_url}
+                                        alt={evaluation.profiles.full_name}
+                                        className="w-12 h-12 rounded-full object-cover"
+                                      />
+                                    ) : (
+                                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center">
+                                        <ImageIcon className="w-6 h-6 text-primary" />
+                                      </div>
+                                    )}
+                                    <div className="flex-1">
+                                      <div className="flex items-center justify-between mb-2">
+                                        <div>
+                                          <p className="font-semibold">
+                                            {formatFullName(evaluation.profiles.full_name)}
+                                          </p>
+                                          <div className="flex items-center gap-2">
+                                            <div className="flex">
+                                              {[1, 2, 3, 4, 5].map((star) => (
+                                                <Star
+                                                  key={star}
+                                                  className={`w-4 h-4 ${
+                                                    star <= evaluation.rating
+                                                      ? 'fill-yellow-400 text-yellow-400'
+                                                      : 'text-muted-foreground'
+                                                  }`}
+                                                />
+                                              ))}
+                                            </div>
+                                            <span className="text-xs text-muted-foreground">
+                                              {new Date(evaluation.created_at).toLocaleDateString('pt-BR')}
+                                            </span>
+                                          </div>
+                                        </div>
+                                      </div>
+                                      <p className="text-sm text-muted-foreground mb-3">
+                                        {evaluation.content}
+                                      </p>
+                                      {evaluation.media_urls && evaluation.media_urls.length > 0 && (
+                                        <div className="grid grid-cols-3 gap-2">
+                                          {evaluation.media_urls.map((url, idx) => (
+                                            <div key={idx} className="aspect-square rounded-lg overflow-hidden">
+                                              {evaluation.media_types?.[idx] === 'video' ? (
+                                                <video
+                                                  src={url}
+                                                  controls
+                                                  className="w-full h-full object-cover"
+                                                />
+                                              ) : (
+                                                <SafeImage
+                                                  src={url}
+                                                  alt={`Mídia ${idx + 1}`}
+                                                  className="w-full h-full object-cover"
+                                                />
+                                              )}
+                                            </div>
+                                          ))}
+                                        </div>
+                                      )}
+                                      {evaluation.public_response && (
+                                        <div className="mt-3 p-3 bg-muted/50 rounded-lg">
+                                          <p className="text-xs font-semibold mb-1">Resposta da empresa:</p>
+                                          <p className="text-sm">{evaluation.public_response}</p>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            ))}
+                          </div>
+                          {positiveEvaluations.length > 5 && (
+                            <Button
+                              variant="outline"
+                              onClick={() => setShowAllPositive(!showAllPositive)}
+                              className="w-full"
+                            >
+                              {showAllPositive ? 'Ver menos' : `Ver mais (${positiveEvaluations.length - 5} restantes)`}
+                            </Button>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  </TabsContent>
+
+                  {/* Reclamações Tab */}
+                  <TabsContent value="reclamacoes" className="p-6">
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between mb-4">
+                        <div>
+                          <h2 className="text-xl font-bold flex items-center gap-2">
+                            <AlertCircle className="w-5 h-5" />
+                            Reclamações
+                          </h2>
+                          {complaintEvaluations.length > 0 && (
+                            <p className="text-sm text-muted-foreground mt-1">
+                              {complaintEvaluations.length} {complaintEvaluations.length === 1 ? 'reclamação' : 'reclamações'}
+                            </p>
+                          )}
+                        </div>
+                        <Button onClick={() => setShowEvaluationForm(!showEvaluationForm)}>
+                          {showEvaluationForm ? 'Cancelar' : 'Avaliar'}
+                        </Button>
+                      </div>
+
+                      {showEvaluationForm && (
+                        <ProfileEvaluationForm
+                          profileId={business.id}
+                          onSuccess={() => {
+                            setShowEvaluationForm(false);
+                            loadBusinessData();
+                          }}
+                        />
+                      )}
+
+                      {complaintEvaluations.length === 0 ? (
+                        <div className="text-center py-12">
+                          <AlertCircle className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
+                          <p className="text-muted-foreground">Nenhuma reclamação ainda</p>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="space-y-4">
+                            {complaintEvaluations.slice(0, showAllComplaints ? undefined : 5).map((evaluation) => (
+                              <Card key={evaluation.id}>
+                                <CardContent className="p-4">
+                                  <div className="flex items-start gap-4">
+                                    {evaluation.profiles.avatar_url ? (
+                                      <SafeImage
+                                        src={evaluation.profiles.avatar_url}
+                                        alt={evaluation.profiles.full_name}
+                                        className="w-12 h-12 rounded-full object-cover"
+                                      />
+                                    ) : (
+                                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center">
+                                        <ImageIcon className="w-6 h-6 text-primary" />
+                                      </div>
+                                    )}
+                                    <div className="flex-1">
+                                      <div className="flex items-center justify-between mb-2">
+                                        <div>
+                                          <p className="font-semibold">
+                                            {formatFullName(evaluation.profiles.full_name)}
+                                          </p>
+                                          <div className="flex items-center gap-2">
+                                            <div className="flex">
+                                              {[1, 2, 3, 4, 5].map((star) => (
+                                                <Star
+                                                  key={star}
+                                                  className={`w-4 h-4 ${
+                                                    star <= evaluation.rating
+                                                      ? 'fill-yellow-400 text-yellow-400'
+                                                      : 'text-muted-foreground'
+                                                  }`}
+                                                />
+                                              ))}
+                                            </div>
+                                            <span className="text-xs text-muted-foreground">
+                                              {new Date(evaluation.created_at).toLocaleDateString('pt-BR')}
+                                            </span>
+                                          </div>
+                                        </div>
+                                      </div>
+                                      <p className="text-sm text-muted-foreground mb-3">
+                                        {evaluation.content}
+                                      </p>
+                                      {evaluation.media_urls && evaluation.media_urls.length > 0 && (
+                                        <div className="grid grid-cols-3 gap-2">
+                                          {evaluation.media_urls.map((url, idx) => (
+                                            <div key={idx} className="aspect-square rounded-lg overflow-hidden">
+                                              {evaluation.media_types?.[idx] === 'video' ? (
+                                                <video
+                                                  src={url}
+                                                  controls
+                                                  className="w-full h-full object-cover"
+                                                />
+                                              ) : (
+                                                <SafeImage
+                                                  src={url}
+                                                  alt={`Mídia ${idx + 1}`}
+                                                  className="w-full h-full object-cover"
+                                                />
+                                              )}
+                                            </div>
+                                          ))}
+                                        </div>
+                                      )}
+                                      {evaluation.public_response && (
+                                        <div className="mt-3 p-3 bg-muted/50 rounded-lg">
+                                          <p className="text-xs font-semibold mb-1">Resposta da empresa:</p>
+                                          <p className="text-sm">{evaluation.public_response}</p>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            ))}
+                          </div>
+                          {complaintEvaluations.length > 5 && (
+                            <Button
+                              variant="outline"
+                              onClick={() => setShowAllComplaints(!showAllComplaints)}
+                              className="w-full"
+                            >
+                              {showAllComplaints ? 'Ver menos' : `Ver mais (${complaintEvaluations.length - 5} restantes)`}
+                            </Button>
+                          )}
+                        </>
+                      )}
+                    </div>
                   </TabsContent>
                 </Tabs>
               </Card>

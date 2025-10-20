@@ -354,8 +354,8 @@ export default function BusinessProfile() {
                           className="w-36 h-36 rounded-xl object-contain bg-card p-2 border-4 border-background shadow-lg"
                         />
                       ) : (
-                        <div className="w-36 h-36 rounded-xl bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center border-4 border-background shadow-lg">
-                          <ImageIcon className="w-12 h-12 text-primary" />
+                        <div className="w-36 h-36 rounded-xl bg-gradient-to-br from-primary/20 via-primary/10 to-secondary/20 flex items-center justify-center border-4 border-background shadow-lg">
+                          <ImageIcon className="w-16 h-16 text-primary/70" />
                         </div>
                       )}
                     </div>
@@ -529,8 +529,8 @@ export default function BusinessProfile() {
                                         className="w-12 h-12 rounded-full object-cover"
                                       />
                                     ) : (
-                                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center">
-                                        <ImageIcon className="w-6 h-6 text-primary" />
+                                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/20 via-primary/10 to-secondary/20 flex items-center justify-center">
+                                        <UserIcon className="w-7 h-7 text-primary/70" />
                                       </div>
                                     )}
                                     <div className="flex-1">
@@ -657,8 +657,8 @@ export default function BusinessProfile() {
                                         className="w-12 h-12 rounded-full object-cover"
                                       />
                                     ) : (
-                                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center">
-                                        <ImageIcon className="w-6 h-6 text-primary" />
+                                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/20 via-primary/10 to-secondary/20 flex items-center justify-center">
+                                        <UserIcon className="w-7 h-7 text-primary/70" />
                                       </div>
                                     )}
                                     <div className="flex-1">

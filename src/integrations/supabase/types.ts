@@ -1805,32 +1805,41 @@ export type Database = {
       portfolio_items: {
         Row: {
           business_id: string
+          category: string | null
           created_at: string
           description: string | null
+          external_link: string | null
           id: string
           media_type: string
           media_url: string
           order_index: number | null
+          tags: string[] | null
           title: string
         }
         Insert: {
           business_id: string
+          category?: string | null
           created_at?: string
           description?: string | null
+          external_link?: string | null
           id?: string
           media_type: string
           media_url: string
           order_index?: number | null
+          tags?: string[] | null
           title: string
         }
         Update: {
           business_id?: string
+          category?: string | null
           created_at?: string
           description?: string | null
+          external_link?: string | null
           id?: string
           media_type?: string
           media_url?: string
           order_index?: number | null
+          tags?: string[] | null
           title?: string
         }
         Relationships: [

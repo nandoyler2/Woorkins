@@ -31,6 +31,7 @@ import { BusinessCertificationsManager } from '@/components/business/BusinessCer
 import { BusinessAppointmentsManager } from '@/components/business/BusinessAppointmentsManager';
 import { BusinessLinktreeManager } from '@/components/business/BusinessLinktreeManager';
 import { BusinessJobVacanciesManager } from '@/components/business/BusinessJobVacanciesManager';
+import { BusinessPortfolioManager } from '@/components/business/BusinessPortfolioManager';
 import BusinessAdministrators from './BusinessAdministrators';
 import {
   AlertDialog,
@@ -87,14 +88,6 @@ interface BusinessProfile {
   active: boolean;
   average_rating: number;
   total_reviews: number;
-}
-
-interface PortfolioItem {
-  id: string;
-  title: string;
-  description: string | null;
-  media_url: string;
-  media_type: string;
 }
 
 interface BusinessPost {
@@ -157,12 +150,10 @@ export default function BusinessEdit() {
   
   const [business, setBusiness] = useState<BusinessProfile | null>(null);
   const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
-  const [portfolio, setPortfolio] = useState<PortfolioItem[]>([]);
   const [posts, setPosts] = useState<BusinessPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [responses, setResponses] = useState<{ [key: string]: string }>({});
-  const [newPortfolioItem, setNewPortfolioItem] = useState({ title: '', description: '', url: '', type: '' });
   const [activeSection, setActiveSection] = useState<Section>('dashboard');
   const [features, setFeatures] = useState<BusinessFeature[]>([]);
   const [configuringFeature, setConfiguringFeature] = useState<string | null>(null);
@@ -293,7 +284,6 @@ export default function BusinessEdit() {
 
   useEffect(() => {
     if (business?.id) {
-      loadPortfolio();
       loadPosts();
       loadFeatures();
       loadProfileViews();
@@ -406,19 +396,6 @@ export default function BusinessEdit() {
     }
   };
 
-  const loadPortfolio = async () => {
-    if (!business?.id) return;
-
-    const { data } = await supabase
-      .from('portfolio_items' as any)
-      .select('*')
-      .eq('business_id', business.id)
-      .order('order_index', { ascending: true });
-
-    if (data) {
-      setPortfolio(data as any);
-    }
-  };
 
   const loadPosts = async () => {
     if (!business?.id) return;
@@ -866,62 +843,6 @@ export default function BusinessEdit() {
     } catch (error: any) {
       toast({
         title: 'Erro ao responder',
-        description: error.message,
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const handleAddPortfolioItem = async () => {
-    if (!business || !newPortfolioItem.title || !newPortfolioItem.url) {
-      toast({
-        title: 'Campos obrigatórios',
-        description: 'Preencha título e adicione uma mídia',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    try {
-      const { error } = await supabase
-        .from('portfolio_items' as any)
-        .insert({
-          business_id: business.id,
-          title: newPortfolioItem.title,
-          description: newPortfolioItem.description,
-          media_url: newPortfolioItem.url,
-          media_type: newPortfolioItem.type,
-          order_index: portfolio.length,
-        });
-
-      if (error) throw error;
-
-      toast({ title: 'Item adicionado ao portfólio!' });
-      setNewPortfolioItem({ title: '', description: '', url: '', type: '' });
-      loadPortfolio();
-    } catch (error: any) {
-      toast({
-        title: 'Erro ao adicionar item',
-        description: error.message,
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const handleDeletePortfolioItem = async (id: string) => {
-    try {
-      const { error } = await supabase
-        .from('portfolio_items' as any)
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-
-      toast({ title: 'Item removido do portfólio' });
-      loadPortfolio();
-    } catch (error: any) {
-      toast({
-        title: 'Erro ao remover item',
         description: error.message,
         variant: 'destructive',
       });
@@ -1790,97 +1711,8 @@ export default function BusinessEdit() {
                         </Card>
                       )}
 
-                      {configuringFeature === 'portfolio' && (
-                        <>
-                          <Card className="bg-card/50 backdrop-blur-sm border-2">
-                            <div className="bg-gradient-to-r from-green-500/10 via-emerald-500/10 to-teal-500/10 p-6 border-b">
-                              <CardTitle className="text-green-600">Adicionar Item ao Portfólio</CardTitle>
-                            </div>
-                            <CardContent className="p-6">
-                              <form onSubmit={handleAddPortfolioItem} className="space-y-4">
-                                <div className="space-y-2">
-                                  <Label className="text-base font-medium">Título</Label>
-                                  <Input
-                                    value={newPortfolioItem.title}
-                                    onChange={(e) => setNewPortfolioItem({ ...newPortfolioItem, title: e.target.value })}
-                                    required
-                                    className="text-base"
-                                  />
-                                </div>
-                                <div className="space-y-2">
-                                  <Label className="text-base font-medium">Descrição (opcional)</Label>
-                                  <Textarea
-                                    value={newPortfolioItem.description}
-                                    onChange={(e) => setNewPortfolioItem({ ...newPortfolioItem, description: e.target.value })}
-                                    rows={3}
-                                    className="text-base resize-none"
-                                  />
-                                </div>
-                                <div className="space-y-2">
-                                  <Label className="text-base font-medium">Imagem ou Vídeo</Label>
-                                  <MediaUpload
-                                    onUpload={(url, type) => {
-                                      setNewPortfolioItem({ 
-                                        ...newPortfolioItem, 
-                                        url,
-                                        type: type.startsWith('image') ? 'image' : 'video'
-                                      });
-                                    }}
-                                    accept="image/*,video/*"
-                                  />
-                                </div>
-                                <Button
-                                  type="submit"
-                                  disabled={!newPortfolioItem.title || !newPortfolioItem.url}
-                                  className="w-full bg-gradient-to-r from-green-500 to-teal-500"
-                                >
-                                  <Plus className="w-5 h-5 mr-2" />
-                                  Adicionar ao Portfólio
-                                </Button>
-                              </form>
-                            </CardContent>
-                          </Card>
-
-                          <Card className="bg-card/50 backdrop-blur-sm border-2">
-                            <div className="bg-gradient-to-r from-green-500/10 via-emerald-500/10 to-teal-500/10 p-6 border-b">
-                              <CardTitle className="text-green-600">Itens do Portfólio ({portfolio.length})</CardTitle>
-                            </div>
-                            <CardContent className="p-6">
-                              {portfolio.length === 0 ? (
-                                <div className="text-center py-12">
-                                  <ImageIcon className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-                                  <p className="text-muted-foreground">Nenhum item no portfólio ainda</p>
-                                </div>
-                              ) : (
-                                <div className="grid md:grid-cols-2 gap-4">
-                                  {portfolio.map((item) => (
-                                    <div key={item.id} className="relative group border-2 rounded-lg overflow-hidden hover:shadow-lg transition-all">
-                                      {item.media_type === 'image' ? (
-                                        <img src={item.media_url} alt={item.title} className="w-full h-48 object-cover" />
-                                      ) : (
-                                        <video src={item.media_url} className="w-full h-48 object-cover" />
-                                      )}
-                                      <div className="p-3 bg-card">
-                                        <h4 className="font-medium">{item.title}</h4>
-                                        {item.description && (
-                                          <p className="text-sm text-muted-foreground line-clamp-2">{item.description}</p>
-                                        )}
-                                      </div>
-                                      <Button
-                                        variant="destructive"
-                                        size="icon"
-                                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
-                                        onClick={() => handleDeletePortfolioItem(item.id)}
-                                      >
-                                        <Trash2 className="w-4 h-4" />
-                                      </Button>
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
-                            </CardContent>
-                          </Card>
-                        </>
+                      {configuringFeature === 'portfolio' && business && (
+                        <BusinessPortfolioManager businessId={business.id} />
                       )}
                     </div>
                   ) : (

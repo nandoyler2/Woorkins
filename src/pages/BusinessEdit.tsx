@@ -869,6 +869,26 @@ export default function BusinessEdit() {
     }
   };
 
+  const handleDeleteComment = async (postId: string, commentId: string) => {
+    try {
+      const { error } = await supabase
+        .from('business_post_comments' as any)
+        .delete()
+        .eq('id', commentId);
+
+      if (error) throw error;
+
+      toast({ title: 'Comentário removido' });
+      loadPostComments(postId);
+    } catch (error: any) {
+      toast({
+        title: 'Erro ao remover comentário',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  };
+
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || !business?.id) return;
@@ -2329,8 +2349,22 @@ export default function BusinessEdit() {
                                         )}
                                         <div className="flex-1">
                                           <div className="bg-muted rounded-lg p-3">
-                                            <p className="font-semibold text-sm">{comment.profile.full_name}</p>
-                                            <p className="text-sm mt-1">{comment.content}</p>
+                                            <div className="flex items-start justify-between gap-2">
+                                              <div className="flex-1">
+                                                <p className="font-semibold text-sm">{comment.profile.full_name}</p>
+                                                <p className="text-sm mt-1">{comment.content}</p>
+                                              </div>
+                                              {comment.profile_id === currentProfileId && (
+                                                <Button
+                                                  variant="ghost"
+                                                  size="icon"
+                                                  className="h-6 w-6 shrink-0"
+                                                  onClick={() => handleDeleteComment(post.id, comment.id)}
+                                                >
+                                                  <Trash2 className="w-3 h-3" />
+                                                </Button>
+                                              )}
+                                            </div>
                                           </div>
                                           <p className="text-xs text-muted-foreground mt-1 ml-1">
                                             {new Date(comment.created_at).toLocaleDateString('pt-BR', {

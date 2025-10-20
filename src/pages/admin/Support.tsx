@@ -135,14 +135,23 @@ export default function Support() {
     setIsSending(true);
 
     try {
-      const userId = (await supabase.auth.getUser()).data.user?.id;
-      if (!userId) throw new Error('Not authenticated');
+      // Buscar profile_id do admin
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (!profile) throw new Error('Profile not found');
 
       const { error } = await supabase
         .from('support_messages')
         .insert({
           conversation_id: selectedConversation.id,
-          sender_id: userId,
+          sender_id: profile.id,
           sender_type: 'agent',
           content: newMessage
         });
@@ -150,6 +159,13 @@ export default function Support() {
       if (error) throw error;
 
       setNewMessage('');
+      
+      // Atualizar updated_at da conversa
+      await supabase
+        .from('support_conversations')
+        .update({ updated_at: new Date().toISOString() })
+        .eq('id', selectedConversation.id);
+
     } catch (error) {
       toast({
         title: 'Erro',

@@ -167,23 +167,10 @@ export default function FAQ() {
                       </div>
                     </AccordionTrigger>
                     <AccordionContent className="text-muted-foreground leading-relaxed">
-                      <div className="pt-4 pb-2 pl-9 space-y-4">
+                      <div className="pt-4 pb-2 pl-9">
                         <div className="text-base whitespace-pre-line">
                           {faq.faq_display_response || faq.response}
                         </div>
-                        {faq.keywords.length > 0 && (
-                          <div className="flex flex-wrap gap-2 pt-2">
-                            {faq.keywords.slice(0, 5).map((keyword, i) => (
-                              <Badge 
-                                key={i} 
-                                variant="secondary" 
-                                className="text-xs font-normal"
-                              >
-                                {keyword}
-                              </Badge>
-                            ))}
-                          </div>
-                        )}
                       </div>
                     </AccordionContent>
                   </AccordionItem>

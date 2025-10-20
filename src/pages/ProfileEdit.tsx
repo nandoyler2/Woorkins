@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAIAssistant } from '@/contexts/AIAssistantContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
@@ -8,13 +9,39 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { ProfilePhotoUpload } from '@/components/ProfilePhotoUpload';
 import { ImageUpload } from '@/components/ImageUpload';
+import { MediaUpload } from '@/components/MediaUpload';
+import { CreatePostDialog } from '@/components/CreatePostDialog';
 import { 
-  ArrowLeft, Save, User, Globe, Settings as SettingsIcon, Info, Eye, Image as ImageIcon
+  ArrowLeft, Save, Star, MessageSquare, Plus, Trash2, Shield,
+  Facebook, Instagram, Linkedin, Twitter, Globe, MessageCircle,
+  AlertTriangle, Info, Image as ImageIcon, Users, MessagesSquare,
+  Eye, EyeOff, ExternalLink, Upload, X, Briefcase, Zap, Play,
+  ShoppingBag, ThumbsUp, Award, Calendar, Link as LinkIcon, Briefcase as BriefcaseIcon, Building2,
+  Heart, Share2, MessageCircleMore, User
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import {
   Sidebar,
   SidebarContent,
@@ -38,33 +65,173 @@ interface Profile {
   website: string | null;
 }
 
-type Section = 'profile-cover' | 'info' | 'social' | 'settings';
+interface UserPost {
+  id: string;
+  content: string;
+  media_urls: string[] | null;
+  media_types: string[] | null;
+  created_at: string;
+}
+
+interface PostComment {
+  id: string;
+  post_id: string;
+  profile_id: string;
+  content: string;
+  created_at: string;
+  profile: {
+    full_name: string;
+    avatar_url: string | null;
+  };
+}
+
+interface PostLike {
+  id: string;
+  post_id: string;
+  profile_id: string;
+}
+
+interface Evaluation {
+  id: string;
+  user_id: string;
+  title: string;
+  content: string;
+  rating: number;
+  public_response: string | null;
+  created_at: string;
+  profiles: {
+    username: string;
+    full_name: string;
+  };
+}
+
+type Section = 'dashboard' | 'profile-cover' | 'tools' | 'posts' | 'evaluations' | 'settings' | 'admin' | 'info';
+
+interface UserFeature {
+  key: string;
+  name: string;
+  description: string;
+  icon: any;
+  color: string;
+  isActive: boolean;
+}
 
 export default function ProfileEdit() {
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { openWithMessage } = useAIAssistant();
   
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
+  const [posts, setPosts] = useState<UserPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [activeSection, setActiveSection] = useState<Section>('profile-cover');
-
+  const [responses, setResponses] = useState<{ [key: string]: string }>({});
+  const [activeSection, setActiveSection] = useState<Section>('dashboard');
+  const [features, setFeatures] = useState<UserFeature[]>([]);
+  const [configuringFeature, setConfiguringFeature] = useState<string | null>(null);
+  const [postExpanded, setPostExpanded] = useState(false);
+  const [postContent, setPostContent] = useState('');
+  const [postImages, setPostImages] = useState<string[]>([]);
+  const [posting, setPosting] = useState(false);
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [sharePostUrl, setSharePostUrl] = useState('');
+  const [showComments, setShowComments] = useState<{ [key: string]: boolean }>({});
+  const [commentText, setCommentText] = useState<{ [key: string]: string }>({});
+  const [postComments, setPostComments] = useState<{ [key: string]: PostComment[] }>({});
+  const [postLikes, setPostLikes] = useState<{ [key: string]: PostLike[] }>({});
+  const [currentProfileId, setCurrentProfileId] = useState<string | null>(null);
+  const [profileViews, setProfileViews] = useState<number>(0);
+  const [viewsLastWeek, setViewsLastWeek] = useState<number>(0);
+  const [canEditUsername, setCanEditUsername] = useState(true);
+  const [daysUntilUsernameEdit, setDaysUntilUsernameEdit] = useState(0);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
+  const menuItems = [
+    { id: 'dashboard' as Section, label: 'Dashboard', icon: Building2, color: 'text-blue-500' },
+    { id: 'posts' as Section, label: 'Posts', icon: MessagesSquare, color: 'text-orange-500' },
+    { id: 'evaluations' as Section, label: 'Avaliações', icon: Users, color: 'text-pink-500' },
+  ];
+
   const customizationItems = [
+    { id: 'tools' as Section, label: 'Ferramentas', icon: Zap, color: 'text-yellow-500' },
     { id: 'profile-cover' as Section, label: 'Perfil e Capa', icon: Eye, color: 'text-blue-500' },
     { id: 'info' as Section, label: 'Informações', icon: Info, color: 'text-indigo-500' },
   ];
 
-  const generalItems = [
-    { id: 'social' as Section, label: 'Redes Sociais', icon: Globe, color: 'text-purple-500' },
-    { id: 'settings' as Section, label: 'Configurações', icon: SettingsIcon, color: 'text-orange-500' },
+  const adminItems = [
+    { id: 'admin' as Section, label: 'Administradores', icon: Shield, color: 'text-purple-500' },
+    { id: 'settings' as Section, label: 'Configurações', icon: AlertTriangle, color: 'text-red-500' },
+  ];
+
+  const availableFeatures: Omit<UserFeature, 'isActive'>[] = [
+    {
+      key: 'social',
+      name: 'Redes Sociais',
+      description: 'Links para suas redes sociais e contatos',
+      icon: Globe,
+      color: 'bg-gradient-to-br from-purple-500 to-pink-500'
+    },
+    {
+      key: 'portfolio',
+      name: 'Portfólio',
+      description: 'Galeria de trabalhos e projetos realizados',
+      icon: ImageIcon,
+      color: 'bg-gradient-to-br from-green-500 to-teal-500'
+    },
+    {
+      key: 'testimonials',
+      name: 'Depoimentos',
+      description: 'Área para clientes deixarem avaliações',
+      icon: ThumbsUp,
+      color: 'bg-gradient-to-br from-purple-500 to-violet-500'
+    },
+    {
+      key: 'certifications',
+      name: 'Certificações e Prêmios',
+      description: 'Mostre seus certificados e conquistas',
+      icon: Award,
+      color: 'bg-gradient-to-br from-amber-500 to-orange-500'
+    },
+    {
+      key: 'linktree',
+      name: 'LinkTree Personalizado',
+      description: 'Múltiplos links externos personalizados',
+      icon: LinkIcon,
+      color: 'bg-gradient-to-br from-teal-500 to-cyan-500'
+    }
   ];
 
   useEffect(() => {
     loadProfile();
+    loadEvaluations();
+    loadCurrentProfile();
   }, [user]);
+
+  useEffect(() => {
+    if (profile?.id) {
+      loadPosts();
+      loadFeatures();
+      loadProfileViews();
+    }
+  }, [profile?.id]);
+
+  const loadCurrentProfile = async () => {
+    if (!user) return;
+    
+    const { data } = await supabase
+      .from('profiles' as any)
+      .select('id')
+      .eq('user_id', user.id)
+      .maybeSingle();
+    
+    if (data) {
+      setCurrentProfileId((data as any).id);
+    }
+  };
 
   const loadProfile = async () => {
     if (!user) return;
@@ -75,10 +242,10 @@ export default function ProfileEdit() {
       .eq('user_id', user.id)
       .maybeSingle();
 
-    if (error) {
+    if (error || !data) {
       toast({
         title: 'Erro',
-        description: 'Não foi possível carregar o perfil',
+        description: 'Perfil não encontrado',
         variant: 'destructive',
       });
       navigate('/painel');
@@ -87,6 +254,246 @@ export default function ProfileEdit() {
 
     setProfile(data);
     setLoading(false);
+  };
+
+  const loadEvaluations = async () => {
+    if (!user) return;
+
+    const { data: profileData } = await supabase
+      .from('profiles' as any)
+      .select('id')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (!profileData) return;
+
+    const { data: evaluationsData } = await supabase
+      .from('evaluations' as any)
+      .select('id, title, content, rating, created_at, public_response, user_id')
+      .eq('profile_id', (profileData as any).id)
+      .order('created_at', { ascending: false });
+
+    if (evaluationsData) {
+      const userIds = evaluationsData.map((e: any) => e.user_id);
+      const { data: profilesData } = await supabase
+        .from('profiles' as any)
+        .select('user_id, username, full_name')
+        .in('user_id', userIds);
+
+      const evaluationsWithProfiles = evaluationsData.map((evaluation: any) => {
+        const profile = profilesData?.find((p: any) => p.user_id === evaluation.user_id);
+        return {
+          ...evaluation,
+          profiles: profile || { username: 'unknown', full_name: 'Unknown User' }
+        };
+      });
+
+      setEvaluations(evaluationsWithProfiles as any);
+    }
+  };
+
+  const loadPosts = async () => {
+    if (!profile?.id) return;
+
+    const { data } = await supabase
+      .from('user_posts' as any)
+      .select('*')
+      .eq('profile_id', profile.id)
+      .order('created_at', { ascending: false });
+
+    if (data) {
+      setPosts(data as any);
+      data.forEach((post: any) => {
+        loadPostComments(post.id);
+        loadPostLikes(post.id);
+      });
+    }
+  };
+
+  const loadPostComments = async (postId: string) => {
+    const { data: commentsData } = await supabase
+      .from('user_post_comments' as any)
+      .select('id, post_id, profile_id, content, created_at')
+      .eq('post_id', postId)
+      .order('created_at', { ascending: true });
+
+    if (commentsData && commentsData.length > 0) {
+      const profileIds = commentsData.map((c: any) => c.profile_id);
+      const { data: profilesData } = await supabase
+        .from('profiles' as any)
+        .select('id, full_name, avatar_url')
+        .in('id', profileIds);
+
+      const comments = commentsData.map((comment: any) => {
+        const profile = profilesData?.find((p: any) => p.id === comment.profile_id);
+        return {
+          ...comment,
+          profile: profile || { full_name: 'Usuário', avatar_url: null }
+        };
+      });
+      
+      setPostComments(prev => ({ ...prev, [postId]: comments }));
+    } else {
+      setPostComments(prev => ({ ...prev, [postId]: [] }));
+    }
+  };
+
+  const loadPostLikes = async (postId: string) => {
+    const { data } = await supabase
+      .from('user_post_likes' as any)
+      .select('id, post_id, profile_id')
+      .eq('post_id', postId);
+
+    if (data) {
+      setPostLikes(prev => ({ ...prev, [postId]: data as any }));
+    } else {
+      setPostLikes(prev => ({ ...prev, [postId]: [] }));
+    }
+  };
+
+  const handleToggleLike = async (postId: string) => {
+    if (!currentProfileId) return;
+
+    const currentLikes = postLikes[postId] || [];
+    const isLiked = currentLikes.some(like => like.profile_id === currentProfileId);
+
+    if (isLiked) {
+      const { error } = await supabase
+        .from('user_post_likes' as any)
+        .delete()
+        .eq('post_id', postId)
+        .eq('profile_id', currentProfileId);
+
+      if (!error) {
+        loadPostLikes(postId);
+      }
+    } else {
+      const { error } = await supabase
+        .from('user_post_likes' as any)
+        .insert({
+          post_id: postId,
+          profile_id: currentProfileId
+        });
+
+      if (!error) {
+        loadPostLikes(postId);
+      }
+    }
+  };
+
+  const handleAddComment = async (postId: string) => {
+    if (!currentProfileId || !commentText[postId]?.trim()) return;
+
+    const { error } = await supabase
+      .from('user_post_comments' as any)
+      .insert({
+        post_id: postId,
+        profile_id: currentProfileId,
+        content: commentText[postId].trim()
+      });
+
+    if (!error) {
+      toast({
+        title: 'Comentário publicado!',
+        description: 'Seu comentário foi adicionado ao post.',
+      });
+      setCommentText({ ...commentText, [postId]: '' });
+      loadPostComments(postId);
+    } else {
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível adicionar o comentário.',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const loadFeatures = async () => {
+    if (!profile?.id) return;
+
+    const { data } = await supabase
+      .from('user_profile_features' as any)
+      .select('*')
+      .eq('profile_id', profile.id);
+
+    const featuresMap = new Map(data?.map((f: any) => [f.feature_key, f.is_active]) || []);
+    
+    const allFeatures = availableFeatures.map(f => ({
+      ...f,
+      isActive: featuresMap.get(f.key) || false
+    }));
+
+    allFeatures.sort((a, b) => {
+      if (a.isActive === b.isActive) return 0;
+      return a.isActive ? -1 : 1;
+    });
+
+    setFeatures(allFeatures);
+  };
+
+  const loadProfileViews = async () => {
+    if (!profile?.id) return;
+
+    const { count: totalViews } = await supabase
+      .from('profile_views' as any)
+      .select('*', { count: 'exact', head: true })
+      .eq('profile_id', profile.id);
+
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+    const { count: weekViews } = await supabase
+      .from('profile_views' as any)
+      .select('*', { count: 'exact', head: true })
+      .eq('profile_id', profile.id)
+      .gte('viewed_at', oneWeekAgo.toISOString());
+
+    setProfileViews(totalViews || 0);
+    setViewsLastWeek(weekViews || 0);
+  };
+
+  const handleToggleFeature = async (featureKey: string) => {
+    if (!profile?.id) return;
+
+    const feature = features.find(f => f.key === featureKey);
+    if (!feature) return;
+
+    const newActiveState = !feature.isActive;
+
+    setFeatures(prevFeatures => 
+      prevFeatures.map(f => 
+        f.key === featureKey ? { ...f, isActive: newActiveState } : f
+      )
+    );
+
+    if (newActiveState) {
+      setActiveSection('tools');
+    }
+
+    const { error } = await supabase
+      .from('user_profile_features' as any)
+      .upsert({
+        profile_id: profile.id,
+        feature_key: featureKey,
+        is_active: newActiveState,
+        settings: {}
+      }, {
+        onConflict: 'profile_id,feature_key'
+      });
+
+    if (!error) {
+      toast({
+        title: newActiveState ? 'Ferramenta ativada!' : 'Ferramenta desativada',
+        description: `${feature.name} foi ${newActiveState ? 'ativada' : 'desativada'}.`
+      });
+    } else {
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível atualizar a ferramenta',
+        variant: 'destructive'
+      });
+      loadFeatures();
+    }
   };
 
   const handleSave = async (e?: React.FormEvent) => {
@@ -125,9 +532,159 @@ export default function ProfileEdit() {
     loadProfile();
   };
 
+  const handleResponseSubmit = async (evaluationId: string) => {
+    const response = responses[evaluationId];
+    if (!response?.trim()) return;
+
+    try {
+      const { error } = await supabase
+        .from('evaluations' as any)
+        .update({ public_response: response })
+        .eq('id', evaluationId);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Resposta publicada!',
+        description: 'Sua resposta foi enviada.',
+      });
+
+      setResponses({ ...responses, [evaluationId]: '' });
+      loadEvaluations();
+    } catch (error: any) {
+      toast({
+        title: 'Erro ao responder',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleDeletePost = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('user_posts' as any)
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast({ title: 'Post removido' });
+      loadPosts();
+    } catch (error: any) {
+      toast({
+        title: 'Erro ao remover post',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleDeleteComment = async (postId: string, commentId: string) => {
+    try {
+      const { error } = await supabase
+        .from('user_post_comments' as any)
+        .delete()
+        .eq('id', commentId);
+
+      if (error) throw error;
+
+      toast({ title: 'Comentário removido' });
+      loadPostComments(postId);
+    } catch (error: any) {
+      toast({
+        title: 'Erro ao remover comentário',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || !profile?.id) return;
+
+    const uploadedUrls: string[] = [];
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${profile.id}/${Date.now()}_${i}.${fileExt}`;
+
+      try {
+        const { data, error } = await supabase.storage
+          .from('user-media')
+          .upload(fileName, file);
+
+        if (error) throw error;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('user-media')
+          .getPublicUrl(fileName);
+
+        uploadedUrls.push(publicUrl);
+      } catch (error: any) {
+        toast({
+          title: 'Erro ao fazer upload',
+          description: error.message,
+          variant: 'destructive',
+        });
+      }
+    }
+
+    setPostImages([...postImages, ...uploadedUrls]);
+  };
+
+  const handleRemoveImage = (index: number) => {
+    setPostImages(postImages.filter((_, i) => i !== index));
+  };
+
+  const handleCreatePost = async () => {
+    if (!postContent.trim() && postImages.length === 0) {
+      toast({
+        title: 'Post vazio',
+        description: 'Adicione texto ou imagem ao post',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setPosting(true);
+    try {
+      const { error } = await supabase
+        .from('user_posts' as any)
+        .insert({
+          profile_id: profile?.id,
+          content: postContent.trim(),
+          media_urls: postImages.length > 0 ? postImages : null,
+          media_types: postImages.length > 0 ? postImages.map(() => 'image') : null,
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: 'Post publicado!',
+        description: 'Seu post foi compartilhado.',
+      });
+
+      setPostContent('');
+      setPostImages([]);
+      setPostExpanded(false);
+      loadPosts();
+    } catch (error: any) {
+      toast({
+        title: 'Erro ao publicar',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setPosting(false);
+    }
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-muted/20 to-background">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
       </div>
     );
@@ -153,6 +710,36 @@ export default function ProfileEdit() {
                   </Link>
                 </Button>
               </div>
+
+              <SidebarGroup>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {menuItems.map((item) => {
+                      const Icon = item.icon;
+                      const isActive = activeSection === item.id;
+                      return (
+                        <SidebarMenuItem key={item.id}>
+                          <SidebarMenuButton
+                            onClick={() => {
+                              setActiveSection(item.id);
+                              if (item.id === 'tools') {
+                                setConfiguringFeature(null);
+                              }
+                            }}
+                            className={`
+                              ${isActive ? 'bg-primary/10 text-primary font-medium' : 'hover:bg-muted/50'}
+                              transition-all duration-200
+                            `}
+                          >
+                            <Icon className={`w-5 h-5 mr-3 ${isActive ? item.color : 'text-muted-foreground'}`} />
+                            <span>{item.label}</span>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      );
+                    })}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
 
               <SidebarGroup>
                 <SidebarGroupLabel className="px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
@@ -184,11 +771,11 @@ export default function ProfileEdit() {
 
               <SidebarGroup>
                 <SidebarGroupLabel className="px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                  Geral
+                  Administração
                 </SidebarGroupLabel>
                 <SidebarGroupContent>
                   <SidebarMenu>
-                    {generalItems.map((item) => {
+                    {adminItems.map((item) => {
                       const Icon = item.icon;
                       const isActive = activeSection === item.id;
                       return (
@@ -215,11 +802,102 @@ export default function ProfileEdit() {
           {/* Main Content */}
           <main className="flex-1 overflow-auto">
             <div className="container mx-auto px-6 py-8 max-w-5xl">
-              {/* Header do perfil */}
-              <div className="mb-8">
-                <h1 className="text-3xl font-bold mb-2">{profile.full_name || profile.username}</h1>
-                <p className="text-muted-foreground">@{profile.username}</p>
-              </div>
+              {/* Dashboard */}
+              {activeSection === 'dashboard' && (
+                <div className="space-y-6 animate-fade-in">
+                  <div>
+                    <h1 className="text-3xl font-bold mb-2">{profile.full_name || profile.username}</h1>
+                    <p className="text-muted-foreground">@{profile.username}</p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <Card className="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border-2 border-blue-500/20">
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-blue-600">
+                          <Eye className="w-5 h-5" />
+                          Visualizações
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-3xl font-bold">{profileViews}</div>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          +{viewsLastWeek} esta semana
+                        </p>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border-2 border-purple-500/20">
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-purple-600">
+                          <MessagesSquare className="w-5 h-5" />
+                          Posts
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-3xl font-bold">{posts.length}</div>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Publicações totais
+                        </p>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="bg-gradient-to-br from-amber-500/10 to-orange-500/10 border-2 border-amber-500/20">
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-amber-600">
+                          <Star className="w-5 h-5" />
+                          Avaliações
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-3xl font-bold">{evaluations.length}</div>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Total de avaliações
+                        </p>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  <Card className="bg-card/50 backdrop-blur-sm border-2">
+                    <CardHeader>
+                      <CardTitle>Ações Rápidas</CardTitle>
+                    </CardHeader>
+                    <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <Button
+                        variant="outline"
+                        className="h-auto flex-col py-4 gap-2"
+                        onClick={() => setActiveSection('posts')}
+                      >
+                        <MessagesSquare className="w-6 h-6" />
+                        <span className="text-sm">Criar Post</span>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="h-auto flex-col py-4 gap-2"
+                        onClick={() => setActiveSection('tools')}
+                      >
+                        <Zap className="w-6 h-6" />
+                        <span className="text-sm">Ferramentas</span>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="h-auto flex-col py-4 gap-2"
+                        onClick={() => setActiveSection('profile-cover')}
+                      >
+                        <User className="w-6 h-6" />
+                        <span className="text-sm">Editar Foto</span>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="h-auto flex-col py-4 gap-2"
+                        onClick={() => setActiveSection('info')}
+                      >
+                        <Info className="w-6 h-6" />
+                        <span className="text-sm">Informações</span>
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
 
               {/* Perfil e Capa */}
               {activeSection === 'profile-cover' && (
@@ -241,6 +919,322 @@ export default function ProfileEdit() {
                       />
                     </CardContent>
                   </Card>
+                </div>
+              )}
+
+              {/* Posts */}
+              {activeSection === 'posts' && (
+                <div className="space-y-6 animate-fade-in">
+                  <Card className="bg-card/50 backdrop-blur-sm border-2">
+                    <div className="bg-gradient-to-r from-orange-500/10 via-red-500/10 to-pink-500/10 p-6 border-b">
+                      <CardTitle className="flex items-center gap-2 text-orange-600">
+                        <MessagesSquare className="w-5 h-5" />
+                        Criar Novo Post
+                      </CardTitle>
+                      <CardDescription>Compartilhe novidades com seus seguidores</CardDescription>
+                    </div>
+                    <CardContent className="p-6">
+                      <div className="space-y-4">
+                        <Textarea
+                          value={postContent}
+                          onChange={(e) => setPostContent(e.target.value)}
+                          placeholder="No que você está pensando?"
+                          className="min-h-[120px] text-base resize-none"
+                        />
+
+                        {postImages.length > 0 && (
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            {postImages.map((url, index) => (
+                              <div key={index} className="relative group">
+                                <img src={url} alt="" className="w-full h-32 object-cover rounded-lg" />
+                                <Button
+                                  size="icon"
+                                  variant="destructive"
+                                  className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                                  onClick={() => handleRemoveImage(index)}
+                                >
+                                  <X className="w-4 h-4" />
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        <div className="flex gap-2">
+                          <input
+                            ref={imageInputRef}
+                            type="file"
+                            accept="image/*"
+                            multiple
+                            onChange={handleImageUpload}
+                            className="hidden"
+                          />
+                          <Button
+                            variant="outline"
+                            onClick={() => imageInputRef.current?.click()}
+                          >
+                            <Upload className="w-4 h-4 mr-2" />
+                            Adicionar Imagens
+                          </Button>
+                          <Button
+                            className="ml-auto bg-gradient-to-r from-orange-500 to-pink-500"
+                            onClick={handleCreatePost}
+                            disabled={posting}
+                          >
+                            {posting ? 'Publicando...' : 'Publicar Post'}
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="bg-card/50 backdrop-blur-sm border-2">
+                    <CardHeader>
+                      <CardTitle>Meus Posts</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {posts.length === 0 ? (
+                        <div className="text-center py-8 text-muted-foreground">
+                          Nenhum post publicado ainda.
+                        </div>
+                      ) : (
+                        posts.map((post) => (
+                          <div key={post.id} className="border rounded-lg p-4 space-y-3">
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <p className="text-sm whitespace-pre-wrap">{post.content}</p>
+                                {post.media_urls && post.media_urls.length > 0 && (
+                                  <div className="grid grid-cols-2 gap-2 mt-3">
+                                    {post.media_urls.map((url, index) => (
+                                      <img key={index} src={url} alt="" className="w-full h-48 object-cover rounded-lg" />
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button size="icon" variant="ghost">
+                                    <Trash2 className="w-4 h-4 text-destructive" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Excluir Post</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      Tem certeza que deseja excluir este post? Esta ação não pode ser desfeita.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                    <AlertDialogAction onClick={() => handleDeletePost(post.id)}>
+                                      Excluir
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </div>
+                            
+                            <div className="flex items-center gap-4 pt-2 border-t text-sm text-muted-foreground">
+                              <span>{new Date(post.created_at).toLocaleDateString('pt-BR')}</span>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+
+              {/* Avaliações */}
+              {activeSection === 'evaluations' && (
+                <div className="space-y-6 animate-fade-in">
+                  <Card className="bg-card/50 backdrop-blur-sm border-2">
+                    <div className="bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-blue-500/10 p-6 border-b">
+                      <CardTitle className="flex items-center gap-2 text-pink-600">
+                        <Star className="w-5 h-5" />
+                        Avaliações Recebidas
+                      </CardTitle>
+                      <CardDescription>Gerencie as avaliações dos seus clientes</CardDescription>
+                    </div>
+                    <CardContent className="p-6">
+                      {evaluations.length === 0 ? (
+                        <div className="text-center py-8 text-muted-foreground">
+                          Nenhuma avaliação recebida ainda.
+                        </div>
+                      ) : (
+                        <div className="space-y-6">
+                          {evaluations.map((evaluation) => (
+                            <div key={evaluation.id} className="border rounded-lg p-4 space-y-3">
+                              <div className="flex items-start justify-between">
+                                <div>
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <span className="font-medium">{evaluation.profiles.full_name}</span>
+                                    <div className="flex">
+                                      {[...Array(5)].map((_, i) => (
+                                        <Star
+                                          key={i}
+                                          className={`w-4 h-4 ${
+                                            i < evaluation.rating
+                                              ? 'fill-yellow-400 text-yellow-400'
+                                              : 'text-gray-300'
+                                          }`}
+                                        />
+                                      ))}
+                                    </div>
+                                  </div>
+                                  <p className="text-sm text-muted-foreground">
+                                    {new Date(evaluation.created_at).toLocaleDateString('pt-BR')}
+                                  </p>
+                                </div>
+                              </div>
+                              
+                              <div>
+                                <h4 className="font-medium mb-1">{evaluation.title}</h4>
+                                <p className="text-sm text-muted-foreground">{evaluation.content}</p>
+                              </div>
+
+                              {evaluation.public_response ? (
+                                <div className="bg-muted/50 rounded-lg p-3 mt-3">
+                                  <p className="text-sm font-medium mb-1">Sua resposta:</p>
+                                  <p className="text-sm">{evaluation.public_response}</p>
+                                </div>
+                              ) : (
+                                <div className="space-y-2 mt-3">
+                                  <Textarea
+                                    placeholder="Escreva sua resposta..."
+                                    value={responses[evaluation.id] || ''}
+                                    onChange={(e) => setResponses({ ...responses, [evaluation.id]: e.target.value })}
+                                    rows={3}
+                                    className="text-sm resize-none"
+                                  />
+                                  <Button
+                                    size="sm"
+                                    onClick={() => handleResponseSubmit(evaluation.id)}
+                                    disabled={!responses[evaluation.id]?.trim()}
+                                  >
+                                    Publicar Resposta
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+
+              {/* Ferramentas */}
+              {activeSection === 'tools' && (
+                <div className="space-y-6 animate-fade-in">
+                  {configuringFeature ? (
+                    <div>
+                      <Button
+                        variant="ghost"
+                        onClick={() => setConfiguringFeature(null)}
+                        className="mb-4"
+                      >
+                        <ArrowLeft className="w-4 h-4 mr-2" />
+                        Voltar para Ferramentas
+                      </Button>
+
+                      {configuringFeature === 'social' && (
+                        <Card className="bg-card/50 backdrop-blur-sm border-2">
+                          <div className="bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-rose-500/10 p-6 border-b">
+                            <CardTitle className="text-purple-600">Redes Sociais</CardTitle>
+                            <CardDescription>Configure seus links e contatos</CardDescription>
+                          </div>
+                          <CardContent className="p-6">
+                            <form onSubmit={handleSave} className="space-y-4">
+                              <div className="space-y-2">
+                                <Label className="flex items-center gap-2 text-base font-medium">
+                                  <Globe className="w-4 h-4" />
+                                  Website
+                                </Label>
+                                <Input
+                                  value={profile.website || ''}
+                                  onChange={(e) => setProfile({ ...profile, website: e.target.value })}
+                                  placeholder="https://seusite.com"
+                                  className="text-base"
+                                />
+                              </div>
+                              <Button type="submit" disabled={saving} className="w-full bg-gradient-to-r from-purple-500 to-pink-500">
+                                <Save className="w-4 h-4 mr-2" />
+                                {saving ? 'Salvando...' : 'Salvar Redes Sociais'}
+                              </Button>
+                            </form>
+                          </CardContent>
+                        </Card>
+                      )}
+                    </div>
+                  ) : (
+                    <Card className="bg-card/50 backdrop-blur-sm border-2">
+                      <div className="bg-gradient-to-r from-yellow-500/10 via-amber-500/10 to-orange-500/10 p-6 border-b">
+                        <CardTitle className="flex items-center gap-2 text-yellow-600 dark:text-yellow-500">
+                          <Zap className="w-5 h-5" />
+                          Ferramentas Interativas
+                        </CardTitle>
+                        <CardDescription>
+                          Ative funcionalidades extras para seu perfil
+                        </CardDescription>
+                      </div>
+                      <CardContent className="p-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {features.map((feature) => {
+                            const Icon = feature.icon;
+                            return (
+                              <div
+                                key={feature.key}
+                                className={`relative rounded-lg p-6 transition-all hover:shadow-lg group ${
+                                  feature.isActive
+                                    ? `${feature.color} text-white`
+                                    : 'bg-muted/50 border-2 hover:border-primary/50'
+                                }`}
+                              >
+                                <div className="flex items-start justify-between mb-3">
+                                  <Icon className={`w-8 h-8 ${feature.isActive ? '' : 'text-muted-foreground'}`} />
+                                  <Switch
+                                    checked={feature.isActive}
+                                    onCheckedChange={() => handleToggleFeature(feature.key)}
+                                    className={feature.isActive ? "data-[state=checked]:bg-white/30" : ""}
+                                  />
+                                </div>
+                                <h4 className="font-bold text-lg mb-1">{feature.name}</h4>
+                                <p className={`text-sm mb-4 ${
+                                  feature.isActive ? 'text-white/90' : 'text-muted-foreground'
+                                }`}>
+                                  {feature.description}
+                                </p>
+                                {feature.isActive && (
+                                  <Button
+                                    size="sm"
+                                    variant="secondary"
+                                    onClick={() => setConfiguringFeature(feature.key)}
+                                    className="w-full"
+                                  >
+                                    Configurar
+                                  </Button>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        <div className="mt-6 p-4 rounded-lg bg-primary/10 border border-primary/20">
+                          <div className="flex items-start gap-3">
+                            <Info className="w-5 h-5 text-primary mt-0.5" />
+                            <div className="flex-1">
+                              <p className="font-medium mb-1">Sobre as Ferramentas</p>
+                              <p className="text-sm text-muted-foreground">
+                                Ative ferramentas para adicionar funcionalidades ao seu perfil. Você pode configurar cada uma individualmente.
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
                 </div>
               )}
 
@@ -302,39 +1296,23 @@ export default function ProfileEdit() {
                 </div>
               )}
 
-              {/* Redes Sociais */}
-              {activeSection === 'social' && (
+              {/* Administradores */}
+              {activeSection === 'admin' && (
                 <div className="space-y-6 animate-fade-in">
                   <Card className="bg-card/50 backdrop-blur-sm border-2">
-                    <div className="bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-orange-500/10 p-6 border-b">
+                    <CardHeader>
                       <CardTitle className="flex items-center gap-2 text-purple-600">
-                        <Globe className="w-5 h-5" />
-                        Links e Redes Sociais
+                        <Shield className="w-5 h-5" />
+                        Administradores
                       </CardTitle>
-                      <CardDescription>Compartilhe seus links importantes</CardDescription>
-                    </div>
-                    <CardContent className="p-6">
-                      <form onSubmit={handleSave} className="space-y-4">
-                        <div className="space-y-2">
-                          <Label className="text-base font-medium">Website</Label>
-                          <Input
-                            type="url"
-                            value={profile.website || ''}
-                            onChange={(e) => setProfile({ ...profile, website: e.target.value })}
-                            placeholder="https://seusite.com"
-                            className="text-base"
-                          />
-                        </div>
-
-                        <Button 
-                          type="submit" 
-                          className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:shadow-lg transition-all text-base py-6" 
-                          disabled={saving}
-                        >
-                          <Save className="w-5 h-5 mr-2" />
-                          {saving ? 'Salvando...' : 'Salvar Alterações'}
-                        </Button>
-                      </form>
+                      <CardDescription>
+                        Gerencie quem pode administrar este perfil
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-center py-8 text-muted-foreground">
+                        Funcionalidade em desenvolvimento
+                      </div>
                     </CardContent>
                   </Card>
                 </div>
@@ -344,9 +1322,9 @@ export default function ProfileEdit() {
               {activeSection === 'settings' && (
                 <div className="space-y-6 animate-fade-in">
                   <Card className="bg-card/50 backdrop-blur-sm border-2">
-                    <div className="bg-gradient-to-r from-orange-500/10 via-red-500/10 to-pink-500/10 p-6 border-b">
-                      <CardTitle className="flex items-center gap-2 text-orange-600">
-                        <SettingsIcon className="w-5 h-5" />
+                    <div className="bg-gradient-to-r from-red-500/10 via-orange-500/10 to-yellow-500/10 p-6 border-b">
+                      <CardTitle className="flex items-center gap-2 text-red-600">
+                        <AlertTriangle className="w-5 h-5" />
                         Configurações do Perfil
                       </CardTitle>
                       <CardDescription>Gerencie as configurações da sua conta</CardDescription>

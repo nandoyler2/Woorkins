@@ -58,6 +58,8 @@ interface FeedPost {
   likes: number;
   comments: number;
   business_id: string;
+  author_username?: string;
+  author_profile_link: string;
 }
 
 interface Achievement {
@@ -401,6 +403,7 @@ export default function Dashboard() {
             category,
             logo_url,
             profile_id,
+            slug,
             profiles!inner (
               full_name,
               username,
@@ -454,7 +457,13 @@ export default function Dashboard() {
             image_url: post.media_urls?.[0] || undefined,
             likes: likesData.count || 0,
             comments: commentsData.count || 0,
-            business_id: businessProfile?.profile_id || ''
+            business_id: businessProfile?.profile_id || '',
+            author_username: profile?.username,
+            author_profile_link: businessProfile?.slug 
+              ? `/empresa/${businessProfile.slug}` 
+              : profile?.username 
+                ? `/perfil/${profile.username}` 
+                : '#'
           };
         })
       );
@@ -865,16 +874,22 @@ export default function Dashboard() {
                       return (
                         <div key={post.id} className="p-4 border-b border-slate-100 last:border-0">
                           <div className="flex items-start gap-3">
-                            <Avatar className="w-10 h-10">
-                              <AvatarImage src={post.author_avatar} />
-                              <AvatarFallback className="bg-slate-200 text-slate-600 text-sm">
-                                {post.author_name.charAt(0)}
-                              </AvatarFallback>
-                            </Avatar>
+                            <Link to={post.author_profile_link}>
+                              <Avatar className="w-10 h-10 cursor-pointer hover:opacity-80 transition-opacity">
+                                <AvatarImage src={post.author_avatar} />
+                                <AvatarFallback className="bg-slate-200 text-slate-600 text-sm">
+                                  {post.author_name.charAt(0)}
+                                </AvatarFallback>
+                              </Avatar>
+                            </Link>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-start justify-between mb-1">
                                 <div>
-                                  <h4 className="font-semibold text-sm text-slate-900">{post.author_name}</h4>
+                                  <Link to={post.author_profile_link}>
+                                    <h4 className="font-semibold text-sm text-slate-900 hover:text-primary cursor-pointer transition-colors">
+                                      {post.author_name}
+                                    </h4>
+                                  </Link>
                                   <p className="text-xs text-slate-600">
                                     {post.author_role} • {post.time_ago} • {followerCount} seguidores
                                   </p>

@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { MessageCircle, X, Send, HelpCircle, Shield, Coins, AlertCircle, History, GripVertical, Paperclip, FileText, File, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -12,8 +11,6 @@ import { useLocation } from 'react-router-dom';
 import { formatShortName, formatTimeSaoPaulo } from '@/lib/utils';
 import { useSpamBlock } from '@/hooks/useSpamBlock';
 import { SpamBlockCountdown } from './SpamBlockCountdown';
-import { SupportChatDialog } from '@/components/SupportChatDialog';
-import { useSupportUnreadCount } from '@/hooks/useSupportUnreadCount';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -107,11 +104,6 @@ export const AIAssistant = () => {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { systemBlock, messagingBlock } = useSystemBlock(profileId || '');
-  
-  // Suporte - variáveis para chat de suporte
-  const [supportDialogOpen, setSupportDialogOpen] = useState(false);
-  const [supportInitialMessage, setSupportInitialMessage] = useState('');
-  const { unreadCount, hasActiveConversation } = useSupportUnreadCount(userProfileId, supportDialogOpen);
 
   // Verificar se está em áreas onde o botão deve ser escondido
   const isAdminArea = location.pathname.startsWith('/admin');
@@ -668,7 +660,7 @@ export const AIAssistant = () => {
       
       // Só abrir se não houve movimento (foi um clique)
       if (!moved) {
-        setSupportDialogOpen(true);
+        setInternalOpen(true);
       }
     }
     setIsDragging(false);
@@ -699,33 +691,14 @@ export const AIAssistant = () => {
           }}
           className="z-50 group"
         >
-          <div className="relative">
-            <Button
-              onMouseDown={handleMouseDown}
-              className="h-8 px-3 rounded-full shadow-2xl bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-white flex items-center gap-1.5 animate-fade-in hover-scale border border-white/20 transition-all"
-            >
-              <GripVertical className="h-3 w-3 opacity-50 group-hover:opacity-100 transition-opacity" />
-              <MessageCircle className="h-3.5 w-3.5" />
-              <span className="font-medium text-xs">Precisa de Ajuda?</span>
-            </Button>
-            
-            {/* Badge de mensagens não lidas */}
-            {unreadCount > 0 && (
-              <Badge 
-                variant="destructive" 
-                className="absolute -top-1 -right-1 h-4 min-w-4 flex items-center justify-center p-0 px-1 text-[9px] animate-pulse"
-              >
-                {unreadCount > 9 ? '9+' : unreadCount}
-              </Badge>
-            )}
-            
-            {/* Aviso de inatividade fora do chat */}
-            {hasActiveConversation && unreadCount === 0 && !supportDialogOpen && (
-              <div className="absolute top-full mt-2 left-0 right-0 bg-amber-100 border border-amber-300 rounded-lg p-2 text-xs text-amber-800 shadow-lg whitespace-nowrap animate-fade-in">
-                ⚠️ Conversa ativa - responda para não ser encerrada
-              </div>
-            )}
-          </div>
+          <Button
+            onMouseDown={handleMouseDown}
+            className="h-8 px-3 rounded-full shadow-2xl bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-white flex items-center gap-1.5 animate-fade-in hover-scale border border-white/20 transition-all"
+          >
+            <GripVertical className="h-3 w-3 opacity-50 group-hover:opacity-100 transition-opacity" />
+            <MessageCircle className="h-3.5 w-3.5" />
+            <span className="font-medium text-xs">Precisa de Ajuda?</span>
+          </Button>
         </div>
       )}
 
@@ -1076,14 +1049,6 @@ export const AIAssistant = () => {
           )}
         </div>
       )}
-      
-      {/* Diálogo de suporte */}
-      <SupportChatDialog 
-        open={supportDialogOpen}
-        onOpenChange={setSupportDialogOpen}
-        profileId={userProfileId}
-        initialMessage={supportInitialMessage}
-      />
     </>
   );
 };

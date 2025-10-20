@@ -5,7 +5,7 @@ import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Star, Search, Briefcase, MessageSquare, CheckCircle2, Phone, Building2, Users, UserPlus, ThumbsUp, MessageCircle, Award, Activity, TrendingUp, Bell, Clock, Trophy, Share2, Heart, Bookmark, Camera, Mail, FileCheck, Settings, Eye } from 'lucide-react';
+import { Star, Search, Briefcase, MessageSquare, CheckCircle2, Phone, Building2, Users, UserPlus, ThumbsUp, MessageCircle, Award, Activity, TrendingUp, Bell, Clock, Trophy, Share2, Heart, Bookmark, Camera, Mail, FileCheck, Settings, Eye, User } from 'lucide-react';
 import woorkoinsIcon from '@/assets/woorkoins-icon-latest.png';
 import { Link } from 'react-router-dom';
 import { Progress } from '@/components/ui/progress';
@@ -883,7 +883,7 @@ export default function Dashboard() {
                               <Avatar className="w-10 h-10 cursor-pointer hover:opacity-80 transition-opacity">
                                 <AvatarImage src={post.author_avatar} />
                                 <AvatarFallback className="bg-slate-200 text-slate-600 text-sm">
-                                  {post.author_name.charAt(0)}
+                                  <User className="w-5 h-5" />
                                 </AvatarFallback>
                               </Avatar>
                             </Link>
@@ -960,7 +960,7 @@ export default function Dashboard() {
                                     <Avatar className="w-8 h-8">
                                       <AvatarImage src={profile?.avatar_url || ''} />
                                       <AvatarFallback className="bg-slate-200 text-slate-600 text-xs">
-                                        {profile?.username?.charAt(0).toUpperCase() || 'U'}
+                                        <User className="w-4 h-4" />
                                       </AvatarFallback>
                                     </Avatar>
                                     <div className="flex-1 flex gap-2">
@@ -993,7 +993,7 @@ export default function Dashboard() {
                                       <Avatar className="w-8 h-8">
                                         <AvatarImage src={comment.profiles?.avatar_url || ''} />
                                         <AvatarFallback className="bg-slate-200 text-slate-600 text-xs">
-                                          {comment.profiles?.username?.charAt(0).toUpperCase() || 'U'}
+                                          <User className="w-4 h-4" />
                                         </AvatarFallback>
                                       </Avatar>
                                       <div className="flex-1 bg-slate-50 rounded-lg p-2">
@@ -1051,7 +1051,7 @@ export default function Dashboard() {
                       <AvatarImage src={profile.avatar_url} alt={profile.username} />
                     ) : (
                       <AvatarFallback className="bg-blue-100 text-blue-700">
-                        {profile?.username?.charAt(0).toUpperCase() || 'U'}
+                        <User className="w-5 h-5" />
                       </AvatarFallback>
                     )}
                   </Avatar>

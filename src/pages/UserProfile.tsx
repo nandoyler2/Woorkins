@@ -77,7 +77,7 @@ export default function UserProfile() {
   const [complaintEvaluations, setComplaintEvaluations] = useState<Evaluation[]>([]);
   const [averageRating, setAverageRating] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('sobre');
+  const [activeTab, setActiveTab] = useState('inicio');
   const [showEvaluationForm, setShowEvaluationForm] = useState(false);
   const [showAllPositive, setShowAllPositive] = useState(false);
   const [showAllComplaints, setShowAllComplaints] = useState(false);
@@ -286,22 +286,16 @@ export default function UserProfile() {
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                   <TabsList className="w-full justify-start rounded-none border-b bg-transparent h-auto p-0">
                     <TabsTrigger 
-                      value="sobre" 
+                      value="inicio" 
+                      className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-6 py-3"
+                    >
+                      Início
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="sobre"
                       className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-6 py-3"
                     >
                       Sobre
-                    </TabsTrigger>
-                    <TabsTrigger 
-                      value="projetos"
-                      className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-6 py-3"
-                    >
-                      Projetos ({projects.length})
-                    </TabsTrigger>
-                    <TabsTrigger 
-                      value="atividade"
-                      className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-6 py-3"
-                    >
-                      Atividade
                     </TabsTrigger>
                     <TabsTrigger 
                       value="positivas"
@@ -319,108 +313,124 @@ export default function UserProfile() {
                     </TabsTrigger>
                   </TabsList>
 
-                  {/* Sobre Tab */}
-                  <TabsContent value="sobre" className="p-6 space-y-6">
+                  {/* Início Tab */}
+                  <TabsContent value="inicio" className="p-6 space-y-6">
                     <div>
-                      <h2 className="text-xl font-bold mb-4">Sobre</h2>
+                      <h2 className="text-xl font-bold mb-4">Visão Geral</h2>
                       <div className="space-y-4">
-                        {profile.bio ? (
-                          <p className="text-muted-foreground leading-relaxed">{profile.bio}</p>
-                        ) : (
-                          <p className="text-muted-foreground italic">Este usuário ainda não adicionou uma bio.</p>
-                        )}
-                        
-                        {profile.website && (
-                          <div>
-                            <h3 className="font-semibold mb-2">Website</h3>
-                            <a 
-                              href={profile.website} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="text-primary hover:underline"
-                            >
-                              {profile.website}
-                            </a>
+                        <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg">
+                          <div className="p-2 bg-primary rounded-lg">
+                            <Star className="w-5 h-5 text-primary-foreground" />
                           </div>
-                        )}
+                          <div>
+                            <p className="text-2xl font-bold">{averageRating > 0 ? averageRating.toFixed(1) : '0.0'}</p>
+                            <p className="text-sm text-muted-foreground">{evaluations.length} avaliações</p>
+                          </div>
+                        </div>
                       </div>
+                    </div>
+
+                    {/* Projetos Section */}
+                    <div>
+                      <h2 className="text-xl font-bold mb-4">Projetos Recentes</h2>
+                      {projects.length === 0 ? (
+                        <div className="text-center py-8">
+                          <Briefcase className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
+                          <p className="text-muted-foreground">Nenhum projeto público ainda</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          {projects.slice(0, 3).map((project) => (
+                            <Card key={project.id} className="hover:shadow-md transition-shadow">
+                              <CardContent className="p-4">
+                                <div className="flex justify-between items-start mb-2">
+                                  <h3 className="font-semibold text-lg">{project.title}</h3>
+                                  <Badge variant="secondary">{project.category}</Badge>
+                                </div>
+                                <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+                                  {project.description}
+                                </p>
+                                <div className="flex items-center justify-between text-sm">
+                                  <div className="flex items-center gap-4 text-muted-foreground">
+                                    {project.budget_min && project.budget_max && (
+                                      <span>
+                                        R$ {project.budget_min.toLocaleString('pt-BR')} - R$ {project.budget_max.toLocaleString('pt-BR')}
+                                      </span>
+                                    )}
+                                    <span>{project.proposals_count} proposta(s)</span>
+                                  </div>
+                                  <Button variant="outline" size="sm">Ver detalhes</Button>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Activity Section */}
+                    <div>
+                      <h2 className="text-xl font-bold mb-4">Atividade Recente</h2>
+                      {posts.length === 0 ? (
+                        <div className="text-center py-8">
+                          <Star className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
+                          <p className="text-muted-foreground">Nenhuma atividade pública ainda</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          {posts.slice(0, 3).map((post) => (
+                            <Card key={post.id}>
+                              <CardContent className="p-4">
+                                <p className="text-sm mb-2">{post.content}</p>
+                                {post.media_urls && post.media_urls.length > 0 && (
+                                  <div className="grid grid-cols-2 gap-2 mb-2">
+                                    {post.media_urls.slice(0, 4).map((url, idx) => (
+                                      <SafeImage
+                                        key={idx}
+                                        src={url}
+                                        alt="Post media"
+                                        className="w-full h-32 object-cover rounded-lg"
+                                      />
+                                    ))}
+                                  </div>
+                                )}
+                                <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                                  <span>{post.likes_count} curtidas</span>
+                                  <span>{post.comments_count} comentários</span>
+                                  <span>{new Date(post.created_at).toLocaleDateString('pt-BR')}</span>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </TabsContent>
 
-                  {/* Projetos Tab */}
-                  <TabsContent value="projetos" className="p-6">
-                    <h2 className="text-xl font-bold mb-6">Projetos Públicos</h2>
-                    {projects.length === 0 ? (
-                      <div className="text-center py-12">
-                        <Briefcase className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
-                        <p className="text-muted-foreground">Nenhum projeto público ainda</p>
-                      </div>
-                    ) : (
-                      <div className="space-y-4">
-                        {projects.map((project) => (
-                          <Card key={project.id} className="hover:shadow-md transition-shadow">
-                            <CardContent className="p-4">
-                              <div className="flex justify-between items-start mb-2">
-                                <h3 className="font-semibold text-lg">{project.title}</h3>
-                                <Badge variant="secondary">{project.category}</Badge>
-                              </div>
-                              <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-                                {project.description}
-                              </p>
-                              <div className="flex items-center justify-between text-sm">
-                                <div className="flex items-center gap-4 text-muted-foreground">
-                                  {project.budget_min && project.budget_max && (
-                                    <span>
-                                      R$ {project.budget_min.toLocaleString('pt-BR')} - R$ {project.budget_max.toLocaleString('pt-BR')}
-                                    </span>
-                                  )}
-                                  <span>{project.proposals_count} proposta(s)</span>
-                                </div>
-                                <Button variant="outline" size="sm">Ver detalhes</Button>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))}
-                      </div>
-                    )}
-                  </TabsContent>
-
-                  {/* Atividade Tab */}
-                  <TabsContent value="atividade" className="p-6">
-                    <h2 className="text-xl font-bold mb-6">Atividade Recente</h2>
-                    {posts.length === 0 ? (
-                      <div className="text-center py-12">
-                        <Star className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
-                        <p className="text-muted-foreground">Nenhuma atividade pública ainda</p>
-                      </div>
-                    ) : (
-                      <div className="space-y-4">
-                        {posts.map((post) => (
-                          <Card key={post.id}>
-                            <CardContent className="p-4">
-                              <p className="text-sm mb-2">{post.content}</p>
-                              {post.media_urls && post.media_urls.length > 0 && (
-                                <div className="grid grid-cols-2 gap-2 mb-2">
-                                  {post.media_urls.slice(0, 4).map((url, idx) => (
-                                    <SafeImage
-                                      key={idx}
-                                      src={url}
-                                      alt="Post media"
-                                      className="w-full h-32 object-cover rounded-lg"
-                                    />
-                                  ))}
-                                </div>
-                              )}
-                              <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                                <span>{post.likes_count} curtidas</span>
-                                <span>{post.comments_count} comentários</span>
-                                <span>{new Date(post.created_at).toLocaleDateString('pt-BR')}</span>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))}
-                      </div>
-                    )}
+                  {/* Sobre Tab */}
+                  <TabsContent value="sobre" className="p-6">
+                    <div className="space-y-4">
+                      <h2 className="text-xl font-bold mb-4">Sobre</h2>
+                      {profile.bio ? (
+                        <p className="text-muted-foreground leading-relaxed">{profile.bio}</p>
+                      ) : (
+                        <p className="text-muted-foreground italic">Este usuário ainda não adicionou uma bio.</p>
+                      )}
+                      
+                      {profile.website && (
+                        <div>
+                          <h3 className="font-semibold mb-2">Website</h3>
+                          <a 
+                            href={profile.website} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-primary hover:underline"
+                          >
+                            {profile.website}
+                          </a>
+                        </div>
+                      )}
+                    </div>
                   </TabsContent>
 
                   {/* Avaliações Positivas Tab */}
@@ -444,13 +454,20 @@ export default function UserProfile() {
                       </div>
 
                       {showEvaluationForm && profile && (
-                        <ProfileEvaluationForm
-                          profileId={profile.id}
-                          onSuccess={() => {
-                            setShowEvaluationForm(false);
-                            loadEvaluations(profile.id);
-                          }}
-                        />
+                        <Dialog open={showEvaluationForm} onOpenChange={setShowEvaluationForm}>
+                          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                            <DialogHeader>
+                              <DialogTitle>Avaliar {formatFullName(profile.full_name)}</DialogTitle>
+                            </DialogHeader>
+                            <ProfileEvaluationForm
+                              profileId={profile.id}
+                              onSuccess={() => {
+                                setShowEvaluationForm(false);
+                                loadEvaluations(profile.id);
+                              }}
+                            />
+                          </DialogContent>
+                        </Dialog>
                       )}
 
                       {positiveEvaluations.length === 0 ? (
@@ -566,13 +583,20 @@ export default function UserProfile() {
                       </div>
 
                       {showEvaluationForm && profile && (
-                        <ProfileEvaluationForm
-                          profileId={profile.id}
-                          onSuccess={() => {
-                            setShowEvaluationForm(false);
-                            loadEvaluations(profile.id);
-                          }}
-                        />
+                        <Dialog open={showEvaluationForm} onOpenChange={setShowEvaluationForm}>
+                          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                            <DialogHeader>
+                              <DialogTitle>Avaliar {formatFullName(profile.full_name)}</DialogTitle>
+                            </DialogHeader>
+                            <ProfileEvaluationForm
+                              profileId={profile.id}
+                              onSuccess={() => {
+                                setShowEvaluationForm(false);
+                                loadEvaluations(profile.id);
+                              }}
+                            />
+                          </DialogContent>
+                        </Dialog>
                       )}
 
                       {complaintEvaluations.length === 0 ? (
@@ -750,24 +774,6 @@ export default function UserProfile() {
           </div>
         </div>
       </div>
-
-      {/* Dialog de Avaliação */}
-      <Dialog open={showEvaluationForm} onOpenChange={setShowEvaluationForm}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Avaliar {profile?.full_name || 'Usuário'}</DialogTitle>
-          </DialogHeader>
-          {profile && (
-            <ProfileEvaluationForm
-              profileId={profile.id}
-              onSuccess={() => {
-                setShowEvaluationForm(false);
-                loadUserProfile();
-              }}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
 
       <Footer />
     </div>

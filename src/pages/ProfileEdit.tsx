@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -10,8 +10,9 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { ProfilePhotoUpload } from '@/components/ProfilePhotoUpload';
+import { ImageUpload } from '@/components/ImageUpload';
 import { 
-  ArrowLeft, Save, User, Globe, Settings as SettingsIcon, Info
+  ArrowLeft, Save, User, Globe, Settings as SettingsIcon, Info, Eye, Image as ImageIcon
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import {
@@ -19,6 +20,7 @@ import {
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -36,7 +38,7 @@ interface Profile {
   website: string | null;
 }
 
-type Section = 'info' | 'social' | 'settings';
+type Section = 'profile-cover' | 'info' | 'social' | 'settings';
 
 export default function ProfileEdit() {
   const { user } = useAuth();
@@ -46,10 +48,16 @@ export default function ProfileEdit() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [activeSection, setActiveSection] = useState<Section>('info');
+  const [activeSection, setActiveSection] = useState<Section>('profile-cover');
 
-  const menuItems = [
-    { id: 'info' as Section, label: 'Informações Básicas', icon: User, color: 'text-blue-500' },
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+
+  const customizationItems = [
+    { id: 'profile-cover' as Section, label: 'Perfil e Capa', icon: Eye, color: 'text-blue-500' },
+    { id: 'info' as Section, label: 'Informações', icon: Info, color: 'text-indigo-500' },
+  ];
+
+  const generalItems = [
     { id: 'social' as Section, label: 'Redes Sociais', icon: Globe, color: 'text-purple-500' },
     { id: 'settings' as Section, label: 'Configurações', icon: SettingsIcon, color: 'text-orange-500' },
   ];
@@ -81,8 +89,8 @@ export default function ProfileEdit() {
     setLoading(false);
   };
 
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSave = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     if (!profile || !user) return;
 
     setSaving(true);
@@ -114,7 +122,6 @@ export default function ProfileEdit() {
   };
 
   const handlePhotoUpdated = () => {
-    // Reload profile after photo update
     loadProfile();
   };
 
@@ -148,9 +155,40 @@ export default function ProfileEdit() {
               </div>
 
               <SidebarGroup>
+                <SidebarGroupLabel className="px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  Personalização
+                </SidebarGroupLabel>
                 <SidebarGroupContent>
                   <SidebarMenu>
-                    {menuItems.map((item) => {
+                    {customizationItems.map((item) => {
+                      const Icon = item.icon;
+                      const isActive = activeSection === item.id;
+                      return (
+                        <SidebarMenuItem key={item.id}>
+                          <SidebarMenuButton
+                            onClick={() => setActiveSection(item.id)}
+                            className={`
+                              ${isActive ? 'bg-primary/10 text-primary font-medium' : 'hover:bg-muted/50'}
+                              transition-all duration-200
+                            `}
+                          >
+                            <Icon className={`w-5 h-5 mr-3 ${isActive ? item.color : 'text-muted-foreground'}`} />
+                            <span>{item.label}</span>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      );
+                    })}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+
+              <SidebarGroup>
+                <SidebarGroupLabel className="px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  Geral
+                </SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {generalItems.map((item) => {
                       const Icon = item.icon;
                       const isActive = activeSection === item.id;
                       return (
@@ -183,8 +221,8 @@ export default function ProfileEdit() {
                 <p className="text-muted-foreground">@{profile.username}</p>
               </div>
 
-              {/* Informações Básicas */}
-              {activeSection === 'info' && (
+              {/* Perfil e Capa */}
+              {activeSection === 'profile-cover' && (
                 <div className="space-y-6 animate-fade-in">
                   <Card className="bg-card/50 backdrop-blur-sm border-2 overflow-hidden">
                     <div className="bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 p-6 border-b">
@@ -203,10 +241,19 @@ export default function ProfileEdit() {
                       />
                     </CardContent>
                   </Card>
+                </div>
+              )}
 
+              {/* Informações */}
+              {activeSection === 'info' && (
+                <div className="space-y-6 animate-fade-in">
                   <Card className="bg-card/50 backdrop-blur-sm border-2">
                     <div className="bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 p-6 border-b">
-                      <CardTitle className="text-blue-600">Dados Pessoais</CardTitle>
+                      <CardTitle className="flex items-center gap-2 text-blue-600">
+                        <Info className="w-5 h-5" />
+                        Dados Pessoais
+                      </CardTitle>
+                      <CardDescription>Informações básicas sobre você</CardDescription>
                     </div>
                     <CardContent className="p-6">
                       <form onSubmit={handleSave} className="space-y-4">

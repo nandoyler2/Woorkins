@@ -90,6 +90,22 @@ export function ProfileEvaluationForm({ profileId, onSuccess }: ProfileEvaluatio
         return;
       }
 
+      // Buscar o profile_id do usuário logado
+      const { data: userProfile, error: profileError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (profileError || !userProfile) {
+        toast({
+          title: 'Erro',
+          description: 'Erro ao carregar perfil do usuário',
+          variant: 'destructive',
+        });
+        return;
+      }
+
       // Upload de mídia
       const mediaUrls: string[] = [];
       const mediaTypes: string[] = [];
@@ -124,11 +140,11 @@ export function ProfileEvaluationForm({ profileId, onSuccess }: ProfileEvaluatio
       // Determinar categoria automaticamente
       const evaluationCategory = rating <= 3 ? 'complaint' : 'positive';
 
-      // Criar avaliação - usar business_id tanto para perfis quanto empresas
+      // Criar avaliação - usar profile_id do usuário logado
       const { error: insertError } = await supabase
         .from('evaluations' as any)
         .insert({
-          user_id: user.id,
+          user_id: userProfile.id,
           business_id: profileId,
           rating,
           title: evaluationCategory === 'complaint' ? 'Reclamação' : 'Avaliação Positiva',

@@ -1161,10 +1161,13 @@ export type Database = {
           business_id: string
           content: string
           created_at: string
+          evaluation_category: string | null
           evaluation_type: Database["public"]["Enums"]["evaluation_type"]
           helpful_count: number | null
           id: string
           is_verified: boolean | null
+          media_types: string[] | null
+          media_urls: string[] | null
           public_response: string | null
           rating: number
           tags: string[] | null
@@ -1176,10 +1179,13 @@ export type Database = {
           business_id: string
           content: string
           created_at?: string
+          evaluation_category?: string | null
           evaluation_type: Database["public"]["Enums"]["evaluation_type"]
           helpful_count?: number | null
           id?: string
           is_verified?: boolean | null
+          media_types?: string[] | null
+          media_urls?: string[] | null
           public_response?: string | null
           rating: number
           tags?: string[] | null
@@ -1191,10 +1197,13 @@ export type Database = {
           business_id?: string
           content?: string
           created_at?: string
+          evaluation_category?: string | null
           evaluation_type?: Database["public"]["Enums"]["evaluation_type"]
           helpful_count?: number | null
           id?: string
           is_verified?: boolean | null
+          media_types?: string[] | null
+          media_urls?: string[] | null
           public_response?: string | null
           rating?: number
           tags?: string[] | null

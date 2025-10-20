@@ -6,11 +6,12 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { MapPin, Calendar, User as UserIcon, Star, Briefcase } from 'lucide-react';
+import { MapPin, Calendar, User as UserIcon, Star, Briefcase, MessageSquare, ThumbsUp, AlertCircle } from 'lucide-react';
 import { Footer } from '@/components/Footer';
 import { SafeImage } from '@/components/ui/safe-image';
 import { useToast } from '@/hooks/use-toast';
 import { formatFullName } from '@/lib/utils';
+import { ProfileEvaluationForm } from '@/components/ProfileEvaluationForm';
 
 interface UserProfileData {
   id: string;
@@ -47,14 +48,36 @@ interface UserPost {
   comments_count: number;
 }
 
+interface Evaluation {
+  id: string;
+  rating: number;
+  title: string;
+  content: string;
+  created_at: string;
+  media_urls: string[] | null;
+  media_types: string[] | null;
+  evaluation_category: 'positive' | 'complaint';
+  user_id: string;
+  profiles?: {
+    full_name: string;
+    avatar_url: string | null;
+    username: string;
+  };
+}
+
 export default function UserProfile() {
   const { slug } = useParams();
   const { toast } = useToast();
   const [profile, setProfile] = useState<UserProfileData | null>(null);
   const [projects, setProjects] = useState<UserProject[]>([]);
   const [posts, setPosts] = useState<UserPost[]>([]);
+  const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
+  const [positiveEvaluations, setPositiveEvaluations] = useState<Evaluation[]>([]);
+  const [complaintEvaluations, setComplaintEvaluations] = useState<Evaluation[]>([]);
+  const [averageRating, setAverageRating] = useState(0);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('sobre');
+  const [showEvaluationForm, setShowEvaluationForm] = useState(false);
 
   useEffect(() => {
     loadUserProfile();
@@ -106,10 +129,47 @@ export default function UserProfile() {
       if (postsData) {
         setPosts(postsData as UserPost[]);
       }
+
+      // Load evaluations
+      await loadEvaluations(profileData.id);
     } catch (error) {
       console.error('Error loading user profile:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadEvaluations = async (profileId: string) => {
+    try {
+      const { data: evaluationsData } = await supabase
+        .from('evaluations')
+        .select(`
+          *,
+          profiles:user_id (
+            full_name,
+            avatar_url,
+            username
+          )
+        `)
+        .eq('business_id', profileId)
+        .order('created_at', { ascending: false });
+
+      if (evaluationsData) {
+        const evals = evaluationsData as unknown as Evaluation[];
+        setEvaluations(evals);
+        
+        // Separar por categoria
+        setPositiveEvaluations(evals.filter(e => e.evaluation_category === 'positive'));
+        setComplaintEvaluations(evals.filter(e => e.evaluation_category === 'complaint'));
+        
+        // Calcular média
+        const avg = evals.length > 0 
+          ? evals.reduce((acc, curr) => acc + curr.rating, 0) / evals.length 
+          : 0;
+        setAverageRating(avg);
+      }
+    } catch (error) {
+      console.error('Error loading evaluations:', error);
     }
   };
 
@@ -240,6 +300,12 @@ export default function UserProfile() {
                     >
                       Atividade
                     </TabsTrigger>
+                    <TabsTrigger 
+                      value="avaliacoes"
+                      className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-6 py-3"
+                    >
+                      Avaliações ({evaluations.length})
+                    </TabsTrigger>
                   </TabsList>
 
                   {/* Sobre Tab */}
@@ -344,6 +410,224 @@ export default function UserProfile() {
                         ))}
                       </div>
                     )}
+                  </TabsContent>
+
+                  {/* Avaliações Tab */}
+                  <TabsContent value="avaliacoes" className="p-6">
+                    <div className="space-y-6">
+                      {/* Header com estatísticas */}
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h2 className="text-xl font-bold mb-2">Avaliações</h2>
+                          {evaluations.length > 0 && (
+                            <div className="flex items-center gap-2">
+                              <div className="flex">
+                                {[1, 2, 3, 4, 5].map((star) => (
+                                  <Star
+                                    key={star}
+                                    className={`w-5 h-5 ${
+                                      star <= Math.round(averageRating)
+                                        ? 'fill-yellow-400 text-yellow-400'
+                                        : 'text-muted-foreground'
+                                    }`}
+                                  />
+                                ))}
+                              </div>
+                              <span className="font-semibold">{averageRating.toFixed(1)}</span>
+                              <span className="text-sm text-muted-foreground">
+                                ({evaluations.length} {evaluations.length === 1 ? 'avaliação' : 'avaliações'})
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                        <Button onClick={() => setShowEvaluationForm(!showEvaluationForm)}>
+                          {showEvaluationForm ? 'Cancelar' : 'Avaliar'}
+                        </Button>
+                      </div>
+
+                      {/* Formulário de avaliação */}
+                      {showEvaluationForm && profile && (
+                        <ProfileEvaluationForm
+                          profileId={profile.id}
+                          onSuccess={() => {
+                            setShowEvaluationForm(false);
+                            loadEvaluations(profile.id);
+                          }}
+                        />
+                      )}
+
+                      {/* Abas de avaliações */}
+                      <Tabs defaultValue="positivas" className="w-full">
+                        <TabsList className="grid w-full grid-cols-2">
+                          <TabsTrigger value="positivas" className="gap-2">
+                            <ThumbsUp className="w-4 h-4" />
+                            Avaliações Positivas ({positiveEvaluations.length})
+                          </TabsTrigger>
+                          <TabsTrigger value="reclamacoes" className="gap-2">
+                            <AlertCircle className="w-4 h-4" />
+                            Reclamações ({complaintEvaluations.length})
+                          </TabsTrigger>
+                        </TabsList>
+
+                        <TabsContent value="positivas" className="space-y-4 mt-4">
+                          {positiveEvaluations.length === 0 ? (
+                            <div className="text-center py-12">
+                              <ThumbsUp className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
+                              <p className="text-muted-foreground">Nenhuma avaliação positiva ainda</p>
+                            </div>
+                          ) : (
+                            positiveEvaluations.map((evaluation) => (
+                              <Card key={evaluation.id}>
+                                <CardContent className="p-4">
+                                  <div className="flex items-start gap-4">
+                                    {evaluation.profiles?.avatar_url ? (
+                                      <SafeImage
+                                        src={evaluation.profiles.avatar_url}
+                                        alt={evaluation.profiles.full_name}
+                                        className="w-12 h-12 rounded-full object-cover"
+                                      />
+                                    ) : (
+                                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center">
+                                        <UserIcon className="w-6 h-6 text-primary" />
+                                      </div>
+                                    )}
+                                    <div className="flex-1">
+                                      <div className="flex items-center justify-between mb-2">
+                                        <div>
+                                          <p className="font-semibold">
+                                            {evaluation.profiles?.full_name || 'Usuário'}
+                                          </p>
+                                          <div className="flex items-center gap-2">
+                                            <div className="flex">
+                                              {[1, 2, 3, 4, 5].map((star) => (
+                                                <Star
+                                                  key={star}
+                                                  className={`w-4 h-4 ${
+                                                    star <= evaluation.rating
+                                                      ? 'fill-yellow-400 text-yellow-400'
+                                                      : 'text-muted-foreground'
+                                                  }`}
+                                                />
+                                              ))}
+                                            </div>
+                                            <span className="text-xs text-muted-foreground">
+                                              {new Date(evaluation.created_at).toLocaleDateString('pt-BR')}
+                                            </span>
+                                          </div>
+                                        </div>
+                                      </div>
+                                      <p className="text-sm text-muted-foreground mb-3">
+                                        {evaluation.content}
+                                      </p>
+                                      {evaluation.media_urls && evaluation.media_urls.length > 0 && (
+                                        <div className="grid grid-cols-3 gap-2">
+                                          {evaluation.media_urls.map((url, idx) => (
+                                            <div key={idx} className="aspect-square rounded-lg overflow-hidden">
+                                              {evaluation.media_types?.[idx] === 'video' ? (
+                                                <video
+                                                  src={url}
+                                                  controls
+                                                  className="w-full h-full object-cover"
+                                                />
+                                              ) : (
+                                                <SafeImage
+                                                  src={url}
+                                                  alt={`Mídia ${idx + 1}`}
+                                                  className="w-full h-full object-cover"
+                                                />
+                                              )}
+                                            </div>
+                                          ))}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            ))
+                          )}
+                        </TabsContent>
+
+                        <TabsContent value="reclamacoes" className="space-y-4 mt-4">
+                          {complaintEvaluations.length === 0 ? (
+                            <div className="text-center py-12">
+                              <AlertCircle className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
+                              <p className="text-muted-foreground">Nenhuma reclamação ainda</p>
+                            </div>
+                          ) : (
+                            complaintEvaluations.map((evaluation) => (
+                              <Card key={evaluation.id}>
+                                <CardContent className="p-4">
+                                  <div className="flex items-start gap-4">
+                                    {evaluation.profiles?.avatar_url ? (
+                                      <SafeImage
+                                        src={evaluation.profiles.avatar_url}
+                                        alt={evaluation.profiles.full_name}
+                                        className="w-12 h-12 rounded-full object-cover"
+                                      />
+                                    ) : (
+                                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center">
+                                        <UserIcon className="w-6 h-6 text-primary" />
+                                      </div>
+                                    )}
+                                    <div className="flex-1">
+                                      <div className="flex items-center justify-between mb-2">
+                                        <div>
+                                          <p className="font-semibold">
+                                            {evaluation.profiles?.full_name || 'Usuário'}
+                                          </p>
+                                          <div className="flex items-center gap-2">
+                                            <div className="flex">
+                                              {[1, 2, 3, 4, 5].map((star) => (
+                                                <Star
+                                                  key={star}
+                                                  className={`w-4 h-4 ${
+                                                    star <= evaluation.rating
+                                                      ? 'fill-yellow-400 text-yellow-400'
+                                                      : 'text-muted-foreground'
+                                                  }`}
+                                                />
+                                              ))}
+                                            </div>
+                                            <span className="text-xs text-muted-foreground">
+                                              {new Date(evaluation.created_at).toLocaleDateString('pt-BR')}
+                                            </span>
+                                          </div>
+                                        </div>
+                                      </div>
+                                      <p className="text-sm text-muted-foreground mb-3">
+                                        {evaluation.content}
+                                      </p>
+                                      {evaluation.media_urls && evaluation.media_urls.length > 0 && (
+                                        <div className="grid grid-cols-3 gap-2">
+                                          {evaluation.media_urls.map((url, idx) => (
+                                            <div key={idx} className="aspect-square rounded-lg overflow-hidden">
+                                              {evaluation.media_types?.[idx] === 'video' ? (
+                                                <video
+                                                  src={url}
+                                                  controls
+                                                  className="w-full h-full object-cover"
+                                                />
+                                              ) : (
+                                                <SafeImage
+                                                  src={url}
+                                                  alt={`Mídia ${idx + 1}`}
+                                                  className="w-full h-full object-cover"
+                                                />
+                                              )}
+                                            </div>
+                                          ))}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            ))
+                          )}
+                        </TabsContent>
+                      </Tabs>
+                    </div>
                   </TabsContent>
                 </Tabs>
               </Card>

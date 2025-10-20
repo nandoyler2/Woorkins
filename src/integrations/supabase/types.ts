@@ -58,6 +58,7 @@ export type Database = {
           category: string
           created_at: string
           created_by: string | null
+          faq_display_response: string | null
           id: string
           keywords: string[]
           link: string | null
@@ -71,6 +72,7 @@ export type Database = {
           category?: string
           created_at?: string
           created_by?: string | null
+          faq_display_response?: string | null
           id?: string
           keywords: string[]
           link?: string | null
@@ -84,6 +86,7 @@ export type Database = {
           category?: string
           created_at?: string
           created_by?: string | null
+          faq_display_response?: string | null
           id?: string
           keywords?: string[]
           link?: string | null

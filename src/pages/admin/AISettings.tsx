@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -16,7 +17,9 @@ import {
   DollarSign,
   Briefcase,
   Navigation,
-  HelpCircle
+  HelpCircle,
+  Copy,
+  Eye
 } from 'lucide-react';
 
 interface FAQ {
@@ -24,6 +27,7 @@ interface FAQ {
   keywords: string[];
   question_pattern: string;
   response: string;
+  faq_display_response?: string | null;
   link: string | null;
   category: string;
   active: boolean;
@@ -46,6 +50,7 @@ export default function AISettings() {
     keywords: [],
     question_pattern: '',
     response: '',
+    faq_display_response: '',
     link: '',
     category: 'general',
     active: true,
@@ -80,10 +85,10 @@ export default function AISettings() {
 
   const handleSave = async () => {
     try {
-      if (!formData.question_pattern || !formData.response) {
+      if (!formData.question_pattern || !formData.response || !formData.faq_display_response) {
         toast({
           title: 'Campos obrigatórios',
-          description: 'Preencha o padrão da pergunta e a resposta',
+          description: 'Preencha o padrão da pergunta, a resposta do chat e a resposta do FAQ',
           variant: 'destructive'
         });
         return;
@@ -109,6 +114,7 @@ export default function AISettings() {
         keywords: [],
         question_pattern: '',
         response: '',
+        faq_display_response: '',
         link: '',
         category: 'general',
         active: true,
@@ -207,6 +213,7 @@ export default function AISettings() {
                   keywords: [],
                   question_pattern: '',
                   response: '',
+                  faq_display_response: '',
                   link: '',
                   category: 'general',
                   active: true,
@@ -252,16 +259,63 @@ export default function AISettings() {
 
           <div>
             <label className="text-sm font-medium mb-2 block">
-              Resposta *
+              Respostas * (Chat e FAQ)
             </label>
-            <Textarea
-              value={formData.response}
-              onChange={(e) =>
-                setFormData({ ...formData, response: e.target.value })
-              }
-              placeholder="Digite a resposta que será enviada ao usuário..."
-              rows={8}
-            />
+            <Tabs defaultValue="chat" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="chat" className="gap-2">
+                  <MessageSquare className="h-4 w-4" />
+                  Chat
+                </TabsTrigger>
+                <TabsTrigger value="faq" className="gap-2">
+                  <Eye className="h-4 w-4" />
+                  FAQ Público
+                </TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="chat" className="space-y-3 mt-4">
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">
+                    💬 <strong>Resposta Conversacional:</strong> Use emojis, marcadores (✅) e tom amigável. Será usada pelo assistente virtual.
+                  </p>
+                  <Textarea
+                    value={formData.response}
+                    onChange={(e) =>
+                      setFormData({ ...formData, response: e.target.value })
+                    }
+                    placeholder="Ex: Woorkins é incrível! 🚀&#10;&#10;✅ Contrate freelancers&#10;✅ Pagamentos seguros&#10;✅ Suporte 24/7"
+                    rows={8}
+                    className="font-mono text-sm"
+                  />
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setFormData({...formData, faq_display_response: formData.response})}
+                  className="gap-2"
+                >
+                  <Copy className="h-4 w-4" />
+                  Copiar para FAQ
+                </Button>
+              </TabsContent>
+              
+              <TabsContent value="faq" className="space-y-3 mt-4">
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">
+                    📄 <strong>Resposta Formal:</strong> Texto corrido e profissional, sem emojis. Será exibida na página pública de FAQ.
+                  </p>
+                  <Textarea
+                    value={formData.faq_display_response || ''}
+                    onChange={(e) =>
+                      setFormData({ ...formData, faq_display_response: e.target.value })
+                    }
+                    placeholder="Ex: Woorkins é uma plataforma profissional que conecta freelancers e clientes. Oferece sistema de pagamentos seguros, gestão de projetos e suporte especializado."
+                    rows={8}
+                  />
+                </div>
+              </TabsContent>
+            </Tabs>
           </div>
 
           <div>
@@ -357,10 +411,30 @@ export default function AISettings() {
                     Prioridade: {faq.priority}
                   </Badge>
                 </div>
-                <p className="text-sm text-muted-foreground mb-2 whitespace-pre-wrap">
-                  {faq.response.substring(0, 150)}
-                  {faq.response.length > 150 && '...'}
-                </p>
+                <div className="space-y-3 mb-2">
+                  <div>
+                    <Badge variant="outline" className="mb-1">
+                      <MessageSquare className="h-3 w-3 mr-1" />
+                      Chat
+                    </Badge>
+                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                      {faq.response.substring(0, 100)}
+                      {faq.response.length > 100 && '...'}
+                    </p>
+                  </div>
+                  {faq.faq_display_response && (
+                    <div>
+                      <Badge variant="outline" className="mb-1">
+                        <Eye className="h-3 w-3 mr-1" />
+                        FAQ
+                      </Badge>
+                      <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                        {faq.faq_display_response.substring(0, 100)}
+                        {faq.faq_display_response.length > 100 && '...'}
+                      </p>
+                    </div>
+                  )}
+                </div>
                 <div className="flex flex-wrap gap-2">
                   {faq.keywords.map((keyword, idx) => (
                     <Badge key={idx} variant="secondary" className="text-xs">

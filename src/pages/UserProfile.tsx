@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { MapPin, Calendar, User as UserIcon, Star, Briefcase, MessageSquare, ThumbsUp, AlertCircle } from 'lucide-react';
 import { Footer } from '@/components/Footer';
 import { SafeImage } from '@/components/ui/safe-image';
@@ -697,30 +698,14 @@ export default function UserProfile() {
                       ))}
                     </div>
                     <Button 
-                      onClick={() => setShowEvaluationForm(!showEvaluationForm)}
+                      onClick={() => setShowEvaluationForm(true)}
                       className="w-full"
-                      variant={showEvaluationForm ? "outline" : "default"}
                     >
-                      {showEvaluationForm ? 'Cancelar' : 'Avaliar Usuário'}
+                      Avaliar Usuário
                     </Button>
                   </div>
                 </CardContent>
               </Card>
-
-              {/* Formulário de Avaliação */}
-              {showEvaluationForm && profile && (
-                <Card className="bg-card/50 backdrop-blur-sm border-2 shadow-lg">
-                  <CardContent className="p-6">
-                    <ProfileEvaluationForm
-                      profileId={profile.id}
-                      onSuccess={() => {
-                        setShowEvaluationForm(false);
-                        loadUserProfile();
-                      }}
-                    />
-                  </CardContent>
-                </Card>
-              )}
 
               <Card className="bg-card/50 backdrop-blur-sm border-2 shadow-lg">
                 <CardContent className="p-6">
@@ -765,6 +750,24 @@ export default function UserProfile() {
           </div>
         </div>
       </div>
+
+      {/* Dialog de Avaliação */}
+      <Dialog open={showEvaluationForm} onOpenChange={setShowEvaluationForm}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Avaliar {profile?.full_name || 'Usuário'}</DialogTitle>
+          </DialogHeader>
+          {profile && (
+            <ProfileEvaluationForm
+              profileId={profile.id}
+              onSuccess={() => {
+                setShowEvaluationForm(false);
+                loadUserProfile();
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
 
       <Footer />
     </div>

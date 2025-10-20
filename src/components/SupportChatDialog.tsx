@@ -396,7 +396,7 @@ export function SupportChatDialog({ open, onOpenChange, documentRejected, profil
           </DialogTitle>
         </DialogHeader>
 
-        {showWelcome ? (
+        {showWelcome && !isBlocked ? (
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
             {/* Conversas ativas pendentes */}
             {activeConversations.length > 0 && (
@@ -490,6 +490,13 @@ export function SupportChatDialog({ open, onOpenChange, documentRejected, profil
                 </p>
               </div>
             </div>
+          </div>
+        ) : showWelcome && isBlocked ? (
+          <div className="flex-1 flex items-center justify-center p-4">
+            <SpamBlockCountdown 
+              remainingSeconds={remainingSeconds}
+              reason="Por favor, aguarde alguns minutos antes de iniciar uma nova conversa."
+            />
           </div>
         ) : (
           <>

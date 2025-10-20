@@ -27,6 +27,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import confetti from 'canvas-confetti';
@@ -117,6 +124,9 @@ export default function Dashboard() {
   const [postComments, setPostComments] = useState<Record<string, any[]>>({});
   const [followingProfiles, setFollowingProfiles] = useState<Set<string>>(new Set());
   const [profileFollowers, setProfileFollowers] = useState<Record<string, number>>({});
+  const [showEvaluateDialog, setShowEvaluateDialog] = useState(false);
+  const [availableProfiles, setAvailableProfiles] = useState<Array<{ id: string; username: string; full_name: string | null; avatar_url: string | null; type: 'user' | 'business'; company_name?: string; slug?: string }>>([]);
+  const [profileSearchQuery, setProfileSearchQuery] = useState('');
 
   const achievements: Achievement[] = [
     {
@@ -371,6 +381,49 @@ export default function Dashboard() {
     
     if (!error && data) {
       setWoorkoinsBalance(data.balance || 0);
+    }
+  };
+
+  const loadAvailableProfiles = async () => {
+    if (!profile) return;
+    
+    try {
+      // Buscar usuários (excluindo o próprio usuário)
+      const { data: users, error: usersError } = await supabase
+        .from('profiles')
+        .select('id, username, full_name, avatar_url')
+        .neq('id', profile.id)
+        .limit(50);
+
+      // Buscar perfis de negócios (excluindo os do usuário)
+      const { data: businesses, error: businessesError } = await supabase
+        .from('business_profiles')
+        .select('id, company_name, logo_url, slug, profile_id')
+        .neq('profile_id', profile.id)
+        .or('deleted.is.null,deleted.eq.false')
+        .limit(50);
+
+      const userProfiles = (users || []).map((u: any) => ({
+        id: u.id,
+        username: u.username,
+        full_name: u.full_name,
+        avatar_url: u.avatar_url,
+        type: 'user' as const
+      }));
+
+      const businessProfiles = (businesses || []).map((b: any) => ({
+        id: b.id,
+        username: b.slug || b.company_name,
+        full_name: null,
+        avatar_url: b.logo_url,
+        company_name: b.company_name,
+        slug: b.slug,
+        type: 'business' as const
+      }));
+
+      setAvailableProfiles([...userProfiles, ...businessProfiles]);
+    } catch (error) {
+      console.error('Error loading profiles:', error);
     }
   };
 
@@ -804,7 +857,13 @@ export default function Dashboard() {
 
             {/* Action Cards Grid */}
             <div className="grid grid-cols-2 gap-4">
-              <Card className="bg-gradient-to-br from-blue-500 to-blue-600 border-0 shadow-md hover:shadow-lg transition-all cursor-pointer group">
+              <Card 
+                className="bg-gradient-to-br from-blue-500 to-blue-600 border-0 shadow-md hover:shadow-lg transition-all cursor-pointer group"
+                onClick={() => {
+                  loadAvailableProfiles();
+                  setShowEvaluateDialog(true);
+                }}
+              >
                 <CardContent className="p-5">
                   <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                     <Star className="w-5 h-5 text-white" />
@@ -1397,6 +1456,94 @@ export default function Dashboard() {
           />
         </>
       )}
+
+      {/* Dialog de seleção de perfil para avaliar */}
+      <Dialog open={showEvaluateDialog} onOpenChange={setShowEvaluateDialog}>
+        <DialogContent className="max-w-2xl max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle>Selecionar Perfil para Avaliar</DialogTitle>
+            <DialogDescription>
+              Escolha um perfil de usuário ou empresa para escrever uma avaliação
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar por nome ou empresa..."
+                className="pl-10"
+                value={profileSearchQuery}
+                onChange={(e) => setProfileSearchQuery(e.target.value)}
+              />
+            </div>
+
+            <ScrollArea className="h-[400px] pr-4">
+              <div className="space-y-2">
+                {availableProfiles
+                  .filter(p => {
+                    const query = profileSearchQuery.toLowerCase();
+                    if (!query) return true;
+                    return (
+                      (p.full_name?.toLowerCase().includes(query)) ||
+                      (p.company_name?.toLowerCase().includes(query)) ||
+                      (p.username?.toLowerCase().includes(query))
+                    );
+                  })
+                  .map((profileItem) => (
+                    <Link
+                      key={profileItem.id}
+                      to={profileItem.type === 'business' 
+                        ? `/${profileItem.slug}/avaliar` 
+                        : `/@${profileItem.username}/avaliar`}
+                      onClick={() => setShowEvaluateDialog(false)}
+                      className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition-colors border"
+                    >
+                      <Avatar className="w-12 h-12">
+                        <AvatarImage src={profileItem.avatar_url || ''} />
+                        <AvatarFallback className="bg-slate-200 text-slate-600">
+                          {profileItem.type === 'business' ? (
+                            <Building2 className="w-6 h-6" />
+                          ) : (
+                            <User className="w-6 h-6" />
+                          )}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate">
+                          {profileItem.type === 'business' 
+                            ? profileItem.company_name 
+                            : (profileItem.full_name || profileItem.username)}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {profileItem.type === 'business' ? 'Empresa' : 'Usuário'} • @{profileItem.username}
+                        </p>
+                      </div>
+                      <Button size="sm" variant="ghost">
+                        Avaliar
+                      </Button>
+                    </Link>
+                  ))}
+                
+                {availableProfiles.filter(p => {
+                  const query = profileSearchQuery.toLowerCase();
+                  if (!query) return true;
+                  return (
+                    (p.full_name?.toLowerCase().includes(query)) ||
+                    (p.company_name?.toLowerCase().includes(query)) ||
+                    (p.username?.toLowerCase().includes(query))
+                  );
+                }).length === 0 && (
+                  <div className="text-center py-8 text-muted-foreground">
+                    Nenhum perfil encontrado
+                  </div>
+                )}
+              </div>
+            </ScrollArea>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <Footer />
     </div>
   );

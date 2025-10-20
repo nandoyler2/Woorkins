@@ -2,7 +2,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { Globe, LogOut, User, Home, Search, MessageSquare, Shield, Briefcase, MessageCircle, Plus, FolderOpen } from 'lucide-react';
+import { Globe, LogOut, User, Home, Search, MessageSquare, Shield, Briefcase, MessageCircle, Plus, FolderOpen, Headset } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import {
   DropdownMenu,
@@ -18,6 +18,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { NotificationBell } from '@/components/NotificationBell';
 import { SearchSlideIn } from '@/components/SearchSlideIn';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
+import { useActiveSupportCount } from '@/hooks/useActiveSupportCount';
 
 export const Header = () => {
   const { language, setLanguage, t } = useLanguage();
@@ -29,6 +30,7 @@ export const Header = () => {
   const [searchOpen, setSearchOpen] = useState(false);
   const [projectsOpen, setProjectsOpen] = useState(false);
   const unreadCount = useUnreadMessages(profileId);
+  const activeSupportCount = useActiveSupportCount();
 
   // Helper to check if current route matches
   const isActiveRoute = (path: string) => location.pathname === path;
@@ -173,6 +175,26 @@ export const Header = () => {
 
         <div className="flex items-center gap-3">
           {user && profileId && <NotificationBell profileId={profileId} />}
+          
+          {isAdmin && (
+            <Link to="/admin/support" className="relative">
+              <Button 
+                variant="ghost" 
+                size="icon"
+                className="relative"
+              >
+                <Headset className="w-5 h-5" />
+                {activeSupportCount > 0 && (
+                  <Badge 
+                    variant="destructive" 
+                    className="absolute -top-1 -right-1 h-4 min-w-4 flex items-center justify-center p-0 px-1 text-[9px]"
+                  >
+                    {activeSupportCount > 9 ? '9+' : activeSupportCount}
+                  </Badge>
+                )}
+              </Button>
+            </Link>
+          )}
           
           <Button 
             variant="ghost" 

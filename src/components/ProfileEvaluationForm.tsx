@@ -142,18 +142,18 @@ export function ProfileEvaluationForm({ profileId, onSuccess }: ProfileEvaluatio
 
       // Criar avaliação - usar profile_id do usuário logado
       const { error: insertError } = await supabase
-        .from('evaluations' as any)
+        .from('evaluations')
         .insert({
           user_id: userProfile.id,
           business_id: profileId,
           rating,
           title: evaluationCategory === 'complaint' ? 'Reclamação' : 'Avaliação Positiva',
           content: content.trim(),
-          evaluation_type: 'client',
+          evaluation_type: 'client' as const,
           media_urls: mediaUrls.length > 0 ? mediaUrls : null,
           media_types: mediaTypes.length > 0 ? mediaTypes : null,
           evaluation_category: evaluationCategory,
-        });
+        } as any);
 
       if (insertError) throw insertError;
 

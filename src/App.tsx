@@ -51,6 +51,7 @@ import Messages from "./pages/Messages";
 import PaymentSettings from "./pages/PaymentSettings";
 import BusinessProfile from "./pages/BusinessProfile";
 import AdminInvites from "./pages/AdminInvites";
+import ProfileEvaluate from "./pages/ProfileEvaluate";
 
 const queryClient = new QueryClient();
 
@@ -103,6 +104,7 @@ function AppContent() {
         
         {/* Rotas dinâmicas devem vir por último */}
         <Route path="/:slug/editar" element={<ProtectedRoute><BusinessEdit /></ProtectedRoute>} />
+        <Route path="/:slug/avaliar" element={<ProtectedRoute><ProfileEvaluate /></ProtectedRoute>} />
         <Route path="/:slug" element={<ProfileRouter />} />
 
         <Route path="/admin" element={<ProtectedRoute requireAdmin><AdminLayout /></ProtectedRoute>}>

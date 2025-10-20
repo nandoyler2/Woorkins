@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -47,13 +47,14 @@ export function SupportChatDialog({ open, onOpenChange, documentRejected, profil
   const [showWelcome, setShowWelcome] = useState(true);
   const [activeConversations, setActiveConversations] = useState<any[]>([]);
   const [lastActivity, setLastActivity] = useState<Date>(new Date());
-  const [timeUntilClose, setTimeUntilClose] = useState<number>(360); // 6 minutos em segundos (5 minutos + 1 minuto de aviso)
+  const [timeUntilClose, setTimeUntilClose] = useState<number>(300); // 5 minutos em segundos
   const [showInactivityWarning, setShowInactivityWarning] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messageInputRef = useRef<HTMLTextAreaElement>(null);
   const inactivityTimerRef = useRef<NodeJS.Timeout | null>(null);
   const countdownTimerRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
+  const hasAgent = useMemo(() => messages.some(m => m.sender_type === 'agent'), [messages]);
 
   // Carregar conversas ativas e retomar automaticamente se houver conversa em andamento
   useEffect(() => {
@@ -79,6 +80,17 @@ export function SupportChatDialog({ open, onOpenChange, documentRejected, profil
     loadActiveConversations();
   }, [open, profileId]);
 
+  // Restaurar conversa ao reabrir (persistência em localStorage)
+  useEffect(() => {
+    if (!open || conversationId) return;
+    try {
+      const storedId = localStorage.getItem('support_conversation_id');
+      if (storedId) {
+        loadConversation(storedId);
+      }
+    } catch {}
+  }, [open, conversationId]);
+
   // Mensagem inicial automática
   useEffect(() => {
     if (open && documentRejected && !askedForHelp) {
@@ -98,16 +110,16 @@ export function SupportChatDialog({ open, onOpenChange, documentRejected, profil
       }, 500);
       return () => clearTimeout(timer);
     }
-  }, [open, documentRejected, askedForHelp, initialMessage]);
+  }, [open, documentRejected, askedForHelp, initialMessage, messages.length, conversationId]);
 
-  // Timer de inatividade e countdown
+  // Timer de inatividade e countdown (apenas para conversas com IA)
   useEffect(() => {
-    if (!conversationId || showWelcome) return;
+    if (!conversationId || showWelcome || hasAgent) return;
 
     // Resetar timer de inatividade
     const resetInactivityTimer = () => {
       setLastActivity(new Date());
-      setTimeUntilClose(360);
+      setTimeUntilClose(300);
       setShowInactivityWarning(false);
       
       if (inactivityTimerRef.current) {
@@ -115,9 +127,9 @@ export function SupportChatDialog({ open, onOpenChange, documentRejected, profil
       }
 
       inactivityTimerRef.current = setTimeout(() => {
-        // Encerrar conversa após 6 minutos
+        // Encerrar conversa após 5 minutos
         handleCloseConversation();
-      }, 360000); // 6 minutos
+      }, 300000); // 5 minutos
     };
 
     // Countdown a cada segundo
@@ -151,7 +163,7 @@ export function SupportChatDialog({ open, onOpenChange, documentRejected, profil
         clearInterval(countdownTimerRef.current);
       }
     };
-  }, [conversationId, showWelcome, messages.length]);
+  }, [conversationId, showWelcome, messages.length, hasAgent]);
 
   const handleCloseConversation = async () => {
     if (!conversationId) return;
@@ -171,8 +183,9 @@ export function SupportChatDialog({ open, onOpenChange, documentRejected, profil
       setConversationId(null);
       setMessages([]);
       setShowWelcome(true);
-      setTimeUntilClose(360);
+      setTimeUntilClose(300);
       setShowInactivityWarning(false);
+      try { localStorage.removeItem('support_conversation_id'); } catch {}
     } catch (error) {
       console.error('Erro ao encerrar conversa:', error);
     }
@@ -316,6 +329,7 @@ export function SupportChatDialog({ open, onOpenChange, documentRejected, profil
 
       if (data.conversationId && !conversationId) {
         setConversationId(data.conversationId);
+        try { localStorage.setItem('support_conversation_id', data.conversationId); } catch {}
       }
 
       // Add AI response
@@ -387,6 +401,8 @@ export function SupportChatDialog({ open, onOpenChange, documentRejected, profil
         }));
         setMessages(formattedMessages);
         setConversationId(convId);
+        // Persistir conversa atual
+        try { localStorage.setItem('support_conversation_id', convId); } catch {}
         setShowWelcome(false);
       }
     } catch (error) {
@@ -422,7 +438,7 @@ export function SupportChatDialog({ open, onOpenChange, documentRejected, profil
               <MessageCircle className="h-5 w-5" />
               Assistente Virtual Woorkins
             </div>
-            {!showWelcome && conversationId && (
+            {!showWelcome && conversationId && !hasAgent && (
               <div className="flex items-center gap-2">
                 <div className="text-xs text-muted-foreground">
                   Encerra em: {formatTime(timeUntilClose)}

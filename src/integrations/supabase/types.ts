@@ -1847,7 +1847,7 @@ export type Database = {
             foreignKeyName: "portfolio_items_business_id_fkey"
             columns: ["business_id"]
             isOneToOne: false
-            referencedRelation: "profiles"
+            referencedRelation: "business_profiles"
             referencedColumns: ["id"]
           },
         ]

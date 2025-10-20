@@ -6,6 +6,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Camera, Loader2, Upload } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ProfilePhotoCropDialog } from './ProfilePhotoCropDialog';
+import { compressImage } from '@/lib/imageCompression';
 
 interface ProfilePhotoUploadProps {
   currentPhotoUrl?: string;
@@ -57,9 +58,21 @@ export function ProfilePhotoUpload({ currentPhotoUrl, userName, userId, onPhotoU
       setModerating(true);
       setImageToCrop(null);
 
-      // Convert cropped blob to base64 for moderation
+      // Compress cropped image
+      console.log('Compressing profile photo...');
+      const compressedBlob = await compressImage(
+        new File([croppedBlob], originalFile.name, { type: croppedBlob.type }),
+        {
+          maxWidth: 800,
+          maxHeight: 800,
+          quality: 0.85,
+          maxSizeMB: 1
+        }
+      );
+
+      // Convert compressed blob to base64 for moderation
       const reader = new FileReader();
-      reader.readAsDataURL(croppedBlob);
+      reader.readAsDataURL(compressedBlob);
       
       await new Promise((resolve, reject) => {
         reader.onload = () => resolve(reader.result);
@@ -108,10 +121,13 @@ export function ProfilePhotoUpload({ currentPhotoUrl, userName, userId, onPhotoU
         }
       }
 
-      // Upload cropped photo
+      // Upload compressed photo
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(fileName, croppedBlob, { upsert: true });
+        .upload(fileName, compressedBlob, { 
+          upsert: true,
+          contentType: 'image/jpeg'
+        });
 
       if (uploadError) throw uploadError;
 

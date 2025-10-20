@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { RealtimeChannel } from '@supabase/supabase-js';
+import { compressImage } from '@/lib/imageCompression';
 
 interface Message {
   id: string;
@@ -419,13 +420,28 @@ export const useRealtimeMessaging = ({
         // Upload attachment FIRST if present (before moderation) to get public URL
         if (attachment) {
           try {
+            let fileToUpload: File | Blob = attachment.file;
+
+            // Compress images before upload
+            if (attachment.file.type.startsWith('image/')) {
+              console.log('Compressing message attachment...');
+              fileToUpload = await compressImage(attachment.file, {
+                maxWidth: 1920,
+                maxHeight: 1920,
+                quality: 0.85,
+                maxSizeMB: 2
+              });
+            }
+
             const fileExt = attachment.file.name.split('.').pop();
             const fileName = `${currentUserId}/${Date.now()}.${fileExt}`;
             uploadedFileName = fileName;
             
             const { data: uploadData, error: uploadError } = await supabase.storage
               .from('message-attachments')
-              .upload(fileName, attachment.file);
+              .upload(fileName, fileToUpload, {
+                contentType: attachment.file.type.startsWith('image/') ? 'image/jpeg' : attachment.file.type
+              });
 
             if (uploadError) throw uploadError;
 
@@ -528,13 +544,28 @@ export const useRealtimeMessaging = ({
         // If not moderating, still need to upload attachment
         if (attachment) {
           try {
+            let fileToUpload: File | Blob = attachment.file;
+
+            // Compress images before upload
+            if (attachment.file.type.startsWith('image/')) {
+              console.log('Compressing message attachment...');
+              fileToUpload = await compressImage(attachment.file, {
+                maxWidth: 1920,
+                maxHeight: 1920,
+                quality: 0.85,
+                maxSizeMB: 2
+              });
+            }
+
             const fileExt = attachment.file.name.split('.').pop();
             const fileName = `${currentUserId}/${Date.now()}.${fileExt}`;
             uploadedFileName = fileName;
             
             const { data: uploadData, error: uploadError } = await supabase.storage
               .from('message-attachments')
-              .upload(fileName, attachment.file);
+              .upload(fileName, fileToUpload, {
+                contentType: attachment.file.type.startsWith('image/') ? 'image/jpeg' : attachment.file.type
+              });
 
             if (uploadError) throw uploadError;
 

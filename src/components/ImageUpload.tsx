@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Upload } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ImageCropDialog } from './ImageCropDialog';
+import { compressImage } from '@/lib/imageCompression';
 
 interface ImageUploadProps {
   currentImageUrl: string | null;
@@ -109,12 +110,24 @@ export function ImageUpload({ currentImageUrl, onUpload, bucket, folder, type = 
     try {
       const croppedBlob = await getCroppedImg(tempPreview, croppedAreaPixels);
       
+      // Compress cropped image
+      console.log('Compressing business image...');
+      const compressedBlob = await compressImage(
+        new File([croppedBlob], selectedFile.name, { type: croppedBlob.type }),
+        {
+          maxWidth: type === 'logo' ? 800 : 1920,
+          maxHeight: type === 'logo' ? 800 : 1080,
+          quality: 0.85,
+          maxSizeMB: 1
+        }
+      );
+      
       const fileExt = selectedFile.name.split('.').pop();
       const fileName = `${folder}/${Date.now()}.${fileExt}`;
 
       const { data, error } = await supabase.storage
         .from(bucket)
-        .upload(fileName, croppedBlob, {
+        .upload(fileName, compressedBlob, {
           cacheControl: '3600',
           upsert: false,
           contentType: 'image/jpeg',

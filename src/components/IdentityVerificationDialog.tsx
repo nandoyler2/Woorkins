@@ -5,6 +5,7 @@ import { Upload, CheckCircle, XCircle, Loader2, HelpCircle } from 'lucide-react'
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAIAssistant } from '@/contexts/AIAssistantContext';
+import { compressImage } from '@/lib/imageCompression';
 
 interface IdentityVerificationDialogProps {
   open: boolean;
@@ -41,9 +42,42 @@ export function IdentityVerificationDialog({
   const backInputRef = useRef<HTMLInputElement>(null);
   const { openWithMessage } = useAIAssistant();
 
+  // Cleanup old documents before new upload
+  const cleanupOldDocuments = async () => {
+    if (!profileId) return;
+    
+    try {
+      console.log('🧹 Cleaning up old documents...');
+      
+      const { data: files, error: listError } = await supabase.storage
+        .from('identity-documents')
+        .list(profileId);
+      
+      if (listError || !files || files.length === 0) return;
+      
+      const filesToDelete = files.map(file => `${profileId}/${file.name}`);
+      console.log(`Deleting ${filesToDelete.length} old files...`);
+      
+      const { error: deleteError } = await supabase.storage
+        .from('identity-documents')
+        .remove(filesToDelete);
+      
+      if (!deleteError) {
+        console.log(`✅ Deleted ${filesToDelete.length} old files`);
+      }
+    } catch (error) {
+      console.error('Error cleaning up old documents:', error);
+    }
+  };
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, type: 'front' | 'back' | 'combined') => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    // Cleanup old files before uploading new ones
+    if (type === 'front' || type === 'combined') {
+      await cleanupOldDocuments();
+    }
 
     if (type === 'front') {
       setUploadOption('separate');
@@ -57,7 +91,6 @@ export function IdentityVerificationDialog({
       setUploadOption('combined');
       setCombinedImage(file);
       await preValidateDocument(file, 'combined');
-      // Para documento combinado, verificar automaticamente após pré-validação
       setTimeout(() => processVerification(file, file), 100);
     }
   };
@@ -176,10 +209,29 @@ export function IdentityVerificationDialog({
       if (!profile) throw new Error('Perfil não encontrado');
       
       console.log('[DEBUG] Uploading files...');
-      const uploadFile = async (file: File, fileName: string) => {
+      
+      // Compress images before upload
+      console.log('Compressing identity documents...');
+      const compressedFront = await compressImage(frontFile, {
+        maxWidth: 1920,
+        maxHeight: 1920,
+        quality: 0.85,
+        maxSizeMB: 2
+      });
+      
+      const compressedBack = await compressImage(backFile, {
+        maxWidth: 1920,
+        maxHeight: 1920,
+        quality: 0.85,
+        maxSizeMB: 2
+      });
+      
+      const uploadFile = async (file: Blob, fileName: string) => {
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('identity-documents')
-          .upload(`${profile.id}/${fileName}_${timestamp}.jpg`, file);
+          .upload(`${profile.id}/${fileName}_${timestamp}.jpg`, file, {
+            contentType: 'image/jpeg'
+          });
         
         if (uploadError) throw uploadError;
         
@@ -197,11 +249,11 @@ export function IdentityVerificationDialog({
       let backUrl = '';
 
       if (uploadOption === 'combined') {
-        frontUrl = await uploadFile(frontFile, 'document_combined');
+        frontUrl = await uploadFile(compressedFront, 'document_combined');
         backUrl = frontUrl;
       } else {
-        frontUrl = await uploadFile(frontFile, 'document_front');
-        backUrl = await uploadFile(backFile, 'document_back');
+        frontUrl = await uploadFile(compressedFront, 'document_front');
+        backUrl = await uploadFile(compressedBack, 'document_back');
       }
 
       console.log('[DEBUG] Calling verification function...');

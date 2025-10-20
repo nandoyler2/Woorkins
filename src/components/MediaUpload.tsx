@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Upload, X, Image as ImageIcon, Video } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { compressImage } from '@/lib/imageCompression';
 
 interface MediaUploadProps {
   onUpload: (url: string, type: string) => void;
@@ -44,13 +45,28 @@ export function MediaUpload({ onUpload, accept = "image/*,video/*", maxSizeMB = 
     // Upload
     setUploading(true);
     try {
+      let fileToUpload: File | Blob = file;
+
+      // Compress images before upload
+      if (type === 'image') {
+        console.log('Compressing image...');
+        fileToUpload = await compressImage(file, {
+          maxWidth: 1920,
+          maxHeight: 1920,
+          quality: 0.85,
+          maxSizeMB: 2
+        });
+      }
+
       const fileExt = file.name.split('.').pop();
       const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
       const filePath = `${Date.now()}-${fileName}`;
 
       const { error: uploadError, data } = await supabase.storage
         .from('business-media')
-        .upload(filePath, file);
+        .upload(filePath, fileToUpload, {
+          contentType: type === 'image' ? 'image/jpeg' : file.type
+        });
 
       if (uploadError) throw uploadError;
 

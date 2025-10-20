@@ -107,41 +107,8 @@ export default function Dashboard() {
     return localStorage.getItem('woorkins_confetti_shown') === 'true';
   });
   
-  // Mock data for feed posts
-  const feedPosts: FeedPost[] = [
-    {
-      id: '1',
-      author_name: 'Maria Santos',
-      author_role: 'Especialista em Marketing',
-      author_avatar: '',
-      time_ago: '2h atrás',
-      content: 'Acabei de concluir um projeto incrível com a TechCorp! A equipe deles foi extremamente profissional e entregou exatamente o que precisávamos. A atenção aos detalhes e comunicação durante todo o processo foi excepcional. Recomendo muito os serviços deles para qualquer pessoa que procura trabalho de desenvolvimento web de qualidade. 🚀',
-      image_url: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&h=300&fit=crop',
-      likes: 24,
-      comments: 8
-    },
-    {
-      id: '2',
-      author_name: 'Carlos Rodriguez',
-      author_role: 'Designer Freelancer',
-      author_avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
-      time_ago: '4h atrás',
-      content: 'Animado para compartilhar meu último design de logo para um restaurante local! 🎨 O cliente queria algo moderno mas acolhedor, refletindo sua herança familiar. Após várias iterações, chegamos a essa bela combinação de tipografia e iconografia. O que vocês acham? Adoraria ouvir seus comentários!',
-      image_url: 'https://images.unsplash.com/photo-1626785774573-4b799315345d?w=600&h=300&fit=crop',
-      likes: 42,
-      comments: 15
-    },
-    {
-      id: '3',
-      author_name: 'Ana Costa',
-      author_role: 'Consultora de Negócios',
-      author_avatar: '',
-      time_ago: '8h atrás',
-      content: 'Ótimo evento de networking ontem à noite! Conheci tantos profissionais talentosos e potenciais colaboradores. Uma lição importante que compartilharam sobre gestão de projetos: você pode planejar, mas o valor que você pode oferecer aos outros. Ansioso para fazer follow-up com todos vocês e ver o que aprenderam. A Comunidade Woorkins continua me impressionando! 👏',
-      likes: 18,
-      comments: 6
-    }
-  ];
+  const [feedPosts, setFeedPosts] = useState<FeedPost[]>([]);
+  const [loadingPosts, setLoadingPosts] = useState(true);
 
   const achievements: Achievement[] = [
     {
@@ -410,6 +377,127 @@ export default function Dashboard() {
       setBusinessProfiles(data as unknown as BusinessProfile[]);
     }
   };
+
+  const loadFeedPosts = async () => {
+    setLoadingPosts(true);
+    try {
+      const { data: posts, error } = await supabase
+        .from('business_posts')
+        .select(`
+          id,
+          content,
+          media_urls,
+          media_types,
+          created_at,
+          business_id,
+          business_profiles!inner (
+            company_name,
+            category,
+            logo_url,
+            profile_id,
+            profiles!inner (
+              full_name,
+              username,
+              avatar_url
+            )
+          )
+        `)
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      if (error) throw error;
+
+      // Buscar curtidas e comentários para cada post
+      const postsWithStats = await Promise.all(
+        (posts || []).map(async (post: any) => {
+          const [likesData, commentsData] = await Promise.all([
+            supabase
+              .from('business_post_likes')
+              .select('id', { count: 'exact', head: true })
+              .eq('post_id', post.id),
+            supabase
+              .from('business_post_comments')
+              .select('id', { count: 'exact', head: true })
+              .eq('post_id', post.id)
+          ]);
+
+          const businessProfile = post.business_profiles;
+          const profile = businessProfile?.profiles;
+          
+          // Calcular tempo atrás
+          const createdAt = new Date(post.created_at);
+          const now = new Date();
+          const diffInMinutes = Math.floor((now.getTime() - createdAt.getTime()) / (1000 * 60));
+          
+          let timeAgo = '';
+          if (diffInMinutes < 60) {
+            timeAgo = `${diffInMinutes}m atrás`;
+          } else if (diffInMinutes < 1440) {
+            timeAgo = `${Math.floor(diffInMinutes / 60)}h atrás`;
+          } else {
+            timeAgo = `${Math.floor(diffInMinutes / 1440)}d atrás`;
+          }
+
+          return {
+            id: post.id,
+            author_name: profile?.full_name || profile?.username || businessProfile?.company_name || 'Usuário',
+            author_role: businessProfile?.category || 'Profissional',
+            author_avatar: profile?.avatar_url || businessProfile?.logo_url || '',
+            time_ago: timeAgo,
+            content: post.content,
+            image_url: post.media_urls?.[0] || undefined,
+            likes: likesData.count || 0,
+            comments: commentsData.count || 0
+          };
+        })
+      );
+
+      setFeedPosts(postsWithStats);
+    } catch (error) {
+      console.error('Error loading feed posts:', error);
+    } finally {
+      setLoadingPosts(false);
+    }
+  };
+
+  const handleLikePost = async (postId: string) => {
+    if (!profile) return;
+
+    try {
+      // Verificar se já curtiu
+      const { data: existingLike } = await supabase
+        .from('business_post_likes')
+        .select('id')
+        .eq('post_id', postId)
+        .eq('profile_id', profile.id)
+        .maybeSingle();
+
+      if (existingLike) {
+        // Remover curtida
+        await supabase
+          .from('business_post_likes')
+          .delete()
+          .eq('id', existingLike.id);
+      } else {
+        // Adicionar curtida
+        await supabase
+          .from('business_post_likes')
+          .insert({
+            post_id: postId,
+            profile_id: profile.id
+          });
+      }
+
+      // Recarregar posts
+      loadFeedPosts();
+    } catch (error) {
+      console.error('Error liking post:', error);
+    }
+  };
+
+  useEffect(() => {
+    loadFeedPosts();
+  }, []);
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -621,59 +709,79 @@ export default function Dashboard() {
                 </div>
               </CardHeader>
               <CardContent className="p-0">
-                {feedPosts.map((post) => (
-                  <div key={post.id} className="p-4 border-b border-slate-100 last:border-0">
-                    <div className="flex items-start gap-3">
-                      <Avatar className="w-10 h-10">
-                        <AvatarImage src={post.author_avatar} />
-                        <AvatarFallback className="bg-slate-200 text-slate-600 text-sm">
-                          {post.author_name.charAt(0)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between mb-1">
-                          <div>
-                            <h4 className="font-semibold text-sm text-slate-900">{post.author_name}</h4>
-                            <p className="text-xs text-slate-600">{post.author_role} • {post.time_ago}</p>
+                {loadingPosts ? (
+                  <div className="p-8 text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                  </div>
+                ) : feedPosts.length === 0 ? (
+                  <div className="p-8 text-center text-slate-500">
+                    Nenhuma postagem ainda. Seja o primeiro a compartilhar!
+                  </div>
+                ) : (
+                  <>
+                    {feedPosts.map((post) => (
+                      <div key={post.id} className="p-4 border-b border-slate-100 last:border-0">
+                        <div className="flex items-start gap-3">
+                          <Avatar className="w-10 h-10">
+                            <AvatarImage src={post.author_avatar} />
+                            <AvatarFallback className="bg-slate-200 text-slate-600 text-sm">
+                              {post.author_name.charAt(0)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start justify-between mb-1">
+                              <div>
+                                <h4 className="font-semibold text-sm text-slate-900">{post.author_name}</h4>
+                                <p className="text-xs text-slate-600">{post.author_role} • {post.time_ago}</p>
+                              </div>
+                              <Button variant="default" size="sm" className="h-7 text-xs px-3">
+                                Seguir
+                              </Button>
+                            </div>
+                            <p className="text-sm text-slate-700 mb-2 leading-relaxed">{post.content}</p>
+                            {post.image_url && (
+                              <img 
+                                src={post.image_url} 
+                                alt="Post content" 
+                                className="w-full h-48 object-cover rounded-lg mb-2"
+                              />
+                            )}
+                            <div className="flex items-center gap-4 text-xs text-slate-600">
+                              <button 
+                                onClick={() => handleLikePost(post.id)}
+                                className="flex items-center gap-1 hover:text-red-500 transition-colors"
+                              >
+                                <Heart className="w-4 h-4" />
+                                <span>{post.likes}</span>
+                              </button>
+                              <button className="flex items-center gap-1 hover:text-blue-500 transition-colors">
+                                <MessageCircle className="w-4 h-4" />
+                                <span>{post.comments}</span>
+                              </button>
+                              <button className="flex items-center gap-1 hover:text-green-500 transition-colors">
+                                <Share2 className="w-4 h-4" />
+                                <span>Compartilhar</span>
+                              </button>
+                              <button className="ml-auto hover:text-blue-500 transition-colors">
+                                <Bookmark className="w-4 h-4" />
+                              </button>
+                            </div>
                           </div>
-                          <Button variant="default" size="sm" className="h-7 text-xs px-3">
-                            Seguir
-                          </Button>
-                        </div>
-                        <p className="text-sm text-slate-700 mb-2 leading-relaxed">{post.content}</p>
-                        {post.image_url && (
-                          <img 
-                            src={post.image_url} 
-                            alt="Post content" 
-                            className="w-full h-48 object-cover rounded-lg mb-2"
-                          />
-                        )}
-                        <div className="flex items-center gap-4 text-xs text-slate-600">
-                          <button className="flex items-center gap-1 hover:text-red-500 transition-colors">
-                            <Heart className="w-4 h-4" />
-                            <span>{post.likes}</span>
-                          </button>
-                          <button className="flex items-center gap-1 hover:text-blue-500 transition-colors">
-                            <MessageCircle className="w-4 h-4" />
-                            <span>{post.comments}</span>
-                          </button>
-                          <button className="flex items-center gap-1 hover:text-green-500 transition-colors">
-                            <Share2 className="w-4 h-4" />
-                            <span>Compartilhar</span>
-                          </button>
-                          <button className="ml-auto hover:text-blue-500 transition-colors">
-                            <Bookmark className="w-4 h-4" />
-                          </button>
                         </div>
                       </div>
+                    ))}
+                    <div className="p-4 text-center">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="text-sm"
+                        onClick={loadFeedPosts}
+                      >
+                        Carregar mais postagens
+                      </Button>
                     </div>
-                  </div>
-                ))}
-                <div className="p-4 text-center">
-                  <Button variant="outline" size="sm" className="text-sm">
-                    Carregar mais postagens
-                  </Button>
-                </div>
+                  </>
+                )}
               </CardContent>
             </Card>
           </div>

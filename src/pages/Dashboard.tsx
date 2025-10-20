@@ -459,11 +459,10 @@ export default function Dashboard() {
             comments: commentsData.count || 0,
             business_id: businessProfile?.profile_id || '',
             author_username: profile?.username,
-            author_profile_link: businessProfile?.slug 
-              ? `/${businessProfile.slug}` 
-              : profile?.username 
-                ? `/${profile.username}` 
-                : '#'
+            // Sempre usar o username do perfil PESSOAL, não o slug do business
+            author_profile_link: profile?.username 
+              ? `/${profile.username}` 
+              : '#'
           };
         })
       );

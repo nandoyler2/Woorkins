@@ -452,8 +452,10 @@ export default function Dashboard() {
             // Priorizar nome da empresa para posts de business
             author_name: businessProfile?.company_name || profile?.full_name || profile?.username || 'Usuário',
             author_role: businessProfile?.category || 'Profissional',
-            // Priorizar logo da empresa para posts de business
-            author_avatar: businessProfile?.logo_url || profile?.avatar_url || '',
+            // Usar logo da empresa SE existir, senão usa avatar pessoal
+            author_avatar: (businessProfile?.logo_url && businessProfile.logo_url.trim() !== '') 
+              ? businessProfile.logo_url 
+              : profile?.avatar_url || '',
             time_ago: timeAgo,
             content: post.content,
             image_url: post.media_urls?.[0] || undefined,

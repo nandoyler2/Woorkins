@@ -2276,6 +2276,7 @@ export type Database = {
           assigned_to: string | null
           created_at: string
           id: string
+          last_agent_message_at: string | null
           profile_id: string
           reason: string | null
           status: string
@@ -2285,6 +2286,7 @@ export type Database = {
           assigned_to?: string | null
           created_at?: string
           id?: string
+          last_agent_message_at?: string | null
           profile_id: string
           reason?: string | null
           status?: string
@@ -2294,6 +2296,7 @@ export type Database = {
           assigned_to?: string | null
           created_at?: string
           id?: string
+          last_agent_message_at?: string | null
           profile_id?: string
           reason?: string | null
           status?: string
@@ -2316,6 +2319,7 @@ export type Database = {
           conversation_id: string
           created_at: string
           id: string
+          read: boolean | null
           sender_id: string
           sender_type: string
         }
@@ -2325,6 +2329,7 @@ export type Database = {
           conversation_id: string
           created_at?: string
           id?: string
+          read?: boolean | null
           sender_id: string
           sender_type: string
         }
@@ -2334,6 +2339,7 @@ export type Database = {
           conversation_id?: string
           created_at?: string
           id?: string
+          read?: boolean | null
           sender_id?: string
           sender_type?: string
         }

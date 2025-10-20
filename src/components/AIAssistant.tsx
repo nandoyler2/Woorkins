@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { MessageCircle, X, Send, HelpCircle, Shield, Coins, AlertCircle, History, GripVertical, Paperclip, FileText, File, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -11,6 +12,8 @@ import { useLocation } from 'react-router-dom';
 import { formatShortName, formatTimeSaoPaulo } from '@/lib/utils';
 import { useSpamBlock } from '@/hooks/useSpamBlock';
 import { SpamBlockCountdown } from './SpamBlockCountdown';
+import { SupportChatDialog } from '@/components/SupportChatDialog';
+import { useSupportUnreadCount } from '@/hooks/useSupportUnreadCount';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -104,6 +107,11 @@ export const AIAssistant = () => {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { systemBlock, messagingBlock } = useSystemBlock(profileId || '');
+  
+  // Suporte - variáveis para chat de suporte
+  const [supportDialogOpen, setSupportDialogOpen] = useState(false);
+  const [supportInitialMessage, setSupportInitialMessage] = useState('');
+  const { unreadCount, hasActiveConversation } = useSupportUnreadCount(userProfileId, supportDialogOpen);
 
   // Verificar se está em áreas onde o botão deve ser escondido
   const isAdminArea = location.pathname.startsWith('/admin');
@@ -653,14 +661,14 @@ export const AIAssistant = () => {
     });
   };
 
-  const handleMouseUp = (e: MouseEvent) => {
+  const handleGlobalMouseUp = (e: MouseEvent) => {
     if (isDragging) {
       // Calcular se houve movimento significativo (mais de 5px)
       const moved = Math.abs(e.clientX - dragStartPos.x) > 5 || Math.abs(e.clientY - dragStartPos.y) > 5;
       
       // Só abrir se não houve movimento (foi um clique)
       if (!moved) {
-        setInternalOpen(true);
+        setSupportDialogOpen(true);
       }
     }
     setIsDragging(false);
@@ -669,11 +677,11 @@ export const AIAssistant = () => {
   useEffect(() => {
     if (isDragging) {
       window.addEventListener('mousemove', handleMouseMove);
-      window.addEventListener('mouseup', handleMouseUp);
+      window.addEventListener('mouseup', handleGlobalMouseUp);
       
       return () => {
         window.removeEventListener('mousemove', handleMouseMove);
-        window.removeEventListener('mouseup', handleMouseUp);
+        window.removeEventListener('mouseup', handleGlobalMouseUp);
       };
     }
   }, [isDragging, dragOffset]);
@@ -1068,6 +1076,14 @@ export const AIAssistant = () => {
           )}
         </div>
       )}
+      
+      {/* Diálogo de suporte */}
+      <SupportChatDialog 
+        open={supportDialogOpen}
+        onOpenChange={setSupportDialogOpen}
+        profileId={userProfileId}
+        initialMessage={supportInitialMessage}
+      />
     </>
   );
 };

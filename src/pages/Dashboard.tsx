@@ -57,6 +57,7 @@ interface FeedPost {
   image_url?: string;
   likes: number;
   comments: number;
+  business_id: string;
 }
 
 interface Achievement {
@@ -109,6 +110,11 @@ export default function Dashboard() {
   
   const [feedPosts, setFeedPosts] = useState<FeedPost[]>([]);
   const [loadingPosts, setLoadingPosts] = useState(true);
+  const [showCommentsForPost, setShowCommentsForPost] = useState<string | null>(null);
+  const [commentText, setCommentText] = useState('');
+  const [postComments, setPostComments] = useState<Record<string, any[]>>({});
+  const [followingProfiles, setFollowingProfiles] = useState<Set<string>>(new Set());
+  const [profileFollowers, setProfileFollowers] = useState<Record<string, number>>({});
 
   const achievements: Achievement[] = [
     {
@@ -447,7 +453,8 @@ export default function Dashboard() {
             content: post.content,
             image_url: post.media_urls?.[0] || undefined,
             likes: likesData.count || 0,
-            comments: commentsData.count || 0
+            comments: commentsData.count || 0,
+            business_id: businessProfile?.profile_id || ''
           };
         })
       );
@@ -495,8 +502,139 @@ export default function Dashboard() {
     }
   };
 
+  const loadPostComments = async (postId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('business_post_comments')
+        .select(`
+          id,
+          content,
+          created_at,
+          profile_id,
+          profiles!inner (
+            full_name,
+            username,
+            avatar_url
+          )
+        `)
+        .eq('post_id', postId)
+        .order('created_at', { ascending: false });
+
+      if (!error && data) {
+        setPostComments(prev => ({ ...prev, [postId]: data }));
+      }
+    } catch (error) {
+      console.error('Error loading comments:', error);
+    }
+  };
+
+  const handleAddComment = async (postId: string) => {
+    if (!profile || !commentText.trim()) return;
+
+    try {
+      await supabase
+        .from('business_post_comments')
+        .insert({
+          post_id: postId,
+          profile_id: profile.id,
+          content: commentText.trim()
+        });
+
+      setCommentText('');
+      loadPostComments(postId);
+      loadFeedPosts();
+    } catch (error) {
+      console.error('Error adding comment:', error);
+    }
+  };
+
+  const handleFollowProfile = async (targetProfileId: string) => {
+    if (!profile) return;
+
+    try {
+      const isFollowing = followingProfiles.has(targetProfileId);
+
+      if (isFollowing) {
+        // Deixar de seguir
+        await supabase
+          .from('follows')
+          .delete()
+          .eq('follower_id', profile.id)
+          .eq('following_id', targetProfileId);
+        
+        setFollowingProfiles(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(targetProfileId);
+          return newSet;
+        });
+      } else {
+        // Seguir
+        await supabase
+          .from('follows')
+          .insert({
+            follower_id: profile.id,
+            following_id: targetProfileId
+          });
+        
+        setFollowingProfiles(prev => new Set(prev).add(targetProfileId));
+      }
+
+      // Recarregar contador de seguidores
+      loadFollowers();
+    } catch (error) {
+      console.error('Error following/unfollowing:', error);
+    }
+  };
+
+  const handleSharePost = (postId: string) => {
+    const url = `${window.location.origin}/post/${postId}`;
+    navigator.clipboard.writeText(url);
+    alert('Link copiado para a área de transferência!');
+  };
+
+  const loadFollowers = async () => {
+    try {
+      // Carregar quem o usuário está seguindo
+      if (profile) {
+        const { data: following } = await supabase
+          .from('follows')
+          .select('following_id')
+          .eq('follower_id', profile.id);
+
+        if (following) {
+          setFollowingProfiles(new Set(following.map(f => f.following_id)));
+        }
+      }
+
+      // Carregar contadores de seguidores para os perfis dos posts
+      const { data: posts } = await supabase
+        .from('business_posts')
+        .select('business_profiles!inner(profile_id)')
+        .limit(20);
+
+      if (posts) {
+        const profileIds = [...new Set(posts.map((p: any) => p.business_profiles?.profile_id).filter(Boolean))];
+        
+        const followerCounts: Record<string, number> = {};
+        for (const profileId of profileIds) {
+          const { count } = await supabase
+            .from('follows')
+            .select('*', { count: 'exact', head: true })
+            .eq('following_id', profileId);
+          
+          followerCounts[profileId] = count || 0;
+        }
+        
+        setProfileFollowers(followerCounts);
+      }
+    } catch (error) {
+      console.error('Error loading followers:', error);
+    }
+  };
+
   useEffect(() => {
     loadFeedPosts();
+    loadFollowers();
   }, []);
   if (loading) {
     return (
@@ -719,57 +857,145 @@ export default function Dashboard() {
                   </div>
                 ) : (
                   <>
-                    {feedPosts.map((post) => (
-                      <div key={post.id} className="p-4 border-b border-slate-100 last:border-0">
-                        <div className="flex items-start gap-3">
-                          <Avatar className="w-10 h-10">
-                            <AvatarImage src={post.author_avatar} />
-                            <AvatarFallback className="bg-slate-200 text-slate-600 text-sm">
-                              {post.author_name.charAt(0)}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-start justify-between mb-1">
-                              <div>
-                                <h4 className="font-semibold text-sm text-slate-900">{post.author_name}</h4>
-                                <p className="text-xs text-slate-600">{post.author_role} • {post.time_ago}</p>
+                    {feedPosts.map((post) => {
+                      const postAuthorProfileId = post.business_id; // Assuming business_id maps to profile
+                      const isFollowing = followingProfiles.has(postAuthorProfileId);
+                      const followerCount = profileFollowers[postAuthorProfileId] || 0;
+                      
+                      return (
+                        <div key={post.id} className="p-4 border-b border-slate-100 last:border-0">
+                          <div className="flex items-start gap-3">
+                            <Avatar className="w-10 h-10">
+                              <AvatarImage src={post.author_avatar} />
+                              <AvatarFallback className="bg-slate-200 text-slate-600 text-sm">
+                                {post.author_name.charAt(0)}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-start justify-between mb-1">
+                                <div>
+                                  <h4 className="font-semibold text-sm text-slate-900">{post.author_name}</h4>
+                                  <p className="text-xs text-slate-600">
+                                    {post.author_role} • {post.time_ago} • {followerCount} seguidores
+                                  </p>
+                                </div>
+                                {postAuthorProfileId !== profile?.id && (
+                                  <Button 
+                                    variant={isFollowing ? "outline" : "default"}
+                                    size="sm" 
+                                    className="h-7 text-xs px-3"
+                                    onClick={() => handleFollowProfile(postAuthorProfileId)}
+                                  >
+                                    {isFollowing ? 'Seguindo' : 'Seguir'}
+                                  </Button>
+                                )}
                               </div>
-                              <Button variant="default" size="sm" className="h-7 text-xs px-3">
-                                Seguir
-                              </Button>
-                            </div>
-                            <p className="text-sm text-slate-700 mb-2 leading-relaxed">{post.content}</p>
-                            {post.image_url && (
-                              <img 
-                                src={post.image_url} 
-                                alt="Post content" 
-                                className="w-full h-48 object-cover rounded-lg mb-2"
-                              />
-                            )}
-                            <div className="flex items-center gap-4 text-xs text-slate-600">
-                              <button 
-                                onClick={() => handleLikePost(post.id)}
-                                className="flex items-center gap-1 hover:text-red-500 transition-colors"
-                              >
-                                <Heart className="w-4 h-4" />
-                                <span>{post.likes}</span>
-                              </button>
-                              <button className="flex items-center gap-1 hover:text-blue-500 transition-colors">
-                                <MessageCircle className="w-4 h-4" />
-                                <span>{post.comments}</span>
-                              </button>
-                              <button className="flex items-center gap-1 hover:text-green-500 transition-colors">
-                                <Share2 className="w-4 h-4" />
-                                <span>Compartilhar</span>
-                              </button>
-                              <button className="ml-auto hover:text-blue-500 transition-colors">
-                                <Bookmark className="w-4 h-4" />
-                              </button>
+                              <p className="text-sm text-slate-700 mb-2 leading-relaxed">{post.content}</p>
+                              {post.image_url && (
+                                <img 
+                                  src={post.image_url} 
+                                  alt="Post content" 
+                                  className="w-full h-48 object-cover rounded-lg mb-2"
+                                />
+                              )}
+                              <div className="flex items-center gap-4 text-xs text-slate-600 mb-2">
+                                <button 
+                                  onClick={() => handleLikePost(post.id)}
+                                  className="flex items-center gap-1 hover:text-red-500 transition-colors"
+                                >
+                                  <Heart className="w-4 h-4" />
+                                  <span>{post.likes}</span>
+                                </button>
+                                <button 
+                                  onClick={() => {
+                                    if (showCommentsForPost === post.id) {
+                                      setShowCommentsForPost(null);
+                                    } else {
+                                      setShowCommentsForPost(post.id);
+                                      loadPostComments(post.id);
+                                    }
+                                  }}
+                                  className="flex items-center gap-1 hover:text-blue-500 transition-colors"
+                                >
+                                  <MessageCircle className="w-4 h-4" />
+                                  <span>{post.comments}</span>
+                                </button>
+                                <button 
+                                  onClick={() => handleSharePost(post.id)}
+                                  className="flex items-center gap-1 hover:text-green-500 transition-colors"
+                                >
+                                  <Share2 className="w-4 h-4" />
+                                  <span>Compartilhar</span>
+                                </button>
+                                <button className="ml-auto hover:text-blue-500 transition-colors">
+                                  <Bookmark className="w-4 h-4" />
+                                </button>
+                              </div>
+
+                              {/* Seção de comentários */}
+                              {showCommentsForPost === post.id && (
+                                <div className="mt-3 space-y-3">
+                                  {/* Input para novo comentário */}
+                                  <div className="flex gap-2">
+                                    <Avatar className="w-8 h-8">
+                                      <AvatarImage src={profile?.avatar_url || ''} />
+                                      <AvatarFallback className="bg-slate-200 text-slate-600 text-xs">
+                                        {profile?.username?.charAt(0).toUpperCase() || 'U'}
+                                      </AvatarFallback>
+                                    </Avatar>
+                                    <div className="flex-1 flex gap-2">
+                                      <input
+                                        type="text"
+                                        value={commentText}
+                                        onChange={(e) => setCommentText(e.target.value)}
+                                        placeholder="Escreva um comentário..."
+                                        className="flex-1 px-3 py-1.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                                        onKeyPress={(e) => {
+                                          if (e.key === 'Enter') {
+                                            handleAddComment(post.id);
+                                          }
+                                        }}
+                                      />
+                                      <Button 
+                                        size="sm" 
+                                        onClick={() => handleAddComment(post.id)}
+                                        disabled={!commentText.trim()}
+                                        className="h-8"
+                                      >
+                                        Enviar
+                                      </Button>
+                                    </div>
+                                  </div>
+
+                                  {/* Lista de comentários */}
+                                  {postComments[post.id]?.map((comment: any) => (
+                                    <div key={comment.id} className="flex gap-2">
+                                      <Avatar className="w-8 h-8">
+                                        <AvatarImage src={comment.profiles?.avatar_url || ''} />
+                                        <AvatarFallback className="bg-slate-200 text-slate-600 text-xs">
+                                          {comment.profiles?.username?.charAt(0).toUpperCase() || 'U'}
+                                        </AvatarFallback>
+                                      </Avatar>
+                                      <div className="flex-1 bg-slate-50 rounded-lg p-2">
+                                        <div className="flex items-center gap-2 mb-1">
+                                          <span className="font-semibold text-xs text-slate-900">
+                                            {comment.profiles?.full_name || comment.profiles?.username}
+                                          </span>
+                                          <span className="text-xs text-slate-500">
+                                            {new Date(comment.created_at).toLocaleDateString('pt-BR')}
+                                          </span>
+                                        </div>
+                                        <p className="text-sm text-slate-700">{comment.content}</p>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
                             </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                     <div className="p-4 text-center">
                       <Button 
                         variant="outline" 

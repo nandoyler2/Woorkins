@@ -1812,13 +1812,24 @@ export default function BusinessEdit() {
                   <Card className="bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-pink-500/10 border-2">
                     <CardContent className="p-6">
                       <div className="flex items-center justify-between">
-                        <div>
-                          <h2 className="text-2xl font-bold mb-2">
-                            Bem-vindo, {business.company_name}! 👋
-                          </h2>
-                          <p className="text-muted-foreground">
-                            Gerencie seu perfil profissional e acompanhe suas estatísticas
-                          </p>
+                        <div className="flex items-center gap-4">
+                          <div className="w-16 h-16 rounded-full overflow-hidden flex-shrink-0 border-2 border-primary/20">
+                            {business.logo_url ? (
+                              <img src={business.logo_url} alt={business.company_name} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center">
+                                <Building2 className="w-8 h-8 text-primary/40" />
+                              </div>
+                            )}
+                          </div>
+                          <div>
+                            <h2 className="text-2xl font-bold mb-2">
+                              Perfil de {business.company_name}
+                            </h2>
+                            <p className="text-muted-foreground">
+                              Gerencie seu perfil profissional e acompanhe suas estatísticas
+                            </p>
+                          </div>
                         </div>
                         <Link to={`/${business.slug}`} target="_blank">
                           <Button variant="outline" size="lg" className="gap-2">

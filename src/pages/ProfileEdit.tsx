@@ -805,11 +805,40 @@ export default function ProfileEdit() {
               {/* Dashboard */}
               {activeSection === 'dashboard' && (
                 <div className="space-y-6 animate-fade-in">
-                  <div>
-                    <h1 className="text-3xl font-bold mb-2">{profile.full_name || profile.username}</h1>
-                    <p className="text-muted-foreground">@{profile.username}</p>
-                  </div>
+                  {/* Welcome Card */}
+                  <Card className="bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-pink-500/10 border-2">
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <div className="w-16 h-16 rounded-full overflow-hidden flex-shrink-0 border-2 border-primary/20">
+                            {profile.avatar_url ? (
+                              <img src={profile.avatar_url} alt={profile.full_name || profile.username} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center">
+                                <User className="w-8 h-8 text-primary/40" />
+                              </div>
+                            )}
+                          </div>
+                          <div>
+                            <h2 className="text-2xl font-bold mb-2">
+                              Perfil de {profile.full_name || profile.username}
+                            </h2>
+                            <p className="text-muted-foreground">
+                              Gerencie seu perfil e acompanhe suas estatísticas
+                            </p>
+                          </div>
+                        </div>
+                        <Link to={`/@${profile.username}`} target="_blank">
+                          <Button variant="outline" size="lg" className="gap-2">
+                            <ExternalLink className="w-4 h-4" />
+                            Ver Perfil Público
+                          </Button>
+                        </Link>
+                      </div>
+                    </CardContent>
+                  </Card>
 
+                  {/* Stats Cards */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <Card className="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border-2 border-blue-500/20">
                       <CardHeader>

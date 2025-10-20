@@ -189,7 +189,9 @@ export function SupportChatDialog({ open, onOpenChange, documentRejected, profil
   }, [messages]);
 
   useEffect(() => {
-    if (!conversationId) return;
+    if (!conversationId || !open) return;
+
+    console.log('Setting up realtime for conversation:', conversationId);
 
     const channel = supabase
       .channel(`support_${conversationId}`)
@@ -202,18 +204,45 @@ export function SupportChatDialog({ open, onOpenChange, documentRejected, profil
           filter: `conversation_id=eq.${conversationId}`
         },
         (payload) => {
+          console.log('New message received:', payload);
           const newMsg = payload.new as Message;
-          if (newMsg.sender_type === 'agent') {
-            setMessages(prev => [...prev, newMsg]);
+          // Adicionar mensagens do agente E do AI
+          if (newMsg.sender_type === 'agent' || newMsg.sender_type === 'ai') {
+            setMessages(prev => {
+              // Evitar duplicatas
+              if (prev.some(m => m.id === newMsg.id)) {
+                return prev;
+              }
+              return [...prev, newMsg];
+            });
           }
         }
       )
-      .subscribe();
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'support_messages',
+          filter: `conversation_id=eq.${conversationId}`
+        },
+        (payload) => {
+          console.log('Message updated:', payload);
+          const updatedMsg = payload.new as Message;
+          setMessages(prev => 
+            prev.map(m => m.id === updatedMsg.id ? updatedMsg : m)
+          );
+        }
+      )
+      .subscribe((status) => {
+        console.log('Realtime status:', status);
+      });
 
     return () => {
+      console.log('Removing realtime channel');
       supabase.removeChannel(channel);
     };
-  }, [conversationId]);
+  }, [conversationId, open]);
 
   const handleSendMessage = async (customMessage?: string) => {
     const msgToSend = customMessage || message;
@@ -543,7 +572,7 @@ export function SupportChatDialog({ open, onOpenChange, documentRejected, profil
                     }`}
                   >
                     {msg.sender_type === 'agent' && (
-                      <div className="text-xs font-semibold mb-1">Atendente</div>
+                      <div className="text-xs font-semibold mb-1">Atendimento Woorkins</div>
                     )}
                     <p 
                       className="text-sm whitespace-pre-wrap"

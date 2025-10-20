@@ -55,7 +55,7 @@ export function SupportChatDialog({ open, onOpenChange, documentRejected, profil
   const countdownTimerRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
 
-  // Carregar conversas ativas
+  // Carregar conversas ativas e retomar automaticamente se houver conversa em andamento
   useEffect(() => {
     if (!open || !profileId) return;
 
@@ -68,6 +68,12 @@ export function SupportChatDialog({ open, onOpenChange, documentRejected, profil
         .order('updated_at', { ascending: false });
 
       setActiveConversations(data || []);
+      
+      // Se há conversa ativa e não temos conversationId carregado, carregar automaticamente
+      if (data && data.length > 0 && !conversationId) {
+        const activeConv = data[0];
+        loadConversation(activeConv.id);
+      }
     };
 
     loadActiveConversations();

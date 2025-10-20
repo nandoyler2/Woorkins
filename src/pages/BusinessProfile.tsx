@@ -770,8 +770,8 @@ export default function BusinessProfile() {
                 </CardContent>
               </Card>
 
-              {/* Contact Info Card */}
-              <Card className="bg-card border shadow-sm">
+              {/* Informações de Contato - Idêntico ao UserProfile, mas sem card de estatísticas */}
+              <Card className="bg-card/50 backdrop-blur-sm border-2 shadow-lg">
                 <CardContent className="p-6">
                   <h2 className="font-bold mb-4">Informações de Contato</h2>
                   <div className="space-y-3">

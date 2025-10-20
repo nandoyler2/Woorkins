@@ -257,6 +257,7 @@ export default function UserProfile() {
                         )}
                       </div>
 
+                      {/* ELEMENTOS EXCLUSIVOS DO USUÁRIO - Badge de membro e nível */}
                       <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                         {profile.location && (
                           <div className="flex items-center gap-1">
@@ -731,6 +732,7 @@ export default function UserProfile() {
                 </CardContent>
               </Card>
 
+              {/* CARD EXCLUSIVO DO USUÁRIO - Estatísticas */}
               <Card className="bg-card/50 backdrop-blur-sm border-2 shadow-lg">
                 <CardContent className="p-6">
                   <h3 className="font-bold mb-4">Estatísticas</h3>

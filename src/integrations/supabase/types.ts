@@ -643,6 +643,13 @@ export type Database = {
             referencedRelation: "business_posts"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "business_post_comments_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       business_post_likes: {

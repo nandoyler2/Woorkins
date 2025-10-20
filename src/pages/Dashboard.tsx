@@ -459,7 +459,11 @@ export default function Dashboard() {
             comments: commentsData.count || 0,
             business_id: businessProfile?.profile_id || '',
             author_username: profile?.username,
-            author_profile_link: businessProfile?.slug || profile?.username || '#'
+            author_profile_link: businessProfile?.slug 
+              ? `/${businessProfile.slug}` 
+              : profile?.username 
+                ? `/${profile.username}` 
+                : '#'
           };
         })
       );

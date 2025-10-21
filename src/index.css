@@ -146,6 +146,21 @@ All colors MUST be HSL.
     background: hsl(var(--muted-foreground) / 0.5);
   }
 
+  @keyframes coin-fall {
+    from {
+      transform: translateY(-50px) rotate(0deg);
+      opacity: 1;
+    }
+    to {
+      transform: translateY(100vh) rotate(720deg);
+      opacity: 0;
+    }
+  }
+
+  .animate-coin-fall {
+    animation: coin-fall 3s linear forwards;
+  }
+
   @keyframes spin-slow {
     from {
       transform: rotate(0deg);

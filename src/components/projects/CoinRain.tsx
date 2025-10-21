@@ -1,5 +1,6 @@
 import { useState } from "react";
 import coinImage from "@/assets/woorkoins-coin.png";
+import coinSound from "@/assets/coin-sound.mp3";
 
 interface Coin {
   id: string;
@@ -13,30 +14,9 @@ export function CoinRain() {
   const [coins, setCoins] = useState<Coin[]>([]);
 
   const playCoinSound = () => {
-    // Create more realistic coin sound using Web Audio API
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-    
-    // Create multiple oscillators for metallic sound
-    const frequencies = [1200, 1600, 2000];
-    
-    frequencies.forEach((freq, index) => {
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-      
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-      
-      // Metallic coin sound with quick decay
-      oscillator.frequency.setValueAtTime(freq, audioContext.currentTime);
-      oscillator.frequency.exponentialRampToValueAtTime(freq * 0.5, audioContext.currentTime + 0.15);
-      
-      const volume = 0.15 / (index + 1);
-      gainNode.gain.setValueAtTime(volume, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.15);
-      
-      oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 0.15);
-    });
+    const audio = new Audio(coinSound);
+    audio.volume = 0.3; // Volume reduzido para ficar leve
+    audio.play().catch(err => console.log('Audio play failed:', err));
   };
 
   const triggerCoinRain = () => {

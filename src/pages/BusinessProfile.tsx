@@ -444,7 +444,11 @@ export default function BusinessProfile() {
                     <PublicBusinessLinktree businessId={business.id} />
                     <PublicBusinessCatalog businessId={business.id} />
                     <PublicBusinessPortfolio businessId={business.id} />
-                    <PublicBusinessAppointments businessId={business.id} />
+                    <PublicBusinessAppointments 
+                      businessId={business.id} 
+                      businessSlug={business.slug}
+                      isOwner={isAdmin}
+                    />
                     
                     <div>
                       <h2 className="text-xl font-bold mb-4">Visão Geral</h2>

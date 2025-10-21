@@ -2,10 +2,11 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock } from "lucide-react";
+import { Calendar, Clock, Settings } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { AppointmentBookingDialog } from "./AppointmentBookingDialog";
 
 interface Availability {
   day_of_week: number;
@@ -15,13 +16,20 @@ interface Availability {
 
 interface PublicBusinessAppointmentsProps {
   businessId: string;
+  businessSlug: string;
+  isOwner?: boolean;
 }
 
 const dayNames = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
 
-export function PublicBusinessAppointments({ businessId }: PublicBusinessAppointmentsProps) {
+export function PublicBusinessAppointments({ 
+  businessId, 
+  businessSlug,
+  isOwner = false 
+}: PublicBusinessAppointmentsProps) {
   const [availability, setAvailability] = useState<Availability[]>([]);
   const [isActive, setIsActive] = useState(false);
+  const [bookingDialogOpen, setBookingDialogOpen] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -64,22 +72,30 @@ export function PublicBusinessAppointments({ businessId }: PublicBusinessAppoint
       return;
     }
 
-    // TODO: Implementar fluxo de agendamento
-    toast({
-      title: "Em breve!",
-      description: "Sistema de agendamento será implementado em breve",
-    });
+    setBookingDialogOpen(true);
   };
 
   if (!isActive) return null;
 
   return (
-    <Card className="mb-8">
-      <CardContent className="p-6">
-        <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-          <Calendar className="h-6 w-6" />
-          Agendamento
-        </h2>
+    <>
+      <Card className="mb-8">
+        <CardContent className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-2xl font-bold flex items-center gap-2">
+              <Calendar className="h-6 w-6" />
+              Agendamento
+            </h2>
+            {isOwner && (
+              <Button
+                variant="outline"
+                onClick={() => navigate(`/${businessSlug}/agendamentos`)}
+              >
+                <Settings className="h-4 w-4 mr-2" />
+                Ver Agendamentos
+              </Button>
+            )}
+          </div>
         
         {availability.length > 0 ? (
           <>
@@ -109,7 +125,14 @@ export function PublicBusinessAppointments({ businessId }: PublicBusinessAppoint
             </Button>
           </div>
         )}
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+
+      <AppointmentBookingDialog
+        open={bookingDialogOpen}
+        onOpenChange={setBookingDialogOpen}
+        businessId={businessId}
+      />
+    </>
   );
 }

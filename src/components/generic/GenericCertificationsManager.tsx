@@ -42,13 +42,13 @@ export function GenericCertificationsManager({ entityType, entityId }: GenericCe
   const loadCertifications = async () => {
     try {
       const { data, error } = await supabase
-        .from(tableName)
+        .from(tableName as any)
         .select("*")
         .eq(idColumn, entityId)
         .order("order_index", { ascending: true });
 
       if (error) throw error;
-      setCertifications(data || []);
+      setCertifications((data || []) as any);
     } catch (error: any) {
       toast({
         title: "Erro ao carregar certificações",
@@ -214,14 +214,11 @@ export function GenericCertificationsManager({ entityType, entityId }: GenericCe
               <div>
                 <Label>Arquivo (Imagem ou PDF) *</Label>
                 <MediaUpload
-                  currentMediaUrl={editingCert.file_url}
-                  currentMediaType={editingCert.file_type}
-                  onMediaUpload={(url, type) =>
+                  onUpload={(url, type) =>
                     setEditingCert({ ...editingCert, file_url: url, file_type: type })
                   }
-                  bucket={storageBucket}
-                  path={`${entityId}/certifications`}
-                  acceptedTypes={["image/*", "application/pdf"]}
+                  accept="image/*,application/pdf"
+                  maxSizeMB={10}
                 />
               </div>
 

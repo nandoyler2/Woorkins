@@ -62,25 +62,19 @@ export function GenericSocialManager({ entityType, entityId }: GenericSocialMana
   const handleSave = async () => {
     setLoading(true);
     try {
-      const updateQuery = entityType === 'business'
-        ? supabase.from('business_profiles').update({
-            facebook: socialLinks.facebook || null,
-            instagram: socialLinks.instagram || null,
-            twitter: socialLinks.twitter || null,
-            linkedin: socialLinks.linkedin || null,
-            whatsapp: socialLinks.whatsapp || null,
-            website_url: socialLinks.website_url || null,
-          }).eq("id", entityId)
-        : supabase.from('profiles').update({
-            facebook: socialLinks.facebook || null,
-            instagram: socialLinks.instagram || null,
-            twitter: socialLinks.twitter || null,
-            linkedin: socialLinks.linkedin || null,
-            whatsapp: socialLinks.whatsapp || null,
-            website_url: socialLinks.website_url || null,
-          }).eq("id", entityId);
-      
-      const { error } = await updateQuery;
+      const updateData = {
+        facebook: socialLinks.facebook || null,
+        instagram: socialLinks.instagram || null,
+        twitter: socialLinks.twitter || null,
+        linkedin: socialLinks.linkedin || null,
+        whatsapp: socialLinks.whatsapp || null,
+        website_url: socialLinks.website_url || null,
+      };
+
+      const { error } = await supabase
+        .from(tableName as any)
+        .update(updateData as any)
+        .eq("id", entityId);
 
       if (error) throw error;
 

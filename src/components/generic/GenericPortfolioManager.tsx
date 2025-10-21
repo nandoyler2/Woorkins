@@ -41,8 +41,8 @@ export function GenericPortfolioManager({ entityType, entityId }: GenericPortfol
   const loadItems = async () => {
     try {
       const query = entityType === 'business'
-        ? supabase.from('business_portfolio_items').select("*").eq('business_id', entityId)
-        : supabase.from('user_portfolio_items').select("*").eq('profile_id', entityId);
+        ? supabase.from('business_portfolio_items' as any).select("*").eq('business_id', entityId)
+        : supabase.from('user_portfolio_items' as any).select("*").eq('profile_id', entityId);
       
       const { data, error } = await query.order("order_index", { ascending: true });
 
@@ -75,15 +75,15 @@ export function GenericPortfolioManager({ entityType, entityId }: GenericPortfol
 
       if (editingItem.id) {
         const updateQuery = entityType === 'business'
-          ? supabase.from('business_portfolio_items').update(itemData).eq("id", editingItem.id)
-          : supabase.from('user_portfolio_items').update(itemData).eq("id", editingItem.id);
+          ? supabase.from('business_portfolio_items' as any).update(itemData).eq("id", editingItem.id)
+          : supabase.from('user_portfolio_items' as any).update(itemData).eq("id", editingItem.id);
         
         const { error } = await updateQuery;
         if (error) throw error;
       } else {
         const insertQuery = entityType === 'business'
-          ? supabase.from('business_portfolio_items').insert(itemData)
-          : supabase.from('user_portfolio_items').insert(itemData);
+          ? supabase.from('business_portfolio_items' as any).insert(itemData)
+          : supabase.from('user_portfolio_items' as any).insert(itemData);
         
         const { error } = await insertQuery;
         if (error) throw error;
@@ -112,8 +112,8 @@ export function GenericPortfolioManager({ entityType, entityId }: GenericPortfol
 
     try {
       const deleteQuery = entityType === 'business'
-        ? supabase.from('business_portfolio_items').delete().eq("id", id)
-        : supabase.from('user_portfolio_items').delete().eq("id", id);
+        ? supabase.from('business_portfolio_items' as any).delete().eq("id", id)
+        : supabase.from('user_portfolio_items' as any).delete().eq("id", id);
       
       const { error } = await deleteQuery;
 
@@ -165,12 +165,13 @@ export function GenericPortfolioManager({ entityType, entityId }: GenericPortfol
               <div>
                 <Label>Imagem do Projeto</Label>
                 <ImageUpload
-                  currentImageUrl={editingItem.image_url}
-                  onImageUpload={(url) =>
+                  currentImageUrl={editingItem.image_url || null}
+                  onUpload={(url) =>
                     setEditingItem({ ...editingItem, image_url: url })
                   }
                   bucket={storageBucket}
-                  path={`${entityId}/portfolio`}
+                  folder={`${entityId}/portfolio`}
+                  type="cover"
                 />
               </div>
 

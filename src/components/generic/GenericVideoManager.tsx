@@ -36,7 +36,7 @@ export function GenericVideoManager({ entityType, entityId }: GenericVideoManage
   const loadVideo = async () => {
     try {
       const { data, error } = await supabase
-        .from(tableName)
+        .from(tableName as any)
         .select("*")
         .eq(idColumn, entityId)
         .eq("active", true)
@@ -45,9 +45,9 @@ export function GenericVideoManager({ entityType, entityId }: GenericVideoManage
       if (error) throw error;
 
       if (data) {
-        setVideo(data);
-        setYoutubeUrl(data.youtube_url);
-        setTitle(data.title || "");
+        setVideo(data as any);
+        setYoutubeUrl((data as any).youtube_url);
+        setTitle((data as any).title || "");
       }
     } catch (error: any) {
       toast({
@@ -95,13 +95,13 @@ export function GenericVideoManager({ entityType, entityId }: GenericVideoManage
 
       if (video?.id) {
         const { error } = await supabase
-          .from(tableName)
+          .from(tableName as any)
           .update(videoData)
           .eq("id", video.id);
 
         if (error) throw error;
       } else {
-        const { error } = await supabase.from(tableName).insert(videoData);
+        const { error } = await supabase.from(tableName as any).insert(videoData as any);
         if (error) throw error;
       }
 

@@ -39,14 +39,14 @@ export function GenericAppointmentsManager({ entityType, entityId }: GenericAppo
   const loadAvailability = async () => {
     try {
       const { data, error } = await supabase
-        .from(tableName)
+        .from(tableName as any)
         .select("*")
         .eq(idColumn, entityId)
         .order("day_of_week", { ascending: true })
         .order("start_time", { ascending: true });
 
       if (error) throw error;
-      setAvailability(data || []);
+      setAvailability((data || []) as any);
     } catch (error: any) {
       toast({
         title: "Erro ao carregar disponibilidade",

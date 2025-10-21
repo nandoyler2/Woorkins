@@ -39,13 +39,13 @@ export function GenericBannersManager({ entityType, entityId }: GenericBannersMa
   const loadBanners = async () => {
     try {
       const { data, error } = await supabase
-        .from(tableName)
+        .from(tableName as any)
         .select("*")
         .eq(idColumn, entityId)
         .order("order_index", { ascending: true });
 
       if (error) throw error;
-      setBanners(data || []);
+      setBanners((data || []) as any);
     } catch (error: any) {
       toast({
         title: "Erro ao carregar banners",
@@ -202,12 +202,13 @@ export function GenericBannersManager({ entityType, entityId }: GenericBannersMa
               <div>
                 <Label>Imagem do Banner *</Label>
                 <ImageUpload
-                  currentImageUrl={editingBanner.image_url}
-                  onImageUpload={(url) =>
+                  currentImageUrl={editingBanner.image_url || null}
+                  onUpload={(url) =>
                     setEditingBanner({ ...editingBanner, image_url: url })
                   }
                   bucket={storageBucket}
-                  path={`${entityId}/banners`}
+                  folder={`${entityId}/banners`}
+                  type="cover"
                 />
               </div>
 

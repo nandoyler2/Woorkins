@@ -41,13 +41,13 @@ export function GenericLinktreeManager({ entityType, entityId }: GenericLinktree
   const loadLinks = async () => {
     try {
       const { data, error } = await supabase
-        .from(tableName)
+        .from(tableName as any)
         .select("*")
         .eq(idColumn, entityId)
         .order("order_index", { ascending: true });
 
       if (error) throw error;
-      setLinks(data || []);
+      setLinks((data || []) as any);
     } catch (error: any) {
       toast({
         title: "Erro ao carregar links",
@@ -157,12 +157,12 @@ export function GenericLinktreeManager({ entityType, entityId }: GenericLinktree
               <div>
                 <Label>Imagem (opcional)</Label>
                 <ImageUpload
-                  currentImageUrl={editingLink.image_url}
-                  onImageUpload={(url) =>
+                  currentImageUrl={editingLink.image_url || null}
+                  onUpload={(url) =>
                     setEditingLink({ ...editingLink, image_url: url })
                   }
                   bucket={storageBucket}
-                  path={`${entityId}/linktree`}
+                  folder={`${entityId}/linktree`}
                 />
               </div>
 

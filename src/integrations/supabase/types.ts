@@ -1925,20 +1925,26 @@ export type Database = {
           document_verification_status: string | null
           document_verified: boolean | null
           enable_negotiation: boolean | null
+          facebook: string | null
           filiation: string | null
           full_name: string | null
           id: string
+          instagram: string | null
           last_username_change: string | null
+          linkedin: string | null
           location: string | null
           nationality: string | null
           place_of_birth: string | null
           trust_level: string | null
+          twitter: string | null
           updated_at: string
           user_id: string
           user_type: Database["public"]["Enums"]["user_type"]
           username: string
           verified: boolean | null
           website: string | null
+          website_url: string | null
+          whatsapp: string | null
         }
         Insert: {
           active?: boolean | null
@@ -1951,20 +1957,26 @@ export type Database = {
           document_verification_status?: string | null
           document_verified?: boolean | null
           enable_negotiation?: boolean | null
+          facebook?: string | null
           filiation?: string | null
           full_name?: string | null
           id?: string
+          instagram?: string | null
           last_username_change?: string | null
+          linkedin?: string | null
           location?: string | null
           nationality?: string | null
           place_of_birth?: string | null
           trust_level?: string | null
+          twitter?: string | null
           updated_at?: string
           user_id: string
           user_type?: Database["public"]["Enums"]["user_type"]
           username: string
           verified?: boolean | null
           website?: string | null
+          website_url?: string | null
+          whatsapp?: string | null
         }
         Update: {
           active?: boolean | null
@@ -1977,20 +1989,26 @@ export type Database = {
           document_verification_status?: string | null
           document_verified?: boolean | null
           enable_negotiation?: boolean | null
+          facebook?: string | null
           filiation?: string | null
           full_name?: string | null
           id?: string
+          instagram?: string | null
           last_username_change?: string | null
+          linkedin?: string | null
           location?: string | null
           nationality?: string | null
           place_of_birth?: string | null
           trust_level?: string | null
+          twitter?: string | null
           updated_at?: string
           user_id?: string
           user_type?: Database["public"]["Enums"]["user_type"]
           username?: string
           verified?: boolean | null
           website?: string | null
+          website_url?: string | null
+          whatsapp?: string | null
         }
         Relationships: []
       }

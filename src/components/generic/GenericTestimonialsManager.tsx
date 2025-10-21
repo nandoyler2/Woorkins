@@ -33,13 +33,13 @@ export function GenericTestimonialsManager({ entityType, entityId }: GenericTest
   const loadTestimonials = async () => {
     try {
       const { data, error } = await supabase
-        .from(tableName)
+        .from(tableName as any)
         .select("*")
         .eq(idColumn, entityId)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setTestimonials(data || []);
+      setTestimonials((data || []) as any);
     } catch (error: any) {
       toast({
         title: "Erro ao carregar depoimentos",

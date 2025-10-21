@@ -43,13 +43,13 @@ export function GenericJobVacanciesManager({ entityType, entityId }: GenericJobV
   const loadVacancies = async () => {
     try {
       const { data, error } = await supabase
-        .from(tableName)
+        .from(tableName as any)
         .select("*")
         .eq(idColumn, entityId)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setVacancies(data || []);
+      setVacancies((data || []) as any);
     } catch (error: any) {
       toast({
         title: "Erro ao carregar vagas",

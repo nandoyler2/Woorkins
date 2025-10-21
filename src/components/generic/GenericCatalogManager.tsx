@@ -41,13 +41,13 @@ export function GenericCatalogManager({ entityType, entityId }: GenericCatalogMa
   const loadItems = async () => {
     try {
       const { data, error } = await supabase
-        .from(tableName)
+        .from(tableName as any)
         .select("*")
         .eq(idColumn, entityId)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setItems(data || []);
+      setItems((data || []) as any);
     } catch (error: any) {
       toast({
         title: "Erro ao carregar catálogo",
@@ -157,12 +157,12 @@ export function GenericCatalogManager({ entityType, entityId }: GenericCatalogMa
               <div>
                 <Label>Imagem (opcional)</Label>
                 <ImageUpload
-                  currentImageUrl={editingItem.image_url}
-                  onImageUpload={(url) =>
+                  currentImageUrl={editingItem.image_url || null}
+                  onUpload={(url) =>
                     setEditingItem({ ...editingItem, image_url: url })
                   }
                   bucket={storageBucket}
-                  path={`${entityId}/catalog`}
+                  folder={`${entityId}/catalog`}
                 />
               </div>
 

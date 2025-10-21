@@ -228,7 +228,7 @@ export default function Projects() {
                 </Sheet>
 
                 {user && (
-                  <Link to="/projeto/criar">
+                  <Link to="/projetos/novo">
                     <Button className="whitespace-nowrap animate-gradient text-white border-0 hover:shadow-lg">
                       <Plus className="h-4 w-4 mr-2" />
                       Criar Projeto

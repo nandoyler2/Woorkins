@@ -84,7 +84,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
     <Card className="p-6 hover:shadow-md transition-shadow">
       {/* Header */}
       <div className="flex justify-between items-start mb-3">
-        <Link to={`/projeto/${project.id}`} className="flex-1">
+        <Link to={`/projetos/${project.id}`} className="flex-1">
           <h3 className="text-lg font-bold text-foreground hover:text-primary transition-colors">
             {project.title}
           </h3>
@@ -116,7 +116,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
       {/* Description */}
       <p className="text-sm text-foreground/80 mb-4 leading-relaxed">
         {truncateDescription(project.description)}
-        <Link to={`/projeto/${project.id}`} className="text-primary hover:underline ml-1">
+        <Link to={`/projetos/${project.id}`} className="text-primary hover:underline ml-1">
           Ver mais detalhes
         </Link>
       </p>

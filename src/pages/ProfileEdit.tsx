@@ -71,6 +71,7 @@ interface Profile {
   full_name: string | null;
   bio: string | null;
   avatar_url: string | null;
+  cover_url: string | null;
   location: string | null;
   website: string | null;
 }
@@ -162,7 +163,9 @@ export default function ProfileEdit() {
   const [daysUntilUsernameEdit, setDaysUntilUsernameEdit] = useState(0);
   const imageInputRef = useRef<HTMLInputElement>(null);
   
+  // Refs para inputs de upload
   const avatarInputRef = useRef<HTMLInputElement>(null);
+  const coverInputRef = useRef<HTMLInputElement>(null);
 
   const menuItems = [
     { id: 'dashboard' as Section, label: 'Dashboard', icon: Building2, color: 'text-blue-500' },
@@ -586,6 +589,62 @@ export default function ProfileEdit() {
 
   const handlePhotoUpdated = () => {
     loadProfile();
+  };
+
+  const handleAvatarUpload = async (url: string) => {
+    if (!profile) return;
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({ avatar_url: url })
+      .eq('user_id', profile.user_id);
+
+    if (!error) {
+      setProfile({ ...profile, avatar_url: url });
+      toast({ title: 'Foto de perfil atualizada!' });
+    }
+  };
+
+  const handleCoverUpload = async (url: string) => {
+    if (!profile) return;
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({ cover_url: url })
+      .eq('user_id', profile.user_id);
+
+    if (!error) {
+      setProfile({ ...profile, cover_url: url });
+      toast({ title: 'Capa atualizada!' });
+    }
+  };
+  
+  const handleAvatarDelete = async () => {
+    if (!profile) return;
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({ avatar_url: null })
+      .eq('user_id', profile.user_id);
+
+    if (!error) {
+      setProfile({ ...profile, avatar_url: null });
+      toast({ title: 'Foto de perfil removida!' });
+    }
+  };
+
+  const handleCoverDelete = async () => {
+    if (!profile) return;
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({ cover_url: null })
+      .eq('user_id', profile.user_id);
+
+    if (!error) {
+      setProfile({ ...profile, cover_url: null });
+      toast({ title: 'Capa removida!' });
+    }
   };
 
   const handleResponseSubmit = async (evaluationId: string) => {
@@ -1058,18 +1117,177 @@ export default function ProfileEdit() {
                   <Card className="bg-card/50 backdrop-blur-sm border-2 overflow-hidden">
                     <div className="bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 p-6 border-b">
                       <CardTitle className="flex items-center gap-2 text-blue-600">
-                        <User className="w-5 h-5" />
-                        Foto de Perfil
+                        <Eye className="w-5 h-5" />
+                        Perfil e Capa
                       </CardTitle>
-                      <CardDescription>Sua imagem de perfil no Woorkins</CardDescription>
+                      <CardDescription>Personalize a aparência do seu perfil</CardDescription>
                     </div>
-                    <CardContent className="p-6">
-                      <ProfilePhotoUpload
-                        currentPhotoUrl={profile.avatar_url || undefined}
-                        userName={profile.full_name || profile.username}
-                        userId={profile.user_id}
-                        onPhotoUpdated={handlePhotoUpdated}
+                    <CardContent className="p-6 space-y-6">
+                      {/* Inputs de upload escondidos */}
+                      <input
+                        ref={avatarInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const imageUpload = document.querySelector('[data-upload-type="avatar"]');
+                            if (imageUpload) {
+                              const input = imageUpload.querySelector('input[type="file"]') as HTMLInputElement;
+                              if (input) {
+                                const dataTransfer = new DataTransfer();
+                                dataTransfer.items.add(file);
+                                input.files = dataTransfer.files;
+                                input.dispatchEvent(new Event('change', { bubbles: true }));
+                              }
+                            }
+                          }
+                        }}
                       />
+                      <input
+                        ref={coverInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const imageUpload = document.querySelector('[data-upload-type="cover"]');
+                            if (imageUpload) {
+                              const input = imageUpload.querySelector('input[type="file"]') as HTMLInputElement;
+                              if (input) {
+                                const dataTransfer = new DataTransfer();
+                                dataTransfer.items.add(file);
+                                input.files = dataTransfer.files;
+                                input.dispatchEvent(new Event('change', { bubbles: true }));
+                              }
+                            }
+                          }
+                        }}
+                      />
+                      
+                      {/* Prévia do Perfil */}
+                      <div className="space-y-3">
+                        <Label className="text-base font-medium">Prévia do Perfil</Label>
+                        <div className="relative w-full rounded-lg overflow-visible border-2 border-border bg-background">
+                          {/* Capa */}
+                          <div className="relative group h-48 w-full overflow-hidden rounded-t-lg">
+                            {profile.cover_url ? (
+                              <img 
+                                src={profile.cover_url} 
+                                alt="Capa" 
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full bg-gradient-to-br from-primary/20 to-secondary/20" />
+                            )}
+                            
+                            {/* Hover Overlay para Capa */}
+                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
+                              <div className="flex gap-2">
+                                <Button
+                                  size="icon"
+                                  variant="secondary"
+                                  className="h-10 w-10 rounded-full shadow-lg bg-green-500 hover:bg-green-600 text-white"
+                                  onClick={() => coverInputRef.current?.click()}
+                                  title="Alterar capa"
+                                >
+                                  <Upload className="h-5 w-5" />
+                                </Button>
+                                {profile.cover_url && (
+                                  <Button
+                                    size="icon"
+                                    variant="destructive"
+                                    className="h-10 w-10 rounded-full shadow-lg"
+                                    onClick={handleCoverDelete}
+                                    title="Remover capa"
+                                  >
+                                    <X className="h-5 w-5" />
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="relative px-4 pb-4">
+                            <div className="absolute -top-12 left-4">
+                              <div className="relative group w-32 h-32 rounded-xl border-4 border-background overflow-hidden bg-background shadow-xl">
+                                {profile.avatar_url ? (
+                                  <img 
+                                    src={profile.avatar_url} 
+                                    alt="Avatar" 
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <div className="w-full h-full bg-muted flex items-center justify-center">
+                                    <User className="w-10 h-10 text-muted-foreground" />
+                                  </div>
+                                )}
+                                {/* Hover Overlay para Avatar */}
+                                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
+                                  <div className="flex gap-2">
+                                    <Button
+                                      size="icon"
+                                      variant="secondary"
+                                      className="h-9 w-9 rounded-full shadow-lg bg-green-500 hover:bg-green-600 text-white"
+                                      onClick={() => avatarInputRef.current?.click()}
+                                      title="Alterar foto"
+                                    >
+                                      <Upload className="h-4 w-4" />
+                                    </Button>
+                                    {profile.avatar_url && (
+                                      <Button
+                                        size="icon"
+                                        variant="destructive"
+                                        className="h-9 w-9 rounded-full shadow-lg"
+                                        onClick={handleAvatarDelete}
+                                        title="Remover foto"
+                                      >
+                                        <X className="h-4 w-4" />
+                                      </Button>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            <div className="pt-6 pl-40">
+                              <div className="inline-block bg-background/95 backdrop-blur-sm px-6 py-2 rounded-lg shadow-sm border">
+                                <h2 className="text-2xl font-bold whitespace-nowrap">
+                                  {profile.full_name || profile.username}
+                                </h2>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <p className="text-xs text-muted-foreground">
+                          Esta é uma prévia de como seu perfil aparecerá para os visitantes
+                        </p>
+                      </div>
+                      
+                      {/* Componentes de upload escondidos */}
+                      <div className="hidden">
+                        <div data-upload-type="avatar">
+                          <ImageUpload
+                            currentImageUrl={profile.avatar_url}
+                            onUpload={handleAvatarUpload}
+                            bucket="avatars"
+                            folder={profile.user_id}
+                            type="logo"
+                          />
+                        </div>
+                        <div data-upload-type="cover">
+                          <ImageUpload
+                            currentImageUrl={profile.cover_url}
+                            onUpload={handleCoverUpload}
+                            bucket="user-covers"
+                            folder={profile.user_id}
+                            type="cover"
+                          />
+                        </div>
+                      </div>
                     </CardContent>
                   </Card>
                 </div>

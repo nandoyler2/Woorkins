@@ -16,22 +16,13 @@ export function ProjectBanner() {
     localStorage.setItem('projectBannerDismissed', 'true');
   };
 
-  const handleBannerClick = (e: React.MouseEvent) => {
-    // Não dispara se clicar no botão ou no X
-    if ((e.target as HTMLElement).closest('button')) {
-      return;
-    }
-    triggerCoinRain();
-  };
-
   if (dismissed) return null;
 
   return (
     <>
       {coinRainComponent}
       <div 
-        className="relative bg-gradient-to-r from-[#1E88E5] via-[#26C6DA] to-[#00ACC1] text-white p-6 rounded-lg mb-6 cursor-pointer"
-        onClick={handleBannerClick}
+        className="relative bg-gradient-to-r from-[#1E88E5] via-[#26C6DA] to-[#00ACC1] text-white p-6 rounded-lg mb-6"
       >
         <Button
           variant="ghost"
@@ -56,7 +47,11 @@ export function ProjectBanner() {
               Clique aqui e siga
             </Button>
           </div>
-          <div className="hidden md:block">
+          <div 
+            className="hidden md:block cursor-pointer hover:scale-105 transition-transform"
+            onClick={triggerCoinRain}
+            title="Clique para uma surpresa!"
+          >
             <div className="w-32 h-32 bg-white/10 rounded-full flex items-center justify-center backdrop-blur-sm p-4">
               <img 
                 src={woorkoinsIcon} 

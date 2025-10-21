@@ -858,6 +858,40 @@ export default function ProfileEdit() {
           {/* Main Content */}
           <main className="flex-1 overflow-auto">
             <div className="container mx-auto px-6 py-8 max-w-5xl">
+              {/* Header do perfil - não mostrar no dashboard */}
+              {activeSection !== 'dashboard' && (
+                <div className="mb-8">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-3">
+                      {profile.avatar_url ? (
+                        <img 
+                          src={profile.avatar_url} 
+                          alt={profile.full_name || profile.username}
+                          className="w-12 h-12 rounded-full object-cover border-2 border-border"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center border-2 border-border">
+                          <User className="w-6 h-6 text-muted-foreground" />
+                        </div>
+                      )}
+                      <div>
+                        <h1 className="text-3xl font-bold">{profile.full_name || profile.username}</h1>
+                        <p className="text-muted-foreground text-sm">@{profile.username}</p>
+                      </div>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => window.open(`/@${profile.username}`, '_blank')}
+                      className="gap-2"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                      Ver Perfil
+                    </Button>
+                  </div>
+                </div>
+              )}
+
               {/* Dashboard */}
               {activeSection === 'dashboard' && (
                 <div className="space-y-6 animate-fade-in">

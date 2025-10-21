@@ -882,7 +882,7 @@ export default function ProfileEdit() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => window.open(`/@${profile.username}`, '_blank')}
+                      onClick={() => window.open(`/${profile.username}`, '_blank')}
                       className="gap-2"
                     >
                       <ExternalLink className="w-4 h-4" />

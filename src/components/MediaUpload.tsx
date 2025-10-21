@@ -10,9 +10,11 @@ interface MediaUploadProps {
   onUpload: (url: string, type: string) => void;
   accept?: string;
   maxSizeMB?: number;
+  bucket?: string;
+  folder?: string;
 }
 
-export function MediaUpload({ onUpload, accept = "image/*,video/*", maxSizeMB = 50 }: MediaUploadProps) {
+export function MediaUpload({ onUpload, accept = "image/*,video/*", maxSizeMB = 50, bucket = 'business-media', folder }: MediaUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
   const [mediaType, setMediaType] = useState<'image' | 'video' | null>(null);
@@ -58,12 +60,12 @@ export function MediaUpload({ onUpload, accept = "image/*,video/*", maxSizeMB = 
         });
       }
 
-      const fileExt = file.name.split('.').pop();
+const fileExt = file.name.split('.').pop();
       const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
-      const filePath = `${Date.now()}-${fileName}`;
+      const filePath = `${folder ? `${folder}/` : ''}${Date.now()}-${fileName}`;
 
-      const { error: uploadError, data } = await supabase.storage
-        .from('business-media')
+      const { error: uploadError } = await supabase.storage
+        .from(bucket)
         .upload(filePath, fileToUpload, {
           contentType: type === 'image' ? 'image/jpeg' : file.type
         });
@@ -71,7 +73,7 @@ export function MediaUpload({ onUpload, accept = "image/*,video/*", maxSizeMB = 
       if (uploadError) throw uploadError;
 
       const { data: { publicUrl } } = supabase.storage
-        .from('business-media')
+        .from(bucket)
         .getPublicUrl(filePath);
 
       onUpload(publicUrl, type);

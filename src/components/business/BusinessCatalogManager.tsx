@@ -155,6 +155,7 @@ export function BusinessCatalogManager({ businessId }: BusinessCatalogManagerPro
                     }
                     accept="image/*"
                     maxSizeMB={5}
+                    folder={businessId}
                   />
                 </div>
 

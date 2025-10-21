@@ -93,7 +93,7 @@ export function CreatePostDialog({ businessId, onPostCreated, open: controlledOp
             rows={4}
             className="resize-none"
           />
-          <MediaUpload onUpload={handleMediaUpload} />
+          <MediaUpload onUpload={handleMediaUpload} folder={businessId} />
           {mediaUrls.length > 0 && (
             <div className="text-sm text-muted-foreground">
               {mediaUrls.length} {mediaUrls.length === 1 ? 'arquivo' : 'arquivos'} adicionado(s)

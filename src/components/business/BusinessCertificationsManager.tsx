@@ -159,6 +159,7 @@ export function BusinessCertificationsManager({ businessId }: BusinessCertificat
                     }}
                     accept="image/*,application/pdf"
                     maxSizeMB={10}
+                    folder={businessId}
                   />
                 </div>
 

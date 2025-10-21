@@ -395,6 +395,7 @@ export function BusinessPortfolioManager({ businessId }: BusinessPortfolioManage
                     });
                   }}
                   accept="image/*,video/*"
+                  folder={businessId}
                 />
               ) : (
                 <div className="relative aspect-video rounded-lg overflow-hidden border">

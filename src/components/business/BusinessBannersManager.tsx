@@ -196,6 +196,7 @@ export function BusinessBannersManager({ businessId }: BusinessBannersManagerPro
                     }
                     accept="image/*"
                     maxSizeMB={5}
+                    folder={businessId}
                   />
                 </div>
 

@@ -219,6 +219,8 @@ export function GenericCertificationsManager({ entityType, entityId }: GenericCe
                   }
                   accept="image/*,application/pdf"
                   maxSizeMB={10}
+                  bucket={entityType === 'business' ? 'business-media' : 'user-media'}
+                  folder={entityId}
                 />
               </div>
 

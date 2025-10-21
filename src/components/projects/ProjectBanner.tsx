@@ -37,14 +37,14 @@ export function ProjectBanner() {
           <div>
             <h2 className="text-2xl font-bold mb-2">Ganhe Woorkoins diariamente!</h2>
             <p className="text-white/90 mb-4">
-              Siga nosso Instagram e receba prêmios de Woorkoins todos os dias em nosso storie.
+              Siga nosso Instagram e receba prêmios de Woorkoins todos os dias em nossos stories.
             </p>
             <Button 
               variant="secondary" 
               className="bg-white text-[#1E88E5] hover:bg-white/90 font-semibold"
               onClick={() => window.open('https://instagram.com/woorkinsbrasil', '_blank')}
             >
-              Clique aqui e siga
+              Clique aqui e siga @woorkinsbrasil
             </Button>
           </div>
           <div 

@@ -32,7 +32,7 @@ export function GenericPortfolioManager({ entityType, entityId }: GenericPortfol
 
   const tableName = entityType === 'business' ? 'business_portfolio_items' : 'user_portfolio_items';
   const idColumn = entityType === 'business' ? 'business_id' : 'profile_id';
-  const storageBucket = entityType === 'business' ? 'business-media' : 'portfolio';
+  const storageBucket = entityType === 'business' ? 'business-media' : 'user-media';
 
   useEffect(() => {
     loadItems();

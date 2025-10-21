@@ -23,6 +23,16 @@ import {
   ShoppingBag, ThumbsUp, Award, Calendar, Link as LinkIcon, Briefcase as BriefcaseIcon, Building2,
   Heart, Share2, MessageCircleMore, User
 } from 'lucide-react';
+import { GenericSocialManager } from '@/components/generic/GenericSocialManager';
+import { GenericPortfolioManager } from '@/components/generic/GenericPortfolioManager';
+import { GenericBannersManager } from '@/components/generic/GenericBannersManager';
+import { GenericVideoManager } from '@/components/generic/GenericVideoManager';
+import { GenericCatalogManager } from '@/components/generic/GenericCatalogManager';
+import { GenericTestimonialsManager } from '@/components/generic/GenericTestimonialsManager';
+import { GenericCertificationsManager } from '@/components/generic/GenericCertificationsManager';
+import { GenericAppointmentsManager } from '@/components/generic/GenericAppointmentsManager';
+import { GenericLinktreeManager } from '@/components/generic/GenericLinktreeManager';
+import { GenericJobVacanciesManager } from '@/components/generic/GenericJobVacanciesManager';
 import { Link } from 'react-router-dom';
 import {
   AlertDialog,
@@ -173,6 +183,13 @@ export default function ProfileEdit() {
 
   const availableFeatures: Omit<UserFeature, 'isActive'>[] = [
     {
+      key: 'negotiation',
+      name: 'Negociação',
+      description: 'Sistema de negociação com clientes',
+      icon: MessageSquare,
+      color: 'bg-gradient-to-br from-emerald-500 to-teal-500'
+    },
+    {
       key: 'social',
       name: 'Redes Sociais',
       description: 'Links para suas redes sociais e contatos',
@@ -185,6 +202,27 @@ export default function ProfileEdit() {
       description: 'Galeria de trabalhos e projetos realizados',
       icon: ImageIcon,
       color: 'bg-gradient-to-br from-green-500 to-teal-500'
+    },
+    {
+      key: 'banner',
+      name: 'Banner Rotativo',
+      description: 'Até 5 banners rotativos no topo do perfil',
+      icon: ImageIcon,
+      color: 'bg-gradient-to-br from-blue-500 to-cyan-500'
+    },
+    {
+      key: 'video',
+      name: 'Vídeo de Apresentação',
+      description: 'Vídeo do YouTube no topo do perfil',
+      icon: Play,
+      color: 'bg-gradient-to-br from-red-500 to-pink-500'
+    },
+    {
+      key: 'catalog',
+      name: 'Catálogo de Serviços',
+      description: 'Venda produtos e serviços diretamente',
+      icon: ShoppingBag,
+      color: 'bg-gradient-to-br from-green-500 to-emerald-500'
     },
     {
       key: 'testimonials',
@@ -201,11 +239,25 @@ export default function ProfileEdit() {
       color: 'bg-gradient-to-br from-amber-500 to-orange-500'
     },
     {
+      key: 'appointments',
+      name: 'Agendamento',
+      description: 'Sistema de agendamento integrado',
+      icon: Calendar,
+      color: 'bg-gradient-to-br from-indigo-500 to-blue-500'
+    },
+    {
       key: 'linktree',
       name: 'LinkTree Personalizado',
       description: 'Múltiplos links externos personalizados',
       icon: LinkIcon,
       color: 'bg-gradient-to-br from-teal-500 to-cyan-500'
+    },
+    {
+      key: 'vacancies',
+      name: 'Vagas de Emprego',
+      description: 'Publique e gerencie vagas de trabalho',
+      icon: BriefcaseIcon,
+      color: 'bg-gradient-to-br from-pink-500 to-rose-500'
     }
   ];
 
@@ -1162,7 +1214,7 @@ export default function ProfileEdit() {
               {activeSection === 'tools' && (
                 <div className="space-y-6 animate-fade-in">
                   {configuringFeature ? (
-                    <div>
+                    <div className="space-y-6">
                       <Button
                         variant="ghost"
                         onClick={() => setConfiguringFeature(null)}
@@ -1172,31 +1224,61 @@ export default function ProfileEdit() {
                         Voltar para Ferramentas
                       </Button>
 
+                      {configuringFeature === 'banner' && (
+                        <GenericBannersManager entityType="user" entityId={profile.id} />
+                      )}
+
+                      {configuringFeature === 'video' && (
+                        <GenericVideoManager entityType="user" entityId={profile.id} />
+                      )}
+
+                      {configuringFeature === 'catalog' && (
+                        <GenericCatalogManager entityType="user" entityId={profile.id} />
+                      )}
+
+                      {configuringFeature === 'testimonials' && (
+                        <GenericTestimonialsManager entityType="user" entityId={profile.id} />
+                      )}
+
+                      {configuringFeature === 'certifications' && (
+                        <GenericCertificationsManager entityType="user" entityId={profile.id} />
+                      )}
+
+                      {configuringFeature === 'appointments' && (
+                        <GenericAppointmentsManager entityType="user" entityId={profile.id} />
+                      )}
+
+                      {configuringFeature === 'linktree' && (
+                        <GenericLinktreeManager entityType="user" entityId={profile.id} />
+                      )}
+
+                      {configuringFeature === 'vacancies' && (
+                        <GenericJobVacanciesManager entityType="user" entityId={profile.id} />
+                      )}
+
+                      {configuringFeature === 'portfolio' && (
+                        <GenericPortfolioManager entityType="user" entityId={profile.id} />
+                      )}
+
                       {configuringFeature === 'social' && (
+                        <GenericSocialManager entityType="user" entityId={profile.id} />
+                      )}
+
+                      {configuringFeature === 'negotiation' && (
                         <Card className="bg-card/50 backdrop-blur-sm border-2">
-                          <div className="bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-rose-500/10 p-6 border-b">
-                            <CardTitle className="text-purple-600">Redes Sociais</CardTitle>
-                            <CardDescription>Configure seus links e contatos</CardDescription>
+                          <div className="bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-cyan-500/10 p-6 border-b">
+                            <CardTitle className="flex items-center gap-2 text-emerald-600">
+                              <MessageSquare className="w-5 h-5" />
+                              Configurar Negociação
+                            </CardTitle>
+                            <CardDescription>
+                              Personalize como os clientes podem negociar com você
+                            </CardDescription>
                           </div>
                           <CardContent className="p-6">
-                            <form onSubmit={handleSave} className="space-y-4">
-                              <div className="space-y-2">
-                                <Label className="flex items-center gap-2 text-base font-medium">
-                                  <Globe className="w-4 h-4" />
-                                  Website
-                                </Label>
-                                <Input
-                                  value={profile.website || ''}
-                                  onChange={(e) => setProfile({ ...profile, website: e.target.value })}
-                                  placeholder="https://seusite.com"
-                                  className="text-base"
-                                />
-                              </div>
-                              <Button type="submit" disabled={saving} className="w-full bg-gradient-to-r from-purple-500 to-pink-500">
-                                <Save className="w-4 h-4 mr-2" />
-                                {saving ? 'Salvando...' : 'Salvar Redes Sociais'}
-                              </Button>
-                            </form>
+                            <div className="text-center py-8 text-muted-foreground">
+                              Sistema de negociação em desenvolvimento
+                            </div>
                           </CardContent>
                         </Card>
                       )}

@@ -23,15 +23,16 @@ import {
   Heart, Share2, MessageCircleMore
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { BusinessBannersManager } from '@/components/business/BusinessBannersManager';
-import { BusinessVideoManager } from '@/components/business/BusinessVideoManager';
-import { BusinessCatalogManager } from '@/components/business/BusinessCatalogManager';
-import { BusinessTestimonialsManager } from '@/components/business/BusinessTestimonialsManager';
-import { BusinessCertificationsManager } from '@/components/business/BusinessCertificationsManager';
-import { BusinessAppointmentsManager } from '@/components/business/BusinessAppointmentsManager';
-import { BusinessLinktreeManager } from '@/components/business/BusinessLinktreeManager';
-import { BusinessJobVacanciesManager } from '@/components/business/BusinessJobVacanciesManager';
-import { BusinessPortfolioManager } from '@/components/business/BusinessPortfolioManager';
+import { GenericBannersManager } from '@/components/generic/GenericBannersManager';
+import { GenericVideoManager } from '@/components/generic/GenericVideoManager';
+import { GenericCatalogManager } from '@/components/generic/GenericCatalogManager';
+import { GenericTestimonialsManager } from '@/components/generic/GenericTestimonialsManager';
+import { GenericCertificationsManager } from '@/components/generic/GenericCertificationsManager';
+import { GenericAppointmentsManager } from '@/components/generic/GenericAppointmentsManager';
+import { GenericLinktreeManager } from '@/components/generic/GenericLinktreeManager';
+import { GenericJobVacanciesManager } from '@/components/generic/GenericJobVacanciesManager';
+import { GenericPortfolioManager } from '@/components/generic/GenericPortfolioManager';
+import { GenericSocialManager } from '@/components/generic/GenericSocialManager';
 import BusinessAdministrators from './BusinessAdministrators';
 import {
   AlertDialog,
@@ -1464,35 +1465,39 @@ export default function BusinessEdit() {
                   {configuringFeature ? (
                     <div className="space-y-6">
                       {configuringFeature === 'banner' && (
-                        <BusinessBannersManager businessId={business.id} />
+                        <GenericBannersManager entityType="business" entityId={business.id} />
                       )}
 
                       {configuringFeature === 'video' && (
-                        <BusinessVideoManager businessId={business.id} />
+                        <GenericVideoManager entityType="business" entityId={business.id} />
                       )}
 
                       {configuringFeature === 'catalog' && (
-                        <BusinessCatalogManager businessId={business.id} />
+                        <GenericCatalogManager entityType="business" entityId={business.id} />
                       )}
 
                       {configuringFeature === 'testimonials' && (
-                        <BusinessTestimonialsManager businessId={business.id} />
+                        <GenericTestimonialsManager entityType="business" entityId={business.id} />
                       )}
 
                       {configuringFeature === 'certifications' && (
-                        <BusinessCertificationsManager businessId={business.id} />
+                        <GenericCertificationsManager entityType="business" entityId={business.id} />
                       )}
 
                       {configuringFeature === 'appointments' && (
-                        <BusinessAppointmentsManager businessId={business.id} />
+                        <GenericAppointmentsManager entityType="business" entityId={business.id} />
                       )}
 
                       {configuringFeature === 'linktree' && (
-                        <BusinessLinktreeManager businessId={business.id} businessLogo={business.logo_url} />
+                        <GenericLinktreeManager entityType="business" entityId={business.id} />
                       )}
 
                       {configuringFeature === 'vacancies' && (
-                        <BusinessJobVacanciesManager businessId={business.id} />
+                        <GenericJobVacanciesManager entityType="business" entityId={business.id} />
+                      )}
+
+                      {configuringFeature === 'portfolio' && (
+                        <GenericPortfolioManager entityType="business" entityId={business.id} />
                       )}
 
                       {configuringFeature === 'negotiation' && (
@@ -1645,98 +1650,11 @@ export default function BusinessEdit() {
                       )}
 
                       {configuringFeature === 'social' && (
-                        <Card className="bg-card/50 backdrop-blur-sm border-2">
-                          <div className="bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-rose-500/10 p-6 border-b">
-                            <CardTitle className="text-purple-600">Redes Sociais</CardTitle>
-                            <CardDescription>Configure seus links e contatos</CardDescription>
-                          </div>
-                          <CardContent className="p-6">
-                            <form onSubmit={handleSave} className="space-y-4">
-                              <div className="grid md:grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                  <Label className="flex items-center gap-2 text-base font-medium">
-                                    <Globe className="w-4 h-4" />
-                                    Website
-                                  </Label>
-                                  <Input
-                                    value={business.website_url || ''}
-                                    onChange={(e) => setBusiness({ ...business, website_url: e.target.value })}
-                                    placeholder="https://seusite.com"
-                                    className="text-base"
-                                  />
-                                </div>
-                                <div className="space-y-2">
-                                  <Label className="flex items-center gap-2 text-base font-medium">
-                                    <MessageCircle className="w-4 h-4" />
-                                    WhatsApp
-                                  </Label>
-                                  <Input
-                                    value={business.whatsapp || ''}
-                                    onChange={(e) => setBusiness({ ...business, whatsapp: e.target.value })}
-                                    placeholder="(00) 00000-0000"
-                                    className="text-base"
-                                  />
-                                </div>
-                                <div className="space-y-2">
-                                  <Label className="flex items-center gap-2 text-base font-medium">
-                                    <Facebook className="w-4 h-4" />
-                                    Facebook
-                                  </Label>
-                                  <Input
-                                    value={business.facebook || ''}
-                                    onChange={(e) => setBusiness({ ...business, facebook: e.target.value })}
-                                    placeholder="facebook.com/seu-perfil"
-                                    className="text-base"
-                                  />
-                                </div>
-                                <div className="space-y-2">
-                                  <Label className="flex items-center gap-2 text-base font-medium">
-                                    <Instagram className="w-4 h-4" />
-                                    Instagram
-                                  </Label>
-                                  <Input
-                                    value={business.instagram || ''}
-                                    onChange={(e) => setBusiness({ ...business, instagram: e.target.value })}
-                                    placeholder="@seu_instagram"
-                                    className="text-base"
-                                  />
-                                </div>
-                                <div className="space-y-2">
-                                  <Label className="flex items-center gap-2 text-base font-medium">
-                                    <Linkedin className="w-4 h-4" />
-                                    LinkedIn
-                                  </Label>
-                                  <Input
-                                    value={business.linkedin || ''}
-                                    onChange={(e) => setBusiness({ ...business, linkedin: e.target.value })}
-                                    placeholder="linkedin.com/in/seu-perfil"
-                                    className="text-base"
-                                  />
-                                </div>
-                                <div className="space-y-2">
-                                  <Label className="flex items-center gap-2 text-base font-medium">
-                                    <Twitter className="w-4 h-4" />
-                                    Twitter/X
-                                  </Label>
-                                  <Input
-                                    value={business.twitter || ''}
-                                    onChange={(e) => setBusiness({ ...business, twitter: e.target.value })}
-                                    placeholder="@seu_twitter"
-                                    className="text-base"
-                                  />
-                                </div>
-                              </div>
-                              <Button type="submit" disabled={saving} className="w-full bg-gradient-to-r from-purple-500 to-pink-500">
-                                <Save className="w-4 h-4 mr-2" />
-                                {saving ? 'Salvando...' : 'Salvar Redes Sociais'}
-                              </Button>
-                            </form>
-                          </CardContent>
-                        </Card>
+                        <GenericSocialManager entityType="business" entityId={business.id} />
                       )}
 
                       {configuringFeature === 'portfolio' && business && (
-                        <BusinessPortfolioManager businessId={business.id} />
+                        <GenericPortfolioManager entityType="business" entityId={business.id} />
                       )}
                     </div>
                   ) : (

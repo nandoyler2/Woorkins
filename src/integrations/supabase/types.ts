@@ -1658,6 +1658,8 @@ export type Database = {
       negotiations: {
         Row: {
           accepted_at: string | null
+          archived: boolean | null
+          archived_at: string | null
           business_id: string
           completed_at: string | null
           created_at: string
@@ -1680,6 +1682,8 @@ export type Database = {
         }
         Insert: {
           accepted_at?: string | null
+          archived?: boolean | null
+          archived_at?: string | null
           business_id: string
           completed_at?: string | null
           created_at?: string
@@ -1702,6 +1706,8 @@ export type Database = {
         }
         Update: {
           accepted_at?: string | null
+          archived?: boolean | null
+          archived_at?: string | null
           business_id?: string
           completed_at?: string | null
           created_at?: string
@@ -2186,6 +2192,8 @@ export type Database = {
       proposals: {
         Row: {
           accepted_amount: number | null
+          archived: boolean | null
+          archived_at: string | null
           awaiting_acceptance_from: string | null
           budget: number
           business_id: string | null
@@ -2212,6 +2220,8 @@ export type Database = {
         }
         Insert: {
           accepted_amount?: number | null
+          archived?: boolean | null
+          archived_at?: string | null
           awaiting_acceptance_from?: string | null
           budget: number
           business_id?: string | null
@@ -2238,6 +2248,8 @@ export type Database = {
         }
         Update: {
           accepted_amount?: number | null
+          archived?: boolean | null
+          archived_at?: string | null
           awaiting_acceptance_from?: string | null
           budget?: number
           business_id?: string | null

@@ -121,7 +121,7 @@ export default function Messages() {
         supabase.removeChannel(channel);
       };
     }
-  }, [profileId, selectedConversation]);
+  }, [profileId, selectedConversation, activeFilter]);
 
   // Auto-select conversation from query params (only from notifications)
   useEffect(() => {
@@ -172,6 +172,7 @@ export default function Messages() {
           user_id,
           business_id,
           updated_at,
+          archived,
           business_profiles!inner(
             company_name,
             logo_url,
@@ -179,6 +180,7 @@ export default function Messages() {
           )
         `)
         .eq('user_id', user?.id)
+        .eq('archived', activeFilter === 'archived' ? true : false)
         .order('updated_at', { ascending: false });
 
       // Load negotiations where user is the business
@@ -191,6 +193,7 @@ export default function Messages() {
           user_id,
           business_id,
           updated_at,
+          archived,
           business_profiles!inner(
             company_name,
             logo_url,
@@ -198,6 +201,7 @@ export default function Messages() {
           )
         `)
         .eq('business_profiles.profile_id', profileId)
+        .eq('archived', activeFilter === 'archived' ? true : false)
         .order('updated_at', { ascending: false });
 
       // Load proposals where user is the freelancer
@@ -208,6 +212,7 @@ export default function Messages() {
           status,
           message,
           updated_at,
+          archived,
           freelancer_id,
           project:projects!inner(
             id,
@@ -221,6 +226,7 @@ export default function Messages() {
           )
         `)
         .eq('freelancer_id', profileId)
+        .eq('archived', activeFilter === 'archived' ? true : false)
         .order('updated_at', { ascending: false });
 
       // Load proposals where user is the project owner
@@ -231,6 +237,7 @@ export default function Messages() {
           status,
           message,
           updated_at,
+          archived,
           freelancer_id,
           project:projects!inner(
             id,
@@ -244,6 +251,7 @@ export default function Messages() {
           )
         `)
         .eq('project.profile_id', profileId)
+        .eq('archived', activeFilter === 'archived' ? true : false)
         .order('updated_at', { ascending: false });
 
       const negotiations = [...(userNegotiations || []), ...(businessNegotiations || [])];

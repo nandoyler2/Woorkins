@@ -648,6 +648,38 @@ useEffect(() => {
     }
   };
 
+  const handleArchiveConversation = async () => {
+    try {
+      const tableName = conversationType === 'negotiation' ? 'negotiations' : 'proposals';
+      
+      const { error } = await supabase
+        .from(tableName as any)
+        .update({
+          archived: true,
+          archived_at: new Date().toISOString(),
+        })
+        .eq('id', conversationId);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Conversa arquivada',
+        description: 'A conversa foi arquivada com sucesso',
+      });
+
+      if (onConversationDeleted) {
+        onConversationDeleted();
+      }
+    } catch (error: any) {
+      console.error('Error archiving conversation:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Erro ao arquivar',
+        description: error.message || 'Não foi possível arquivar a conversa',
+      });
+    }
+  };
+
   return (
     <div className="h-full flex flex-col bg-white relative">
       {/* Unified Header with Proposal Info - 3 Columns Layout */}
@@ -735,7 +767,7 @@ useEffect(() => {
                       <DropdownMenuSeparator />
                     </>
                   )}
-                  <DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleArchiveConversation}>
                     <Archive className="h-4 w-4 mr-2" />
                     Arquivar Conversa
                   </DropdownMenuItem>
@@ -809,7 +841,7 @@ useEffect(() => {
                   <DropdownMenuSeparator />
                 </>
               )}
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={handleArchiveConversation}>
                 <Archive className="h-4 w-4 mr-2" />
                 Arquivar Conversa
               </DropdownMenuItem>

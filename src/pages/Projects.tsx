@@ -34,9 +34,6 @@ interface Project {
     username: string;
     full_name: string;
     avatar_url?: string;
-    country?: string;
-    rating?: number;
-    payment_verified?: boolean;
   };
   skills?: string[];
 }
@@ -60,8 +57,8 @@ export default function Projects() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [selectedBudget, setSelectedBudget] = useState<string>('');
-  const [selectedDeadline, setSelectedDeadline] = useState<string>('');
+  const [selectedBudget, setSelectedBudget] = useState<string>('all');
+  const [selectedDeadline, setSelectedDeadline] = useState<string>('all');
   const [workMode, setWorkMode] = useState<string>('all');
   const [language, setLanguage] = useState<string>('all');
   const [proposalsFilter, setProposalsFilter] = useState<string>('all');
@@ -86,10 +83,7 @@ export default function Projects() {
           profiles:profile_id (
             username,
             full_name,
-            avatar_url,
-            country,
-            rating,
-            payment_verified
+            avatar_url
           )
         `)
         .eq('status', 'open')
@@ -101,7 +95,7 @@ export default function Projects() {
       }
 
       // Filtro de orçamento
-      if (selectedBudget) {
+      if (selectedBudget && selectedBudget !== 'all') {
         const [min, max] = selectedBudget.split('-').map(Number);
         if (min !== undefined) {
           query = query.gte('budget_min', min);
@@ -112,7 +106,7 @@ export default function Projects() {
       }
 
       // Filtro de prazo
-      if (selectedDeadline) {
+      if (selectedDeadline && selectedDeadline !== 'all') {
         const now = new Date();
         let startDate = new Date();
         

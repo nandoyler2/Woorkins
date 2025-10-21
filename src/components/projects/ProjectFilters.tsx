@@ -24,7 +24,7 @@ interface ProjectFiltersProps {
 }
 
 const BUDGET_RANGES = [
-  { label: 'Todos', value: '' },
+  { label: 'Todos', value: 'all' },
   { label: 'Até R$ 500', value: '0-500' },
   { label: 'R$ 500 - R$ 1.000', value: '500-1000' },
   { label: 'R$ 1.000 - R$ 3.000', value: '1000-3000' },
@@ -87,7 +87,7 @@ export function ProjectFilters({
             <SelectValue placeholder="Selecione" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Todas</SelectItem>
+            <SelectItem value="all">Todas</SelectItem>
             <SelectItem value="today">Hoje</SelectItem>
             <SelectItem value="week">Última semana</SelectItem>
             <SelectItem value="month">Último mês</SelectItem>

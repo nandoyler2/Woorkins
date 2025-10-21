@@ -22,9 +22,6 @@ interface ProjectCardProps {
       username: string;
       full_name: string;
       avatar_url?: string;
-      country?: string;
-      rating?: number;
-      payment_verified?: boolean;
     };
     skills?: string[];
   };
@@ -126,28 +123,10 @@ export function ProjectCard({ project }: ProjectCardProps) {
             <span className="text-sm font-medium">
               {project.profiles.full_name || project.profiles.username}
             </span>
-            {project.profiles.country && (
-              <>
-                <MapPin className="h-3 w-3 text-muted-foreground" />
-                <span className="text-xs text-muted-foreground">{project.profiles.country}</span>
-              </>
-            )}
-            {project.profiles.rating && (
-              <div className="flex items-center gap-1">
-                <Star className="h-3 w-3 fill-orange text-orange" />
-                <span className="text-xs text-muted-foreground">{project.profiles.rating.toFixed(1)}</span>
-              </div>
-            )}
           </div>
         </div>
         
         <div className="flex items-center gap-2">
-          {project.profiles.payment_verified && (
-            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-              <CheckCircle className="h-4 w-4 text-accent" />
-              <span>Pagamento verificado</span>
-            </div>
-          )}
           <Button variant="ghost" size="icon">
             <MessageSquare className="h-4 w-4" />
           </Button>

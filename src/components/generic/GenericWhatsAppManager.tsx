@@ -85,7 +85,9 @@ export const GenericWhatsAppManager = ({ entityType, entityId }: GenericWhatsApp
           welcome_message: config.welcome_message,
           auto_open: config.auto_open,
           questions: config.questions
-        } as any);
+        } as any, {
+          onConflict: columnName
+        });
 
       if (error) throw error;
 

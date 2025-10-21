@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { MapPin, Calendar, User as UserIcon, Star, Briefcase, MessageSquare, ThumbsUp, AlertCircle } from 'lucide-react';
 import { Footer } from '@/components/Footer';
 import { PublicWhatsAppWidget } from '@/components/generic/PublicWhatsAppWidget';
+import { PublicTestimonialsSlider } from '@/components/generic/PublicTestimonialsSlider';
 import { SafeImage } from '@/components/ui/safe-image';
 import { useToast } from '@/hooks/use-toast';
 import { formatFullName } from '@/lib/utils';
@@ -415,6 +416,9 @@ export default function UserProfile() {
                         </div>
                       )}
                     </div>
+
+                    {/* Depoimentos Section */}
+                    <PublicTestimonialsSlider entityType="user" entityId={profile.id} />
                   </TabsContent>
 
                   {/* Sobre Tab */}

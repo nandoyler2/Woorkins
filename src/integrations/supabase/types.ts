@@ -918,12 +918,14 @@ export type Database = {
         Row: {
           business_id: string
           client_name: string
+          client_photo_url: string | null
           client_profile_id: string | null
           content: string
           created_at: string | null
           id: string
           moderated_at: string | null
           moderated_by: string | null
+          order_index: number | null
           rating: number | null
           status: string | null
           updated_at: string | null
@@ -931,12 +933,14 @@ export type Database = {
         Insert: {
           business_id: string
           client_name: string
+          client_photo_url?: string | null
           client_profile_id?: string | null
           content: string
           created_at?: string | null
           id?: string
           moderated_at?: string | null
           moderated_by?: string | null
+          order_index?: number | null
           rating?: number | null
           status?: string | null
           updated_at?: string | null
@@ -944,12 +948,14 @@ export type Database = {
         Update: {
           business_id?: string
           client_name?: string
+          client_photo_url?: string | null
           client_profile_id?: string | null
           content?: string
           created_at?: string | null
           id?: string
           moderated_at?: string | null
           moderated_by?: string | null
+          order_index?: number | null
           rating?: number | null
           status?: string | null
           updated_at?: string | null
@@ -3213,59 +3219,42 @@ export type Database = {
       }
       user_testimonials: {
         Row: {
+          active: boolean | null
           client_name: string
-          client_profile_id: string | null
+          client_photo_url: string | null
           content: string
           created_at: string | null
           id: string
-          moderated_at: string | null
-          moderated_by: string | null
+          order_index: number | null
           profile_id: string
           rating: number | null
-          status: string | null
           updated_at: string | null
         }
         Insert: {
+          active?: boolean | null
           client_name: string
-          client_profile_id?: string | null
+          client_photo_url?: string | null
           content: string
           created_at?: string | null
           id?: string
-          moderated_at?: string | null
-          moderated_by?: string | null
+          order_index?: number | null
           profile_id: string
           rating?: number | null
-          status?: string | null
           updated_at?: string | null
         }
         Update: {
+          active?: boolean | null
           client_name?: string
-          client_profile_id?: string | null
+          client_photo_url?: string | null
           content?: string
           created_at?: string | null
           id?: string
-          moderated_at?: string | null
-          moderated_by?: string | null
+          order_index?: number | null
           profile_id?: string
           rating?: number | null
-          status?: string | null
           updated_at?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "user_testimonials_client_profile_id_fkey"
-            columns: ["client_profile_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "user_testimonials_moderated_by_fkey"
-            columns: ["moderated_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "user_testimonials_profile_id_fkey"
             columns: ["profile_id"]

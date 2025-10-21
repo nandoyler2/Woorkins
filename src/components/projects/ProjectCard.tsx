@@ -5,6 +5,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MapPin, Star, CheckCircle, Clock, MessageSquare } from "lucide-react";
 import { formatShortName } from "@/lib/utils";
 import { Link } from "react-router-dom";
+import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { ProposalDialog } from "./ProposalDialog";
+import { LoginPromptDialog } from "./LoginPromptDialog";
 
 interface ProjectCardProps {
   project: {
@@ -28,6 +32,23 @@ interface ProjectCardProps {
 }
 
 export function ProjectCard({ project }: ProjectCardProps) {
+  const { user } = useAuth();
+  const [proposalDialogOpen, setProposalDialogOpen] = useState(false);
+  const [loginDialogOpen, setLoginDialogOpen] = useState(false);
+
+  const handleMakeProposal = () => {
+    if (!user) {
+      setLoginDialogOpen(true);
+    } else {
+      setProposalDialogOpen(true);
+    }
+  };
+
+  const handleLoginSuccess = () => {
+    setLoginDialogOpen(false);
+    setProposalDialogOpen(true);
+  };
+
   const formatBudget = (min: number | null, max: number | null) => {
     if (!min && !max) return "A combinar";
     if (min && max) return `R$ ${min.toLocaleString()} - R$ ${max.toLocaleString()}`;
@@ -72,7 +93,12 @@ export function ProjectCard({ project }: ProjectCardProps) {
           <span className="text-lg font-bold text-primary whitespace-nowrap">
             {formatBudget(project.budget_min, project.budget_max)}
           </span>
-          <Button variant="default" size="sm" className="whitespace-nowrap">
+          <Button 
+            variant="default" 
+            size="sm" 
+            className="whitespace-nowrap"
+            onClick={handleMakeProposal}
+          >
             Fazer uma proposta
           </Button>
         </div>
@@ -140,6 +166,20 @@ export function ProjectCard({ project }: ProjectCardProps) {
           </Button>
         </div>
       </div>
+
+      {/* Dialogs */}
+      <ProposalDialog
+        open={proposalDialogOpen}
+        onOpenChange={setProposalDialogOpen}
+        projectId={project.id}
+        projectTitle={project.title}
+      />
+
+      <LoginPromptDialog
+        open={loginDialogOpen}
+        onOpenChange={setLoginDialogOpen}
+        onLoginSuccess={handleLoginSuccess}
+      />
     </Card>
   );
 }

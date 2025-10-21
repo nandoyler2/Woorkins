@@ -9,6 +9,10 @@ export default function Feed() {
   const { user, loading } = useAuth();
   const { t } = useLanguage();
 
+  useEffect(() => {
+    document.title = 'Feed - Woorkins';
+  }, []);
+
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center">Carregando...</div>;
   }

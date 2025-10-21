@@ -24,6 +24,10 @@ interface Transaction {
 export default function Financeiro() {
   const { user } = useAuth();
   const { toast } = useToast();
+
+  useEffect(() => {
+    document.title = 'Financeiro - Woorkins';
+  }, []);
   const [loading, setLoading] = useState(false);
   const [balance, setBalance] = useState({ available: 0, pending: 0, total: 0 });
   const [showBalance, setShowBalance] = useState(true);

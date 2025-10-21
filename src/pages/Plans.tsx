@@ -33,6 +33,10 @@ export default function Plans() {
   const { toast } = useToast();
 
   useEffect(() => {
+    document.title = 'Planos - Woorkins';
+  }, []);
+
+  useEffect(() => {
     loadPlans();
     if (user) {
       loadCurrentPlan();

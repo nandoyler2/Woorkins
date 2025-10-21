@@ -37,6 +37,10 @@ export default function FAQ() {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
   useEffect(() => {
+    document.title = 'Perguntas Frequentes - Woorkins';
+  }, []);
+
+  useEffect(() => {
     loadFAQs();
   }, []);
 

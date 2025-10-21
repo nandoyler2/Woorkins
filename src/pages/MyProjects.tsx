@@ -73,6 +73,10 @@ const MyProjects = () => {
   } | null>(null);
 
   useEffect(() => {
+    document.title = 'Meus Projetos - Woorkins';
+  }, []);
+
+  useEffect(() => {
     if (user) {
       loadData();
     }

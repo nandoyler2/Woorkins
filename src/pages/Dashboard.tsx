@@ -237,6 +237,10 @@ export default function Dashboard() {
     }
   ];
   useEffect(() => {
+    document.title = 'Painel - Woorkins';
+  }, []);
+
+  useEffect(() => {
     if (user) {
       loadProfile();
       checkEmailConfirmation();

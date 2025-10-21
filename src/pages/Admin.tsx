@@ -23,6 +23,10 @@ export default function Admin() {
   const { toast } = useToast();
 
   useEffect(() => {
+    document.title = 'Administração - Woorkins';
+  }, []);
+
+  useEffect(() => {
     loadStats();
   }, []);
 

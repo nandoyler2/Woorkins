@@ -121,6 +121,10 @@ export default function ProfileEdit() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { openWithMessage } = useAIAssistant();
+
+  useEffect(() => {
+    document.title = 'Editar Perfil - Woorkins';
+  }, []);
   
   const [profile, setProfile] = useState<Profile | null>(null);
   const [evaluations, setEvaluations] = useState<Evaluation[]>([]);

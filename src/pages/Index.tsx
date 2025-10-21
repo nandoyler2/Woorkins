@@ -25,6 +25,10 @@ const Index = () => {
   const [profile, setProfile] = useState<any>(null);
 
   useEffect(() => {
+    document.title = 'Woorkins - Conecte. Trabalhe. Confie.';
+  }, []);
+
+  useEffect(() => {
     if (user) {
       navigate('/painel');
     }

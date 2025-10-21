@@ -98,6 +98,14 @@ export default function PublicLinktree() {
   const { slug } = useParams();
   const [business, setBusiness] = useState<BusinessProfile | null>(null);
   const [links, setLinks] = useState<CustomLink[]>([]);
+
+  useEffect(() => {
+    if (business) {
+      document.title = `${business.company_name} - Links - Woorkins`;
+    } else {
+      document.title = 'Links - Woorkins';
+    }
+  }, [business]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 

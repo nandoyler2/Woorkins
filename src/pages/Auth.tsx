@@ -28,6 +28,10 @@ export default function Auth() {
   const { toast } = useToast();
 
   useEffect(() => {
+    document.title = mode === 'signin' ? 'Entrar - Woorkins' : 'Cadastrar - Woorkins';
+  }, [mode]);
+
+  useEffect(() => {
     if (user) {
       navigate('/painel');
     }

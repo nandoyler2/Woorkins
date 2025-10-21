@@ -41,6 +41,10 @@ export default function Account() {
   const { toast } = useToast();
   const { openWithMessage } = useAIAssistant();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    document.title = 'Minha Conta - Woorkins';
+  }, []);
   const [loading, setLoading] = useState(false);
   const [profile, setProfile] = useState({
     id: '',

@@ -95,6 +95,14 @@ export default function BusinessProfile() {
   const [showAllComplaints, setShowAllComplaints] = useState(false);
 
   useEffect(() => {
+    if (business) {
+      document.title = `${business.company_name} - Woorkins`;
+    } else {
+      document.title = 'Perfil de Empresa - Woorkins';
+    }
+  }, [business]);
+
+  useEffect(() => {
     loadBusinessData();
     recordProfileView();
   }, [slug]);

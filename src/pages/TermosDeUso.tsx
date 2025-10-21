@@ -12,6 +12,10 @@ export default function TermosDeUso() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    document.title = 'Termos de Uso - Woorkins';
+  }, []);
+
+  useEffect(() => {
     loadTerms();
   }, []);
 

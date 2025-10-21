@@ -33,6 +33,10 @@ export default function AdminInvites() {
   const [profileId, setProfileId] = useState<string | null>(null);
 
   useEffect(() => {
+    document.title = 'Convites de Administração - Woorkins';
+  }, []);
+
+  useEffect(() => {
     const loadProfile = async () => {
       if (!user) return;
       

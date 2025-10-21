@@ -43,6 +43,10 @@ export default function ProjectCreate() {
   const { isVerified, isLoading: isCheckingVerification } = useDocumentVerification(profileId);
 
   useEffect(() => {
+    document.title = 'Criar Projeto - Woorkins';
+  }, []);
+
+  useEffect(() => {
     const checkRequirements = async () => {
       if (!user) {
         setIsCheckingRequirements(false);

@@ -12,6 +12,10 @@ export default function PoliticaPrivacidade() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    document.title = 'Política de Privacidade - Woorkins';
+  }, []);
+
+  useEffect(() => {
     loadPrivacy();
   }, []);
 

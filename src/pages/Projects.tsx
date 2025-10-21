@@ -73,6 +73,10 @@ export default function Projects() {
   const [reportDescription, setReportDescription] = useState('');
 
   useEffect(() => {
+    document.title = 'Projetos - Woorkins';
+  }, []);
+
+  useEffect(() => {
     loadProjects();
   }, [filter, user, selectedCategories, selectedBudget, sortBy, searchQuery]);
 

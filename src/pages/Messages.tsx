@@ -46,6 +46,10 @@ export default function Messages() {
   const location = useLocation();
 
   useEffect(() => {
+    document.title = 'Mensagens - Woorkins';
+  }, []);
+
+  useEffect(() => {
     if (user) {
       loadProfile();
     }

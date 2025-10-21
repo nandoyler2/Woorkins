@@ -83,6 +83,14 @@ export default function UserProfile() {
   const [showAllComplaints, setShowAllComplaints] = useState(false);
 
   useEffect(() => {
+    if (profile) {
+      document.title = `${formatFullName(profile.full_name)} (@${profile.username}) - Woorkins`;
+    } else {
+      document.title = 'Perfil - Woorkins';
+    }
+  }, [profile]);
+
+  useEffect(() => {
     loadUserProfile();
   }, [slug]);
 

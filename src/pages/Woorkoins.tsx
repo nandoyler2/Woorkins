@@ -25,6 +25,10 @@ interface WoorkoinProduct {
 export default function Woorkoins() {
   const { user } = useAuth();
   const { toast } = useToast();
+
+  useEffect(() => {
+    document.title = 'Woorkoins - Woorkins';
+  }, []);
   const [loading, setLoading] = useState(false);
   const [loadingPayment, setLoadingPayment] = useState(false);
   const [balance, setBalance] = useState(0);

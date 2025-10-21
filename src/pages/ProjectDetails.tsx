@@ -88,6 +88,14 @@ export default function ProjectDetails() {
   const [selectedBusiness, setSelectedBusiness] = useState('individual');
 
   useEffect(() => {
+    if (project) {
+      document.title = `${project.title} - Woorkins`;
+    } else {
+      document.title = 'Projeto - Woorkins';
+    }
+  }, [project]);
+
+  useEffect(() => {
     loadProjectData();
     if (user) {
       loadMyBusinesses();

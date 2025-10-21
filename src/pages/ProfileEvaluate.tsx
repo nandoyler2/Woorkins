@@ -17,6 +17,10 @@ export default function ProfileEvaluate() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    document.title = 'Avaliar Perfil - Woorkins';
+  }, []);
+
+  useEffect(() => {
     loadProfile();
   }, [slug]);
 

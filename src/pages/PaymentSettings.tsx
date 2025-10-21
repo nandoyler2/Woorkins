@@ -32,6 +32,10 @@ interface WalletBalance {
 export default function PaymentSettings() {
   const { user } = useAuth();
   const { toast } = useToast();
+
+  useEffect(() => {
+    document.title = 'Configurações de Pagamento - Woorkins';
+  }, []);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [withdrawing, setWithdrawing] = useState(false);

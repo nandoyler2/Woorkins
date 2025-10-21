@@ -147,6 +147,10 @@ export default function BusinessEdit() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { openWithMessage } = useAIAssistant();
+
+  useEffect(() => {
+    document.title = 'Editar Empresa - Woorkins';
+  }, []);
   
   const [business, setBusiness] = useState<BusinessProfile | null>(null);
   const [evaluations, setEvaluations] = useState<Evaluation[]>([]);

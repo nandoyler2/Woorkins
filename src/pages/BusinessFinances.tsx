@@ -30,6 +30,10 @@ export default function BusinessFinances() {
   const { toast } = useToast();
 
   useEffect(() => {
+    document.title = 'Finanças da Empresa - Woorkins';
+  }, []);
+
+  useEffect(() => {
     if (user) {
       fetchProfile();
     }

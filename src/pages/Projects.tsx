@@ -229,7 +229,7 @@ export default function Projects() {
 
                 {user && (
                   <Link to="/projeto/criar">
-                    <Button className="whitespace-nowrap">
+                    <Button className="whitespace-nowrap animate-gradient text-white border-0 hover:shadow-lg">
                       <Plus className="h-4 w-4 mr-2" />
                       Criar Projeto
                     </Button>

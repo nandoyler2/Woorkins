@@ -34,7 +34,7 @@ export function UnifiedVideoManager({ entityType, entityId }: UnifiedVideoManage
   const loadVideo = async () => {
     try {
       const { data, error } = await supabase
-        .from(tableName)
+        .from(tableName as any)
         .select('*')
         .eq(idColumn, entityId)
         .eq('active', true)
@@ -43,9 +43,10 @@ export function UnifiedVideoManager({ entityType, entityId }: UnifiedVideoManage
       if (error && error.code !== 'PGRST116') throw error;
 
       if (data) {
-        setVideo(data as any);
-        setYoutubeUrl(data.youtube_url);
-        setTitle(data.title || "");
+        const videoData = data as any;
+        setVideo(videoData);
+        setYoutubeUrl(videoData.youtube_url);
+        setTitle(videoData.title || "");
       }
     } catch (error: any) {
       toast({
@@ -84,14 +85,14 @@ export function UnifiedVideoManager({ entityType, entityId }: UnifiedVideoManage
 
       if (video?.id) {
         const { error } = await supabase
-          .from(tableName)
+          .from(tableName as any)
           .update(videoData)
           .eq('id', video.id);
 
         if (error) throw error;
       } else {
         const { error } = await supabase
-          .from(tableName)
+          .from(tableName as any)
           .insert([videoData]);
 
         if (error) throw error;
@@ -119,7 +120,7 @@ export function UnifiedVideoManager({ entityType, entityId }: UnifiedVideoManage
 
     try {
       const { error } = await supabase
-        .from(tableName)
+        .from(tableName as any)
         .delete()
         .eq('id', video.id);
 

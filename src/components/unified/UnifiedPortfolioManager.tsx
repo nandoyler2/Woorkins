@@ -39,13 +39,13 @@ export function UnifiedPortfolioManager({ entityType, entityId }: UnifiedPortfol
   const loadItems = async () => {
     try {
       const { data, error } = await supabase
-        .from(tableName)
+        .from(tableName as any)
         .select('*')
         .eq(idColumn, entityId)
         .order('order_index');
 
       if (error) throw error;
-      setItems((data || []) as any);
+      setItems(data as any || []);
     } catch (error: any) {
       toast({
         title: "Erro ao carregar portfólio",
@@ -76,14 +76,14 @@ export function UnifiedPortfolioManager({ entityType, entityId }: UnifiedPortfol
 
       if (editingItem.id) {
         const { error } = await supabase
-          .from(tableName)
+          .from(tableName as any)
           .update(itemData)
           .eq('id', editingItem.id);
 
         if (error) throw error;
       } else {
         const { error } = await supabase
-          .from(tableName)
+          .from(tableName as any)
           .insert([itemData]);
 
         if (error) throw error;
@@ -112,7 +112,7 @@ export function UnifiedPortfolioManager({ entityType, entityId }: UnifiedPortfol
 
     try {
       const { error } = await supabase
-        .from(tableName)
+        .from(tableName as any)
         .delete()
         .eq('id', id);
 
@@ -140,8 +140,9 @@ export function UnifiedPortfolioManager({ entityType, entityId }: UnifiedPortfol
       {editingItem !== null ? (
         <div className="space-y-4 mb-6">
           <ImageUpload
-            value={editingItem.image_url || ""}
-            onChange={(url) => setEditingItem({ ...editingItem, image_url: url })}
+            currentImageUrl={editingItem.image_url || null}
+            onUpload={(url) => setEditingItem({ ...editingItem, image_url: url })}
+            bucket="business-files"
             folder={`${entityType}_portfolio`}
           />
 

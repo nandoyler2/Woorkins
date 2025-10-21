@@ -46,7 +46,7 @@ export function UnifiedWhatsAppManager({ entityType, entityId }: UnifiedWhatsApp
   const loadConfig = async () => {
     try {
       const { data, error } = await supabase
-        .from(tableName)
+        .from(tableName as any)
         .select('*')
         .eq(idColumn, entityId)
         .single();
@@ -54,11 +54,13 @@ export function UnifiedWhatsAppManager({ entityType, entityId }: UnifiedWhatsApp
       if (error && error.code !== 'PGRST116') throw error;
 
       if (data) {
+        const configData = data as any;
+        const questionsData = configData.questions;
         setConfig({
-          phone: data.phone || "",
-          welcome_message: data.welcome_message || "Olá! Gostaria de conversar com você.",
-          auto_open: data.auto_open || false,
-          questions: data.questions || [],
+          phone: configData.phone || "",
+          welcome_message: configData.welcome_message || "Olá! Gostaria de conversar com você.",
+          auto_open: configData.auto_open || false,
+          questions: Array.isArray(questionsData) ? questionsData : [],
         });
       }
     } catch (error: any) {
@@ -112,30 +114,30 @@ export function UnifiedWhatsAppManager({ entityType, entityId }: UnifiedWhatsApp
 
     setLoading(true);
     try {
-      const configData = {
+      const configData: any = {
         phone: validPhone,
         welcome_message: config.welcome_message,
         auto_open: config.auto_open,
-        questions: config.questions,
+        questions: config.questions as any,
         [idColumn]: entityId,
       };
 
       const { data: existing } = await supabase
-        .from(tableName)
+        .from(tableName as any)
         .select('id')
         .eq(idColumn, entityId)
         .single();
 
       if (existing) {
         const { error } = await supabase
-          .from(tableName)
+          .from(tableName as any)
           .update(configData)
           .eq(idColumn, entityId);
 
         if (error) throw error;
       } else {
         const { error } = await supabase
-          .from(tableName)
+          .from(tableName as any)
           .insert([configData]);
 
         if (error) throw error;

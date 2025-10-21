@@ -167,7 +167,7 @@ export function UnifiedLinktreeManager({ entityType, entityId, entityLogo }: Uni
         .order("order_index");
 
       if (error) throw error;
-      setLinks((data || []) as CustomLink[]);
+      setLinks(data as any || []);
     } catch (error: any) {
       toast({
         title: "Erro ao carregar links",

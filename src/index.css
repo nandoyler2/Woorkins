@@ -193,6 +193,22 @@ All colors MUST be HSL.
     animation: pulse-slow 2.5s ease-in-out infinite;
   }
 
+  @keyframes thunder-flash {
+    0%, 100% {
+      opacity: 0;
+    }
+    10%, 30%, 50%, 70%, 90% {
+      opacity: 1;
+    }
+    20%, 40%, 60%, 80% {
+      opacity: 0.3;
+    }
+  }
+
+  .animate-thunder {
+    animation: thunder-flash 0.2s ease-in-out 15;
+  }
+
   @keyframes shimmer {
     0% {
       background-position: -200% 0;

@@ -183,51 +183,6 @@ export default function Projects() {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      
-      {/* Simple top bar */}
-      <div className="border-b bg-background">
-        <div className="container mx-auto px-4 py-4 max-w-7xl">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-4 flex-1 max-w-4xl">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Buscar projetos..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-              
-              {/* Mobile filters button */}
-              <Sheet open={mobileFiltersOpen} onOpenChange={setMobileFiltersOpen}>
-                <SheetTrigger asChild className="md:hidden">
-                  <Button variant="outline" size="icon">
-                    <SlidersHorizontal className="h-4 w-4" />
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="left" className="w-80 overflow-y-auto">
-                  <SheetHeader>
-                    <SheetTitle>Filtros</SheetTitle>
-                  </SheetHeader>
-                  <div className="mt-6">
-                    <ProjectFilters {...filtersProps} />
-                  </div>
-                </SheetContent>
-              </Sheet>
-            </div>
-
-            {user && (
-              <Link to="/projeto/criar">
-                <Button>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Criar Projeto
-                </Button>
-              </Link>
-            )}
-          </div>
-        </div>
-      </div>
 
       <main className="flex-1 bg-muted/30">
         <div className="container mx-auto px-4 py-6 max-w-7xl">
@@ -242,6 +197,45 @@ export default function Projects() {
             {/* Main content */}
             <div className="md:col-span-3">
               <ProjectBanner />
+
+              {/* Search and Create Project */}
+              <div className="mb-6 flex items-center gap-4">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Buscar projetos..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+
+                {/* Mobile filters button */}
+                <Sheet open={mobileFiltersOpen} onOpenChange={setMobileFiltersOpen}>
+                  <SheetTrigger asChild className="md:hidden">
+                    <Button variant="outline" size="icon">
+                      <SlidersHorizontal className="h-4 w-4" />
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent side="left" className="w-80 overflow-y-auto">
+                    <SheetHeader>
+                      <SheetTitle>Filtros</SheetTitle>
+                    </SheetHeader>
+                    <div className="mt-6">
+                      <ProjectFilters {...filtersProps} />
+                    </div>
+                  </SheetContent>
+                </Sheet>
+
+                {user && (
+                  <Link to="/projeto/criar">
+                    <Button className="whitespace-nowrap">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Criar Projeto
+                    </Button>
+                  </Link>
+                )}
+              </div>
 
               {loading ? (
                 <div className="text-center py-12">

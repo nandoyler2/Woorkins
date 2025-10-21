@@ -27,17 +27,21 @@ export function ProjectBanner() {
       
       <div className="flex items-center justify-between pr-8">
         <div>
-          <h2 className="text-2xl font-bold mb-2">Encontre os melhores projetos!</h2>
+          <h2 className="text-2xl font-bold mb-2">Ganhe Woorkoins diariamente!</h2>
           <p className="text-white/90 mb-4">
-            Milhares de projetos disponíveis para você trabalhar e crescer profissionalmente.
+            Siga nosso Instagram e receba prêmios de Woorkoins todos os dias em nosso storie.
           </p>
-          <Button variant="secondary" className="bg-white text-purple-600 hover:bg-white/90">
-            Criar meu perfil gratuitamente
+          <Button 
+            variant="secondary" 
+            className="bg-white text-purple-600 hover:bg-white/90"
+            onClick={() => window.open('https://instagram.com/woorkinsbrasil', '_blank')}
+          >
+            Clique aqui e siga
           </Button>
         </div>
         <div className="hidden md:block">
           <div className="w-32 h-32 bg-white/10 rounded-full flex items-center justify-center backdrop-blur-sm">
-            <span className="text-4xl">🚀</span>
+            <span className="text-4xl">🎁</span>
           </div>
         </div>
       </div>

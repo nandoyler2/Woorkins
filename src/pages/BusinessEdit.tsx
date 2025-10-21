@@ -1670,10 +1670,6 @@ export default function BusinessEdit() {
                       {configuringFeature === 'social' && (
                         <GenericSocialManager entityType="business" entityId={business.id} />
                       )}
-
-                      {configuringFeature === 'portfolio' && business && (
-                        <GenericPortfolioManager entityType="business" entityId={business.id} />
-                      )}
                     </div>
                   ) : (
                     <Card className="bg-card/50 backdrop-blur-sm border-2">

@@ -72,16 +72,73 @@ export const GenericWhatsAppManager = ({ entityType, entityId }: GenericWhatsApp
     }
   };
 
+  const validateAndFormatPhone = (phone: string): { valid: boolean; formatted: string; error?: string } => {
+    // Remove todos os caracteres não numéricos
+    let cleaned = phone.replace(/\D/g, '');
+    
+    // Se não começar com 55, adiciona automaticamente
+    if (!cleaned.startsWith('55')) {
+      cleaned = '55' + cleaned;
+    }
+    
+    // Validação: deve ter pelo menos 12 dígitos (55 + 2 DDD + 8 número)
+    // ou 13 dígitos (55 + 2 DDD + 9 número com o 9 extra)
+    if (cleaned.length < 12) {
+      return {
+        valid: false,
+        formatted: cleaned,
+        error: 'Número inválido. Verifique se incluiu o DDD e o número completo.'
+      };
+    }
+    
+    // Verifica se tem DDD válido (após o 55, deve ter 2 dígitos de DDD)
+    const ddd = cleaned.substring(2, 4);
+    const dddNum = parseInt(ddd);
+    if (dddNum < 11 || dddNum > 99) {
+      return {
+        valid: false,
+        formatted: cleaned,
+        error: 'DDD inválido. Insira um DDD válido (ex: 11, 21, 47).'
+      };
+    }
+    
+    // Verifica o tamanho total
+    if (cleaned.length > 13) {
+      return {
+        valid: false,
+        formatted: cleaned,
+        error: 'Número muito longo. Formato esperado: 5511999999999'
+      };
+    }
+    
+    return {
+      valid: true,
+      formatted: cleaned
+    };
+  };
+
   const handleSave = async () => {
     try {
+      // Valida e formata o número antes de salvar
+      const { valid, formatted, error } = validateAndFormatPhone(config.phone);
+      
+      if (!valid) {
+        toast({
+          title: "Número inválido",
+          description: error,
+          variant: "destructive",
+        });
+        return;
+      }
+
       const tableName = entityType === 'business' ? 'business_whatsapp_config' : 'user_whatsapp_config';
       const columnName = `${entityType}_id`;
 
-      const { error } = await supabase
+      const { error: saveError } = await supabase
         .from(tableName as any)
         .upsert({
           [columnName]: entityId,
-          phone: config.phone,
+          phone: formatted,
           welcome_message: config.welcome_message,
           auto_open: config.auto_open,
           questions: config.questions
@@ -89,7 +146,10 @@ export const GenericWhatsAppManager = ({ entityType, entityId }: GenericWhatsApp
           onConflict: columnName
         });
 
-      if (error) throw error;
+      if (saveError) throw saveError;
+
+      // Atualiza o estado com o número formatado
+      setConfig({ ...config, phone: formatted });
 
       toast({
         title: "Configurações salvas",
@@ -147,12 +207,12 @@ export const GenericWhatsAppManager = ({ entityType, entityId }: GenericWhatsApp
           <Label htmlFor="phone">Número do WhatsApp</Label>
           <Input
             id="phone"
-            placeholder="Ex: 5511999999999"
+            placeholder="Ex: 11999999999 ou 5511999999999"
             value={config.phone}
             onChange={(e) => setConfig({ ...config, phone: e.target.value })}
           />
           <p className="text-xs text-muted-foreground">
-            Digite o número com código do país (ex: 55 para Brasil) sem espaços ou caracteres especiais
+            Digite o DDD + número. O código do país (55) será adicionado automaticamente se necessário.
           </p>
         </div>
 

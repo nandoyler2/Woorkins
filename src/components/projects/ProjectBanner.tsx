@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import woorkoinsIcon from "@/assets/woorkoins-banner-icon.png";
 
 export function ProjectBanner() {
   const [dismissed, setDismissed] = useState(() => {
@@ -40,8 +41,12 @@ export function ProjectBanner() {
           </Button>
         </div>
         <div className="hidden md:block">
-          <div className="w-32 h-32 bg-white/10 rounded-full flex items-center justify-center backdrop-blur-sm">
-            <span className="text-4xl">🎁</span>
+          <div className="w-32 h-32 bg-white/10 rounded-full flex items-center justify-center backdrop-blur-sm p-4">
+            <img 
+              src={woorkoinsIcon} 
+              alt="Woorkoins" 
+              className="w-full h-full object-contain"
+            />
           </div>
         </div>
       </div>

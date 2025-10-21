@@ -15,25 +15,27 @@ export function CoinRain() {
   useEffect(() => {
     if (coins.length === 0) return;
 
+    // Remove coins after animation completes (5 seconds max)
     const timer = setTimeout(() => {
-      setCoins([]);
-    }, 3000);
+      setCoins((prev) => prev.slice(30)); // Keep only recent coins to avoid memory issues
+    }, 5000);
 
     return () => clearTimeout(timer);
   }, [coins]);
 
   const triggerCoinRain = () => {
     const newCoins: Coin[] = [];
-    for (let i = 0; i < 20; i++) {
+    const timestamp = Date.now();
+    for (let i = 0; i < 30; i++) {
       newCoins.push({
-        id: Date.now() + i,
-        left: Math.random() * 100,
-        delay: Math.random() * 0.5,
-        duration: 2 + Math.random() * 1,
+        id: timestamp + Math.random() * 10000 + i,
+        left: Math.random() * 95 + 2.5, // 2.5% to 97.5% to avoid edges
+        delay: Math.random() * 0.3,
+        duration: 3 + Math.random() * 2, // 3-5 seconds
         rotation: Math.random() * 360,
       });
     }
-    setCoins(newCoins);
+    setCoins((prev) => [...prev, ...newCoins]);
   };
 
   return {

@@ -147,12 +147,18 @@ All colors MUST be HSL.
   }
 
   @keyframes coin-fall {
-    from {
+    0% {
       transform: translateY(-50px) rotate(0deg);
+      opacity: 0;
+    }
+    10% {
       opacity: 1;
     }
-    to {
-      transform: translateY(100vh) rotate(720deg);
+    90% {
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(calc(100vh + 100px)) rotate(720deg);
       opacity: 0;
     }
   }

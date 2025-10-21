@@ -1915,13 +1915,16 @@ export type Database = {
       }
       profiles: {
         Row: {
+          active: boolean | null
           avatar_url: string | null
           bio: string | null
           birth_date: string | null
+          cover_url: string | null
           cpf: string | null
           created_at: string
           document_verification_status: string | null
           document_verified: boolean | null
+          enable_negotiation: boolean | null
           filiation: string | null
           full_name: string | null
           id: string
@@ -1938,13 +1941,16 @@ export type Database = {
           website: string | null
         }
         Insert: {
+          active?: boolean | null
           avatar_url?: string | null
           bio?: string | null
           birth_date?: string | null
+          cover_url?: string | null
           cpf?: string | null
           created_at?: string
           document_verification_status?: string | null
           document_verified?: boolean | null
+          enable_negotiation?: boolean | null
           filiation?: string | null
           full_name?: string | null
           id?: string
@@ -1961,13 +1967,16 @@ export type Database = {
           website?: string | null
         }
         Update: {
+          active?: boolean | null
           avatar_url?: string | null
           bio?: string | null
           birth_date?: string | null
+          cover_url?: string | null
           cpf?: string | null
           created_at?: string
           document_verification_status?: string | null
           document_verified?: boolean | null
+          enable_negotiation?: boolean | null
           filiation?: string | null
           full_name?: string | null
           id?: string
@@ -2552,6 +2561,496 @@ export type Database = {
         }
         Relationships: []
       }
+      user_appointments: {
+        Row: {
+          appointment_date: string
+          appointment_time: string
+          client_profile_id: string
+          created_at: string | null
+          duration_minutes: number | null
+          google_calendar_event_id: string | null
+          id: string
+          notes: string | null
+          profile_id: string
+          service_description: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          appointment_date: string
+          appointment_time: string
+          client_profile_id: string
+          created_at?: string | null
+          duration_minutes?: number | null
+          google_calendar_event_id?: string | null
+          id?: string
+          notes?: string | null
+          profile_id: string
+          service_description?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          appointment_date?: string
+          appointment_time?: string
+          client_profile_id?: string
+          created_at?: string | null
+          duration_minutes?: number | null
+          google_calendar_event_id?: string | null
+          id?: string
+          notes?: string | null
+          profile_id?: string
+          service_description?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_appointments_client_profile_id_fkey"
+            columns: ["client_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_appointments_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_availability: {
+        Row: {
+          active: boolean | null
+          created_at: string | null
+          day_of_week: number | null
+          end_time: string
+          id: string
+          profile_id: string
+          start_time: string
+          updated_at: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string | null
+          day_of_week?: number | null
+          end_time: string
+          id?: string
+          profile_id: string
+          start_time: string
+          updated_at?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string | null
+          day_of_week?: number | null
+          end_time?: string
+          id?: string
+          profile_id?: string
+          start_time?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_availability_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_banners: {
+        Row: {
+          active: boolean | null
+          created_at: string | null
+          id: string
+          image_url: string
+          link_url: string | null
+          order_index: number | null
+          profile_id: string
+          title: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string | null
+          id?: string
+          image_url: string
+          link_url?: string | null
+          order_index?: number | null
+          profile_id: string
+          title?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string | null
+          id?: string
+          image_url?: string
+          link_url?: string | null
+          order_index?: number | null
+          profile_id?: string
+          title?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_banners_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_catalog_items: {
+        Row: {
+          active: boolean | null
+          category: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          image_url: string | null
+          name: string
+          price: number
+          profile_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          name: string
+          price: number
+          profile_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          name?: string
+          price?: number
+          profile_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_catalog_items_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_certifications: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          file_type: string | null
+          file_url: string
+          id: string
+          issued_by: string | null
+          issued_date: string | null
+          order_index: number | null
+          profile_id: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          file_type?: string | null
+          file_url: string
+          id?: string
+          issued_by?: string | null
+          issued_date?: string | null
+          order_index?: number | null
+          profile_id: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          file_type?: string | null
+          file_url?: string
+          id?: string
+          issued_by?: string | null
+          issued_date?: string | null
+          order_index?: number | null
+          profile_id?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_certifications_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_custom_links: {
+        Row: {
+          active: boolean | null
+          created_at: string | null
+          icon_name: string | null
+          id: string
+          image_url: string | null
+          order_index: number | null
+          profile_id: string
+          title: string
+          updated_at: string | null
+          url: string
+          youtube_url: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string | null
+          icon_name?: string | null
+          id?: string
+          image_url?: string | null
+          order_index?: number | null
+          profile_id: string
+          title: string
+          updated_at?: string | null
+          url: string
+          youtube_url?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string | null
+          icon_name?: string | null
+          id?: string
+          image_url?: string | null
+          order_index?: number | null
+          profile_id?: string
+          title?: string
+          updated_at?: string | null
+          url?: string
+          youtube_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_custom_links_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_job_applications: {
+        Row: {
+          applicant_profile_id: string
+          cover_letter: string | null
+          created_at: string | null
+          id: string
+          resume_url: string | null
+          reviewed_at: string | null
+          status: string | null
+          updated_at: string | null
+          vacancy_id: string
+        }
+        Insert: {
+          applicant_profile_id: string
+          cover_letter?: string | null
+          created_at?: string | null
+          id?: string
+          resume_url?: string | null
+          reviewed_at?: string | null
+          status?: string | null
+          updated_at?: string | null
+          vacancy_id: string
+        }
+        Update: {
+          applicant_profile_id?: string
+          cover_letter?: string | null
+          created_at?: string | null
+          id?: string
+          resume_url?: string | null
+          reviewed_at?: string | null
+          status?: string | null
+          updated_at?: string | null
+          vacancy_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_job_applications_applicant_profile_id_fkey"
+            columns: ["applicant_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_job_applications_vacancy_id_fkey"
+            columns: ["vacancy_id"]
+            isOneToOne: false
+            referencedRelation: "user_job_vacancies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_job_vacancies: {
+        Row: {
+          area: string | null
+          created_at: string | null
+          deadline: string | null
+          description: string
+          id: string
+          profile_id: string
+          requirements: string | null
+          salary_max: number | null
+          salary_min: number | null
+          status: string | null
+          title: string
+          updated_at: string | null
+          work_mode: string | null
+        }
+        Insert: {
+          area?: string | null
+          created_at?: string | null
+          deadline?: string | null
+          description: string
+          id?: string
+          profile_id: string
+          requirements?: string | null
+          salary_max?: number | null
+          salary_min?: number | null
+          status?: string | null
+          title: string
+          updated_at?: string | null
+          work_mode?: string | null
+        }
+        Update: {
+          area?: string | null
+          created_at?: string | null
+          deadline?: string | null
+          description?: string
+          id?: string
+          profile_id?: string
+          requirements?: string | null
+          salary_max?: number | null
+          salary_min?: number | null
+          status?: string | null
+          title?: string
+          updated_at?: string | null
+          work_mode?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_job_vacancies_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_portfolio: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          link_url: string | null
+          media_type: string | null
+          media_url: string | null
+          order_index: number | null
+          profile_id: string
+          tags: string[] | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          link_url?: string | null
+          media_type?: string | null
+          media_url?: string | null
+          order_index?: number | null
+          profile_id: string
+          tags?: string[] | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          link_url?: string | null
+          media_type?: string | null
+          media_url?: string | null
+          order_index?: number | null
+          profile_id?: string
+          tags?: string[] | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_portfolio_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_profile_features: {
+        Row: {
+          created_at: string | null
+          feature_key: string
+          id: string
+          is_active: boolean | null
+          profile_id: string
+          settings: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          feature_key: string
+          id?: string
+          is_active?: boolean | null
+          profile_id: string
+          settings?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          feature_key?: string
+          id?: string
+          is_active?: boolean | null
+          profile_id?: string
+          settings?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_profile_features_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -2605,6 +3104,108 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      user_testimonials: {
+        Row: {
+          client_name: string
+          client_profile_id: string | null
+          content: string
+          created_at: string | null
+          id: string
+          moderated_at: string | null
+          moderated_by: string | null
+          profile_id: string
+          rating: number | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          client_name: string
+          client_profile_id?: string | null
+          content: string
+          created_at?: string | null
+          id?: string
+          moderated_at?: string | null
+          moderated_by?: string | null
+          profile_id: string
+          rating?: number | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          client_name?: string
+          client_profile_id?: string | null
+          content?: string
+          created_at?: string | null
+          id?: string
+          moderated_at?: string | null
+          moderated_by?: string | null
+          profile_id?: string
+          rating?: number | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_testimonials_client_profile_id_fkey"
+            columns: ["client_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_testimonials_moderated_by_fkey"
+            columns: ["moderated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_testimonials_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_videos: {
+        Row: {
+          active: boolean | null
+          created_at: string | null
+          id: string
+          profile_id: string
+          title: string | null
+          updated_at: string | null
+          youtube_url: string
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string | null
+          id?: string
+          profile_id: string
+          title?: string | null
+          updated_at?: string | null
+          youtube_url: string
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string | null
+          id?: string
+          profile_id?: string
+          title?: string | null
+          updated_at?: string | null
+          youtube_url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_videos_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       withdrawal_requests: {
         Row: {

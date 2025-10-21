@@ -1131,12 +1131,12 @@ export default function BusinessEdit() {
                     <SidebarMenu>
                       {features.filter(f => f.isActive).map((feature) => {
                         const Icon = feature.icon;
-                        const isActive = configuringFeature === feature.key;
+                        const isActive = activeSection === `tools-${feature.key}`;
                         return (
                           <SidebarMenuItem key={feature.key}>
                             <SidebarMenuButton
                               onClick={() => {
-                                setActiveSection('tools');
+                                setActiveSection(`tools-${feature.key}` as Section);
                                 setConfiguringFeature(feature.key);
                               }}
                               className={`
@@ -1473,10 +1473,10 @@ export default function BusinessEdit() {
               )}
 
               {/* Ferramentas */}
-              {activeSection === 'tools' && (
+              {(activeSection === 'tools' || activeSection.toString().startsWith('tools-')) && (
                 <div className="space-y-6 animate-fade-in">
                   {/* Ferramentas Interativas */}
-                  {configuringFeature ? (
+                  {activeSection.toString().startsWith('tools-') ? (
                     <div className="space-y-6">
                       {configuringFeature === 'banner' && (
                         <GenericBannersManager entityType="business" entityId={business.id} />
@@ -1717,7 +1717,10 @@ export default function BusinessEdit() {
                                   <Button
                                     size="sm"
                                     variant="secondary"
-                                    onClick={() => setConfiguringFeature(feature.key)}
+                                    onClick={() => {
+                                      setActiveSection(`tools-${feature.key}` as Section);
+                                      setConfiguringFeature(feature.key);
+                                    }}
                                     className="w-full"
                                   >
                                     Configurar
@@ -1952,7 +1955,7 @@ export default function BusinessEdit() {
                               key={feature.key}
                               className={`${feature.color} p-4 rounded-lg cursor-pointer hover:opacity-80 transition-all`}
                               onClick={() => {
-                                setActiveSection('tools');
+                                setActiveSection(`tools-${feature.key}` as Section);
                                 setConfiguringFeature(feature.key);
                               }}
                             >

@@ -874,12 +874,12 @@ export default function ProfileEdit() {
                     <SidebarMenu>
                       {features.filter(f => f.isActive).map((feature) => {
                         const Icon = feature.icon;
-                        const isActive = configuringFeature === feature.key;
+                        const isActive = activeSection === `tools-${feature.key}`;
                         return (
                           <SidebarMenuItem key={feature.key}>
                             <SidebarMenuButton
                               onClick={() => {
-                                setActiveSection('tools');
+                                setActiveSection(`tools-${feature.key}` as Section);
                                 setConfiguringFeature(feature.key);
                               }}
                               className={`
@@ -1505,13 +1505,16 @@ export default function ProfileEdit() {
               )}
 
               {/* Ferramentas */}
-              {activeSection === 'tools' && (
+              {(activeSection === 'tools' || activeSection.toString().startsWith('tools-')) && (
                 <div className="space-y-6 animate-fade-in">
-                  {configuringFeature ? (
+                  {activeSection.toString().startsWith('tools-') ? (
                     <div className="space-y-6">
                       <Button
                         variant="ghost"
-                        onClick={() => setConfiguringFeature(null)}
+                        onClick={() => {
+                          setActiveSection('tools');
+                          setConfiguringFeature(null);
+                        }}
                         className="mb-4"
                       >
                         <ArrowLeft className="w-4 h-4 mr-2" />
@@ -1623,7 +1626,10 @@ export default function ProfileEdit() {
                                   <Button
                                     size="sm"
                                     variant="secondary"
-                                    onClick={() => setConfiguringFeature(feature.key)}
+                                    onClick={() => {
+                                      setActiveSection(`tools-${feature.key}` as Section);
+                                      setConfiguringFeature(feature.key);
+                                    }}
                                     className="w-full"
                                   >
                                     Configurar

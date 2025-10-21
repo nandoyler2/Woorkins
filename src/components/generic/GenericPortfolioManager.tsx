@@ -6,33 +6,33 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { ShoppingBag, Plus, Trash2, X } from "lucide-react";
+import { Image, Plus, Trash2, X } from "lucide-react";
 import { ImageUpload } from "@/components/ImageUpload";
 
-interface CatalogItem {
+interface PortfolioItem {
   id: string;
-  name: string;
+  title: string;
   description?: string;
-  price: number;
   image_url?: string;
-  category?: string;
+  project_url?: string;
+  order_index: number;
   active: boolean;
 }
 
-interface GenericCatalogManagerProps {
+interface GenericPortfolioManagerProps {
   entityType: 'business' | 'user';
   entityId: string;
 }
 
-export function GenericCatalogManager({ entityType, entityId }: GenericCatalogManagerProps) {
-  const [items, setItems] = useState<CatalogItem[]>([]);
-  const [editingItem, setEditingItem] = useState<Partial<CatalogItem> | null>(null);
+export function GenericPortfolioManager({ entityType, entityId }: GenericPortfolioManagerProps) {
+  const [items, setItems] = useState<PortfolioItem[]>([]);
+  const [editingItem, setEditingItem] = useState<Partial<PortfolioItem> | null>(null);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
-  const tableName = entityType === 'business' ? 'business_catalog_items' : 'user_catalog_items';
+  const tableName = entityType === 'business' ? 'business_portfolio_items' : 'user_portfolio_items';
   const idColumn = entityType === 'business' ? 'business_id' : 'profile_id';
-  const storageBucket = entityType === 'business' ? 'business-media' : 'avatars';
+  const storageBucket = entityType === 'business' ? 'business-media' : 'portfolio';
 
   useEffect(() => {
     loadItems();
@@ -40,17 +40,17 @@ export function GenericCatalogManager({ entityType, entityId }: GenericCatalogMa
 
   const loadItems = async () => {
     try {
-      const { data, error } = await supabase
-        .from(tableName)
-        .select("*")
-        .eq(idColumn, entityId)
-        .order("created_at", { ascending: false });
+      const query = entityType === 'business'
+        ? supabase.from('business_portfolio_items').select("*").eq('business_id', entityId)
+        : supabase.from('user_portfolio_items').select("*").eq('profile_id', entityId);
+      
+      const { data, error } = await query.order("order_index", { ascending: true });
 
       if (error) throw error;
-      setItems(data || []);
+      setItems(data as any || []);
     } catch (error: any) {
       toast({
-        title: "Erro ao carregar catálogo",
+        title: "Erro ao carregar portfólio",
         description: error.message,
         variant: "destructive",
       });
@@ -58,10 +58,10 @@ export function GenericCatalogManager({ entityType, entityId }: GenericCatalogMa
   };
 
   const handleSaveItem = async () => {
-    if (!editingItem?.name || !editingItem?.price) {
+    if (!editingItem?.title) {
       toast({
         title: "Erro",
-        description: "Nome e preço são obrigatórios",
+        description: "Título é obrigatório",
         variant: "destructive",
       });
       return;
@@ -70,24 +70,28 @@ export function GenericCatalogManager({ entityType, entityId }: GenericCatalogMa
     setLoading(true);
     try {
       const itemData = entityType === 'business'
-        ? { business_id: entityId, name: editingItem.name, description: editingItem.description || null, price: editingItem.price, image_url: editingItem.image_url || null, category: editingItem.category || null, active: true }
-        : { profile_id: entityId, name: editingItem.name, description: editingItem.description || null, price: editingItem.price, image_url: editingItem.image_url || null, category: editingItem.category || null, active: true };
+        ? { business_id: entityId, title: editingItem.title, description: editingItem.description || null, image_url: editingItem.image_url || null, project_url: editingItem.project_url || null, order_index: editingItem.order_index ?? items.length, active: true }
+        : { profile_id: entityId, title: editingItem.title, description: editingItem.description || null, image_url: editingItem.image_url || null, project_url: editingItem.project_url || null, order_index: editingItem.order_index ?? items.length, active: true };
 
       if (editingItem.id) {
-        const { error } = await supabase
-          .from(tableName)
-          .update(itemData)
-          .eq("id", editingItem.id);
-
+        const updateQuery = entityType === 'business'
+          ? supabase.from('business_portfolio_items').update(itemData).eq("id", editingItem.id)
+          : supabase.from('user_portfolio_items').update(itemData).eq("id", editingItem.id);
+        
+        const { error } = await updateQuery;
         if (error) throw error;
       } else {
-        const { error } = await supabase.from(tableName).insert(itemData as any);
+        const insertQuery = entityType === 'business'
+          ? supabase.from('business_portfolio_items').insert(itemData)
+          : supabase.from('user_portfolio_items').insert(itemData);
+        
+        const { error } = await insertQuery;
         if (error) throw error;
       }
 
       toast({
         title: "Item salvo",
-        description: "Item do catálogo atualizado com sucesso",
+        description: "Item do portfólio atualizado com sucesso",
       });
 
       setEditingItem(null);
@@ -107,13 +111,17 @@ export function GenericCatalogManager({ entityType, entityId }: GenericCatalogMa
     if (!confirm("Deseja realmente remover este item?")) return;
 
     try {
-      const { error } = await supabase.from(tableName).delete().eq("id", id);
+      const deleteQuery = entityType === 'business'
+        ? supabase.from('business_portfolio_items').delete().eq("id", id)
+        : supabase.from('user_portfolio_items').delete().eq("id", id);
+      
+      const { error } = await deleteQuery;
 
       if (error) throw error;
 
       toast({
         title: "Item removido",
-        description: "Item removido do catálogo",
+        description: "Item removido do portfólio",
       });
 
       loadItems();
@@ -130,11 +138,11 @@ export function GenericCatalogManager({ entityType, entityId }: GenericCatalogMa
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <ShoppingBag className="h-5 w-5" />
-          Catálogo de Serviços/Produtos
+          <Image className="h-5 w-5" />
+          Portfólio
         </CardTitle>
         <CardDescription>
-          Adicione serviços ou produtos que você oferece
+          Mostre seus melhores trabalhos e projetos
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -155,38 +163,26 @@ export function GenericCatalogManager({ entityType, entityId }: GenericCatalogMa
               </div>
 
               <div>
-                <Label>Imagem (opcional)</Label>
+                <Label>Imagem do Projeto</Label>
                 <ImageUpload
                   currentImageUrl={editingItem.image_url}
                   onImageUpload={(url) =>
                     setEditingItem({ ...editingItem, image_url: url })
                   }
                   bucket={storageBucket}
-                  path={`${entityId}/catalog`}
+                  path={`${entityId}/portfolio`}
                 />
               </div>
 
               <div>
-                <Label htmlFor="name">Nome *</Label>
+                <Label htmlFor="title">Título *</Label>
                 <Input
-                  id="name"
-                  value={editingItem.name || ""}
+                  id="title"
+                  value={editingItem.title || ""}
                   onChange={(e) =>
-                    setEditingItem({ ...editingItem, name: e.target.value })
+                    setEditingItem({ ...editingItem, title: e.target.value })
                   }
-                  placeholder="Nome do serviço/produto"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="category">Categoria</Label>
-                <Input
-                  id="category"
-                  value={editingItem.category || ""}
-                  onChange={(e) =>
-                    setEditingItem({ ...editingItem, category: e.target.value })
-                  }
-                  placeholder="Ex: Design, Desenvolvimento, Consultoria"
+                  placeholder="Nome do projeto"
                 />
               </div>
 
@@ -198,25 +194,20 @@ export function GenericCatalogManager({ entityType, entityId }: GenericCatalogMa
                   onChange={(e) =>
                     setEditingItem({ ...editingItem, description: e.target.value })
                   }
-                  placeholder="Descreva o serviço/produto"
+                  placeholder="Descreva o projeto"
                   rows={3}
                 />
               </div>
 
               <div>
-                <Label htmlFor="price">Preço (R$) *</Label>
+                <Label htmlFor="project_url">URL do Projeto (opcional)</Label>
                 <Input
-                  id="price"
-                  type="number"
-                  step="0.01"
-                  value={editingItem.price || ""}
+                  id="project_url"
+                  value={editingItem.project_url || ""}
                   onChange={(e) =>
-                    setEditingItem({
-                      ...editingItem,
-                      price: parseFloat(e.target.value),
-                    })
+                    setEditingItem({ ...editingItem, project_url: e.target.value })
                   }
-                  placeholder="0.00"
+                  placeholder="https://..."
                 />
               </div>
 
@@ -245,46 +236,54 @@ export function GenericCatalogManager({ entityType, entityId }: GenericCatalogMa
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {items.map((item) => (
-            <Card key={item.id} className="p-4">
+            <Card key={item.id} className="overflow-hidden">
               {item.image_url && (
                 <img
                   src={item.image_url}
-                  alt={item.name}
-                  className="w-full h-40 object-cover rounded mb-3"
+                  alt={item.title}
+                  className="w-full h-48 object-cover"
                 />
               )}
-              <h4 className="font-semibold">{item.name}</h4>
-              {item.category && (
-                <p className="text-sm text-muted-foreground">{item.category}</p>
-              )}
-              {item.description && (
-                <p className="text-sm mt-2 line-clamp-2">{item.description}</p>
-              )}
-              <p className="text-lg font-bold mt-2">
-                R$ {item.price.toFixed(2)}
-              </p>
-              <div className="flex gap-2 mt-3">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setEditingItem(item)}
-                >
-                  Editar
-                </Button>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => handleDeleteItem(item.id)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+              <div className="p-4">
+                <h4 className="font-semibold">{item.title}</h4>
+                {item.description && (
+                  <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                    {item.description}
+                  </p>
+                )}
+                {item.project_url && (
+                  <a
+                    href={item.project_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-primary hover:underline mt-2 inline-block"
+                  >
+                    Ver projeto
+                  </a>
+                )}
+                <div className="flex gap-2 mt-3">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setEditingItem(item)}
+                  >
+                    Editar
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => handleDeleteItem(item.id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             </Card>
           ))}
 
           {items.length === 0 && !editingItem && (
             <p className="text-center text-muted-foreground py-8 col-span-2">
-              Nenhum item no catálogo ainda
+              Nenhum item no portfólio ainda
             </p>
           )}
         </div>

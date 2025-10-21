@@ -89,7 +89,7 @@ export function GenericCertificationsManager({ entityType, entityId }: GenericCe
 
         if (error) throw error;
       } else {
-        const { error } = await supabase.from(tableName).insert(certData);
+        const { error } = await supabase.from(tableName).insert(certData as any);
         if (error) throw error;
       }
 

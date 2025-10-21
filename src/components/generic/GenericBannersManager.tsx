@@ -93,7 +93,7 @@ export function GenericBannersManager({ entityType, entityId }: GenericBannersMa
 
         if (error) throw error;
       } else {
-        const { error } = await supabase.from(tableName).insert(bannerData);
+        const { error } = await supabase.from(tableName).insert(bannerData as any);
         if (error) throw error;
       }
 
@@ -202,7 +202,7 @@ export function GenericBannersManager({ entityType, entityId }: GenericBannersMa
               <div>
                 <Label>Imagem do Banner *</Label>
                 <ImageUpload
-                  currentImage={editingBanner.image_url}
+                  currentImageUrl={editingBanner.image_url}
                   onImageUpload={(url) =>
                     setEditingBanner({ ...editingBanner, image_url: url })
                   }

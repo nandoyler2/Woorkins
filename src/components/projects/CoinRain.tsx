@@ -91,20 +91,39 @@ export function CoinRain() {
       <>
         {/* Thunder Effect */}
         {showThunder && (
-          <div className="fixed inset-0 pointer-events-none z-50 animate-thunder">
-            <div className="absolute inset-0 bg-yellow-300/30"></div>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="text-yellow-400 animate-pulse-slow">
-                <svg className="w-64 h-64" viewBox="0 0 24 24" fill="currentColor">
+          <div className="fixed inset-0 pointer-events-none z-[60]">
+            {/* Fundo escuro piscando */}
+            <div className="absolute inset-0 bg-black/80 animate-thunder-dark"></div>
+            
+            {/* Flash amarelo intenso */}
+            <div className="absolute inset-0 bg-yellow-300/50 animate-thunder-flash"></div>
+            
+            {/* Múltiplos raios */}
+            <div className="absolute inset-0 flex items-center justify-center animate-thunder-shake">
+              <div className="text-yellow-400 opacity-90">
+                <svg className="w-96 h-96 animate-pulse-fast" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M13 2L3 14h8l-1 8 10-12h-8l1-8z" />
                 </svg>
               </div>
+            </div>
+            
+            {/* Raios laterais */}
+            <div className="absolute top-1/4 left-1/4 text-yellow-300 opacity-70 animate-thunder-shake">
+              <svg className="w-48 h-48" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M13 2L3 14h8l-1 8 10-12h-8l1-8z" />
+              </svg>
+            </div>
+            
+            <div className="absolute top-1/3 right-1/4 text-yellow-300 opacity-70 animate-thunder-shake" style={{ animationDelay: '0.1s' }}>
+              <svg className="w-48 h-48" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M13 2L3 14h8l-1 8 10-12h-8l1-8z" />
+              </svg>
             </div>
           </div>
         )}
         
         {/* Coin Rain */}
-        <div className="fixed inset-0 pointer-events-none z-50">
+        <div className={`fixed inset-0 pointer-events-none z-50 ${showThunder ? 'animate-screen-shake' : ''}`}>
           {coins.map((coin) => (
             <div
               key={coin.id}

@@ -1343,7 +1343,7 @@ export default function BusinessEdit() {
                         <Label className="text-base font-medium">Prévia do Perfil</Label>
                         <div className="relative w-full rounded-lg overflow-visible border-2 border-border bg-background">
                           {/* Capa */}
-                          <div className="relative h-48 w-full overflow-hidden rounded-t-lg">
+                          <div className="relative group h-48 w-full overflow-hidden rounded-t-lg">
                             {business.cover_url ? (
                               <img 
                                 src={business.cover_url} 
@@ -1354,33 +1354,36 @@ export default function BusinessEdit() {
                               <div className="w-full h-full bg-gradient-to-br from-primary/20 to-secondary/20" />
                             )}
                             
-                            <div className="absolute top-2 right-2 flex gap-2">
-                              <Button
-                                size="icon"
-                                variant="secondary"
-                                className="h-8 w-8 rounded-full shadow-lg bg-green-500 hover:bg-green-600 text-white"
-                                onClick={() => coverInputRef.current?.click()}
-                                title="Alterar capa"
-                              >
-                                <Upload className="h-4 w-4" />
-                              </Button>
-                              {business.cover_url && (
+                            {/* Hover Overlay para Capa */}
+                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
+                              <div className="flex gap-2">
                                 <Button
                                   size="icon"
-                                  variant="destructive"
-                                  className="h-8 w-8 rounded-full shadow-lg"
-                                  onClick={handleCoverDelete}
-                                  title="Remover capa"
+                                  variant="secondary"
+                                  className="h-10 w-10 rounded-full shadow-lg bg-green-500 hover:bg-green-600 text-white"
+                                  onClick={() => coverInputRef.current?.click()}
+                                  title="Alterar capa"
                                 >
-                                  <X className="h-4 w-4" />
+                                  <Upload className="h-5 w-5" />
                                 </Button>
-                              )}
+                                {business.cover_url && (
+                                  <Button
+                                    size="icon"
+                                    variant="destructive"
+                                    className="h-10 w-10 rounded-full shadow-lg"
+                                    onClick={handleCoverDelete}
+                                    title="Remover capa"
+                                  >
+                                    <X className="h-5 w-5" />
+                                  </Button>
+                                )}
+                              </div>
                             </div>
                           </div>
                           
                           <div className="relative px-4 pb-4">
                             <div className="absolute -top-12 left-4">
-                              <div className="relative w-32 h-32 rounded-xl border-4 border-background overflow-hidden bg-background shadow-xl">
+                              <div className="relative group w-32 h-32 rounded-xl border-4 border-background overflow-hidden bg-background shadow-xl">
                                 {business.logo_url ? (
                                   <img 
                                     src={business.logo_url} 
@@ -1392,27 +1395,30 @@ export default function BusinessEdit() {
                                     <ImageIcon className="w-10 h-10 text-muted-foreground" />
                                   </div>
                                 )}
-                                <div className="absolute bottom-1 right-1 flex gap-1">
-                                  <Button
-                                    size="icon"
-                                    variant="secondary"
-                                    className="h-7 w-7 rounded-full shadow-lg bg-green-500 hover:bg-green-600 text-white"
-                                    onClick={() => logoInputRef.current?.click()}
-                                    title="Alterar logo"
-                                  >
-                                    <Upload className="h-3 w-3" />
-                                  </Button>
-                                  {business.logo_url && (
+                                {/* Hover Overlay para Logo */}
+                                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
+                                  <div className="flex gap-2">
                                     <Button
                                       size="icon"
-                                      variant="destructive"
-                                      className="h-7 w-7 rounded-full shadow-lg"
-                                      onClick={handleLogoDelete}
-                                      title="Remover logo"
+                                      variant="secondary"
+                                      className="h-9 w-9 rounded-full shadow-lg bg-green-500 hover:bg-green-600 text-white"
+                                      onClick={() => logoInputRef.current?.click()}
+                                      title="Alterar logo"
                                     >
-                                      <X className="h-3 w-3" />
+                                      <Upload className="h-4 w-4" />
                                     </Button>
-                                  )}
+                                    {business.logo_url && (
+                                      <Button
+                                        size="icon"
+                                        variant="destructive"
+                                        className="h-9 w-9 rounded-full shadow-lg"
+                                        onClick={handleLogoDelete}
+                                        title="Remover logo"
+                                      >
+                                        <X className="h-4 w-4" />
+                                      </Button>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
                             </div>

@@ -170,7 +170,7 @@ export function ProfilePhotoUpload({ currentPhotoUrl, userName, userId, onPhotoU
   return (
     <div className="space-y-4">
       <div className="flex flex-col items-center gap-4">
-        <div className="relative">
+        <div className="relative group">
           <Avatar className="h-32 w-32 ring-4 ring-background shadow-xl">
             <AvatarImage src={currentPhotoUrl} />
             <AvatarFallback className="bg-primary/10 text-primary text-3xl">
@@ -178,16 +178,17 @@ export function ProfilePhotoUpload({ currentPhotoUrl, userName, userId, onPhotoU
             </AvatarFallback>
           </Avatar>
           
+          {/* Hover Overlay */}
           <label
             htmlFor="photo-upload"
-            className={`absolute bottom-0 right-0 p-2 bg-primary text-primary-foreground rounded-full shadow-lg cursor-pointer hover:bg-primary/90 transition-all ${
-              isProcessing ? 'opacity-50 cursor-not-allowed' : ''
+            className={`absolute inset-0 flex items-center justify-center bg-black/60 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 cursor-pointer ${
+              isProcessing ? 'cursor-not-allowed' : ''
             }`}
           >
             {isProcessing ? (
-              <Loader2 className="h-5 w-5 animate-spin" />
+              <Loader2 className="h-8 w-8 text-white animate-spin" />
             ) : (
-              <Camera className="h-5 w-5" />
+              <Camera className="h-8 w-8 text-white" />
             )}
           </label>
           

@@ -1977,8 +1977,13 @@ export type Database = {
           full_name: string | null
           id: string
           instagram: string | null
+          last_slug_change_at: string | null
           last_username_change: string | null
           linkedin: string | null
+          linktree_config: Json | null
+          linktree_logo_url: string | null
+          linktree_slug: string | null
+          linktree_social_links: Json | null
           location: string | null
           nationality: string | null
           place_of_birth: string | null
@@ -2009,8 +2014,13 @@ export type Database = {
           full_name?: string | null
           id?: string
           instagram?: string | null
+          last_slug_change_at?: string | null
           last_username_change?: string | null
           linkedin?: string | null
+          linktree_config?: Json | null
+          linktree_logo_url?: string | null
+          linktree_slug?: string | null
+          linktree_social_links?: Json | null
           location?: string | null
           nationality?: string | null
           place_of_birth?: string | null
@@ -2041,8 +2051,13 @@ export type Database = {
           full_name?: string | null
           id?: string
           instagram?: string | null
+          last_slug_change_at?: string | null
           last_username_change?: string | null
           linkedin?: string | null
+          linktree_config?: Json | null
+          linktree_logo_url?: string | null
+          linktree_slug?: string | null
+          linktree_social_links?: Json | null
           location?: string | null
           nationality?: string | null
           place_of_birth?: string | null

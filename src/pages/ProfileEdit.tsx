@@ -33,6 +33,7 @@ import { GenericCertificationsManager } from '@/components/generic/GenericCertif
 import { GenericAppointmentsManager } from '@/components/generic/GenericAppointmentsManager';
 import { GenericLinktreeManager } from '@/components/generic/GenericLinktreeManager';
 import { GenericJobVacanciesManager } from '@/components/generic/GenericJobVacanciesManager';
+import { GenericWhatsAppManager } from '@/components/generic/GenericWhatsAppManager';
 import { Link } from 'react-router-dom';
 import {
   AlertDialog,
@@ -261,6 +262,13 @@ export default function ProfileEdit() {
       description: 'Publique e gerencie vagas de trabalho',
       icon: BriefcaseIcon,
       color: 'bg-gradient-to-br from-pink-500 to-rose-500'
+    },
+    {
+      key: 'whatsapp',
+      name: 'WhatsApp Widget',
+      description: 'Botão flutuante de contato direto',
+      icon: MessageCircle,
+      color: 'bg-gradient-to-br from-green-500 to-emerald-500'
     }
   ];
 
@@ -1544,6 +1552,10 @@ export default function ProfileEdit() {
 
                       {configuringFeature === 'portfolio' && (
                         <GenericPortfolioManager entityType="user" entityId={profile.id} />
+                      )}
+
+                      {configuringFeature === 'whatsapp' && (
+                        <GenericWhatsAppManager entityType="user" entityId={profile.id} />
                       )}
 
                       {configuringFeature === 'social' && (

@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/dialog';
 import { Star, MapPin, Phone, Mail, Globe, Image as ImageIcon, MessageCircle, Facebook, Instagram, Linkedin, Twitter, Clock, Shield, User as UserIcon } from 'lucide-react';
 import { Footer } from '@/components/Footer';
+import { PublicWhatsAppWidget } from '@/components/generic/PublicWhatsAppWidget';
 import { SafeImage } from '@/components/ui/safe-image';
 import { useToast } from '@/hooks/use-toast';
 import { formatFullName } from '@/lib/utils';
@@ -848,6 +849,15 @@ export default function BusinessProfile() {
       <div className="mt-12">
         <Footer />
       </div>
+
+      {/* WhatsApp Widget */}
+      {business && (
+        <PublicWhatsAppWidget 
+          entityType="business" 
+          entityId={business.id} 
+          entityName={business.company_name} 
+        />
+      )}
 
       {/* Negotiation Dialog */}
       <Dialog open={showNegotiationDialog} onOpenChange={setShowNegotiationDialog}>

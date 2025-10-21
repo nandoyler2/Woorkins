@@ -38,7 +38,7 @@ export const PublicWhatsAppWidget = ({ entityType, entityId, entityName }: Publi
     try {
       const tableName = entityType === 'business' ? 'business_whatsapp_config' : 'user_whatsapp_config';
       const { data, error } = await supabase
-        .from(tableName)
+        .from(tableName as any)
         .select('*')
         .eq(`${entityType}_id`, entityId)
         .single();
@@ -47,13 +47,16 @@ export const PublicWhatsAppWidget = ({ entityType, entityId, entityName }: Publi
         throw error;
       }
 
-      if (data && data.phone) {
-        setConfig({
-          phone: data.phone,
-          welcome_message: data.welcome_message || 'Olá! Gostaria de conversar com você.',
-          auto_open: data.auto_open || false,
-          questions: data.questions || []
-        });
+      if (data) {
+        const config = data as any;
+        if (config.phone) {
+          setConfig({
+            phone: config.phone,
+            welcome_message: config.welcome_message || 'Olá! Gostaria de conversar com você.',
+            auto_open: config.auto_open || false,
+            questions: Array.isArray(config.questions) ? config.questions as unknown as WhatsAppQuestion[] : []
+          });
+        }
       }
     } catch (error) {
       console.error('Error loading WhatsApp config:', error);

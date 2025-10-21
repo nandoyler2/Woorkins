@@ -1016,6 +1016,47 @@ export type Database = {
           },
         ]
       }
+      business_whatsapp_config: {
+        Row: {
+          auto_open: boolean | null
+          business_id: string
+          created_at: string
+          id: string
+          phone: string
+          questions: Json | null
+          updated_at: string
+          welcome_message: string | null
+        }
+        Insert: {
+          auto_open?: boolean | null
+          business_id: string
+          created_at?: string
+          id?: string
+          phone: string
+          questions?: Json | null
+          updated_at?: string
+          welcome_message?: string | null
+        }
+        Update: {
+          auto_open?: boolean | null
+          business_id?: string
+          created_at?: string
+          id?: string
+          phone?: string
+          questions?: Json | null
+          updated_at?: string
+          welcome_message?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_whatsapp_config_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: true
+            referencedRelation: "business_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       counter_proposals: {
         Row: {
           amount: number
@@ -3224,6 +3265,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_whatsapp_config: {
+        Row: {
+          auto_open: boolean | null
+          created_at: string
+          id: string
+          phone: string
+          questions: Json | null
+          updated_at: string
+          user_id: string
+          welcome_message: string | null
+        }
+        Insert: {
+          auto_open?: boolean | null
+          created_at?: string
+          id?: string
+          phone: string
+          questions?: Json | null
+          updated_at?: string
+          user_id: string
+          welcome_message?: string | null
+        }
+        Update: {
+          auto_open?: boolean | null
+          created_at?: string
+          id?: string
+          phone?: string
+          questions?: Json | null
+          updated_at?: string
+          user_id?: string
+          welcome_message?: string | null
+        }
+        Relationships: []
       }
       withdrawal_requests: {
         Row: {

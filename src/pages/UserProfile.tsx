@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { MapPin, Calendar, User as UserIcon, Star, Briefcase, MessageSquare, ThumbsUp, AlertCircle } from 'lucide-react';
 import { Footer } from '@/components/Footer';
+import { PublicWhatsAppWidget } from '@/components/generic/PublicWhatsAppWidget';
 import { SafeImage } from '@/components/ui/safe-image';
 import { useToast } from '@/hooks/use-toast';
 import { formatFullName } from '@/lib/utils';
@@ -786,6 +787,15 @@ export default function UserProfile() {
       </div>
 
       <Footer />
+
+      {/* WhatsApp Widget */}
+      {profile && (
+        <PublicWhatsAppWidget 
+          entityType="user" 
+          entityId={profile.id} 
+          entityName={profile.full_name || profile.username} 
+        />
+      )}
     </div>
   );
 }

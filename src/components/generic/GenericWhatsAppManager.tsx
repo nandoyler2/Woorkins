@@ -47,7 +47,7 @@ export const GenericWhatsAppManager = ({ entityType, entityId }: GenericWhatsApp
       
       const tableName = entityType === 'business' ? 'business_whatsapp_config' : 'user_whatsapp_config';
       const { data, error } = await supabase
-        .from(tableName)
+        .from(tableName as any)
         .select('*')
         .eq(`${entityType}_id`, entityId)
         .single();
@@ -57,11 +57,12 @@ export const GenericWhatsAppManager = ({ entityType, entityId }: GenericWhatsApp
       }
 
       if (data) {
+        const config = data as any;
         setConfig({
-          phone: data.phone || '',
-          welcome_message: data.welcome_message || 'Olá! Gostaria de conversar com você.',
-          auto_open: data.auto_open || false,
-          questions: data.questions || []
+          phone: config.phone || '',
+          welcome_message: config.welcome_message || 'Olá! Gostaria de conversar com você.',
+          auto_open: config.auto_open || false,
+          questions: Array.isArray(config.questions) ? config.questions as unknown as WhatsAppQuestion[] : []
         });
       }
     } catch (error) {
@@ -77,14 +78,14 @@ export const GenericWhatsAppManager = ({ entityType, entityId }: GenericWhatsApp
       const columnName = `${entityType}_id`;
 
       const { error } = await supabase
-        .from(tableName)
+        .from(tableName as any)
         .upsert({
           [columnName]: entityId,
           phone: config.phone,
           welcome_message: config.welcome_message,
           auto_open: config.auto_open,
           questions: config.questions
-        });
+        } as any);
 
       if (error) throw error;
 

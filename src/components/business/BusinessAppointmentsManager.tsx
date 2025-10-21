@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Calendar, Plus, Trash2, Clock } from "lucide-react";
+import { Calendar, Plus, Trash2, Clock, Settings } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 
 interface Availability {
@@ -36,11 +37,26 @@ export function BusinessAppointmentsManager({ businessId }: BusinessAppointments
   const [startTime, setStartTime] = useState("09:00");
   const [endTime, setEndTime] = useState("18:00");
   const [loading, setLoading] = useState(false);
+  const [businessSlug, setBusinessSlug] = useState<string>("");
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     loadAvailabilities();
+    loadBusinessSlug();
   }, [businessId]);
+
+  const loadBusinessSlug = async () => {
+    const { data } = await supabase
+      .from("business_profiles")
+      .select("slug")
+      .eq("id", businessId)
+      .single();
+    
+    if (data) {
+      setBusinessSlug(data.slug);
+    }
+  };
 
   const loadAvailabilities = async () => {
     try {
@@ -152,13 +168,26 @@ export function BusinessAppointmentsManager({ businessId }: BusinessAppointments
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Calendar className="h-5 w-5" />
-          Agendamento
-        </CardTitle>
-        <CardDescription>
-          Configure sua disponibilidade para agendamentos
-        </CardDescription>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5" />
+              Agendamento
+            </CardTitle>
+            <CardDescription>
+              Configure sua disponibilidade para agendamentos
+            </CardDescription>
+          </div>
+          {businessSlug && (
+            <Button
+              variant="outline"
+              onClick={() => navigate(`/${businessSlug}/agendamentos`)}
+            >
+              <Settings className="h-4 w-4 mr-2" />
+              Ver Agendamentos
+            </Button>
+          )}
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         {editingDay !== null && (

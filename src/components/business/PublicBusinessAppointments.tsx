@@ -81,21 +81,10 @@ export function PublicBusinessAppointments({
     <>
       <Card className="mb-8">
         <CardContent className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-bold flex items-center gap-2">
-              <Calendar className="h-6 w-6" />
-              Agendamento
-            </h2>
-            {isOwner && (
-              <Button
-                variant="outline"
-                onClick={() => navigate(`/${businessSlug}/agendamentos`)}
-              >
-                <Settings className="h-4 w-4 mr-2" />
-                Ver Agendamentos
-              </Button>
-            )}
-          </div>
+          <h2 className="text-2xl font-bold flex items-center gap-2 mb-4">
+            <Calendar className="h-6 w-6" />
+            Agendamento
+          </h2>
         
         {availability.length > 0 ? (
           <>

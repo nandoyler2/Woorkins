@@ -16,7 +16,7 @@ export function ProjectBanner() {
   if (dismissed) return null;
 
   return (
-    <div className="relative bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 text-white p-6 rounded-lg mb-6">
+    <div className="relative bg-gradient-to-r from-[#1E88E5] via-[#26C6DA] to-[#00ACC1] text-white p-6 rounded-lg mb-6">
       <Button
         variant="ghost"
         size="icon"
@@ -34,7 +34,7 @@ export function ProjectBanner() {
           </p>
           <Button 
             variant="secondary" 
-            className="bg-white text-purple-600 hover:bg-white/90"
+            className="bg-white text-[#1E88E5] hover:bg-white/90 font-semibold"
             onClick={() => window.open('https://instagram.com/woorkinsbrasil', '_blank')}
           >
             Clique aqui e siga

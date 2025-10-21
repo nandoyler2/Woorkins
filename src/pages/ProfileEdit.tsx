@@ -658,14 +658,14 @@ export default function ProfileEdit() {
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (!files || !profile?.id) return;
+    if (!files || !user?.id) return;
 
     const uploadedUrls: string[] = [];
 
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       const fileExt = file.name.split('.').pop();
-      const fileName = `${profile.id}/${Date.now()}_${i}.${fileExt}`;
+      const fileName = `${user.id}/${Date.now()}_${i}.${fileExt}`;
 
       try {
         const { data, error } = await supabase.storage

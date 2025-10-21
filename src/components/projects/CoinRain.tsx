@@ -12,29 +12,27 @@ interface Coin {
 export function CoinRain() {
   const [coins, setCoins] = useState<Coin[]>([]);
 
-  useEffect(() => {
-    if (coins.length === 0) return;
-
-    // Remove coins after animation completes (5 seconds max)
-    const timer = setTimeout(() => {
-      setCoins((prev) => prev.slice(30)); // Keep only recent coins to avoid memory issues
-    }, 5000);
-
-    return () => clearTimeout(timer);
-  }, [coins]);
-
   const triggerCoinRain = () => {
     const newCoins: Coin[] = [];
     const timestamp = Date.now();
     for (let i = 0; i < 30; i++) {
+      const duration = 3 + Math.random() * 2; // 3-5 seconds
+      const coinId = timestamp + Math.random() * 10000 + i;
+      
       newCoins.push({
-        id: timestamp + Math.random() * 10000 + i,
+        id: coinId,
         left: Math.random() * 95 + 2.5, // 2.5% to 97.5% to avoid edges
         delay: Math.random() * 0.3,
-        duration: 3 + Math.random() * 2, // 3-5 seconds
+        duration: duration,
         rotation: Math.random() * 360,
       });
+
+      // Remove each coin after its animation completes
+      setTimeout(() => {
+        setCoins((prev) => prev.filter((c) => c.id !== coinId));
+      }, (duration + 0.5) * 1000);
     }
+    
     setCoins((prev) => [...prev, ...newCoins]);
   };
 

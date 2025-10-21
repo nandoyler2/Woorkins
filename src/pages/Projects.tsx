@@ -230,7 +230,7 @@ export default function Projects() {
       </div>
 
       <main className="flex-1 bg-muted/30">
-        <div className="container mx-auto px-4 py-6">
+        <div className="container mx-auto px-4 py-6 max-w-7xl">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             {/* Sidebar - Desktop only */}
             <aside className="hidden md:block">

@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MapPin, Star, CheckCircle, Clock, MessageSquare } from "lucide-react";
 import { formatShortName } from "@/lib/utils";
 import { Link } from "react-router-dom";
@@ -115,9 +115,17 @@ export function ProjectCard({ project }: ProjectCardProps) {
       <div className="flex justify-between items-center pt-4 border-t">
         <div className="flex items-center gap-3">
           <Avatar className="h-8 w-8">
-            <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-              {formatShortName(project.profiles.full_name || project.profiles.username)}
-            </AvatarFallback>
+            {project.profiles.avatar_url ? (
+              <img 
+                src={project.profiles.avatar_url} 
+                alt={project.profiles.full_name || project.profiles.username}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                {formatShortName(project.profiles.full_name || project.profiles.username)}
+              </AvatarFallback>
+            )}
           </Avatar>
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium">

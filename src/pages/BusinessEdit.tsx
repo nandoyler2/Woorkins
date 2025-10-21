@@ -29,7 +29,7 @@ import { GenericCatalogManager } from '@/components/generic/GenericCatalogManage
 import { GenericTestimonialsManager } from '@/components/generic/GenericTestimonialsManager';
 import { GenericCertificationsManager } from '@/components/generic/GenericCertificationsManager';
 import { GenericAppointmentsManager } from '@/components/generic/GenericAppointmentsManager';
-import { GenericLinktreeManager } from '@/components/generic/GenericLinktreeManager';
+import { BusinessLinktreeManager } from '@/components/business/BusinessLinktreeManager';
 import { GenericJobVacanciesManager } from '@/components/generic/GenericJobVacanciesManager';
 import { GenericPortfolioManager } from '@/components/generic/GenericPortfolioManager';
 import { GenericSocialManager } from '@/components/generic/GenericSocialManager';
@@ -1502,8 +1502,8 @@ export default function BusinessEdit() {
                         <GenericAppointmentsManager entityType="business" entityId={business.id} />
                       )}
 
-                      {configuringFeature === 'linktree' && (
-                        <GenericLinktreeManager entityType="business" entityId={business.id} />
+{configuringFeature === 'linktree' && (
+                        <BusinessLinktreeManager businessId={business.id} businessLogo={business.logo_url || undefined} />
                       )}
 
                       {configuringFeature === 'vacancies' && (

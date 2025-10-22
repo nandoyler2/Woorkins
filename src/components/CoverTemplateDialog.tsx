@@ -12,6 +12,8 @@ import cover7 from '@/assets/cover-templates/cover-7.jpg';
 import cover8 from '@/assets/cover-templates/cover-8.jpg';
 import cover9 from '@/assets/cover-templates/cover-9.jpg';
 import cover10 from '@/assets/cover-templates/cover-10.jpg';
+import cover11 from '@/assets/cover-templates/cover-11.jpg';
+import cover12 from '@/assets/cover-templates/cover-12.jpg';
 
 interface CoverTemplateDialogProps {
   open: boolean;
@@ -30,6 +32,8 @@ const COVER_TEMPLATES = [
   { id: 8, url: cover8, name: 'City Lights' },
   { id: 9, url: cover9, name: 'Vista Aérea' },
   { id: 10, url: cover10, name: 'Arquitetura Moderna' },
+  { id: 11, url: cover11, name: 'Golden Hour' },
+  { id: 12, url: cover12, name: 'Ondas Abstratas' },
 ];
 
 export function CoverTemplateDialog({ open, onClose, onSelect }: CoverTemplateDialogProps) {

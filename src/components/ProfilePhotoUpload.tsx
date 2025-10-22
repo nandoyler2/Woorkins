@@ -178,17 +178,17 @@ export function ProfilePhotoUpload({ currentPhotoUrl, userName, userId, onPhotoU
             </AvatarFallback>
           </Avatar>
           
-          {/* Hover Overlay */}
+          {/* Upload Button at Bottom Center */}
           <label
             htmlFor="photo-upload"
-            className={`absolute inset-0 flex items-center justify-center bg-black/60 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 cursor-pointer ${
-              isProcessing ? 'cursor-not-allowed' : ''
+            className={`absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 flex items-center justify-center bg-primary hover:bg-primary/90 text-primary-foreground rounded-full p-3 shadow-lg transition-all duration-200 cursor-pointer ${
+              isProcessing ? 'cursor-not-allowed opacity-50' : ''
             }`}
           >
             {isProcessing ? (
-              <Loader2 className="h-8 w-8 text-white animate-spin" />
+              <Loader2 className="h-5 w-5 animate-spin" />
             ) : (
-              <Camera className="h-8 w-8 text-white" />
+              <Camera className="h-5 w-5" />
             )}
           </label>
           

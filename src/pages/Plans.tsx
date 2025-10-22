@@ -478,15 +478,11 @@ export default function Plans() {
                   {/* Preço no Final */}
                   <div className="pt-4 border-t border-border">
                     <div className="text-center space-y-1">
-                      {isFree ? (
-                        <div className="text-3xl font-bold">Grátis</div>
-                      ) : (
-                        <div className="flex items-baseline justify-center gap-1">
-                          <span className="text-sm text-muted-foreground">R$</span>
-                          <span className="text-3xl font-bold">{plan.price.toFixed(2)}</span>
-                          <span className="text-sm text-muted-foreground">/mês</span>
-                        </div>
-                      )}
+                      <div className="flex items-baseline justify-center gap-1">
+                        <span className="text-sm text-muted-foreground">R$</span>
+                        <span className="text-3xl font-bold">{plan.price.toFixed(2)}</span>
+                        <span className="text-sm text-muted-foreground">/mês</span>
+                      </div>
                     </div>
                   </div>
 

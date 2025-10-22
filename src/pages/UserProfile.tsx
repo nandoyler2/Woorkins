@@ -384,43 +384,8 @@ export default function UserProfile() {
                     {/* Banner Section */}
                     <PublicUserBanners userId={profile.id} />
 
-                    {/* Activity Section */}
-                    <div>
-                      <h2 className="text-xl font-bold mb-4">Atividade Recente</h2>
-                      {posts.length === 0 ? (
-                        <div className="text-center py-8">
-                          <Star className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
-                          <p className="text-muted-foreground">Nenhuma atividade pública ainda</p>
-                        </div>
-                      ) : (
-                        <div className="space-y-4">
-                          {posts.slice(0, 3).map((post) => (
-                            <Card key={post.id}>
-                              <CardContent className="p-4">
-                                <p className="text-sm mb-2">{post.content}</p>
-                                {post.media_urls && post.media_urls.length > 0 && (
-                                  <div className="grid grid-cols-2 gap-2 mb-2">
-                                    {post.media_urls.slice(0, 4).map((url, idx) => (
-                                      <SafeImage
-                                        key={idx}
-                                        src={url}
-                                        alt="Post media"
-                                        className="w-full h-32 object-cover rounded-lg"
-                                      />
-                                    ))}
-                                  </div>
-                                )}
-                                <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                                  <span>{post.likes_count} curtidas</span>
-                                  <span>{post.comments_count} comentários</span>
-                                  <span>{new Date(post.created_at).toLocaleDateString('pt-BR')}</span>
-                                </div>
-                              </CardContent>
-                            </Card>
-                          ))}
-                        </div>
-                      )}
-                    </div>
+                    {/* Video Section */}
+                    <PublicUserVideo userId={profile.id} />
 
                     {/* Catalog Section */}
                     <PublicUserCatalog userId={profile.id} />

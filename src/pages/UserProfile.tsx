@@ -439,8 +439,6 @@ export default function UserProfile() {
                     {/* Catalog Section */}
                     <PublicUserCatalog userId={profile.id} />
 
-                    {/* Certifications Section */}
-                    <PublicUserCertifications userId={profile.id} />
                   </TabsContent>
 
                   {/* Sobre Tab */}
@@ -728,13 +726,13 @@ export default function UserProfile() {
                   </TabsContent>
                 </Tabs>
               </Card>
+
+              {/* Appointments - below tabs */}
+              <PublicUserAppointments userId={profile.id} username={profile.username} />
             </div>
 
             {/* Right Column - Info Sidebar */}
             <div className="space-y-4">
-              {/* Appointments */}
-              <PublicUserAppointments userId={profile.id} username={profile.username} />
-
               {/* Rating Highlight Card */}
               <Card className="bg-gradient-to-br from-primary/10 to-secondary/10 border-2 border-primary/20 shadow-glow">
                 <CardContent className="p-6">
@@ -794,6 +792,9 @@ export default function UserProfile() {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Certifications */}
+              <PublicUserCertifications userId={profile.id} />
 
               {/* Social Links */}
               <PublicUserSocial userId={profile.id} />

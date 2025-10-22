@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ThumbsUp, Star, Plus, Trash2, Edit2, Upload } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { ImageCropDialog } from "@/components/ImageCropDialog";
 
 interface Testimonial {
   id: string;
@@ -31,6 +32,9 @@ export function GenericTestimonialsManager({ entityType, entityId }: GenericTest
   const [editingItem, setEditingItem] = useState<Partial<Testimonial> | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [imageToCrop, setImageToCrop] = useState<string | null>(null);
+  const [cropDialogOpen, setCropDialogOpen] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const { toast } = useToast();
 
   const tableName = entityType === 'business' ? 'business_testimonials' : 'user_testimonials';
@@ -64,15 +68,64 @@ export function GenericTestimonialsManager({ entityType, entityId }: GenericTest
     const file = event.target.files?.[0];
     if (!file) return;
 
+    // Show crop dialog
+    setSelectedFile(file);
+    const reader = new FileReader();
+    reader.onload = () => {
+      setImageToCrop(reader.result as string);
+      setCropDialogOpen(true);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleCropComplete = async (croppedAreaPixels: any) => {
+    if (!imageToCrop || !selectedFile) return;
+
     try {
       setUploading(true);
-      const fileExt = file.name.split('.').pop();
+      setCropDialogOpen(false);
+
+      // Create canvas and crop image
+      const image = new Image();
+      image.src = imageToCrop;
+      await new Promise((resolve) => {
+        image.onload = resolve;
+      });
+
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('Could not get canvas context');
+
+      canvas.width = croppedAreaPixels.width;
+      canvas.height = croppedAreaPixels.height;
+
+      ctx.drawImage(
+        image,
+        croppedAreaPixels.x,
+        croppedAreaPixels.y,
+        croppedAreaPixels.width,
+        croppedAreaPixels.height,
+        0,
+        0,
+        croppedAreaPixels.width,
+        croppedAreaPixels.height
+      );
+
+      // Convert to blob
+      const blob = await new Promise<Blob>((resolve) => {
+        canvas.toBlob((blob) => {
+          resolve(blob!);
+        }, 'image/jpeg', 0.9);
+      });
+
+      // Upload to Supabase
+      const fileExt = 'jpg';
       const fileName = `${crypto.randomUUID()}.${fileExt}`;
       const filePath = `${entityId}/testimonials/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
         .from(storageBucket)
-        .upload(filePath, file);
+        .upload(filePath, blob);
 
       if (uploadError) throw uploadError;
 
@@ -94,6 +147,8 @@ export function GenericTestimonialsManager({ entityType, entityId }: GenericTest
       });
     } finally {
       setUploading(false);
+      setImageToCrop(null);
+      setSelectedFile(null);
     }
   };
 
@@ -359,6 +414,21 @@ export function GenericTestimonialsManager({ entityType, entityId }: GenericTest
           </div>
         )}
       </CardContent>
+
+      {/* Crop Dialog */}
+      {imageToCrop && (
+        <ImageCropDialog
+          open={cropDialogOpen}
+          imageSrc={imageToCrop}
+          onClose={() => {
+            setCropDialogOpen(false);
+            setImageToCrop(null);
+            setSelectedFile(null);
+          }}
+          onCropComplete={handleCropComplete}
+          aspect={1}
+        />
+      )}
     </Card>
   );
 }

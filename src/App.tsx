@@ -19,7 +19,6 @@ import Auth from "./pages/Auth";
 import Feed from "./pages/Feed";
 import Admin from "./pages/Admin";
 import Dashboard from "./pages/Dashboard";
-import BusinessEdit from "./pages/BusinessEdit";
 import ProfileEdit from "./pages/ProfileEdit";
 import ProfileRouter from "./pages/ProfileRouter";
 import BusinessFinances from "./pages/BusinessFinances";
@@ -51,7 +50,6 @@ import Financeiro from "./pages/Financeiro";
 import Woorkoins from "./pages/Woorkoins";
 import Messages from "./pages/Messages";
 import PaymentSettings from "./pages/PaymentSettings";
-import BusinessProfile from "./pages/BusinessProfile";
 import AdminInvites from "./pages/AdminInvites";
 import ProfileEvaluate from "./pages/ProfileEvaluate";
 import BusinessAppointments from "./pages/BusinessAppointments";
@@ -107,7 +105,6 @@ function AppContent() {
         <Route path="/empresa/financeiro" element={<ProtectedRoute><BusinessFinances /></ProtectedRoute>} />
         
         {/* Rotas dinâmicas devem vir por último */}
-        <Route path="/:slug/editar" element={<ProtectedRoute><BusinessEdit /></ProtectedRoute>} />
         <Route path="/:slug/avaliar" element={<ProtectedRoute><ProfileEvaluate /></ProtectedRoute>} />
         <Route path="/:slug/agendamentos" element={<ProtectedRoute><BusinessAppointments /></ProtectedRoute>} />
         <Route path="/:slug/agendamento" element={<ProtectedRoute><UserAppointmentBooking /></ProtectedRoute>} />

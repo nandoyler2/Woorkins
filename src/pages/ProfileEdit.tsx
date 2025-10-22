@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAIAssistant } from '@/contexts/AIAssistantContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -68,13 +68,20 @@ import {
 interface Profile {
   id: string;
   user_id: string;
+  profile_id?: string;
   username: string;
+  slug?: string;
   full_name: string | null;
+  company_name?: string;
   bio: string | null;
+  description?: string | null;
   avatar_url: string | null;
+  logo_url?: string | null;
   cover_url: string | null;
   location: string | null;
+  address?: string | null;
   website: string | null;
+  website_url?: string | null;
 }
 
 interface UserPost {
@@ -133,12 +140,16 @@ export default function ProfileEdit() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { openWithMessage } = useAIAssistant();
+  const [searchParams] = useSearchParams();
+  const businessId = searchParams.get('businessId');
 
   useEffect(() => {
     document.title = 'Editar Perfil - Woorkins';
   }, []);
   
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [profileType, setProfileType] = useState<'user' | 'business'>('user');
+  const [businessProfiles, setBusinessProfiles] = useState<any[]>([]);
   const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
   const [posts, setPosts] = useState<UserPost[]>([]);
   const [loading, setLoading] = useState(true);
@@ -273,10 +284,14 @@ export default function ProfileEdit() {
   ];
 
   useEffect(() => {
-    loadProfile();
+    if (businessId) {
+      loadBusinessProfile(businessId);
+    } else {
+      loadProfile();
+    }
     loadEvaluations();
     loadCurrentProfile();
-  }, [user]);
+  }, [user, businessId]);
 
   useEffect(() => {
     if (profile?.id) {
@@ -320,7 +335,72 @@ export default function ProfileEdit() {
     }
 
     setProfile(data);
+    setProfileType('user');
     setLoading(false);
+    
+    // Carregar lista de perfis de negócio do usuário
+    const { data: businesses } = await supabase
+      .from('business_profiles')
+      .select('id, company_name, slug')
+      .eq('profile_id', data.id)
+      .or('deleted.is.null,deleted.eq.false');
+    
+    if (businesses) {
+      setBusinessProfiles(businesses);
+    }
+  };
+
+  const loadBusinessProfile = async (id: string) => {
+    if (!user) return;
+
+    // Primeiro verifica se o usuário tem permissão
+    const { data: userProfile } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (!userProfile) {
+      toast({
+        title: 'Erro',
+        description: 'Perfil não encontrado',
+        variant: 'destructive',
+      });
+      navigate('/painel');
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from('business_profiles')
+      .select('*')
+      .eq('id', id)
+      .eq('profile_id', userProfile.id)
+      .maybeSingle();
+
+    if (error || !data) {
+      toast({
+        title: 'Erro',
+        description: 'Perfil profissional não encontrado ou você não tem permissão',
+        variant: 'destructive',
+      });
+      navigate('/painel');
+      return;
+    }
+
+    setProfile(data as unknown as Profile);
+    setProfileType('business');
+    setLoading(false);
+    
+    // Carregar lista de perfis de negócio do usuário
+    const { data: businesses } = await supabase
+      .from('business_profiles')
+      .select('id, company_name, slug')
+      .eq('profile_id', userProfile.id)
+      .or('deleted.is.null,deleted.eq.false');
+    
+    if (businesses) {
+      setBusinessProfiles(businesses);
+    }
   };
 
   const loadEvaluations = async () => {
@@ -362,10 +442,13 @@ export default function ProfileEdit() {
   const loadPosts = async () => {
     if (!profile?.id) return;
 
+    const tableName = profileType === 'user' ? 'user_posts' : 'business_posts';
+    const idColumn = profileType === 'user' ? 'profile_id' : 'business_id';
+
     const { data } = await supabase
-      .from('user_posts' as any)
+      .from(tableName as any)
       .select('*')
-      .eq('profile_id', profile.id)
+      .eq(idColumn, profile.id)
       .order('created_at', { ascending: false });
 
     if (data) {
@@ -478,10 +561,13 @@ export default function ProfileEdit() {
   const loadFeatures = async () => {
     if (!profile?.id) return;
 
+    const tableName = profileType === 'user' ? 'user_profile_features' : 'business_profile_features';
+    const idColumn = profileType === 'user' ? 'profile_id' : 'business_id';
+
     const { data } = await supabase
-      .from('user_profile_features' as any)
+      .from(tableName as any)
       .select('*')
-      .eq('profile_id', profile.id);
+      .eq(idColumn, profile.id);
 
     const featuresMap = new Map(data?.map((f: any) => [f.feature_key, f.is_active]) || []);
     
@@ -569,15 +655,25 @@ export default function ProfileEdit() {
 
     setSaving(true);
 
+    const tableName = profileType === 'user' ? 'profiles' : 'business_profiles';
+    const updateData = profileType === 'user' 
+      ? {
+          full_name: profile.full_name,
+          bio: profile.bio,
+          location: profile.location,
+          website: profile.website,
+        }
+      : {
+          company_name: profile.company_name,
+          description: profile.description,
+          address: profile.address,
+          website_url: profile.website_url,
+        };
+
     const { error } = await supabase
-      .from('profiles')
-      .update({
-        full_name: profile.full_name,
-        bio: profile.bio,
-        location: profile.location,
-        website: profile.website,
-      })
-      .eq('user_id', user.id);
+      .from(tableName as any)
+      .update(updateData)
+      .eq('id', profile.id);
 
     if (error) {
       toast({
@@ -685,8 +781,10 @@ export default function ProfileEdit() {
 
   const handleDeletePost = async (id: string) => {
     try {
+      const tableName = profileType === 'user' ? 'user_posts' : 'business_posts';
+      
       const { error } = await supabase
-        .from('user_posts' as any)
+        .from(tableName as any)
         .delete()
         .eq('id', id);
 
@@ -774,10 +872,13 @@ export default function ProfileEdit() {
 
     setPosting(true);
     try {
+      const tableName = profileType === 'user' ? 'user_posts' : 'business_posts';
+      const idColumn = profileType === 'user' ? 'profile_id' : 'business_id';
+
       const { error } = await supabase
-        .from('user_posts' as any)
+        .from(tableName as any)
         .insert({
-          profile_id: profile?.id,
+          [idColumn]: profile?.id,
           content: postContent.trim(),
           media_urls: postImages.length > 0 ? postImages : null,
           media_types: postImages.length > 0 ? postImages.map(() => 'image') : null,

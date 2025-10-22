@@ -399,6 +399,18 @@ export default function Plans() {
                       <li className="flex items-start gap-3">
                         <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
                         <span className="text-sm text-foreground">
+                          Ferramentas Exclusivas
+                        </span>
+                      </li>
+                      <li className="flex items-start gap-3">
+                        <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
+                        <span className="text-sm text-foreground">
+                          Badge especial no perfil
+                        </span>
+                      </li>
+                      <li className="flex items-start gap-3">
+                        <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
+                        <span className="text-sm text-foreground">
                           Suporte prioritário
                         </span>
                       </li>

@@ -69,7 +69,7 @@ export default function Plans() {
       setPlans((data || []).map(p => ({
         ...p,
         price: planPrices[p.slug] || 0,
-        commission_percentage: planCommissions[p.slug] || p.commission_percentage,
+        commission_percentage: planCommissions[p.slug] ?? 12,
         features: typeof p.features === 'string' 
           ? JSON.parse(p.features) 
           : (p.features as any)

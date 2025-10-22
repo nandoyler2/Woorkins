@@ -14,6 +14,7 @@ import { PublicTestimonialsSlider } from '@/components/generic/PublicTestimonial
 import { SafeImage } from '@/components/ui/safe-image';
 import { PublicUserBanners } from '@/components/user/PublicUserBanners';
 import { PublicUserAppointments } from '@/components/user/PublicUserAppointments';
+import { PublicUserNegotiation } from '@/components/user/PublicUserNegotiation';
 import { PublicUserPortfolio } from '@/components/user/PublicUserPortfolio';
 import { PublicUserCatalog } from '@/components/user/PublicUserCatalog';
 import { PublicUserCertifications } from '@/components/user/PublicUserCertifications';
@@ -830,6 +831,9 @@ export default function UserProfile() {
 
               {/* Appointments */}
               <PublicUserAppointments userId={profile.id} username={profile.username} />
+
+              {/* Negotiation */}
+              <PublicUserNegotiation userId={profile.id} username={profile.username} />
 
               {/* Certifications */}
               <PublicUserCertifications userId={profile.id} />

@@ -373,17 +373,19 @@ export default function UserProfile() {
 
       {/* Cover - gradiente simples */}
       {isProfileOwner ? (
-        <InlinePhotoUpload
-          currentPhotoUrl={undefined}
-          userId={user!.id}
-          userName={profile.username}
-          onPhotoUpdated={loadUserProfile}
-          type="cover"
-          className="w-full h-48 md:h-60"
-          iconPosition="top"
-        >
-          <div className="w-full h-48 md:h-60 relative overflow-hidden bg-gradient-to-br from-primary/20 to-secondary/20" />
-        </InlinePhotoUpload>
+        <div className="w-full h-48 md:h-60 relative">
+          <InlinePhotoUpload
+            currentPhotoUrl={undefined}
+            userId={user!.id}
+            userName={profile.username}
+            onPhotoUpdated={loadUserProfile}
+            type="cover"
+            className="w-full h-full"
+            iconPosition="top"
+          >
+            <div className="w-full h-full relative overflow-hidden bg-gradient-to-br from-primary/20 to-secondary/20" />
+          </InlinePhotoUpload>
+        </div>
       ) : (
         <div className="w-full h-48 md:h-60 relative overflow-hidden bg-gradient-to-br from-primary/20 to-secondary/20" />
       )}

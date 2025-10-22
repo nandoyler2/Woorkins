@@ -150,16 +150,18 @@ export function InlinePhotoUpload({
   return (
     <>
       {imageToCrop ? (
-        <InlineCropEditor
-          imageUrl={imageToCrop}
-          onSave={handleCropComplete}
-          onCancel={() => {
-            setImageToCrop(null);
-            setOriginalFile(null);
-          }}
-          aspectRatio={type === 'avatar' ? 1 : 16 / 9}
-          className={className}
-        />
+        <div className={`relative ${className}`}>
+          <InlineCropEditor
+            imageUrl={imageToCrop}
+            onSave={handleCropComplete}
+            onCancel={() => {
+              setImageToCrop(null);
+              setOriginalFile(null);
+            }}
+            aspectRatio={type === 'avatar' ? 1 : 16 / 9}
+            className="w-full h-full"
+          />
+        </div>
       ) : (
         <div 
           className={`relative group ${className}`}

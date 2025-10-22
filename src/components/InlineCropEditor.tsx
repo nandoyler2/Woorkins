@@ -154,12 +154,12 @@ export function InlineCropEditor({
       </div>
 
       {/* Controles */}
-      <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-background/95 rounded-full px-3 py-2 shadow-lg border border-border">
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-background/95 backdrop-blur-sm rounded-full px-4 py-2.5 shadow-xl border-2 border-border z-50">
         <Button
           size="sm"
           variant="ghost"
           onClick={handleZoomOut}
-          className="h-8 w-8 p-0 rounded-full"
+          className="h-8 w-8 p-0 rounded-full hover:bg-primary/10"
         >
           <ZoomOut className="w-4 h-4" />
         </Button>
@@ -172,33 +172,35 @@ export function InlineCropEditor({
           size="sm"
           variant="ghost"
           onClick={handleZoomIn}
-          className="h-8 w-8 p-0 rounded-full"
+          className="h-8 w-8 p-0 rounded-full hover:bg-primary/10"
         >
           <ZoomIn className="w-4 h-4" />
         </Button>
 
-        <div className="w-px h-4 bg-border mx-1" />
+        <div className="w-px h-5 bg-border mx-1" />
 
         <Button
           size="sm"
           variant="ghost"
           onClick={onCancel}
-          className="h-8 w-8 p-0 rounded-full hover:bg-destructive hover:text-destructive-foreground"
+          className="h-8 px-3 rounded-full hover:bg-destructive/10 hover:text-destructive font-medium"
         >
-          <X className="w-4 h-4" />
+          <X className="w-4 h-4 mr-1" />
+          Cancelar
         </Button>
 
         <Button
           size="sm"
           onClick={handleSave}
-          className="h-8 w-8 p-0 rounded-full bg-primary hover:bg-primary/90"
+          className="h-8 px-3 rounded-full bg-primary hover:bg-primary/90 font-medium"
         >
-          <Check className="w-4 h-4" />
+          <Check className="w-4 h-4 mr-1" />
+          Salvar
         </Button>
       </div>
 
-      <div className="absolute top-2 left-1/2 -translate-x-1/2 bg-background/95 px-3 py-1.5 rounded-full text-xs font-medium shadow-lg border border-border">
-        Arraste para ajustar
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-background/95 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-medium shadow-lg border-2 border-border z-50">
+        Arraste para ajustar a posição
       </div>
     </div>
   );

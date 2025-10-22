@@ -56,106 +56,12 @@ export function InlinePhotoUpload({
       return;
     }
 
-    // Se for capa, faz upload direto sem crop
-    if (type === 'cover') {
-      handleDirectUpload(file);
-      return;
-    }
-
-    // Se for avatar, abre o crop
     setOriginalFile(file);
     const reader = new FileReader();
     reader.onload = () => {
       setImageToCrop(reader.result as string);
     };
     reader.readAsDataURL(file);
-  };
-
-  const handleDirectUpload = async (file: File) => {
-    setUploading(true);
-    
-    try {
-      // Comprimir a imagem
-      const compressedBlob = await compressImage(file);
-      const compressedFile = new File([compressedBlob], file.name, { type: 'image/jpeg' });
-      const fileName = `${userId}-${Date.now()}.jpg`;
-      const bucketName = 'user-covers';
-      const filePath = `${userId}/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from(bucketName)
-        .upload(filePath, compressedFile, {
-          contentType: 'image/jpeg',
-          upsert: false,
-        });
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from(bucketName)
-        .getPublicUrl(filePath);
-
-      setModerating(true);
-
-      const { data: moderationData, error: moderationError } = await supabase.functions.invoke(
-        'moderate-cover-photo',
-        {
-          body: { imageUrl: publicUrl, userId }
-        }
-      );
-
-      setModerating(false);
-
-      if (moderationError) throw moderationError;
-
-      if (!moderationData.approved) {
-        await supabase.storage.from(bucketName).remove([filePath]);
-        
-        toast({
-          variant: 'destructive',
-          title: 'Foto rejeitada',
-          description: moderationData.reason || 'A foto não atende aos padrões da comunidade',
-        });
-        return;
-      }
-
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ cover_url: publicUrl })
-        .eq('user_id', userId);
-
-      if (updateError) throw updateError;
-
-      if (currentPhotoUrl) {
-        try {
-          const url = new URL(currentPhotoUrl);
-          const needle = `/object/public/${bucketName}/`;
-          const idx = url.pathname.indexOf(needle);
-          const oldPath = idx !== -1 ? url.pathname.slice(idx + needle.length) : null;
-          if (oldPath) {
-            await supabase.storage.from(bucketName).remove([oldPath]);
-          }
-        } catch (e) {
-          console.warn('Could not parse old photo URL for deletion', e);
-        }
-      }
-
-      toast({
-        title: 'Foto atualizada!',
-        description: 'Sua foto foi atualizada com sucesso.',
-      });
-
-      onPhotoUpdated?.();
-    } catch (error) {
-      console.error('Error uploading photo:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Erro ao enviar foto',
-        description: 'Não foi possível atualizar a foto. Tente novamente.',
-      });
-    } finally {
-      setUploading(false);
-    }
   };
 
   const handleCropComplete = async (croppedImageBlob: Blob) => {

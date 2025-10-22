@@ -7,6 +7,7 @@ import { formatShortName } from "@/lib/utils";
 import { Link } from "react-router-dom";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useAuthAction } from "@/contexts/AuthActionContext";
 import { ProposalDialog } from "./ProposalDialog";
 import { LoginPromptDialog } from "./LoginPromptDialog";
 import { ClickableProfile } from "@/components/ClickableProfile";
@@ -35,13 +36,12 @@ interface ProjectCardProps {
 
 export function ProjectCard({ project }: ProjectCardProps) {
   const { user } = useAuth();
+  const { requireAuth } = useAuthAction();
   const [proposalDialogOpen, setProposalDialogOpen] = useState(false);
   const [loginDialogOpen, setLoginDialogOpen] = useState(false);
 
   const handleMakeProposal = () => {
-    if (!user) {
-      setLoginDialogOpen(true);
-    } else {
+    if (requireAuth(() => setProposalDialogOpen(true))) {
       setProposalDialogOpen(true);
     }
   };

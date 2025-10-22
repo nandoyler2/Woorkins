@@ -27,6 +27,7 @@ import { ProfileEvaluationForm } from '@/components/ProfileEvaluationForm';
 import { ClickableProfile } from '@/components/ClickableProfile';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAuthAction } from '@/contexts/AuthActionContext';
 
 
 interface UserProfileData {
@@ -87,6 +88,7 @@ export default function UserProfile() {
   const { slug } = useParams();
   const { toast } = useToast();
   const { user } = useAuth();
+  const { requireAuth } = useAuthAction();
   const [profile, setProfile] = useState<UserProfileData | null>(null);
   const [projects, setProjects] = useState<UserProject[]>([]);
   const [posts, setPosts] = useState<UserPost[]>([]);
@@ -108,6 +110,12 @@ export default function UserProfile() {
   const [submittingResponse, setSubmittingResponse] = useState<{ [key: string]: boolean }>({});
 
   const isProfileOwner = user && profile && user.id === profile.user_id;
+
+  const handleEvaluateClick = () => {
+    if (requireAuth(() => setShowEvaluationForm(true))) {
+      setShowEvaluationForm(true);
+    }
+  };
 
   useEffect(() => {
     if (profile) {
@@ -543,7 +551,7 @@ export default function UserProfile() {
                             </p>
                           )}
                         </div>
-                        <Button onClick={() => setShowEvaluationForm(!showEvaluationForm)}>
+                        <Button onClick={handleEvaluateClick}>
                           {showEvaluationForm ? 'Cancelar' : 'Avaliar'}
                         </Button>
                       </div>
@@ -710,7 +718,7 @@ export default function UserProfile() {
                             </p>
                           )}
                         </div>
-                        <Button onClick={() => setShowEvaluationForm(!showEvaluationForm)}>
+                        <Button onClick={handleEvaluateClick}>
                           {showEvaluationForm ? 'Cancelar' : 'Avaliar'}
                         </Button>
                       </div>
@@ -893,7 +901,7 @@ export default function UserProfile() {
                       ))}
                     </div>
                     <Button 
-                      onClick={() => setShowEvaluationForm(true)}
+                      onClick={handleEvaluateClick}
                       className="w-full"
                     >
                       Avaliar {profile.full_name ? profile.full_name.split(' ')[0] : profile.username}

@@ -5,9 +5,11 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { AuthActionProvider } from "@/contexts/AuthActionContext";
 import { AIAssistantProvider } from "@/contexts/AIAssistantContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AIAssistant } from "@/components/AIAssistant";
+import { AuthDialog } from "@/components/AuthDialog";
 import { SystemBlockAlert } from "@/components/SystemBlockAlert";
 import { useSystemBlock } from "@/hooks/useSystemBlock";
 import { useEffect, useState } from "react";
@@ -123,6 +125,7 @@ function AppContent() {
 
         <Route path="*" element={<NotFound />} />
       </Routes>
+      <AuthDialog />
       <AIAssistant />
     </>
   );
@@ -149,9 +152,11 @@ function App() {
         <BrowserRouter>
           <LanguageProvider>
             <AuthProvider>
-              <AIAssistantProvider>
-                <AppContent />
-              </AIAssistantProvider>
+              <AuthActionProvider>
+                <AIAssistantProvider>
+                  <AppContent />
+                </AIAssistantProvider>
+              </AuthActionProvider>
             </AuthProvider>
           </LanguageProvider>
         </BrowserRouter>

@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { MessageCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useAuthAction } from "@/contexts/AuthActionContext";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 
@@ -18,6 +19,7 @@ export function PublicUserNegotiation({
 }: PublicUserNegotiationProps) {
   const [isActive, setIsActive] = useState(false);
   const { user } = useAuth();
+  const { requireAuth } = useAuthAction();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -41,15 +43,17 @@ export function PublicUserNegotiation({
   };
 
   const startNegotiation = async () => {
-    if (!user) {
-      toast({
-        title: "Login necessário",
-        description: "Faça login para iniciar uma negociação",
-        variant: "destructive",
-      });
-      navigate("/auth");
+    if (!requireAuth(async () => {
+      await performNegotiation();
+    })) {
       return;
     }
+    
+    await performNegotiation();
+  };
+
+  const performNegotiation = async () => {
+    if (!user) return;
 
     try {
       // Buscar o profile_id do usuário logado

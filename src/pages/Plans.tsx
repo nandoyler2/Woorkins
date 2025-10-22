@@ -366,7 +366,8 @@ export default function Plans() {
                       {plan.features
                         .filter((feature) => 
                           !feature.text.includes('Suporte prioritário') && 
-                          !feature.text.includes('Badge especial no perfil')
+                          !feature.text.includes('Badge especial no perfil') &&
+                          !feature.text.toLowerCase().includes('mensagens')
                         )
                         .map((feature, idx) => {
                           // Substituir texto específico de propostas

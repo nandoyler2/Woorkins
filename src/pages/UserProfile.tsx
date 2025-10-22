@@ -12,6 +12,13 @@ import { Footer } from '@/components/Footer';
 import { PublicWhatsAppWidget } from '@/components/generic/PublicWhatsAppWidget';
 import { PublicTestimonialsSlider } from '@/components/generic/PublicTestimonialsSlider';
 import { SafeImage } from '@/components/ui/safe-image';
+import { PublicUserBanners } from '@/components/user/PublicUserBanners';
+import { PublicUserAppointments } from '@/components/user/PublicUserAppointments';
+import { PublicUserPortfolio } from '@/components/user/PublicUserPortfolio';
+import { PublicUserCatalog } from '@/components/user/PublicUserCatalog';
+import { PublicUserCertifications } from '@/components/user/PublicUserCertifications';
+import { PublicUserVideo } from '@/components/user/PublicUserVideo';
+import { PublicUserSocial } from '@/components/user/PublicUserSocial';
 import { useToast } from '@/hooks/use-toast';
 import { formatFullName } from '@/lib/utils';
 import { ProfileEvaluationForm } from '@/components/ProfileEvaluationForm';
@@ -222,8 +229,8 @@ export default function UserProfile() {
     <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-secondary/10">
       <Header />
 
-      {/* Cover - simples com gradiente */}
-      <div className="w-full h-48 md:h-60 relative overflow-hidden bg-gradient-to-br from-primary/20 to-secondary/20" />
+      {/* Banner (if active) */}
+      <PublicUserBanners userId={profile.id} />
 
       {/* Main Content Container */}
       <div className="container mx-auto px-4 -mt-16 relative z-10 max-w-woorkins">
@@ -419,6 +426,18 @@ export default function UserProfile() {
 
                     {/* Depoimentos Section */}
                     <PublicTestimonialsSlider entityType="user" entityId={profile.id} />
+
+                    {/* Video Section */}
+                    <PublicUserVideo userId={profile.id} />
+
+                    {/* Portfolio Section */}
+                    <PublicUserPortfolio userId={profile.id} />
+
+                    {/* Catalog Section */}
+                    <PublicUserCatalog userId={profile.id} />
+
+                    {/* Certifications Section */}
+                    <PublicUserCertifications userId={profile.id} />
                   </TabsContent>
 
                   {/* Sobre Tab */}
@@ -710,6 +729,9 @@ export default function UserProfile() {
 
             {/* Right Column - Info Sidebar */}
             <div className="space-y-4">
+              {/* Appointments */}
+              <PublicUserAppointments userId={profile.id} username={profile.username} />
+
               {/* Rating Highlight Card */}
               <Card className="bg-gradient-to-br from-primary/10 to-secondary/10 border-2 border-primary/20 shadow-glow">
                 <CardContent className="p-6">
@@ -770,21 +792,8 @@ export default function UserProfile() {
                 </CardContent>
               </Card>
 
-              {profile.website && (
-                <Card className="bg-card/50 backdrop-blur-sm border-2 shadow-lg">
-                  <CardContent className="p-6">
-                    <h3 className="font-bold mb-4">Links</h3>
-                    <a 
-                      href={profile.website}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-primary hover:underline text-sm break-all"
-                    >
-                      {profile.website}
-                    </a>
-                  </CardContent>
-                </Card>
-              )}
+              {/* Social Links */}
+              <PublicUserSocial userId={profile.id} />
             </div>
           </div>
         </div>

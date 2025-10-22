@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { MessageSquare } from "lucide-react";
+import { MessageCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
@@ -40,7 +40,7 @@ export function PublicUserNegotiation({
     }
   };
 
-  const handleStartNegotiation = async () => {
+  const startNegotiation = async () => {
     if (!user) {
       toast({
         title: "Login necessário",
@@ -69,43 +69,43 @@ export function PublicUserNegotiation({
       }
 
       // Verificar se já existe uma negociação ativa
-      const { data: existingNegotiation } = await supabase
-        .from('user_negotiations' as any)
+      const { data: existing } = await supabase
+        .from('user_negotiations')
         .select('id')
         .eq('client_profile_id', userProfile.id)
         .eq('professional_profile_id', userId)
-        .eq('status', 'open')
-        .maybeSingle() as any;
+        .in('status', ['open', 'accepted', 'paid'])
+        .maybeSingle();
 
-      if (existingNegotiation?.id) {
-        navigate(`/messages?type=user_negotiation&id=${existingNegotiation.id}`);
+      if (existing) {
+        navigate(`/messages?type=user_negotiation&id=${existing.id}`);
         return;
       }
 
       // Criar nova negociação
       const { data: newNegotiation, error } = await supabase
-        .from('user_negotiations' as any)
+        .from('user_negotiations')
         .insert({
           client_profile_id: userProfile.id,
           professional_profile_id: userId,
           status: 'open',
         })
         .select()
-        .single() as any;
+        .single();
 
       if (error) throw error;
 
       toast({
-        title: "Sucesso",
-        description: "Negociação iniciada!",
+        title: "Negociação iniciada!",
+        description: `Comece a conversar com ${username}`,
       });
 
-      navigate(`/messages?type=user_negotiation&id=${newNegotiation?.id}`);
+      navigate(`/messages?type=user_negotiation&id=${newNegotiation.id}`);
     } catch (error) {
       console.error("Error starting negotiation:", error);
       toast({
         title: "Erro",
-        description: "Erro ao iniciar negociação",
+        description: "Não foi possível iniciar a negociação",
         variant: "destructive",
       });
     }
@@ -114,33 +114,18 @@ export function PublicUserNegotiation({
   if (!isActive) return null;
 
   return (
-    <Card className="relative overflow-hidden bg-gradient-to-br from-accent/5 via-primary/5 to-secondary/5 border-2 border-accent/20 shadow-elegant hover:shadow-glow transition-all duration-300">
-      <div className="absolute top-0 right-0 w-32 h-32 bg-accent/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-      <div className="absolute bottom-0 left-0 w-24 h-24 bg-primary/5 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2" />
-      
-      <CardContent className="relative p-6 space-y-4">
-        <div className="text-center space-y-2">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-br from-accent to-accent/80 shadow-lg mb-2">
-            <MessageSquare className="w-7 h-7 text-accent-foreground" />
-          </div>
-          <h3 className="text-xl font-bold bg-gradient-to-r from-accent via-primary to-accent bg-clip-text text-transparent">
-            Iniciar Negociação
-          </h3>
-          <p className="text-xs text-muted-foreground">
-            Converse diretamente com {username}
-          </p>
-        </div>
-
+    <Card className="bg-gradient-to-br from-green-500/10 to-green-600/10 border-2 border-green-500/20">
+      <CardContent className="p-6">
+        <h2 className="font-bold mb-2">Negociação Disponível</h2>
+        <p className="text-sm text-muted-foreground mb-4">
+          Este profissional aceita negociações diretas na plataforma
+        </p>
         <Button 
-          onClick={handleStartNegotiation}
-          className="w-full relative overflow-hidden group shadow-lg hover:shadow-xl transition-all duration-300"
-          size="lg"
+          className="w-full bg-green-600 hover:bg-green-700"
+          onClick={startNegotiation}
         >
-          <span className="relative z-10 flex items-center justify-center gap-2 font-semibold">
-            <MessageSquare className="w-4 h-4" />
-            Negociar Agora
-          </span>
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
+          <MessageCircle className="w-4 h-4 mr-2" />
+          Iniciar Conversa
         </Button>
       </CardContent>
     </Card>

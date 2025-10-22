@@ -29,6 +29,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAuthAction } from '@/contexts/AuthActionContext';
 import { InlinePhotoUpload } from '@/components/InlinePhotoUpload';
+import { ImageViewerDialog } from '@/components/ImageViewerDialog';
 
 
 interface UserProfileData {
@@ -112,6 +113,7 @@ export default function UserProfile() {
   const [hasJobVacancies, setHasJobVacancies] = useState(false);
   const [responseText, setResponseText] = useState<{ [key: string]: string }>({});
   const [submittingResponse, setSubmittingResponse] = useState<{ [key: string]: boolean }>({});
+  const [showImageViewer, setShowImageViewer] = useState(false);
   
   const handleTabChange = (value: string) => {
     const basePath = `/${slug}`;
@@ -378,6 +380,7 @@ export default function UserProfile() {
           onPhotoUpdated={loadUserProfile}
           type="cover"
           className="w-full h-48 md:h-60"
+          iconPosition="top"
         >
           <div className="w-full h-48 md:h-60 relative overflow-hidden bg-gradient-to-br from-primary/20 to-secondary/20" />
         </InlinePhotoUpload>
@@ -406,20 +409,28 @@ export default function UserProfile() {
                           type="avatar"
                           className="w-36 h-36 rounded-full"
                         >
-                          {profile.avatar_url ? (
-                            <SafeImage
-                              src={profile.avatar_url}
-                              alt={formatFullName(profile.full_name)}
-                              className="w-36 h-36 rounded-full object-cover bg-card border-4 border-background shadow-lg"
-                            />
-                          ) : (
-                            <div className="w-36 h-36 rounded-full bg-gradient-to-br from-primary/20 via-primary/10 to-secondary/20 flex items-center justify-center border-4 border-background shadow-lg">
-                              <UserIcon className="w-16 h-16 text-primary/70" />
-                            </div>
-                          )}
+                          <div 
+                            className="cursor-pointer"
+                            onClick={() => profile.avatar_url && setShowImageViewer(true)}
+                          >
+                            {profile.avatar_url ? (
+                              <SafeImage
+                                src={profile.avatar_url}
+                                alt={formatFullName(profile.full_name)}
+                                className="w-36 h-36 rounded-full object-cover bg-card border-4 border-background shadow-lg"
+                              />
+                            ) : (
+                              <div className="w-36 h-36 rounded-full bg-gradient-to-br from-primary/20 via-primary/10 to-secondary/20 flex items-center justify-center border-4 border-background shadow-lg">
+                                <UserIcon className="w-16 h-16 text-primary/70" />
+                              </div>
+                            )}
+                          </div>
                         </InlinePhotoUpload>
                       ) : (
-                        <>
+                        <div 
+                          className="cursor-pointer"
+                          onClick={() => profile.avatar_url && setShowImageViewer(true)}
+                        >
                           {profile.avatar_url ? (
                             <SafeImage
                               src={profile.avatar_url}
@@ -431,7 +442,7 @@ export default function UserProfile() {
                               <UserIcon className="w-16 h-16 text-primary/70" />
                             </div>
                           )}
-                        </>
+                        </div>
                       )}
                       <Button variant="outline" size="sm" className="rounded-full w-32">
                         Seguir
@@ -1113,6 +1124,16 @@ export default function UserProfile() {
             />
           </DialogContent>
         </Dialog>
+      )}
+
+      {/* Image Viewer Modal */}
+      {profile?.avatar_url && (
+        <ImageViewerDialog
+          imageUrl={profile.avatar_url}
+          alt={formatFullName(profile.full_name)}
+          open={showImageViewer}
+          onClose={() => setShowImageViewer(false)}
+        />
       )}
 
       {/* WhatsApp Widget */}

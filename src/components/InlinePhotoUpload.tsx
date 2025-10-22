@@ -13,6 +13,7 @@ interface InlinePhotoUploadProps {
   type: 'avatar' | 'cover';
   children: React.ReactNode;
   className?: string;
+  iconPosition?: 'top' | 'bottom';
 }
 
 export function InlinePhotoUpload({ 
@@ -22,7 +23,8 @@ export function InlinePhotoUpload({
   onPhotoUpdated,
   type,
   children,
-  className = ''
+  className = '',
+  iconPosition = 'bottom'
 }: InlinePhotoUploadProps) {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -30,6 +32,7 @@ export function InlinePhotoUpload({
   const [moderating, setModerating] = useState(false);
   const [imageToCrop, setImageToCrop] = useState<string | null>(null);
   const [originalFile, setOriginalFile] = useState<File | null>(null);
+  const [isHovered, setIsHovered] = useState(false);
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -160,14 +163,16 @@ export function InlinePhotoUpload({
       ) : (
         <div 
           className={`relative group ${className}`}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
         >
           {children}
           
-          {/* Ícone de câmera no canto */}
-          {!uploading && !moderating && (
+          {/* Ícone de câmera no canto - só aparece no hover */}
+          {!uploading && !moderating && isHovered && (
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="absolute bottom-2 right-2 bg-background/90 hover:bg-background p-2.5 rounded-full shadow-lg transition-all hover:scale-110 border-2 border-border"
+              className={`absolute ${iconPosition === 'top' ? 'top-3 right-3' : 'bottom-2 right-2'} bg-background/90 hover:bg-background p-2.5 rounded-full shadow-lg transition-all hover:scale-110 border-2 border-border z-10`}
             >
               <Camera className="w-4 h-4 text-foreground" />
             </button>

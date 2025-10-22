@@ -28,6 +28,7 @@ import { ClickableProfile } from '@/components/ClickableProfile';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAuthAction } from '@/contexts/AuthActionContext';
+import { InlinePhotoUpload } from '@/components/InlinePhotoUpload';
 
 
 interface UserProfileData {
@@ -369,7 +370,20 @@ export default function UserProfile() {
       <Header />
 
       {/* Cover - gradiente simples */}
-      <div className="w-full h-48 md:h-60 relative overflow-hidden bg-gradient-to-br from-primary/20 to-secondary/20" />
+      {isProfileOwner ? (
+        <InlinePhotoUpload
+          currentPhotoUrl={undefined}
+          userId={user!.id}
+          userName={profile.username}
+          onPhotoUpdated={loadUserProfile}
+          type="cover"
+          className="w-full h-48 md:h-60"
+        >
+          <div className="w-full h-48 md:h-60 relative overflow-hidden bg-gradient-to-br from-primary/20 to-secondary/20" />
+        </InlinePhotoUpload>
+      ) : (
+        <div className="w-full h-48 md:h-60 relative overflow-hidden bg-gradient-to-br from-primary/20 to-secondary/20" />
+      )}
 
       {/* Main Content Container */}
       <div className="container mx-auto px-4 -mt-16 relative z-10 max-w-woorkins">
@@ -383,16 +397,41 @@ export default function UserProfile() {
                   <div className="flex flex-col md:flex-row gap-6">
                     {/* Avatar */}
                     <div className="-mt-20 flex flex-col items-center gap-3">
-                      {profile.avatar_url ? (
-                        <SafeImage
-                          src={profile.avatar_url}
-                          alt={formatFullName(profile.full_name)}
-                          className="w-36 h-36 rounded-full object-cover bg-card border-4 border-background shadow-lg"
-                        />
+                      {isProfileOwner ? (
+                        <InlinePhotoUpload
+                          currentPhotoUrl={profile.avatar_url || undefined}
+                          userId={user!.id}
+                          userName={profile.username}
+                          onPhotoUpdated={loadUserProfile}
+                          type="avatar"
+                          className="w-36 h-36 rounded-full"
+                        >
+                          {profile.avatar_url ? (
+                            <SafeImage
+                              src={profile.avatar_url}
+                              alt={formatFullName(profile.full_name)}
+                              className="w-36 h-36 rounded-full object-cover bg-card border-4 border-background shadow-lg"
+                            />
+                          ) : (
+                            <div className="w-36 h-36 rounded-full bg-gradient-to-br from-primary/20 via-primary/10 to-secondary/20 flex items-center justify-center border-4 border-background shadow-lg">
+                              <UserIcon className="w-16 h-16 text-primary/70" />
+                            </div>
+                          )}
+                        </InlinePhotoUpload>
                       ) : (
-                        <div className="w-36 h-36 rounded-full bg-gradient-to-br from-primary/20 via-primary/10 to-secondary/20 flex items-center justify-center border-4 border-background shadow-lg">
-                          <UserIcon className="w-16 h-16 text-primary/70" />
-                        </div>
+                        <>
+                          {profile.avatar_url ? (
+                            <SafeImage
+                              src={profile.avatar_url}
+                              alt={formatFullName(profile.full_name)}
+                              className="w-36 h-36 rounded-full object-cover bg-card border-4 border-background shadow-lg"
+                            />
+                          ) : (
+                            <div className="w-36 h-36 rounded-full bg-gradient-to-br from-primary/20 via-primary/10 to-secondary/20 flex items-center justify-center border-4 border-background shadow-lg">
+                              <UserIcon className="w-16 h-16 text-primary/70" />
+                            </div>
+                          )}
+                        </>
                       )}
                       <Button variant="outline" size="sm" className="rounded-full w-32">
                         Seguir

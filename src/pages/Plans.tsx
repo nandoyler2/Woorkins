@@ -53,16 +53,23 @@ export default function Plans() {
 
       if (error) throw error;
       
-      // Definir preços dos planos
+      // Definir preços e taxas dos planos
       const planPrices: Record<string, number> = {
         'basico': 0,
         'pro': 49.90,
         'premium': 99.90
       };
+      
+      const planCommissions: Record<string, number> = {
+        'basico': 12,
+        'pro': 9,
+        'premium': 7
+      };
 
       setPlans((data || []).map(p => ({
         ...p,
         price: planPrices[p.slug] || 0,
+        commission_percentage: planCommissions[p.slug] || p.commission_percentage,
         features: typeof p.features === 'string' 
           ? JSON.parse(p.features) 
           : (p.features as any)
@@ -244,17 +251,20 @@ export default function Plans() {
                                   (currentPlan === 'basico' && plan.price === 0) ||
                                   (currentPlan === 'free' && plan.price === 0);
             const isFree = plan.price === 0;
+            const isPremium = plan.slug === 'premium';
             
             return (
               <Card
                 key={plan.id}
                 className={`relative overflow-hidden transition-all duration-300 hover:shadow-2xl ${
-                  isCurrentPlan
+                  isPremium
+                    ? 'border-yellow-500/60 border-2 shadow-lg shadow-yellow-500/20 bg-gradient-to-br from-yellow-50/50 via-card to-card dark:from-yellow-900/10 dark:via-card dark:to-card'
+                    : isCurrentPlan
                     ? 'border-primary border-3 shadow-xl ring-2 ring-primary/20'
                     : plan.recommended
                     ? 'border-primary/60 border-2 shadow-lg'
                     : 'border-border hover:border-primary/30'
-                } ${plan.recommended || isCurrentPlan ? 'pt-8' : ''}`}
+                } ${plan.recommended || isCurrentPlan || isPremium ? 'pt-8' : ''}`}
               >
                 {/* Badge de Plano Atual */}
                 {isCurrentPlan && (
@@ -266,8 +276,18 @@ export default function Plans() {
                   </div>
                 )}
 
+                {/* Badge Avançado para Premium */}
+                {isPremium && !isCurrentPlan && (
+                  <div className="absolute top-3 left-1/2 -translate-x-1/2 z-10">
+                    <Badge className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white shadow-lg shadow-yellow-500/50">
+                      <Crown className="w-3 h-3 mr-1" />
+                      Avançado
+                    </Badge>
+                  </div>
+                )}
+
                 {/* Badge Recomendado */}
-                {plan.recommended && !isCurrentPlan && (
+                {plan.recommended && !isCurrentPlan && !isPremium && (
                   <div className="absolute top-3 left-1/2 -translate-x-1/2 z-10">
                     <Badge className="bg-primary text-primary-foreground shadow-md">
                       <Sparkles className="w-3 h-3 mr-1" />
@@ -285,7 +305,9 @@ export default function Plans() {
                   {/* Cabeçalho do Plano */}
                   <div className="text-center space-y-3">
                     <div className="flex items-center justify-center gap-2">
-                      <h3 className="text-2xl font-bold">{plan.name}</h3>
+                      <h3 className={`text-2xl font-bold ${isPremium ? 'bg-gradient-to-r from-yellow-500 to-yellow-600 bg-clip-text text-transparent' : ''}`}>
+                        {plan.name}
+                      </h3>
                       {isCurrentPlan && (
                         <Badge className="bg-primary text-primary-foreground">
                           Ativo

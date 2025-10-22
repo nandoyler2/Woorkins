@@ -7,6 +7,11 @@ import cover2 from '@/assets/cover-templates/cover-2.jpg';
 import cover3 from '@/assets/cover-templates/cover-3.jpg';
 import cover4 from '@/assets/cover-templates/cover-4.jpg';
 import cover5 from '@/assets/cover-templates/cover-5.jpg';
+import cover6 from '@/assets/cover-templates/cover-6.jpg';
+import cover7 from '@/assets/cover-templates/cover-7.jpg';
+import cover8 from '@/assets/cover-templates/cover-8.jpg';
+import cover9 from '@/assets/cover-templates/cover-9.jpg';
+import cover10 from '@/assets/cover-templates/cover-10.jpg';
 
 interface CoverTemplateDialogProps {
   open: boolean;
@@ -20,6 +25,11 @@ const COVER_TEMPLATES = [
   { id: 3, url: cover3, name: 'Nuvens Pastel' },
   { id: 4, url: cover4, name: 'Coral Vibrante' },
   { id: 5, url: cover5, name: 'Tech Verde' },
+  { id: 6, url: cover6, name: 'Business Sunset' },
+  { id: 7, url: cover7, name: 'Cityscape' },
+  { id: 8, url: cover8, name: 'City Lights' },
+  { id: 9, url: cover9, name: 'Vista Aérea' },
+  { id: 10, url: cover10, name: 'Arquitetura Moderna' },
 ];
 
 export function CoverTemplateDialog({ open, onClose, onSelect }: CoverTemplateDialogProps) {
@@ -41,7 +51,7 @@ export function CoverTemplateDialog({ open, onClose, onSelect }: CoverTemplateDi
           <DialogTitle>Escolher Capa Pronta</DialogTitle>
         </DialogHeader>
         
-        <div className="grid grid-cols-1 gap-4 mt-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
           {COVER_TEMPLATES.map((cover) => (
             <button
               key={cover.id}
@@ -52,7 +62,7 @@ export function CoverTemplateDialog({ open, onClose, onSelect }: CoverTemplateDi
                   : 'ring-2 ring-transparent hover:ring-primary/50'
               }`}
             >
-              <div className="relative w-full h-32 md:h-40">
+              <div className="relative w-full h-24 md:h-32">
                 <img
                   src={cover.url}
                   alt={cover.name}
@@ -66,8 +76,8 @@ export function CoverTemplateDialog({ open, onClose, onSelect }: CoverTemplateDi
                   </div>
                 )}
               </div>
-              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3">
-                <p className="text-white text-sm font-medium">{cover.name}</p>
+              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2">
+                <p className="text-white text-xs font-medium">{cover.name}</p>
               </div>
             </button>
           ))}

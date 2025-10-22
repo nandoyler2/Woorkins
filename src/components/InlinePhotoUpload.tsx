@@ -14,6 +14,7 @@ interface InlinePhotoUploadProps {
   children: React.ReactNode;
   className?: string;
   iconPosition?: 'top' | 'bottom';
+  currentCoverPosition?: number;
 }
 
 export function InlinePhotoUpload({ 
@@ -24,7 +25,8 @@ export function InlinePhotoUpload({
   type,
   children,
   className = '',
-  iconPosition = 'bottom'
+  iconPosition = 'bottom',
+  currentCoverPosition = 50
 }: InlinePhotoUploadProps) {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -34,7 +36,7 @@ export function InlinePhotoUpload({
   const [originalFile, setOriginalFile] = useState<File | null>(null);
   const [isHovered, setIsHovered] = useState(false);
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
-  const [coverPosition, setCoverPosition] = useState(50); // Posição vertical em %
+  const [coverPosition, setCoverPosition] = useState(currentCoverPosition);
   const [isDragging, setIsDragging] = useState(false);
   const [dragStartY, setDragStartY] = useState(0);
   const [dragStartPosition, setDragStartPosition] = useState(50);
@@ -293,6 +295,7 @@ export function InlinePhotoUpload({
     const coverUrl = localCoverUrl || currentPhotoUrl;
     if (coverUrl && type === 'cover') {
       setCoverPreview(coverUrl);
+      setCoverPosition(currentCoverPosition);
       setIsAdjusting(true);
     }
   };

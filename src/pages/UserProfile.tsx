@@ -384,13 +384,15 @@ export default function UserProfile() {
             type="cover"
             className="w-full h-full"
             iconPosition="top"
+            currentCoverPosition={profile.cover_position || 50}
           >
             <div className="w-full h-full relative overflow-hidden">
               {profile.cover_url ? (
                 <div 
-                  className="w-full h-full bg-cover bg-center"
+                  className="w-full h-full"
                   style={{ 
                     backgroundImage: `url(${profile.cover_url})`,
+                    backgroundSize: 'cover',
                     backgroundPosition: `center ${profile.cover_position || 50}%`
                   }}
                 />
@@ -403,9 +405,10 @@ export default function UserProfile() {
       ) : profile.cover_url ? (
         <div className="w-full h-48 md:h-60 relative overflow-hidden">
           <div 
-            className="w-full h-full bg-cover bg-center"
+            className="w-full h-full"
             style={{ 
               backgroundImage: `url(${profile.cover_url})`,
+              backgroundSize: 'cover',
               backgroundPosition: `center ${profile.cover_position || 50}%`
             }}
           />

@@ -90,6 +90,9 @@ export default function UserProfile() {
   const [showEvaluationForm, setShowEvaluationForm] = useState(false);
   const [showAllPositive, setShowAllPositive] = useState(false);
   const [showAllComplaints, setShowAllComplaints] = useState(false);
+  const [hasTestimonials, setHasTestimonials] = useState(false);
+  const [hasVideo, setHasVideo] = useState(false);
+  const [hasPortfolio, setHasPortfolio] = useState(false);
 
   useEffect(() => {
     if (profile) {
@@ -152,10 +155,45 @@ export default function UserProfile() {
 
       // Load evaluations
       await loadEvaluations(profileData.id);
+
+      // Check for content
+      await checkContent(profileData.id);
     } catch (error) {
       console.error('Error loading user profile:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const checkContent = async (profileId: string) => {
+    try {
+      // Check testimonials
+      const { data: testimonials } = await supabase
+        .from('user_testimonials')
+        .select('id')
+        .eq('profile_id', profileId)
+        .limit(1);
+      setHasTestimonials((testimonials?.length || 0) > 0);
+
+      // Check video
+      const { data: video } = await supabase
+        .from('user_videos')
+        .select('id')
+        .eq('profile_id', profileId)
+        .eq('active', true)
+        .maybeSingle();
+      setHasVideo(!!video);
+
+      // Check portfolio
+      const { data: portfolio } = await supabase
+        .from('user_portfolio_items')
+        .select('id')
+        .eq('profile_id', profileId)
+        .eq('active', true)
+        .limit(1);
+      setHasPortfolio((portfolio?.length || 0) > 0);
+    } catch (error) {
+      console.error('Error checking content:', error);
     }
   };
 
@@ -309,12 +347,30 @@ export default function UserProfile() {
                     >
                       Início
                     </TabsTrigger>
-                    <TabsTrigger 
-                      value="sobre"
-                      className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-6 py-3"
-                    >
-                      Sobre
-                    </TabsTrigger>
+                    {hasTestimonials && (
+                      <TabsTrigger 
+                        value="depoimentos"
+                        className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-6 py-3"
+                      >
+                        Depoimentos
+                      </TabsTrigger>
+                    )}
+                    {hasVideo && (
+                      <TabsTrigger 
+                        value="video"
+                        className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-6 py-3"
+                      >
+                        Vídeo
+                      </TabsTrigger>
+                    )}
+                    {hasPortfolio && (
+                      <TabsTrigger 
+                        value="portfolio"
+                        className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-6 py-3"
+                      >
+                        Portfólio
+                      </TabsTrigger>
+                    )}
                     <TabsTrigger 
                       value="positivas"
                       className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-6 py-3 flex items-center gap-2"
@@ -412,45 +468,31 @@ export default function UserProfile() {
                       )}
                     </div>
 
-                    {/* Depoimentos Section */}
-                    <PublicTestimonialsSlider entityType="user" entityId={profile.id} />
-
-                    {/* Video Section */}
-                    <PublicUserVideo userId={profile.id} />
-
-                    {/* Portfolio Section */}
-                    <PublicUserPortfolio userId={profile.id} />
-
                     {/* Catalog Section */}
                     <PublicUserCatalog userId={profile.id} />
 
                   </TabsContent>
 
-                  {/* Sobre Tab */}
-                  <TabsContent value="sobre" className="p-6">
-                    <div className="space-y-4">
-                      <h2 className="text-xl font-bold mb-4">Sobre</h2>
-                      {profile.bio ? (
-                        <p className="text-muted-foreground leading-relaxed">{profile.bio}</p>
-                      ) : (
-                        <p className="text-muted-foreground italic">Este usuário ainda não adicionou uma bio.</p>
-                      )}
-                      
-                      {profile.website && (
-                        <div>
-                          <h3 className="font-semibold mb-2">Website</h3>
-                          <a 
-                            href={profile.website} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="text-primary hover:underline"
-                          >
-                            {profile.website}
-                          </a>
-                        </div>
-                      )}
-                    </div>
-                  </TabsContent>
+                  {/* Depoimentos Tab */}
+                  {hasTestimonials && (
+                    <TabsContent value="depoimentos" className="p-6">
+                      <PublicTestimonialsSlider entityType="user" entityId={profile.id} />
+                    </TabsContent>
+                  )}
+
+                  {/* Video Tab */}
+                  {hasVideo && (
+                    <TabsContent value="video" className="p-6">
+                      <PublicUserVideo userId={profile.id} />
+                    </TabsContent>
+                  )}
+
+                  {/* Portfolio Tab */}
+                  {hasPortfolio && (
+                    <TabsContent value="portfolio" className="p-6">
+                      <PublicUserPortfolio userId={profile.id} />
+                    </TabsContent>
+                  )}
 
                   {/* Avaliações Positivas Tab */}
                   <TabsContent value="positivas" className="p-6">

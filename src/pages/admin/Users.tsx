@@ -62,6 +62,8 @@ export default function AdminUsers() {
   const [selectedDocumentUser, setSelectedDocumentUser] = useState<any>(null);
   const [accountDialogOpen, setAccountDialogOpen] = useState(false);
   const [selectedAccountUser, setSelectedAccountUser] = useState<any>(null);
+  const [searchingByEmail, setSearchingByEmail] = useState(false);
+  const [emailSearchResults, setEmailSearchResults] = useState<any[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -322,10 +324,93 @@ export default function AdminUsers() {
     loadUsers();
   }, []);
 
-  const filteredUsers = users.filter(user => 
-    user.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.full_name?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Busca por email usando edge function
+  useEffect(() => {
+    const searchByEmail = async () => {
+      if (!searchTerm.includes('@')) {
+        setEmailSearchResults([]);
+        setSearchingByEmail(false);
+        return;
+      }
+
+      setSearchingByEmail(true);
+      try {
+        const { data, error } = await supabase.functions.invoke('search-users-by-email', {
+          body: { searchQuery: searchTerm }
+        });
+
+        if (error) throw error;
+
+        if (data?.users) {
+          // Buscar dados completos dos usuários encontrados
+          const userIds = data.users.map((u: any) => u.id);
+          const usersWithData = await Promise.all(
+            userIds.map(async (profileId: string) => {
+              const profile = data.users.find((u: any) => u.id === profileId);
+              
+              const { data: role } = await supabase
+                .from('user_roles')
+                .select('role')
+                .eq('user_id', profile.user_id)
+                .maybeSingle();
+              
+              const { data: woorkoins } = await supabase
+                .from('woorkoins_balance')
+                .select('balance')
+                .eq('profile_id', profileId)
+                .maybeSingle();
+
+              const { data: subscription } = await supabase
+                .from('user_subscription_plans')
+                .select('plan_type')
+                .eq('user_id', profile.user_id)
+                .eq('is_active', true)
+                .maybeSingle();
+
+              const { data: blocks } = await supabase
+                .from('system_blocks')
+                .select('*')
+                .eq('profile_id', profileId)
+                .is('unblocked_at', null);
+
+              const { data: document } = await supabase
+                .from('document_verifications')
+                .select('verification_status')
+                .eq('profile_id', profileId)
+                .eq('verification_status', 'verified')
+                .maybeSingle();
+
+              return {
+                ...profile,
+                user_role: role?.role || 'user',
+                woorkoins_balance: woorkoins?.balance || 0,
+                subscription_plan: subscription?.plan_type || 'free',
+                blocks: blocks || [],
+                ai_assistant_block: null,
+                approved_document: !!document
+              };
+            })
+          );
+          setEmailSearchResults(usersWithData);
+        }
+      } catch (error) {
+        console.error('Error searching by email:', error);
+        setEmailSearchResults([]);
+      } finally {
+        setSearchingByEmail(false);
+      }
+    };
+
+    const timer = setTimeout(searchByEmail, 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  const filteredUsers = searchTerm.includes('@') && emailSearchResults.length > 0
+    ? emailSearchResults
+    : users.filter(user => 
+        user.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.full_name?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
 
   if (loading) {
     return <div className="flex items-center justify-center h-64">Carregando...</div>;
@@ -343,11 +428,16 @@ export default function AdminUsers() {
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
             <Input
-              placeholder="Buscar por nome ou username..."
+              placeholder="Buscar por nome, username ou email..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-9"
             />
+            {searchingByEmail && (
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full" />
+              </div>
+            )}
           </div>
         </div>
 

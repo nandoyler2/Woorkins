@@ -363,24 +363,29 @@ export default function Plans() {
                   {/* Features */}
                   {isFree ? (
                     <ul className="space-y-3 flex-1">
-                      {plan.features.map((feature, idx) => (
-                        <li key={idx} className="flex items-start gap-3">
-                          {feature.included ? (
-                            <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
-                          ) : (
-                            <X className="h-5 w-5 text-muted-foreground/40 shrink-0 mt-0.5" />
-                          )}
-                          <span
-                            className={`text-sm ${
-                              feature.included
-                                ? 'text-foreground'
-                                : 'text-muted-foreground/60 line-through'
-                            }`}
-                          >
-                            {feature.text}
-                          </span>
-                        </li>
-                      ))}
+                      {plan.features
+                        .filter((feature) => 
+                          !feature.text.includes('Suporte prioritário') && 
+                          !feature.text.includes('Badge especial no perfil')
+                        )
+                        .map((feature, idx) => (
+                          <li key={idx} className="flex items-start gap-3">
+                            {feature.included ? (
+                              <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
+                            ) : (
+                              <X className="h-5 w-5 text-muted-foreground/40 shrink-0 mt-0.5" />
+                            )}
+                            <span
+                              className={`text-sm ${
+                                feature.included
+                                  ? 'text-foreground'
+                                  : 'text-muted-foreground/60 line-through'
+                              }`}
+                            >
+                              {feature.text}
+                            </span>
+                          </li>
+                        ))}
                     </ul>
                   ) : plan.slug === 'pro' ? (
                     <ul className="space-y-3 flex-1">

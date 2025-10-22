@@ -79,6 +79,7 @@ export function InlinePhotoUpload({
     if (!originalFile || !coverPreview) return;
     
     setUploading(true);
+    setCoverPreview(null);
 
     try {
       // Comprimir a imagem original da capa
@@ -134,6 +135,7 @@ export function InlinePhotoUpload({
 
       setLocalCoverUrl(publicUrl);
 
+      // Deletar foto antiga do storage
       if (currentPhotoUrl) {
         try {
           const url = new URL(currentPhotoUrl);

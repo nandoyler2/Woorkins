@@ -732,6 +732,98 @@ export default function UserProfile() {
                       Avaliar Usuário
                     </Button>
                   </div>
+
+                  {/* Últimas Avaliações Positivas */}
+                  {positiveEvaluations.length > 0 && (
+                    <div className="mt-6 pt-6 border-t border-border/50">
+                      <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                        <ThumbsUp className="w-4 h-4 text-green-500" />
+                        Últimas Avaliações
+                      </h3>
+                      <div className="space-y-3">
+                        {positiveEvaluations.slice(0, 5).map((evaluation) => (
+                          <div key={evaluation.id} className="bg-background/60 rounded-lg p-3 border border-border/30">
+                            <div className="flex items-start gap-2 mb-2">
+                              {evaluation.profiles?.avatar_url ? (
+                                <SafeImage
+                                  src={evaluation.profiles.avatar_url}
+                                  alt={evaluation.profiles.full_name}
+                                  className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+                                />
+                              ) : (
+                                <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                                  <UserIcon className="w-4 h-4 text-primary" />
+                                </div>
+                              )}
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-1 mb-1">
+                                  {[1, 2, 3, 4, 5].map((star) => (
+                                    <Star
+                                      key={star}
+                                      className={`w-3 h-3 ${
+                                        star <= evaluation.rating
+                                          ? 'fill-yellow-400 text-yellow-400'
+                                          : 'text-muted-foreground'
+                                      }`}
+                                    />
+                                  ))}
+                                </div>
+                                <p className="text-xs text-muted-foreground line-clamp-2">
+                                  {evaluation.content}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Últimas Reclamações */}
+                  {complaintEvaluations.length > 0 && (
+                    <div className="mt-6 pt-6 border-t border-border/50">
+                      <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                        <AlertCircle className="w-4 h-4 text-orange-500" />
+                        Últimas Reclamações
+                      </h3>
+                      <div className="space-y-3">
+                        {complaintEvaluations.slice(0, 5).map((evaluation) => (
+                          <div key={evaluation.id} className="bg-background/60 rounded-lg p-3 border border-border/30">
+                            <div className="flex items-start gap-2 mb-2">
+                              {evaluation.profiles?.avatar_url ? (
+                                <SafeImage
+                                  src={evaluation.profiles.avatar_url}
+                                  alt={evaluation.profiles.full_name}
+                                  className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+                                />
+                              ) : (
+                                <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                                  <UserIcon className="w-4 h-4 text-primary" />
+                                </div>
+                              )}
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-1 mb-1">
+                                  {[1, 2, 3, 4, 5].map((star) => (
+                                    <Star
+                                      key={star}
+                                      className={`w-3 h-3 ${
+                                        star <= evaluation.rating
+                                          ? 'fill-yellow-400 text-yellow-400'
+                                          : 'text-muted-foreground'
+                                      }`}
+                                    />
+                                  ))}
+                                </div>
+                                <p className="text-xs text-muted-foreground line-clamp-2">
+                                  {evaluation.content}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 

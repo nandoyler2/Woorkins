@@ -21,6 +21,32 @@ interface Plan {
   price: number;
 }
 
+interface PlanFeature {
+  label: string;
+  basico: boolean;
+  pro: boolean;
+  premium: boolean;
+}
+
+const PLAN_FEATURES: PlanFeature[] = [
+  { label: 'Acesso completo à plataforma', basico: true, pro: true, premium: true },
+  { label: 'Criar projetos ilimitados', basico: true, pro: true, premium: true },
+  { label: 'Enviar proposta a cada 15 minutos', basico: true, pro: false, premium: false },
+  { label: 'Sistema de mensagens', basico: true, pro: true, premium: true },
+  { label: 'Enviar propostas ilimitadas', basico: false, pro: true, premium: true },
+  { label: 'Projetos no topo', basico: false, pro: true, premium: true },
+  { label: 'Propostas no topo', basico: false, pro: true, premium: true },
+  { label: 'Ferramentas exclusivas', basico: false, pro: true, premium: true },
+  { label: 'Layouts personalizados no perfil', basico: false, pro: true, premium: true },
+  { label: 'Promova por 24h 2x por mês', basico: false, pro: true, premium: false },
+  { label: 'Selo premium exclusivo', basico: false, pro: false, premium: true },
+  { label: 'Mensagens no topo', basico: false, pro: false, premium: true },
+  { label: 'Relatórios Completo', basico: false, pro: false, premium: true },
+  { label: 'Storie em destaque', basico: false, pro: false, premium: true },
+  { label: 'Promova por 24h 5x por mês', basico: false, pro: false, premium: true },
+  { label: 'Suporte rápido via WhatsApp', basico: false, pro: false, premium: true },
+];
+
 export default function Plans() {
   const { user } = useAuth();
   const [plans, setPlans] = useState<Plan[]>([]);
@@ -360,120 +386,30 @@ export default function Plans() {
                     )}
                   </div>
 
-                  {/* Features */}
-                  {isFree ? (
-                    <ul className="space-y-3 flex-1">
-                      {plan.features
-                        .filter((feature) => 
-                          !feature.text.includes('Suporte prioritário') && 
-                          !feature.text.includes('Badge especial no perfil')
-                        )
-                        .map((feature, idx) => {
-                          // Substituir texto específico de propostas
-                          let featureText = feature.text;
-                          if (featureText.toLowerCase().includes('enviar proposta')) {
-                            featureText = 'Enviar proposta a cada 15 minutos';
-                          }
-                          
-                          return (
-                            <li key={idx} className="flex items-start gap-3">
-                              {feature.included ? (
-                                <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
-                              ) : (
-                                <X className="h-5 w-5 text-muted-foreground/40 shrink-0 mt-0.5" />
-                              )}
-                              <span
-                                className={`text-sm ${
-                                  feature.included
-                                    ? 'text-foreground'
-                                    : 'text-muted-foreground/60 line-through'
-                                }`}
-                              >
-                                {featureText}
-                              </span>
-                            </li>
-                          );
-                        })}
-                    </ul>
-                  ) : plan.slug === 'pro' ? (
-                    <ul className="space-y-3 flex-1">
-                      <li className="flex items-start gap-3">
-                        <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
-                        <span className="text-sm text-foreground">
-                          Enviar propostas ilimitadas
-                        </span>
-                      </li>
-                      <li className="flex items-start gap-3">
-                        <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
-                        <span className="text-sm text-foreground">
-                          Projetos no topo
-                        </span>
-                      </li>
-                      <li className="flex items-start gap-3">
-                        <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
-                        <span className="text-sm text-foreground">
-                          Propostas no topo
-                        </span>
-                      </li>
-                      <li className="flex items-start gap-3">
-                        <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
-                        <span className="text-sm text-foreground">
-                          Ferramentas exclusivas
-                        </span>
-                      </li>
-                      <li className="flex items-start gap-3">
-                        <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
-                        <span className="text-sm text-foreground">
-                          Layouts personalizados no perfil
-                        </span>
-                      </li>
-                      <li className="flex items-start gap-3">
-                        <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
-                        <span className="text-sm text-foreground">
-                          Promova por 24h 2x por mês
-                        </span>
-                      </li>
-                    </ul>
-                  ) : plan.slug === 'premium' ? (
-                    <ul className="space-y-3 flex-1">
-                      <li className="flex items-start gap-3">
-                        <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
-                        <span className="text-sm text-foreground">
-                          Selo premium exclusivo
-                        </span>
-                      </li>
-                      <li className="flex items-start gap-3">
-                        <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
-                        <span className="text-sm text-foreground">
-                          Mensagens no topo
-                        </span>
-                      </li>
-                      <li className="flex items-start gap-3">
-                        <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
-                        <span className="text-sm text-foreground">
-                          Relatórios Completo
-                        </span>
-                      </li>
-                      <li className="flex items-start gap-3">
-                        <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
-                        <span className="text-sm text-foreground">
-                          Storie em destaque
-                        </span>
-                      </li>
-                      <li className="flex items-start gap-3">
-                        <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
-                        <span className="text-sm text-foreground">
-                          Promova por 24h 5x por mês
-                        </span>
-                      </li>
-                      <li className="flex items-start gap-3">
-                        <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
-                        <span className="text-sm text-foreground">
-                          Suporte rápido via WhatsApp
-                        </span>
-                      </li>
-                    </ul>
-                  ) : null}
+                  {/* Features Alinhadas */}
+                  <ul className="space-y-3 flex-1">
+                    {PLAN_FEATURES.map((feature, idx) => {
+                      const isIncluded = feature[plan.slug as 'basico' | 'pro' | 'premium'];
+                      return (
+                        <li key={idx} className="flex items-start gap-3">
+                          {isIncluded ? (
+                            <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
+                          ) : (
+                            <X className="h-5 w-5 text-muted-foreground/40 shrink-0 mt-0.5" />
+                          )}
+                          <span
+                            className={`text-sm ${
+                              isIncluded
+                                ? 'text-foreground'
+                                : 'text-muted-foreground/60 line-through'
+                            }`}
+                          >
+                            {feature.label}
+                          </span>
+                        </li>
+                      );
+                    })}
+                  </ul>
 
                   {/* Preço no Final */}
                   <div className="pt-4 border-t border-border">

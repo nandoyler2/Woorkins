@@ -260,7 +260,7 @@ export default function Plans() {
                   isPremium
                     ? 'border-yellow-500/60 border-2 shadow-lg shadow-yellow-500/20 bg-gradient-to-br from-yellow-50/50 via-card to-card dark:from-yellow-900/10 dark:via-card dark:to-card'
                     : isFree
-                    ? 'border-[#2485AE]/60 border-2 shadow-lg shadow-[#2485AE]/20 bg-gradient-to-br from-[#2485AE]/5 via-card to-card dark:from-[#2485AE]/10 dark:via-card dark:to-card'
+                    ? 'border-[#27B0B3]/60 border-2 shadow-lg shadow-[#27B0B3]/20 bg-gradient-to-br from-[#27B0B3]/5 via-card to-card dark:from-[#27B0B3]/10 dark:via-card dark:to-card'
                     : isCurrentPlan
                     ? 'border-primary border-3 shadow-xl ring-2 ring-primary/20'
                     : plan.recommended
@@ -291,7 +291,7 @@ export default function Plans() {
                 {/* Badge Ativo para Grátis */}
                 {isFree && !isCurrentPlan && (
                   <div className="absolute top-3 left-1/2 -translate-x-1/2 z-10">
-                    <Badge className="bg-[#2485AE] text-white shadow-lg shadow-[#2485AE]/50">
+                    <Badge className="bg-[#27B0B3] text-white shadow-lg shadow-[#27B0B3]/50">
                       <Check className="w-3 h-3 mr-1" />
                       Ativo
                     </Badge>
@@ -321,7 +321,7 @@ export default function Plans() {
                         isPremium 
                           ? 'bg-gradient-to-r from-yellow-500 to-yellow-600 bg-clip-text text-transparent' 
                           : isFree
-                          ? 'text-[#2485AE]'
+                          ? 'text-[#27B0B3]'
                           : ''
                       }`}>
                         {plan.name}
@@ -383,7 +383,7 @@ export default function Plans() {
 
                   {/* Botão de Ação */}
                   <Button
-                    className={`w-full ${isCurrentPlan && isFree ? 'bg-[#2485AE] hover:bg-[#2485AE]/90 text-white' : ''}`}
+                    className={`w-full ${isCurrentPlan && isFree ? 'bg-[#27B0B3] hover:bg-[#27B0B3]/90 text-white' : ''}`}
                     size="lg"
                     variant={isCurrentPlan ? 'secondary' : plan.recommended ? 'default' : 'outline'}
                     disabled={loadingPayment && selectedPlan?.id === plan.id}

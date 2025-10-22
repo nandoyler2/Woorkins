@@ -99,8 +99,10 @@ export function InlinePhotoUpload({
 
       setModerating(true);
 
+      // Use different moderation function based on type
+      const moderationFunction = type === 'avatar' ? 'moderate-profile-photo' : 'moderate-cover-photo';
       const { data: moderationData, error: moderationError } = await supabase.functions.invoke(
-        'moderate-profile-photo',
+        moderationFunction,
         {
           body: { imageUrl: publicUrl, userId }
         }
@@ -110,7 +112,7 @@ export function InlinePhotoUpload({
 
       if (moderationError) throw moderationError;
 
-      if (!moderationData.isAppropriate) {
+      if (!moderationData.approved) {
         await supabase.storage.from(bucketName).remove([filePath]);
         
         toast({

@@ -12,15 +12,15 @@ import { Footer } from '@/components/Footer';
 import { PublicWhatsAppWidget } from '@/components/generic/PublicWhatsAppWidget';
 import { PublicTestimonialsSlider } from '@/components/generic/PublicTestimonialsSlider';
 import { SafeImage } from '@/components/ui/safe-image';
-import { PublicUserBanners } from '@/components/user/PublicUserBanners';
-import { PublicUserAppointments } from '@/components/user/PublicUserAppointments';
-import { PublicUserNegotiation } from '@/components/user/PublicUserNegotiation';
-import { PublicUserPortfolio } from '@/components/user/PublicUserPortfolio';
-import { PublicUserCatalog } from '@/components/user/PublicUserCatalog';
-import { PublicUserJobVacancies } from '@/components/user/PublicUserJobVacancies';
-import { PublicUserCertifications } from '@/components/user/PublicUserCertifications';
-import { PublicUserVideo } from '@/components/user/PublicUserVideo';
-import { PublicUserSocial } from '@/components/user/PublicUserSocial';
+import { PublicBanners } from '@/components/unified/PublicBanners';
+import { PublicAppointments } from '@/components/unified/PublicAppointments';
+import { PublicNegotiation } from '@/components/unified/PublicNegotiation';
+import { PublicPortfolio } from '@/components/unified/PublicPortfolio';
+import { PublicCatalog } from '@/components/unified/PublicCatalog';
+import { PublicJobVacancies } from '@/components/unified/PublicJobVacancies';
+import { PublicCertifications } from '@/components/unified/PublicCertifications';
+import { PublicVideo } from '@/components/unified/PublicVideo';
+import { PublicSocial } from '@/components/unified/PublicSocial';
 import { NegotiationChat } from '@/components/NegotiationChat';
 import { useToast } from '@/hooks/use-toast';
 import { formatFullName } from '@/lib/utils';
@@ -631,9 +631,10 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
                         </Badge>
                       </div>
 
-                      <PublicUserNegotiation 
-                        userId={profile.id}
-                        username={profile.username}
+                      <PublicNegotiation 
+                        entityType={profileType}
+                        entityId={profile.id}
+                        username={profile.username || profile.slug}
                         inline={true}
                       />
                     </div>
@@ -702,22 +703,22 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
                   {/* Início Tab */}
                   <TabsContent value="inicio" className="p-6 space-y-6">
                     {/* Banner Section */}
-                    <PublicUserBanners userId={profile.id} />
+                    <PublicBanners entityType={profileType} entityId={profile.id} />
 
                     {/* Job Vacancies Section */}
-                    {hasJobVacancies && <PublicUserJobVacancies userId={profile.id} />}
+                    {hasJobVacancies && <PublicJobVacancies entityType={profileType} entityId={profile.id} />}
 
                     {/* Portfolio Section */}
-                    <PublicUserPortfolio userId={profile.id} />
+                    <PublicPortfolio entityType={profileType} entityId={profile.id} />
 
                     {/* Video Section */}
-                    <PublicUserVideo userId={profile.id} />
+                    <PublicVideo entityType={profileType} entityId={profile.id} />
 
                     {/* Catalog Section */}
-                    <PublicUserCatalog userId={profile.id} />
+                    <PublicCatalog entityType={profileType} entityId={profile.id} />
 
                     {/* Depoimentos Section */}
-                    <PublicTestimonialsSlider entityType="user" entityId={profile.id} />
+                    <PublicTestimonialsSlider entityType={profileType} entityId={profile.id} />
 
                   </TabsContent>
 
@@ -731,21 +732,21 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
                   {/* Portfolio Tab */}
                   {hasPortfolio && (
                     <TabsContent value="portfolio" className="p-6">
-                      <PublicUserPortfolio userId={profile.id} />
+                      <PublicPortfolio entityType={profileType} entityId={profile.id} />
                     </TabsContent>
                   )}
 
                   {/* Serviços Tab */}
                   {hasCatalog && (
                     <TabsContent value="servicos" className="p-6">
-                      <PublicUserCatalog userId={profile.id} />
+                      <PublicCatalog entityType={profileType} entityId={profile.id} />
                     </TabsContent>
                   )}
 
                   {/* Vagas Tab */}
                   {hasJobVacancies && (
                     <TabsContent value="vagas" className="p-6">
-                      <PublicUserJobVacancies userId={profile.id} />
+                      <PublicJobVacancies entityType={profileType} entityId={profile.id} />
                     </TabsContent>
                   )}
 
@@ -1242,16 +1243,16 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
 
 
               {/* Appointments */}
-              <PublicUserAppointments userId={profile.id} username={profile.username} />
+              <PublicAppointments entityType={profileType} entityId={profile.id} username={profile.username || profile.slug} />
 
               {/* Negotiation */}
-              <PublicUserNegotiation userId={profile.id} username={profile.username} />
+              <PublicNegotiation entityType={profileType} entityId={profile.id} username={profile.username || profile.slug} />
 
               {/* Certifications */}
-              <PublicUserCertifications userId={profile.id} />
+              <PublicCertifications entityType={profileType} entityId={profile.id} />
 
               {/* Social Links */}
-              <PublicUserSocial userId={profile.id} />
+              <PublicSocial entityType={profileType} entityId={profile.id} />
             </div>
           </div>
         </div>

@@ -5,10 +5,11 @@ import { useNavigate } from 'react-router-dom';
 
 interface PublicAppointmentsProps {
   entityType: 'user' | 'business';
-  username: string;
+  entityId: string;
+  username?: string;
 }
 
-export function PublicAppointments({ entityType, username }: PublicAppointmentsProps) {
+export function PublicAppointments({ entityType, entityId, username }: PublicAppointmentsProps) {
   const navigate = useNavigate();
 
   const handleBookAppointment = () => {

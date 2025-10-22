@@ -3,21 +3,24 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { MessageSquare } from 'lucide-react';
 
 interface PublicNegotiationProps {
-  onNegotiateClick: () => void;
+  entityType: 'user' | 'business';
+  entityId: string;
+  username?: string;
+  inline?: boolean;
 }
 
-export function PublicNegotiation({ onNegotiateClick }: PublicNegotiationProps) {
+export function PublicNegotiation({ entityType, entityId, username, inline = false }: PublicNegotiationProps) {
   return (
-    <Card className="mb-6">
+    <Card className={inline ? "" : "mb-6"}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <MessageSquare className="h-5 w-5" />
           Negociação
         </CardTitle>
-        <CardDescription>Inicie uma conversa para negociar</CardDescription>
+        {!inline && <CardDescription>Inicie uma conversa para negociar</CardDescription>}
       </CardHeader>
       <CardContent>
-        <Button onClick={onNegotiateClick} className="w-full">
+        <Button onClick={() => {/* TODO: implementar navegação para chat de negociação */}} className="w-full">
           <MessageSquare className="h-4 w-4 mr-2" />
           Iniciar Negociação
         </Button>

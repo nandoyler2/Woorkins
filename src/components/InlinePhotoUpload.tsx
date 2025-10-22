@@ -35,6 +35,9 @@ export function InlinePhotoUpload({
   const [isHovered, setIsHovered] = useState(false);
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
   const [coverPosition, setCoverPosition] = useState(50); // Posição vertical em %
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStartY, setDragStartY] = useState(0);
+  const [dragStartPosition, setDragStartPosition] = useState(50);
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -258,6 +261,26 @@ export function InlinePhotoUpload({
     }
   };
 
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (type !== 'cover' || !coverPreview) return;
+    setIsDragging(true);
+    setDragStartY(e.clientY);
+    setDragStartPosition(coverPosition);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging) return;
+    const deltaY = e.clientY - dragStartY;
+    const containerHeight = e.currentTarget.clientHeight;
+    const deltaPercent = (deltaY / containerHeight) * 100;
+    const newPosition = Math.max(0, Math.min(100, dragStartPosition + deltaPercent));
+    setCoverPosition(newPosition);
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
   return (
     <>
       <div 
@@ -267,44 +290,41 @@ export function InlinePhotoUpload({
       >
         {/* Preview da capa com ajuste de posição */}
         {coverPreview && type === 'cover' ? (
-          <div className="absolute inset-0 z-50 bg-background rounded-[inherit] overflow-hidden">
+          <div 
+            className="absolute inset-0 z-50 bg-background rounded-[inherit] overflow-hidden"
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseUp}
+            style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
+          >
             <div 
-              className="absolute inset-0 overflow-hidden"
+              className="absolute inset-0 overflow-hidden pointer-events-none"
               style={{
                 backgroundImage: `url(${coverPreview})`,
                 backgroundSize: 'cover',
                 backgroundPosition: `center ${coverPosition}%`,
               }}
             />
-            <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center gap-4">
-              <div className="bg-background/95 p-4 rounded-lg shadow-lg max-w-xs">
-                <p className="text-sm font-medium mb-3">Ajustar posição da imagem</p>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={coverPosition}
-                  onChange={(e) => setCoverPosition(Number(e.target.value))}
-                  className="w-full"
-                />
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => {
-                    setCoverPreview(null);
-                    setOriginalFile(null);
-                  }}
-                  className="px-4 py-2 bg-background/90 hover:bg-background rounded-lg transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={handleCoverSave}
-                  className="px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg transition-colors"
-                >
-                  Salvar
-                </button>
-              </div>
+            <div className="absolute top-3 right-3 flex gap-2 pointer-events-auto">
+              <button
+                onClick={() => {
+                  setCoverPreview(null);
+                  setOriginalFile(null);
+                }}
+                className="px-3 py-1.5 bg-background/90 hover:bg-background rounded-lg transition-colors text-sm"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleCoverSave}
+                className="px-3 py-1.5 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg transition-colors text-sm"
+              >
+                Salvar
+              </button>
+            </div>
+            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-background/90 px-3 py-1.5 rounded-lg text-sm pointer-events-none">
+              Arraste para ajustar
             </div>
           </div>
         ) : (

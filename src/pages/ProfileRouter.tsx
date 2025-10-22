@@ -30,9 +30,10 @@ export default function ProfileRouter() {
 
       // Se não for usuário, verifica se é um slug de empresa
       const { data: businessData } = await supabase
-        .from('business_profiles')
+        .from('profiles')
         .select('id, slug')
         .eq('slug', slug)
+        .eq('profile_type', 'business')
         .maybeSingle();
 
       if (businessData) {

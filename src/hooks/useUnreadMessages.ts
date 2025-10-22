@@ -81,9 +81,10 @@ export const useUnreadMessages = (profileId: string) => {
           .eq('user_id', profileId);
 
         const { data: myBusinesses } = await supabase
-          .from('business_profiles')
+          .from('profiles')
           .select('id')
-          .eq('profile_id', profileId);
+          .eq('id', profileId)
+          .eq('profile_type', 'business');
 
         const businessIds = (myBusinesses || []).map((b: any) => b.id);
         const { data: negAsBusiness } = businessIds.length

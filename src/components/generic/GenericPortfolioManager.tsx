@@ -13,10 +13,12 @@ interface PortfolioItem {
   id: string;
   title: string;
   description?: string;
-  image_url?: string;
-  project_url?: string;
+  media_url: string;
+  media_type: string;
+  external_link?: string;
   order_index: number;
-  active: boolean;
+  category?: string;
+  tags?: string[];
 }
 
 interface GenericPortfolioManagerProps {
@@ -68,10 +70,12 @@ export function GenericPortfolioManager({ entityId }: GenericPortfolioManagerPro
         business_id: entityId,
         title: editingItem.title,
         description: editingItem.description || null,
-        image_url: editingItem.image_url || null,
-        project_url: editingItem.project_url || null,
+        media_url: editingItem.media_url || '',
+        media_type: editingItem.media_type || 'image',
+        external_link: editingItem.external_link || null,
         order_index: editingItem.order_index ?? items.length,
-        active: true
+        category: editingItem.category || null,
+        tags: editingItem.tags || null
       };
 
       if (editingItem.id) {
@@ -164,9 +168,9 @@ export function GenericPortfolioManager({ entityId }: GenericPortfolioManagerPro
               <div>
                 <Label>Imagem do Projeto</Label>
                 <ImageUpload
-                  currentImageUrl={editingItem.image_url || null}
+                  currentImageUrl={editingItem.media_url || null}
                   onUpload={(url) =>
-                    setEditingItem({ ...editingItem, image_url: url })
+                    setEditingItem({ ...editingItem, media_url: url, media_type: 'image' })
                   }
                   bucket="profile-photos"
                   folder={`${entityId}/portfolio`}
@@ -200,12 +204,12 @@ export function GenericPortfolioManager({ entityId }: GenericPortfolioManagerPro
               </div>
 
               <div>
-                <Label htmlFor="project_url">URL do Projeto (opcional)</Label>
+                <Label htmlFor="external_link">URL do Projeto (opcional)</Label>
                 <Input
-                  id="project_url"
-                  value={editingItem.project_url || ""}
+                  id="external_link"
+                  value={editingItem.external_link || ""}
                   onChange={(e) =>
-                    setEditingItem({ ...editingItem, project_url: e.target.value })
+                    setEditingItem({ ...editingItem, external_link: e.target.value })
                   }
                   placeholder="https://..."
                 />
@@ -237,9 +241,9 @@ export function GenericPortfolioManager({ entityId }: GenericPortfolioManagerPro
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {items.map((item) => (
             <Card key={item.id} className="overflow-hidden">
-              {item.image_url && (
+              {item.media_url && (
                 <img
-                  src={item.image_url}
+                  src={item.media_url}
                   alt={item.title}
                   className="w-full h-48 object-cover"
                 />
@@ -251,9 +255,9 @@ export function GenericPortfolioManager({ entityId }: GenericPortfolioManagerPro
                     {item.description}
                   </p>
                 )}
-                {item.project_url && (
+                {item.external_link && (
                   <a
-                    href={item.project_url}
+                    href={item.external_link}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-sm text-primary hover:underline mt-2 inline-block"

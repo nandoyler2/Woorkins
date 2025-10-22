@@ -258,7 +258,7 @@ export default function Dashboard() {
     if (!profile) return;
     
     const { count, error } = await supabase
-      .from('business_admins')
+      .from('profile_admins')
       .select('*', { count: 'exact', head: true })
       .eq('profile_id', profile.id)
       .eq('status', 'pending');
@@ -402,10 +402,10 @@ export default function Dashboard() {
 
       // Buscar perfis de negócios (excluindo os do usuário)
       const { data: businesses, error: businessesError } = await supabase
-        .from('business_profiles')
-        .select('id, company_name, logo_url, slug, profile_id')
-        .neq('profile_id', profile.id)
-        .or('deleted.is.null,deleted.eq.false')
+        .from('profiles')
+        .select('id, business_name, photo_url, slug')
+        .eq('profile_type', 'business')
+        .neq('id', profile.id)
         .limit(50);
 
       const userProfiles = (users || []).map((u: any) => ({
@@ -418,10 +418,10 @@ export default function Dashboard() {
 
       const businessProfiles = (businesses || []).map((b: any) => ({
         id: b.id,
-        username: b.slug || b.company_name,
+        username: b.slug || b.business_name,
         full_name: null,
-        avatar_url: b.logo_url,
-        company_name: b.company_name,
+        avatar_url: b.photo_url,
+        company_name: b.business_name,
         slug: b.slug,
         type: 'business' as const
       }));
@@ -434,10 +434,10 @@ export default function Dashboard() {
 
   const loadBusinessProfiles = async (profileId: string) => {
     const { data, error } = await supabase
-      .from('business_profiles' as any)
-      .select('id, company_name, category, logo_url, slug')
-      .eq('profile_id', profileId)
-      .or('deleted.is.null,deleted.eq.false');
+      .from('profiles' as any)
+      .select('id, business_name, business_category, photo_url, slug')
+      .eq('user_id', user?.id)
+      .eq('profile_type', 'business');
     
     if (!error && data) {
       setBusinessProfiles(data as unknown as BusinessProfile[]);
@@ -448,27 +448,16 @@ export default function Dashboard() {
     setLoadingPosts(true);
     try {
       const { data: posts, error } = await supabase
-        .from('business_posts')
+        .from('profile_posts')
         .select(`
-          id,
-          content,
-          media_urls,
-          media_types,
-          created_at,
-          business_id,
-          business_profiles!inner (
-            company_name,
-            category,
-            logo_url,
-            profile_id,
-            slug,
-            profiles!inner (
-              full_name,
-              username,
-              avatar_url
-            )
+          *,
+          profile:profiles!profile_posts_profile_id_fkey(
+            business_name,
+            photo_url,
+            slug
           )
         `)
+        .eq('profile_id', businessData.id)
         .order('created_at', { ascending: false })
         .limit(10);
 
@@ -479,17 +468,16 @@ export default function Dashboard() {
         (posts || []).map(async (post: any) => {
           const [likesData, commentsData] = await Promise.all([
             supabase
-              .from('business_post_likes')
+              .from('profile_post_likes')
               .select('id', { count: 'exact', head: true })
               .eq('post_id', post.id),
             supabase
-              .from('business_post_comments')
+              .from('profile_post_comments')
               .select('id', { count: 'exact', head: true })
               .eq('post_id', post.id)
           ]);
 
-          const businessProfile = post.business_profiles;
-          const profile = businessProfile?.profiles;
+          const postProfile = post.profile;
           
           // Calcular tempo atrás
           const createdAt = new Date(post.created_at);
@@ -507,26 +495,19 @@ export default function Dashboard() {
 
           return {
             id: post.id,
-            // Priorizar nome da empresa para posts de business
-            author_name: businessProfile?.company_name || profile?.full_name || profile?.username || 'Usuário',
-            author_role: businessProfile?.category || 'Profissional',
-            // Usar logo da empresa SE existir, senão usa avatar pessoal
-            author_avatar: (businessProfile?.logo_url && businessProfile.logo_url.trim() !== '') 
-              ? businessProfile.logo_url 
-              : profile?.avatar_url || '',
+            author_name: postProfile?.business_name || 'Empresa',
+            author_role: 'Profissional',
+            author_avatar: postProfile?.photo_url || '',
             time_ago: timeAgo,
             content: post.content,
             image_url: post.media_urls?.[0] || undefined,
             likes: likesData.count || 0,
             comments: commentsData.count || 0,
-            business_id: businessProfile?.profile_id || '',
-            author_username: profile?.username,
-            // Link vai para o perfil business (slug) quando disponível
-            author_profile_link: businessProfile?.slug 
-              ? `/${businessProfile.slug}` 
-              : profile?.username 
-                ? `/${profile.username}` 
-                : '#'
+            business_id: postProfile?.id || '',
+            author_username: postProfile?.slug,
+            author_profile_link: postProfile?.slug 
+              ? `/${postProfile.slug}` 
+              : '#'
           };
         })
       );
@@ -545,7 +526,7 @@ export default function Dashboard() {
     try {
       // Verificar se já curtiu
       const { data: existingLike } = await supabase
-        .from('business_post_likes')
+        .from('profile_post_likes')
         .select('id')
         .eq('post_id', postId)
         .eq('profile_id', profile.id)
@@ -554,13 +535,13 @@ export default function Dashboard() {
       if (existingLike) {
         // Remover curtida
         await supabase
-          .from('business_post_likes')
+          .from('profile_post_likes')
           .delete()
           .eq('id', existingLike.id);
       } else {
         // Adicionar curtida
         await supabase
-          .from('business_post_likes')
+          .from('profile_post_likes')
           .insert({
             post_id: postId,
             profile_id: profile.id
@@ -577,7 +558,7 @@ export default function Dashboard() {
   const loadPostComments = async (postId: string) => {
     try {
       const { data, error } = await supabase
-        .from('business_post_comments')
+        .from('profile_post_comments')
         .select(`
           id,
           content,
@@ -605,7 +586,7 @@ export default function Dashboard() {
 
     try {
       await supabase
-        .from('business_post_comments')
+        .from('profile_post_comments')
         .insert({
           post_id: postId,
           profile_id: profile.id,
@@ -680,12 +661,12 @@ export default function Dashboard() {
 
       // Carregar contadores de seguidores para os perfis dos posts
       const { data: posts } = await supabase
-        .from('business_posts')
-        .select('business_profiles!inner(profile_id)')
+        .from('profile_posts')
+        .select('profile_id')
         .limit(20);
 
       if (posts) {
-        const profileIds = [...new Set(posts.map((p: any) => p.business_profiles?.profile_id).filter(Boolean))];
+        const profileIds = [...new Set(posts.map((p: any) => p.profile_id).filter(Boolean))];
         
         const followerCounts: Record<string, number> = {};
         for (const profileId of profileIds) {

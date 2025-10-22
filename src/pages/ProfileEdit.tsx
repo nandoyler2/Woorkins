@@ -340,10 +340,10 @@ export default function ProfileEdit() {
     
     // Carregar lista de perfis de negócio do usuário
     const { data: businesses } = await supabase
-      .from('business_profiles')
-      .select('id, company_name, slug')
-      .eq('profile_id', data.id)
-      .or('deleted.is.null,deleted.eq.false');
+      .from('profiles')
+      .select('id, business_name, slug')
+      .eq('user_id', user?.id)
+      .eq('profile_type', 'business');
     
     if (businesses) {
       setBusinessProfiles(businesses);
@@ -371,10 +371,11 @@ export default function ProfileEdit() {
     }
 
     const { data, error } = await supabase
-      .from('business_profiles')
+      .from('profiles')
       .select('*')
       .eq('id', id)
-      .eq('profile_id', userProfile.id)
+      .eq('profile_type', 'business')
+      .eq('user_id', user?.id)
       .maybeSingle();
 
     if (error || !data) {
@@ -393,10 +394,10 @@ export default function ProfileEdit() {
     
     // Carregar lista de perfis de negócio do usuário
     const { data: businesses } = await supabase
-      .from('business_profiles')
-      .select('id, company_name, slug')
-      .eq('profile_id', userProfile.id)
-      .or('deleted.is.null,deleted.eq.false');
+      .from('profiles')
+      .select('id, business_name, slug')
+      .eq('user_id', user?.id)
+      .eq('profile_type', 'business');
     
     if (businesses) {
       setBusinessProfiles(businesses);
@@ -1633,47 +1634,47 @@ export default function ProfileEdit() {
                       </Button>
 
                       {configuringFeature === 'banner' && (
-                        <GenericBannersManager entityType="user" entityId={profile.id} />
+                        <GenericBannersManager entityId={profile.id} />
                       )}
 
                       {configuringFeature === 'video' && (
-                        <GenericVideoManager entityType="user" entityId={profile.id} />
+                        <GenericVideoManager entityId={profile.id} />
                       )}
 
                       {configuringFeature === 'catalog' && (
-                        <GenericCatalogManager entityType="user" entityId={profile.id} />
+                        <GenericCatalogManager entityId={profile.id} />
                       )}
 
                       {configuringFeature === 'testimonials' && (
-                        <GenericTestimonialsManager entityType="user" entityId={profile.id} />
+                        <GenericTestimonialsManager entityId={profile.id} />
                       )}
 
                       {configuringFeature === 'certifications' && (
-                        <GenericCertificationsManager entityType="user" entityId={profile.id} />
+                        <GenericCertificationsManager entityId={profile.id} />
                       )}
 
                       {configuringFeature === 'appointments' && (
-                        <GenericAppointmentsManager entityType="user" entityId={profile.id} />
+                        <GenericAppointmentsManager entityId={profile.id} />
                       )}
 
                       {configuringFeature === 'linktree' && (
-                        <GenericLinktreeManager entityType="user" entityId={profile.id} />
+                        <GenericLinktreeManager entityId={profile.id} />
                       )}
 
                       {configuringFeature === 'vacancies' && (
-                        <GenericJobVacanciesManager entityType="user" entityId={profile.id} />
+                        <GenericJobVacanciesManager entityId={profile.id} />
                       )}
 
                       {configuringFeature === 'portfolio' && (
-                        <GenericPortfolioManager entityType="user" entityId={profile.id} />
+                        <GenericPortfolioManager entityId={profile.id} />
                       )}
 
                       {configuringFeature === 'whatsapp' && (
-                        <GenericWhatsAppManager entityType="user" entityId={profile.id} />
+                        <GenericWhatsAppManager entityId={profile.id} />
                       )}
 
                       {configuringFeature === 'social' && (
-                        <GenericSocialManager entityType="user" entityId={profile.id} />
+                        <GenericSocialManager entityId={profile.id} />
                       )}
 
                       {configuringFeature === 'negotiation' && (

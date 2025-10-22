@@ -40,32 +40,8 @@ export function UnifiedWhatsAppManager({ profileId }: UnifiedWhatsAppManagerProp
   }, [profileId]);
 
   const loadConfig = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('profile_whatsapp_widgets')
-        .select('*')
-        .eq('target_profile_id', profileId)
-        .single();
-
-      if (error && error.code !== 'PGRST116') throw error;
-
-      if (data) {
-        const configData = data as any;
-        const questionsData = configData.questions;
-        setConfig({
-          phone: configData.phone || "",
-          welcome_message: configData.welcome_message || "Olá! Gostaria de conversar com você.",
-          auto_open: configData.auto_open || false,
-          questions: Array.isArray(questionsData) ? questionsData : [],
-        });
-      }
-    } catch (error: any) {
-      toast({
-        title: "Erro ao carregar configurações",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
+    // WhatsApp widget feature not yet implemented in database
+    return;
   };
 
   const validateAndFormatPhone = (phone: string): string | null => {
@@ -105,53 +81,10 @@ export function UnifiedWhatsAppManager({ profileId }: UnifiedWhatsAppManagerProp
   };
 
   const handleSave = async () => {
-    const validPhone = validateAndFormatPhone(config.phone);
-    if (!validPhone) return;
-
-    setLoading(true);
-    try {
-      const configData = {
-        phone: validPhone,
-        welcome_message: config.welcome_message,
-        auto_open: config.auto_open,
-        questions: config.questions,
-        target_profile_id: profileId,
-      };
-
-      const { data: existing } = await supabase
-        .from('profile_whatsapp_widgets')
-        .select('id')
-        .eq('target_profile_id', profileId)
-        .maybeSingle();
-
-      if (existing) {
-        const { error } = await supabase
-          .from('profile_whatsapp_widgets')
-          .update(configData)
-          .eq('target_profile_id', profileId);
-
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from('profile_whatsapp_widgets')
-          .insert([configData]);
-
-        if (error) throw error;
-      }
-
-      toast({
-        title: "Sucesso",
-        description: "Configurações salvas com sucesso!",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Erro ao salvar",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
+    toast({
+      title: "Funcionalidade em desenvolvimento",
+      description: "O widget WhatsApp será implementado em breve.",
+    });
   };
 
   const addQuestion = () => {

@@ -463,6 +463,12 @@ export default function UserProfile() {
                     {/* Catalog Section */}
                     <PublicUserCatalog userId={profile.id} />
 
+                    {/* Depoimentos Section */}
+                    <PublicTestimonialsSlider entityType="user" entityId={profile.id} />
+
+                    {/* Portfolio Section */}
+                    <PublicUserPortfolio userId={profile.id} />
+
                   </TabsContent>
 
                   {/* Depoimentos Tab */}

@@ -77,7 +77,8 @@ export function InlinePhotoUpload({
       const compressedFile = new File([compressedBlob], file.name, { type: 'image/jpeg' });
       const fileName = `${userId}-${Date.now()}.jpg`;
       const bucketName = type === 'avatar' ? 'avatars' : 'user-covers';
-      const filePath = `${fileName}`;
+      // Use a path that includes the user's id as the first folder to satisfy RLS policies
+      const filePath = `${userId}/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
         .from(bucketName)
@@ -125,9 +126,16 @@ export function InlinePhotoUpload({
       if (updateError) throw updateError;
 
       if (currentPhotoUrl) {
-        const oldPath = currentPhotoUrl.split('/').pop();
-        if (oldPath) {
-          await supabase.storage.from(bucketName).remove([oldPath]);
+        try {
+          const url = new URL(currentPhotoUrl);
+          const needle = `/object/public/${bucketName}/`;
+          const idx = url.pathname.indexOf(needle);
+          const oldPath = idx !== -1 ? url.pathname.slice(idx + needle.length) : null;
+          if (oldPath) {
+            await supabase.storage.from(bucketName).remove([oldPath]);
+          }
+        } catch (e) {
+          console.warn('Could not parse old photo URL for deletion', e);
         }
       }
 

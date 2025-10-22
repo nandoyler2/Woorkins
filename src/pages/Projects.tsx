@@ -30,6 +30,7 @@ interface Project {
   status: string;
   proposals_count: number;
   created_at: string;
+  profile_id: string;
   profiles: {
     username: string;
     full_name: string;

@@ -9,6 +9,7 @@ import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { ProposalDialog } from "./ProposalDialog";
 import { LoginPromptDialog } from "./LoginPromptDialog";
+import { ClickableProfile } from "@/components/ClickableProfile";
 
 interface ProjectCardProps {
   project: {
@@ -22,6 +23,7 @@ interface ProjectCardProps {
     status: string;
     proposals_count: number;
     created_at: string;
+    profile_id?: string;
     profiles: {
       username: string;
       full_name: string;
@@ -139,26 +141,34 @@ export function ProjectCard({ project }: ProjectCardProps) {
 
       {/* Footer */}
       <div className="flex justify-between items-center pt-4 border-t">
-        <div className="flex items-center gap-3">
-          <Avatar className="h-8 w-8">
-            {project.profiles.avatar_url ? (
-              <img 
-                src={project.profiles.avatar_url} 
-                alt={project.profiles.full_name || project.profiles.username}
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-                {formatShortName(project.profiles.full_name || project.profiles.username)}
-              </AvatarFallback>
-            )}
-          </Avatar>
-          <div className="flex items-center gap-2">
+        {project.profile_id ? (
+          <ClickableProfile
+            profileId={project.profile_id}
+            username={project.profiles.username}
+            fullName={project.profiles.full_name}
+            avatarUrl={project.profiles.avatar_url}
+            avatarSize="md"
+          />
+        ) : (
+          <div className="flex items-center gap-3">
+            <Avatar className="h-8 w-8">
+              {project.profiles.avatar_url ? (
+                <img 
+                  src={project.profiles.avatar_url} 
+                  alt={project.profiles.full_name || project.profiles.username}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                  {formatShortName(project.profiles.full_name || project.profiles.username)}
+                </AvatarFallback>
+              )}
+            </Avatar>
             <span className="text-sm font-medium">
               {project.profiles.full_name || project.profiles.username}
             </span>
           </div>
-        </div>
+        )}
         
         <div className="flex items-center gap-2">
           <Button variant="ghost" size="icon">

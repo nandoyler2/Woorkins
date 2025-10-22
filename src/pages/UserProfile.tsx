@@ -24,6 +24,10 @@ import { PublicUserSocial } from '@/components/user/PublicUserSocial';
 import { useToast } from '@/hooks/use-toast';
 import { formatFullName } from '@/lib/utils';
 import { ProfileEvaluationForm } from '@/components/ProfileEvaluationForm';
+import { ClickableProfile } from '@/components/ClickableProfile';
+import { Textarea } from '@/components/ui/textarea';
+import { useAuth } from '@/contexts/AuthContext';
+
 
 interface UserProfileData {
   id: string;
@@ -70,6 +74,8 @@ interface Evaluation {
   media_types: string[] | null;
   evaluation_category: 'positive' | 'complaint';
   user_id: string;
+  owner_response: string | null;
+  owner_response_at: string | null;
   profiles?: {
     full_name: string;
     avatar_url: string | null;
@@ -80,6 +86,7 @@ interface Evaluation {
 export default function UserProfile() {
   const { slug } = useParams();
   const { toast } = useToast();
+  const { user } = useAuth();
   const [profile, setProfile] = useState<UserProfileData | null>(null);
   const [projects, setProjects] = useState<UserProject[]>([]);
   const [posts, setPosts] = useState<UserPost[]>([]);
@@ -97,6 +104,10 @@ export default function UserProfile() {
   const [hasPortfolio, setHasPortfolio] = useState(false);
   const [hasCatalog, setHasCatalog] = useState(false);
   const [hasJobVacancies, setHasJobVacancies] = useState(false);
+  const [responseText, setResponseText] = useState<{ [key: string]: string }>({});
+  const [submittingResponse, setSubmittingResponse] = useState<{ [key: string]: boolean }>({});
+
+  const isProfileOwner = user && profile && user.id === profile.user_id;
 
   useEffect(() => {
     if (profile) {
@@ -261,6 +272,56 @@ export default function UserProfile() {
       platinum: { color: 'bg-blue-400', label: 'Platina' },
     };
     return levels[level] || levels.bronze;
+  };
+
+  const handleSubmitResponse = async (evaluationId: string) => {
+    const response = responseText[evaluationId];
+    if (!response || !response.trim()) {
+      toast({
+        title: "Erro",
+        description: "Digite uma resposta",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSubmittingResponse(prev => ({ ...prev, [evaluationId]: true }));
+
+    try {
+      const { error } = await supabase
+        .from('evaluations')
+        .update({
+          owner_response: response,
+          owner_response_at: new Date().toISOString(),
+        })
+        .eq('id', evaluationId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Resposta enviada!",
+        description: "Sua resposta foi publicada com sucesso",
+      });
+
+      // Atualizar a lista de avaliações
+      if (profile) {
+        loadEvaluations(profile.id);
+      }
+      setResponseText(prev => {
+        const newState = { ...prev };
+        delete newState[evaluationId];
+        return newState;
+      });
+    } catch (error) {
+      console.error('Error submitting response:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível enviar a resposta",
+        variant: "destructive",
+      });
+    } finally {
+      setSubmittingResponse(prev => ({ ...prev, [evaluationId]: false }));
+    }
   };
 
   if (loading) {
@@ -516,23 +577,24 @@ export default function UserProfile() {
                               <Card key={evaluation.id}>
                                 <CardContent className="p-4">
                                   <div className="flex items-start gap-4">
-                                    {evaluation.profiles?.avatar_url ? (
-                                      <SafeImage
-                                        src={evaluation.profiles.avatar_url}
-                                        alt={evaluation.profiles.full_name}
-                                        className="w-12 h-12 rounded-full object-cover"
-                                      />
-                                    ) : (
-                                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/20 via-primary/10 to-secondary/20 flex items-center justify-center">
-                                        <UserIcon className="w-7 h-7 text-primary/70" />
-                                      </div>
-                                    )}
+                                    <ClickableProfile
+                                      profileId={evaluation.user_id}
+                                      username={evaluation.profiles?.username}
+                                      fullName={evaluation.profiles?.full_name}
+                                      avatarUrl={evaluation.profiles?.avatar_url}
+                                      showName={false}
+                                      avatarSize="lg"
+                                    />
                                     <div className="flex-1">
                                       <div className="flex items-center justify-between mb-2">
                                         <div>
-                                          <p className="font-semibold">
-                                            {evaluation.profiles?.full_name || 'Usuário'}
-                                          </p>
+                                          <ClickableProfile
+                                            profileId={evaluation.user_id}
+                                            username={evaluation.profiles?.username}
+                                            fullName={evaluation.profiles?.full_name}
+                                            showAvatar={false}
+                                            nameClassName="font-semibold"
+                                          />
                                           <div className="flex items-center gap-2">
                                             <div className="flex">
                                               {[1, 2, 3, 4, 5].map((star) => (
@@ -574,6 +636,43 @@ export default function UserProfile() {
                                               )}
                                             </div>
                                           ))}
+                                        </div>
+                                       )}
+                                      
+                                      {/* Resposta do dono do perfil */}
+                                      {evaluation.owner_response && (
+                                        <div className="mt-4 pl-4 border-l-2 border-primary/30 bg-primary/5 p-3 rounded-r">
+                                          <p className="text-xs font-semibold text-primary mb-1">
+                                            Resposta de {formatFullName(profile.full_name)}:
+                                          </p>
+                                          <p className="text-sm text-foreground">
+                                            {evaluation.owner_response}
+                                          </p>
+                                          <p className="text-xs text-muted-foreground mt-1">
+                                            {new Date(evaluation.owner_response_at!).toLocaleDateString('pt-BR')}
+                                          </p>
+                                        </div>
+                                      )}
+
+                                      {/* Formulário de resposta para o dono do perfil */}
+                                      {isProfileOwner && !evaluation.owner_response && (
+                                        <div className="mt-4 space-y-2">
+                                          <Textarea
+                                            placeholder="Digite sua resposta..."
+                                            value={responseText[evaluation.id] || ''}
+                                            onChange={(e) => setResponseText(prev => ({
+                                              ...prev,
+                                              [evaluation.id]: e.target.value
+                                            }))}
+                                            className="min-h-[80px]"
+                                          />
+                                          <Button
+                                            onClick={() => handleSubmitResponse(evaluation.id)}
+                                            disabled={submittingResponse[evaluation.id]}
+                                            size="sm"
+                                          >
+                                            {submittingResponse[evaluation.id] ? 'Enviando...' : 'Enviar Resposta'}
+                                          </Button>
                                         </div>
                                       )}
                                     </div>
@@ -645,23 +744,24 @@ export default function UserProfile() {
                               <Card key={evaluation.id}>
                                 <CardContent className="p-4">
                                   <div className="flex items-start gap-4">
-                                    {evaluation.profiles?.avatar_url ? (
-                                      <SafeImage
-                                        src={evaluation.profiles.avatar_url}
-                                        alt={evaluation.profiles.full_name}
-                                        className="w-12 h-12 rounded-full object-cover"
-                                      />
-                                    ) : (
-                                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/20 via-primary/10 to-secondary/20 flex items-center justify-center">
-                                        <UserIcon className="w-7 h-7 text-primary/70" />
-                                      </div>
-                                    )}
+                                    <ClickableProfile
+                                      profileId={evaluation.user_id}
+                                      username={evaluation.profiles?.username}
+                                      fullName={evaluation.profiles?.full_name}
+                                      avatarUrl={evaluation.profiles?.avatar_url}
+                                      showName={false}
+                                      avatarSize="lg"
+                                    />
                                     <div className="flex-1">
                                       <div className="flex items-center justify-between mb-2">
                                         <div>
-                                          <p className="font-semibold">
-                                            {evaluation.profiles?.full_name || 'Usuário'}
-                                          </p>
+                                          <ClickableProfile
+                                            profileId={evaluation.user_id}
+                                            username={evaluation.profiles?.username}
+                                            fullName={evaluation.profiles?.full_name}
+                                            showAvatar={false}
+                                            nameClassName="font-semibold"
+                                          />
                                           <div className="flex items-center gap-2">
                                             <div className="flex">
                                               {[1, 2, 3, 4, 5].map((star) => (
@@ -703,6 +803,43 @@ export default function UserProfile() {
                                               )}
                                             </div>
                                           ))}
+                                        </div>
+                                      )}
+                                      
+                                      {/* Resposta do dono do perfil */}
+                                      {evaluation.owner_response && (
+                                        <div className="mt-4 pl-4 border-l-2 border-primary/30 bg-primary/5 p-3 rounded-r">
+                                          <p className="text-xs font-semibold text-primary mb-1">
+                                            Resposta de {formatFullName(profile.full_name)}:
+                                          </p>
+                                          <p className="text-sm text-foreground">
+                                            {evaluation.owner_response}
+                                          </p>
+                                          <p className="text-xs text-muted-foreground mt-1">
+                                            {new Date(evaluation.owner_response_at!).toLocaleDateString('pt-BR')}
+                                          </p>
+                                        </div>
+                                      )}
+
+                                      {/* Formulário de resposta para o dono do perfil */}
+                                      {isProfileOwner && !evaluation.owner_response && (
+                                        <div className="mt-4 space-y-2">
+                                          <Textarea
+                                            placeholder="Digite sua resposta..."
+                                            value={responseText[evaluation.id] || ''}
+                                            onChange={(e) => setResponseText(prev => ({
+                                              ...prev,
+                                              [evaluation.id]: e.target.value
+                                            }))}
+                                            className="min-h-[80px]"
+                                          />
+                                          <Button
+                                            onClick={() => handleSubmitResponse(evaluation.id)}
+                                            disabled={submittingResponse[evaluation.id]}
+                                            size="sm"
+                                          >
+                                            {submittingResponse[evaluation.id] ? 'Enviando...' : 'Enviar Resposta'}
+                                          </Button>
                                         </div>
                                       )}
                                     </div>

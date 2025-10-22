@@ -1222,6 +1222,8 @@ export type Database = {
           is_verified: boolean | null
           media_types: string[] | null
           media_urls: string[] | null
+          owner_response: string | null
+          owner_response_at: string | null
           public_response: string | null
           rating: number
           tags: string[] | null
@@ -1240,6 +1242,8 @@ export type Database = {
           is_verified?: boolean | null
           media_types?: string[] | null
           media_urls?: string[] | null
+          owner_response?: string | null
+          owner_response_at?: string | null
           public_response?: string | null
           rating: number
           tags?: string[] | null
@@ -1258,6 +1262,8 @@ export type Database = {
           is_verified?: boolean | null
           media_types?: string[] | null
           media_urls?: string[] | null
+          owner_response?: string | null
+          owner_response_at?: string | null
           public_response?: string | null
           rating?: number
           tags?: string[] | null

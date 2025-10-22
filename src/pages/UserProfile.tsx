@@ -30,6 +30,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useAuthAction } from '@/contexts/AuthActionContext';
 import { InlinePhotoUpload } from '@/components/InlinePhotoUpload';
 import { ImageViewerDialog } from '@/components/ImageViewerDialog';
+import { FollowSuccessDialog } from '@/components/FollowSuccessDialog';
+import { useFollow } from '@/hooks/useFollow';
 
 
 interface UserProfileData {
@@ -116,6 +118,8 @@ export default function UserProfile() {
   const [responseText, setResponseText] = useState<{ [key: string]: string }>({});
   const [submittingResponse, setSubmittingResponse] = useState<{ [key: string]: boolean }>({});
   const [showImageViewer, setShowImageViewer] = useState(false);
+  const [showFollowSuccess, setShowFollowSuccess] = useState(false);
+  const { isFollowing, loading: followLoading, toggleFollow } = useFollow(profile?.id || '');
   
   const handleTabChange = (value: string) => {
     const basePath = `/${slug}`;
@@ -129,6 +133,20 @@ export default function UserProfile() {
   const handleEvaluateClick = () => {
     if (requireAuth(() => setShowEvaluationForm(true))) {
       setShowEvaluationForm(true);
+    }
+  };
+
+  const handleFollowClick = async () => {
+    if (requireAuth(async () => {
+      const result = await toggleFollow();
+      if (result === true) {
+        setShowFollowSuccess(true);
+      }
+    })) {
+      const result = await toggleFollow();
+      if (result === true) {
+        setShowFollowSuccess(true);
+      }
     }
   };
 
@@ -473,9 +491,17 @@ export default function UserProfile() {
                           )}
                         </div>
                       )}
-                      <Button variant="outline" size="sm" className="rounded-full w-32">
-                        Seguir
-                      </Button>
+                      {!isProfileOwner && (
+                        <Button
+                          variant={isFollowing ? 'secondary' : 'outline'}
+                          size="sm"
+                          className="rounded-full w-32"
+                          onClick={handleFollowClick}
+                          disabled={followLoading}
+                        >
+                          {isFollowing ? 'Seguindo' : 'Seguir'}
+                        </Button>
+                      )}
                     </div>
 
                     {/* User Info */}
@@ -1168,12 +1194,14 @@ export default function UserProfile() {
         />
       )}
 
-      {/* WhatsApp Widget */}
+      {/* Follow Success Dialog */}
       {profile && (
-        <PublicWhatsAppWidget 
-          entityType="user" 
-          entityId={profile.id} 
-          entityName={profile.full_name || profile.username} 
+        <FollowSuccessDialog
+          open={showFollowSuccess}
+          onOpenChange={setShowFollowSuccess}
+          profileName={formatFullName(profile.full_name)}
+          profileAvatar={profile.avatar_url}
+          profileType="user"
         />
       )}
     </div>

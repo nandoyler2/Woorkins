@@ -17,6 +17,7 @@ import { formatShortName } from '@/lib/utils';
 import { ProfileEditDialog } from '@/components/ProfileEditDialog';
 import { IdentityVerificationDialog } from '@/components/IdentityVerificationDialog';
 import { CreateBusinessProfileDialog } from '@/components/CreateBusinessProfileDialog';
+import { FollowingSection } from '@/components/dashboard/FollowingSection';
 import {
   AlertDialog,
   AlertDialogAction,

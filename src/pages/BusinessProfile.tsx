@@ -21,6 +21,7 @@ import { SafeImage } from '@/components/ui/safe-image';
 import { useToast } from '@/hooks/use-toast';
 import { formatFullName } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAuthAction } from '@/contexts/AuthActionContext';
 import { NegotiationChat } from '@/components/NegotiationChat';
 import { PublicBusinessBanners } from '@/components/business/PublicBusinessBanners';
 import { PublicBusinessVideo } from '@/components/business/PublicBusinessVideo';
@@ -35,6 +36,8 @@ import { PublicBusinessAppointments } from '@/components/business/PublicBusiness
 
 import { ProfileEvaluationForm } from '@/components/ProfileEvaluationForm';
 import { ThumbsUp, AlertCircle } from 'lucide-react';
+import { FollowSuccessDialog } from '@/components/FollowSuccessDialog';
+import { useFollow } from '@/hooks/useFollow';
 
 interface BusinessData {
   id: string;
@@ -81,6 +84,7 @@ export default function BusinessProfile() {
   const { slug } = useParams();
   const { toast } = useToast();
   const { user } = useAuth();
+  const { requireAuth } = useAuthAction();
   const [business, setBusiness] = useState<BusinessData | null>(null);
   const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
   const [positiveEvaluations, setPositiveEvaluations] = useState<Evaluation[]>([]);
@@ -94,6 +98,22 @@ export default function BusinessProfile() {
   const [showEvaluationForm, setShowEvaluationForm] = useState(false);
   const [showAllPositive, setShowAllPositive] = useState(false);
   const [showAllComplaints, setShowAllComplaints] = useState(false);
+  const [showFollowSuccess, setShowFollowSuccess] = useState(false);
+  const { isFollowing, loading: followLoading, toggleFollow, followerProfileId } = useFollow(business?.id || '');
+
+  const handleFollowClick = async () => {
+    if (requireAuth(async () => {
+      const result = await toggleFollow();
+      if (result === true) {
+        setShowFollowSuccess(true);
+      }
+    })) {
+      const result = await toggleFollow();
+      if (result === true) {
+        setShowFollowSuccess(true);
+      }
+    }
+  };
 
   useEffect(() => {
     if (business) {
@@ -109,56 +129,91 @@ export default function BusinessProfile() {
   }, [slug]);
 
   const startNegotiation = async () => {
-    if (!user) {
-      toast({
-        title: 'Login necessário',
-        description: 'Faça login para iniciar uma negociação',
-        variant: 'destructive',
-      });
-      return;
-    }
+    if (requireAuth(async () => {
+      if (!business) return;
 
-    if (!business) return;
+      // Check if already has an open negotiation
+      const { data: existing } = await supabase
+        .from('negotiations')
+        .select('id')
+        .eq('business_id', business.id)
+        .eq('user_id', user!.id)
+        .in('status', ['open', 'accepted', 'paid'])
+        .maybeSingle();
 
-    // Check if already has an open negotiation
-    const { data: existing } = await supabase
-      .from('negotiations')
-      .select('id')
-      .eq('business_id', business.id)
-      .eq('user_id', user.id)
-      .in('status', ['open', 'accepted', 'paid'])
-      .maybeSingle();
+      if (existing) {
+        setCurrentNegotiation(existing.id);
+        setShowNegotiationDialog(true);
+        return;
+      }
 
-    if (existing) {
-      setCurrentNegotiation(existing.id);
-      setShowNegotiationDialog(true);
-      return;
-    }
+      // Create new negotiation
+      const { data, error } = await supabase
+        .from('negotiations')
+        .insert({
+          business_id: business.id,
+          user_id: user!.id,
+          status: 'open',
+        })
+        .select()
+        .single();
 
-    // Create new negotiation
-    const { data, error } = await supabase
-      .from('negotiations')
-      .insert({
-        business_id: business.id,
-        user_id: user.id,
-        status: 'open',
-      })
-      .select()
-      .single();
+      if (error) {
+        toast({
+          title: 'Erro',
+          description: 'Não foi possível iniciar a negociação',
+          variant: 'destructive',
+        });
+      } else {
+        setCurrentNegotiation(data.id);
+        setShowNegotiationDialog(true);
+        toast({
+          title: 'Negociação iniciada!',
+          description: 'Comece a conversar com a empresa',
+        });
+      }
+    })) {
+      // User is authenticated, execute the action
+      if (!business) return;
 
-    if (error) {
-      toast({
-        title: 'Erro',
-        description: 'Não foi possível iniciar a negociação',
-        variant: 'destructive',
-      });
-    } else {
-      setCurrentNegotiation(data.id);
-      setShowNegotiationDialog(true);
-      toast({
-        title: 'Negociação iniciada!',
-        description: 'Comece a conversar com a empresa',
-      });
+      const { data: existing } = await supabase
+        .from('negotiations')
+        .select('id')
+        .eq('business_id', business.id)
+        .eq('user_id', user!.id)
+        .in('status', ['open', 'accepted', 'paid'])
+        .maybeSingle();
+
+      if (existing) {
+        setCurrentNegotiation(existing.id);
+        setShowNegotiationDialog(true);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('negotiations')
+        .insert({
+          business_id: business.id,
+          user_id: user!.id,
+          status: 'open',
+        })
+        .select()
+        .single();
+
+      if (error) {
+        toast({
+          title: 'Erro',
+          description: 'Não foi possível iniciar a negociação',
+          variant: 'destructive',
+        });
+      } else {
+        setCurrentNegotiation(data.id);
+        setShowNegotiationDialog(true);
+        toast({
+          title: 'Negociação iniciada!',
+          description: 'Comece a conversar com a empresa',
+        });
+      }
     }
   };
 
@@ -396,8 +451,13 @@ export default function BusinessProfile() {
                           Você administra esse perfil
                         </Badge>
                       ) : (
-                        <Button variant="outline" className="rounded-full">
-                          Seguir
+                        <Button
+                          variant={isFollowing ? 'secondary' : 'outline'}
+                          className="rounded-full"
+                          onClick={handleFollowClick}
+                          disabled={followLoading}
+                        >
+                          {isFollowing ? 'Seguindo' : 'Seguir'}
                         </Button>
                       )}
                     </div>
@@ -872,6 +932,17 @@ export default function BusinessProfile() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Follow Success Dialog */}
+      {business && (
+        <FollowSuccessDialog
+          open={showFollowSuccess}
+          onOpenChange={setShowFollowSuccess}
+          profileName={business.company_name}
+          profileAvatar={business.logo_url}
+          profileType="business"
+        />
+      )}
     </div>
   );
 }

@@ -1,6 +1,6 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import Cropper from 'react-easy-crop';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 
@@ -12,22 +12,16 @@ interface ImageCropDialogProps {
   aspect: number;
 }
 
-export function ImageCropDialog({ open, imageSrc, onClose, onCropComplete, aspect }: ImageCropDialogProps) {
+export function ImageCropDialog({ 
+  open,
+  imageSrc, 
+  onClose,
+  onCropComplete, 
+  aspect
+}: ImageCropDialogProps) {
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
-  const [minZoom, setMinZoom] = useState(1);
-  const [initialized, setInitialized] = useState(false);
-
-  const onMediaLoaded = useCallback((mediaSize: { naturalWidth: number; naturalHeight: number }) => {
-    const cropWidth = 400;
-    const cropHeight = 400 / aspect;
-    const requiredZoom = Math.max(cropWidth / mediaSize.naturalWidth, cropHeight / mediaSize.naturalHeight);
-    const initialZoom = Math.max(1, requiredZoom * 1.6);
-    setMinZoom(requiredZoom);
-    setZoom(initialZoom);
-    setInitialized(true);
-  }, [aspect]);
 
   const onCropChange = (location: any) => {
     setCrop(location);
@@ -37,33 +31,24 @@ export function ImageCropDialog({ open, imageSrc, onClose, onCropComplete, aspec
     setZoom(zoom);
   };
 
-  useEffect(() => {
-    // Reset when a new image is opened
-    setInitialized(false);
-    setZoom(1);
-    setCrop({ x: 0, y: 0 });
-  }, [imageSrc, open]);
-
   const onCropCompleteCallback = useCallback((croppedArea: any, croppedAreaPixels: any) => {
     setCroppedAreaPixels(croppedAreaPixels);
   }, []);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (croppedAreaPixels) {
       onCropComplete(croppedAreaPixels);
-      onClose();
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle>Ajustar Imagem</DialogTitle>
-          <DialogDescription>Use o mouse para arrastar e o controle para ajustar o zoom.</DialogDescription>
+          <DialogTitle>Ajustar imagem</DialogTitle>
         </DialogHeader>
         
-        <div className="relative h-96 bg-muted">
+        <div className="relative h-96 bg-muted rounded-lg overflow-hidden">
           <Cropper
             image={imageSrc}
             crop={crop}
@@ -72,30 +57,20 @@ export function ImageCropDialog({ open, imageSrc, onClose, onCropComplete, aspec
             onCropChange={onCropChange}
             onZoomChange={onZoomChange}
             onCropComplete={onCropCompleteCallback}
-            onMediaLoaded={onMediaLoaded}
-            minZoom={minZoom}
-            maxZoom={Math.max(2, minZoom * 2)}
-            zoomSpeed={0.01}
-            zoomWithScroll={true}
-            cropSize={{ width: 400, height: 400 / aspect }}
-            restrictPosition={false}
+            showGrid={false}
           />
         </div>
 
         <div className="space-y-2 px-4">
           <label className="text-sm font-medium">Zoom</label>
-          {initialized ? (
-            <Slider
-              value={[zoom]}
-              onValueChange={(value) => setZoom(value[0])}
-              min={minZoom}
-              max={Math.max(2, minZoom * 2)}
-              step={0.001}
-              className="w-full"
-            />
-          ) : (
-            <div className="h-2 w-full rounded-full bg-secondary/60" />
-          )}
+          <Slider
+            value={[zoom]}
+            onValueChange={(value) => setZoom(value[0])}
+            min={1}
+            max={3}
+            step={0.1}
+            className="w-full"
+          />
         </div>
 
         <DialogFooter>

@@ -2,12 +2,8 @@ import { useState, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Camera, Loader2 } from 'lucide-react';
-import { InlineCropEditor } from './InlineCropEditor';
+import { PhotoCropDialog } from './PhotoCropDialog';
 import { compressImage } from '@/lib/imageCompression';
-import {
-  Dialog,
-  DialogContent,
-} from '@/components/ui/dialog';
 
 interface InlinePhotoUploadProps {
   currentPhotoUrl?: string;
@@ -194,28 +190,20 @@ export function InlinePhotoUpload({
         )}
       </div>
 
-      {/* Dialog de Crop em tela cheia */}
-      <Dialog open={!!imageToCrop} onOpenChange={(open) => {
-        if (!open) {
-          setImageToCrop(null);
-          setOriginalFile(null);
-        }
-      }}>
-        <DialogContent className="max-w-4xl h-[80vh] p-0">
-          {imageToCrop && (
-            <InlineCropEditor
-              imageUrl={imageToCrop}
-              onSave={handleCropComplete}
-              onCancel={() => {
-                setImageToCrop(null);
-                setOriginalFile(null);
-              }}
-              aspectRatio={type === 'avatar' ? 1 : 16 / 9}
-              className="w-full h-full"
-            />
-          )}
-        </DialogContent>
-      </Dialog>
+      {/* Dialog de Crop */}
+      {imageToCrop && (
+        <PhotoCropDialog
+          imageUrl={imageToCrop}
+          onCropComplete={handleCropComplete}
+          onCancel={() => {
+            setImageToCrop(null);
+            setOriginalFile(null);
+          }}
+          aspectRatio={type === 'avatar' ? 1 : 16 / 9}
+          cropShape={type === 'avatar' ? 'round' : 'rect'}
+          title={type === 'avatar' ? 'Ajustar Foto de Perfil' : 'Ajustar Foto de Capa'}
+        />
+      )}
 
       <input
         ref={fileInputRef}

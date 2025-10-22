@@ -454,6 +454,24 @@ export default function Plans() {
                           Relatórios Completo
                         </span>
                       </li>
+                      <li className="flex items-start gap-3">
+                        <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
+                        <span className="text-sm text-foreground">
+                          Storie em destaque
+                        </span>
+                      </li>
+                      <li className="flex items-start gap-3">
+                        <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
+                        <span className="text-sm text-foreground">
+                          Promova por 24h 5x por mês
+                        </span>
+                      </li>
+                      <li className="flex items-start gap-3">
+                        <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
+                        <span className="text-sm text-foreground">
+                          Suporte rápido via WhatsApp
+                        </span>
+                      </li>
                     </ul>
                   ) : null}
 

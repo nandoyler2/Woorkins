@@ -15,27 +15,24 @@ interface SocialLinks {
 }
 
 interface UnifiedSocialManagerProps {
-  entityType: 'business' | 'user';
-  entityId: string;
+  profileId: string;
 }
 
-export function UnifiedSocialManager({ entityType, entityId }: UnifiedSocialManagerProps) {
+export function UnifiedSocialManager({ profileId }: UnifiedSocialManagerProps) {
   const [socialLinks, setSocialLinks] = useState<SocialLinks>({});
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
-  const tableName = entityType === 'business' ? 'business_profiles' : 'profiles';
-
   useEffect(() => {
     loadSocialLinks();
-  }, [entityId]);
+  }, [profileId]);
 
   const loadSocialLinks = async () => {
     try {
-      const { data, error } = await supabase
-        .from(tableName)
+      const { data, error} = await supabase
+        .from('profiles')
         .select('facebook, instagram, twitter, linkedin, whatsapp, website_url')
-        .eq('id', entityId)
+        .eq('id', profileId)
         .single();
 
       if (error) throw error;
@@ -61,9 +58,9 @@ export function UnifiedSocialManager({ entityType, entityId }: UnifiedSocialMana
     setLoading(true);
     try {
       const { error } = await supabase
-        .from(tableName)
+        .from('profiles')
         .update(socialLinks)
-        .eq('id', entityId);
+        .eq('id', profileId);
 
       if (error) throw error;
 

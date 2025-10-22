@@ -22,11 +22,10 @@ interface WhatsAppConfig {
 }
 
 interface UnifiedWhatsAppManagerProps {
-  entityType: 'business' | 'user';
-  entityId: string;
+  profileId: string;
 }
 
-export function UnifiedWhatsAppManager({ entityType, entityId }: UnifiedWhatsAppManagerProps) {
+export function UnifiedWhatsAppManager({ profileId }: UnifiedWhatsAppManagerProps) {
   const [loading, setLoading] = useState(false);
   const [config, setConfig] = useState<WhatsAppConfig>({
     phone: "",
@@ -36,19 +35,16 @@ export function UnifiedWhatsAppManager({ entityType, entityId }: UnifiedWhatsApp
   });
   const { toast } = useToast();
 
-  const tableName = entityType === 'business' ? 'business_whatsapp_config' : 'user_whatsapp_config';
-  const idColumn = entityType === 'business' ? 'business_id' : 'user_id';
-
   useEffect(() => {
     loadConfig();
-  }, [entityId]);
+  }, [profileId]);
 
   const loadConfig = async () => {
     try {
       const { data, error } = await supabase
-        .from(tableName as any)
+        .from('profile_whatsapp_config')
         .select('*')
-        .eq(idColumn, entityId)
+        .eq('target_profile_id', profileId)
         .single();
 
       if (error && error.code !== 'PGRST116') throw error;
@@ -114,30 +110,30 @@ export function UnifiedWhatsAppManager({ entityType, entityId }: UnifiedWhatsApp
 
     setLoading(true);
     try {
-      const configData: any = {
+      const configData = {
         phone: validPhone,
         welcome_message: config.welcome_message,
         auto_open: config.auto_open,
-        questions: config.questions as any,
-        [idColumn]: entityId,
+        questions: config.questions,
+        target_profile_id: profileId,
       };
 
       const { data: existing } = await supabase
-        .from(tableName as any)
+        .from('profile_whatsapp_config')
         .select('id')
-        .eq(idColumn, entityId)
-        .single();
+        .eq('target_profile_id', profileId)
+        .maybeSingle();
 
       if (existing) {
         const { error } = await supabase
-          .from(tableName as any)
+          .from('profile_whatsapp_config')
           .update(configData)
-          .eq(idColumn, entityId);
+          .eq('target_profile_id', profileId);
 
         if (error) throw error;
       } else {
         const { error } = await supabase
-          .from(tableName as any)
+          .from('profile_whatsapp_config')
           .insert([configData]);
 
         if (error) throw error;

@@ -15,30 +15,26 @@ interface VideoData {
 }
 
 interface GenericVideoManagerProps {
-  entityType: 'business' | 'user';
-  entityId: string;
+  profileId: string;
 }
 
-export function GenericVideoManager({ entityType, entityId }: GenericVideoManagerProps) {
+export function GenericVideoManager({ profileId }: GenericVideoManagerProps) {
   const [video, setVideo] = useState<VideoData | null>(null);
   const [youtubeUrl, setYoutubeUrl] = useState("");
   const [title, setTitle] = useState("");
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
-  const tableName = entityType === 'business' ? 'business_videos' : 'user_videos';
-  const idColumn = entityType === 'business' ? 'business_id' : 'profile_id';
-
   useEffect(() => {
     loadVideo();
-  }, [entityId]);
+  }, [profileId]);
 
   const loadVideo = async () => {
     try {
       const { data, error } = await supabase
-        .from(tableName as any)
+        .from('profile_videos')
         .select("*")
-        .eq(idColumn, entityId)
+        .eq('target_profile_id', profileId)
         .eq("active", true)
         .maybeSingle();
 
@@ -87,7 +83,7 @@ export function GenericVideoManager({ entityType, entityId }: GenericVideoManage
     setLoading(true);
     try {
       const videoData = {
-        [idColumn]: entityId,
+        target_profile_id: profileId,
         youtube_url: youtubeUrl,
         title: title || null,
         active: true,
@@ -95,13 +91,15 @@ export function GenericVideoManager({ entityType, entityId }: GenericVideoManage
 
       if (video?.id) {
         const { error } = await supabase
-          .from(tableName as any)
+          .from('profile_videos')
           .update(videoData)
           .eq("id", video.id);
 
         if (error) throw error;
       } else {
-        const { error } = await supabase.from(tableName as any).insert(videoData as any);
+        const { error } = await supabase
+          .from('profile_videos')
+          .insert(videoData as any);
         if (error) throw error;
       }
 
@@ -127,7 +125,10 @@ export function GenericVideoManager({ entityType, entityId }: GenericVideoManage
     if (!confirm("Deseja realmente remover este vídeo?")) return;
 
     try {
-      const { error } = await supabase.from(tableName).delete().eq("id", video.id);
+      const { error } = await supabase
+        .from('profile_videos')
+        .delete()
+        .eq("id", video.id);
 
       if (error) throw error;
 

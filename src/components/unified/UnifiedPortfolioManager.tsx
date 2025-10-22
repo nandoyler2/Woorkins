@@ -19,29 +19,25 @@ interface PortfolioItem {
 }
 
 interface UnifiedPortfolioManagerProps {
-  entityType: 'business' | 'user';
-  entityId: string;
+  profileId: string;
 }
 
-export function UnifiedPortfolioManager({ entityType, entityId }: UnifiedPortfolioManagerProps) {
+export function UnifiedPortfolioManager({ profileId }: UnifiedPortfolioManagerProps) {
   const [items, setItems] = useState<PortfolioItem[]>([]);
   const [editingItem, setEditingItem] = useState<Partial<PortfolioItem> | null>(null);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
-  const tableName = entityType === 'business' ? 'business_portfolio' : 'user_portfolio';
-  const idColumn = entityType === 'business' ? 'business_id' : 'user_id';
-
   useEffect(() => {
     loadItems();
-  }, [entityId]);
+  }, [profileId]);
 
   const loadItems = async () => {
     try {
       const { data, error } = await supabase
-        .from(tableName as any)
+        .from('user_portfolio_items')
         .select('*')
-        .eq(idColumn, entityId)
+        .eq('profile_id', profileId)
         .order('order_index');
 
       if (error) throw error;
@@ -69,21 +65,21 @@ export function UnifiedPortfolioManager({ entityType, entityId }: UnifiedPortfol
     try {
       const itemData = {
         ...editingItem,
-        [idColumn]: entityId,
+        profile_id: profileId,
         order_index: editingItem.order_index ?? items.length,
         active: true,
       };
 
       if (editingItem.id) {
         const { error } = await supabase
-          .from(tableName as any)
+          .from('user_portfolio_items')
           .update(itemData)
           .eq('id', editingItem.id);
 
         if (error) throw error;
       } else {
         const { error } = await supabase
-          .from(tableName as any)
+          .from('user_portfolio_items')
           .insert([itemData]);
 
         if (error) throw error;
@@ -112,7 +108,7 @@ export function UnifiedPortfolioManager({ entityType, entityId }: UnifiedPortfol
 
     try {
       const { error } = await supabase
-        .from(tableName as any)
+        .from('user_portfolio_items')
         .delete()
         .eq('id', id);
 
@@ -142,8 +138,8 @@ export function UnifiedPortfolioManager({ entityType, entityId }: UnifiedPortfol
           <ImageUpload
             currentImageUrl={editingItem.image_url || null}
             onUpload={(url) => setEditingItem({ ...editingItem, image_url: url })}
-            bucket="business-files"
-            folder={`${entityType}_portfolio`}
+            bucket="portfolio"
+            folder="profile_portfolio"
           />
 
           <Input

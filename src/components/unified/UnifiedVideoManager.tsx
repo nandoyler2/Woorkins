@@ -13,30 +13,26 @@ interface VideoData {
 }
 
 interface UnifiedVideoManagerProps {
-  entityType: 'business' | 'user';
-  entityId: string;
+  profileId: string;
 }
 
-export function UnifiedVideoManager({ entityType, entityId }: UnifiedVideoManagerProps) {
+export function UnifiedVideoManager({ profileId }: UnifiedVideoManagerProps) {
   const [video, setVideo] = useState<VideoData | null>(null);
   const [youtubeUrl, setYoutubeUrl] = useState("");
   const [title, setTitle] = useState("");
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
-  const tableName = entityType === 'business' ? 'business_videos' : 'user_videos';
-  const idColumn = entityType === 'business' ? 'business_id' : 'user_id';
-
   useEffect(() => {
     loadVideo();
-  }, [entityId]);
+  }, [profileId]);
 
   const loadVideo = async () => {
     try {
       const { data, error } = await supabase
-        .from(tableName as any)
+        .from('profile_videos')
         .select('*')
-        .eq(idColumn, entityId)
+        .eq('target_profile_id', profileId)
         .eq('active', true)
         .single();
 
@@ -79,20 +75,20 @@ export function UnifiedVideoManager({ entityType, entityId }: UnifiedVideoManage
       const videoData = {
         youtube_url: youtubeUrl,
         title: title || null,
-        [idColumn]: entityId,
+        target_profile_id: profileId,
         active: true,
       };
 
       if (video?.id) {
         const { error } = await supabase
-          .from(tableName as any)
+          .from('profile_videos')
           .update(videoData)
           .eq('id', video.id);
 
         if (error) throw error;
       } else {
         const { error } = await supabase
-          .from(tableName as any)
+          .from('profile_videos')
           .insert([videoData]);
 
         if (error) throw error;
@@ -120,7 +116,7 @@ export function UnifiedVideoManager({ entityType, entityId }: UnifiedVideoManage
 
     try {
       const { error } = await supabase
-        .from(tableName as any)
+        .from('profile_videos')
         .delete()
         .eq('id', video.id);
 

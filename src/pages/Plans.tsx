@@ -343,14 +343,20 @@ export default function Plans() {
                       </span>
                     </div>
                     {plan.slug === 'pro' && (
-                      <p className="text-sm text-muted-foreground pl-8">
-                        Tudo do plano grátis
-                      </p>
+                      <div className="flex items-start gap-3">
+                        <Sparkles className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                        <p className="text-sm text-foreground font-bold">
+                          Tudo do plano grátis
+                        </p>
+                      </div>
                     )}
                     {plan.slug === 'premium' && (
-                      <p className="text-sm text-muted-foreground pl-8">
-                        Tudo do plano grátis e pro
-                      </p>
+                      <div className="flex items-start gap-3">
+                        <Crown className="h-5 w-5 text-yellow-500 shrink-0 mt-0.5" />
+                        <p className="text-sm text-foreground font-bold">
+                          Tudo do plano grátis e pro
+                        </p>
+                      </div>
                     )}
                   </div>
 

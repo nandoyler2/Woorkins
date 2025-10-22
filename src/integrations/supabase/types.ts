@@ -150,919 +150,6 @@ export type Database = {
           },
         ]
       }
-      business_admins: {
-        Row: {
-          business_id: string
-          created_at: string
-          created_by_profile_id: string | null
-          id: string
-          invited_at: string | null
-          permissions: Json
-          profile_id: string
-          responded_at: string | null
-          status: string | null
-          updated_at: string
-        }
-        Insert: {
-          business_id: string
-          created_at?: string
-          created_by_profile_id?: string | null
-          id?: string
-          invited_at?: string | null
-          permissions?: Json
-          profile_id: string
-          responded_at?: string | null
-          status?: string | null
-          updated_at?: string
-        }
-        Update: {
-          business_id?: string
-          created_at?: string
-          created_by_profile_id?: string | null
-          id?: string
-          invited_at?: string | null
-          permissions?: Json
-          profile_id?: string
-          responded_at?: string | null
-          status?: string | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "business_admins_business_id_fkey"
-            columns: ["business_id"]
-            isOneToOne: false
-            referencedRelation: "business_profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "business_admins_created_by_profile_id_fkey"
-            columns: ["created_by_profile_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "business_admins_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      business_appointments: {
-        Row: {
-          appointment_date: string
-          appointment_time: string
-          business_id: string
-          client_profile_id: string
-          created_at: string | null
-          duration_minutes: number | null
-          google_calendar_event_id: string | null
-          id: string
-          notes: string | null
-          service_description: string | null
-          status: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          appointment_date: string
-          appointment_time: string
-          business_id: string
-          client_profile_id: string
-          created_at?: string | null
-          duration_minutes?: number | null
-          google_calendar_event_id?: string | null
-          id?: string
-          notes?: string | null
-          service_description?: string | null
-          status?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          appointment_date?: string
-          appointment_time?: string
-          business_id?: string
-          client_profile_id?: string
-          created_at?: string | null
-          duration_minutes?: number | null
-          google_calendar_event_id?: string | null
-          id?: string
-          notes?: string | null
-          service_description?: string | null
-          status?: string | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "business_appointments_business_id_fkey"
-            columns: ["business_id"]
-            isOneToOne: false
-            referencedRelation: "business_profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "business_appointments_client_profile_id_fkey"
-            columns: ["client_profile_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      business_availability: {
-        Row: {
-          active: boolean | null
-          business_id: string
-          created_at: string | null
-          day_of_week: number | null
-          end_time: string
-          id: string
-          start_time: string
-          updated_at: string | null
-        }
-        Insert: {
-          active?: boolean | null
-          business_id: string
-          created_at?: string | null
-          day_of_week?: number | null
-          end_time: string
-          id?: string
-          start_time: string
-          updated_at?: string | null
-        }
-        Update: {
-          active?: boolean | null
-          business_id?: string
-          created_at?: string | null
-          day_of_week?: number | null
-          end_time?: string
-          id?: string
-          start_time?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "business_availability_business_id_fkey"
-            columns: ["business_id"]
-            isOneToOne: false
-            referencedRelation: "business_profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      business_banners: {
-        Row: {
-          active: boolean | null
-          business_id: string
-          created_at: string | null
-          id: string
-          image_url: string
-          link_url: string | null
-          order_index: number | null
-          title: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          active?: boolean | null
-          business_id: string
-          created_at?: string | null
-          id?: string
-          image_url: string
-          link_url?: string | null
-          order_index?: number | null
-          title?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          active?: boolean | null
-          business_id?: string
-          created_at?: string | null
-          id?: string
-          image_url?: string
-          link_url?: string | null
-          order_index?: number | null
-          title?: string | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "business_banners_business_id_fkey"
-            columns: ["business_id"]
-            isOneToOne: false
-            referencedRelation: "business_profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      business_catalog_items: {
-        Row: {
-          active: boolean | null
-          business_id: string
-          category: string | null
-          created_at: string | null
-          description: string | null
-          id: string
-          image_url: string | null
-          name: string
-          price: number
-          updated_at: string | null
-        }
-        Insert: {
-          active?: boolean | null
-          business_id: string
-          category?: string | null
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          image_url?: string | null
-          name: string
-          price: number
-          updated_at?: string | null
-        }
-        Update: {
-          active?: boolean | null
-          business_id?: string
-          category?: string | null
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          image_url?: string | null
-          name?: string
-          price?: number
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "business_catalog_items_business_id_fkey"
-            columns: ["business_id"]
-            isOneToOne: false
-            referencedRelation: "business_profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      business_certifications: {
-        Row: {
-          business_id: string
-          created_at: string | null
-          description: string | null
-          file_type: string | null
-          file_url: string
-          id: string
-          issued_by: string | null
-          issued_date: string | null
-          order_index: number | null
-          title: string
-          updated_at: string | null
-        }
-        Insert: {
-          business_id: string
-          created_at?: string | null
-          description?: string | null
-          file_type?: string | null
-          file_url: string
-          id?: string
-          issued_by?: string | null
-          issued_date?: string | null
-          order_index?: number | null
-          title: string
-          updated_at?: string | null
-        }
-        Update: {
-          business_id?: string
-          created_at?: string | null
-          description?: string | null
-          file_type?: string | null
-          file_url?: string
-          id?: string
-          issued_by?: string | null
-          issued_date?: string | null
-          order_index?: number | null
-          title?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "business_certifications_business_id_fkey"
-            columns: ["business_id"]
-            isOneToOne: false
-            referencedRelation: "business_profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      business_custom_links: {
-        Row: {
-          active: boolean | null
-          business_id: string
-          created_at: string | null
-          icon_name: string | null
-          id: string
-          image_url: string | null
-          order_index: number | null
-          title: string
-          updated_at: string | null
-          url: string
-          youtube_url: string | null
-        }
-        Insert: {
-          active?: boolean | null
-          business_id: string
-          created_at?: string | null
-          icon_name?: string | null
-          id?: string
-          image_url?: string | null
-          order_index?: number | null
-          title: string
-          updated_at?: string | null
-          url: string
-          youtube_url?: string | null
-        }
-        Update: {
-          active?: boolean | null
-          business_id?: string
-          created_at?: string | null
-          icon_name?: string | null
-          id?: string
-          image_url?: string | null
-          order_index?: number | null
-          title?: string
-          updated_at?: string | null
-          url?: string
-          youtube_url?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "business_custom_links_business_id_fkey"
-            columns: ["business_id"]
-            isOneToOne: false
-            referencedRelation: "business_profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      business_job_applications: {
-        Row: {
-          applicant_profile_id: string
-          cover_letter: string | null
-          created_at: string | null
-          id: string
-          resume_url: string | null
-          reviewed_at: string | null
-          status: string | null
-          updated_at: string | null
-          vacancy_id: string
-        }
-        Insert: {
-          applicant_profile_id: string
-          cover_letter?: string | null
-          created_at?: string | null
-          id?: string
-          resume_url?: string | null
-          reviewed_at?: string | null
-          status?: string | null
-          updated_at?: string | null
-          vacancy_id: string
-        }
-        Update: {
-          applicant_profile_id?: string
-          cover_letter?: string | null
-          created_at?: string | null
-          id?: string
-          resume_url?: string | null
-          reviewed_at?: string | null
-          status?: string | null
-          updated_at?: string | null
-          vacancy_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "business_job_applications_applicant_profile_id_fkey"
-            columns: ["applicant_profile_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "business_job_applications_vacancy_id_fkey"
-            columns: ["vacancy_id"]
-            isOneToOne: false
-            referencedRelation: "business_job_vacancies"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      business_job_vacancies: {
-        Row: {
-          area: string | null
-          business_id: string
-          created_at: string | null
-          deadline: string | null
-          description: string
-          id: string
-          requirements: string | null
-          salary_max: number | null
-          salary_min: number | null
-          status: string | null
-          title: string
-          updated_at: string | null
-          work_mode: string | null
-        }
-        Insert: {
-          area?: string | null
-          business_id: string
-          created_at?: string | null
-          deadline?: string | null
-          description: string
-          id?: string
-          requirements?: string | null
-          salary_max?: number | null
-          salary_min?: number | null
-          status?: string | null
-          title: string
-          updated_at?: string | null
-          work_mode?: string | null
-        }
-        Update: {
-          area?: string | null
-          business_id?: string
-          created_at?: string | null
-          deadline?: string | null
-          description?: string
-          id?: string
-          requirements?: string | null
-          salary_max?: number | null
-          salary_min?: number | null
-          status?: string | null
-          title?: string
-          updated_at?: string | null
-          work_mode?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "business_job_vacancies_business_id_fkey"
-            columns: ["business_id"]
-            isOneToOne: false
-            referencedRelation: "business_profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      business_post_comments: {
-        Row: {
-          content: string
-          created_at: string
-          id: string
-          post_id: string
-          profile_id: string
-          updated_at: string
-        }
-        Insert: {
-          content: string
-          created_at?: string
-          id?: string
-          post_id: string
-          profile_id: string
-          updated_at?: string
-        }
-        Update: {
-          content?: string
-          created_at?: string
-          id?: string
-          post_id?: string
-          profile_id?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "business_post_comments_post_id_fkey"
-            columns: ["post_id"]
-            isOneToOne: false
-            referencedRelation: "business_posts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "business_post_comments_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      business_post_likes: {
-        Row: {
-          created_at: string
-          id: string
-          post_id: string
-          profile_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          post_id: string
-          profile_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          post_id?: string
-          profile_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "business_post_likes_post_id_fkey"
-            columns: ["post_id"]
-            isOneToOne: false
-            referencedRelation: "business_posts"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      business_posts: {
-        Row: {
-          business_id: string
-          content: string
-          created_at: string
-          id: string
-          media_types: string[] | null
-          media_urls: string[] | null
-          updated_at: string
-        }
-        Insert: {
-          business_id: string
-          content: string
-          created_at?: string
-          id?: string
-          media_types?: string[] | null
-          media_urls?: string[] | null
-          updated_at?: string
-        }
-        Update: {
-          business_id?: string
-          content?: string
-          created_at?: string
-          id?: string
-          media_types?: string[] | null
-          media_urls?: string[] | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "business_posts_business_id_fkey"
-            columns: ["business_id"]
-            isOneToOne: false
-            referencedRelation: "business_profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      business_profile_features: {
-        Row: {
-          business_id: string
-          created_at: string | null
-          feature_key: string
-          id: string
-          is_active: boolean | null
-          settings: Json | null
-          updated_at: string | null
-        }
-        Insert: {
-          business_id: string
-          created_at?: string | null
-          feature_key: string
-          id?: string
-          is_active?: boolean | null
-          settings?: Json | null
-          updated_at?: string | null
-        }
-        Update: {
-          business_id?: string
-          created_at?: string | null
-          feature_key?: string
-          id?: string
-          is_active?: boolean | null
-          settings?: Json | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "business_profile_features_business_id_fkey"
-            columns: ["business_id"]
-            isOneToOne: false
-            referencedRelation: "business_profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      business_profile_views: {
-        Row: {
-          business_id: string
-          id: string
-          ip_address: string | null
-          user_agent: string | null
-          viewed_at: string
-          viewer_profile_id: string | null
-        }
-        Insert: {
-          business_id: string
-          id?: string
-          ip_address?: string | null
-          user_agent?: string | null
-          viewed_at?: string
-          viewer_profile_id?: string | null
-        }
-        Update: {
-          business_id?: string
-          id?: string
-          ip_address?: string | null
-          user_agent?: string | null
-          viewed_at?: string
-          viewer_profile_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "business_profile_views_business_id_fkey"
-            columns: ["business_id"]
-            isOneToOne: false
-            referencedRelation: "business_profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      business_profiles: {
-        Row: {
-          active: boolean | null
-          address: string | null
-          average_rating: number | null
-          category: string | null
-          company_name: string
-          cover_url: string | null
-          created_at: string
-          deleted: boolean | null
-          deleted_at: string | null
-          deleted_by: string | null
-          description: string | null
-          email: string | null
-          enable_negotiation: boolean | null
-          facebook: string | null
-          id: string
-          instagram: string | null
-          last_slug_change_at: string | null
-          linkedin: string | null
-          linktree_config: Json | null
-          linktree_logo_url: string | null
-          linktree_slug: string | null
-          linktree_social_links: Json | null
-          logo_url: string | null
-          phone: string | null
-          portfolio_description: string | null
-          profile_id: string
-          response_time_avg: number | null
-          services_offered: string[] | null
-          slug: string | null
-          total_reviews: number | null
-          twitter: string | null
-          updated_at: string
-          website_url: string | null
-          whatsapp: string | null
-          working_hours: string | null
-        }
-        Insert: {
-          active?: boolean | null
-          address?: string | null
-          average_rating?: number | null
-          category?: string | null
-          company_name: string
-          cover_url?: string | null
-          created_at?: string
-          deleted?: boolean | null
-          deleted_at?: string | null
-          deleted_by?: string | null
-          description?: string | null
-          email?: string | null
-          enable_negotiation?: boolean | null
-          facebook?: string | null
-          id?: string
-          instagram?: string | null
-          last_slug_change_at?: string | null
-          linkedin?: string | null
-          linktree_config?: Json | null
-          linktree_logo_url?: string | null
-          linktree_slug?: string | null
-          linktree_social_links?: Json | null
-          logo_url?: string | null
-          phone?: string | null
-          portfolio_description?: string | null
-          profile_id: string
-          response_time_avg?: number | null
-          services_offered?: string[] | null
-          slug?: string | null
-          total_reviews?: number | null
-          twitter?: string | null
-          updated_at?: string
-          website_url?: string | null
-          whatsapp?: string | null
-          working_hours?: string | null
-        }
-        Update: {
-          active?: boolean | null
-          address?: string | null
-          average_rating?: number | null
-          category?: string | null
-          company_name?: string
-          cover_url?: string | null
-          created_at?: string
-          deleted?: boolean | null
-          deleted_at?: string | null
-          deleted_by?: string | null
-          description?: string | null
-          email?: string | null
-          enable_negotiation?: boolean | null
-          facebook?: string | null
-          id?: string
-          instagram?: string | null
-          last_slug_change_at?: string | null
-          linkedin?: string | null
-          linktree_config?: Json | null
-          linktree_logo_url?: string | null
-          linktree_slug?: string | null
-          linktree_social_links?: Json | null
-          logo_url?: string | null
-          phone?: string | null
-          portfolio_description?: string | null
-          profile_id?: string
-          response_time_avg?: number | null
-          services_offered?: string[] | null
-          slug?: string | null
-          total_reviews?: number | null
-          twitter?: string | null
-          updated_at?: string
-          website_url?: string | null
-          whatsapp?: string | null
-          working_hours?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "business_profiles_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      business_testimonials: {
-        Row: {
-          business_id: string
-          client_name: string
-          client_photo_url: string | null
-          client_profile_id: string | null
-          content: string
-          created_at: string | null
-          id: string
-          moderated_at: string | null
-          moderated_by: string | null
-          order_index: number | null
-          rating: number | null
-          status: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          business_id: string
-          client_name: string
-          client_photo_url?: string | null
-          client_profile_id?: string | null
-          content: string
-          created_at?: string | null
-          id?: string
-          moderated_at?: string | null
-          moderated_by?: string | null
-          order_index?: number | null
-          rating?: number | null
-          status?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          business_id?: string
-          client_name?: string
-          client_photo_url?: string | null
-          client_profile_id?: string | null
-          content?: string
-          created_at?: string | null
-          id?: string
-          moderated_at?: string | null
-          moderated_by?: string | null
-          order_index?: number | null
-          rating?: number | null
-          status?: string | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "business_testimonials_business_id_fkey"
-            columns: ["business_id"]
-            isOneToOne: false
-            referencedRelation: "business_profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "business_testimonials_client_profile_id_fkey"
-            columns: ["client_profile_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "business_testimonials_moderated_by_fkey"
-            columns: ["moderated_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      business_videos: {
-        Row: {
-          active: boolean | null
-          business_id: string
-          created_at: string | null
-          id: string
-          title: string | null
-          updated_at: string | null
-          youtube_url: string
-        }
-        Insert: {
-          active?: boolean | null
-          business_id: string
-          created_at?: string | null
-          id?: string
-          title?: string | null
-          updated_at?: string | null
-          youtube_url: string
-        }
-        Update: {
-          active?: boolean | null
-          business_id?: string
-          created_at?: string | null
-          id?: string
-          title?: string | null
-          updated_at?: string | null
-          youtube_url?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "business_videos_business_id_fkey"
-            columns: ["business_id"]
-            isOneToOne: true
-            referencedRelation: "business_profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      business_whatsapp_config: {
-        Row: {
-          auto_open: boolean | null
-          business_id: string
-          created_at: string
-          id: string
-          phone: string
-          questions: Json | null
-          updated_at: string
-          welcome_message: string | null
-        }
-        Insert: {
-          auto_open?: boolean | null
-          business_id: string
-          created_at?: string
-          id?: string
-          phone: string
-          questions?: Json | null
-          updated_at?: string
-          welcome_message?: string | null
-        }
-        Update: {
-          auto_open?: boolean | null
-          business_id?: string
-          created_at?: string
-          id?: string
-          phone?: string
-          questions?: Json | null
-          updated_at?: string
-          welcome_message?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "business_whatsapp_config_business_id_fkey"
-            columns: ["business_id"]
-            isOneToOne: true
-            referencedRelation: "business_profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       counter_proposals: {
         Row: {
           amount: number
@@ -1212,7 +299,7 @@ export type Database = {
       }
       evaluations: {
         Row: {
-          business_id: string
+          author_profile_id: string
           content: string
           created_at: string
           evaluation_category: string | null
@@ -1227,12 +314,12 @@ export type Database = {
           public_response: string | null
           rating: number
           tags: string[] | null
+          target_profile_id: string
           title: string
           updated_at: string
-          user_id: string
         }
         Insert: {
-          business_id: string
+          author_profile_id: string
           content: string
           created_at?: string
           evaluation_category?: string | null
@@ -1247,12 +334,12 @@ export type Database = {
           public_response?: string | null
           rating: number
           tags?: string[] | null
+          target_profile_id: string
           title: string
           updated_at?: string
-          user_id: string
         }
         Update: {
-          business_id?: string
+          author_profile_id?: string
           content?: string
           created_at?: string
           evaluation_category?: string | null
@@ -1267,21 +354,21 @@ export type Database = {
           public_response?: string | null
           rating?: number
           tags?: string[] | null
+          target_profile_id?: string
           title?: string
           updated_at?: string
-          user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "evaluations_business_id_fkey"
-            columns: ["business_id"]
+            foreignKeyName: "evaluations_target_profile_id_fkey"
+            columns: ["target_profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "evaluations_user_id_fkey"
-            columns: ["user_id"]
+            columns: ["author_profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -1666,7 +753,7 @@ export type Database = {
           accepted_at: string | null
           archived: boolean | null
           archived_at: string | null
-          business_id: string
+          client_user_id: string
           completed_at: string | null
           created_at: string
           current_amount: number | null
@@ -1683,14 +770,14 @@ export type Database = {
           status: string
           stripe_fee_amount: number | null
           stripe_payment_intent_id: string | null
+          target_profile_id: string
           updated_at: string
-          user_id: string
         }
         Insert: {
           accepted_at?: string | null
           archived?: boolean | null
           archived_at?: string | null
-          business_id: string
+          client_user_id: string
           completed_at?: string | null
           created_at?: string
           current_amount?: number | null
@@ -1707,14 +794,14 @@ export type Database = {
           status?: string
           stripe_fee_amount?: number | null
           stripe_payment_intent_id?: string | null
+          target_profile_id: string
           updated_at?: string
-          user_id: string
         }
         Update: {
           accepted_at?: string | null
           archived?: boolean | null
           archived_at?: string | null
-          business_id?: string
+          client_user_id?: string
           completed_at?: string | null
           created_at?: string
           current_amount?: number | null
@@ -1731,15 +818,15 @@ export type Database = {
           status?: string
           stripe_fee_amount?: number | null
           stripe_payment_intent_id?: string | null
+          target_profile_id?: string
           updated_at?: string
-          user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "negotiations_business_id_fkey"
-            columns: ["business_id"]
+            foreignKeyName: "negotiations_target_profile_id_fkey"
+            columns: ["target_profile_id"]
             isOneToOne: false
-            referencedRelation: "business_profiles"
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -1915,19 +1002,438 @@ export type Database = {
           tags?: string[] | null
           title?: string
         }
+        Relationships: []
+      }
+      profile_admins: {
+        Row: {
+          created_at: string
+          created_by_profile_id: string | null
+          id: string
+          invited_at: string | null
+          permissions: Json
+          profile_id: string
+          responded_at: string | null
+          status: string | null
+          target_profile_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by_profile_id?: string | null
+          id?: string
+          invited_at?: string | null
+          permissions?: Json
+          profile_id: string
+          responded_at?: string | null
+          status?: string | null
+          target_profile_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by_profile_id?: string | null
+          id?: string
+          invited_at?: string | null
+          permissions?: Json
+          profile_id?: string
+          responded_at?: string | null
+          status?: string | null
+          target_profile_id?: string
+          updated_at?: string
+        }
         Relationships: [
           {
-            foreignKeyName: "portfolio_items_business_id_fkey"
-            columns: ["business_id"]
+            foreignKeyName: "business_admins_created_by_profile_id_fkey"
+            columns: ["created_by_profile_id"]
             isOneToOne: false
-            referencedRelation: "business_profiles"
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_admins_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
       }
-      posts: {
+      profile_appointments: {
         Row: {
-          author_id: string
+          appointment_date: string
+          appointment_time: string
+          client_profile_id: string
+          created_at: string | null
+          duration_minutes: number | null
+          google_calendar_event_id: string | null
+          id: string
+          notes: string | null
+          service_description: string | null
+          status: string | null
+          target_profile_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          appointment_date: string
+          appointment_time: string
+          client_profile_id: string
+          created_at?: string | null
+          duration_minutes?: number | null
+          google_calendar_event_id?: string | null
+          id?: string
+          notes?: string | null
+          service_description?: string | null
+          status?: string | null
+          target_profile_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          appointment_date?: string
+          appointment_time?: string
+          client_profile_id?: string
+          created_at?: string | null
+          duration_minutes?: number | null
+          google_calendar_event_id?: string | null
+          id?: string
+          notes?: string | null
+          service_description?: string | null
+          status?: string | null
+          target_profile_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_appointments_client_profile_id_fkey"
+            columns: ["client_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profile_availability: {
+        Row: {
+          active: boolean | null
+          created_at: string | null
+          day_of_week: number | null
+          end_time: string
+          id: string
+          start_time: string
+          target_profile_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string | null
+          day_of_week?: number | null
+          end_time: string
+          id?: string
+          start_time: string
+          target_profile_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string | null
+          day_of_week?: number | null
+          end_time?: string
+          id?: string
+          start_time?: string
+          target_profile_id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      profile_banners: {
+        Row: {
+          active: boolean | null
+          created_at: string | null
+          id: string
+          image_url: string
+          link_url: string | null
+          order_index: number | null
+          target_profile_id: string
+          title: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string | null
+          id?: string
+          image_url: string
+          link_url?: string | null
+          order_index?: number | null
+          target_profile_id: string
+          title?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string | null
+          id?: string
+          image_url?: string
+          link_url?: string | null
+          order_index?: number | null
+          target_profile_id?: string
+          title?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      profile_catalog_items: {
+        Row: {
+          active: boolean | null
+          category: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          image_url: string | null
+          name: string
+          price: number
+          target_profile_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          name: string
+          price: number
+          target_profile_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          name?: string
+          price?: number
+          target_profile_id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      profile_certifications: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          file_type: string | null
+          file_url: string
+          id: string
+          issued_by: string | null
+          issued_date: string | null
+          order_index: number | null
+          target_profile_id: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          file_type?: string | null
+          file_url: string
+          id?: string
+          issued_by?: string | null
+          issued_date?: string | null
+          order_index?: number | null
+          target_profile_id: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          file_type?: string | null
+          file_url?: string
+          id?: string
+          issued_by?: string | null
+          issued_date?: string | null
+          order_index?: number | null
+          target_profile_id?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      profile_custom_links: {
+        Row: {
+          active: boolean | null
+          created_at: string | null
+          icon_name: string | null
+          id: string
+          image_url: string | null
+          order_index: number | null
+          target_profile_id: string
+          title: string
+          updated_at: string | null
+          url: string
+          youtube_url: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string | null
+          icon_name?: string | null
+          id?: string
+          image_url?: string | null
+          order_index?: number | null
+          target_profile_id: string
+          title: string
+          updated_at?: string | null
+          url: string
+          youtube_url?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string | null
+          icon_name?: string | null
+          id?: string
+          image_url?: string | null
+          order_index?: number | null
+          target_profile_id?: string
+          title?: string
+          updated_at?: string | null
+          url?: string
+          youtube_url?: string | null
+        }
+        Relationships: []
+      }
+      profile_features: {
+        Row: {
+          created_at: string | null
+          feature_key: string
+          id: string
+          is_active: boolean | null
+          profile_id: string
+          settings: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          feature_key: string
+          id?: string
+          is_active?: boolean | null
+          profile_id: string
+          settings?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          feature_key?: string
+          id?: string
+          is_active?: boolean | null
+          profile_id?: string
+          settings?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      profile_job_applications: {
+        Row: {
+          applicant_profile_id: string
+          cover_letter: string | null
+          created_at: string | null
+          id: string
+          resume_url: string | null
+          reviewed_at: string | null
+          status: string | null
+          updated_at: string | null
+          vacancy_id: string
+        }
+        Insert: {
+          applicant_profile_id: string
+          cover_letter?: string | null
+          created_at?: string | null
+          id?: string
+          resume_url?: string | null
+          reviewed_at?: string | null
+          status?: string | null
+          updated_at?: string | null
+          vacancy_id: string
+        }
+        Update: {
+          applicant_profile_id?: string
+          cover_letter?: string | null
+          created_at?: string | null
+          id?: string
+          resume_url?: string | null
+          reviewed_at?: string | null
+          status?: string | null
+          updated_at?: string | null
+          vacancy_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_job_applications_applicant_profile_id_fkey"
+            columns: ["applicant_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_job_applications_vacancy_id_fkey"
+            columns: ["vacancy_id"]
+            isOneToOne: false
+            referencedRelation: "profile_job_vacancies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profile_job_vacancies: {
+        Row: {
+          area: string | null
+          created_at: string | null
+          deadline: string | null
+          description: string
+          id: string
+          requirements: string | null
+          salary_max: number | null
+          salary_min: number | null
+          status: string | null
+          target_profile_id: string
+          title: string
+          updated_at: string | null
+          work_mode: string | null
+        }
+        Insert: {
+          area?: string | null
+          created_at?: string | null
+          deadline?: string | null
+          description: string
+          id?: string
+          requirements?: string | null
+          salary_max?: number | null
+          salary_min?: number | null
+          status?: string | null
+          target_profile_id: string
+          title: string
+          updated_at?: string | null
+          work_mode?: string | null
+        }
+        Update: {
+          area?: string | null
+          created_at?: string | null
+          deadline?: string | null
+          description?: string
+          id?: string
+          requirements?: string | null
+          salary_max?: number | null
+          salary_min?: number | null
+          status?: string | null
+          target_profile_id?: string
+          title?: string
+          updated_at?: string | null
+          work_mode?: string | null
+        }
+        Relationships: []
+      }
+      profile_posts: {
+        Row: {
           comments_count: number | null
           content: string | null
           created_at: string
@@ -1936,10 +1442,10 @@ export type Database = {
           is_story: boolean | null
           likes_count: number | null
           media_urls: string[] | null
+          profile_id: string
           updated_at: string
         }
         Insert: {
-          author_id: string
           comments_count?: number | null
           content?: string | null
           created_at?: string
@@ -1948,10 +1454,10 @@ export type Database = {
           is_story?: boolean | null
           likes_count?: number | null
           media_urls?: string[] | null
+          profile_id: string
           updated_at?: string
         }
         Update: {
-          author_id?: string
           comments_count?: number | null
           content?: string | null
           created_at?: string
@@ -1960,30 +1466,219 @@ export type Database = {
           is_story?: boolean | null
           likes_count?: number | null
           media_urls?: string[] | null
+          profile_id?: string
           updated_at?: string
         }
         Relationships: [
           {
             foreignKeyName: "posts_author_id_fkey"
-            columns: ["author_id"]
+            columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
       }
+      profile_testimonials: {
+        Row: {
+          client_name: string
+          client_photo_url: string | null
+          client_profile_id: string | null
+          content: string
+          created_at: string | null
+          id: string
+          moderated_at: string | null
+          moderated_by: string | null
+          order_index: number | null
+          rating: number | null
+          status: string | null
+          target_profile_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          client_name: string
+          client_photo_url?: string | null
+          client_profile_id?: string | null
+          content: string
+          created_at?: string | null
+          id?: string
+          moderated_at?: string | null
+          moderated_by?: string | null
+          order_index?: number | null
+          rating?: number | null
+          status?: string | null
+          target_profile_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          client_name?: string
+          client_photo_url?: string | null
+          client_profile_id?: string | null
+          content?: string
+          created_at?: string | null
+          id?: string
+          moderated_at?: string | null
+          moderated_by?: string | null
+          order_index?: number | null
+          rating?: number | null
+          status?: string | null
+          target_profile_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_testimonials_client_profile_id_fkey"
+            columns: ["client_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_testimonials_moderated_by_fkey"
+            columns: ["moderated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profile_update_reads: {
+        Row: {
+          id: string
+          profile_id: string
+          read_at: string
+          update_id: string
+        }
+        Insert: {
+          id?: string
+          profile_id: string
+          read_at?: string
+          update_id: string
+        }
+        Update: {
+          id?: string
+          profile_id?: string
+          read_at?: string
+          update_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profile_update_reads_update_id_fkey"
+            columns: ["update_id"]
+            isOneToOne: false
+            referencedRelation: "profile_updates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profile_updates: {
+        Row: {
+          created_at: string
+          id: string
+          profile_id: string
+          update_data: Json | null
+          update_type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          profile_id: string
+          update_data?: Json | null
+          update_type: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          profile_id?: string
+          update_data?: Json | null
+          update_type?: string
+        }
+        Relationships: []
+      }
+      profile_videos: {
+        Row: {
+          active: boolean | null
+          created_at: string | null
+          id: string
+          target_profile_id: string
+          title: string | null
+          updated_at: string | null
+          youtube_url: string
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string | null
+          id?: string
+          target_profile_id: string
+          title?: string | null
+          updated_at?: string | null
+          youtube_url: string
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string | null
+          id?: string
+          target_profile_id?: string
+          title?: string | null
+          updated_at?: string | null
+          youtube_url?: string
+        }
+        Relationships: []
+      }
+      profile_whatsapp_config: {
+        Row: {
+          auto_open: boolean | null
+          created_at: string
+          id: string
+          phone: string
+          questions: Json | null
+          target_profile_id: string
+          updated_at: string
+          welcome_message: string | null
+        }
+        Insert: {
+          auto_open?: boolean | null
+          created_at?: string
+          id?: string
+          phone: string
+          questions?: Json | null
+          target_profile_id: string
+          updated_at?: string
+          welcome_message?: string | null
+        }
+        Update: {
+          auto_open?: boolean | null
+          created_at?: string
+          id?: string
+          phone?: string
+          questions?: Json | null
+          target_profile_id?: string
+          updated_at?: string
+          welcome_message?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           active: boolean | null
+          address: string | null
           avatar_url: string | null
+          average_rating: number | null
           bio: string | null
           birth_date: string | null
+          category: string | null
+          company_name: string | null
           cover_position: number | null
           cover_url: string | null
           cpf: string | null
           created_at: string
+          deleted: boolean | null
+          deleted_at: string | null
+          deleted_by: string | null
+          description: string | null
           document_verification_status: string | null
           document_verified: boolean | null
+          email: string | null
           enable_negotiation: boolean | null
           facebook: string | null
           filiation: string | null
@@ -1998,8 +1693,16 @@ export type Database = {
           linktree_slug: string | null
           linktree_social_links: Json | null
           location: string | null
+          logo_url: string | null
           nationality: string | null
+          phone: string | null
           place_of_birth: string | null
+          portfolio_description: string | null
+          profile_type: string | null
+          response_time_avg: number | null
+          services_offered: string[] | null
+          slug: string | null
+          total_reviews: number | null
           trust_level: string | null
           twitter: string | null
           updated_at: string
@@ -2010,18 +1713,28 @@ export type Database = {
           website: string | null
           website_url: string | null
           whatsapp: string | null
+          working_hours: string | null
         }
         Insert: {
           active?: boolean | null
+          address?: string | null
           avatar_url?: string | null
+          average_rating?: number | null
           bio?: string | null
           birth_date?: string | null
+          category?: string | null
+          company_name?: string | null
           cover_position?: number | null
           cover_url?: string | null
           cpf?: string | null
           created_at?: string
+          deleted?: boolean | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          description?: string | null
           document_verification_status?: string | null
           document_verified?: boolean | null
+          email?: string | null
           enable_negotiation?: boolean | null
           facebook?: string | null
           filiation?: string | null
@@ -2036,8 +1749,16 @@ export type Database = {
           linktree_slug?: string | null
           linktree_social_links?: Json | null
           location?: string | null
+          logo_url?: string | null
           nationality?: string | null
+          phone?: string | null
           place_of_birth?: string | null
+          portfolio_description?: string | null
+          profile_type?: string | null
+          response_time_avg?: number | null
+          services_offered?: string[] | null
+          slug?: string | null
+          total_reviews?: number | null
           trust_level?: string | null
           twitter?: string | null
           updated_at?: string
@@ -2048,18 +1769,28 @@ export type Database = {
           website?: string | null
           website_url?: string | null
           whatsapp?: string | null
+          working_hours?: string | null
         }
         Update: {
           active?: boolean | null
+          address?: string | null
           avatar_url?: string | null
+          average_rating?: number | null
           bio?: string | null
           birth_date?: string | null
+          category?: string | null
+          company_name?: string | null
           cover_position?: number | null
           cover_url?: string | null
           cpf?: string | null
           created_at?: string
+          deleted?: boolean | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          description?: string | null
           document_verification_status?: string | null
           document_verified?: boolean | null
+          email?: string | null
           enable_negotiation?: boolean | null
           facebook?: string | null
           filiation?: string | null
@@ -2074,8 +1805,16 @@ export type Database = {
           linktree_slug?: string | null
           linktree_social_links?: Json | null
           location?: string | null
+          logo_url?: string | null
           nationality?: string | null
+          phone?: string | null
           place_of_birth?: string | null
+          portfolio_description?: string | null
+          profile_type?: string | null
+          response_time_avg?: number | null
+          services_offered?: string[] | null
+          slug?: string | null
+          total_reviews?: number | null
           trust_level?: string | null
           twitter?: string | null
           updated_at?: string
@@ -2086,6 +1825,7 @@ export type Database = {
           website?: string | null
           website_url?: string | null
           whatsapp?: string | null
+          working_hours?: string | null
         }
         Relationships: []
       }
@@ -2289,13 +2029,6 @@ export type Database = {
             columns: ["awaiting_acceptance_from"]
             isOneToOne: false
             referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "proposals_business_id_fkey"
-            columns: ["business_id"]
-            isOneToOne: false
-            referencedRelation: "business_profiles"
             referencedColumns: ["id"]
           },
           {
@@ -3308,44 +3041,6 @@ export type Database = {
           },
         ]
       }
-      user_profile_features: {
-        Row: {
-          created_at: string | null
-          feature_key: string
-          id: string
-          is_active: boolean | null
-          profile_id: string
-          settings: Json | null
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          feature_key: string
-          id?: string
-          is_active?: boolean | null
-          profile_id: string
-          settings?: Json | null
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          feature_key?: string
-          id?: string
-          is_active?: boolean | null
-          profile_id?: string
-          settings?: Json | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "user_profile_features_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       user_roles: {
         Row: {
           created_at: string
@@ -3602,15 +3297,7 @@ export type Database = {
           requested_at?: string
           status?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "withdrawals_business_id_fkey"
-            columns: ["business_id"]
-            isOneToOne: false
-            referencedRelation: "business_profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       woorkoins_balance: {
         Row: {

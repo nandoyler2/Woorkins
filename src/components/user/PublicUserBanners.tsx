@@ -62,7 +62,7 @@ export function PublicUserBanners({ userId }: PublicUserBannersProps) {
   );
 
   return (
-    <div className="w-full h-48 md:h-60 lg:h-72 relative overflow-hidden bg-muted">
+    <div className="w-full h-48 md:h-60 lg:h-72 relative overflow-hidden bg-muted rounded-lg">
       {currentBanner.link_url ? (
         <a
           href={currentBanner.link_url}

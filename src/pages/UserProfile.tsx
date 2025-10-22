@@ -333,21 +333,6 @@ export default function UserProfile() {
 
                   {/* Início Tab */}
                   <TabsContent value="inicio" className="p-6 space-y-6">
-                    <div>
-                      <h2 className="text-xl font-bold mb-4">Visão Geral</h2>
-                      <div className="space-y-4">
-                        <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg">
-                          <div className="p-2 bg-primary rounded-lg">
-                            <Star className="w-5 h-5 text-primary-foreground" />
-                          </div>
-                          <div>
-                            <p className="text-2xl font-bold">{averageRating > 0 ? averageRating.toFixed(1) : '0.0'}</p>
-                            <p className="text-sm text-muted-foreground">{evaluations.length} avaliações</p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
                     {/* Banner Section */}
                     <PublicUserBanners userId={profile.id} />
 

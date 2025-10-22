@@ -46,44 +46,46 @@ export function CoverTemplateDialog({ open, onClose, onSelect }: CoverTemplateDi
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[80vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Escolher Capa Pronta</DialogTitle>
         </DialogHeader>
         
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
-          {COVER_TEMPLATES.map((cover) => (
-            <button
-              key={cover.id}
-              onClick={() => setSelectedCover(cover.id)}
-              className={`relative group overflow-hidden rounded-lg transition-all ${
-                selectedCover === cover.id 
-                  ? 'ring-4 ring-primary' 
-                  : 'ring-2 ring-transparent hover:ring-primary/50'
-              }`}
-            >
-              <div className="relative w-full h-24 md:h-32">
-                <img
-                  src={cover.url}
-                  alt={cover.name}
-                  className="w-full h-full object-cover"
-                />
-                {selectedCover === cover.id && (
-                  <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
-                    <div className="bg-primary text-primary-foreground rounded-full p-2">
-                      <Check className="w-6 h-6" />
+        <div className="flex-1 overflow-y-auto min-h-0">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4 pb-4">
+            {COVER_TEMPLATES.map((cover) => (
+              <button
+                key={cover.id}
+                onClick={() => setSelectedCover(cover.id)}
+                className={`relative group overflow-hidden rounded-lg transition-all ${
+                  selectedCover === cover.id 
+                    ? 'ring-4 ring-primary' 
+                    : 'ring-2 ring-transparent hover:ring-primary/50'
+                }`}
+              >
+                <div className="relative w-full h-24 md:h-32">
+                  <img
+                    src={cover.url}
+                    alt={cover.name}
+                    className="w-full h-full object-cover"
+                  />
+                  {selectedCover === cover.id && (
+                    <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                      <div className="bg-primary text-primary-foreground rounded-full p-2">
+                        <Check className="w-6 h-6" />
+                      </div>
                     </div>
-                  </div>
-                )}
-              </div>
-              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2">
-                <p className="text-white text-xs font-medium">{cover.name}</p>
-              </div>
-            </button>
-          ))}
+                  )}
+                </div>
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2">
+                  <p className="text-white text-xs font-medium">{cover.name}</p>
+                </div>
+              </button>
+            ))}
+          </div>
         </div>
 
-        <div className="flex justify-end gap-2 mt-6">
+        <div className="flex justify-end gap-2 pt-4 border-t bg-background">
           <Button variant="outline" onClick={onClose}>
             Cancelar
           </Button>

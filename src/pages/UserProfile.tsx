@@ -37,18 +37,26 @@ import { useFollow } from '@/hooks/useFollow';
 
 interface UserProfileData {
   id: string;
-  user_id: string;
+  user_id?: string;
+  profile_id?: string;
   username: string;
+  slug?: string;
   full_name: string;
+  company_name?: string;
   avatar_url: string | null;
+  logo_url?: string | null;
   cover_url: string | null;
   cover_position: number | null;
   bio: string | null;
+  description?: string | null;
   location: string | null;
+  address?: string | null;
   website: string | null;
+  website_url?: string | null;
   created_at: string;
   verified: boolean;
   trust_level: string;
+  enable_negotiation?: boolean;
 }
 
 interface UserProject {
@@ -91,7 +99,12 @@ interface Evaluation {
   };
 }
 
-export default function UserProfile() {
+interface UserProfileProps {
+  profileType?: 'user' | 'business';
+  profileId?: string;
+}
+
+export default function UserProfile({ profileType: propProfileType, profileId: propProfileId }: UserProfileProps = {}) {
   const { slug, tab } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
@@ -99,6 +112,7 @@ export default function UserProfile() {
   const { user } = useAuth();
   const { requireAuth } = useAuthAction();
   const [profile, setProfile] = useState<UserProfileData | null>(null);
+  const [profileType, setProfileType] = useState<'user' | 'business'>(propProfileType || 'user');
   const [projects, setProjects] = useState<UserProject[]>([]);
   const [posts, setPosts] = useState<UserPost[]>([]);
   const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
@@ -107,7 +121,7 @@ export default function UserProfile() {
   const [averageRating, setAverageRating] = useState(0);
   const [loading, setLoading] = useState(true);
   const activeTab = tab || 'inicio';
-  const isProfileOwner = user?.id === profile?.user_id;
+  const isProfileOwner = user?.id === (profile?.user_id || (profile as any)?.profile_id);
   const [showEvaluationForm, setShowEvaluationForm] = useState(false);
   const [showAllPositive, setShowAllPositive] = useState(false);
   const [showAllComplaints, setShowAllComplaints] = useState(false);
@@ -153,68 +167,111 @@ export default function UserProfile() {
 
   useEffect(() => {
     if (profile) {
-      document.title = `${formatFullName(profile.full_name)} (@${profile.username}) - Woorkins`;
+      const displayName = profileType === 'business' ? profile.company_name : formatFullName(profile.full_name);
+      const identifier = profileType === 'business' ? profile.slug : profile.username;
+      document.title = `${displayName} (@${identifier}) - Woorkins`;
     } else {
       document.title = 'Perfil - Woorkins';
     }
-  }, [profile]);
+  }, [profile, profileType]);
 
   useEffect(() => {
-    loadUserProfile();
-  }, [slug]);
+    // Se recebeu props, usa elas; senão carrega pelo slug
+    if (propProfileType && propProfileId) {
+      setProfileType(propProfileType);
+      loadProfileById(propProfileId, propProfileType);
+    } else {
+      loadUserProfile();
+    }
+  }, [slug, propProfileType, propProfileId]);
+
+  const loadProfileById = async (id: string, type: 'user' | 'business') => {
+    try {
+      if (type === 'user') {
+        const { data: profileData, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', id)
+          .maybeSingle();
+
+        if (error || !profileData) {
+          toast({ title: 'Erro', description: 'Usuário não encontrado', variant: 'destructive' });
+          return;
+        }
+
+        setProfile(profileData as UserProfileData);
+        await Promise.all([
+          loadProjects(profileData.id, 'user'),
+          loadPosts(profileData.id, 'user'),
+          loadEvaluations(profileData.id),
+          checkContent(profileData.id, 'user')
+        ]);
+      } else {
+        const { data: profileData, error } = await supabase
+          .from('business_profiles')
+          .select('*')
+          .eq('id', id)
+          .maybeSingle();
+
+        if (error || !profileData) {
+          toast({ title: 'Erro', description: 'Perfil não encontrado', variant: 'destructive' });
+          return;
+        }
+
+        setProfile(profileData as unknown as UserProfileData);
+        await Promise.all([
+          loadPosts(profileData.id, 'business'),
+          loadEvaluations(profileData.id),
+          checkContent(profileData.id, 'business')
+        ]);
+      }
+    } catch (error) {
+      console.error('Error loading profile:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const loadUserProfile = async () => {
     if (!slug) return;
 
     try {
-      // Load user profile
+      // Tenta carregar como usuário primeiro
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('username', slug)
         .maybeSingle();
 
-      if (profileError || !profileData) {
-        toast({
-          title: 'Erro',
-          description: 'Usuário não encontrado',
-          variant: 'destructive',
-        });
-        return;
+      if (profileData) {
+        setProfileType('user');
+        setProfile(profileData as UserProfileData);
+        await Promise.all([
+          loadProjects(profileData.id, 'user'),
+          loadPosts(profileData.id, 'user'),
+          loadEvaluations(profileData.id),
+          checkContent(profileData.id, 'user')
+        ]);
+      } else {
+        // Tenta como perfil profissional
+        const { data: businessData, error: businessError } = await supabase
+          .from('business_profiles')
+          .select('*')
+          .eq('slug', slug)
+          .maybeSingle();
+
+        if (businessData) {
+          setProfileType('business');
+          setProfile(businessData as unknown as UserProfileData);
+          await Promise.all([
+            loadPosts(businessData.id, 'business'),
+            loadEvaluations(businessData.id),
+            checkContent(businessData.id, 'business')
+          ]);
+        } else {
+          toast({ title: 'Erro', description: 'Perfil não encontrado', variant: 'destructive' });
+        }
       }
-
-      setProfile(profileData as UserProfileData);
-
-      // Load user's projects
-      const { data: projectsData } = await supabase
-        .from('projects')
-        .select('*')
-        .eq('profile_id', profileData.id)
-        .eq('status', 'open')
-        .order('created_at', { ascending: false })
-        .limit(6);
-
-      if (projectsData) {
-        setProjects(projectsData as UserProject[]);
-      }
-
-      // Load user's posts
-      const { data: postsData } = await supabase
-        .from('posts')
-        .select('*')
-        .eq('author_id', profileData.id)
-        .order('created_at', { ascending: false })
-        .limit(6);
-
-      if (postsData) {
-        setPosts(postsData as UserPost[]);
-      }
-
-      // Load evaluations
-      await loadEvaluations(profileData.id);
-
-      // Check for content
-      await checkContent(profileData.id);
     } catch (error) {
       console.error('Error loading user profile:', error);
     } finally {
@@ -222,48 +279,83 @@ export default function UserProfile() {
     }
   };
 
-  const checkContent = async (profileId: string) => {
+  const loadProjects = async (profileId: string, type: 'user' | 'business') => {
+    if (type === 'business') return; // Perfis profissionais não têm projetos
+
+    const { data: projectsData } = await supabase
+      .from('projects')
+      .select('*')
+      .eq('profile_id', profileId)
+      .eq('status', 'open')
+      .order('created_at', { ascending: false })
+      .limit(6);
+
+    if (projectsData) {
+      setProjects(projectsData as UserProject[]);
+    }
+  };
+
+  const loadPosts = async (profileId: string, type: 'user' | 'business') => {
+    const tableName = type === 'user' ? 'user_posts' : 'business_posts';
+    const idColumn = type === 'user' ? 'profile_id' : 'business_id';
+
+    const { data: postsData } = await supabase
+      .from(tableName as any)
+      .select('*')
+      .eq(idColumn, profileId)
+      .order('created_at', { ascending: false })
+      .limit(6);
+
+    if (postsData) {
+      setPosts(postsData as unknown as UserPost[]);
+    }
+  };
+
+  const checkContent = async (profileId: string, type: 'user' | 'business') => {
+    const prefix = type === 'user' ? 'user' : 'business';
+    const idColumn = type === 'user' ? 'profile_id' : 'business_id';
+
     try {
       // Check testimonials
       const { data: testimonials } = await supabase
-        .from('user_testimonials')
+        .from(`${prefix}_testimonials` as any)
         .select('id')
-        .eq('profile_id', profileId)
+        .eq(idColumn, profileId)
         .limit(1);
       setHasTestimonials((testimonials?.length || 0) > 0);
 
       // Check video
       const { data: video } = await supabase
-        .from('user_videos')
+        .from(`${prefix}_videos` as any)
         .select('id')
-        .eq('profile_id', profileId)
+        .eq(idColumn, profileId)
         .eq('active', true)
         .maybeSingle();
       setHasVideo(!!video);
 
       // Check portfolio
       const { data: portfolio } = await supabase
-        .from('user_portfolio_items')
+        .from(`${prefix}_portfolio_items` as any)
         .select('id')
-        .eq('profile_id', profileId)
+        .eq(idColumn, profileId)
         .eq('active', true)
         .limit(1);
       setHasPortfolio((portfolio?.length || 0) > 0);
 
       // Check catalog
       const { data: catalog } = await supabase
-        .from('user_catalog_items')
+        .from(`${prefix}_catalog_items` as any)
         .select('id')
-        .eq('profile_id', profileId)
+        .eq(idColumn, profileId)
         .eq('active', true)
         .limit(1);
       setHasCatalog((catalog?.length || 0) > 0);
 
       // Check job vacancies
       const { data: vacancies } = await supabase
-        .from('user_job_vacancies')
+        .from(`${prefix}_job_vacancies` as any)
         .select('id')
-        .eq('profile_id', profileId)
+        .eq(idColumn, profileId)
         .eq('status', 'open')
         .limit(1);
       setHasJobVacancies((vacancies?.length || 0) > 0);

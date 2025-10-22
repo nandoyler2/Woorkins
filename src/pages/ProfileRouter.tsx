@@ -2,11 +2,11 @@ import { useState, useEffect } from 'react';
 import { useParams, Routes, Route } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import UserProfile from './UserProfile';
-import BusinessProfile from './BusinessProfile';
 
 export default function ProfileRouter() {
   const { slug } = useParams<{ slug: string }>();
   const [profileType, setProfileType] = useState<'user' | 'business' | 'notfound' | null>(null);
+  const [profileId, setProfileId] = useState<string | null>(null);
 
   useEffect(() => {
     const checkProfileType = async () => {
@@ -18,24 +18,26 @@ export default function ProfileRouter() {
       // Primeiro verifica se é um username de usuário
       const { data: userData } = await supabase
         .from('profiles')
-        .select('username')
+        .select('id, username')
         .eq('username', slug)
         .maybeSingle();
 
       if (userData) {
         setProfileType('user');
+        setProfileId(userData.id);
         return;
       }
 
       // Se não for usuário, verifica se é um slug de empresa
       const { data: businessData } = await supabase
         .from('business_profiles')
-        .select('slug')
+        .select('id, slug')
         .eq('slug', slug)
         .maybeSingle();
 
       if (businessData) {
         setProfileType('business');
+        setProfileId(businessData.id);
         return;
       }
 
@@ -65,19 +67,11 @@ export default function ProfileRouter() {
     );
   }
 
-  if (profileType === 'user') {
-    return (
-      <Routes>
-        <Route path="/" element={<UserProfile />} />
-        <Route path="/:tab" element={<UserProfile />} />
-      </Routes>
-    );
-  }
-
+  // Sempre usa UserProfile, mas passa o tipo como prop
   return (
     <Routes>
-      <Route path="/" element={<BusinessProfile />} />
-      <Route path="/:tab" element={<BusinessProfile />} />
+      <Route path="/" element={<UserProfile profileType={profileType} profileId={profileId!} />} />
+      <Route path="/:tab" element={<UserProfile profileType={profileType} profileId={profileId!} />} />
     </Routes>
   );
 }

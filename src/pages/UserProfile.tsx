@@ -729,7 +729,7 @@ export default function UserProfile() {
                       onClick={() => setShowEvaluationForm(true)}
                       className="w-full"
                     >
-                      Avaliar Usuário
+                      Avaliar {profile.full_name ? profile.full_name.split(' ')[0] : profile.username}
                     </Button>
                   </div>
 
@@ -842,6 +842,24 @@ export default function UserProfile() {
       </div>
 
       <Footer />
+
+      {/* Evaluation Dialog */}
+      {profile && (
+        <Dialog open={showEvaluationForm} onOpenChange={setShowEvaluationForm}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Avaliar {formatFullName(profile.full_name)}</DialogTitle>
+            </DialogHeader>
+            <ProfileEvaluationForm
+              profileId={profile.id}
+              onSuccess={() => {
+                setShowEvaluationForm(false);
+                loadEvaluations(profile.id);
+              }}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
 
       {/* WhatsApp Widget */}
       {profile && (

@@ -33,6 +33,8 @@ export function InlinePhotoUpload({
   const [imageToCrop, setImageToCrop] = useState<string | null>(null);
   const [originalFile, setOriginalFile] = useState<File | null>(null);
   const [isHovered, setIsHovered] = useState(false);
+  const [coverPreview, setCoverPreview] = useState<string | null>(null);
+  const [coverPosition, setCoverPosition] = useState(50); // Posição vertical em %
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -59,9 +61,105 @@ export function InlinePhotoUpload({
     setOriginalFile(file);
     const reader = new FileReader();
     reader.onload = () => {
-      setImageToCrop(reader.result as string);
+      if (type === 'cover') {
+        setCoverPreview(reader.result as string);
+        setCoverPosition(50);
+      } else {
+        setImageToCrop(reader.result as string);
+      }
     };
     reader.readAsDataURL(file);
+  };
+
+  const handleCoverSave = async () => {
+    if (!originalFile || !coverPreview) return;
+    
+    setUploading(true);
+    setCoverPreview(null);
+
+    try {
+      // Comprimir a imagem original da capa
+      const compressedBlob = await compressImage(originalFile);
+      const compressedFile = new File([compressedBlob], originalFile.name, { type: 'image/jpeg' });
+      const fileName = `${userId}-${Date.now()}.jpg`;
+      const bucketName = 'user-covers';
+      const filePath = `${userId}/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from(bucketName)
+        .upload(filePath, compressedFile, {
+          contentType: 'image/jpeg',
+          upsert: false,
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from(bucketName)
+        .getPublicUrl(filePath);
+
+      setModerating(true);
+
+      const { data: moderationData, error: moderationError } = await supabase.functions.invoke(
+        'moderate-cover-photo',
+        {
+          body: { imageUrl: publicUrl, userId }
+        }
+      );
+
+      setModerating(false);
+
+      if (moderationError) throw moderationError;
+
+      if (!moderationData.approved) {
+        await supabase.storage.from(bucketName).remove([filePath]);
+        
+        toast({
+          variant: 'destructive',
+          title: 'Foto rejeitada',
+          description: moderationData.reason || 'A foto não atende aos padrões da comunidade',
+        });
+        return;
+      }
+
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ cover_url: publicUrl })
+        .eq('user_id', userId);
+
+      if (updateError) throw updateError;
+
+      if (currentPhotoUrl) {
+        try {
+          const url = new URL(currentPhotoUrl);
+          const needle = `/object/public/${bucketName}/`;
+          const idx = url.pathname.indexOf(needle);
+          const oldPath = idx !== -1 ? url.pathname.slice(idx + needle.length) : null;
+          if (oldPath) {
+            await supabase.storage.from(bucketName).remove([oldPath]);
+          }
+        } catch (e) {
+          console.warn('Could not parse old photo URL for deletion', e);
+        }
+      }
+
+      toast({
+        title: 'Foto atualizada!',
+        description: 'Sua foto de capa foi atualizada com sucesso.',
+      });
+
+      onPhotoUpdated?.();
+    } catch (error) {
+      console.error('Error uploading cover:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Erro ao enviar foto',
+        description: 'Não foi possível atualizar a foto de capa. Tente novamente.',
+      });
+    } finally {
+      setUploading(false);
+      setOriginalFile(null);
+    }
   };
 
   const handleCropComplete = async (croppedImageBlob: Blob) => {
@@ -167,31 +265,77 @@ export function InlinePhotoUpload({
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        {children}
-        
-        {/* Ícone de câmera no canto - só aparece no hover e quando não está editando */}
-        {!uploading && !moderating && isHovered && !imageToCrop && (
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            className={`absolute ${iconPosition === 'top' ? 'top-3 right-3' : 'bottom-2 right-2'} bg-background/90 hover:bg-background p-2.5 rounded-full shadow-lg transition-all hover:scale-110 border-2 border-border z-10`}
-          >
-            <Camera className="w-4 h-4 text-foreground" />
-          </button>
-        )}
-
-        {/* Loading overlay */}
-        {(uploading || moderating) && (
-          <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center rounded-[inherit] z-40">
-            <Loader2 className="w-8 h-8 text-white animate-spin mb-2" />
-            <p className="text-sm text-white">
-              {moderating ? 'Verificando foto...' : 'Enviando...'}
-            </p>
+        {/* Preview da capa com ajuste de posição */}
+        {coverPreview && type === 'cover' ? (
+          <div className="absolute inset-0 z-50 bg-background rounded-[inherit] overflow-hidden">
+            <div 
+              className="absolute inset-0 overflow-hidden"
+              style={{
+                backgroundImage: `url(${coverPreview})`,
+                backgroundSize: 'cover',
+                backgroundPosition: `center ${coverPosition}%`,
+              }}
+            />
+            <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center gap-4">
+              <div className="bg-background/95 p-4 rounded-lg shadow-lg max-w-xs">
+                <p className="text-sm font-medium mb-3">Ajustar posição da imagem</p>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={coverPosition}
+                  onChange={(e) => setCoverPosition(Number(e.target.value))}
+                  className="w-full"
+                />
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    setCoverPreview(null);
+                    setOriginalFile(null);
+                  }}
+                  className="px-4 py-2 bg-background/90 hover:bg-background rounded-lg transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleCoverSave}
+                  className="px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg transition-colors"
+                >
+                  Salvar
+                </button>
+              </div>
+            </div>
           </div>
+        ) : (
+          <>
+            {children}
+            
+            {/* Ícone de câmera no canto - só aparece no hover e quando não está editando */}
+            {!uploading && !moderating && isHovered && !imageToCrop && (
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className={`absolute ${iconPosition === 'top' ? 'top-3 right-3' : 'bottom-2 right-2'} bg-background/90 hover:bg-background p-2.5 rounded-full shadow-lg transition-all hover:scale-110 border-2 border-border z-10`}
+              >
+                <Camera className="w-4 h-4 text-foreground" />
+              </button>
+            )}
+
+            {/* Loading overlay */}
+            {(uploading || moderating) && (
+              <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center rounded-[inherit] z-40">
+                <Loader2 className="w-8 h-8 text-white animate-spin mb-2" />
+                <p className="text-sm text-white">
+                  {moderating ? 'Verificando foto...' : 'Enviando...'}
+                </p>
+              </div>
+            )}
+          </>
         )}
       </div>
 
-      {/* Dialog de Crop */}
-      {imageToCrop && (
+      {/* Dialog de Crop - apenas para avatar */}
+      {imageToCrop && type === 'avatar' && (
         <PhotoCropDialog
           imageUrl={imageToCrop}
           onCropComplete={handleCropComplete}
@@ -199,9 +343,9 @@ export function InlinePhotoUpload({
             setImageToCrop(null);
             setOriginalFile(null);
           }}
-          aspectRatio={type === 'avatar' ? 1 : 16 / 9}
-          cropShape={type === 'avatar' ? 'round' : 'rect'}
-          title={type === 'avatar' ? 'Ajustar Foto de Perfil' : 'Ajustar Foto de Capa'}
+          aspectRatio={1}
+          cropShape="round"
+          title="Ajustar Foto de Perfil"
         />
       )}
 

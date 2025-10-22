@@ -76,10 +76,11 @@ export function InlinePhotoUpload({
       const compressedBlob = await compressImage(file);
       const compressedFile = new File([compressedBlob], file.name, { type: 'image/jpeg' });
       const fileName = `${userId}-${Date.now()}.jpg`;
-      const filePath = `${type === 'avatar' ? 'avatars' : 'covers'}/${fileName}`;
+      const bucketName = type === 'avatar' ? 'avatars' : 'user-covers';
+      const filePath = `${fileName}`;
 
       const { error: uploadError } = await supabase.storage
-        .from('profile-photos')
+        .from(bucketName)
         .upload(filePath, compressedFile, {
           contentType: 'image/jpeg',
           upsert: false,
@@ -88,7 +89,7 @@ export function InlinePhotoUpload({
       if (uploadError) throw uploadError;
 
       const { data: { publicUrl } } = supabase.storage
-        .from('profile-photos')
+        .from(bucketName)
         .getPublicUrl(filePath);
 
       setModerating(true);
@@ -105,7 +106,7 @@ export function InlinePhotoUpload({
       if (moderationError) throw moderationError;
 
       if (!moderationData.isAppropriate) {
-        await supabase.storage.from('profile-photos').remove([filePath]);
+        await supabase.storage.from(bucketName).remove([filePath]);
         
         toast({
           variant: 'destructive',
@@ -124,8 +125,10 @@ export function InlinePhotoUpload({
       if (updateError) throw updateError;
 
       if (currentPhotoUrl) {
-        const oldPath = currentPhotoUrl.split('/').slice(-2).join('/');
-        await supabase.storage.from('profile-photos').remove([oldPath]);
+        const oldPath = currentPhotoUrl.split('/').pop();
+        if (oldPath) {
+          await supabase.storage.from(bucketName).remove([oldPath]);
+        }
       }
 
       toast({

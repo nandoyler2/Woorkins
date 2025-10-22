@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Camera, Loader2 } from 'lucide-react';
-import { ProfilePhotoCropDialog } from './ProfilePhotoCropDialog';
+import { InlineCropEditor } from './InlineCropEditor';
 import { compressImage } from '@/lib/imageCompression';
 
 interface InlinePhotoUploadProps {
@@ -30,7 +30,6 @@ export function InlinePhotoUpload({
   const [moderating, setModerating] = useState(false);
   const [imageToCrop, setImageToCrop] = useState<string | null>(null);
   const [originalFile, setOriginalFile] = useState<File | null>(null);
-  const [isHovered, setIsHovered] = useState(false);
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -147,38 +146,44 @@ export function InlinePhotoUpload({
 
   return (
     <>
-      <div 
-        className={`relative group ${className}`}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-      >
-        {children}
-        
-        {/* Overlay hover */}
-        {isHovered && !uploading && !moderating && (
-          <div 
-            className="absolute inset-0 bg-black/60 flex items-center justify-center cursor-pointer transition-opacity"
-            onClick={() => fileInputRef.current?.click()}
-          >
-            <div className="text-center text-white">
-              <Camera className="w-8 h-8 mx-auto mb-2" />
-              <p className="text-sm font-medium">
-                {type === 'avatar' ? 'Alterar foto' : 'Alterar capa'}
+      {imageToCrop ? (
+        <InlineCropEditor
+          imageUrl={imageToCrop}
+          onSave={handleCropComplete}
+          onCancel={() => {
+            setImageToCrop(null);
+            setOriginalFile(null);
+          }}
+          aspectRatio={type === 'avatar' ? 1 : 16 / 9}
+          className={className}
+        />
+      ) : (
+        <div 
+          className={`relative group ${className}`}
+        >
+          {children}
+          
+          {/* Ícone de câmera no canto */}
+          {!uploading && !moderating && (
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="absolute bottom-2 right-2 bg-background/90 hover:bg-background p-2.5 rounded-full shadow-lg transition-all hover:scale-110 border-2 border-border"
+            >
+              <Camera className="w-4 h-4 text-foreground" />
+            </button>
+          )}
+
+          {/* Loading overlay */}
+          {(uploading || moderating) && (
+            <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center rounded-[inherit]">
+              <Loader2 className="w-8 h-8 text-white animate-spin mb-2" />
+              <p className="text-sm text-white">
+                {moderating ? 'Verificando foto...' : 'Enviando...'}
               </p>
             </div>
-          </div>
-        )}
-
-        {/* Loading overlay */}
-        {(uploading || moderating) && (
-          <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center">
-            <Loader2 className="w-8 h-8 text-white animate-spin mb-2" />
-            <p className="text-sm text-white">
-              {moderating ? 'Verificando foto...' : 'Enviando...'}
-            </p>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
 
       <input
         ref={fileInputRef}
@@ -187,17 +192,6 @@ export function InlinePhotoUpload({
         onChange={handleFileSelect}
         className="hidden"
       />
-
-      {imageToCrop && (
-        <ProfilePhotoCropDialog
-          imageUrl={imageToCrop}
-          onCropComplete={handleCropComplete}
-          onCancel={() => {
-            setImageToCrop(null);
-            setOriginalFile(null);
-          }}
-        />
-      )}
     </>
   );
 }

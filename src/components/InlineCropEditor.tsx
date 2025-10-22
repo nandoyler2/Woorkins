@@ -130,7 +130,7 @@ export function InlineCropEditor({
     <div className={`relative ${className}`}>
       <div
         ref={containerRef}
-        className="relative overflow-hidden cursor-move bg-black/5"
+        className="relative overflow-hidden cursor-move bg-muted w-full h-full"
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}

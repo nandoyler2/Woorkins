@@ -149,48 +149,49 @@ export function InlinePhotoUpload({
 
   return (
     <>
-      {imageToCrop ? (
-        <div className={`relative ${className}`}>
-          <InlineCropEditor
-            imageUrl={imageToCrop}
-            onSave={handleCropComplete}
-            onCancel={() => {
-              setImageToCrop(null);
-              setOriginalFile(null);
-            }}
-            aspectRatio={type === 'avatar' ? 1 : 16 / 9}
-            className="w-full h-full"
-          />
-        </div>
-      ) : (
-        <div 
-          className={`relative group ${className}`}
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
-        >
-          {children}
-          
-          {/* Ícone de câmera no canto - só aparece no hover */}
-          {!uploading && !moderating && isHovered && (
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              className={`absolute ${iconPosition === 'top' ? 'top-3 right-3' : 'bottom-2 right-2'} bg-background/90 hover:bg-background p-2.5 rounded-full shadow-lg transition-all hover:scale-110 border-2 border-border z-10`}
-            >
-              <Camera className="w-4 h-4 text-foreground" />
-            </button>
-          )}
+      <div 
+        className={`relative ${className}`}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
+        {children}
+        
+        {/* Editor de Crop - aparece por cima quando uma imagem é selecionada */}
+        {imageToCrop && (
+          <div className="absolute inset-0 z-50">
+            <InlineCropEditor
+              imageUrl={imageToCrop}
+              onSave={handleCropComplete}
+              onCancel={() => {
+                setImageToCrop(null);
+                setOriginalFile(null);
+              }}
+              aspectRatio={type === 'avatar' ? 1 : 16 / 9}
+              className="w-full h-full"
+            />
+          </div>
+        )}
+        
+        {/* Ícone de câmera no canto - só aparece no hover e quando não está editando */}
+        {!uploading && !moderating && isHovered && !imageToCrop && (
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className={`absolute ${iconPosition === 'top' ? 'top-3 right-3' : 'bottom-2 right-2'} bg-background/90 hover:bg-background p-2.5 rounded-full shadow-lg transition-all hover:scale-110 border-2 border-border z-10`}
+          >
+            <Camera className="w-4 h-4 text-foreground" />
+          </button>
+        )}
 
-          {/* Loading overlay */}
-          {(uploading || moderating) && (
-            <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center rounded-[inherit]">
-              <Loader2 className="w-8 h-8 text-white animate-spin mb-2" />
-              <p className="text-sm text-white">
-                {moderating ? 'Verificando foto...' : 'Enviando...'}
-              </p>
-            </div>
-          )}
-        </div>
-      )}
+        {/* Loading overlay */}
+        {(uploading || moderating) && (
+          <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center rounded-[inherit] z-40">
+            <Loader2 className="w-8 h-8 text-white animate-spin mb-2" />
+            <p className="text-sm text-white">
+              {moderating ? 'Verificando foto...' : 'Enviando...'}
+            </p>
+          </div>
+        )}
+      </div>
 
       <input
         ref={fileInputRef}

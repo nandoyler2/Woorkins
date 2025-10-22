@@ -229,9 +229,6 @@ export default function UserProfile() {
     <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-secondary/10">
       <Header />
 
-      {/* Banner no topo (if active) */}
-      <PublicUserBanners userId={profile.id} />
-
       {/* Cover - gradiente simples */}
       <div className="w-full h-48 md:h-60 relative overflow-hidden bg-gradient-to-br from-primary/20 to-secondary/20" />
 
@@ -350,6 +347,9 @@ export default function UserProfile() {
                         </div>
                       </div>
                     </div>
+
+                    {/* Banner Section */}
+                    <PublicUserBanners userId={profile.id} />
 
                     {/* Projetos Section */}
                     <div>

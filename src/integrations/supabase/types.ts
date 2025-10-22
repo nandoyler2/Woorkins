@@ -2945,6 +2945,60 @@ export type Database = {
           },
         ]
       }
+      user_evaluations: {
+        Row: {
+          content: string
+          created_at: string
+          evaluated_profile_id: string
+          evaluation_category: string | null
+          helpful_count: number | null
+          id: string
+          is_verified: boolean | null
+          media_types: string[] | null
+          media_urls: string[] | null
+          public_response: string | null
+          rating: number
+          tags: string[] | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          evaluated_profile_id: string
+          evaluation_category?: string | null
+          helpful_count?: number | null
+          id?: string
+          is_verified?: boolean | null
+          media_types?: string[] | null
+          media_urls?: string[] | null
+          public_response?: string | null
+          rating: number
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          evaluated_profile_id?: string
+          evaluation_category?: string | null
+          helpful_count?: number | null
+          id?: string
+          is_verified?: boolean | null
+          media_types?: string[] | null
+          media_urls?: string[] | null
+          public_response?: string | null
+          rating?: number
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_job_applications: {
         Row: {
           applicant_profile_id: string
@@ -3617,22 +3671,10 @@ export type Database = {
         Args: { p_identifier: string }
         Returns: boolean
       }
-      cleanup_expired_email_verifications: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      cleanup_expired_spam_blocks: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      cleanup_typing_indicators: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      delete_own_account: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      cleanup_expired_email_verifications: { Args: never; Returns: undefined }
+      cleanup_expired_spam_blocks: { Args: never; Returns: undefined }
+      cleanup_typing_indicators: { Args: never; Returns: undefined }
+      delete_own_account: { Args: never; Returns: undefined }
       get_freelancer_wallet_balance: {
         Args: { freelancer_profile_id: string }
         Returns: {
@@ -3642,10 +3684,7 @@ export type Database = {
           withdrawn: number
         }[]
       }
-      get_user_plan: {
-        Args: { _user_id: string }
-        Returns: string
-      }
+      get_user_plan: { Args: { _user_id: string }; Returns: string }
       get_user_plan_by_profile: {
         Args: { _profile_id: string }
         Returns: string
@@ -3657,10 +3696,7 @@ export type Database = {
         }
         Returns: boolean
       }
-      is_profile_owner: {
-        Args: { _profile_id: string }
-        Returns: boolean
-      }
+      is_profile_owner: { Args: { _profile_id: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"

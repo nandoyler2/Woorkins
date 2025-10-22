@@ -350,17 +350,17 @@ export default function UserProfile() {
               {/* Tabs Navigation */}
               <Card className="bg-card/50 backdrop-blur-sm border-2 shadow-lg">
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                  <TabsList className="w-full justify-start rounded-none border-b bg-transparent h-auto p-0">
+                  <TabsList className="w-full justify-start rounded-none border-b bg-transparent h-auto p-2 flex flex-wrap gap-2 overflow-visible">
                     <TabsTrigger 
                       value="inicio" 
-                      className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-6 py-3"
+                      className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-2 text-sm whitespace-normal break-words min-w-0"
                     >
                       Início
                     </TabsTrigger>
                     {hasTestimonials && (
                       <TabsTrigger 
                         value="depoimentos"
-                        className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-6 py-3"
+                        className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-2 text-sm whitespace-normal break-words min-w-0"
                       >
                         Depoimentos
                       </TabsTrigger>
@@ -368,7 +368,7 @@ export default function UserProfile() {
                     {hasPortfolio && (
                       <TabsTrigger 
                         value="portfolio"
-                        className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-6 py-3"
+                        className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-2 text-sm whitespace-normal break-words min-w-0"
                       >
                         Portfólio
                       </TabsTrigger>
@@ -376,21 +376,21 @@ export default function UserProfile() {
                     {hasCatalog && (
                       <TabsTrigger 
                         value="servicos"
-                        className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-6 py-3"
+                        className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-2 text-sm whitespace-normal break-words min-w-0"
                       >
                         Serviços
                       </TabsTrigger>
                     )}
                     <TabsTrigger 
                       value="positivas"
-                      className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-6 py-3 flex items-center gap-2"
+                      className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-2 text-sm whitespace-normal break-words min-w-0 flex items-center gap-2"
                     >
                       <ThumbsUp className="w-4 h-4" />
                       Avaliações ({positiveEvaluations.length})
                     </TabsTrigger>
                     <TabsTrigger 
                       value="reclamacoes"
-                      className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-6 py-3 flex items-center gap-2"
+                      className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-2 text-sm whitespace-normal break-words min-w-0 flex items-center gap-2"
                     >
                       <AlertCircle className="w-4 h-4" />
                       Reclamações ({complaintEvaluations.length})

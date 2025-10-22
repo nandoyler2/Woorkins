@@ -137,8 +137,9 @@ export function ProfileEvaluationForm({ profileId, onSuccess }: ProfileEvaluatio
         mediaTypes.push(isImage ? 'image' : 'video');
       }
 
-      // Determinar categoria automaticamente
+      // Determinar categoria e tipo automaticamente
       const evaluationCategory = rating <= 3 ? 'complaint' : 'positive';
+      const evaluationType = rating <= 3 ? 'complaint' : 'praise';
 
       // Criar avaliação - usar profile_id do usuário logado
       const { error: insertError } = await supabase
@@ -149,7 +150,7 @@ export function ProfileEvaluationForm({ profileId, onSuccess }: ProfileEvaluatio
           rating,
           title: evaluationCategory === 'complaint' ? 'Reclamação' : 'Avaliação Positiva',
           content: content.trim(),
-          evaluation_type: 'client' as const,
+          evaluation_type: evaluationType as any,
           media_urls: mediaUrls.length > 0 ? mediaUrls : null,
           media_types: mediaTypes.length > 0 ? mediaTypes : null,
           evaluation_category: evaluationCategory,

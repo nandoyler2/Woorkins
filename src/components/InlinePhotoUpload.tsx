@@ -509,11 +509,11 @@ export function InlinePhotoUpload({
               />
             )}
             
-            {/* Ícone de câmera no canto - só aparece no hover e quando não está editando */}
+            {/* Ícone de câmera - posição diferente para avatar e cover */}
             {!uploading && !moderating && isHovered && !imageToCrop && (
-              <div className="absolute top-3 right-3 flex gap-2 z-10">
-                {type === 'cover' && (
-                  <>
+              <>
+                {type === 'cover' ? (
+                  <div className="absolute top-3 right-3 flex gap-2 z-10">
                     <button
                       onClick={() => setShowTemplateDialog(true)}
                       className="bg-background/90 hover:bg-background px-3 py-1.5 rounded-lg shadow-lg transition-all hover:scale-105 border-2 border-border text-sm flex items-center gap-1.5"
@@ -529,15 +529,22 @@ export function InlinePhotoUpload({
                         Ajustar
                       </button>
                     )}
-                  </>
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      className="bg-background/90 hover:bg-background p-2.5 rounded-full shadow-lg transition-all hover:scale-110 border-2 border-border"
+                    >
+                      <Camera className="w-4 h-4 text-foreground" />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 bg-primary hover:bg-primary/90 text-primary-foreground p-3 rounded-full shadow-lg transition-all hover:scale-110 z-10"
+                  >
+                    <Camera className="w-5 h-5" />
+                  </button>
                 )}
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  className={`bg-background/90 hover:bg-background p-2.5 rounded-full shadow-lg transition-all hover:scale-110 border-2 border-border`}
-                >
-                  <Camera className="w-4 h-4 text-foreground" />
-                </button>
-              </div>
+              </>
             )}
 
             {/* Loading overlay */}

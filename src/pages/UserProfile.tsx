@@ -17,6 +17,7 @@ import { PublicUserAppointments } from '@/components/user/PublicUserAppointments
 import { PublicUserNegotiation } from '@/components/user/PublicUserNegotiation';
 import { PublicUserPortfolio } from '@/components/user/PublicUserPortfolio';
 import { PublicUserCatalog } from '@/components/user/PublicUserCatalog';
+import { PublicUserJobVacancies } from '@/components/user/PublicUserJobVacancies';
 import { PublicUserCertifications } from '@/components/user/PublicUserCertifications';
 import { PublicUserVideo } from '@/components/user/PublicUserVideo';
 import { PublicUserSocial } from '@/components/user/PublicUserSocial';
@@ -95,6 +96,7 @@ export default function UserProfile() {
   const [hasVideo, setHasVideo] = useState(false);
   const [hasPortfolio, setHasPortfolio] = useState(false);
   const [hasCatalog, setHasCatalog] = useState(false);
+  const [hasJobVacancies, setHasJobVacancies] = useState(false);
 
   useEffect(() => {
     if (profile) {
@@ -203,6 +205,15 @@ export default function UserProfile() {
         .eq('active', true)
         .limit(1);
       setHasCatalog((catalog?.length || 0) > 0);
+
+      // Check job vacancies
+      const { data: vacancies } = await supabase
+        .from('user_job_vacancies')
+        .select('id')
+        .eq('profile_id', profileId)
+        .eq('status', 'open')
+        .limit(1);
+      setHasJobVacancies((vacancies?.length || 0) > 0);
     } catch (error) {
       console.error('Error checking content:', error);
     }
@@ -382,6 +393,14 @@ export default function UserProfile() {
                         Serviços
                       </TabsTrigger>
                     )}
+                    {hasJobVacancies && (
+                      <TabsTrigger 
+                        value="vagas"
+                        className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-2 text-sm whitespace-normal break-words min-w-0"
+                      >
+                        Vagas
+                      </TabsTrigger>
+                    )}
                     <TabsTrigger 
                       value="positivas"
                       className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-2 text-sm whitespace-normal break-words min-w-0 flex items-center gap-2"
@@ -402,6 +421,9 @@ export default function UserProfile() {
                   <TabsContent value="inicio" className="p-6 space-y-6">
                     {/* Banner Section */}
                     <PublicUserBanners userId={profile.id} />
+
+                    {/* Job Vacancies Section */}
+                    {hasJobVacancies && <PublicUserJobVacancies userId={profile.id} />}
 
                     {/* Portfolio Section */}
                     <PublicUserPortfolio userId={profile.id} />
@@ -435,6 +457,13 @@ export default function UserProfile() {
                   {hasCatalog && (
                     <TabsContent value="servicos" className="p-6">
                       <PublicUserCatalog userId={profile.id} />
+                    </TabsContent>
+                  )}
+
+                  {/* Vagas Tab */}
+                  {hasJobVacancies && (
+                    <TabsContent value="vagas" className="p-6">
+                      <PublicUserJobVacancies userId={profile.id} />
                     </TabsContent>
                   )}
 

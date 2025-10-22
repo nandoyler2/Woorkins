@@ -4,6 +4,10 @@ import { useToast } from '@/hooks/use-toast';
 import { Camera, Loader2 } from 'lucide-react';
 import { InlineCropEditor } from './InlineCropEditor';
 import { compressImage } from '@/lib/imageCompression';
+import {
+  Dialog,
+  DialogContent,
+} from '@/components/ui/dialog';
 
 interface InlinePhotoUploadProps {
   currentPhotoUrl?: string;
@@ -167,22 +171,6 @@ export function InlinePhotoUpload({
       >
         {children}
         
-        {/* Editor de Crop - aparece por cima quando uma imagem é selecionada */}
-        {imageToCrop && (
-          <div className="absolute inset-0 z-50">
-            <InlineCropEditor
-              imageUrl={imageToCrop}
-              onSave={handleCropComplete}
-              onCancel={() => {
-                setImageToCrop(null);
-                setOriginalFile(null);
-              }}
-              aspectRatio={type === 'avatar' ? 1 : 16 / 9}
-              className="w-full h-full"
-            />
-          </div>
-        )}
-        
         {/* Ícone de câmera no canto - só aparece no hover e quando não está editando */}
         {!uploading && !moderating && isHovered && !imageToCrop && (
           <button
@@ -203,6 +191,29 @@ export function InlinePhotoUpload({
           </div>
         )}
       </div>
+
+      {/* Dialog de Crop em tela cheia */}
+      <Dialog open={!!imageToCrop} onOpenChange={(open) => {
+        if (!open) {
+          setImageToCrop(null);
+          setOriginalFile(null);
+        }
+      }}>
+        <DialogContent className="max-w-4xl h-[80vh] p-0">
+          {imageToCrop && (
+            <InlineCropEditor
+              imageUrl={imageToCrop}
+              onSave={handleCropComplete}
+              onCancel={() => {
+                setImageToCrop(null);
+                setOriginalFile(null);
+              }}
+              aspectRatio={type === 'avatar' ? 1 : 16 / 9}
+              className="w-full h-full"
+            />
+          )}
+        </DialogContent>
+      </Dialog>
 
       <input
         ref={fileInputRef}

@@ -15,7 +15,6 @@ interface TimeSlot {
 }
 
 interface GenericAppointmentsManagerProps {
-  entityType: 'business' | 'user';
   entityId: string;
 }
 
@@ -24,13 +23,10 @@ const DAYS = [
   'Quinta-feira', 'Sexta-feira', 'Sábado'
 ];
 
-export function GenericAppointmentsManager({ entityType, entityId }: GenericAppointmentsManagerProps) {
+export function GenericAppointmentsManager({ entityId }: GenericAppointmentsManagerProps) {
   const [availability, setAvailability] = useState<TimeSlot[]>([]);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
-
-  const tableName = entityType === 'business' ? 'business_availability' : 'user_availability';
-  const idColumn = entityType === 'business' ? 'business_id' : 'profile_id';
 
   useEffect(() => {
     loadAvailability();
@@ -39,14 +35,14 @@ export function GenericAppointmentsManager({ entityType, entityId }: GenericAppo
   const loadAvailability = async () => {
     try {
       const { data, error } = await supabase
-        .from(tableName as any)
+        .from("profile_availability")
         .select("*")
-        .eq(idColumn, entityId)
+        .eq("target_profile_id", entityId)
         .order("day_of_week", { ascending: true })
         .order("start_time", { ascending: true });
 
       if (error) throw error;
-      setAvailability((data || []) as any);
+      setAvailability(data || []);
     } catch (error: any) {
       toast({
         title: "Erro ao carregar disponibilidade",
@@ -59,11 +55,15 @@ export function GenericAppointmentsManager({ entityType, entityId }: GenericAppo
   const handleAddSlot = async (dayOfWeek: number) => {
     setLoading(true);
     try {
-      const slotData = entityType === 'business' 
-        ? { business_id: entityId, day_of_week: dayOfWeek, start_time: "09:00", end_time: "18:00", active: true }
-        : { profile_id: entityId, day_of_week: dayOfWeek, start_time: "09:00", end_time: "18:00", active: true };
+      const slotData = {
+        target_profile_id: entityId,
+        day_of_week: dayOfWeek,
+        start_time: "09:00",
+        end_time: "18:00",
+        active: true
+      };
       
-      const { error } = await supabase.from(tableName).insert(slotData as any);
+      const { error } = await supabase.from("profile_availability").insert(slotData);
 
       if (error) throw error;
 
@@ -88,7 +88,7 @@ export function GenericAppointmentsManager({ entityType, entityId }: GenericAppo
     if (!confirm("Deseja realmente remover este horário?")) return;
 
     try {
-      const { error } = await supabase.from(tableName).delete().eq("id", id);
+      const { error } = await supabase.from("profile_availability").delete().eq("id", id);
 
       if (error) throw error;
 
@@ -114,7 +114,7 @@ export function GenericAppointmentsManager({ entityType, entityId }: GenericAppo
   ) => {
     try {
       const { error } = await supabase
-        .from(tableName)
+        .from("profile_availability")
         .update({ [field]: value })
         .eq("id", id);
 

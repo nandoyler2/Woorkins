@@ -99,9 +99,10 @@ export function CreateBusinessProfileDialog({ open, onOpenChange, onSuccess }: C
     setCheckingSlug(true);
     try {
       const { data, error } = await supabase
-        .from('business_profiles')
+        .from('profiles')
         .select('slug')
         .eq('slug', slugToCheck)
+        .eq('profile_type', 'business')
         .maybeSingle();
 
       if (error) throw error;
@@ -245,36 +246,36 @@ export function CreateBusinessProfileDialog({ open, onOpenChange, onSuccess }: C
         }
       }
 
-      // Create business profile
-      const { data: newBusiness, error: createError } = await supabase
-        .from('business_profiles')
-        .insert({
-          profile_id: profileData.id,
+      // Update profile with business data
+      const { data: updatedProfile, error: updateError } = await supabase
+        .from('profiles')
+        .update({
+          profile_type: 'business',
           company_name: companyName.trim(),
           slug: slug,
-          logo_url: logoUrl,
+          photo_url: logoUrl,
           cover_url: coverUrl,
           category: category || null,
-          description: description || null,
-          active: true,
+          bio: description || null,
         })
+        .eq('id', profileData.id)
         .select('*')
         .single();
 
-      if (createError || !newBusiness) {
-        throw new Error(createError?.message || 'Não foi possível criar o perfil');
+      if (updateError || !updatedProfile) {
+        throw new Error(updateError?.message || 'Não foi possível criar o perfil');
       }
 
       // Activate selected features
       if (selectedFeatures.length > 0) {
         const featuresToInsert = selectedFeatures.map(key => ({
-          business_id: newBusiness.id,
+          profile_id: profileData.id,
           feature_key: key,
           is_active: true,
         }));
 
         await supabase
-          .from('business_profile_features')
+          .from('profile_features')
           .insert(featuresToInsert);
       }
 
@@ -299,7 +300,7 @@ export function CreateBusinessProfileDialog({ open, onOpenChange, onSuccess }: C
       setCategory('');
       setDescription('');
       
-      navigate(`/${newBusiness.slug}/editar`);
+      navigate(`/${updatedProfile.slug}/editar`);
       
     } catch (error: any) {
       console.error('Error creating business profile:', error);

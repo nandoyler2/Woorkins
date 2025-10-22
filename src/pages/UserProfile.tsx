@@ -382,7 +382,7 @@ export default function UserProfile() {
                 <CardContent className="p-6">
                   <div className="flex flex-col md:flex-row gap-6">
                     {/* Avatar */}
-                    <div className="-mt-20">
+                    <div className="-mt-20 flex flex-col items-center gap-3">
                       {profile.avatar_url ? (
                         <SafeImage
                           src={profile.avatar_url}
@@ -394,6 +394,9 @@ export default function UserProfile() {
                           <UserIcon className="w-16 h-16 text-primary/70" />
                         </div>
                       )}
+                      <Button variant="outline" size="sm" className="rounded-full w-32">
+                        Seguir
+                      </Button>
                     </div>
 
                     {/* User Info */}
@@ -430,9 +433,11 @@ export default function UserProfile() {
                         </Badge>
                       </div>
 
-                      <Button variant="outline" className="rounded-full">
-                        Seguir
-                      </Button>
+                      <PublicUserNegotiation 
+                        userId={profile.id}
+                        username={profile.username}
+                        inline={true}
+                      />
                     </div>
                   </div>
                 </CardContent>
@@ -441,7 +446,7 @@ export default function UserProfile() {
               {/* Tabs Navigation */}
               <Card className="bg-card/50 backdrop-blur-sm border-2 shadow-lg">
                 <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-                  <TabsList className="w-full justify-start rounded-none border-b bg-transparent h-auto p-0 flex gap-0 overflow-x-auto">
+                  <TabsList className="w-full justify-start rounded-none border-b bg-transparent h-auto p-0 flex flex-nowrap overflow-x-auto scrollbar-hide">
                     <TabsTrigger 
                       value="inicio" 
                       className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3 text-sm whitespace-nowrap flex-shrink-0"

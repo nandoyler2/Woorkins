@@ -326,4 +326,14 @@ All colors MUST be HSL.
   .animate-scale-in {
     animation: scale-in 0.4s ease-out;
   }
+
+  /* Hide scrollbar but keep functionality */
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
 }

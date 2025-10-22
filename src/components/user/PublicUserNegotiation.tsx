@@ -11,11 +11,13 @@ import { useNavigate } from "react-router-dom";
 interface PublicUserNegotiationProps {
   userId: string;
   username: string;
+  inline?: boolean;
 }
 
 export function PublicUserNegotiation({ 
   userId, 
-  username 
+  username,
+  inline = false
 }: PublicUserNegotiationProps) {
   const [isActive, setIsActive] = useState(false);
   const { user } = useAuth();
@@ -116,6 +118,18 @@ export function PublicUserNegotiation({
   };
 
   if (!isActive) return null;
+
+  if (inline) {
+    return (
+      <Button 
+        className="w-full md:w-auto bg-green-600 hover:bg-green-700"
+        onClick={startNegotiation}
+      >
+        <MessageCircle className="w-4 h-4 mr-2" />
+        Negociar Agora
+      </Button>
+    );
+  }
 
   return (
     <Card className="bg-gradient-to-br from-green-500/10 to-green-600/10 border-2 border-green-500/20">

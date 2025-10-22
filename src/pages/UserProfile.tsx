@@ -93,6 +93,7 @@ export default function UserProfile() {
   const [hasTestimonials, setHasTestimonials] = useState(false);
   const [hasVideo, setHasVideo] = useState(false);
   const [hasPortfolio, setHasPortfolio] = useState(false);
+  const [hasCatalog, setHasCatalog] = useState(false);
 
   useEffect(() => {
     if (profile) {
@@ -192,6 +193,15 @@ export default function UserProfile() {
         .eq('active', true)
         .limit(1);
       setHasPortfolio((portfolio?.length || 0) > 0);
+
+      // Check catalog
+      const { data: catalog } = await supabase
+        .from('user_catalog_items')
+        .select('id')
+        .eq('profile_id', profileId)
+        .eq('active', true)
+        .limit(1);
+      setHasCatalog((catalog?.length || 0) > 0);
     } catch (error) {
       console.error('Error checking content:', error);
     }
@@ -363,6 +373,14 @@ export default function UserProfile() {
                         Portfólio
                       </TabsTrigger>
                     )}
+                    {hasCatalog && (
+                      <TabsTrigger 
+                        value="servicos"
+                        className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-6 py-3"
+                      >
+                        Serviços
+                      </TabsTrigger>
+                    )}
                     <TabsTrigger 
                       value="positivas"
                       className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-6 py-3 flex items-center gap-2"
@@ -384,6 +402,9 @@ export default function UserProfile() {
                     {/* Banner Section */}
                     <PublicUserBanners userId={profile.id} />
 
+                    {/* Portfolio Section */}
+                    <PublicUserPortfolio userId={profile.id} />
+
                     {/* Video Section */}
                     <PublicUserVideo userId={profile.id} />
 
@@ -392,9 +413,6 @@ export default function UserProfile() {
 
                     {/* Depoimentos Section */}
                     <PublicTestimonialsSlider entityType="user" entityId={profile.id} />
-
-                    {/* Portfolio Section */}
-                    <PublicUserPortfolio userId={profile.id} />
 
                   </TabsContent>
 
@@ -409,6 +427,13 @@ export default function UserProfile() {
                   {hasPortfolio && (
                     <TabsContent value="portfolio" className="p-6">
                       <PublicUserPortfolio userId={profile.id} />
+                    </TabsContent>
+                  )}
+
+                  {/* Serviços Tab */}
+                  {hasCatalog && (
+                    <TabsContent value="servicos" className="p-6">
+                      <PublicUserCatalog userId={profile.id} />
                     </TabsContent>
                   )}
 

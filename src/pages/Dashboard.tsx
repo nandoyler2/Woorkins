@@ -1214,6 +1214,12 @@ export default function Dashboard() {
                 )}
               </CardContent>
             </Card>
+
+            {/* Following Section */}
+            {profile && (
+              <FollowingSection profileId={profile.id} />
+            )}
+
             {/* Statistics Card */}
             <Card className="bg-white shadow-sm border border-slate-200">
               <CardHeader className="border-b border-slate-100 p-4">

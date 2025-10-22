@@ -129,7 +129,10 @@ export function InlinePhotoUpload({
 
       const { error: updateError } = await supabase
         .from('profiles')
-        .update({ cover_url: publicUrl })
+        .update({ 
+          cover_url: publicUrl,
+          cover_position: coverPosition 
+        })
         .eq('user_id', userId);
 
       if (updateError) throw updateError;
@@ -297,15 +300,34 @@ export function InlinePhotoUpload({
   const handleSaveAdjustment = async () => {
     if (!isAdjusting || !coverPreview) return;
     
+    setUploading(true);
     setIsAdjusting(false);
     setCoverPreview(null);
     
-    toast({
-      title: 'Posição atualizada!',
-      description: 'A posição da capa foi ajustada com sucesso.',
-    });
-    
-    onPhotoUpdated?.();
+    try {
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ cover_position: coverPosition })
+        .eq('user_id', userId);
+
+      if (updateError) throw updateError;
+
+      toast({
+        title: 'Posição atualizada!',
+        description: 'A posição da capa foi ajustada com sucesso.',
+      });
+      
+      onPhotoUpdated?.();
+    } catch (error) {
+      console.error('Error updating cover position:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Erro ao atualizar',
+        description: 'Não foi possível atualizar a posição da capa.',
+      });
+    } finally {
+      setUploading(false);
+    }
   };
 
   return (

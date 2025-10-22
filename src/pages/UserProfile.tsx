@@ -39,6 +39,7 @@ interface UserProfileData {
   full_name: string;
   avatar_url: string | null;
   cover_url: string | null;
+  cover_position: number | null;
   bio: string | null;
   location: string | null;
   website: string | null;
@@ -388,7 +389,10 @@ export default function UserProfile() {
               {profile.cover_url ? (
                 <div 
                   className="w-full h-full bg-cover bg-center"
-                  style={{ backgroundImage: `url(${profile.cover_url})` }}
+                  style={{ 
+                    backgroundImage: `url(${profile.cover_url})`,
+                    backgroundPosition: `center ${profile.cover_position || 50}%`
+                  }}
                 />
               ) : (
                 <div className="w-full h-full bg-gradient-to-br from-primary/20 to-secondary/20" />
@@ -400,7 +404,10 @@ export default function UserProfile() {
         <div className="w-full h-48 md:h-60 relative overflow-hidden">
           <div 
             className="w-full h-full bg-cover bg-center"
-            style={{ backgroundImage: `url(${profile.cover_url})` }}
+            style={{ 
+              backgroundImage: `url(${profile.cover_url})`,
+              backgroundPosition: `center ${profile.cover_position || 50}%`
+            }}
           />
         </div>
       ) : (

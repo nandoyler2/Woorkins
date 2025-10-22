@@ -1978,6 +1978,7 @@ export type Database = {
           avatar_url: string | null
           bio: string | null
           birth_date: string | null
+          cover_position: number | null
           cover_url: string | null
           cpf: string | null
           created_at: string
@@ -2015,6 +2016,7 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           birth_date?: string | null
+          cover_position?: number | null
           cover_url?: string | null
           cpf?: string | null
           created_at?: string
@@ -2052,6 +2054,7 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           birth_date?: string | null
+          cover_position?: number | null
           cover_url?: string | null
           cpf?: string | null
           created_at?: string

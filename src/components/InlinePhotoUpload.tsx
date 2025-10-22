@@ -131,7 +131,7 @@ export function InlinePhotoUpload({
         .from('profiles')
         .update({ 
           cover_url: publicUrl,
-          cover_position: coverPosition 
+          cover_position: Math.round(coverPosition)
         })
         .eq('user_id', userId);
 
@@ -307,7 +307,7 @@ export function InlinePhotoUpload({
     try {
       const { error: updateError } = await supabase
         .from('profiles')
-        .update({ cover_position: coverPosition })
+        .update({ cover_position: Math.round(coverPosition) })
         .eq('user_id', userId);
 
       if (updateError) throw updateError;

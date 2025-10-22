@@ -82,7 +82,6 @@ export function InlinePhotoUpload({
     if (!originalFile || !coverPreview) return;
     
     setUploading(true);
-    setCoverPreview(null);
 
     try {
       // Comprimir a imagem original da capa
@@ -156,6 +155,8 @@ export function InlinePhotoUpload({
         }
       }
 
+      setCoverPreview(null);
+      
       toast({
         title: 'Foto atualizada!',
         description: 'Sua foto de capa foi atualizada com sucesso.',
@@ -304,8 +305,6 @@ export function InlinePhotoUpload({
     if (!isAdjusting || !coverPreview) return;
     
     setUploading(true);
-    setIsAdjusting(false);
-    setCoverPreview(null);
     
     try {
       const { error: updateError } = await supabase
@@ -314,6 +313,9 @@ export function InlinePhotoUpload({
         .eq('user_id', userId);
 
       if (updateError) throw updateError;
+
+      setIsAdjusting(false);
+      setCoverPreview(null);
 
       toast({
         title: 'Posição atualizada!',
@@ -344,11 +346,11 @@ export function InlinePhotoUpload({
         {coverPreview && type === 'cover' ? (
           <div 
             className="absolute inset-0 z-50 bg-background rounded-[inherit] overflow-hidden"
-            onMouseDown={handleMouseDown}
-            onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
-            onMouseLeave={handleMouseUp}
-            style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
+            onMouseDown={!uploading ? handleMouseDown : undefined}
+            onMouseMove={!uploading ? handleMouseMove : undefined}
+            onMouseUp={!uploading ? handleMouseUp : undefined}
+            onMouseLeave={!uploading ? handleMouseUp : undefined}
+            style={{ cursor: uploading ? 'default' : (isDragging ? 'grabbing' : 'grab') }}
           >
             <div 
               className="absolute inset-0 overflow-hidden pointer-events-none"
@@ -358,6 +360,15 @@ export function InlinePhotoUpload({
                 backgroundPosition: `center ${coverPosition}%`,
               }}
             />
+            
+            {/* Loading overlay durante o salvamento */}
+            {uploading && (
+              <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center pointer-events-none z-10">
+                <Loader2 className="w-8 h-8 text-white animate-spin mb-2" />
+                <p className="text-sm text-white">Salvando...</p>
+              </div>
+            )}
+            
             <div className="absolute top-3 right-3 flex gap-2 pointer-events-auto">
               <button
                 onClick={() => {
@@ -365,13 +376,15 @@ export function InlinePhotoUpload({
                   setOriginalFile(null);
                   setIsAdjusting(false);
                 }}
-                className="px-3 py-1.5 bg-background/90 hover:bg-background rounded-lg transition-colors text-sm"
+                disabled={uploading}
+                className="px-3 py-1.5 bg-background/90 hover:bg-background rounded-lg transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Cancelar
               </button>
               <button
                 onClick={isAdjusting ? handleSaveAdjustment : handleCoverSave}
-                className="px-3 py-1.5 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg transition-colors text-sm"
+                disabled={uploading}
+                className="px-3 py-1.5 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Salvar
               </button>

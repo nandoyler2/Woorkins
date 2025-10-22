@@ -21,6 +21,7 @@ import { PublicUserJobVacancies } from '@/components/user/PublicUserJobVacancies
 import { PublicUserCertifications } from '@/components/user/PublicUserCertifications';
 import { PublicUserVideo } from '@/components/user/PublicUserVideo';
 import { PublicUserSocial } from '@/components/user/PublicUserSocial';
+import { NegotiationChat } from '@/components/NegotiationChat';
 import { useToast } from '@/hooks/use-toast';
 import { formatFullName } from '@/lib/utils';
 import { ProfileEvaluationForm } from '@/components/ProfileEvaluationForm';

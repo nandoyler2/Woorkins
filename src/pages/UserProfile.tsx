@@ -38,6 +38,7 @@ interface UserProfileData {
   username: string;
   full_name: string;
   avatar_url: string | null;
+  cover_url: string | null;
   bio: string | null;
   location: string | null;
   website: string | null;
@@ -375,7 +376,7 @@ export default function UserProfile() {
       {isProfileOwner ? (
         <div className="w-full h-48 md:h-60 relative">
           <InlinePhotoUpload
-            currentPhotoUrl={undefined}
+            currentPhotoUrl={profile.cover_url || undefined}
             userId={user!.id}
             userName={profile.username}
             onPhotoUpdated={loadUserProfile}
@@ -383,8 +384,24 @@ export default function UserProfile() {
             className="w-full h-full"
             iconPosition="top"
           >
-            <div className="w-full h-full relative overflow-hidden bg-gradient-to-br from-primary/20 to-secondary/20" />
+            <div className="w-full h-full relative overflow-hidden">
+              {profile.cover_url ? (
+                <div 
+                  className="w-full h-full bg-cover bg-center"
+                  style={{ backgroundImage: `url(${profile.cover_url})` }}
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-primary/20 to-secondary/20" />
+              )}
+            </div>
           </InlinePhotoUpload>
+        </div>
+      ) : profile.cover_url ? (
+        <div className="w-full h-48 md:h-60 relative overflow-hidden">
+          <div 
+            className="w-full h-full bg-cover bg-center"
+            style={{ backgroundImage: `url(${profile.cover_url})` }}
+          />
         </div>
       ) : (
         <div className="w-full h-48 md:h-60 relative overflow-hidden bg-gradient-to-br from-primary/20 to-secondary/20" />

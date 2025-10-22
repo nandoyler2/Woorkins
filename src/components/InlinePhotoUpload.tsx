@@ -1,9 +1,10 @@
 import { useState, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Camera, Loader2 } from 'lucide-react';
+import { Camera, Loader2, Sparkles } from 'lucide-react';
 import { PhotoCropDialog } from './PhotoCropDialog';
 import { compressImage } from '@/lib/imageCompression';
+import { CoverTemplateDialog } from './CoverTemplateDialog';
 
 interface InlinePhotoUploadProps {
   currentPhotoUrl?: string;
@@ -42,6 +43,7 @@ export function InlinePhotoUpload({
   const [dragStartPosition, setDragStartPosition] = useState(50);
   const [localCoverUrl, setLocalCoverUrl] = useState<string | null>(null);
   const [isAdjusting, setIsAdjusting] = useState(false);
+  const [showTemplateDialog, setShowTemplateDialog] = useState(false);
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -301,6 +303,106 @@ export function InlinePhotoUpload({
     }
   };
 
+  const handleTemplateSelect = async (templateUrl: string) => {
+    setShowTemplateDialog(false);
+    setUploading(true);
+
+    try {
+      // Carregar a imagem do template
+      const response = await fetch(templateUrl);
+      const blob = await response.blob();
+      const file = new File([blob], `template-${Date.now()}.jpg`, { type: 'image/jpeg' });
+      
+      // Comprimir
+      const compressedBlob = await compressImage(file);
+      const compressedFile = new File([compressedBlob], file.name, { type: 'image/jpeg' });
+      const fileName = `${userId}-${Date.now()}.jpg`;
+      const bucketName = 'user-covers';
+      const filePath = `${userId}/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from(bucketName)
+        .upload(filePath, compressedFile, {
+          contentType: 'image/jpeg',
+          upsert: false,
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from(bucketName)
+        .getPublicUrl(filePath);
+
+      setModerating(true);
+
+      const { data: moderationData, error: moderationError } = await supabase.functions.invoke(
+        'moderate-cover-photo',
+        {
+          body: { imageUrl: publicUrl, userId }
+        }
+      );
+
+      setModerating(false);
+
+      if (moderationError) throw moderationError;
+
+      if (!moderationData.approved) {
+        await supabase.storage.from(bucketName).remove([filePath]);
+        
+        toast({
+          variant: 'destructive',
+          title: 'Erro',
+          description: 'Não foi possível aplicar a capa',
+        });
+        return;
+      }
+
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ 
+          cover_url: publicUrl,
+          cover_position: 50
+        })
+        .eq('user_id', userId);
+
+      if (updateError) throw updateError;
+
+      setLocalCoverUrl(publicUrl);
+      setCoverPosition(50);
+
+      // Deletar foto antiga
+      if (currentPhotoUrl) {
+        try {
+          const url = new URL(currentPhotoUrl);
+          const needle = `/object/public/${bucketName}/`;
+          const idx = url.pathname.indexOf(needle);
+          const oldPath = idx !== -1 ? url.pathname.slice(idx + needle.length) : null;
+          if (oldPath) {
+            await supabase.storage.from(bucketName).remove([oldPath]);
+          }
+        } catch (e) {
+          console.warn('Could not parse old photo URL for deletion', e);
+        }
+      }
+
+      toast({
+        title: 'Capa atualizada!',
+        description: 'Sua capa foi atualizada com sucesso.',
+      });
+
+      onPhotoUpdated?.();
+    } catch (error) {
+      console.error('Error applying template:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Erro',
+        description: 'Não foi possível aplicar a capa.',
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const handleSaveAdjustment = async () => {
     if (!isAdjusting || !coverPreview) return;
     
@@ -410,13 +512,24 @@ export function InlinePhotoUpload({
             {/* Ícone de câmera no canto - só aparece no hover e quando não está editando */}
             {!uploading && !moderating && isHovered && !imageToCrop && (
               <div className="absolute top-3 right-3 flex gap-2 z-10">
-                {(localCoverUrl || currentPhotoUrl) && type === 'cover' && (
-                  <button
-                    onClick={handleAdjustCover}
-                    className="bg-background/90 hover:bg-background px-3 py-1.5 rounded-lg shadow-lg transition-all hover:scale-105 border-2 border-border text-sm"
-                  >
-                    Ajustar
-                  </button>
+                {type === 'cover' && (
+                  <>
+                    <button
+                      onClick={() => setShowTemplateDialog(true)}
+                      className="bg-background/90 hover:bg-background px-3 py-1.5 rounded-lg shadow-lg transition-all hover:scale-105 border-2 border-border text-sm flex items-center gap-1.5"
+                    >
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span>Capas Prontas</span>
+                    </button>
+                    {(localCoverUrl || currentPhotoUrl) && (
+                      <button
+                        onClick={handleAdjustCover}
+                        className="bg-background/90 hover:bg-background px-3 py-1.5 rounded-lg shadow-lg transition-all hover:scale-105 border-2 border-border text-sm"
+                      >
+                        Ajustar
+                      </button>
+                    )}
+                  </>
                 )}
                 <button
                   onClick={() => fileInputRef.current?.click()}
@@ -461,6 +574,12 @@ export function InlinePhotoUpload({
         accept="image/*"
         onChange={handleFileSelect}
         className="hidden"
+      />
+
+      <CoverTemplateDialog
+        open={showTemplateDialog}
+        onClose={() => setShowTemplateDialog(false)}
+        onSelect={handleTemplateSelect}
       />
     </>
   );

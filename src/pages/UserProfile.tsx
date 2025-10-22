@@ -806,6 +806,14 @@ export default function UserProfile() {
                           </div>
                         ))}
                       </div>
+                      {positiveEvaluations.length > 5 && (
+                        <button
+                          onClick={() => setActiveTab("avaliacoes")}
+                          className="text-sm text-primary hover:underline mt-2 block"
+                        >
+                          Ver todas as avaliações →
+                        </button>
+                      )}
                     </div>
                   )}
 
@@ -852,6 +860,14 @@ export default function UserProfile() {
                           </div>
                         ))}
                       </div>
+                      {complaintEvaluations.length > 5 && (
+                        <button
+                          onClick={() => setActiveTab("reclamacoes")}
+                          className="text-sm text-primary hover:underline mt-2 block"
+                        >
+                          Ver todas as reclamações →
+                        </button>
+                      )}
                     </div>
                   )}
                 </CardContent>

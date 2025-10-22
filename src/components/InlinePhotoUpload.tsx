@@ -79,7 +79,6 @@ export function InlinePhotoUpload({
     if (!originalFile || !coverPreview) return;
     
     setUploading(true);
-    setCoverPreview(null);
 
     try {
       // Comprimir a imagem original da capa

@@ -383,7 +383,7 @@ export default function Plans() {
 
                   {/* Botão de Ação */}
                   <Button
-                    className="w-full"
+                    className={`w-full ${isCurrentPlan && isFree ? 'bg-[#2485AE] hover:bg-[#2485AE]/90 text-white' : ''}`}
                     size="lg"
                     variant={isCurrentPlan ? 'secondary' : plan.recommended ? 'default' : 'outline'}
                     disabled={loadingPayment && selectedPlan?.id === plan.id}

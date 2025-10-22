@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Routes, Route } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import UserProfile from './UserProfile';
 import BusinessProfile from './BusinessProfile';
 
 export default function ProfileRouter() {
-  const { slug } = useParams();
+  const { slug } = useParams<{ slug: string }>();
   const [profileType, setProfileType] = useState<'user' | 'business' | 'notfound' | null>(null);
 
   useEffect(() => {
@@ -66,8 +66,18 @@ export default function ProfileRouter() {
   }
 
   if (profileType === 'user') {
-    return <UserProfile />;
+    return (
+      <Routes>
+        <Route path="/" element={<UserProfile />} />
+        <Route path="/:tab" element={<UserProfile />} />
+      </Routes>
+    );
   }
 
-  return <BusinessProfile />;
+  return (
+    <Routes>
+      <Route path="/" element={<BusinessProfile />} />
+      <Route path="/:tab" element={<BusinessProfile />} />
+    </Routes>
+  );
 }

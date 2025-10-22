@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Header } from '@/components/Header';
 import { Card, CardContent } from '@/components/ui/card';
@@ -85,7 +85,9 @@ interface Evaluation {
 }
 
 export default function UserProfile() {
-  const { slug } = useParams();
+  const { slug, tab } = useParams();
+  const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const { user } = useAuth();
   const { requireAuth } = useAuthAction();
@@ -97,7 +99,8 @@ export default function UserProfile() {
   const [complaintEvaluations, setComplaintEvaluations] = useState<Evaluation[]>([]);
   const [averageRating, setAverageRating] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('inicio');
+  const activeTab = tab || 'inicio';
+  const isProfileOwner = user?.id === profile?.user_id;
   const [showEvaluationForm, setShowEvaluationForm] = useState(false);
   const [showAllPositive, setShowAllPositive] = useState(false);
   const [showAllComplaints, setShowAllComplaints] = useState(false);
@@ -108,8 +111,15 @@ export default function UserProfile() {
   const [hasJobVacancies, setHasJobVacancies] = useState(false);
   const [responseText, setResponseText] = useState<{ [key: string]: string }>({});
   const [submittingResponse, setSubmittingResponse] = useState<{ [key: string]: boolean }>({});
-
-  const isProfileOwner = user && profile && user.id === profile.user_id;
+  
+  const handleTabChange = (value: string) => {
+    const basePath = `/${slug}`;
+    if (value === 'inicio') {
+      navigate(basePath);
+    } else {
+      navigate(`${basePath}/${value}`);
+    }
+  };
 
   const handleEvaluateClick = () => {
     if (requireAuth(() => setShowEvaluationForm(true))) {
@@ -430,18 +440,18 @@ export default function UserProfile() {
 
               {/* Tabs Navigation */}
               <Card className="bg-card/50 backdrop-blur-sm border-2 shadow-lg">
-                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                  <TabsList className="w-full justify-start rounded-none border-b bg-transparent h-auto p-1 flex gap-0.5 overflow-x-auto">
+                <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+                  <TabsList className="w-full justify-start rounded-none border-b bg-transparent h-auto p-0 flex gap-0 overflow-x-auto">
                     <TabsTrigger 
                       value="inicio" 
-                      className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-2 py-2 text-sm whitespace-nowrap flex-shrink-0"
+                      className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3 text-sm whitespace-nowrap flex-shrink-0"
                     >
                       Início
                     </TabsTrigger>
                     {hasTestimonials && (
                       <TabsTrigger 
                         value="depoimentos"
-                        className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-2 py-2 text-sm whitespace-nowrap flex-shrink-0"
+                        className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3 text-sm whitespace-nowrap flex-shrink-0"
                       >
                         Depoimentos
                       </TabsTrigger>
@@ -449,7 +459,7 @@ export default function UserProfile() {
                     {hasPortfolio && (
                       <TabsTrigger 
                         value="portfolio"
-                        className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-2 py-2 text-sm whitespace-nowrap flex-shrink-0"
+                        className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3 text-sm whitespace-nowrap flex-shrink-0"
                       >
                         Portfólio
                       </TabsTrigger>
@@ -457,7 +467,7 @@ export default function UserProfile() {
                     {hasCatalog && (
                       <TabsTrigger 
                         value="servicos"
-                        className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-2 py-2 text-sm whitespace-nowrap flex-shrink-0"
+                        className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3 text-sm whitespace-nowrap flex-shrink-0"
                       >
                         Serviços
                       </TabsTrigger>
@@ -465,21 +475,21 @@ export default function UserProfile() {
                     {hasJobVacancies && (
                       <TabsTrigger 
                         value="vagas"
-                        className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-2 py-2 text-sm whitespace-nowrap flex-shrink-0"
+                        className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3 text-sm whitespace-nowrap flex-shrink-0"
                       >
                         Vagas
                       </TabsTrigger>
                     )}
                     <TabsTrigger 
                       value="positivas"
-                      className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-2 py-2 text-sm whitespace-nowrap flex-shrink-0 flex items-center gap-1.5"
+                      className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3 text-sm whitespace-nowrap flex-shrink-0 flex items-center gap-1.5"
                     >
                       <ThumbsUp className="w-4 h-4" />
                       Avaliações ({positiveEvaluations.length})
                     </TabsTrigger>
                     <TabsTrigger 
                       value="reclamacoes"
-                      className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-2 py-2 text-sm whitespace-nowrap flex-shrink-0 flex items-center gap-1.5"
+                      className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3 text-sm whitespace-nowrap flex-shrink-0 flex items-center gap-1.5"
                     >
                       <AlertCircle className="w-4 h-4" />
                       Reclamações ({complaintEvaluations.length})
@@ -551,9 +561,11 @@ export default function UserProfile() {
                             </p>
                           )}
                         </div>
-                        <Button onClick={handleEvaluateClick}>
-                          {showEvaluationForm ? 'Cancelar' : 'Avaliar'}
-                        </Button>
+                        {!isProfileOwner && (
+                          <Button onClick={handleEvaluateClick}>
+                            {showEvaluationForm ? 'Cancelar' : 'Avaliar'}
+                          </Button>
+                        )}
                       </div>
 
                       {showEvaluationForm && profile && (
@@ -718,9 +730,11 @@ export default function UserProfile() {
                             </p>
                           )}
                         </div>
-                        <Button onClick={handleEvaluateClick}>
-                          {showEvaluationForm ? 'Cancelar' : 'Avaliar'}
-                        </Button>
+                        {!isProfileOwner && (
+                          <Button onClick={handleEvaluateClick}>
+                            {showEvaluationForm ? 'Cancelar' : 'Avaliar'}
+                          </Button>
+                        )}
                       </div>
 
                       {showEvaluationForm && profile && (
@@ -900,12 +914,14 @@ export default function UserProfile() {
                         />
                       ))}
                     </div>
-                    <Button 
-                      onClick={handleEvaluateClick}
-                      className="w-full"
-                    >
-                      Avaliar {profile.full_name ? profile.full_name.split(' ')[0] : profile.username}
-                    </Button>
+                    {!isProfileOwner && (
+                      <Button 
+                        onClick={handleEvaluateClick}
+                        className="w-full"
+                      >
+                        Avaliar {profile.full_name ? profile.full_name.split(' ')[0] : profile.username}
+                      </Button>
+                    )}
                   </div>
 
                   {/* Últimas Avaliações Positivas */}
@@ -953,7 +969,7 @@ export default function UserProfile() {
                       </div>
                       {positiveEvaluations.length > 5 && (
                         <button
-                          onClick={() => setActiveTab("avaliacoes")}
+                          onClick={() => handleTabChange("positivas")}
                           className="text-sm text-primary hover:underline mt-2 block"
                         >
                           Ver todas as avaliações →
@@ -1007,7 +1023,7 @@ export default function UserProfile() {
                       </div>
                       {complaintEvaluations.length > 5 && (
                         <button
-                          onClick={() => setActiveTab("reclamacoes")}
+                          onClick={() => handleTabChange("reclamacoes")}
                           className="text-sm text-primary hover:underline mt-2 block"
                         >
                           Ver todas as reclamações →

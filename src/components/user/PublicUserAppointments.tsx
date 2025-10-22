@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Calendar, Clock } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
-import { useToast } from "@/hooks/use-toast";
+import { useAuthAction } from "@/contexts/AuthActionContext";
 
 interface Availability {
   day_of_week: number;
@@ -22,8 +22,8 @@ const dayNames = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', '
 export function PublicUserAppointments({ userId, username }: PublicUserAppointmentsProps) {
   const [availability, setAvailability] = useState<Availability[]>([]);
   const [isActive, setIsActive] = useState(false);
-  const { user } = useAuth();
-  const { toast } = useToast();
+  const navigate = useNavigate();
+  const { requireAuth } = useAuthAction();
 
   useEffect(() => {
     loadAvailability();
@@ -58,18 +58,8 @@ export function PublicUserAppointments({ userId, username }: PublicUserAppointme
   };
 
   const handleBooking = () => {
-    if (!user) {
-      toast({
-        title: "Login necessário",
-        description: "Faça login para agendar um horário",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    toast({
-      title: "Em breve",
-      description: "Sistema de agendamento em desenvolvimento",
+    requireAuth(() => {
+      navigate(`/${username}/agendamento`);
     });
   };
 

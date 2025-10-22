@@ -361,119 +361,159 @@ export default function Plans() {
                   </div>
 
                   {/* Features */}
-                  {isFree ? (
-                    <ul className="space-y-3 flex-1">
-                      {plan.features
-                        .filter((feature) => 
-                          !feature.text.includes('Suporte prioritário') && 
-                          !feature.text.includes('Badge especial no perfil')
-                        )
-                        .map((feature, idx) => {
-                          // Substituir texto específico de propostas
-                          let featureText = feature.text;
-                          if (featureText.toLowerCase().includes('enviar proposta')) {
-                            featureText = 'Enviar proposta a cada 15 minutos';
-                          }
-                          
-                          return (
-                            <li key={idx} className="flex items-start gap-3">
-                              {feature.included ? (
-                                <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
-                              ) : (
-                                <X className="h-5 w-5 text-muted-foreground/40 shrink-0 mt-0.5" />
-                              )}
-                              <span
-                                className={`text-sm ${
-                                  feature.included
-                                    ? 'text-foreground'
-                                    : 'text-muted-foreground/60 line-through'
-                                }`}
-                              >
-                                {featureText}
-                              </span>
-                            </li>
-                          );
-                        })}
-                    </ul>
-                  ) : plan.slug === 'pro' ? (
-                    <ul className="space-y-3 flex-1">
-                      <li className="flex items-start gap-3">
+                  <ul className="space-y-3 flex-1">
+                    {/* Linha 1: Acesso completo */}
+                    <li className="flex items-start gap-3">
+                      <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
+                      <span className="text-sm text-foreground">
+                        Acesso completo à plataforma
+                      </span>
+                    </li>
+                    
+                    {/* Linha 2: Criar projetos */}
+                    <li className="flex items-start gap-3">
+                      <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
+                      <span className="text-sm text-foreground">
+                        Criar projetos ilimitados
+                      </span>
+                    </li>
+                    
+                    {/* Linha 3: Enviar propostas */}
+                    <li className="flex items-start gap-3">
+                      <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
+                      <span className="text-sm text-foreground">
+                        {isFree ? 'Enviar proposta a cada 15 minutos' : 'Enviar propostas ilimitadas'}
+                      </span>
+                    </li>
+                    
+                    {/* Linha 4: Sistema de mensagens */}
+                    <li className="flex items-start gap-3">
+                      <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
+                      <span className="text-sm text-foreground">
+                        Sistema de mensagens
+                      </span>
+                    </li>
+                    
+                    {/* Linha 5: Projetos no topo */}
+                    <li className="flex items-start gap-3">
+                      {!isFree ? (
                         <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
-                        <span className="text-sm text-foreground">
-                          Enviar propostas ilimitadas
-                        </span>
-                      </li>
-                      <li className="flex items-start gap-3">
+                      ) : (
+                        <X className="h-5 w-5 text-muted-foreground/40 shrink-0 mt-0.5" />
+                      )}
+                      <span className={`text-sm ${!isFree ? 'text-foreground' : 'text-muted-foreground/60 line-through'}`}>
+                        Projetos no topo
+                      </span>
+                    </li>
+                    
+                    {/* Linha 6: Propostas no topo */}
+                    <li className="flex items-start gap-3">
+                      {!isFree ? (
                         <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
-                        <span className="text-sm text-foreground">
-                          Projetos no topo
-                        </span>
-                      </li>
-                      <li className="flex items-start gap-3">
+                      ) : (
+                        <X className="h-5 w-5 text-muted-foreground/40 shrink-0 mt-0.5" />
+                      )}
+                      <span className={`text-sm ${!isFree ? 'text-foreground' : 'text-muted-foreground/60 line-through'}`}>
+                        Propostas no topo
+                      </span>
+                    </li>
+                    
+                    {/* Linha 7: Ferramentas exclusivas */}
+                    <li className="flex items-start gap-3">
+                      {!isFree ? (
                         <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
-                        <span className="text-sm text-foreground">
-                          Propostas no topo
-                        </span>
-                      </li>
-                      <li className="flex items-start gap-3">
+                      ) : (
+                        <X className="h-5 w-5 text-muted-foreground/40 shrink-0 mt-0.5" />
+                      )}
+                      <span className={`text-sm ${!isFree ? 'text-foreground' : 'text-muted-foreground/60 line-through'}`}>
+                        Ferramentas exclusivas
+                      </span>
+                    </li>
+                    
+                    {/* Linha 8: Layouts personalizados */}
+                    <li className="flex items-start gap-3">
+                      {!isFree ? (
                         <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
-                        <span className="text-sm text-foreground">
-                          Ferramentas exclusivas
-                        </span>
-                      </li>
-                      <li className="flex items-start gap-3">
+                      ) : (
+                        <X className="h-5 w-5 text-muted-foreground/40 shrink-0 mt-0.5" />
+                      )}
+                      <span className={`text-sm ${!isFree ? 'text-foreground' : 'text-muted-foreground/60 line-through'}`}>
+                        Layouts personalizados no perfil
+                      </span>
+                    </li>
+                    
+                    {/* Linha 9: Promover */}
+                    <li className="flex items-start gap-3">
+                      {!isFree ? (
                         <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
-                        <span className="text-sm text-foreground">
-                          Layouts personalizados no perfil
-                        </span>
-                      </li>
-                      <li className="flex items-start gap-3">
+                      ) : (
+                        <X className="h-5 w-5 text-muted-foreground/40 shrink-0 mt-0.5" />
+                      )}
+                      <span className={`text-sm ${!isFree ? 'text-foreground' : 'text-muted-foreground/60 line-through'}`}>
+                        {isPremium ? 'Promova por 24h 5x por mês' : plan.slug === 'pro' ? 'Promova por 24h 2x por mês' : 'Promover publicações'}
+                      </span>
+                    </li>
+                    
+                    {/* Linha 10: Selo premium */}
+                    <li className="flex items-start gap-3">
+                      {isPremium ? (
                         <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
-                        <span className="text-sm text-foreground">
-                          Promova por 24h 2x por mês
-                        </span>
-                      </li>
-                    </ul>
-                  ) : plan.slug === 'premium' ? (
-                    <ul className="space-y-3 flex-1">
-                      <li className="flex items-start gap-3">
+                      ) : (
+                        <X className="h-5 w-5 text-muted-foreground/40 shrink-0 mt-0.5" />
+                      )}
+                      <span className={`text-sm ${isPremium ? 'text-foreground' : 'text-muted-foreground/60 line-through'}`}>
+                        Selo premium exclusivo
+                      </span>
+                    </li>
+                    
+                    {/* Linha 11: Mensagens no topo */}
+                    <li className="flex items-start gap-3">
+                      {isPremium ? (
                         <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
-                        <span className="text-sm text-foreground">
-                          Selo premium exclusivo
-                        </span>
-                      </li>
-                      <li className="flex items-start gap-3">
+                      ) : (
+                        <X className="h-5 w-5 text-muted-foreground/40 shrink-0 mt-0.5" />
+                      )}
+                      <span className={`text-sm ${isPremium ? 'text-foreground' : 'text-muted-foreground/60 line-through'}`}>
+                        Mensagens no topo
+                      </span>
+                    </li>
+                    
+                    {/* Linha 12: Relatórios */}
+                    <li className="flex items-start gap-3">
+                      {isPremium ? (
                         <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
-                        <span className="text-sm text-foreground">
-                          Mensagens no topo
-                        </span>
-                      </li>
-                      <li className="flex items-start gap-3">
+                      ) : (
+                        <X className="h-5 w-5 text-muted-foreground/40 shrink-0 mt-0.5" />
+                      )}
+                      <span className={`text-sm ${isPremium ? 'text-foreground' : 'text-muted-foreground/60 line-through'}`}>
+                        Relatórios Completo
+                      </span>
+                    </li>
+                    
+                    {/* Linha 13: Storie em destaque */}
+                    <li className="flex items-start gap-3">
+                      {isPremium ? (
                         <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
-                        <span className="text-sm text-foreground">
-                          Relatórios Completo
-                        </span>
-                      </li>
-                      <li className="flex items-start gap-3">
+                      ) : (
+                        <X className="h-5 w-5 text-muted-foreground/40 shrink-0 mt-0.5" />
+                      )}
+                      <span className={`text-sm ${isPremium ? 'text-foreground' : 'text-muted-foreground/60 line-through'}`}>
+                        Storie em destaque
+                      </span>
+                    </li>
+                    
+                    {/* Linha 14: Suporte WhatsApp */}
+                    <li className="flex items-start gap-3">
+                      {isPremium ? (
                         <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
-                        <span className="text-sm text-foreground">
-                          Storie em destaque
-                        </span>
-                      </li>
-                      <li className="flex items-start gap-3">
-                        <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
-                        <span className="text-sm text-foreground">
-                          Promova por 24h 5x por mês
-                        </span>
-                      </li>
-                      <li className="flex items-start gap-3">
-                        <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
-                        <span className="text-sm text-foreground">
-                          Suporte rápido via WhatsApp
-                        </span>
-                      </li>
-                    </ul>
-                  ) : null}
+                      ) : (
+                        <X className="h-5 w-5 text-muted-foreground/40 shrink-0 mt-0.5" />
+                      )}
+                      <span className={`text-sm ${isPremium ? 'text-foreground' : 'text-muted-foreground/60 line-through'}`}>
+                        Suporte rápido via WhatsApp
+                      </span>
+                    </li>
+                  </ul>
 
                   {/* Preço no Final */}
                   <div className="pt-4 border-t border-border">

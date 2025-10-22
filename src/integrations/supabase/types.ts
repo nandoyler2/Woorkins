@@ -3106,6 +3106,99 @@ export type Database = {
           },
         ]
       }
+      user_negotiation_messages: {
+        Row: {
+          amount: number | null
+          content: string
+          created_at: string
+          id: string
+          message_type: string
+          negotiation_id: string
+          sender_id: string
+        }
+        Insert: {
+          amount?: number | null
+          content: string
+          created_at?: string
+          id?: string
+          message_type: string
+          negotiation_id: string
+          sender_id: string
+        }
+        Update: {
+          amount?: number | null
+          content?: string
+          created_at?: string
+          id?: string
+          message_type?: string
+          negotiation_id?: string
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_negotiation_messages_negotiation_id_fkey"
+            columns: ["negotiation_id"]
+            isOneToOne: false
+            referencedRelation: "user_negotiations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_negotiation_messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_negotiations: {
+        Row: {
+          archived: boolean | null
+          client_profile_id: string
+          created_at: string
+          final_amount: number | null
+          id: string
+          professional_profile_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          archived?: boolean | null
+          client_profile_id: string
+          created_at?: string
+          final_amount?: number | null
+          id?: string
+          professional_profile_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          archived?: boolean | null
+          client_profile_id?: string
+          created_at?: string
+          final_amount?: number | null
+          id?: string
+          professional_profile_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_negotiations_client_profile_id_fkey"
+            columns: ["client_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_negotiations_professional_profile_id_fkey"
+            columns: ["professional_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_portfolio: {
         Row: {
           category: string | null

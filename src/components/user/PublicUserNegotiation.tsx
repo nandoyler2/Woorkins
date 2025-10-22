@@ -70,28 +70,28 @@ export function PublicUserNegotiation({
 
       // Verificar se já existe uma negociação ativa
       const { data: existingNegotiation } = await supabase
-        .from('user_negotiations')
+        .from('user_negotiations' as any)
         .select('id')
         .eq('client_profile_id', userProfile.id)
         .eq('professional_profile_id', userId)
         .eq('status', 'open')
-        .maybeSingle();
+        .maybeSingle() as any;
 
-      if (existingNegotiation) {
+      if (existingNegotiation?.id) {
         navigate(`/messages?type=user_negotiation&id=${existingNegotiation.id}`);
         return;
       }
 
       // Criar nova negociação
       const { data: newNegotiation, error } = await supabase
-        .from('user_negotiations')
+        .from('user_negotiations' as any)
         .insert({
           client_profile_id: userProfile.id,
           professional_profile_id: userId,
           status: 'open',
         })
         .select()
-        .single();
+        .single() as any;
 
       if (error) throw error;
 
@@ -100,7 +100,7 @@ export function PublicUserNegotiation({
         description: "Negociação iniciada!",
       });
 
-      navigate(`/messages?type=user_negotiation&id=${newNegotiation.id}`);
+      navigate(`/messages?type=user_negotiation&id=${newNegotiation?.id}`);
     } catch (error) {
       console.error("Error starting negotiation:", error);
       toast({

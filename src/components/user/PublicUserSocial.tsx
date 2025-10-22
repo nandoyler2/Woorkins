@@ -29,7 +29,7 @@ export function PublicUserSocial({ userId }: PublicUserSocialProps) {
       // Dados sociais estão na tabela profiles
       const { data, error } = await supabase
         .from("profiles")
-        .select("website, facebook, instagram, linkedin, twitter, phone, email, whatsapp")
+        .select("website, facebook, instagram, linkedin, twitter, whatsapp, website_url")
         .eq("id", userId)
         .maybeSingle();
 
@@ -40,9 +40,9 @@ export function PublicUserSocial({ userId }: PublicUserSocialProps) {
           instagram: data.instagram,
           linkedin: data.linkedin,
           twitter: data.twitter,
-          website: data.website,
-          phone: data.phone || data.whatsapp,
-          email: data.email,
+          website: data.website || data.website_url,
+          phone: data.whatsapp,
+          email: null,
         });
       }
     } catch (error) {

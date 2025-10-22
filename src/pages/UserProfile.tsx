@@ -976,7 +976,10 @@ export default function UserProfile() {
               {/* Rating Highlight Card */}
               <Card className="bg-gradient-to-br from-primary/10 to-secondary/10 border-2 border-primary/20 shadow-glow">
                 <CardContent className="p-6">
-                  <div className="text-center">
+                  <div 
+                    className="text-center cursor-pointer hover:opacity-80 transition-opacity" 
+                    onClick={handleEvaluateClick}
+                  >
                     <div className="flex items-center justify-center gap-2 mb-2">
                       <Star className="w-8 h-8 text-primary fill-primary" />
                       <span className="text-5xl font-bold text-primary">

@@ -360,8 +360,8 @@ export default function Plans() {
                     )}
                   </div>
 
-                  {/* Features - apenas para plano grátis */}
-                  {isFree && (
+                  {/* Features */}
+                  {isFree ? (
                     <ul className="space-y-3 flex-1">
                       {plan.features.map((feature, idx) => (
                         <li key={idx} className="flex items-start gap-3">
@@ -382,7 +382,25 @@ export default function Plans() {
                         </li>
                       ))}
                     </ul>
-                  )}
+                  ) : plan.slug === 'pro' ? (
+                    <ul className="space-y-3 flex-1">
+                      <li className="flex items-start gap-3">
+                        <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
+                        <span className="text-sm text-foreground">
+                          Suporte prioritário
+                        </span>
+                      </li>
+                    </ul>
+                  ) : plan.slug === 'premium' ? (
+                    <ul className="space-y-3 flex-1">
+                      <li className="flex items-start gap-3">
+                        <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
+                        <span className="text-sm text-foreground">
+                          Suporte via WhatsApp
+                        </span>
+                      </li>
+                    </ul>
+                  ) : null}
 
                   {/* Preço no Final */}
                   <div className="pt-4 border-t border-border">

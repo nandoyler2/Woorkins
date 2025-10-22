@@ -384,44 +384,6 @@ export default function UserProfile() {
                     {/* Banner Section */}
                     <PublicUserBanners userId={profile.id} />
 
-                    {/* Projetos Section */}
-                    <div>
-                      <h2 className="text-xl font-bold mb-4">Projetos Recentes</h2>
-                      {projects.length === 0 ? (
-                        <div className="text-center py-8">
-                          <Briefcase className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
-                          <p className="text-muted-foreground">Nenhum projeto público ainda</p>
-                        </div>
-                      ) : (
-                        <div className="space-y-4">
-                          {projects.slice(0, 3).map((project) => (
-                            <Card key={project.id} className="hover:shadow-md transition-shadow">
-                              <CardContent className="p-4">
-                                <div className="flex justify-between items-start mb-2">
-                                  <h3 className="font-semibold text-lg">{project.title}</h3>
-                                  <Badge variant="secondary">{project.category}</Badge>
-                                </div>
-                                <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-                                  {project.description}
-                                </p>
-                                <div className="flex items-center justify-between text-sm">
-                                  <div className="flex items-center gap-4 text-muted-foreground">
-                                    {project.budget_min && project.budget_max && (
-                                      <span>
-                                        R$ {project.budget_min.toLocaleString('pt-BR')} - R$ {project.budget_max.toLocaleString('pt-BR')}
-                                      </span>
-                                    )}
-                                    <span>{project.proposals_count} proposta(s)</span>
-                                  </div>
-                                  <Button variant="outline" size="sm">Ver detalhes</Button>
-                                </div>
-                              </CardContent>
-                            </Card>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-
                     {/* Activity Section */}
                     <div>
                       <h2 className="text-xl font-bold mb-4">Atividade Recente</h2>
@@ -807,6 +769,9 @@ export default function UserProfile() {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Appointments */}
+              <PublicUserAppointments userId={profile.id} username={profile.username} />
 
               {/* Certifications */}
               <PublicUserCertifications userId={profile.id} />

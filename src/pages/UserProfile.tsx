@@ -745,30 +745,6 @@ export default function UserProfile() {
                 </CardContent>
               </Card>
 
-              {/* CARD EXCLUSIVO DO USUÁRIO - Estatísticas */}
-              <Card className="bg-card/50 backdrop-blur-sm border-2 shadow-lg">
-                <CardContent className="p-6">
-                  <h3 className="font-bold mb-4">Estatísticas</h3>
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">Projetos</span>
-                      <span className="font-semibold">{projects.length}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">Nível de Confiança</span>
-                      <Badge variant="outline" className={`${trustLevel.color} text-white border-0 text-xs`}>
-                        {trustLevel.label}
-                      </Badge>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">Membro desde</span>
-                      <span className="text-sm font-semibold">
-                        {new Date(profile.created_at).toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' })}
-                      </span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
 
               {/* Appointments */}
               <PublicUserAppointments userId={profile.id} username={profile.username} />

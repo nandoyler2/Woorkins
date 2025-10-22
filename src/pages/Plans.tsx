@@ -408,6 +408,12 @@ export default function Plans() {
                           Layouts personalizados no perfil
                         </span>
                       </li>
+                      <li className="flex items-start gap-3">
+                        <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
+                        <span className="text-sm text-foreground">
+                          Promova por 24h 2x por mês
+                        </span>
+                      </li>
                     </ul>
                   ) : plan.slug === 'premium' ? (
                     <ul className="space-y-3 flex-1">
@@ -415,6 +421,12 @@ export default function Plans() {
                         <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
                         <span className="text-sm text-foreground">
                           Storie em destaque
+                        </span>
+                      </li>
+                      <li className="flex items-start gap-3">
+                        <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
+                        <span className="text-sm text-foreground">
+                          Promova por 24h 5x por mês
                         </span>
                       </li>
                       <li className="flex items-start gap-3">

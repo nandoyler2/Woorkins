@@ -36,9 +36,9 @@ export function GenericPortfolioManager({ entityId }: GenericPortfolioManagerPro
   const loadItems = async () => {
     try {
       const { data, error } = await supabase
-        .from("profile_portfolio_items")
+        .from("portfolio_items")
         .select("*")
-        .eq("target_profile_id", entityId)
+        .eq("business_id", entityId)
         .order("order_index", { ascending: true });
 
       if (error) throw error;
@@ -65,7 +65,7 @@ export function GenericPortfolioManager({ entityId }: GenericPortfolioManagerPro
     setLoading(true);
     try {
       const itemData = {
-        target_profile_id: entityId,
+        business_id: entityId,
         title: editingItem.title,
         description: editingItem.description || null,
         image_url: editingItem.image_url || null,
@@ -76,14 +76,14 @@ export function GenericPortfolioManager({ entityId }: GenericPortfolioManagerPro
 
       if (editingItem.id) {
         const { error } = await supabase
-          .from("profile_portfolio_items")
+          .from("portfolio_items")
           .update(itemData)
           .eq("id", editingItem.id);
         
         if (error) throw error;
       } else {
         const { error } = await supabase
-          .from("profile_portfolio_items")
+          .from("portfolio_items")
           .insert(itemData);
         
         if (error) throw error;
@@ -112,7 +112,7 @@ export function GenericPortfolioManager({ entityId }: GenericPortfolioManagerPro
 
     try {
       const { error } = await supabase
-        .from("profile_portfolio_items")
+        .from("portfolio_items")
         .delete()
         .eq("id", id);
 

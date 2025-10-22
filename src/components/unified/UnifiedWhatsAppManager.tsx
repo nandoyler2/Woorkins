@@ -42,7 +42,7 @@ export function UnifiedWhatsAppManager({ profileId }: UnifiedWhatsAppManagerProp
   const loadConfig = async () => {
     try {
       const { data, error } = await supabase
-        .from('profile_whatsapp_config')
+        .from('profile_whatsapp_widgets')
         .select('*')
         .eq('target_profile_id', profileId)
         .single();
@@ -119,21 +119,21 @@ export function UnifiedWhatsAppManager({ profileId }: UnifiedWhatsAppManagerProp
       };
 
       const { data: existing } = await supabase
-        .from('profile_whatsapp_config')
+        .from('profile_whatsapp_widgets')
         .select('id')
         .eq('target_profile_id', profileId)
         .maybeSingle();
 
       if (existing) {
         const { error } = await supabase
-          .from('profile_whatsapp_config')
+          .from('profile_whatsapp_widgets')
           .update(configData)
           .eq('target_profile_id', profileId);
 
         if (error) throw error;
       } else {
         const { error } = await supabase
-          .from('profile_whatsapp_config')
+          .from('profile_whatsapp_widgets')
           .insert([configData]);
 
         if (error) throw error;

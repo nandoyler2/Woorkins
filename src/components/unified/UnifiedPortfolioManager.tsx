@@ -35,9 +35,9 @@ export function UnifiedPortfolioManager({ profileId }: UnifiedPortfolioManagerPr
   const loadItems = async () => {
     try {
       const { data, error } = await supabase
-        .from('user_portfolio_items')
+        .from('portfolio_items')
         .select('*')
-        .eq('profile_id', profileId)
+        .eq('business_id', profileId)
         .order('order_index');
 
       if (error) throw error;
@@ -64,22 +64,25 @@ export function UnifiedPortfolioManager({ profileId }: UnifiedPortfolioManagerPr
     setLoading(true);
     try {
       const itemData = {
-        ...editingItem,
-        profile_id: profileId,
+        business_id: profileId,
+        title: editingItem.title || '',
+        description: editingItem.description,
+        image_url: editingItem.image_url,
+        project_url: editingItem.project_url,
         order_index: editingItem.order_index ?? items.length,
         active: true,
       };
 
       if (editingItem.id) {
         const { error } = await supabase
-          .from('user_portfolio_items')
+          .from('portfolio_items')
           .update(itemData)
           .eq('id', editingItem.id);
 
         if (error) throw error;
       } else {
         const { error } = await supabase
-          .from('user_portfolio_items')
+          .from('portfolio_items')
           .insert([itemData]);
 
         if (error) throw error;
@@ -108,7 +111,7 @@ export function UnifiedPortfolioManager({ profileId }: UnifiedPortfolioManagerPr
 
     try {
       const { error } = await supabase
-        .from('user_portfolio_items')
+        .from('portfolio_items')
         .delete()
         .eq('id', id);
 

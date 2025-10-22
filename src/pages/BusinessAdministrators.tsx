@@ -85,18 +85,18 @@ export default function BusinessAdministrators({ businessId }: BusinessAdministr
 
   const loadAdmins = async () => {
     const { data, error } = await supabase
-      .from('business_admins')
+      .from('profile_admins')
       .select(`
         id,
         profile_id,
         permissions,
         status,
-        profiles:profile_id (
+        profiles:profile_admins_profile_id_fkey (
           full_name,
           username
         )
       `)
-      .eq('business_id', businessId)
+      .eq('target_profile_id', businessId)
       .order('created_at', { ascending: false });
 
     if (!error && data) {
@@ -161,9 +161,9 @@ export default function BusinessAdministrators({ businessId }: BusinessAdministr
 
     setLoading(true);
     const { error } = await supabase
-      .from('business_admins')
+      .from('profile_admins')
       .insert({
-        business_id: businessId,
+        target_profile_id: businessId,
         profile_id: selectedProfile.id,
         permissions,
         status: 'pending',
@@ -209,7 +209,7 @@ export default function BusinessAdministrators({ businessId }: BusinessAdministr
 
   const handleRemoveAdmin = async (adminId: string) => {
     const { error } = await supabase
-      .from('business_admins')
+      .from('profile_admins')
       .delete()
       .eq('id', adminId);
 

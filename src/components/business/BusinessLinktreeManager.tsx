@@ -223,9 +223,9 @@ export function BusinessLinktreeManager({ businessId, businessLogo }: BusinessLi
   const loadLinks = async () => {
     try {
       const { data, error } = await supabase
-        .from("business_custom_links")
+        .from("profile_custom_links")
         .select("*")
-        .eq("business_id", businessId)
+        .eq("target_profile_id", businessId)
         .order("order_index");
 
       if (error) throw error;
@@ -242,16 +242,16 @@ export function BusinessLinktreeManager({ businessId, businessLogo }: BusinessLi
   const loadConfig = async () => {
     try {
       const { data: profile } = await supabase
-        .from("business_profiles")
-        .select("linktree_config, linktree_social_links, linktree_logo_url, logo_url, linktree_slug, company_name, slug")
+        .from("profiles")
+        .select("linktree_config, linktree_social_links, linktree_logo_url, avatar_url, linktree_slug, full_name, slug")
         .eq("id", businessId)
         .single();
 
       if (profile) {
         setBusinessData({
-          company_name: profile.company_name || 'Seu Negócio',
+          company_name: profile.full_name || 'Seu Negócio',
           slug: profile.slug,
-          logo_url: profile.linktree_logo_url || profile.logo_url
+          logo_url: profile.linktree_logo_url || profile.avatar_url
         });
 
         const defaultConfig = {
@@ -259,7 +259,7 @@ export function BusinessLinktreeManager({ businessId, businessLogo }: BusinessLi
           primaryColor: '#FFFFFF',
           secondaryColor: '#1A1A1A',
           textColor: '#1A1A1A',
-          logoUrl: profile.linktree_logo_url || profile.logo_url || businessLogo || ''
+          logoUrl: profile.linktree_logo_url || profile.avatar_url || businessLogo || ''
         };
         
         if (profile.linktree_slug) {
@@ -292,7 +292,7 @@ export function BusinessLinktreeManager({ businessId, businessLogo }: BusinessLi
       }
       
       const { error } = await supabase
-        .from("business_profiles")
+        .from("profiles")
         .update(updateData)
         .eq("id", businessId);
 
@@ -389,7 +389,7 @@ export function BusinessLinktreeManager({ businessId, businessLogo }: BusinessLi
     
     try {
       const { error } = await supabase
-        .from("business_profiles")
+        .from("profiles")
         .update({ linktree_social_links: validatedLinks })
         .eq("id", businessId);
 
@@ -420,7 +420,7 @@ export function BusinessLinktreeManager({ businessId, businessLogo }: BusinessLi
     setCheckingSlug(true);
     try {
       const { data, error } = await supabase
-        .from("business_profiles")
+        .from("profiles")
         .select("id, linktree_slug")
         .eq("linktree_slug", slug)
         .maybeSingle();
@@ -481,7 +481,7 @@ export function BusinessLinktreeManager({ businessId, businessLogo }: BusinessLi
 
     try {
       const { error } = await supabase
-        .from("business_profiles")
+        .from("profiles")
         .update({ linktree_slug: linktreeSlug.toLowerCase() })
         .eq("id", businessId);
 
@@ -583,17 +583,17 @@ export function BusinessLinktreeManager({ businessId, businessLogo }: BusinessLi
 
       if (editingLink.id) {
         const { error } = await supabase
-          .from("business_custom_links")
+          .from("profile_custom_links")
           .update(linkData)
           .eq("id", editingLink.id);
 
         if (error) throw error;
       } else {
         const { error } = await supabase
-          .from("business_custom_links")
+          .from("profile_custom_links")
           .insert({
             ...linkData,
-            business_id: businessId,
+            target_profile_id: businessId,
             order_index: links.length,
             active: true,
           });
@@ -620,7 +620,7 @@ export function BusinessLinktreeManager({ businessId, businessLogo }: BusinessLi
   const handleDeleteLink = async (id: string) => {
     try {
       const { error } = await supabase
-        .from("business_custom_links")
+        .from("profile_custom_links")
         .delete()
         .eq("id", id);
 
@@ -661,7 +661,7 @@ export function BusinessLinktreeManager({ businessId, businessLogo }: BusinessLi
 
       for (const update of updates) {
         await supabase
-          .from("business_custom_links")
+          .from("profile_custom_links")
           .update({ order_index: update.order_index })
           .eq("id", update.id);
       }

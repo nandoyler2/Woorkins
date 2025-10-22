@@ -42,9 +42,9 @@ export function BusinessJobVacanciesManager({ businessId }: BusinessJobVacancies
   const loadVacancies = async () => {
     try {
       const { data, error } = await supabase
-        .from("business_job_vacancies")
+        .from("profile_job_vacancies")
         .select("*")
-        .eq("business_id", businessId)
+        .eq("target_profile_id", businessId)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -55,7 +55,7 @@ export function BusinessJobVacanciesManager({ businessId }: BusinessJobVacancies
         const counts: Record<string, number> = {};
         for (const vacancy of data) {
           const { count } = await supabase
-            .from("business_job_applications")
+            .from("profile_job_applications")
             .select("*", { count: "exact", head: true })
             .eq("vacancy_id", vacancy.id);
           counts[vacancy.id] = count || 0;
@@ -85,7 +85,7 @@ export function BusinessJobVacanciesManager({ businessId }: BusinessJobVacancies
     try {
       if (editingVacancy.id) {
         const { error } = await supabase
-          .from("business_job_vacancies")
+          .from("profile_job_vacancies")
           .update({
             title: editingVacancy.title,
             description: editingVacancy.description,
@@ -102,9 +102,9 @@ export function BusinessJobVacanciesManager({ businessId }: BusinessJobVacancies
         if (error) throw error;
       } else {
         const { error } = await supabase
-          .from("business_job_vacancies")
+          .from("profile_job_vacancies")
           .insert({
-            business_id: businessId,
+            target_profile_id: businessId,
             title: editingVacancy.title,
             description: editingVacancy.description,
             area: editingVacancy.area,
@@ -138,7 +138,7 @@ export function BusinessJobVacanciesManager({ businessId }: BusinessJobVacancies
   const handleDeleteVacancy = async (id: string) => {
     try {
       const { error } = await supabase
-        .from("business_job_vacancies")
+        .from("profile_job_vacancies")
         .delete()
         .eq("id", id);
 

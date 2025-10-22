@@ -36,9 +36,9 @@ export function BusinessCatalogManager({ businessId }: BusinessCatalogManagerPro
   const loadItems = async () => {
     try {
       const { data, error } = await supabase
-        .from("business_catalog_items")
+        .from("profile_catalog_items")
         .select("*")
-        .eq("business_id", businessId)
+        .eq("target_profile_id", businessId)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -66,7 +66,7 @@ export function BusinessCatalogManager({ businessId }: BusinessCatalogManagerPro
     try {
       if (editingItem.id) {
         const { error } = await supabase
-          .from("business_catalog_items")
+          .from("profile_catalog_items")
           .update({
             name: editingItem.name,
             description: editingItem.description,
@@ -79,9 +79,9 @@ export function BusinessCatalogManager({ businessId }: BusinessCatalogManagerPro
         if (error) throw error;
       } else {
         const { error } = await supabase
-          .from("business_catalog_items")
+          .from("profile_catalog_items")
           .insert({
-            business_id: businessId,
+            target_profile_id: businessId,
             name: editingItem.name,
             description: editingItem.description,
             price: editingItem.price,
@@ -112,7 +112,7 @@ export function BusinessCatalogManager({ businessId }: BusinessCatalogManagerPro
   const handleDeleteItem = async (id: string) => {
     try {
       const { error } = await supabase
-        .from("business_catalog_items")
+        .from("profile_catalog_items")
         .delete()
         .eq("id", id);
 

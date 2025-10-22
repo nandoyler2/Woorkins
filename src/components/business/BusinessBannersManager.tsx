@@ -34,9 +34,9 @@ export function BusinessBannersManager({ businessId }: BusinessBannersManagerPro
   const loadBanners = async () => {
     try {
       const { data, error } = await supabase
-        .from("business_banners")
+        .from("profile_banners")
         .select("*")
-        .eq("business_id", businessId)
+        .eq("target_profile_id", businessId)
         .order("order_index");
 
       if (error) throw error;
@@ -73,7 +73,7 @@ export function BusinessBannersManager({ businessId }: BusinessBannersManagerPro
     try {
       if (editingBanner.id) {
         const { error } = await supabase
-          .from("business_banners")
+          .from("profile_banners")
           .update({
             image_url: editingBanner.image_url,
             title: editingBanner.title,
@@ -84,9 +84,9 @@ export function BusinessBannersManager({ businessId }: BusinessBannersManagerPro
         if (error) throw error;
       } else {
         const { error } = await supabase
-          .from("business_banners")
+          .from("profile_banners")
           .insert({
-            business_id: businessId,
+            target_profile_id: businessId,
             image_url: editingBanner.image_url,
             title: editingBanner.title,
             link_url: editingBanner.link_url,
@@ -116,7 +116,7 @@ export function BusinessBannersManager({ businessId }: BusinessBannersManagerPro
   const handleDeleteBanner = async (id: string) => {
     try {
       const { error } = await supabase
-        .from("business_banners")
+        .from("profile_banners")
         .delete()
         .eq("id", id);
 
@@ -157,7 +157,7 @@ export function BusinessBannersManager({ businessId }: BusinessBannersManagerPro
 
       for (const update of updates) {
         await supabase
-          .from("business_banners")
+          .from("profile_banners")
           .update({ order_index: update.order_index })
           .eq("id", update.id);
       }

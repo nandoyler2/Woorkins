@@ -38,6 +38,7 @@ export function InlinePhotoUpload({
   const [isDragging, setIsDragging] = useState(false);
   const [dragStartY, setDragStartY] = useState(0);
   const [dragStartPosition, setDragStartPosition] = useState(50);
+  const [localCoverUrl, setLocalCoverUrl] = useState<string | null>(null);
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -131,6 +132,8 @@ export function InlinePhotoUpload({
         .eq('user_id', userId);
 
       if (updateError) throw updateError;
+
+      setLocalCoverUrl(publicUrl);
 
       if (currentPhotoUrl) {
         try {
@@ -330,6 +333,16 @@ export function InlinePhotoUpload({
         ) : (
           <>
             {children}
+            {localCoverUrl && type === 'cover' && !coverPreview && (
+              <div
+                className="absolute inset-0 rounded-[inherit] pointer-events-none z-[5]"
+                style={{
+                  backgroundImage: `url(${localCoverUrl})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: `center ${coverPosition}%`,
+                }}
+              />
+            )}
             
             {/* Ícone de câmera no canto - só aparece no hover e quando não está editando */}
             {!uploading && !moderating && isHovered && !imageToCrop && (

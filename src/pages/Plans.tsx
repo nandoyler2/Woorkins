@@ -57,7 +57,7 @@ export default function Plans() {
       const planPrices: Record<string, number> = {
         'basico': 0,
         'pro': 49.90,
-        'premium': 99.90
+        'premium': 149.90
       };
       
       const planCommissions: Record<string, number> = {
@@ -342,29 +342,41 @@ export default function Plans() {
                         Taxa de recebimento: <span className="font-semibold">{plan.commission_percentage}%</span>
                       </span>
                     </div>
+                    {plan.slug === 'pro' && (
+                      <p className="text-sm text-muted-foreground pl-8">
+                        Tudo do plano grátis
+                      </p>
+                    )}
+                    {plan.slug === 'premium' && (
+                      <p className="text-sm text-muted-foreground pl-8">
+                        Tudo do plano grátis e pro
+                      </p>
+                    )}
                   </div>
 
-                  {/* Features */}
-                  <ul className="space-y-3 flex-1">
-                    {plan.features.map((feature, idx) => (
-                      <li key={idx} className="flex items-start gap-3">
-                        {feature.included ? (
-                          <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
-                        ) : (
-                          <X className="h-5 w-5 text-muted-foreground/40 shrink-0 mt-0.5" />
-                        )}
-                        <span
-                          className={`text-sm ${
-                            feature.included
-                              ? 'text-foreground'
-                              : 'text-muted-foreground/60 line-through'
-                          }`}
-                        >
-                          {feature.text}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
+                  {/* Features - apenas para plano grátis */}
+                  {isFree && (
+                    <ul className="space-y-3 flex-1">
+                      {plan.features.map((feature, idx) => (
+                        <li key={idx} className="flex items-start gap-3">
+                          {feature.included ? (
+                            <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
+                          ) : (
+                            <X className="h-5 w-5 text-muted-foreground/40 shrink-0 mt-0.5" />
+                          )}
+                          <span
+                            className={`text-sm ${
+                              feature.included
+                                ? 'text-foreground'
+                                : 'text-muted-foreground/60 line-through'
+                            }`}
+                          >
+                            {feature.text}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
 
                   {/* Preço no Final */}
                   <div className="pt-4 border-t border-border">

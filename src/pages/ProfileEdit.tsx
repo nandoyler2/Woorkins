@@ -926,7 +926,9 @@ export default function ProfileEdit() {
           <Sidebar className="border-r bg-card/50 backdrop-blur-sm z-10" style={{ top: '64px', height: 'calc(100svh - 64px)' }}>
             <SidebarContent>
               <div className="p-4 border-b space-y-3">
-                <h2 className="text-lg font-bold px-2">Perfil do Usuário</h2>
+                <h2 className="text-lg font-bold px-2">
+                  {profileType === 'business' ? 'Perfil Profissional' : 'Perfil do Usuário'}
+                </h2>
                 <Button variant="ghost" size="sm" asChild className="w-full justify-start">
                   <Link to="/painel">
                     <ArrowLeft className="w-4 h-4 mr-2" />
@@ -1065,10 +1067,10 @@ export default function ProfileEdit() {
                 <div className="mb-8">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-3">
-                      {profile.avatar_url ? (
+                      {(profileType === 'business' ? profile.logo_url : profile.avatar_url) ? (
                         <img 
-                          src={profile.avatar_url} 
-                          alt={profile.full_name || profile.username}
+                          src={profileType === 'business' ? profile.logo_url! : profile.avatar_url!} 
+                          alt={profileType === 'business' ? profile.company_name! : (profile.full_name || profile.username)}
                           className="w-12 h-12 rounded-full object-cover border-2 border-border"
                         />
                       ) : (
@@ -1077,8 +1079,12 @@ export default function ProfileEdit() {
                         </div>
                       )}
                       <div>
-                        <h1 className="text-3xl font-bold">{profile.full_name || profile.username}</h1>
-                        <p className="text-muted-foreground text-sm">@{profile.username}</p>
+                        <h1 className="text-3xl font-bold">
+                          {profileType === 'business' ? profile.company_name : (profile.full_name || profile.username)}
+                        </h1>
+                        <p className="text-muted-foreground text-sm">
+                          {profileType === 'business' ? profile.slug : `@${profile.username}`}
+                        </p>
                       </div>
                     </div>
                     <Button
@@ -1103,8 +1109,12 @@ export default function ProfileEdit() {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
                           <div className="w-16 h-16 rounded-full overflow-hidden flex-shrink-0 border-2 border-primary/20">
-                            {profile.avatar_url ? (
-                              <img src={profile.avatar_url} alt={profile.full_name || profile.username} className="w-full h-full object-cover" />
+                            {(profileType === 'business' ? profile.logo_url : profile.avatar_url) ? (
+                              <img 
+                                src={profileType === 'business' ? profile.logo_url! : profile.avatar_url!} 
+                                alt={profileType === 'business' ? profile.company_name! : (profile.full_name || profile.username)} 
+                                className="w-full h-full object-cover" 
+                              />
                             ) : (
                               <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center">
                                 <User className="w-8 h-8 text-primary/40" />
@@ -1113,7 +1123,7 @@ export default function ProfileEdit() {
                           </div>
                           <div>
                             <h2 className="text-2xl font-bold mb-2">
-                              Perfil de {profile.full_name || profile.username}
+                              Perfil de {profileType === 'business' ? profile.company_name : (profile.full_name || profile.username)}
                             </h2>
                             <p className="text-muted-foreground">
                               Gerencie seu perfil e acompanhe suas estatísticas
@@ -1364,7 +1374,7 @@ export default function ProfileEdit() {
                             <div className="pt-6 pl-40">
                               <div className="inline-block bg-background/95 backdrop-blur-sm px-6 py-2 rounded-lg shadow-sm border">
                                 <h2 className="text-2xl font-bold whitespace-nowrap">
-                                  {profile.full_name || profile.username}
+                                  {profileType === 'business' ? profile.company_name : (profile.full_name || profile.username)}
                                 </h2>
                               </div>
                             </div>
@@ -1771,36 +1781,93 @@ export default function ProfileEdit() {
                     </div>
                     <CardContent className="p-6">
                       <form onSubmit={handleSave} className="space-y-4">
-                        <div className="space-y-2">
-                          <Label className="text-base font-medium">Nome Completo</Label>
-                          <Input
-                            value={profile.full_name || ''}
-                            onChange={(e) => setProfile({ ...profile, full_name: e.target.value })}
-                            placeholder="Seu nome completo"
-                            className="text-base"
-                          />
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <Label className="text-base font-medium">Biografia</Label>
-                          <Textarea
-                            value={profile.bio || ''}
-                            onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
-                            rows={4}
-                            placeholder="Conte um pouco sobre você..."
-                            className="text-base resize-none"
-                          />
-                        </div>
+                        {profileType === 'user' ? (
+                          <>
+                            <div className="space-y-2">
+                              <Label className="text-base font-medium">Nome Completo</Label>
+                              <Input
+                                value={profile.full_name || ''}
+                                onChange={(e) => setProfile({ ...profile, full_name: e.target.value })}
+                                placeholder="Seu nome completo"
+                                className="text-base"
+                              />
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <Label className="text-base font-medium">Biografia</Label>
+                              <Textarea
+                                value={profile.bio || ''}
+                                onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
+                                rows={4}
+                                placeholder="Conte um pouco sobre você..."
+                                className="text-base resize-none"
+                              />
+                            </div>
 
-                        <div className="space-y-2">
-                          <Label className="text-base font-medium">Localização</Label>
-                          <Input
-                            value={profile.location || ''}
-                            onChange={(e) => setProfile({ ...profile, location: e.target.value })}
-                            placeholder="Cidade, Estado"
-                            className="text-base"
-                          />
-                        </div>
+                            <div className="space-y-2">
+                              <Label className="text-base font-medium">Localização</Label>
+                              <Input
+                                value={profile.location || ''}
+                                onChange={(e) => setProfile({ ...profile, location: e.target.value })}
+                                placeholder="Cidade, Estado"
+                                className="text-base"
+                              />
+                            </div>
+
+                            <div className="space-y-2">
+                              <Label className="text-base font-medium">Website</Label>
+                              <Input
+                                value={profile.website || ''}
+                                onChange={(e) => setProfile({ ...profile, website: e.target.value })}
+                                placeholder="https://seusite.com"
+                                className="text-base"
+                              />
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <div className="space-y-2">
+                              <Label className="text-base font-medium">Nome da Empresa</Label>
+                              <Input
+                                value={profile.company_name || ''}
+                                onChange={(e) => setProfile({ ...profile, company_name: e.target.value })}
+                                placeholder="Nome da sua empresa"
+                                className="text-base"
+                              />
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <Label className="text-base font-medium">Descrição</Label>
+                              <Textarea
+                                value={profile.description || ''}
+                                onChange={(e) => setProfile({ ...profile, description: e.target.value })}
+                                rows={4}
+                                placeholder="Descreva sua empresa..."
+                                className="text-base resize-none"
+                              />
+                            </div>
+
+                            <div className="space-y-2">
+                              <Label className="text-base font-medium">Endereço</Label>
+                              <Input
+                                value={profile.address || ''}
+                                onChange={(e) => setProfile({ ...profile, address: e.target.value })}
+                                placeholder="Endereço completo"
+                                className="text-base"
+                              />
+                            </div>
+
+                            <div className="space-y-2">
+                              <Label className="text-base font-medium">Website</Label>
+                              <Input
+                                value={profile.website_url || ''}
+                                onChange={(e) => setProfile({ ...profile, website_url: e.target.value })}
+                                placeholder="https://suaempresa.com"
+                                className="text-base"
+                              />
+                            </div>
+                          </>
+                        )}
 
                         <Button 
                           type="submit" 
@@ -1817,7 +1884,7 @@ export default function ProfileEdit() {
               )}
 
               {/* Administradores */}
-              {activeSection === 'admin' && (
+              {activeSection === 'admin' && profileType === 'business' && (
                 <div className="space-y-6 animate-fade-in">
                   <Card className="bg-card/50 backdrop-blur-sm border-2">
                     <CardHeader>

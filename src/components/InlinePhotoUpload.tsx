@@ -39,6 +39,7 @@ export function InlinePhotoUpload({
   const [dragStartY, setDragStartY] = useState(0);
   const [dragStartPosition, setDragStartPosition] = useState(50);
   const [localCoverUrl, setLocalCoverUrl] = useState<string | null>(null);
+  const [isAdjusting, setIsAdjusting] = useState(false);
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -285,6 +286,28 @@ export function InlinePhotoUpload({
     setIsDragging(false);
   };
 
+  const handleAdjustCover = () => {
+    const coverUrl = localCoverUrl || currentPhotoUrl;
+    if (coverUrl && type === 'cover') {
+      setCoverPreview(coverUrl);
+      setIsAdjusting(true);
+    }
+  };
+
+  const handleSaveAdjustment = async () => {
+    if (!isAdjusting || !coverPreview) return;
+    
+    setIsAdjusting(false);
+    setCoverPreview(null);
+    
+    toast({
+      title: 'Posição atualizada!',
+      description: 'A posição da capa foi ajustada com sucesso.',
+    });
+    
+    onPhotoUpdated?.();
+  };
+
   return (
     <>
       <div 
@@ -315,13 +338,14 @@ export function InlinePhotoUpload({
                 onClick={() => {
                   setCoverPreview(null);
                   setOriginalFile(null);
+                  setIsAdjusting(false);
                 }}
                 className="px-3 py-1.5 bg-background/90 hover:bg-background rounded-lg transition-colors text-sm"
               >
                 Cancelar
               </button>
               <button
-                onClick={handleCoverSave}
+                onClick={isAdjusting ? handleSaveAdjustment : handleCoverSave}
                 className="px-3 py-1.5 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg transition-colors text-sm"
               >
                 Salvar
@@ -347,12 +371,22 @@ export function InlinePhotoUpload({
             
             {/* Ícone de câmera no canto - só aparece no hover e quando não está editando */}
             {!uploading && !moderating && isHovered && !imageToCrop && (
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className={`absolute ${iconPosition === 'top' ? 'top-3 right-3' : 'bottom-2 right-2'} bg-background/90 hover:bg-background p-2.5 rounded-full shadow-lg transition-all hover:scale-110 border-2 border-border z-10`}
-              >
-                <Camera className="w-4 h-4 text-foreground" />
-              </button>
+              <div className="absolute top-3 right-3 flex gap-2 z-10">
+                {(localCoverUrl || currentPhotoUrl) && type === 'cover' && (
+                  <button
+                    onClick={handleAdjustCover}
+                    className="bg-background/90 hover:bg-background px-3 py-1.5 rounded-lg shadow-lg transition-all hover:scale-105 border-2 border-border text-sm"
+                  >
+                    Ajustar
+                  </button>
+                )}
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className={`bg-background/90 hover:bg-background p-2.5 rounded-full shadow-lg transition-all hover:scale-110 border-2 border-border`}
+                >
+                  <Camera className="w-4 h-4 text-foreground" />
+                </button>
+              </div>
             )}
 
             {/* Loading overlay */}

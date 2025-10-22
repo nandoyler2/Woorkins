@@ -259,14 +259,16 @@ export default function Plans() {
                 className={`relative overflow-hidden transition-all duration-300 hover:shadow-2xl ${
                   isPremium
                     ? 'border-yellow-500/60 border-2 shadow-lg shadow-yellow-500/20 bg-gradient-to-br from-yellow-50/50 via-card to-card dark:from-yellow-900/10 dark:via-card dark:to-card'
+                    : isFree
+                    ? 'border-[#2485AE]/60 border-2 shadow-lg shadow-[#2485AE]/20 bg-gradient-to-br from-[#2485AE]/5 via-card to-card dark:from-[#2485AE]/10 dark:via-card dark:to-card'
                     : isCurrentPlan
                     ? 'border-primary border-3 shadow-xl ring-2 ring-primary/20'
                     : plan.recommended
                     ? 'border-primary/60 border-2 shadow-lg'
                     : 'border-border hover:border-primary/30'
-                } ${plan.recommended || isCurrentPlan || isPremium ? 'pt-8' : ''}`}
+                } ${plan.recommended || isCurrentPlan || isPremium || isFree ? 'pt-8' : ''}`}
               >
-                {/* Badge de Plano Atual */}
+                {/* Badge Seu Plano */}
                 {isCurrentPlan && (
                   <div className="absolute top-3 left-1/2 -translate-x-1/2 z-10">
                     <Badge className="bg-gradient-primary shadow-glow">
@@ -286,8 +288,18 @@ export default function Plans() {
                   </div>
                 )}
 
+                {/* Badge Ativo para Grátis */}
+                {isFree && !isCurrentPlan && (
+                  <div className="absolute top-3 left-1/2 -translate-x-1/2 z-10">
+                    <Badge className="bg-[#2485AE] text-white shadow-lg shadow-[#2485AE]/50">
+                      <Check className="w-3 h-3 mr-1" />
+                      Ativo
+                    </Badge>
+                  </div>
+                )}
+
                 {/* Badge Recomendado */}
-                {plan.recommended && !isCurrentPlan && !isPremium && (
+                {plan.recommended && !isCurrentPlan && !isPremium && !isFree && (
                   <div className="absolute top-3 left-1/2 -translate-x-1/2 z-10">
                     <Badge className="bg-primary text-primary-foreground shadow-md">
                       <Sparkles className="w-3 h-3 mr-1" />
@@ -305,7 +317,13 @@ export default function Plans() {
                   {/* Cabeçalho do Plano */}
                   <div className="text-center space-y-3">
                     <div className="flex items-center justify-center gap-2">
-                      <h3 className={`text-2xl font-bold ${isPremium ? 'bg-gradient-to-r from-yellow-500 to-yellow-600 bg-clip-text text-transparent' : ''}`}>
+                      <h3 className={`text-2xl font-bold ${
+                        isPremium 
+                          ? 'bg-gradient-to-r from-yellow-500 to-yellow-600 bg-clip-text text-transparent' 
+                          : isFree
+                          ? 'text-[#2485AE]'
+                          : ''
+                      }`}>
                         {plan.name}
                       </h3>
                       {isCurrentPlan && (

@@ -273,7 +273,7 @@ export function InlinePhotoUpload({
     const deltaY = e.clientY - dragStartY;
     const containerHeight = e.currentTarget.clientHeight;
     const deltaPercent = (deltaY / containerHeight) * 100;
-    const newPosition = Math.max(0, Math.min(100, dragStartPosition + deltaPercent));
+    const newPosition = Math.max(0, Math.min(100, dragStartPosition - deltaPercent));
     setCoverPosition(newPosition);
   };
 

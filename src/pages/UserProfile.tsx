@@ -355,14 +355,6 @@ export default function UserProfile() {
                         Depoimentos
                       </TabsTrigger>
                     )}
-                    {hasVideo && (
-                      <TabsTrigger 
-                        value="video"
-                        className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-6 py-3"
-                      >
-                        Vídeo
-                      </TabsTrigger>
-                    )}
                     {hasPortfolio && (
                       <TabsTrigger 
                         value="portfolio"
@@ -376,7 +368,7 @@ export default function UserProfile() {
                       className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-6 py-3 flex items-center gap-2"
                     >
                       <ThumbsUp className="w-4 h-4" />
-                      Avaliações Positivas ({positiveEvaluations.length})
+                      Avaliações ({positiveEvaluations.length})
                     </TabsTrigger>
                     <TabsTrigger 
                       value="reclamacoes"
@@ -477,13 +469,6 @@ export default function UserProfile() {
                   {hasTestimonials && (
                     <TabsContent value="depoimentos" className="p-6">
                       <PublicTestimonialsSlider entityType="user" entityId={profile.id} />
-                    </TabsContent>
-                  )}
-
-                  {/* Video Tab */}
-                  {hasVideo && (
-                    <TabsContent value="video" className="p-6">
-                      <PublicUserVideo userId={profile.id} />
                     </TabsContent>
                   )}
 
@@ -753,9 +738,6 @@ export default function UserProfile() {
                   </TabsContent>
                 </Tabs>
               </Card>
-
-              {/* Appointments - below tabs */}
-              <PublicUserAppointments userId={profile.id} username={profile.username} />
             </div>
 
             {/* Right Column - Info Sidebar */}

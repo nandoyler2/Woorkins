@@ -515,6 +515,8 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
             className="w-full h-full"
             iconPosition="top"
             currentCoverPosition={profile.cover_position || 50}
+            entityType={profileType}
+            profileId={profile.id}
           >
             <div className="w-full h-full relative overflow-hidden">
               {profile.cover_url ? (
@@ -561,21 +563,23 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
                     <div className="-mt-20 flex flex-col items-center gap-3">
                       {isProfileOwner ? (
                         <InlinePhotoUpload
-                          currentPhotoUrl={profile.avatar_url || undefined}
+                          currentPhotoUrl={(profileType === 'business' ? profile.logo_url : profile.avatar_url) || undefined}
                           userId={user!.id}
-                          userName={profile.username}
+                          userName={profileType === 'business' ? (profile.company_name || '') : profile.username}
                           onPhotoUpdated={loadUserProfile}
                           type="avatar"
                           className="w-36 h-36 rounded-full"
+                          entityType={profileType}
+                          profileId={profile.id}
                         >
                           <div 
                             className="cursor-pointer"
-                            onClick={() => profile.avatar_url && setShowImageViewer(true)}
+                            onClick={() => (profileType === 'business' ? profile.logo_url : profile.avatar_url) && setShowImageViewer(true)}
                           >
-                            {profile.avatar_url ? (
+                            {(profileType === 'business' ? profile.logo_url : profile.avatar_url) ? (
                               <SafeImage
-                                src={profile.avatar_url}
-                                alt={formatFullName(profile.full_name)}
+                                src={profileType === 'business' ? profile.logo_url! : profile.avatar_url!}
+                                alt={profileType === 'business' ? (profile.company_name || 'Logo') : formatFullName(profile.full_name)}
                                 className="w-36 h-36 rounded-full object-cover bg-card border-4 border-background shadow-lg"
                               />
                             ) : (
@@ -588,12 +592,12 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
                       ) : (
                         <div 
                           className="cursor-pointer"
-                          onClick={() => profile.avatar_url && setShowImageViewer(true)}
+                          onClick={() => (profileType === 'business' ? profile.logo_url : profile.avatar_url) && setShowImageViewer(true)}
                         >
-                          {profile.avatar_url ? (
+                          {(profileType === 'business' ? profile.logo_url : profile.avatar_url) ? (
                             <SafeImage
-                              src={profile.avatar_url}
-                              alt={formatFullName(profile.full_name)}
+                              src={profileType === 'business' ? profile.logo_url! : profile.avatar_url!}
+                              alt={profileType === 'business' ? (profile.company_name || 'Logo') : formatFullName(profile.full_name)}
                               className="w-36 h-36 rounded-full object-cover bg-card border-4 border-background shadow-lg"
                             />
                           ) : (
@@ -616,39 +620,63 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
                       )}
                     </div>
 
-                    {/* User Info */}
+                    {/* User/Business Info */}
                     <div className="flex-1 space-y-3">
                       <div>
                         <div className="flex items-center gap-2 mb-1">
-                          <h1 className="text-3xl font-bold">{formatFullName(profile.full_name)}</h1>
+                          <h1 className="text-3xl font-bold">
+                            {profileType === 'business' ? profile.company_name : formatFullName(profile.full_name)}
+                          </h1>
                           {profile.verified && (
                             <Badge variant="default" className="text-xs">
                               ✓ Verificado
                             </Badge>
                           )}
                         </div>
-                        <p className="text-muted-foreground mb-2">@{profile.username}</p>
-                        {profile.bio && (
-                          <p className="text-sm text-muted-foreground leading-relaxed">{profile.bio}</p>
+                        <p className="text-muted-foreground mb-2">
+                          @{profileType === 'business' ? profile.slug : profile.username}
+                        </p>
+                        {(profileType === 'business' ? profile.description : profile.bio) && (
+                          <p className="text-sm text-muted-foreground leading-relaxed">
+                            {profileType === 'business' ? profile.description : profile.bio}
+                          </p>
                         )}
                       </div>
 
                       {/* ELEMENTOS EXCLUSIVOS DO USUÁRIO - Badge de membro e nível */}
-                      <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-                        {profile.location && (
+                      {profileType === 'user' && (
+                        <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+                          {profile.location && (
+                            <div className="flex items-center gap-1">
+                              <MapPin className="w-4 h-4" />
+                              <span>{profile.location}</span>
+                            </div>
+                          )}
                           <div className="flex items-center gap-1">
-                            <MapPin className="w-4 h-4" />
-                            <span>{profile.location}</span>
+                            <Calendar className="w-4 h-4" />
+                            <span>Membro desde {new Date(profile.created_at).toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' })}</span>
                           </div>
-                        )}
-                        <div className="flex items-center gap-1">
-                          <Calendar className="w-4 h-4" />
-                          <span>Membro desde {new Date(profile.created_at).toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' })}</span>
+                          <Badge variant="outline" className={`${trustLevel.color} text-white border-0`}>
+                            {trustLevel.label}
+                          </Badge>
                         </div>
-                        <Badge variant="outline" className={`${trustLevel.color} text-white border-0`}>
-                          {trustLevel.label}
-                        </Badge>
-                      </div>
+                      )}
+
+                      {/* ELEMENTOS DO BUSINESS */}
+                      {profileType === 'business' && (
+                        <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+                          {profile.location && (
+                            <div className="flex items-center gap-1">
+                              <MapPin className="w-4 h-4" />
+                              <span>{profile.location}</span>
+                            </div>
+                          )}
+                          <div className="flex items-center gap-1">
+                            <Calendar className="w-4 h-4" />
+                            <span>Criado em {new Date(profile.created_at).toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' })}</span>
+                          </div>
+                        </div>
+                      )}
 
                       <PublicNegotiation 
                         entityType={profileType}

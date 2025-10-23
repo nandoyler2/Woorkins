@@ -323,8 +323,8 @@ export function CreateBusinessProfileDialog({ open, onOpenChange, onSuccess }: C
       setCategory('');
       setDescription('');
       
-      console.log('🔄 Navegando para:', `/${newProfile.slug}/editar`);
-      navigate(`/${newProfile.slug}/editar`);
+      console.log('🔄 Navegando para:', `/perfil/editar?businessId=${newProfile.id}`);
+      navigate(`/perfil/editar?businessId=${newProfile.id}`);
       
     } catch (error: any) {
       console.error('Error creating business profile:', error);

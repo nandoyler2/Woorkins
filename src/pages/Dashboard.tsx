@@ -406,7 +406,7 @@ export default function Dashboard() {
       // Buscar perfis de negócios (excluindo os do usuário)
       const { data: businesses, error: businessesError } = await supabase
       .from('profiles')
-      .select('id, business_name, logo_url, slug')
+      .select('id, company_name, logo_url, slug')
       .eq('profile_type', 'business')
         .neq('id', profile.id)
         .limit(50);
@@ -421,10 +421,10 @@ export default function Dashboard() {
 
       const businessProfiles = (businesses || []).map((b: any) => ({
         id: b.id,
-        username: b.slug || b.business_name,
+        username: b.slug || b.company_name,
         full_name: null,
         avatar_url: b.logo_url,
-        company_name: b.business_name,
+        company_name: b.company_name,
         slug: b.slug,
         type: 'business' as const
       }));
@@ -438,7 +438,7 @@ export default function Dashboard() {
   const loadBusinessProfiles = async (profileId: string) => {
     const { data, error } = await supabase
     .from('profiles' as any)
-    .select('id, business_name, business_category, logo_url, slug')
+    .select('id, company_name, category, logo_url, slug')
     .eq('user_id', user?.id)
       .eq('profile_type', 'business');
     

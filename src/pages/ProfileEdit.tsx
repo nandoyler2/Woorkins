@@ -341,7 +341,7 @@ export default function ProfileEdit() {
     // Carregar lista de perfis de negócio do usuário
     const { data: businesses } = await supabase
       .from('profiles')
-      .select('id, business_name, slug')
+      .select('id, company_name, slug')
       .eq('user_id', user?.id)
       .eq('profile_type', 'business');
     
@@ -395,7 +395,7 @@ export default function ProfileEdit() {
     // Carregar lista de perfis de negócio do usuário
     const { data: businesses } = await supabase
       .from('profiles')
-      .select('id, business_name, slug')
+      .select('id, company_name, slug')
       .eq('user_id', user?.id)
       .eq('profile_type', 'business');
     

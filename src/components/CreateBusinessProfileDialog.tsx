@@ -201,13 +201,16 @@ export function CreateBusinessProfileDialog({ open, onOpenChange, onSuccess }: C
     setCreating(true);
 
     try {
+      console.log('🔄 Iniciando criação de perfil profissional...');
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('id')
         .eq('user_id', user.id)
         .maybeSingle();
 
+      console.log('📋 profileData:', profileData);
       if (profileError || !profileData) {
+        console.error('❌ Erro ao buscar perfil:', profileError);
         throw new Error('Perfil não encontrado');
       }
 
@@ -247,6 +250,7 @@ export function CreateBusinessProfileDialog({ open, onOpenChange, onSuccess }: C
       }
 
       // Update profile with business data
+      console.log('🔄 Atualizando perfil com dados do negócio...');
       const { data: updatedProfile, error: updateError } = await supabase
         .from('profiles')
         .update({
@@ -262,8 +266,22 @@ export function CreateBusinessProfileDialog({ open, onOpenChange, onSuccess }: C
         .select('*')
         .single();
 
-      if (updateError || !updatedProfile) {
-        throw new Error(updateError?.message || 'Não foi possível criar o perfil');
+      console.log('✅ updatedProfile:', updatedProfile);
+      console.log('❌ updateError:', updateError);
+
+      if (updateError) {
+        console.error('❌ Erro ao atualizar perfil:', updateError);
+        throw new Error(updateError.message || 'Não foi possível atualizar o perfil');
+      }
+
+      if (!updatedProfile) {
+        console.error('❌ updatedProfile está vazio');
+        throw new Error('Perfil atualizado está vazio');
+      }
+
+      if (!updatedProfile.slug) {
+        console.error('❌ slug não foi salvo no perfil:', updatedProfile);
+        throw new Error('Erro ao salvar o @ do perfil');
       }
 
       // Activate selected features
@@ -279,6 +297,8 @@ export function CreateBusinessProfileDialog({ open, onOpenChange, onSuccess }: C
           .insert(featuresToInsert);
       }
 
+      console.log('✅ Perfil criado com sucesso!');
+      
       toast({
         title: 'Perfil criado com sucesso!',
         description: 'Seu perfil profissional está pronto',
@@ -300,6 +320,7 @@ export function CreateBusinessProfileDialog({ open, onOpenChange, onSuccess }: C
       setCategory('');
       setDescription('');
       
+      console.log('🔄 Navegando para:', `/${updatedProfile.slug}/editar`);
       navigate(`/${updatedProfile.slug}/editar`);
       
     } catch (error: any) {

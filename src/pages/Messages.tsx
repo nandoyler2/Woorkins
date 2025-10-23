@@ -174,7 +174,7 @@ export default function Messages() {
           updated_at,
           archived,
           profiles!negotiations_target_profile_id_fkey(
-          business_name,
+          company_name,
           logo_url,
           id
           )

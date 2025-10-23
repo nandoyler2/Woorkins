@@ -2,7 +2,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { SafeImage } from '@/components/ui/safe-image';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { User, CheckCircle, Building2, X } from 'lucide-react';
+import { User, CheckCircle, Building2 } from 'lucide-react';
 
 interface FollowSuccessDialogProps {
   open: boolean;
@@ -26,14 +26,6 @@ export function FollowSuccessDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md border-2">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="absolute right-4 top-4 rounded-full"
-          onClick={handleClose}
-        >
-          <X className="h-4 w-4" />
-        </Button>
         <div className="flex flex-col items-center justify-center gap-6 py-6">
           {/* Ícone de sucesso animado */}
           <div className="relative">

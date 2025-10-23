@@ -119,17 +119,17 @@ export default function PublicLinktree() {
 
       // 1) Buscar por slug
       let { data: profile } = await supabase
-        .from('profiles')
-        .select('name, slug, logo_url, photo_url, id')
-        .eq('slug', cleanSlug)
+      .from('profiles')
+      .select('name, slug, logo_url, avatar_url, id')
+      .eq('slug', cleanSlug)
         .maybeSingle();
 
       // 2) Se não encontrar, tentar por username
       if (!profile) {
         const { data: fallback } = await supabase
-          .from('profiles')
-          .select('name, slug, username, logo_url, photo_url, id')
-          .eq('username', cleanSlug)
+        .from('profiles')
+        .select('name, slug, username, logo_url, avatar_url, id')
+        .eq('username', cleanSlug)
           .maybeSingle();
         profile = fallback as any;
       }

@@ -252,9 +252,9 @@ export function CreateBusinessProfileDialog({ open, onOpenChange, onSuccess }: C
         .update({
           profile_type: 'business',
           company_name: companyName.trim(),
-          slug: slug,
-          photo_url: logoUrl,
-          cover_url: coverUrl,
+        slug: slug,
+        logo_url: logoUrl,
+        cover_url: coverUrl,
           category: category || null,
           bio: description || null,
         })

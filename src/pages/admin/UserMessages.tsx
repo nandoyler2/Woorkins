@@ -94,7 +94,8 @@ export default function UserMessages() {
           profiles!negotiations_target_profile_id_fkey (
             name,
             company_name,
-            photo_url,
+            logo_url,
+            avatar_url,
             user_id
           ),
           negotiation_messages (

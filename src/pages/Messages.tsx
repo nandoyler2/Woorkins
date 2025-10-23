@@ -174,9 +174,9 @@ export default function Messages() {
           updated_at,
           archived,
           profiles!negotiations_target_profile_id_fkey(
-            business_name,
-            photo_url,
-            id
+          business_name,
+          logo_url,
+          id
           )
         `)
         .eq('client_user_id', user?.id)
@@ -196,9 +196,9 @@ export default function Messages() {
           archived,
           profiles!negotiations_target_profile_id_fkey(
             name,
-            company_name,
-            photo_url,
-            id
+          company_name,
+          logo_url,
+          id
           )
         `)
         .eq('profiles.id', profileId)
@@ -273,8 +273,8 @@ export default function Messages() {
           title: neg.service_description || 'Negociação',
           otherUser: {
             id: (neg.profiles as any)?.id || '',
-            name: (neg.profiles as any)?.company_name || (neg.profiles as any)?.name || 'Usuário',
-            avatar: (neg.profiles as any)?.photo_url,
+          name: (neg.profiles as any)?.company_name || (neg.profiles as any)?.name || 'Usuário',
+          avatar: (neg.profiles as any)?.logo_url || (neg.profiles as any)?.avatar_url,
           },
           lastMessageAt: neg.updated_at,
           unreadCount: unreadMap.get(`negotiation-${neg.id}`) ?? (count || 0),

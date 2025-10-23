@@ -73,9 +73,9 @@ export default function AdminInvites() {
         status,
         invited_at,
         target_profile:profiles!profile_admins_target_profile_id_fkey (
-          company_name,
-          photo_url
-        )
+        company_name,
+        logo_url
+      )
       `)
       .eq('profile_id', profileId)
       .order('invited_at', { ascending: false });

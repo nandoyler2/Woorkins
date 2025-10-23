@@ -405,9 +405,9 @@ export default function Dashboard() {
 
       // Buscar perfis de negócios (excluindo os do usuário)
       const { data: businesses, error: businessesError } = await supabase
-        .from('profiles')
-        .select('id, business_name, photo_url, slug')
-        .eq('profile_type', 'business')
+      .from('profiles')
+      .select('id, business_name, logo_url, slug')
+      .eq('profile_type', 'business')
         .neq('id', profile.id)
         .limit(50);
 
@@ -423,7 +423,7 @@ export default function Dashboard() {
         id: b.id,
         username: b.slug || b.business_name,
         full_name: null,
-        avatar_url: b.photo_url,
+        avatar_url: b.logo_url,
         company_name: b.business_name,
         slug: b.slug,
         type: 'business' as const
@@ -437,9 +437,9 @@ export default function Dashboard() {
 
   const loadBusinessProfiles = async (profileId: string) => {
     const { data, error } = await supabase
-      .from('profiles' as any)
-      .select('id, business_name, business_category, photo_url, slug')
-      .eq('user_id', user?.id)
+    .from('profiles' as any)
+    .select('id, business_name, business_category, logo_url, slug')
+    .eq('user_id', user?.id)
       .eq('profile_type', 'business');
     
     if (!error && data) {
@@ -458,9 +458,9 @@ export default function Dashboard() {
           *,
           profile:profiles!profile_posts_profile_id_fkey(
             name,
-            company_name,
-            photo_url,
-            slug
+          company_name,
+          logo_url,
+          slug
           )
         `)
         .eq('profile_id', profile.id)
@@ -494,9 +494,9 @@ export default function Dashboard() {
           return {
             id: post.id,
             author_name: postProfile?.company_name || postProfile?.name || 'Usuário',
-            author_role: 'Profissional',
-            author_avatar: postProfile?.photo_url || '',
-            time_ago: timeAgo,
+          author_role: 'Profissional',
+          author_avatar: postProfile?.logo_url || postProfile?.avatar_url || '',
+          time_ago: timeAgo,
             content: post.content,
             image_url: post.media_urls?.[0] || undefined,
             likes: likeCount,

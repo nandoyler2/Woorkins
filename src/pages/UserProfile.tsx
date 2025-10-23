@@ -369,9 +369,9 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
   const loadEvaluations = async (profileId: string) => {
     try {
       const { data: evaluationsData } = await supabase
-        .from('evaluations')
-        .select('*,author_profile:profiles!evaluations_author_profile_id_fkey(id,name,photo_url)')
-        .eq('target_profile_id', profileId)
+      .from('evaluations')
+      .select('*,author_profile:profiles!evaluations_author_profile_id_fkey(id,name,avatar_url,logo_url)')
+      .eq('target_profile_id', profileId)
         .order('created_at', { ascending: false});
 
       if (evaluationsData) {

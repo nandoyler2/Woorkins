@@ -12,7 +12,6 @@ import { useToast } from '@/hooks/use-toast';
 import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { formatShortName } from '@/lib/utils';
@@ -20,11 +19,6 @@ import { ProfileEditDialog } from '@/components/ProfileEditDialog';
 import { IdentityVerificationDialog } from '@/components/IdentityVerificationDialog';
 import { CreateBusinessProfileDialog } from '@/components/CreateBusinessProfileDialog';
 import { FollowingSection } from '@/components/dashboard/FollowingSection';
-
-export default function Dashboard() {
-  const { user, profile } = useAuth();
-  const navigate = useNavigate();
-  const { toast } = useToast();
 import {
   AlertDialog,
   AlertDialogAction,
@@ -104,8 +98,10 @@ interface Notification {
   iconColor: string;
   read: boolean;
 }
+
 export default function Dashboard() {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [businessProfiles, setBusinessProfiles] = useState<BusinessProfile[]>([]);
   const [loading, setLoading] = useState(true);

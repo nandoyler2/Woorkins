@@ -136,7 +136,7 @@ export default function AdminBusinesses() {
           deleted: false,
           deleted_at: null,
           deleted_by: null,
-          profile_id: selectedProfileId || selectedBusiness.profiles.id,
+          profile_id: selectedProfileId || selectedBusiness.user_id,
         })
         .eq('id', selectedBusiness.id);
 

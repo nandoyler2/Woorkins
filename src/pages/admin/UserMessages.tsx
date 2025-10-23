@@ -91,14 +91,11 @@ export default function UserMessages() {
         .from('negotiations')
         .select(`
           *,
-          business_profiles (
+          profiles!negotiations_target_profile_id_fkey (
+            name,
             company_name,
-            logo_url,
-            profile_id,
-            profiles (
-              full_name,
-              avatar_url
-            )
+            photo_url,
+            user_id
           ),
           negotiation_messages (
             id,
@@ -110,7 +107,7 @@ export default function UserMessages() {
             is_deleted
           )
         `)
-        .eq('user_id', user?.user_id)
+        .eq('client_user_id', user?.user_id)
         .order('updated_at', { ascending: false });
 
       if (negError) throw negError;

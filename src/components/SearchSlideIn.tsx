@@ -42,7 +42,6 @@ export const SearchSlideIn = ({ isOpen, onClose }: SearchSlideInProps) => {
         const { data, error } = await supabase
           .from('profiles')
           .select('username, full_name, company_name, slug, category, description, logo_url, avatar_url, profile_type, average_rating, total_reviews')
-          .eq('profile_type', 'business')
           .or(`company_name.ilike.%${searchTerm}%,category.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%,full_name.ilike.%${searchTerm}%,username.ilike.%${searchTerm}%`)
           .limit(8);
 

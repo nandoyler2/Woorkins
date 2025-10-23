@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { MapPin, Calendar, User as UserIcon, Star, Briefcase, MessageSquare, ThumbsUp, AlertCircle } from 'lucide-react';
 import { Footer } from '@/components/Footer';
 import { PublicWhatsAppWidget } from '@/components/generic/PublicWhatsAppWidget';
@@ -134,6 +135,7 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
   const [submittingResponse, setSubmittingResponse] = useState<{ [key: string]: boolean }>({});
   const [showImageViewer, setShowImageViewer] = useState(false);
   const [showFollowSuccess, setShowFollowSuccess] = useState(false);
+  const [showUnfollowConfirm, setShowUnfollowConfirm] = useState(false);
   const { isFollowing, loading: followLoading, toggleFollow } = useFollow(profile?.id || '');
   
   const handleTabChange = (value: string) => {
@@ -152,6 +154,13 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
   };
 
   const handleFollowClick = async () => {
+    // Se já está seguindo, pede confirmação
+    if (isFollowing) {
+      setShowUnfollowConfirm(true);
+      return;
+    }
+
+    // Se não está seguindo, segue diretamente
     if (requireAuth(async () => {
       const result = await toggleFollow();
       if (result === true) {
@@ -162,6 +171,17 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
       if (result === true) {
         setShowFollowSuccess(true);
       }
+    }
+  };
+
+  const handleUnfollowConfirm = async () => {
+    const result = await toggleFollow();
+    setShowUnfollowConfirm(false);
+    if (result === false) {
+      toast({
+        title: 'Deixou de seguir',
+        description: `Você não segue mais ${profile?.full_name || profile?.company_name}`,
+      });
     }
   };
 
@@ -1293,6 +1313,25 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
           profileType="user"
         />
       )}
+
+      {/* Unfollow Confirmation Dialog */}
+      <AlertDialog open={showUnfollowConfirm} onOpenChange={setShowUnfollowConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Deixar de seguir?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja deixar de seguir {profile?.full_name || profile?.company_name}? 
+              Você não receberá mais notificações sobre as atualizações deste perfil.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleUnfollowConfirm}>
+              Deixar de seguir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

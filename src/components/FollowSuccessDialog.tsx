@@ -1,8 +1,8 @@
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { SafeImage } from '@/components/ui/safe-image';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { User, CheckCircle, Building2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { User, CheckCircle, Building2, X } from 'lucide-react';
 
 interface FollowSuccessDialogProps {
   open: boolean;
@@ -19,27 +19,22 @@ export function FollowSuccessDialog({
   profileAvatar,
   profileType,
 }: FollowSuccessDialogProps) {
-  const [show, setShow] = useState(false);
-
-  useEffect(() => {
-    if (open) {
-      setShow(true);
-      const timer = setTimeout(() => {
-        setShow(false);
-        setTimeout(() => onOpenChange(false), 300);
-      }, 2500);
-      return () => clearTimeout(timer);
-    }
-  }, [open, onOpenChange]);
+  const handleClose = () => {
+    onOpenChange(false);
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md border-2">
-        <div
-          className={`flex flex-col items-center justify-center gap-6 py-6 transition-all duration-500 ${
-            show ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
-          }`}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="absolute right-4 top-4 rounded-full"
+          onClick={handleClose}
         >
+          <X className="h-4 w-4" />
+        </Button>
+        <div className="flex flex-col items-center justify-center gap-6 py-6">
           {/* Ícone de sucesso animado */}
           <div className="relative">
             <div className="absolute inset-0 bg-primary/20 rounded-full animate-ping" />
@@ -77,6 +72,10 @@ export function FollowSuccessDialog({
               Você poderá acompanhar as novidades no painel e receberá notificações
             </p>
           </div>
+
+          <Button onClick={handleClose} className="mt-2">
+            Fechar
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

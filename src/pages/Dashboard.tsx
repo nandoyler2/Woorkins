@@ -279,14 +279,19 @@ export default function Dashboard() {
   
   const loadProfile = async () => {
     if (!user) return;
+    
+    // Buscar TODOS os profiles do usuário
     const { data, error } = await supabase
       .from('profiles' as any)
       .select('*')
-      .eq('user_id', user.id)
-      .maybeSingle();
+      .eq('user_id', user.id);
     
-    if (!error && data) {
-      const profileData = data as unknown as Profile;
+    if (!error && data && data.length > 0) {
+      // Priorizar profile do tipo 'user' para o Dashboard
+      // Se não existir, usar o primeiro disponível
+      const userProfile = data.find((p: any) => p.profile_type === 'user') || data[0];
+      const profileData = userProfile as unknown as Profile;
+      
       setProfile(profileData);
       await loadBusinessProfiles(profileData.id);
       await loadWoorkoinsBalance(profileData.id);
@@ -641,9 +646,11 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    loadFeedPosts();
-    loadFollowers();
-  }, []);
+    if (profile) {
+      loadFeedPosts();
+      loadFollowers();
+    }
+  }, [profile]);
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">

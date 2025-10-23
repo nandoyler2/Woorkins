@@ -294,7 +294,7 @@ export default function Dashboard() {
       
       setProfile(profileData);
       await loadBusinessProfiles(profileData.id);
-      await loadWoorkoinsBalance(profileData.id);
+      await loadWoorkoinsBalanceForIds(data.map((p: any) => p.id));
     }
     setLoading(false);
   };
@@ -397,6 +397,20 @@ export default function Dashboard() {
     }
   };
 
+  // Soma o saldo de Woorkoins de todos os perfis do usuário
+  const loadWoorkoinsBalanceForIds = async (profileIds: string[]) => {
+    if (!profileIds?.length) return;
+    const { data, error } = await supabase
+      .from('woorkoins_balance')
+      .select('profile_id, balance')
+      .in('profile_id', profileIds);
+
+    if (!error && data) {
+      const total = data.reduce((sum: number, r: any) => sum + (r.balance || 0), 0);
+      setWoorkoinsBalance(total);
+    }
+  };
+
   const loadAvailableProfiles = async () => {
     if (!profile) return;
     
@@ -457,63 +471,63 @@ export default function Dashboard() {
     
     setLoadingPosts(true);
     try {
+      // Buscar posts sem relacionamento (não há FK configurada no banco)
       const { data: posts, error } = await supabase
         .from('profile_posts')
-        .select(`
-          *,
-          profile:profiles!profile_posts_profile_id_fkey(
-            name,
-          company_name,
-          logo_url,
-          slug
-          )
-        `)
+        .select('*')
         .eq('profile_id', profile.id)
         .order('created_at', { ascending: false })
         .limit(10);
 
       if (error) throw error;
 
-      // Contadores de curtidas e comentários removidos - tabelas não existem ainda
-      const postsWithStats = await Promise.all(
-        (posts || []).map(async (post: any) => {
-          const likeCount = 0;
-          const commentCount = 0;
+      // Buscar perfis autores dos posts manualmente
+      const profileIds = Array.from(new Set((posts || []).map((p: any) => p.profile_id).filter(Boolean)));
+      let profilesById: Record<string, any> = {};
+      if (profileIds.length) {
+        const { data: authors } = await supabase
+          .from('profiles' as any)
+          .select('id, full_name, username, avatar_url, company_name, logo_url, slug, profile_type')
+          .in('id', profileIds);
+        profilesById = Object.fromEntries((authors || []).map((a: any) => [a.id, a]));
+      }
 
-          const postProfile = post.profile;
-          
-          // Calcular tempo atrás
-          const createdAt = new Date(post.created_at);
-          const now = new Date();
-          const diffInMinutes = Math.floor((now.getTime() - createdAt.getTime()) / (1000 * 60));
-          
-          let timeAgo = '';
-          if (diffInMinutes < 60) {
-            timeAgo = `${diffInMinutes}m atrás`;
-          } else if (diffInMinutes < 1440) {
-            timeAgo = `${Math.floor(diffInMinutes / 60)}h atrás`;
-          } else {
-            timeAgo = `${Math.floor(diffInMinutes / 1440)}d atrás`;
-          }
+      const postsWithStats = (posts || []).map((post: any) => {
+        const postProfile = profilesById[post.profile_id] || {};
 
-          return {
-            id: post.id,
-            author_name: postProfile?.company_name || postProfile?.name || 'Usuário',
+        // Calcular "tempo atrás"
+        const createdAt = new Date(post.created_at);
+        const now = new Date();
+        const diffInMinutes = Math.floor((now.getTime() - createdAt.getTime()) / (1000 * 60));
+        let timeAgo = '';
+        if (diffInMinutes < 60) {
+          timeAgo = `${diffInMinutes}m atrás`;
+        } else if (diffInMinutes < 1440) {
+          timeAgo = `${Math.floor(diffInMinutes / 60)}h atrás`;
+        } else {
+          timeAgo = `${Math.floor(diffInMinutes / 1440)}d atrás`;
+        }
+
+        const isBusiness = postProfile?.profile_type === 'business';
+        const authorLink = isBusiness
+          ? (postProfile?.slug ? `/${postProfile.slug}` : '#')
+          : (postProfile?.username ? `/${postProfile.username}` : '#');
+
+        return {
+          id: post.id,
+          author_name: postProfile?.company_name || postProfile?.full_name || 'Usuário',
           author_role: 'Profissional',
           author_avatar: postProfile?.logo_url || postProfile?.avatar_url || '',
           time_ago: timeAgo,
-            content: post.content,
-            image_url: post.media_urls?.[0] || undefined,
-            likes: likeCount,
-            comments: commentCount,
-            business_id: postProfile?.id || '',
-            author_username: postProfile?.slug,
-            author_profile_link: postProfile?.slug 
-              ? `/${postProfile.slug}` 
-              : '#'
-          };
-        })
-      );
+          content: post.content,
+          image_url: post.media_urls?.[0] || undefined,
+          likes: 0,
+          comments: 0,
+          business_id: postProfile?.id || '',
+          author_username: isBusiness ? postProfile?.slug : postProfile?.username,
+          author_profile_link: authorLink
+        } as FeedPost;
+      });
 
       setFeedPosts(postsWithStats);
     } catch (error) {
@@ -522,7 +536,6 @@ export default function Dashboard() {
       setLoadingPosts(false);
     }
   };
-
   const handleLikePost = async (postId: string) => {
     if (!profile) return;
 

@@ -260,8 +260,27 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
     if (!slug) return;
 
     try {
-      // Tenta carregar como usuário primeiro
-      const { data: profileData, error: profileError } = await supabase
+      // 1) Tenta como perfil profissional (business) pelo slug primeiro
+      const { data: businessData } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('slug', slug)
+        .eq('profile_type', 'business')
+        .maybeSingle();
+
+      if (businessData) {
+        setProfileType('business');
+        setProfile(businessData as unknown as UserProfileData);
+        await Promise.all([
+          loadPosts(businessData.id, 'business'),
+          loadEvaluations(businessData.id),
+          checkContent(businessData.id, 'business')
+        ]);
+        return;
+      }
+
+      // 2) Se não encontrou, tenta carregar como usuário (username)
+      const { data: profileData } = await supabase
         .from('profiles')
         .select('*')
         .eq('username', slug)
@@ -277,25 +296,7 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
           checkContent(profileData.id, 'user')
         ]);
       } else {
-        // Tenta como perfil profissional
-        const { data: businessData, error: businessError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('slug', slug)
-          .eq('profile_type', 'business')
-          .maybeSingle();
-
-        if (businessData) {
-          setProfileType('business');
-          setProfile(businessData as unknown as UserProfileData);
-          await Promise.all([
-            loadPosts(businessData.id, 'business'),
-            loadEvaluations(businessData.id),
-            checkContent(businessData.id, 'business')
-          ]);
-        } else {
-          toast({ title: 'Erro', description: 'Perfil não encontrado', variant: 'destructive' });
-        }
+        toast({ title: 'Erro', description: 'Perfil não encontrado', variant: 'destructive' });
       }
     } catch (error) {
       console.error('Error loading user profile:', error);

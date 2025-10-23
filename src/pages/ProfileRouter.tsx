@@ -43,6 +43,20 @@ export default function ProfileRouter() {
         return;
       }
 
+      // Fallback: verificar se existe business com esse username (legacy)
+      const { data: legacyBusinessData } = await supabase
+        .from('profiles')
+        .select('id, username, slug')
+        .eq('username', slug)
+        .eq('profile_type', 'business')
+        .maybeSingle();
+        
+      if (legacyBusinessData?.slug) {
+        // Redirecionar para o slug correto do business
+        window.location.replace(`/${legacyBusinessData.slug}`);
+        return;
+      }
+
       // Não encontrou nem perfil profissional nem usuário
       setProfileType('notfound');
     };

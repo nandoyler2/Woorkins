@@ -40,13 +40,22 @@ export const SearchSlideIn = ({ isOpen, onClose }: SearchSlideInProps) => {
     const timer = setTimeout(async () => {
       try {
         const { data, error } = await supabase
-          .from('business_profiles' as any)
-          .select('slug, company_name, category, description, logo_url, average_rating, total_reviews')
-          .or(`company_name.ilike.%${searchTerm}%,category.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`)
+          .from('profiles')
+          .select('username, full_name, company_name, slug, category, description, logo_url, avatar_url, profile_type, average_rating, total_reviews')
+          .eq('profile_type', 'business')
+          .or(`company_name.ilike.%${searchTerm}%,category.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%,full_name.ilike.%${searchTerm}%,username.ilike.%${searchTerm}%`)
           .limit(8);
 
         if (!error && data) {
-          setResults(data as unknown as SearchResult[]);
+          setResults(data.map(item => ({
+            slug: item.slug || item.username,
+            company_name: item.company_name || item.full_name,
+            category: item.category,
+            description: item.description,
+            logo_url: item.logo_url || item.avatar_url,
+            average_rating: item.average_rating || 0,
+            total_reviews: item.total_reviews || 0
+          })) as SearchResult[]);
         } else {
           setResults([]);
         }

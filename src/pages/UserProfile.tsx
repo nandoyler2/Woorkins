@@ -154,12 +154,15 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
   };
 
   const handleFollowClick = async () => {
+    console.log('handleFollowClick - isFollowing:', isFollowing);
     // Se já está seguindo, pede confirmação
     if (isFollowing) {
+      console.log('Mostrando confirmação de unfollow');
       setShowUnfollowConfirm(true);
       return;
     }
 
+    console.log('Seguindo perfil');
     // Se não está seguindo, segue diretamente
     if (requireAuth(async () => {
       const result = await toggleFollow();

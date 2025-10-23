@@ -15,20 +15,7 @@ export default function ProfileRouter() {
         return;
       }
 
-      // Primeiro verifica se é um username de usuário
-      const { data: userData } = await supabase
-        .from('profiles')
-        .select('id, username')
-        .eq('username', slug)
-        .maybeSingle();
-
-      if (userData) {
-        setProfileType('user');
-        setProfileId(userData.id);
-        return;
-      }
-
-      // Se não for usuário, verifica se é um slug de empresa
+      // Primeiro verifica se é um slug de perfil profissional (business)
       const { data: businessData } = await supabase
         .from('profiles')
         .select('id, slug')
@@ -42,7 +29,21 @@ export default function ProfileRouter() {
         return;
       }
 
-      // Não encontrou nem usuário nem empresa
+      // Se não for business, verifica se é um username de usuário pessoal
+      const { data: userData } = await supabase
+        .from('profiles')
+        .select('id, username')
+        .eq('username', slug)
+        .eq('profile_type', 'user')
+        .maybeSingle();
+
+      if (userData) {
+        setProfileType('user');
+        setProfileId(userData.id);
+        return;
+      }
+
+      // Não encontrou nem perfil profissional nem usuário
       setProfileType('notfound');
     };
 

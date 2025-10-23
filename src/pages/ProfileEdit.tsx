@@ -1091,7 +1091,7 @@ export default function ProfileEdit() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => window.open(`/${profile.username}`, '_blank')}
+                      onClick={() => window.open(`/${profileType === 'business' ? profile.slug : profile.username}`, '_blank')}
                       className="gap-2"
                     >
                       <ExternalLink className="w-4 h-4" />
@@ -1131,7 +1131,7 @@ export default function ProfileEdit() {
                             </p>
                           </div>
                         </div>
-                        <Link to={`/@${profile.username}`} target="_blank">
+                        <Link to={`/${profileType === 'business' ? profile.slug : profile.username}`} target="_blank">
                           <Button variant="outline" size="lg" className="gap-2">
                             <ExternalLink className="w-4 h-4" />
                             Ver Perfil Público

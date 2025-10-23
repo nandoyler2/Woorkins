@@ -1442,7 +1442,7 @@ export default function Dashboard() {
                       key={profileItem.id}
                       to={profileItem.type === 'business' 
                         ? `/${profileItem.slug}/avaliar` 
-                        : `/@${profileItem.username}/avaliar`}
+                        : `/${profileItem.username}/avaliar`}
                       onClick={() => setShowEvaluateDialog(false)}
                       className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition-colors border"
                     >

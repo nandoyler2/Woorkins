@@ -7,10 +7,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Star, Search, Briefcase, MessageSquare, CheckCircle2, Phone, Building2, Users, UserPlus, ThumbsUp, MessageCircle, Award, Activity, TrendingUp, Bell, Clock, Trophy, Share2, Heart, Bookmark, Camera, Mail, FileCheck, Settings, Eye, User } from 'lucide-react';
 import woorkoinsIcon from '@/assets/woorkoins-icon-latest.png';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useToast } from '@/hooks/use-toast';
 import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { formatShortName } from '@/lib/utils';
@@ -18,6 +20,11 @@ import { ProfileEditDialog } from '@/components/ProfileEditDialog';
 import { IdentityVerificationDialog } from '@/components/IdentityVerificationDialog';
 import { CreateBusinessProfileDialog } from '@/components/CreateBusinessProfileDialog';
 import { FollowingSection } from '@/components/dashboard/FollowingSection';
+
+export default function Dashboard() {
+  const { user, profile } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
 import {
   AlertDialog,
   AlertDialogAction,
@@ -445,6 +452,8 @@ export default function Dashboard() {
   };
 
   const loadFeedPosts = async () => {
+    if (!profile) return;
+    
     setLoadingPosts(true);
     try {
       const { data: posts, error } = await supabase
@@ -452,30 +461,23 @@ export default function Dashboard() {
         .select(`
           *,
           profile:profiles!profile_posts_profile_id_fkey(
-            business_name,
+            name,
+            company_name,
             photo_url,
             slug
           )
         `)
-        .eq('profile_id', businessData.id)
+        .eq('profile_id', profile.id)
         .order('created_at', { ascending: false })
         .limit(10);
 
       if (error) throw error;
 
-      // Buscar curtidas e comentários para cada post
+      // Contadores de curtidas e comentários removidos - tabelas não existem ainda
       const postsWithStats = await Promise.all(
         (posts || []).map(async (post: any) => {
-          const [likesData, commentsData] = await Promise.all([
-            supabase
-              .from('profile_post_likes')
-              .select('id', { count: 'exact', head: true })
-              .eq('post_id', post.id),
-            supabase
-              .from('profile_post_comments')
-              .select('id', { count: 'exact', head: true })
-              .eq('post_id', post.id)
-          ]);
+          const likeCount = 0;
+          const commentCount = 0;
 
           const postProfile = post.profile;
           
@@ -495,14 +497,14 @@ export default function Dashboard() {
 
           return {
             id: post.id,
-            author_name: postProfile?.business_name || 'Empresa',
+            author_name: postProfile?.company_name || postProfile?.name || 'Usuário',
             author_role: 'Profissional',
             author_avatar: postProfile?.photo_url || '',
             time_ago: timeAgo,
             content: post.content,
             image_url: post.media_urls?.[0] || undefined,
-            likes: likesData.count || 0,
-            comments: commentsData.count || 0,
+            likes: likeCount,
+            comments: commentCount,
             business_id: postProfile?.id || '',
             author_username: postProfile?.slug,
             author_profile_link: postProfile?.slug 
@@ -524,32 +526,11 @@ export default function Dashboard() {
     if (!profile) return;
 
     try {
-      // Verificar se já curtiu
-      const { data: existingLike } = await supabase
-        .from('profile_post_likes')
-        .select('id')
-        .eq('post_id', postId)
-        .eq('profile_id', profile.id)
-        .maybeSingle();
-
-      if (existingLike) {
-        // Remover curtida
-        await supabase
-          .from('profile_post_likes')
-          .delete()
-          .eq('id', existingLike.id);
-      } else {
-        // Adicionar curtida
-        await supabase
-          .from('profile_post_likes')
-          .insert({
-            post_id: postId,
-            profile_id: profile.id
-          });
-      }
-
-      // Recarregar posts
-      loadFeedPosts();
+      // Funcionalidade de likes removida - tabela não existe ainda
+      toast({
+        title: "Em breve",
+        description: "Funcionalidade de likes será implementada em breve",
+      });
     } catch (error) {
       console.error('Error liking post:', error);
     }
@@ -557,25 +538,8 @@ export default function Dashboard() {
 
   const loadPostComments = async (postId: string) => {
     try {
-      const { data, error } = await supabase
-        .from('profile_post_comments')
-        .select(`
-          id,
-          content,
-          created_at,
-          profile_id,
-          profiles!inner (
-            full_name,
-            username,
-            avatar_url
-          )
-        `)
-        .eq('post_id', postId)
-        .order('created_at', { ascending: false });
-
-      if (!error && data) {
-        setPostComments(prev => ({ ...prev, [postId]: data }));
-      }
+      // Funcionalidade de comentários removida - tabela não existe ainda
+      setPostComments(prev => ({ ...prev, [postId]: [] }));
     } catch (error) {
       console.error('Error loading comments:', error);
     }
@@ -585,17 +549,12 @@ export default function Dashboard() {
     if (!profile || !commentText.trim()) return;
 
     try {
-      await supabase
-        .from('profile_post_comments')
-        .insert({
-          post_id: postId,
-          profile_id: profile.id,
-          content: commentText.trim()
-        });
-
+      // Funcionalidade de comentários removida - tabela não existe ainda
+      toast({
+        title: "Em breve",
+        description: "Funcionalidade de comentários será implementada em breve",
+      });
       setCommentText('');
-      loadPostComments(postId);
-      loadFeedPosts();
     } catch (error) {
       console.error('Error adding comment:', error);
     }

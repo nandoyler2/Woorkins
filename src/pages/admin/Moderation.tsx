@@ -17,7 +17,7 @@ export default function AdminModeration() {
   const loadContent = async () => {
     try {
       const [postsData, projectsData, evaluationsData] = await Promise.all([
-        supabase.from('posts').select('*, profiles(*)').order('created_at', { ascending: false }).limit(50),
+        supabase.from('profile_posts').select('*, profiles(*)').order('created_at', { ascending: false }).limit(50),
         supabase.from('projects').select('*, profiles(*)').order('created_at', { ascending: false }).limit(50),
         supabase.from('evaluations').select('*').order('created_at', { ascending: false }).limit(50)
       ]);
@@ -38,7 +38,7 @@ export default function AdminModeration() {
 
   const deletePost = async (id: string) => {
     try {
-      const { error } = await supabase.from('posts').delete().eq('id', id);
+      const { error } = await supabase.from('profile_posts').delete().eq('id', id);
       if (error) throw error;
       
       toast({ title: 'Post removido com sucesso' });

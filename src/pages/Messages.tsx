@@ -195,7 +195,8 @@ export default function Messages() {
           updated_at,
           archived,
           profiles!negotiations_target_profile_id_fkey(
-            business_name,
+            name,
+            company_name,
             photo_url,
             id
           )
@@ -271,14 +272,14 @@ export default function Messages() {
           type: 'negotiation' as const,
           title: neg.service_description || 'Negociação',
           otherUser: {
-            id: neg.profiles.id,
-            name: neg.profiles.business_name,
-            avatar: neg.profiles.photo_url,
+            id: (neg.profiles as any)?.id || '',
+            name: (neg.profiles as any)?.company_name || (neg.profiles as any)?.name || 'Usuário',
+            avatar: (neg.profiles as any)?.photo_url,
           },
           lastMessageAt: neg.updated_at,
           unreadCount: unreadMap.get(`negotiation-${neg.id}`) ?? (count || 0),
           status: neg.status,
-          businessName: neg.profiles.business_name,
+          businessName: (neg.profiles as any)?.company_name || (neg.profiles as any)?.name || 'Usuário',
           businessId: neg.target_profile_id,
         };
       }));

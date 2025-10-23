@@ -208,9 +208,10 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
         ]);
       } else {
         const { data: profileData, error } = await supabase
-          .from('business_profiles')
+          .from('profiles')
           .select('*')
           .eq('id', id)
+          .eq('profile_type', 'business')
           .maybeSingle();
 
         if (error || !profileData) {
@@ -255,9 +256,10 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
       } else {
         // Tenta como perfil profissional
         const { data: businessData, error: businessError } = await supabase
-          .from('business_profiles')
+          .from('profiles')
           .select('*')
           .eq('slug', slug)
+          .eq('profile_type', 'business')
           .maybeSingle();
 
         if (businessData) {
@@ -368,16 +370,9 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
     try {
       const { data: evaluationsData } = await supabase
         .from('evaluations')
-        .select(`
-          *,
-          profiles:user_id (
-            full_name,
-            avatar_url,
-            username
-          )
-        `)
-        .eq('business_id', profileId)
-        .order('created_at', { ascending: false });
+        .select('*,author_profile:profiles!evaluations_author_profile_id_fkey(id,name,photo_url)')
+        .eq('target_profile_id', profileId)
+        .order('created_at', { ascending: false});
 
       if (evaluationsData) {
         const evals = evaluationsData as unknown as Evaluation[];

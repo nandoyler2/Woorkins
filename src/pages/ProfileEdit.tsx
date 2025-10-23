@@ -1638,7 +1638,7 @@ export default function ProfileEdit() {
                       )}
 
                       {configuringFeature === 'video' && (
-                        <GenericVideoManager entityId={profile.id} />
+                        <GenericVideoManager profileId={profile.id} />
                       )}
 
                       {configuringFeature === 'catalog' && (
@@ -1646,7 +1646,7 @@ export default function ProfileEdit() {
                       )}
 
                       {configuringFeature === 'testimonials' && (
-                        <GenericTestimonialsManager entityId={profile.id} />
+                        <GenericTestimonialsManager profileId={profile.id} />
                       )}
 
                       {configuringFeature === 'certifications' && (
@@ -1670,11 +1670,11 @@ export default function ProfileEdit() {
                       )}
 
                       {configuringFeature === 'whatsapp' && (
-                        <GenericWhatsAppManager entityId={profile.id} />
+                        <GenericWhatsAppManager profileId={profile.id} />
                       )}
 
                       {configuringFeature === 'social' && (
-                        <GenericSocialManager entityId={profile.id} />
+                        <GenericSocialManager profileId={profile.id} />
                       )}
 
                       {configuringFeature === 'negotiation' && (

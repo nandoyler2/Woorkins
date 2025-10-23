@@ -78,25 +78,16 @@ export const useUnreadMessages = (profileId: string) => {
         const { data: negAsUser } = await supabase
           .from('negotiations')
           .select('id')
-          .eq('user_id', profileId);
+          .eq('client_user_id', profileId);
 
-        const { data: myBusinesses } = await supabase
-          .from('profiles')
+        const { data: negAsTarget } = await supabase
+          .from('negotiations')
           .select('id')
-          .eq('id', profileId)
-          .eq('profile_type', 'business');
-
-        const businessIds = (myBusinesses || []).map((b: any) => b.id);
-        const { data: negAsBusiness } = businessIds.length
-          ? await supabase
-              .from('negotiations')
-              .select('id')
-              .in('business_id', businessIds)
-          : ({ data: [] } as any);
+          .eq('target_profile_id', profileId);
 
         const negotiationIds = [
           ...((negAsUser || []).map((n: any) => n.id)),
-          ...((negAsBusiness || []).map((n: any) => n.id)),
+          ...((negAsTarget || []).map((n: any) => n.id)),
         ];
 
         let negUnread = 0;

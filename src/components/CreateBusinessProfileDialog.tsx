@@ -99,9 +99,10 @@ export function CreateBusinessProfileDialog({ open, onOpenChange, onSuccess }: C
     setCheckingSlug(true);
     try {
       const { data, error } = await supabase
-        .from('business_profiles')
+        .from('profiles')
         .select('slug')
         .eq('slug', slugToCheck)
+        .eq('profile_type', 'business')
         .maybeSingle();
 
       if (error) throw error;
@@ -200,23 +201,48 @@ export function CreateBusinessProfileDialog({ open, onOpenChange, onSuccess }: C
     setCreating(true);
 
     try {
-      const { data: profileData, error: profileError } = await supabase
+      console.log('🔄 Iniciando criação de perfil profissional...');
+      
+      // Criar NOVO perfil profissional (INSERT ao invés de UPDATE)
+      console.log('🔄 Criando novo perfil profissional...');
+      const { data: newProfile, error: insertError } = await supabase
         .from('profiles')
-        .select('id')
-        .eq('user_id', user.id)
-        .maybeSingle();
+        .insert({
+          user_id: user.id,
+          profile_type: 'business',
+          slug: slug,
+          company_name: companyName.trim(),
+          category: category || null,
+          bio: description || null,
+        })
+        .select('*')
+        .single();
 
-      if (profileError || !profileData) {
-        throw new Error('Perfil não encontrado');
+      console.log('✅ newProfile:', newProfile);
+      console.log('❌ insertError:', insertError);
+
+      if (insertError) {
+        console.error('❌ Erro ao criar perfil:', insertError);
+        throw new Error(insertError.message || 'Não foi possível criar o perfil');
+      }
+
+      if (!newProfile) {
+        console.error('❌ newProfile está vazio');
+        throw new Error('Perfil criado está vazio');
+      }
+
+      if (!newProfile.slug) {
+        console.error('❌ slug não foi salvo no perfil:', newProfile);
+        throw new Error('Erro ao salvar o @ do perfil');
       }
 
       let logoUrl = null;
       let coverUrl = null;
 
-      // Upload logo
+      // Upload logo usando o ID do novo perfil
       if (logoFile) {
         const compressed = await compressImage(logoFile, { maxSizeMB: 1, maxWidth: 800, maxHeight: 800 });
-        const logoPath = `${profileData.id}/logo-${Date.now()}.jpg`;
+        const logoPath = `${newProfile.id}/logo-${Date.now()}.jpg`;
         const { error: uploadError } = await supabase.storage
           .from('profile-photos')
           .upload(logoPath, compressed);
@@ -229,10 +255,10 @@ export function CreateBusinessProfileDialog({ open, onOpenChange, onSuccess }: C
         }
       }
 
-      // Upload cover
+      // Upload cover usando o ID do novo perfil
       if (coverFile) {
         const compressed = await compressImage(coverFile, { maxSizeMB: 2, maxWidth: 1920, maxHeight: 1080 });
-        const coverPath = `${profileData.id}/cover-${Date.now()}.jpg`;
+        const coverPath = `${newProfile.id}/cover-${Date.now()}.jpg`;
         const { error: uploadError } = await supabase.storage
           .from('profile-photos')
           .upload(coverPath, compressed);
@@ -245,39 +271,37 @@ export function CreateBusinessProfileDialog({ open, onOpenChange, onSuccess }: C
         }
       }
 
-      // Create business profile
-      const { data: newBusiness, error: createError } = await supabase
-        .from('business_profiles')
-        .insert({
-          profile_id: profileData.id,
-          company_name: companyName.trim(),
-          slug: slug,
-          logo_url: logoUrl,
-          cover_url: coverUrl,
-          category: category || null,
-          description: description || null,
-          active: true,
-        })
-        .select('*')
-        .single();
+      // Atualizar perfil com URLs das imagens
+      if (logoUrl || coverUrl) {
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({
+            logo_url: logoUrl,
+            cover_url: coverUrl,
+          })
+          .eq('id', newProfile.id);
 
-      if (createError || !newBusiness) {
-        throw new Error(createError?.message || 'Não foi possível criar o perfil');
+        if (updateError) {
+          console.error('❌ Erro ao atualizar imagens:', updateError);
+          throw new Error('Erro ao salvar imagens do perfil');
+        }
       }
 
-      // Activate selected features
+      // Ativar features selecionadas para o NOVO perfil
       if (selectedFeatures.length > 0) {
         const featuresToInsert = selectedFeatures.map(key => ({
-          business_id: newBusiness.id,
+          profile_id: newProfile.id,
           feature_key: key,
           is_active: true,
         }));
 
         await supabase
-          .from('business_profile_features')
+          .from('profile_features')
           .insert(featuresToInsert);
       }
 
+      console.log('✅ Perfil criado com sucesso!');
+      
       toast({
         title: 'Perfil criado com sucesso!',
         description: 'Seu perfil profissional está pronto',
@@ -299,7 +323,8 @@ export function CreateBusinessProfileDialog({ open, onOpenChange, onSuccess }: C
       setCategory('');
       setDescription('');
       
-      navigate(`/${newBusiness.slug}/editar`);
+      console.log('🔄 Navegando para:', `/perfil/editar?businessId=${newProfile.id}`);
+      navigate(`/perfil/editar?businessId=${newProfile.id}`);
       
     } catch (error: any) {
       console.error('Error creating business profile:', error);

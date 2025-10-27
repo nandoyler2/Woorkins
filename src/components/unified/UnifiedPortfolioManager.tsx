@@ -12,36 +12,34 @@ interface PortfolioItem {
   id: string;
   title: string;
   description?: string;
-  image_url?: string;
-  project_url?: string;
+  media_url: string;
+  media_type: string;
+  external_link?: string;
   order_index: number;
-  active: boolean;
+  category?: string;
+  tags?: string[];
 }
 
 interface UnifiedPortfolioManagerProps {
-  entityType: 'business' | 'user';
-  entityId: string;
+  profileId: string;
 }
 
-export function UnifiedPortfolioManager({ entityType, entityId }: UnifiedPortfolioManagerProps) {
+export function UnifiedPortfolioManager({ profileId }: UnifiedPortfolioManagerProps) {
   const [items, setItems] = useState<PortfolioItem[]>([]);
   const [editingItem, setEditingItem] = useState<Partial<PortfolioItem> | null>(null);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
-  const tableName = entityType === 'business' ? 'business_portfolio' : 'user_portfolio';
-  const idColumn = entityType === 'business' ? 'business_id' : 'user_id';
-
   useEffect(() => {
     loadItems();
-  }, [entityId]);
+  }, [profileId]);
 
   const loadItems = async () => {
     try {
       const { data, error } = await supabase
-        .from(tableName as any)
+        .from('portfolio_items')
         .select('*')
-        .eq(idColumn, entityId)
+        .eq('business_id', profileId)
         .order('order_index');
 
       if (error) throw error;
@@ -68,22 +66,27 @@ export function UnifiedPortfolioManager({ entityType, entityId }: UnifiedPortfol
     setLoading(true);
     try {
       const itemData = {
-        ...editingItem,
-        [idColumn]: entityId,
+        business_id: profileId,
+        title: editingItem.title || '',
+        description: editingItem.description || null,
+        media_url: editingItem.media_url || '',
+        media_type: editingItem.media_type || 'image',
+        external_link: editingItem.external_link || null,
         order_index: editingItem.order_index ?? items.length,
-        active: true,
+        category: editingItem.category || null,
+        tags: editingItem.tags || null
       };
 
       if (editingItem.id) {
         const { error } = await supabase
-          .from(tableName as any)
+          .from('portfolio_items')
           .update(itemData)
           .eq('id', editingItem.id);
 
         if (error) throw error;
       } else {
         const { error } = await supabase
-          .from(tableName as any)
+          .from('portfolio_items')
           .insert([itemData]);
 
         if (error) throw error;
@@ -112,7 +115,7 @@ export function UnifiedPortfolioManager({ entityType, entityId }: UnifiedPortfol
 
     try {
       const { error } = await supabase
-        .from(tableName as any)
+        .from('portfolio_items')
         .delete()
         .eq('id', id);
 
@@ -140,10 +143,10 @@ export function UnifiedPortfolioManager({ entityType, entityId }: UnifiedPortfol
       {editingItem !== null ? (
         <div className="space-y-4 mb-6">
           <ImageUpload
-            currentImageUrl={editingItem.image_url || null}
-            onUpload={(url) => setEditingItem({ ...editingItem, image_url: url })}
-            bucket="business-files"
-            folder={`${entityType}_portfolio`}
+            currentImageUrl={editingItem.media_url || null}
+            onUpload={(url) => setEditingItem({ ...editingItem, media_url: url, media_type: 'image' })}
+            bucket="portfolio"
+            folder="profile_portfolio"
           />
 
           <Input
@@ -160,8 +163,8 @@ export function UnifiedPortfolioManager({ entityType, entityId }: UnifiedPortfol
 
           <Input
             placeholder="URL do projeto (opcional)"
-            value={editingItem.project_url || ""}
-            onChange={(e) => setEditingItem({ ...editingItem, project_url: e.target.value })}
+            value={editingItem.external_link || ""}
+            onChange={(e) => setEditingItem({ ...editingItem, external_link: e.target.value })}
           />
 
           <div className="flex gap-2">
@@ -182,9 +185,9 @@ export function UnifiedPortfolioManager({ entityType, entityId }: UnifiedPortfol
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
         {items.map((item) => (
           <Card key={item.id} className="p-4">
-            {item.image_url && (
+            {item.media_url && (
               <img
-                src={item.image_url}
+                src={item.media_url}
                 alt={item.title}
                 className="w-full h-48 object-cover rounded mb-4"
               />
@@ -193,9 +196,9 @@ export function UnifiedPortfolioManager({ entityType, entityId }: UnifiedPortfol
             {item.description && (
               <p className="text-sm text-muted-foreground mb-2">{item.description}</p>
             )}
-            {item.project_url && (
+            {item.external_link && (
               <a
-                href={item.project_url}
+                href={item.external_link}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-sm text-primary hover:underline"

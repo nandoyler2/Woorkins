@@ -18,19 +18,14 @@ interface Banner {
 }
 
 interface GenericBannersManagerProps {
-  entityType: 'business' | 'user';
   entityId: string;
 }
 
-export function GenericBannersManager({ entityType, entityId }: GenericBannersManagerProps) {
+export function GenericBannersManager({ entityId }: GenericBannersManagerProps) {
   const [banners, setBanners] = useState<Banner[]>([]);
   const [editingBanner, setEditingBanner] = useState<Partial<Banner> | null>(null);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
-
-  const tableName = entityType === 'business' ? 'business_banners' : 'user_banners';
-  const idColumn = entityType === 'business' ? 'business_id' : 'profile_id';
-  const storageBucket = entityType === 'business' ? 'business-media' : 'avatars';
 
   useEffect(() => {
     loadBanners();
@@ -39,13 +34,13 @@ export function GenericBannersManager({ entityType, entityId }: GenericBannersMa
   const loadBanners = async () => {
     try {
       const { data, error } = await supabase
-        .from(tableName as any)
+        .from("profile_banners")
         .select("*")
-        .eq(idColumn, entityId)
+        .eq("target_profile_id", entityId)
         .order("order_index", { ascending: true });
 
       if (error) throw error;
-      setBanners((data || []) as any);
+      setBanners(data || []);
     } catch (error: any) {
       toast({
         title: "Erro ao carregar banners",
@@ -77,7 +72,7 @@ export function GenericBannersManager({ entityType, entityId }: GenericBannersMa
     setLoading(true);
     try {
       const bannerData = {
-        [idColumn]: entityId,
+        target_profile_id: entityId,
         image_url: editingBanner.image_url,
         title: editingBanner.title || null,
         link_url: editingBanner.link_url || null,
@@ -87,13 +82,13 @@ export function GenericBannersManager({ entityType, entityId }: GenericBannersMa
 
       if (editingBanner.id) {
         const { error } = await supabase
-          .from(tableName)
+          .from("profile_banners")
           .update(bannerData)
           .eq("id", editingBanner.id);
 
         if (error) throw error;
       } else {
-        const { error } = await supabase.from(tableName).insert(bannerData as any);
+        const { error } = await supabase.from("profile_banners").insert(bannerData);
         if (error) throw error;
       }
 
@@ -119,7 +114,7 @@ export function GenericBannersManager({ entityType, entityId }: GenericBannersMa
     if (!confirm("Deseja realmente remover este banner?")) return;
 
     try {
-      const { error } = await supabase.from(tableName).delete().eq("id", id);
+      const { error } = await supabase.from("profile_banners").delete().eq("id", id);
 
       if (error) throw error;
 
@@ -150,7 +145,7 @@ export function GenericBannersManager({ entityType, entityId }: GenericBannersMa
     try {
       const updates = newBanners.map((banner, index) => 
         supabase
-          .from(tableName)
+          .from("profile_banners")
           .update({ order_index: index })
           .eq("id", banner.id)
       );
@@ -206,7 +201,7 @@ export function GenericBannersManager({ entityType, entityId }: GenericBannersMa
                   onUpload={(url) =>
                     setEditingBanner({ ...editingBanner, image_url: url })
                   }
-                  bucket={storageBucket}
+                  bucket="profile-photos"
                   folder={`${entityId}/banners`}
                   type="cover"
                 />

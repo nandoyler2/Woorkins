@@ -67,9 +67,10 @@ export default function BusinessFinances() {
 
   const fetchBusinessProfile = async () => {
     const { data } = await supabase
-      .from('business_profiles')
+      .from('profiles')
       .select('id')
-      .eq('profile_id', profileId)
+      .eq('id', profileId)
+      .eq('profile_type', 'business')
       .single();
 
     if (data) {

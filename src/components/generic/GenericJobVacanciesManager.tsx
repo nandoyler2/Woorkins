@@ -23,18 +23,14 @@ interface JobVacancy {
 }
 
 interface GenericJobVacanciesManagerProps {
-  entityType: 'business' | 'user';
   entityId: string;
 }
 
-export function GenericJobVacanciesManager({ entityType, entityId }: GenericJobVacanciesManagerProps) {
+export function GenericJobVacanciesManager({ entityId }: GenericJobVacanciesManagerProps) {
   const [vacancies, setVacancies] = useState<JobVacancy[]>([]);
   const [editingVacancy, setEditingVacancy] = useState<Partial<JobVacancy> | null>(null);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
-
-  const tableName = entityType === 'business' ? 'business_job_vacancies' : 'user_job_vacancies';
-  const idColumn = entityType === 'business' ? 'business_id' : 'profile_id';
 
   useEffect(() => {
     loadVacancies();
@@ -43,13 +39,13 @@ export function GenericJobVacanciesManager({ entityType, entityId }: GenericJobV
   const loadVacancies = async () => {
     try {
       const { data, error } = await supabase
-        .from(tableName as any)
+        .from("profile_job_vacancies")
         .select("*")
-        .eq(idColumn, entityId)
+        .eq("target_profile_id", entityId)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setVacancies((data || []) as any);
+      setVacancies(data || []);
     } catch (error: any) {
       toast({
         title: "Erro ao carregar vagas",
@@ -71,19 +67,28 @@ export function GenericJobVacanciesManager({ entityType, entityId }: GenericJobV
 
     setLoading(true);
     try {
-      const vacancyData = entityType === 'business'
-        ? { business_id: entityId, title: editingVacancy.title, description: editingVacancy.description, requirements: editingVacancy.requirements || null, area: editingVacancy.area || null, work_mode: editingVacancy.work_mode || null, salary_min: editingVacancy.salary_min || null, salary_max: editingVacancy.salary_max || null, deadline: editingVacancy.deadline || null, status: editingVacancy.status || 'open' }
-        : { profile_id: entityId, title: editingVacancy.title, description: editingVacancy.description, requirements: editingVacancy.requirements || null, area: editingVacancy.area || null, work_mode: editingVacancy.work_mode || null, salary_min: editingVacancy.salary_min || null, salary_max: editingVacancy.salary_max || null, deadline: editingVacancy.deadline || null, status: editingVacancy.status || 'open' };
+      const vacancyData = {
+        target_profile_id: entityId,
+        title: editingVacancy.title,
+        description: editingVacancy.description,
+        requirements: editingVacancy.requirements || null,
+        area: editingVacancy.area || null,
+        work_mode: editingVacancy.work_mode || null,
+        salary_min: editingVacancy.salary_min || null,
+        salary_max: editingVacancy.salary_max || null,
+        deadline: editingVacancy.deadline || null,
+        status: editingVacancy.status || 'open'
+      };
 
       if (editingVacancy.id) {
         const { error } = await supabase
-          .from(tableName)
+          .from("profile_job_vacancies")
           .update(vacancyData)
           .eq("id", editingVacancy.id);
 
         if (error) throw error;
       } else {
-        const { error } = await supabase.from(tableName).insert(vacancyData as any);
+        const { error } = await supabase.from("profile_job_vacancies").insert(vacancyData);
         if (error) throw error;
       }
 
@@ -109,7 +114,7 @@ export function GenericJobVacanciesManager({ entityType, entityId }: GenericJobV
     if (!confirm("Deseja realmente remover esta vaga?")) return;
 
     try {
-      const { error } = await supabase.from(tableName).delete().eq("id", id);
+      const { error } = await supabase.from("profile_job_vacancies").delete().eq("id", id);
 
       if (error) throw error;
 

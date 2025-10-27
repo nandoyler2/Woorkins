@@ -1708,7 +1708,7 @@ export type Database = {
           updated_at: string
           user_id: string
           user_type: Database["public"]["Enums"]["user_type"]
-          username: string
+          username: string | null
           verified: boolean | null
           website: string | null
           website_url: string | null
@@ -1764,7 +1764,7 @@ export type Database = {
           updated_at?: string
           user_id: string
           user_type?: Database["public"]["Enums"]["user_type"]
-          username: string
+          username?: string | null
           verified?: boolean | null
           website?: string | null
           website_url?: string | null
@@ -1820,7 +1820,7 @@ export type Database = {
           updated_at?: string
           user_id?: string
           user_type?: Database["public"]["Enums"]["user_type"]
-          username?: string
+          username?: string | null
           verified?: boolean | null
           website?: string | null
           website_url?: string | null

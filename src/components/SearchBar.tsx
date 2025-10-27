@@ -58,52 +58,40 @@ export const SearchBar = () => {
     setIsSearching(true);
     const timer = setTimeout(async () => {
       try {
-        // Buscar perfis de negócios
-        const { data: businessData } = await supabase
-          .from('business_profiles' as any)
-          .select('slug, company_name, category, description, logo_url, average_rating, total_reviews')
-          .or(`company_name.ilike.%${searchTerm}%,category.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`)
-          .eq('active', true)
-          .is('deleted', null)
-          .limit(5);
-
-        // Buscar perfis de usuários
-        const { data: userData } = await supabase
-          .from('profiles' as any)
-          .select('username, full_name, bio, avatar_url')
-          .or(`username.ilike.%${searchTerm}%,full_name.ilike.%${searchTerm}%,bio.ilike.%${searchTerm}%`)
-          .limit(5);
+        // Buscar todos os perfis (usuários e negócios)
+        const { data } = await supabase
+          .from('profiles')
+          .select('username, full_name, company_name, slug, category, description, bio, logo_url, avatar_url, profile_type, average_rating, total_reviews')
+          .or(`username.ilike.%${searchTerm}%,full_name.ilike.%${searchTerm}%,company_name.ilike.%${searchTerm}%,category.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%,bio.ilike.%${searchTerm}%`)
+          .limit(10);
 
         const combinedResults: SearchResult[] = [];
 
-        // Adicionar negócios aos resultados
-        if (businessData) {
-          businessData.forEach((item: any) => {
-            combinedResults.push({
-              type: 'business',
-              identifier: item.slug,
-              name: item.company_name,
-              category: item.category,
-              description: item.description,
-              image_url: item.logo_url,
-              average_rating: item.average_rating,
-              total_reviews: item.total_reviews,
-            });
-          });
-        }
-
-        // Adicionar usuários aos resultados
-        if (userData) {
-          userData.forEach((item: any) => {
-            combinedResults.push({
-              type: 'user',
-              identifier: item.username,
-              name: item.full_name || item.username,
-              category: null,
-              description: item.bio,
-              image_url: item.avatar_url,
-              username: item.username,
-            });
+        // Mapear resultados
+        if (data) {
+          data.forEach((item: any) => {
+            if (item.profile_type === 'business') {
+              combinedResults.push({
+                type: 'business',
+                identifier: item.slug || item.username,
+                name: item.company_name || item.full_name,
+                category: item.category,
+                description: item.description,
+                image_url: item.logo_url || item.avatar_url,
+                average_rating: item.average_rating,
+                total_reviews: item.total_reviews,
+              });
+            } else {
+              combinedResults.push({
+                type: 'user',
+                identifier: item.username,
+                name: item.full_name || item.username,
+                category: null,
+                description: item.bio,
+                image_url: item.avatar_url,
+                username: item.username,
+              });
+            }
           });
         }
 
@@ -123,50 +111,39 @@ export const SearchBar = () => {
     if (!searchTerm.trim()) return;
     setIsSearching(true);
     try {
-      // Buscar negócios
-      const { data: businessData } = await supabase
-        .from('business_profiles' as any)
-        .select('slug, company_name, category, description, logo_url, average_rating, total_reviews')
-        .or(`company_name.ilike.%${searchTerm}%,category.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`)
-        .eq('active', true)
-        .is('deleted', null)
-        .limit(5);
-
-      // Buscar usuários
-      const { data: userData } = await supabase
-        .from('profiles' as any)
-        .select('username, full_name, bio, avatar_url')
-        .or(`username.ilike.%${searchTerm}%,full_name.ilike.%${searchTerm}%,bio.ilike.%${searchTerm}%`)
-        .limit(5);
+      // Buscar todos os perfis (usuários e negócios)
+      const { data } = await supabase
+        .from('profiles')
+        .select('username, full_name, company_name, slug, category, description, bio, logo_url, avatar_url, profile_type, average_rating, total_reviews')
+        .or(`username.ilike.%${searchTerm}%,full_name.ilike.%${searchTerm}%,company_name.ilike.%${searchTerm}%,category.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%,bio.ilike.%${searchTerm}%`)
+        .limit(10);
 
       const combinedResults: SearchResult[] = [];
 
-      if (businessData) {
-        businessData.forEach((item: any) => {
-          combinedResults.push({
-            type: 'business',
-            identifier: item.slug,
-            name: item.company_name,
-            category: item.category,
-            description: item.description,
-            image_url: item.logo_url,
-            average_rating: item.average_rating,
-            total_reviews: item.total_reviews,
-          });
-        });
-      }
-
-      if (userData) {
-        userData.forEach((item: any) => {
-          combinedResults.push({
-            type: 'user',
-            identifier: item.username,
-            name: item.full_name || item.username,
-            category: null,
-            description: item.bio,
-            image_url: item.avatar_url,
-            username: item.username,
-          });
+      if (data) {
+        data.forEach((item: any) => {
+          if (item.profile_type === 'business') {
+            combinedResults.push({
+              type: 'business',
+              identifier: item.slug || item.username,
+              name: item.company_name || item.full_name,
+              category: item.category,
+              description: item.description,
+              image_url: item.logo_url || item.avatar_url,
+              average_rating: item.average_rating,
+              total_reviews: item.total_reviews,
+            });
+          } else {
+            combinedResults.push({
+              type: 'user',
+              identifier: item.username,
+              name: item.full_name || item.username,
+              category: null,
+              description: item.bio,
+              image_url: item.avatar_url,
+              username: item.username,
+            });
+          }
         });
       }
 

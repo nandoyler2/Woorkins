@@ -20,19 +20,14 @@ interface CatalogItem {
 }
 
 interface GenericCatalogManagerProps {
-  entityType: 'business' | 'user';
   entityId: string;
 }
 
-export function GenericCatalogManager({ entityType, entityId }: GenericCatalogManagerProps) {
+export function GenericCatalogManager({ entityId }: GenericCatalogManagerProps) {
   const [items, setItems] = useState<CatalogItem[]>([]);
   const [editingItem, setEditingItem] = useState<Partial<CatalogItem> | null>(null);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
-
-  const tableName = entityType === 'business' ? 'business_catalog_items' : 'user_catalog_items';
-  const idColumn = entityType === 'business' ? 'business_id' : 'profile_id';
-  const storageBucket = entityType === 'business' ? 'business-media' : 'avatars';
 
   useEffect(() => {
     loadItems();
@@ -41,13 +36,13 @@ export function GenericCatalogManager({ entityType, entityId }: GenericCatalogMa
   const loadItems = async () => {
     try {
       const { data, error } = await supabase
-        .from(tableName as any)
+        .from("profile_catalog_items")
         .select("*")
-        .eq(idColumn, entityId)
+        .eq("target_profile_id", entityId)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setItems((data || []) as any);
+      setItems(data || []);
     } catch (error: any) {
       toast({
         title: "Erro ao carregar catálogo",
@@ -69,19 +64,25 @@ export function GenericCatalogManager({ entityType, entityId }: GenericCatalogMa
 
     setLoading(true);
     try {
-      const itemData = entityType === 'business'
-        ? { business_id: entityId, name: editingItem.name, description: editingItem.description || null, price: editingItem.price, image_url: editingItem.image_url || null, category: editingItem.category || null, active: true }
-        : { profile_id: entityId, name: editingItem.name, description: editingItem.description || null, price: editingItem.price, image_url: editingItem.image_url || null, category: editingItem.category || null, active: true };
+      const itemData = {
+        target_profile_id: entityId,
+        name: editingItem.name,
+        description: editingItem.description || null,
+        price: editingItem.price,
+        image_url: editingItem.image_url || null,
+        category: editingItem.category || null,
+        active: true
+      };
 
       if (editingItem.id) {
         const { error } = await supabase
-          .from(tableName)
+          .from("profile_catalog_items")
           .update(itemData)
           .eq("id", editingItem.id);
 
         if (error) throw error;
       } else {
-        const { error } = await supabase.from(tableName).insert(itemData as any);
+        const { error } = await supabase.from("profile_catalog_items").insert(itemData);
         if (error) throw error;
       }
 
@@ -107,7 +108,7 @@ export function GenericCatalogManager({ entityType, entityId }: GenericCatalogMa
     if (!confirm("Deseja realmente remover este item?")) return;
 
     try {
-      const { error } = await supabase.from(tableName).delete().eq("id", id);
+      const { error } = await supabase.from("profile_catalog_items").delete().eq("id", id);
 
       if (error) throw error;
 
@@ -161,7 +162,7 @@ export function GenericCatalogManager({ entityType, entityId }: GenericCatalogMa
                   onUpload={(url) =>
                     setEditingItem({ ...editingItem, image_url: url })
                   }
-                  bucket={storageBucket}
+                  bucket="profile-photos"
                   folder={`${entityId}/catalog`}
                 />
               </div>

@@ -20,19 +20,14 @@ interface CustomLink {
 }
 
 interface GenericLinktreeManagerProps {
-  entityType: 'business' | 'user';
   entityId: string;
 }
 
-export function GenericLinktreeManager({ entityType, entityId }: GenericLinktreeManagerProps) {
+export function GenericLinktreeManager({ entityId }: GenericLinktreeManagerProps) {
   const [links, setLinks] = useState<CustomLink[]>([]);
   const [editingLink, setEditingLink] = useState<Partial<CustomLink> | null>(null);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
-
-  const tableName = entityType === 'business' ? 'business_custom_links' : 'user_custom_links';
-  const idColumn = entityType === 'business' ? 'business_id' : 'profile_id';
-  const storageBucket = entityType === 'business' ? 'business-media' : 'avatars';
 
   useEffect(() => {
     loadLinks();
@@ -41,13 +36,13 @@ export function GenericLinktreeManager({ entityType, entityId }: GenericLinktree
   const loadLinks = async () => {
     try {
       const { data, error } = await supabase
-        .from(tableName as any)
+        .from("profile_custom_links")
         .select("*")
-        .eq(idColumn, entityId)
+        .eq("target_profile_id", entityId)
         .order("order_index", { ascending: true });
 
       if (error) throw error;
-      setLinks((data || []) as any);
+      setLinks(data || []);
     } catch (error: any) {
       toast({
         title: "Erro ao carregar links",
@@ -69,19 +64,26 @@ export function GenericLinktreeManager({ entityType, entityId }: GenericLinktree
 
     setLoading(true);
     try {
-      const linkData = entityType === 'business'
-        ? { business_id: entityId, title: editingLink.title, url: editingLink.url, icon_name: editingLink.icon_name || null, image_url: editingLink.image_url || null, youtube_url: editingLink.youtube_url || null, order_index: editingLink.order_index ?? links.length, active: true }
-        : { profile_id: entityId, title: editingLink.title, url: editingLink.url, icon_name: editingLink.icon_name || null, image_url: editingLink.image_url || null, youtube_url: editingLink.youtube_url || null, order_index: editingLink.order_index ?? links.length, active: true };
+      const linkData = {
+        target_profile_id: entityId,
+        title: editingLink.title,
+        url: editingLink.url,
+        icon_name: editingLink.icon_name || null,
+        image_url: editingLink.image_url || null,
+        youtube_url: editingLink.youtube_url || null,
+        order_index: editingLink.order_index ?? links.length,
+        active: true
+      };
 
       if (editingLink.id) {
         const { error } = await supabase
-          .from(tableName)
+          .from("profile_custom_links")
           .update(linkData)
           .eq("id", editingLink.id);
 
         if (error) throw error;
       } else {
-        const { error } = await supabase.from(tableName).insert(linkData as any);
+        const { error } = await supabase.from("profile_custom_links").insert(linkData);
         if (error) throw error;
       }
 
@@ -107,7 +109,7 @@ export function GenericLinktreeManager({ entityType, entityId }: GenericLinktree
     if (!confirm("Deseja realmente remover este link?")) return;
 
     try {
-      const { error } = await supabase.from(tableName).delete().eq("id", id);
+      const { error } = await supabase.from("profile_custom_links").delete().eq("id", id);
 
       if (error) throw error;
 
@@ -161,7 +163,7 @@ export function GenericLinktreeManager({ entityType, entityId }: GenericLinktree
                   onUpload={(url) =>
                     setEditingLink({ ...editingLink, image_url: url })
                   }
-                  bucket={storageBucket}
+                  bucket="profile-photos"
                   folder={`${entityId}/linktree`}
                 />
               </div>

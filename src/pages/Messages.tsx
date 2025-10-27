@@ -169,17 +169,17 @@ export default function Messages() {
           id,
           status,
           service_description,
-          user_id,
-          business_id,
+          client_user_id,
+          target_profile_id,
           updated_at,
           archived,
-          business_profiles!inner(
-            company_name,
-            logo_url,
-            profile_id
+          profiles!negotiations_target_profile_id_fkey(
+          company_name,
+          logo_url,
+          id
           )
         `)
-        .eq('user_id', user?.id)
+        .eq('client_user_id', user?.id)
         .eq('archived', activeFilter === 'archived' ? true : false)
         .order('updated_at', { ascending: false });
 
@@ -190,17 +190,18 @@ export default function Messages() {
           id,
           status,
           service_description,
-          user_id,
-          business_id,
+          client_user_id,
+          target_profile_id,
           updated_at,
           archived,
-          business_profiles!inner(
-            company_name,
-            logo_url,
-            profile_id
+          profiles!negotiations_target_profile_id_fkey(
+            name,
+          company_name,
+          logo_url,
+          id
           )
         `)
-        .eq('business_profiles.profile_id', profileId)
+        .eq('profiles.id', profileId)
         .eq('archived', activeFilter === 'archived' ? true : false)
         .order('updated_at', { ascending: false });
 
@@ -271,15 +272,15 @@ export default function Messages() {
           type: 'negotiation' as const,
           title: neg.service_description || 'Negociação',
           otherUser: {
-            id: neg.business_profiles.profile_id,
-            name: neg.business_profiles.company_name,
-            avatar: neg.business_profiles.logo_url,
+            id: (neg.profiles as any)?.id || '',
+          name: (neg.profiles as any)?.company_name || (neg.profiles as any)?.name || 'Usuário',
+          avatar: (neg.profiles as any)?.logo_url || (neg.profiles as any)?.avatar_url,
           },
           lastMessageAt: neg.updated_at,
           unreadCount: unreadMap.get(`negotiation-${neg.id}`) ?? (count || 0),
           status: neg.status,
-          businessName: neg.business_profiles.company_name,
-          businessId: neg.business_id,
+          businessName: (neg.profiles as any)?.company_name || (neg.profiles as any)?.name || 'Usuário',
+          businessId: neg.target_profile_id,
         };
       }));
 

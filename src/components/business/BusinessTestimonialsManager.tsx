@@ -29,9 +29,9 @@ export function BusinessTestimonialsManager({ businessId }: BusinessTestimonials
   const loadTestimonials = async () => {
     try {
       const { data, error } = await supabase
-        .from("business_testimonials")
+        .from("profile_testimonials")
         .select("*")
-        .eq("business_id", businessId)
+        .eq("target_profile_id", businessId)
         .order("created_at", { ascending: false });
 
       if (error) throw error;

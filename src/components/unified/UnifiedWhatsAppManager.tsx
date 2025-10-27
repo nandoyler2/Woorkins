@@ -22,11 +22,10 @@ interface WhatsAppConfig {
 }
 
 interface UnifiedWhatsAppManagerProps {
-  entityType: 'business' | 'user';
-  entityId: string;
+  profileId: string;
 }
 
-export function UnifiedWhatsAppManager({ entityType, entityId }: UnifiedWhatsAppManagerProps) {
+export function UnifiedWhatsAppManager({ profileId }: UnifiedWhatsAppManagerProps) {
   const [loading, setLoading] = useState(false);
   const [config, setConfig] = useState<WhatsAppConfig>({
     phone: "",
@@ -36,40 +35,13 @@ export function UnifiedWhatsAppManager({ entityType, entityId }: UnifiedWhatsApp
   });
   const { toast } = useToast();
 
-  const tableName = entityType === 'business' ? 'business_whatsapp_config' : 'user_whatsapp_config';
-  const idColumn = entityType === 'business' ? 'business_id' : 'user_id';
-
   useEffect(() => {
     loadConfig();
-  }, [entityId]);
+  }, [profileId]);
 
   const loadConfig = async () => {
-    try {
-      const { data, error } = await supabase
-        .from(tableName as any)
-        .select('*')
-        .eq(idColumn, entityId)
-        .single();
-
-      if (error && error.code !== 'PGRST116') throw error;
-
-      if (data) {
-        const configData = data as any;
-        const questionsData = configData.questions;
-        setConfig({
-          phone: configData.phone || "",
-          welcome_message: configData.welcome_message || "Olá! Gostaria de conversar com você.",
-          auto_open: configData.auto_open || false,
-          questions: Array.isArray(questionsData) ? questionsData : [],
-        });
-      }
-    } catch (error: any) {
-      toast({
-        title: "Erro ao carregar configurações",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
+    // WhatsApp widget feature not yet implemented in database
+    return;
   };
 
   const validateAndFormatPhone = (phone: string): string | null => {
@@ -109,53 +81,10 @@ export function UnifiedWhatsAppManager({ entityType, entityId }: UnifiedWhatsApp
   };
 
   const handleSave = async () => {
-    const validPhone = validateAndFormatPhone(config.phone);
-    if (!validPhone) return;
-
-    setLoading(true);
-    try {
-      const configData: any = {
-        phone: validPhone,
-        welcome_message: config.welcome_message,
-        auto_open: config.auto_open,
-        questions: config.questions as any,
-        [idColumn]: entityId,
-      };
-
-      const { data: existing } = await supabase
-        .from(tableName as any)
-        .select('id')
-        .eq(idColumn, entityId)
-        .single();
-
-      if (existing) {
-        const { error } = await supabase
-          .from(tableName as any)
-          .update(configData)
-          .eq(idColumn, entityId);
-
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from(tableName as any)
-          .insert([configData]);
-
-        if (error) throw error;
-      }
-
-      toast({
-        title: "Sucesso",
-        description: "Configurações salvas com sucesso!",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Erro ao salvar",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
+    toast({
+      title: "Funcionalidade em desenvolvimento",
+      description: "O widget WhatsApp será implementado em breve.",
+    });
   };
 
   const addQuestion = () => {

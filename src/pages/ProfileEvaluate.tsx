@@ -48,9 +48,10 @@ export default function ProfileEvaluate() {
       } else {
         // Check if it's a business profile
         const { data, error } = await supabase
-          .from('business_profiles')
-          .select('id, slug, company_name, avatar_url')
-          .eq('slug', slug)
+        .from('profiles')
+        .select('id, slug, company_name, logo_url')
+        .eq('slug', slug)
+          .eq('profile_type', 'business')
           .single();
 
         if (error) throw error;

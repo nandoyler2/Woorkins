@@ -676,20 +676,13 @@ export default function ProfileEdit() {
 
     setSaving(true);
 
-    // Sempre atualizar na tabela 'profiles' para ambos os tipos
-    const updateData = profileType === 'user' 
-      ? {
-          full_name: profile.full_name,
-          bio: profile.bio,
-          location: profile.location,
-          website: profile.website,
-        }
-      : {
-          company_name: profile.company_name,
-          description: profile.description,
-          address: profile.address,
-          website_url: profile.website_url,
-        };
+    // Dados unificados para ambos tipos de perfil
+    const updateData = {
+      full_name: profile.full_name,
+      bio: profile.bio,
+      location: profile.location,
+      website: profile.website,
+    };
 
     const { error } = await supabase
       .from('profiles')
@@ -729,12 +722,10 @@ export default function ProfileEdit() {
   const handleAvatarUpload = async (url: string) => {
     if (!profile) return;
 
-    // Para perfis profissionais, atualizar logo_url; para usuários, avatar_url
-    const updateField = profileType === 'business' ? 'logo_url' : 'avatar_url';
-
+    // Campo unificado para ambos tipos
     const { error } = await supabase
       .from('profiles')
-      .update({ [updateField]: url })
+      .update({ avatar_url: url })
       .eq('id', profile.id);
 
     if (error) {
@@ -751,12 +742,7 @@ export default function ProfileEdit() {
         variant: 'destructive'
       });
     } else {
-      // Atualizar o estado local com o campo correto
-      if (profileType === 'business') {
-        setProfile({ ...profile, logo_url: url });
-      } else {
-        setProfile({ ...profile, avatar_url: url });
-      }
+      setProfile({ ...profile, avatar_url: url });
       toast({ title: 'Foto de perfil atualizada!' });
     }
   };
@@ -791,12 +777,10 @@ export default function ProfileEdit() {
   const handleAvatarDelete = async () => {
     if (!profile) return;
 
-    // Para perfis profissionais, remover logo_url; para usuários, avatar_url
-    const updateField = profileType === 'business' ? 'logo_url' : 'avatar_url';
-
+    // Campo unificado
     const { error } = await supabase
       .from('profiles')
-      .update({ [updateField]: null })
+      .update({ avatar_url: null })
       .eq('id', profile.id);
 
     if (error) {
@@ -813,12 +797,7 @@ export default function ProfileEdit() {
         variant: 'destructive'
       });
     } else {
-      // Atualizar o estado local com o campo correto
-      if (profileType === 'business') {
-        setProfile({ ...profile, logo_url: null });
-      } else {
-        setProfile({ ...profile, avatar_url: null });
-      }
+      setProfile({ ...profile, avatar_url: null });
       toast({ title: 'Foto de perfil removida!' });
     }
   };
@@ -1166,10 +1145,10 @@ export default function ProfileEdit() {
                 <div className="mb-8">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-3">
-                      {(profileType === 'business' ? profile.logo_url : profile.avatar_url) ? (
+                      {profile.avatar_url ? (
                         <img 
-                          src={profileType === 'business' ? profile.logo_url! : profile.avatar_url!} 
-                          alt={profileType === 'business' ? profile.company_name! : (profile.full_name || profile.username)}
+                          src={profile.avatar_url} 
+                          alt={profile.full_name || profile.username}
                           className="w-12 h-12 rounded-full object-cover border-2 border-border"
                         />
                       ) : (
@@ -1179,7 +1158,7 @@ export default function ProfileEdit() {
                       )}
                       <div>
                         <h1 className="text-3xl font-bold">
-                          {profileType === 'business' ? profile.company_name : (profile.full_name || profile.username)}
+                          {profile.full_name || profile.username}
                         </h1>
                         <p className="text-muted-foreground text-sm">
                           {profileType === 'business' ? profile.slug : `@${profile.username}`}
@@ -1208,10 +1187,10 @@ export default function ProfileEdit() {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
                           <div className="w-16 h-16 rounded-full overflow-hidden flex-shrink-0 border-2 border-primary/20">
-                            {(profileType === 'business' ? profile.logo_url : profile.avatar_url) ? (
+                            {profile.avatar_url ? (
                               <img 
-                                src={profileType === 'business' ? profile.logo_url! : profile.avatar_url!} 
-                                alt={profileType === 'business' ? profile.company_name! : (profile.full_name || profile.username)} 
+                                src={profile.avatar_url} 
+                                alt={profile.full_name || profile.username}
                                 className="w-full h-full object-cover" 
                               />
                             ) : (
@@ -1222,7 +1201,7 @@ export default function ProfileEdit() {
                           </div>
                           <div>
                             <h2 className="text-2xl font-bold mb-2">
-                              Perfil de {profileType === 'business' ? profile.company_name : (profile.full_name || profile.username)}
+                              Perfil de {profile.full_name || profile.username}
                             </h2>
                             <p className="text-muted-foreground">
                               Gerencie seu perfil e acompanhe suas estatísticas
@@ -1473,7 +1452,7 @@ export default function ProfileEdit() {
                             <div className="pt-6 pl-40">
                               <div className="inline-block bg-background/95 backdrop-blur-sm px-6 py-2 rounded-lg shadow-sm border">
                                 <h2 className="text-2xl font-bold whitespace-nowrap">
-                                  {profileType === 'business' ? profile.company_name : (profile.full_name || profile.username)}
+                                  {profile.full_name || profile.username}
                                 </h2>
                               </div>
                             </div>
@@ -1880,93 +1859,52 @@ export default function ProfileEdit() {
                     </div>
                     <CardContent className="p-6">
                       <form onSubmit={handleSave} className="space-y-4">
-                        {profileType === 'user' ? (
-                          <>
-                            <div className="space-y-2">
-                              <Label className="text-base font-medium">Nome Completo</Label>
-                              <Input
-                                value={profile.full_name || ''}
-                                onChange={(e) => setProfile({ ...profile, full_name: e.target.value })}
-                                placeholder="Seu nome completo"
-                                className="text-base"
-                              />
-                            </div>
-                            
-                            <div className="space-y-2">
-                              <Label className="text-base font-medium">Biografia</Label>
-                              <Textarea
-                                value={profile.bio || ''}
-                                onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
-                                rows={4}
-                                placeholder="Conte um pouco sobre você..."
-                                className="text-base resize-none"
-                              />
-                            </div>
+                        <div className="space-y-2">
+                          <Label className="text-base font-medium">
+                            {profileType === 'business' ? 'Nome da Empresa / Razão Social' : 'Nome Completo'}
+                          </Label>
+                          <Input
+                            value={profile.full_name || ''}
+                            onChange={(e) => setProfile({ ...profile, full_name: e.target.value })}
+                            placeholder={profileType === 'business' ? 'Nome da sua empresa' : 'Seu nome completo'}
+                            className="text-base"
+                          />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label className="text-base font-medium">
+                            {profileType === 'business' ? 'Descrição da Empresa' : 'Biografia'}
+                          </Label>
+                          <Textarea
+                            value={profile.bio || ''}
+                            onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
+                            rows={4}
+                            placeholder={profileType === 'business' ? 'Descreva sua empresa...' : 'Conte um pouco sobre você...'}
+                            className="text-base resize-none"
+                          />
+                        </div>
 
-                            <div className="space-y-2">
-                              <Label className="text-base font-medium">Localização</Label>
-                              <Input
-                                value={profile.location || ''}
-                                onChange={(e) => setProfile({ ...profile, location: e.target.value })}
-                                placeholder="Cidade, Estado"
-                                className="text-base"
-                              />
-                            </div>
+                        <div className="space-y-2">
+                          <Label className="text-base font-medium">
+                            {profileType === 'business' ? 'Endereço / Localização' : 'Localização'}
+                          </Label>
+                          <Input
+                            value={profile.location || ''}
+                            onChange={(e) => setProfile({ ...profile, location: e.target.value })}
+                            placeholder={profileType === 'business' ? 'Endereço completo' : 'Cidade, Estado'}
+                            className="text-base"
+                          />
+                        </div>
 
-                            <div className="space-y-2">
-                              <Label className="text-base font-medium">Website</Label>
-                              <Input
-                                value={profile.website || ''}
-                                onChange={(e) => setProfile({ ...profile, website: e.target.value })}
-                                placeholder="https://seusite.com"
-                                className="text-base"
-                              />
-                            </div>
-                          </>
-                        ) : (
-                          <>
-                            <div className="space-y-2">
-                              <Label className="text-base font-medium">Nome da Empresa</Label>
-                              <Input
-                                value={profile.company_name || ''}
-                                onChange={(e) => setProfile({ ...profile, company_name: e.target.value })}
-                                placeholder="Nome da sua empresa"
-                                className="text-base"
-                              />
-                            </div>
-                            
-                            <div className="space-y-2">
-                              <Label className="text-base font-medium">Descrição</Label>
-                              <Textarea
-                                value={profile.description || ''}
-                                onChange={(e) => setProfile({ ...profile, description: e.target.value })}
-                                rows={4}
-                                placeholder="Descreva sua empresa..."
-                                className="text-base resize-none"
-                              />
-                            </div>
-
-                            <div className="space-y-2">
-                              <Label className="text-base font-medium">Endereço</Label>
-                              <Input
-                                value={profile.address || ''}
-                                onChange={(e) => setProfile({ ...profile, address: e.target.value })}
-                                placeholder="Endereço completo"
-                                className="text-base"
-                              />
-                            </div>
-
-                            <div className="space-y-2">
-                              <Label className="text-base font-medium">Website</Label>
-                              <Input
-                                value={profile.website_url || ''}
-                                onChange={(e) => setProfile({ ...profile, website_url: e.target.value })}
-                                placeholder="https://suaempresa.com"
-                                className="text-base"
-                              />
-                            </div>
-                          </>
-                        )}
+                        <div className="space-y-2">
+                          <Label className="text-base font-medium">Website</Label>
+                          <Input
+                            value={profile.website || ''}
+                            onChange={(e) => setProfile({ ...profile, website: e.target.value })}
+                            placeholder="https://seusite.com"
+                            className="text-base"
+                          />
+                        </div>
 
                         <Button 
                           type="submit" 

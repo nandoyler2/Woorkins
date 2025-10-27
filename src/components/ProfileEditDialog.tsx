@@ -71,34 +71,62 @@ export function ProfileEditDialog({ open, onOpenChange, userId, onUpdate }: Prof
 
   const loadProfile = async () => {
     try {
+      console.log('[ProfileEditDialog] Loading profile for userId:', userId);
+      
       // Buscar perfil
-      const { data: profileData } = await supabase
+      const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('user_id', userId)
-        .single();
+        .maybeSingle();
+
+      console.log('[ProfileEditDialog] Profile data:', profileData);
+      console.log('[ProfileEditDialog] Profile error:', profileError);
+
+      if (profileError) {
+        console.error('[ProfileEditDialog] Error fetching profile:', profileError);
+        toast({
+          title: 'Erro ao carregar perfil',
+          description: 'Não foi possível carregar os dados do perfil. Tente novamente.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      if (!profileData) {
+        console.error('[ProfileEditDialog] No profile found for user:', userId);
+        toast({
+          title: 'Perfil não encontrado',
+          description: 'Não foi possível encontrar seu perfil. Tente fazer logout e login novamente.',
+          variant: 'destructive',
+        });
+        return;
+      }
 
       // Buscar email do auth
       const { data: { user } } = await supabase.auth.getUser();
 
-      if (profileData) {
-        setProfile({
-          id: profileData.id,
-          full_name: profileData.full_name || '',
-          username: profileData.username || '',
-          email: user?.email || '',
-          cpf: profileData.cpf || '',
-          avatar_url: profileData.avatar_url || '',
-          location: profileData.location || '',
-          bio: profileData.bio || '',
-          website: profileData.website || '',
-          birth_date: profileData.birth_date || '',
-          last_username_change: profileData.last_username_change,
-        });
-        setOriginalUsername(profileData.username || '');
-      }
-    } catch (error) {
-      console.error('Error loading profile:', error);
+      setProfile({
+        id: profileData.id,
+        full_name: profileData.full_name || '',
+        username: profileData.username || '',
+        email: user?.email || '',
+        cpf: profileData.cpf || '',
+        avatar_url: profileData.avatar_url || '',
+        location: profileData.location || '',
+        bio: profileData.bio || '',
+        website: profileData.website || '',
+        birth_date: profileData.birth_date || '',
+        last_username_change: profileData.last_username_change,
+      });
+      setOriginalUsername(profileData.username || '');
+    } catch (error: any) {
+      console.error('[ProfileEditDialog] Unexpected error:', error);
+      toast({
+        title: 'Erro inesperado',
+        description: error.message || 'Ocorreu um erro ao carregar o perfil.',
+        variant: 'destructive',
+      });
     }
   };
 

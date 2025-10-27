@@ -384,23 +384,6 @@ export default function ProfileEdit() {
   const loadBusinessProfile = async (id: string) => {
     if (!user) return;
 
-    // Primeiro verifica se o usuário tem permissão
-    const { data: userProfile } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('user_id', user.id)
-      .maybeSingle();
-
-    if (!userProfile) {
-      toast({
-        title: 'Erro',
-        description: 'Perfil não encontrado',
-        variant: 'destructive',
-      });
-      navigate('/painel');
-      return;
-    }
-
     const { data, error } = await supabase
       .from('profiles')
       .select('*')

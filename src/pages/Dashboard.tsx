@@ -1249,7 +1249,7 @@ export default function Dashboard() {
                               <Eye className="w-3.5 h-3.5" />
                             </Button>
                           </Link>
-                          <Link to={`/perfil/editar?businessId=${business.id}`}>
+                          <Link to={`/settings/profile/${business.id}`}>
                             <Button variant="default" size="sm" className="text-xs h-7 px-3">
                               <Settings className="w-3 h-3 mr-1" />
                               Gerenciar

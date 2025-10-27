@@ -652,15 +652,19 @@ export default function ProfileEdit() {
       setActiveSection('tools');
     }
 
+    // Usar a tabela correta baseado no tipo de perfil
+    const tableName = profileType === 'user' ? 'user_profile_features' : 'business_profile_features';
+    const idColumn = profileType === 'user' ? 'profile_id' : 'business_id';
+
     const { error } = await supabase
-      .from('user_profile_features' as any)
+      .from(tableName as any)
       .upsert({
-        profile_id: profile.id,
+        [idColumn]: profile.id,
         feature_key: featureKey,
         is_active: newActiveState,
         settings: {}
       }, {
-        onConflict: 'profile_id,feature_key'
+        onConflict: `${idColumn},feature_key`
       });
 
     if (!error) {
@@ -669,9 +673,16 @@ export default function ProfileEdit() {
         description: `${feature.name} foi ${newActiveState ? 'ativada' : 'desativada'}.`
       });
     } else {
+      console.error('[ProfileEdit] Erro ao atualizar feature:', {
+        error,
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint
+      });
       toast({
-        title: 'Erro',
-        description: 'Não foi possível atualizar a ferramenta',
+        title: 'Erro ao atualizar ferramenta',
+        description: `${error.message} (${error.code || 'desconhecido'})`,
         variant: 'destructive'
       });
       loadFeatures();
@@ -705,9 +716,19 @@ export default function ProfileEdit() {
       .eq('id', profile.id);
 
     if (error) {
+      console.error('[ProfileEdit] Erro ao salvar perfil:', {
+        error,
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        profileId: profile.id,
+        profileType,
+        updateData
+      });
       toast({
-        title: 'Erro ao salvar',
-        description: error.message,
+        title: 'Erro ao salvar perfil',
+        description: `${error.message} (Código: ${error.code || 'desconhecido'})`,
         variant: 'destructive',
       });
     } else {
@@ -732,7 +753,20 @@ export default function ProfileEdit() {
       .update({ avatar_url: url })
       .eq('id', profile.id);
 
-    if (!error) {
+    if (error) {
+      console.error('[ProfileEdit] Erro ao atualizar avatar:', {
+        error,
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint
+      });
+      toast({ 
+        title: 'Erro ao atualizar foto',
+        description: `${error.message} (${error.code || 'desconhecido'})`,
+        variant: 'destructive'
+      });
+    } else {
       setProfile({ ...profile, avatar_url: url });
       toast({ title: 'Foto de perfil atualizada!' });
     }
@@ -746,7 +780,20 @@ export default function ProfileEdit() {
       .update({ cover_url: url })
       .eq('id', profile.id);
 
-    if (!error) {
+    if (error) {
+      console.error('[ProfileEdit] Erro ao atualizar capa:', {
+        error,
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint
+      });
+      toast({ 
+        title: 'Erro ao atualizar capa',
+        description: `${error.message} (${error.code || 'desconhecido'})`,
+        variant: 'destructive'
+      });
+    } else {
       setProfile({ ...profile, cover_url: url });
       toast({ title: 'Capa atualizada!' });
     }
@@ -760,7 +807,20 @@ export default function ProfileEdit() {
       .update({ avatar_url: null })
       .eq('id', profile.id);
 
-    if (!error) {
+    if (error) {
+      console.error('[ProfileEdit] Erro ao remover avatar:', {
+        error,
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint
+      });
+      toast({ 
+        title: 'Erro ao remover foto',
+        description: `${error.message} (${error.code || 'desconhecido'})`,
+        variant: 'destructive'
+      });
+    } else {
       setProfile({ ...profile, avatar_url: null });
       toast({ title: 'Foto de perfil removida!' });
     }
@@ -774,7 +834,20 @@ export default function ProfileEdit() {
       .update({ cover_url: null })
       .eq('id', profile.id);
 
-    if (!error) {
+    if (error) {
+      console.error('[ProfileEdit] Erro ao remover capa:', {
+        error,
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint
+      });
+      toast({ 
+        title: 'Erro ao remover capa',
+        description: `${error.message} (${error.code || 'desconhecido'})`,
+        variant: 'destructive'
+      });
+    } else {
       setProfile({ ...profile, cover_url: null });
       toast({ title: 'Capa removida!' });
     }

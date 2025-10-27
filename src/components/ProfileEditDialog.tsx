@@ -72,29 +72,40 @@ export function ProfileEditDialog({ open, onOpenChange, userId, onUpdate }: Prof
   const loadProfile = async () => {
     try {
       console.log('[ProfileEditDialog] Loading profile for userId:', userId);
-      
-      // Buscar perfil
-      const { data: profileData, error: profileError } = await supabase
+
+      // 1) Tenta buscar o perfil principal do tipo 'user'
+      const { data: userProfile, error: userProfileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('user_id', userId)
+        .eq('profile_type', 'user')
         .maybeSingle();
 
-      console.log('[ProfileEditDialog] Profile data:', profileData);
-      console.log('[ProfileEditDialog] Profile error:', profileError);
-
-      if (profileError) {
-        console.error('[ProfileEditDialog] Error fetching profile:', profileError);
-        toast({
-          title: 'Erro ao carregar perfil',
-          description: 'Não foi possível carregar os dados do perfil. Tente novamente.',
-          variant: 'destructive',
-        });
-        return;
+      if (userProfileError) {
+        console.warn('[ProfileEditDialog] user profile fetch error (will fallback):', userProfileError);
       }
 
+      let profileData = userProfile;
+
+      // 2) Se não houver, pega o primeiro perfil do usuário (ex.: business)
       if (!profileData) {
-        console.error('[ProfileEditDialog] No profile found for user:', userId);
+        const { data: anyProfile, error: anyProfileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: true })
+          .limit(1)
+          .maybeSingle();
+
+        if (anyProfileError) {
+          console.error('[ProfileEditDialog] Fallback profile fetch error:', anyProfileError);
+        }
+        profileData = anyProfile || null;
+      }
+
+      console.log('[ProfileEditDialog] Resolved profile data:', profileData);
+
+      if (!profileData) {
         toast({
           title: 'Perfil não encontrado',
           description: 'Não foi possível encontrar seu perfil. Tente fazer logout e login novamente.',
@@ -297,7 +308,7 @@ export function ProfileEditDialog({ open, onOpenChange, userId, onUpdate }: Prof
       const { error } = await supabase
         .from('profiles')
         .update(updateData)
-        .eq('user_id', userId);
+        .eq('id', profile.id);
 
       if (error) throw error;
 

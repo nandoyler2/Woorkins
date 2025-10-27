@@ -973,6 +973,7 @@ export type Database = {
           media_type: string
           media_url: string
           order_index: number | null
+          profile_id: string | null
           tags: string[] | null
           title: string
         }
@@ -986,6 +987,7 @@ export type Database = {
           media_type: string
           media_url: string
           order_index?: number | null
+          profile_id?: string | null
           tags?: string[] | null
           title: string
         }
@@ -999,6 +1001,7 @@ export type Database = {
           media_type?: string
           media_url?: string
           order_index?: number | null
+          profile_id?: string | null
           tags?: string[] | null
           title?: string
         }

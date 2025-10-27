@@ -36,11 +36,11 @@ export function UnifiedPortfolioManager({ profileId }: UnifiedPortfolioManagerPr
 
   const loadItems = async () => {
     try {
-      const { data, error } = await supabase
-        .from('portfolio_items')
-        .select('*')
-        .eq('business_id', profileId)
-        .order('order_index');
+    const { data, error } = await supabase
+      .from('portfolio_items')
+      .select('*')
+      .eq('profile_id', profileId)
+      .order('order_index');
 
       if (error) throw error;
       setItems(data as any || []);
@@ -65,8 +65,9 @@ export function UnifiedPortfolioManager({ profileId }: UnifiedPortfolioManagerPr
 
     setLoading(true);
     try {
-      const itemData = {
-        business_id: profileId,
+      const itemData: any = {
+        profile_id: profileId,
+        business_id: profileId, // Compatibilidade temporária
         title: editingItem.title || '',
         description: editingItem.description || null,
         media_url: editingItem.media_url || '',

@@ -20,6 +20,7 @@ import Feed from "./pages/Feed";
 import Admin from "./pages/Admin";
 import Dashboard from "./pages/Dashboard";
 import ProfileEdit from "./pages/ProfileEdit";
+import ProfileSettings from "./pages/ProfileSettings";
 import ProfileRouter from "./pages/ProfileRouter";
 import BusinessFinances from "./pages/BusinessFinances";
 import Projects from "./pages/Projects";
@@ -95,6 +96,7 @@ function AppContent() {
         
         <Route path="/painel" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="/perfil/editar" element={<ProtectedRoute><ProfileEdit /></ProtectedRoute>} />
+        <Route path="/settings/profile/:profileId" element={<ProtectedRoute><ProfileSettings /></ProtectedRoute>} />
         <Route path="/conta" element={<ProtectedRoute><Account /></ProtectedRoute>} />
         <Route path="/mensagens" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
         <Route path="/meus-projetos" element={<ProtectedRoute><MyProjects /></ProtectedRoute>} />

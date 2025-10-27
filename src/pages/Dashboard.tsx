@@ -17,7 +17,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { formatShortName } from '@/lib/utils';
 import { ProfileEditDialog } from '@/components/ProfileEditDialog';
 import { IdentityVerificationDialog } from '@/components/IdentityVerificationDialog';
-import { CreateBusinessProfileDialog } from '@/components/CreateBusinessProfileDialog';
+import { CreateProfileDialog } from '@/components/profile/CreateProfileDialog';
 import { FollowingSection } from '@/components/dashboard/FollowingSection';
 import {
   AlertDialog,
@@ -109,7 +109,7 @@ export default function Dashboard() {
   const [woorkoinsBalance, setWoorkoinsBalance] = useState(0);
   const [showProfileEdit, setShowProfileEdit] = useState(false);
   const [showVerificationDialog, setShowVerificationDialog] = useState(false);
-  const [showCreateBusinessDialog, setShowCreateBusinessDialog] = useState(false);
+  const [showCreateProfileDialog, setShowCreateProfileDialog] = useState(false);
   const [emailConfirmed, setEmailConfirmed] = useState(false);
   const [pendingInvitesCount, setPendingInvitesCount] = useState(0);
   const [profileCompleted, setProfileCompleted] = useState(() => {
@@ -1203,7 +1203,7 @@ export default function Dashboard() {
                     </div>
                     <h3 className="text-base font-bold text-slate-900">Perfis Profissionais</h3>
                   </div>
-                  <Button variant="outline" size="sm" className="text-xs h-7" onClick={() => setShowCreateBusinessDialog(true)}>
+                  <Button variant="outline" size="sm" className="text-xs h-7" onClick={() => setShowCreateProfileDialog(true)}>
                     + Criar Perfil
                   </Button>
                 </div>
@@ -1213,7 +1213,7 @@ export default function Dashboard() {
                   <div className="text-center py-6">
                     <Building2 className="w-12 h-12 text-slate-300 mx-auto mb-2" />
                     <p className="text-sm text-slate-600 mb-3">Você ainda não criou nenhum perfil profissional</p>
-                    <Button variant="default" size="sm" onClick={() => setShowCreateBusinessDialog(true)}>
+                    <Button variant="default" size="sm" onClick={() => setShowCreateProfileDialog(true)}>
                       Criar Primeiro Perfil
                     </Button>
                   </div>
@@ -1249,7 +1249,7 @@ export default function Dashboard() {
                               <Eye className="w-3.5 h-3.5" />
                             </Button>
                           </Link>
-                          <Link to={`/perfil/editar?businessId=${business.id}`}>
+                          <Link to={`/settings/profile/${business.id}`}>
                             <Button variant="default" size="sm" className="text-xs h-7 px-3">
                               <Settings className="w-3 h-3 mr-1" />
                               Gerenciar
@@ -1509,10 +1509,9 @@ export default function Dashboard() {
             registeredName={profile.full_name || ''}
             registeredCPF={profile.cpf || ''}
           />
-          <CreateBusinessProfileDialog
-            open={showCreateBusinessDialog}
-            onOpenChange={setShowCreateBusinessDialog}
-            onSuccess={() => profile && loadBusinessProfiles(profile.id)}
+          <CreateProfileDialog
+            open={showCreateProfileDialog}
+            onOpenChange={setShowCreateProfileDialog}
           />
         </>
       )}

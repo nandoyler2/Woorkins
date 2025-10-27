@@ -13,23 +13,26 @@ interface PortfolioItem {
   id: string;
   title: string;
   description?: string;
-  media_url: string;
-  media_type: string;
-  external_link?: string;
+  image_url?: string;
+  project_url?: string;
   order_index: number;
-  category?: string;
-  tags?: string[];
+  active: boolean;
 }
 
 interface GenericPortfolioManagerProps {
+  entityType: 'business' | 'user';
   entityId: string;
 }
 
-export function GenericPortfolioManager({ entityId }: GenericPortfolioManagerProps) {
+export function GenericPortfolioManager({ entityType, entityId }: GenericPortfolioManagerProps) {
   const [items, setItems] = useState<PortfolioItem[]>([]);
   const [editingItem, setEditingItem] = useState<Partial<PortfolioItem> | null>(null);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+
+  const tableName = entityType === 'business' ? 'business_portfolio_items' : 'user_portfolio_items';
+  const idColumn = entityType === 'business' ? 'business_id' : 'profile_id';
+  const storageBucket = entityType === 'business' ? 'business-media' : 'user-media';
 
   useEffect(() => {
     loadItems();
@@ -37,14 +40,14 @@ export function GenericPortfolioManager({ entityId }: GenericPortfolioManagerPro
 
   const loadItems = async () => {
     try {
-      const { data, error } = await supabase
-        .from("portfolio_items")
-        .select("*")
-        .eq("business_id", entityId)
-        .order("order_index", { ascending: true });
+      const query = entityType === 'business'
+        ? supabase.from('business_portfolio_items' as any).select("*").eq('business_id', entityId)
+        : supabase.from('user_portfolio_items' as any).select("*").eq('profile_id', entityId);
+      
+      const { data, error } = await query.order("order_index", { ascending: true });
 
       if (error) throw error;
-      setItems(data || []);
+      setItems(data as any || []);
     } catch (error: any) {
       toast({
         title: "Erro ao carregar portfólio",
@@ -66,30 +69,23 @@ export function GenericPortfolioManager({ entityId }: GenericPortfolioManagerPro
 
     setLoading(true);
     try {
-      const itemData = {
-        business_id: entityId,
-        title: editingItem.title,
-        description: editingItem.description || null,
-        media_url: editingItem.media_url || '',
-        media_type: editingItem.media_type || 'image',
-        external_link: editingItem.external_link || null,
-        order_index: editingItem.order_index ?? items.length,
-        category: editingItem.category || null,
-        tags: editingItem.tags || null
-      };
+      const itemData = entityType === 'business'
+        ? { business_id: entityId, title: editingItem.title, description: editingItem.description || null, image_url: editingItem.image_url || null, project_url: editingItem.project_url || null, order_index: editingItem.order_index ?? items.length, active: true }
+        : { profile_id: entityId, title: editingItem.title, description: editingItem.description || null, image_url: editingItem.image_url || null, project_url: editingItem.project_url || null, order_index: editingItem.order_index ?? items.length, active: true };
 
       if (editingItem.id) {
-        const { error } = await supabase
-          .from("portfolio_items")
-          .update(itemData)
-          .eq("id", editingItem.id);
+        const updateQuery = entityType === 'business'
+          ? supabase.from('business_portfolio_items' as any).update(itemData).eq("id", editingItem.id)
+          : supabase.from('user_portfolio_items' as any).update(itemData).eq("id", editingItem.id);
         
+        const { error } = await updateQuery;
         if (error) throw error;
       } else {
-        const { error } = await supabase
-          .from("portfolio_items")
-          .insert(itemData);
+        const insertQuery = entityType === 'business'
+          ? supabase.from('business_portfolio_items' as any).insert(itemData)
+          : supabase.from('user_portfolio_items' as any).insert(itemData);
         
+        const { error } = await insertQuery;
         if (error) throw error;
       }
 
@@ -115,10 +111,11 @@ export function GenericPortfolioManager({ entityId }: GenericPortfolioManagerPro
     if (!confirm("Deseja realmente remover este item?")) return;
 
     try {
-      const { error } = await supabase
-        .from("portfolio_items")
-        .delete()
-        .eq("id", id);
+      const deleteQuery = entityType === 'business'
+        ? supabase.from('business_portfolio_items' as any).delete().eq("id", id)
+        : supabase.from('user_portfolio_items' as any).delete().eq("id", id);
+      
+      const { error } = await deleteQuery;
 
       if (error) throw error;
 
@@ -168,11 +165,11 @@ export function GenericPortfolioManager({ entityId }: GenericPortfolioManagerPro
               <div>
                 <Label>Imagem do Projeto</Label>
                 <ImageUpload
-                  currentImageUrl={editingItem.media_url || null}
+                  currentImageUrl={editingItem.image_url || null}
                   onUpload={(url) =>
-                    setEditingItem({ ...editingItem, media_url: url, media_type: 'image' })
+                    setEditingItem({ ...editingItem, image_url: url })
                   }
-                  bucket="profile-photos"
+                  bucket={storageBucket}
                   folder={`${entityId}/portfolio`}
                   type="cover"
                 />
@@ -204,12 +201,12 @@ export function GenericPortfolioManager({ entityId }: GenericPortfolioManagerPro
               </div>
 
               <div>
-                <Label htmlFor="external_link">URL do Projeto (opcional)</Label>
+                <Label htmlFor="project_url">URL do Projeto (opcional)</Label>
                 <Input
-                  id="external_link"
-                  value={editingItem.external_link || ""}
+                  id="project_url"
+                  value={editingItem.project_url || ""}
                   onChange={(e) =>
-                    setEditingItem({ ...editingItem, external_link: e.target.value })
+                    setEditingItem({ ...editingItem, project_url: e.target.value })
                   }
                   placeholder="https://..."
                 />
@@ -241,9 +238,9 @@ export function GenericPortfolioManager({ entityId }: GenericPortfolioManagerPro
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {items.map((item) => (
             <Card key={item.id} className="overflow-hidden">
-              {item.media_url && (
+              {item.image_url && (
                 <img
-                  src={item.media_url}
+                  src={item.image_url}
                   alt={item.title}
                   className="w-full h-48 object-cover"
                 />
@@ -255,9 +252,9 @@ export function GenericPortfolioManager({ entityId }: GenericPortfolioManagerPro
                     {item.description}
                   </p>
                 )}
-                {item.external_link && (
+                {item.project_url && (
                   <a
-                    href={item.external_link}
+                    href={item.project_url}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-sm text-primary hover:underline mt-2 inline-block"

@@ -56,10 +56,9 @@ export default function BusinessAppointments() {
       
       // Get business by slug
       const { data: business, error: businessError } = await supabase
-        .from("profiles")
-        .select("id")
+        .from("business_profiles")
+        .select("id, profile_id")
         .eq("slug", slug)
-        .eq("profile_type", "business")
         .single();
 
       if (businessError) throw businessError;
@@ -82,7 +81,7 @@ export default function BusinessAppointments() {
           .eq("user_id", user.id)
           .single();
 
-        if (profile && profile.id === business.id) {
+        if (profile && profile.id === business.profile_id) {
           setIsOwner(true);
         }
       }
@@ -103,7 +102,7 @@ export default function BusinessAppointments() {
 
   const loadAppointments = async (bizId: string) => {
     const { data, error } = await supabase
-      .from("profile_appointments")
+      .from("business_appointments")
       .select(`
         *,
         profiles:client_profile_id (
@@ -111,7 +110,7 @@ export default function BusinessAppointments() {
           avatar_url
         )
       `)
-      .eq("target_profile_id", bizId)
+      .eq("business_id", bizId)
       .order("appointment_date", { ascending: true })
       .order("appointment_time", { ascending: true });
 
@@ -126,7 +125,7 @@ export default function BusinessAppointments() {
   const handleUpdateStatus = async (appointmentId: string, newStatus: string) => {
     try {
       const { error } = await supabase
-        .from("profile_appointments")
+        .from("business_appointments")
         .update({ status: newStatus })
         .eq("id", appointmentId);
 

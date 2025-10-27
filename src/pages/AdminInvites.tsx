@@ -65,17 +65,17 @@ export default function AdminInvites() {
 
     setLoading(true);
     const { data, error } = await supabase
-      .from('profile_admins')
+      .from('business_admins')
       .select(`
         id,
-        target_profile_id,
+        business_id,
         permissions,
         status,
         invited_at,
-        target_profile:profiles!profile_admins_target_profile_id_fkey (
-        company_name,
-        logo_url
-      )
+        business_profiles:business_id (
+          company_name,
+          logo_url
+        )
       `)
       .eq('profile_id', profileId)
       .order('invited_at', { ascending: false });
@@ -88,7 +88,7 @@ export default function AdminInvites() {
 
   const handleResponse = async (inviteId: string, status: 'accepted' | 'rejected') => {
     const { error } = await supabase
-      .from('profile_admins')
+      .from('business_admins')
       .update({
         status,
         responded_at: new Date().toISOString(),

@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { MapPin, Calendar, User as UserIcon, Star, Briefcase, MessageSquare, ThumbsUp, AlertCircle } from 'lucide-react';
 import { Footer } from '@/components/Footer';
 import { PublicWhatsAppWidget } from '@/components/generic/PublicWhatsAppWidget';
@@ -135,7 +134,6 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
   const [submittingResponse, setSubmittingResponse] = useState<{ [key: string]: boolean }>({});
   const [showImageViewer, setShowImageViewer] = useState(false);
   const [showFollowSuccess, setShowFollowSuccess] = useState(false);
-  const [showUnfollowConfirm, setShowUnfollowConfirm] = useState(false);
   const { isFollowing, loading: followLoading, toggleFollow } = useFollow(profile?.id || '');
   
   const handleTabChange = (value: string) => {
@@ -154,16 +152,6 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
   };
 
   const handleFollowClick = async () => {
-    console.log('handleFollowClick - isFollowing:', isFollowing);
-    // Se já está seguindo, pede confirmação
-    if (isFollowing) {
-      console.log('Mostrando confirmação de unfollow');
-      setShowUnfollowConfirm(true);
-      return;
-    }
-
-    console.log('Seguindo perfil');
-    // Se não está seguindo, segue diretamente
     if (requireAuth(async () => {
       const result = await toggleFollow();
       if (result === true) {
@@ -174,17 +162,6 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
       if (result === true) {
         setShowFollowSuccess(true);
       }
-    }
-  };
-
-  const handleUnfollowConfirm = async () => {
-    const result = await toggleFollow();
-    setShowUnfollowConfirm(false);
-    if (result === false) {
-      toast({
-        title: 'Deixou de seguir',
-        description: `Você não segue mais ${profile?.full_name || profile?.company_name}`,
-      });
     }
   };
 
@@ -231,10 +208,9 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
         ]);
       } else {
         const { data: profileData, error } = await supabase
-          .from('profiles')
+          .from('business_profiles')
           .select('*')
           .eq('id', id)
-          .eq('profile_type', 'business')
           .maybeSingle();
 
         if (error || !profileData) {
@@ -260,27 +236,8 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
     if (!slug) return;
 
     try {
-      // 1) Tenta como perfil profissional (business) pelo slug primeiro
-      const { data: businessData } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('slug', slug)
-        .eq('profile_type', 'business')
-        .maybeSingle();
-
-      if (businessData) {
-        setProfileType('business');
-        setProfile(businessData as unknown as UserProfileData);
-        await Promise.all([
-          loadPosts(businessData.id, 'business'),
-          loadEvaluations(businessData.id),
-          checkContent(businessData.id, 'business')
-        ]);
-        return;
-      }
-
-      // 2) Se não encontrou, tenta carregar como usuário (username)
-      const { data: profileData } = await supabase
+      // Tenta carregar como usuário primeiro
+      const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('username', slug)
@@ -296,7 +253,24 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
           checkContent(profileData.id, 'user')
         ]);
       } else {
-        toast({ title: 'Erro', description: 'Perfil não encontrado', variant: 'destructive' });
+        // Tenta como perfil profissional
+        const { data: businessData, error: businessError } = await supabase
+          .from('business_profiles')
+          .select('*')
+          .eq('slug', slug)
+          .maybeSingle();
+
+        if (businessData) {
+          setProfileType('business');
+          setProfile(businessData as unknown as UserProfileData);
+          await Promise.all([
+            loadPosts(businessData.id, 'business'),
+            loadEvaluations(businessData.id),
+            checkContent(businessData.id, 'business')
+          ]);
+        } else {
+          toast({ title: 'Erro', description: 'Perfil não encontrado', variant: 'destructive' });
+        }
       }
     } catch (error) {
       console.error('Error loading user profile:', error);
@@ -393,10 +367,17 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
   const loadEvaluations = async (profileId: string) => {
     try {
       const { data: evaluationsData } = await supabase
-      .from('evaluations')
-      .select('*,author_profile:profiles!evaluations_author_profile_id_fkey(id,name,avatar_url,logo_url)')
-      .eq('target_profile_id', profileId)
-        .order('created_at', { ascending: false});
+        .from('evaluations')
+        .select(`
+          *,
+          profiles:user_id (
+            full_name,
+            avatar_url,
+            username
+          )
+        `)
+        .eq('business_id', profileId)
+        .order('created_at', { ascending: false });
 
       if (evaluationsData) {
         const evals = evaluationsData as unknown as Evaluation[];
@@ -515,8 +496,6 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
             className="w-full h-full"
             iconPosition="top"
             currentCoverPosition={profile.cover_position || 50}
-            entityType={profileType}
-            profileId={profile.id}
           >
             <div className="w-full h-full relative overflow-hidden">
               {profile.cover_url ? (
@@ -563,23 +542,21 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
                     <div className="-mt-20 flex flex-col items-center gap-3">
                       {isProfileOwner ? (
                         <InlinePhotoUpload
-                          currentPhotoUrl={(profileType === 'business' ? profile.logo_url : profile.avatar_url) || undefined}
+                          currentPhotoUrl={profile.avatar_url || undefined}
                           userId={user!.id}
-                          userName={profileType === 'business' ? (profile.company_name || '') : profile.username}
+                          userName={profile.username}
                           onPhotoUpdated={loadUserProfile}
                           type="avatar"
                           className="w-36 h-36 rounded-full"
-                          entityType={profileType}
-                          profileId={profile.id}
                         >
                           <div 
                             className="cursor-pointer"
-                            onClick={() => (profileType === 'business' ? profile.logo_url : profile.avatar_url) && setShowImageViewer(true)}
+                            onClick={() => profile.avatar_url && setShowImageViewer(true)}
                           >
-                            {(profileType === 'business' ? profile.logo_url : profile.avatar_url) ? (
+                            {profile.avatar_url ? (
                               <SafeImage
-                                src={profileType === 'business' ? profile.logo_url! : profile.avatar_url!}
-                                alt={profileType === 'business' ? (profile.company_name || 'Logo') : formatFullName(profile.full_name)}
+                                src={profile.avatar_url}
+                                alt={formatFullName(profile.full_name)}
                                 className="w-36 h-36 rounded-full object-cover bg-card border-4 border-background shadow-lg"
                               />
                             ) : (
@@ -592,12 +569,12 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
                       ) : (
                         <div 
                           className="cursor-pointer"
-                          onClick={() => (profileType === 'business' ? profile.logo_url : profile.avatar_url) && setShowImageViewer(true)}
+                          onClick={() => profile.avatar_url && setShowImageViewer(true)}
                         >
-                          {(profileType === 'business' ? profile.logo_url : profile.avatar_url) ? (
+                          {profile.avatar_url ? (
                             <SafeImage
-                              src={profileType === 'business' ? profile.logo_url! : profile.avatar_url!}
-                              alt={profileType === 'business' ? (profile.company_name || 'Logo') : formatFullName(profile.full_name)}
+                              src={profile.avatar_url}
+                              alt={formatFullName(profile.full_name)}
                               className="w-36 h-36 rounded-full object-cover bg-card border-4 border-background shadow-lg"
                             />
                           ) : (
@@ -620,63 +597,39 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
                       )}
                     </div>
 
-                    {/* User/Business Info */}
+                    {/* User Info */}
                     <div className="flex-1 space-y-3">
                       <div>
                         <div className="flex items-center gap-2 mb-1">
-                          <h1 className="text-3xl font-bold">
-                            {profileType === 'business' ? profile.company_name : formatFullName(profile.full_name)}
-                          </h1>
+                          <h1 className="text-3xl font-bold">{formatFullName(profile.full_name)}</h1>
                           {profile.verified && (
                             <Badge variant="default" className="text-xs">
                               ✓ Verificado
                             </Badge>
                           )}
                         </div>
-                        <p className="text-muted-foreground mb-2">
-                          @{profileType === 'business' ? profile.slug : profile.username}
-                        </p>
-                        {(profileType === 'business' ? profile.description : profile.bio) && (
-                          <p className="text-sm text-muted-foreground leading-relaxed">
-                            {profileType === 'business' ? profile.description : profile.bio}
-                          </p>
+                        <p className="text-muted-foreground mb-2">@{profile.username}</p>
+                        {profile.bio && (
+                          <p className="text-sm text-muted-foreground leading-relaxed">{profile.bio}</p>
                         )}
                       </div>
 
                       {/* ELEMENTOS EXCLUSIVOS DO USUÁRIO - Badge de membro e nível */}
-                      {profileType === 'user' && (
-                        <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-                          {profile.location && (
-                            <div className="flex items-center gap-1">
-                              <MapPin className="w-4 h-4" />
-                              <span>{profile.location}</span>
-                            </div>
-                          )}
+                      <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+                        {profile.location && (
                           <div className="flex items-center gap-1">
-                            <Calendar className="w-4 h-4" />
-                            <span>Membro desde {new Date(profile.created_at).toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' })}</span>
+                            <MapPin className="w-4 h-4" />
+                            <span>{profile.location}</span>
                           </div>
-                          <Badge variant="outline" className={`${trustLevel.color} text-white border-0`}>
-                            {trustLevel.label}
-                          </Badge>
+                        )}
+                        <div className="flex items-center gap-1">
+                          <Calendar className="w-4 h-4" />
+                          <span>Membro desde {new Date(profile.created_at).toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' })}</span>
                         </div>
-                      )}
-
-                      {/* ELEMENTOS DO BUSINESS */}
-                      {profileType === 'business' && (
-                        <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-                          {profile.location && (
-                            <div className="flex items-center gap-1">
-                              <MapPin className="w-4 h-4" />
-                              <span>{profile.location}</span>
-                            </div>
-                          )}
-                          <div className="flex items-center gap-1">
-                            <Calendar className="w-4 h-4" />
-                            <span>Criado em {new Date(profile.created_at).toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' })}</span>
-                          </div>
-                        </div>
-                      )}
+                        <Badge variant="outline" className={`${trustLevel.color} text-white border-0`}>
+                          {trustLevel.label}
+                        </Badge>
+                      </div>
 
                       <PublicNegotiation 
                         entityType={profileType}
@@ -1345,25 +1298,6 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
           profileType="user"
         />
       )}
-
-      {/* Unfollow Confirmation Dialog */}
-      <AlertDialog open={showUnfollowConfirm} onOpenChange={setShowUnfollowConfirm}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Deixar de seguir?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Tem certeza que deseja deixar de seguir {profile?.full_name || profile?.company_name}? 
-              Você não receberá mais notificações sobre as atualizações deste perfil.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleUnfollowConfirm}>
-              Deixar de seguir
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }

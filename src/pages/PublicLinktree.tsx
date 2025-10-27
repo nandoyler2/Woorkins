@@ -117,19 +117,21 @@ export default function PublicLinktree() {
     try {
       const cleanSlug = decodeURIComponent(slug || '').replace(/^@/, '').trim();
 
-      // 1) Buscar por slug
+      // 1) Buscar por linktree_slug (case-insensitive)
       let { data: profile } = await supabase
-      .from('profiles')
-      .select('name, slug, logo_url, avatar_url, id')
-      .eq('slug', cleanSlug)
+        .from('business_profiles')
+        .select('company_name, slug, logo_url, linktree_config, linktree_social_links, linktree_logo_url, id')
+        .ilike('linktree_slug', cleanSlug)
+        .or('deleted.is.null,deleted.eq.false')
         .maybeSingle();
 
-      // 2) Se não encontrar, tentar por username
+      // 2) Se não encontrar, tentar pelo slug público do perfil
       if (!profile) {
         const { data: fallback } = await supabase
-        .from('profiles')
-        .select('name, slug, username, logo_url, avatar_url, id')
-        .eq('username', cleanSlug)
+          .from('business_profiles')
+          .select('company_name, slug, logo_url, linktree_config, linktree_social_links, linktree_logo_url, id')
+          .ilike('slug', cleanSlug)
+          .or('deleted.is.null,deleted.eq.false')
           .maybeSingle();
         profile = fallback as any;
       }
@@ -143,9 +145,9 @@ export default function PublicLinktree() {
       setBusiness(profile as unknown as BusinessProfile);
 
       const { data: linksData } = await supabase
-        .from('profile_custom_links')
+        .from('business_custom_links')
         .select('*')
-        .eq('target_profile_id', (profile as any).id)
+        .eq('business_id', (profile as any).id)
         .eq('active', true)
         .order('order_index');
 

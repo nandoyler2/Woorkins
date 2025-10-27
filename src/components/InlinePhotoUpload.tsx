@@ -16,8 +16,6 @@ interface InlinePhotoUploadProps {
   className?: string;
   iconPosition?: 'top' | 'bottom';
   currentCoverPosition?: number;
-  entityType?: 'user' | 'business';
-  profileId: string;
 }
 
 export function InlinePhotoUpload({ 
@@ -29,9 +27,7 @@ export function InlinePhotoUpload({
   children,
   className = '',
   iconPosition = 'bottom',
-  currentCoverPosition = 50,
-  entityType = 'user',
-  profileId
+  currentCoverPosition = 50
 }: InlinePhotoUploadProps) {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -94,7 +90,7 @@ export function InlinePhotoUpload({
       const compressedBlob = await compressImage(originalFile);
       const compressedFile = new File([compressedBlob], originalFile.name, { type: 'image/jpeg' });
       const fileName = `${userId}-${Date.now()}.jpg`;
-      const bucketName = entityType === 'business' ? 'business-covers' : 'user-covers';
+      const bucketName = 'user-covers';
       const filePath = `${userId}/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
@@ -140,7 +136,7 @@ export function InlinePhotoUpload({
           cover_url: publicUrl,
           cover_position: Math.round(coverPosition)
         })
-        .eq('id', profileId);
+        .eq('user_id', userId);
 
       if (updateError) throw updateError;
 
@@ -194,10 +190,7 @@ export function InlinePhotoUpload({
       const compressedBlob = await compressImage(file);
       const compressedFile = new File([compressedBlob], file.name, { type: 'image/jpeg' });
       const fileName = `${userId}-${Date.now()}.jpg`;
-      // Determine bucket based on entity type and photo type
-      const bucketName = entityType === 'business' 
-        ? (type === 'avatar' ? 'business-logos' : 'business-covers')
-        : (type === 'avatar' ? 'avatars' : 'user-covers');
+      const bucketName = type === 'avatar' ? 'avatars' : 'user-covers';
       // Use a path that includes the user's id as the first folder to satisfy RLS policies
       const filePath = `${userId}/${fileName}`;
 
@@ -240,14 +233,11 @@ export function InlinePhotoUpload({
         return;
       }
 
-      // Determine column based on entity type and photo type
-      const column = entityType === 'business'
-        ? (type === 'avatar' ? 'logo_url' : 'cover_url')
-        : (type === 'avatar' ? 'avatar_url' : 'cover_url');
+      const column = type === 'avatar' ? 'avatar_url' : 'cover_url';
       const { error: updateError } = await supabase
         .from('profiles')
         .update({ [column]: publicUrl })
-        .eq('id', profileId);
+        .eq('user_id', userId);
 
       if (updateError) throw updateError;
 
@@ -327,7 +317,7 @@ export function InlinePhotoUpload({
       const compressedBlob = await compressImage(file);
       const compressedFile = new File([compressedBlob], file.name, { type: 'image/jpeg' });
       const fileName = `${userId}-${Date.now()}.jpg`;
-      const bucketName = entityType === 'business' ? 'business-covers' : 'user-covers';
+      const bucketName = 'user-covers';
       const filePath = `${userId}/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
@@ -373,7 +363,7 @@ export function InlinePhotoUpload({
           cover_url: publicUrl,
           cover_position: 50
         })
-        .eq('id', profileId);
+        .eq('user_id', userId);
 
       if (updateError) throw updateError;
 
@@ -422,7 +412,7 @@ export function InlinePhotoUpload({
       const { error: updateError } = await supabase
         .from('profiles')
         .update({ cover_position: Math.round(coverPosition) })
-        .eq('id', profileId);
+        .eq('user_id', userId);
 
       if (updateError) throw updateError;
 

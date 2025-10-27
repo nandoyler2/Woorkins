@@ -68,9 +68,9 @@ export function AppointmentBookingDialog({
 
   const loadAvailability = async () => {
     const { data } = await supabase
-      .from("profile_availability")
+      .from("business_availability")
       .select("*")
-      .eq("target_profile_id", businessId)
+      .eq("business_id", businessId)
       .eq("active", true)
       .order("day_of_week");
 
@@ -118,8 +118,8 @@ export function AppointmentBookingDialog({
 
     setLoading(true);
     try {
-      const { error } = await supabase.from("profile_appointments").insert({
-        target_profile_id: businessId,
+      const { error } = await supabase.from("business_appointments").insert({
+        business_id: businessId,
         client_profile_id: clientProfileId,
         appointment_date: format(date, "yyyy-MM-dd"),
         appointment_time: selectedTime,

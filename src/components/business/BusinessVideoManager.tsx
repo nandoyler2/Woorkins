@@ -32,9 +32,9 @@ export function BusinessVideoManager({ businessId }: BusinessVideoManagerProps) 
   const loadVideo = async () => {
     try {
       const { data, error } = await supabase
-        .from("profile_videos")
+        .from("business_videos")
         .select("*")
-        .eq("target_profile_id", businessId)
+        .eq("business_id", businessId)
         .eq("active", true)
         .maybeSingle();
 
@@ -83,7 +83,7 @@ export function BusinessVideoManager({ businessId }: BusinessVideoManagerProps) 
     try {
       if (video) {
         const { error } = await supabase
-          .from("profile_videos")
+          .from("business_videos")
           .update({
             youtube_url: youtubeUrl,
             title: title || null,
@@ -93,9 +93,9 @@ export function BusinessVideoManager({ businessId }: BusinessVideoManagerProps) 
         if (error) throw error;
       } else {
         const { error } = await supabase
-          .from("profile_videos")
+          .from("business_videos")
           .insert({
-            target_profile_id: businessId,
+            business_id: businessId,
             youtube_url: youtubeUrl,
             title: title || null,
             active: true,
@@ -124,7 +124,7 @@ export function BusinessVideoManager({ businessId }: BusinessVideoManagerProps) 
 
     try {
       const { error } = await supabase
-        .from("profile_videos")
+        .from("business_videos")
         .delete()
         .eq("id", video.id);
 

@@ -13,26 +13,30 @@ interface VideoData {
 }
 
 interface UnifiedVideoManagerProps {
-  profileId: string;
+  entityType: 'business' | 'user';
+  entityId: string;
 }
 
-export function UnifiedVideoManager({ profileId }: UnifiedVideoManagerProps) {
+export function UnifiedVideoManager({ entityType, entityId }: UnifiedVideoManagerProps) {
   const [video, setVideo] = useState<VideoData | null>(null);
   const [youtubeUrl, setYoutubeUrl] = useState("");
   const [title, setTitle] = useState("");
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
+  const tableName = entityType === 'business' ? 'business_videos' : 'user_videos';
+  const idColumn = entityType === 'business' ? 'business_id' : 'user_id';
+
   useEffect(() => {
     loadVideo();
-  }, [profileId]);
+  }, [entityId]);
 
   const loadVideo = async () => {
     try {
       const { data, error } = await supabase
-        .from('profile_videos')
+        .from(tableName as any)
         .select('*')
-        .eq('target_profile_id', profileId)
+        .eq(idColumn, entityId)
         .eq('active', true)
         .single();
 
@@ -75,20 +79,20 @@ export function UnifiedVideoManager({ profileId }: UnifiedVideoManagerProps) {
       const videoData = {
         youtube_url: youtubeUrl,
         title: title || null,
-        target_profile_id: profileId,
+        [idColumn]: entityId,
         active: true,
       };
 
       if (video?.id) {
         const { error } = await supabase
-          .from('profile_videos')
+          .from(tableName as any)
           .update(videoData)
           .eq('id', video.id);
 
         if (error) throw error;
       } else {
         const { error } = await supabase
-          .from('profile_videos')
+          .from(tableName as any)
           .insert([videoData]);
 
         if (error) throw error;
@@ -116,7 +120,7 @@ export function UnifiedVideoManager({ profileId }: UnifiedVideoManagerProps) {
 
     try {
       const { error } = await supabase
-        .from('profile_videos')
+        .from(tableName as any)
         .delete()
         .eq('id', video.id);
 

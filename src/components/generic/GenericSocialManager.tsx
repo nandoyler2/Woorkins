@@ -17,25 +17,28 @@ interface SocialLinks {
 }
 
 interface GenericSocialManagerProps {
-  profileId: string;
+  entityType: 'business' | 'user';
+  entityId: string;
 }
 
-export function GenericSocialManager({ profileId }: GenericSocialManagerProps) {
+export function GenericSocialManager({ entityType, entityId }: GenericSocialManagerProps) {
   const [socialLinks, setSocialLinks] = useState<SocialLinks>({});
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
+  const tableName = entityType === 'business' ? 'business_profiles' : 'profiles';
+
   useEffect(() => {
     loadSocialLinks();
-  }, [profileId]);
+  }, [entityId]);
 
   const loadSocialLinks = async () => {
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select("facebook, instagram, twitter, linkedin, whatsapp, website_url")
-        .eq("id", profileId)
-        .single();
+      const selectQuery = entityType === 'business'
+        ? supabase.from('business_profiles').select("facebook, instagram, twitter, linkedin, whatsapp, website_url").eq("id", entityId).single()
+        : supabase.from('profiles').select("facebook, instagram, twitter, linkedin, whatsapp, website_url").eq("id", entityId).single();
+      
+      const { data, error } = await selectQuery;
 
       if (error) throw error;
 
@@ -69,9 +72,9 @@ export function GenericSocialManager({ profileId }: GenericSocialManagerProps) {
       };
 
       const { error } = await supabase
-        .from('profiles')
+        .from(tableName as any)
         .update(updateData as any)
-        .eq("id", profileId);
+        .eq("id", entityId);
 
       if (error) throw error;
 

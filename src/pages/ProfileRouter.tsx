@@ -15,26 +15,11 @@ export default function ProfileRouter() {
         return;
       }
 
-      // Primeiro verifica se é um slug de perfil profissional (business)
-      const { data: businessData } = await supabase
-        .from('profiles')
-        .select('id, slug')
-        .eq('slug', slug)
-        .eq('profile_type', 'business')
-        .maybeSingle();
-
-      if (businessData) {
-        setProfileType('business');
-        setProfileId(businessData.id);
-        return;
-      }
-
-      // Se não for business, verifica se é um username de usuário pessoal
+      // Primeiro verifica se é um username de usuário
       const { data: userData } = await supabase
         .from('profiles')
         .select('id, username')
         .eq('username', slug)
-        .eq('profile_type', 'user')
         .maybeSingle();
 
       if (userData) {
@@ -43,21 +28,20 @@ export default function ProfileRouter() {
         return;
       }
 
-      // Fallback: verificar se existe business com esse username (legacy)
-      const { data: legacyBusinessData } = await supabase
-        .from('profiles')
-        .select('id, username, slug')
-        .eq('username', slug)
-        .eq('profile_type', 'business')
+      // Se não for usuário, verifica se é um slug de empresa
+      const { data: businessData } = await supabase
+        .from('business_profiles')
+        .select('id, slug')
+        .eq('slug', slug)
         .maybeSingle();
-        
-      if (legacyBusinessData?.slug) {
-        // Redirecionar para o slug correto do business
-        window.location.replace(`/${legacyBusinessData.slug}`);
+
+      if (businessData) {
+        setProfileType('business');
+        setProfileId(businessData.id);
         return;
       }
 
-      // Não encontrou nem perfil profissional nem usuário
+      // Não encontrou nem usuário nem empresa
       setProfileType('notfound');
     };
 

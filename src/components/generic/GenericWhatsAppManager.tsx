@@ -23,10 +23,11 @@ interface WhatsAppConfig {
 }
 
 interface GenericWhatsAppManagerProps {
-  profileId: string;
+  entityType: 'business' | 'user';
+  entityId: string;
 }
 
-export const GenericWhatsAppManager = ({ profileId }: GenericWhatsAppManagerProps) => {
+export const GenericWhatsAppManager = ({ entityType, entityId }: GenericWhatsAppManagerProps) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [config, setConfig] = useState<WhatsAppConfig>({
@@ -38,16 +39,17 @@ export const GenericWhatsAppManager = ({ profileId }: GenericWhatsAppManagerProp
 
   useEffect(() => {
     loadConfig();
-  }, [profileId]);
+  }, [entityId]);
 
   const loadConfig = async () => {
     try {
       setLoading(true);
       
+      const tableName = entityType === 'business' ? 'business_whatsapp_config' : 'user_whatsapp_config';
       const { data, error } = await supabase
-        .from('profile_whatsapp_config')
+        .from(tableName as any)
         .select('*')
-        .eq('target_profile_id', profileId)
+        .eq(`${entityType}_id`, entityId)
         .single();
 
       if (error && error.code !== 'PGRST116') {
@@ -129,16 +131,19 @@ export const GenericWhatsAppManager = ({ profileId }: GenericWhatsAppManagerProp
         return;
       }
 
+      const tableName = entityType === 'business' ? 'business_whatsapp_config' : 'user_whatsapp_config';
+      const columnName = `${entityType}_id`;
+
       const { error: saveError } = await supabase
-        .from('profile_whatsapp_config')
+        .from(tableName as any)
         .upsert({
-          target_profile_id: profileId,
+          [columnName]: entityId,
           phone: formatted,
           welcome_message: config.welcome_message,
           auto_open: config.auto_open,
           questions: config.questions
         } as any, {
-          onConflict: 'target_profile_id'
+          onConflict: columnName
         });
 
       if (saveError) throw saveError;

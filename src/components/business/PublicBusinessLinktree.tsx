@@ -28,9 +28,9 @@ export function PublicBusinessLinktree({ businessId }: PublicBusinessLinktreePro
   const loadLinks = async () => {
     // Check if feature is active
     const { data: featureData } = await supabase
-      .from("profile_features")
+      .from("business_profile_features")
       .select("is_active")
-      .eq("profile_id", businessId)
+      .eq("business_id", businessId)
       .eq("feature_key", "linktree")
       .maybeSingle();
 
@@ -39,9 +39,9 @@ export function PublicBusinessLinktree({ businessId }: PublicBusinessLinktreePro
 
     // Load custom links
     const { data } = await supabase
-      .from("profile_custom_links")
+      .from("business_custom_links")
       .select("*")
-      .eq("target_profile_id", businessId)
+      .eq("business_id", businessId)
       .eq("active", true)
       .order("order_index");
 

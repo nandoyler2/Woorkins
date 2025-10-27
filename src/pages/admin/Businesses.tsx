@@ -28,18 +28,18 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface Business {
   id: string;
-  name?: string;
-  company_name?: string;
+  company_name: string;
   category: string | null;
   average_rating: number;
   total_reviews: number;
   active: boolean;
   slug: string | null;
-  deleted?: boolean;
+  deleted: boolean;
   deleted_at: string | null;
-  profile_type?: string;
-  user_id?: string;
-  full_name?: string;
+  profiles: {
+    full_name: string | null;
+    id: string;
+  };
 }
 
 interface Profile {
@@ -65,9 +65,11 @@ export default function AdminBusinesses() {
   const loadBusinesses = async () => {
     try {
       const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('profile_type', 'business')
+        .from('business_profiles')
+        .select(`
+          *,
+          profiles(id, full_name)
+        `)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -105,7 +107,7 @@ export default function AdminBusinesses() {
   const toggleVerification = async (businessId: string, currentStatus: boolean) => {
     try {
       const { error } = await supabase
-        .from('profiles')
+        .from('business_profiles')
         .update({ active: !currentStatus })
         .eq('id', businessId);
 
@@ -131,12 +133,12 @@ export default function AdminBusinesses() {
 
     try {
       const { error } = await supabase
-        .from('profiles')
+        .from('business_profiles')
         .update({
           deleted: false,
           deleted_at: null,
           deleted_by: null,
-          profile_id: selectedProfileId || selectedBusiness.user_id,
+          profile_id: selectedProfileId || selectedBusiness.profiles.id,
         })
         .eq('id', selectedBusiness.id);
 
@@ -181,10 +183,9 @@ export default function AdminBusinesses() {
 
       // Contar perfis profissionais existentes do usuário
       const { count: businessCount, error: countError } = await supabase
-        .from('profiles')
+        .from('business_profiles')
         .select('*', { count: 'exact', head: true })
-        .eq('user_id', selectedProfileId)
-        .eq('profile_type', 'business');
+        .eq('profile_id', selectedProfileId);
 
       if (countError) throw countError;
 
@@ -213,8 +214,8 @@ export default function AdminBusinesses() {
       }
 
       const { error } = await supabase
-        .from('profiles')
-        .update({ user_id: selectedProfileId })
+        .from('business_profiles')
+        .update({ profile_id: selectedProfileId })
         .eq('id', selectedBusiness.id);
 
       if (error) throw error;
@@ -262,7 +263,7 @@ export default function AdminBusinesses() {
     try {
       // Exclusão permanente do banco de dados
       const { error } = await supabase
-        .from('profiles')
+        .from('business_profiles')
         .delete()
         .eq('id', selectedBusiness.id);
 
@@ -317,9 +318,9 @@ export default function AdminBusinesses() {
             <TableCell>
               <div>
                 <div className="font-medium">{business.company_name}</div>
-                {business.full_name && (
+                {business.profiles?.full_name && (
                   <div className="text-sm text-muted-foreground">
-                    Proprietário: {business.full_name}
+                    Proprietário: {business.profiles.full_name}
                   </div>
                 )}
               </div>
@@ -354,7 +355,7 @@ export default function AdminBusinesses() {
                       size="sm"
                       onClick={() => {
                         setSelectedBusiness(business);
-                        setSelectedProfileId(business.user_id || '');
+                        setSelectedProfileId(business.profiles.id);
                         setShowRestoreDialog(true);
                       }}
                       title="Restaurar perfil"
@@ -460,7 +461,7 @@ export default function AdminBusinesses() {
             <div className="space-y-2">
               <Label>Usuário original</Label>
               <p className="text-sm text-muted-foreground">
-                {selectedBusiness?.full_name}
+                {selectedBusiness?.profiles?.full_name}
               </p>
             </div>
             <div className="space-y-2">
@@ -588,7 +589,7 @@ export default function AdminBusinesses() {
             <div className="space-y-2">
               <Label>Proprietário atual</Label>
               <p className="text-sm text-muted-foreground">
-                {selectedBusiness?.full_name}
+                {selectedBusiness?.profiles?.full_name}
               </p>
             </div>
             <div className="space-y-2">

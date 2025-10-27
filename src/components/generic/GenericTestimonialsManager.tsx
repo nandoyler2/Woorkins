@@ -23,10 +23,11 @@ interface Testimonial {
 }
 
 interface GenericTestimonialsManagerProps {
-  profileId: string;
+  entityType: 'business' | 'user';
+  entityId: string;
 }
 
-export function GenericTestimonialsManager({ profileId }: GenericTestimonialsManagerProps) {
+export function GenericTestimonialsManager({ entityType, entityId }: GenericTestimonialsManagerProps) {
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [editingItem, setEditingItem] = useState<Partial<Testimonial> | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -36,16 +37,20 @@ export function GenericTestimonialsManager({ profileId }: GenericTestimonialsMan
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const { toast } = useToast();
 
+  const tableName = entityType === 'business' ? 'business_testimonials' : 'user_testimonials';
+  const idColumn = entityType === 'business' ? 'business_id' : 'profile_id';
+  const storageBucket = entityType === 'business' ? 'business-media' : 'user-media';
+
   useEffect(() => {
     loadTestimonials();
-  }, [profileId]);
+  }, [entityId]);
 
   const loadTestimonials = async () => {
     try {
       const { data, error } = await supabase
-        .from('profile_testimonials')
+        .from(tableName as any)
         .select("*")
-        .eq('target_profile_id', profileId)
+        .eq(idColumn, entityId)
         .order("order_index", { ascending: true });
 
       if (error) throw error;
@@ -116,16 +121,16 @@ export function GenericTestimonialsManager({ profileId }: GenericTestimonialsMan
       // Upload to Supabase
       const fileExt = 'jpg';
       const fileName = `${crypto.randomUUID()}.${fileExt}`;
-      const filePath = `${profileId}/testimonials/${fileName}`;
+      const filePath = `${entityId}/testimonials/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
-        .from('profile-photos')
+        .from(storageBucket)
         .upload(filePath, blob);
 
       if (uploadError) throw uploadError;
 
       const { data: { publicUrl } } = supabase.storage
-        .from('profile-photos')
+        .from(storageBucket)
         .getPublicUrl(filePath);
 
       setEditingItem({ ...editingItem, client_photo_url: publicUrl });
@@ -159,7 +164,7 @@ export function GenericTestimonialsManager({ profileId }: GenericTestimonialsMan
 
     try {
       const itemData = {
-        target_profile_id: profileId,
+        [idColumn]: entityId,
         client_name: editingItem.client_name,
         client_photo_url: editingItem.client_photo_url || null,
         content: editingItem.content,
@@ -170,14 +175,14 @@ export function GenericTestimonialsManager({ profileId }: GenericTestimonialsMan
 
       if (editingItem.id) {
         const { error } = await supabase
-          .from('profile_testimonials')
+          .from(tableName as any)
           .update(itemData)
           .eq("id", editingItem.id);
 
         if (error) throw error;
       } else {
         const { error } = await supabase
-          .from('profile_testimonials')
+          .from(tableName as any)
           .insert(itemData);
 
         if (error) throw error;
@@ -205,7 +210,7 @@ export function GenericTestimonialsManager({ profileId }: GenericTestimonialsMan
 
     try {
       const { error } = await supabase
-        .from('profile_testimonials')
+        .from(tableName as any)
         .delete()
         .eq("id", id);
 

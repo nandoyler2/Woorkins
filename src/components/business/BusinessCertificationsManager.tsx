@@ -37,9 +37,9 @@ export function BusinessCertificationsManager({ businessId }: BusinessCertificat
   const loadCertifications = async () => {
     try {
       const { data, error } = await supabase
-        .from("profile_certifications")
+        .from("business_certifications")
         .select("*")
-        .eq("target_profile_id", businessId)
+        .eq("business_id", businessId)
         .order("order_index");
 
       if (error) throw error;
@@ -67,7 +67,7 @@ export function BusinessCertificationsManager({ businessId }: BusinessCertificat
     try {
       if (editingCert.id) {
         const { error } = await supabase
-          .from("profile_certifications")
+          .from("business_certifications")
           .update({
             title: editingCert.title,
             description: editingCert.description,
@@ -81,9 +81,9 @@ export function BusinessCertificationsManager({ businessId }: BusinessCertificat
         if (error) throw error;
       } else {
         const { error } = await supabase
-          .from("profile_certifications")
+          .from("business_certifications")
           .insert({
-            target_profile_id: businessId,
+            business_id: businessId,
             title: editingCert.title,
             description: editingCert.description,
             issued_by: editingCert.issued_by,
@@ -115,7 +115,7 @@ export function BusinessCertificationsManager({ businessId }: BusinessCertificat
   const handleDeleteCertification = async (id: string) => {
     try {
       const { error } = await supabase
-        .from("profile_certifications")
+        .from("business_certifications")
         .delete()
         .eq("id", id);
 

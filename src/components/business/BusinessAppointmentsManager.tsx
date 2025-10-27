@@ -48,7 +48,7 @@ export function BusinessAppointmentsManager({ businessId }: BusinessAppointments
 
   const loadBusinessSlug = async () => {
     const { data } = await supabase
-      .from("profiles")
+      .from("business_profiles")
       .select("slug")
       .eq("id", businessId)
       .single();
@@ -61,9 +61,9 @@ export function BusinessAppointmentsManager({ businessId }: BusinessAppointments
   const loadAvailabilities = async () => {
     try {
       const { data, error } = await supabase
-        .from("profile_availability")
+        .from("business_availability")
         .select("*")
-        .eq("target_profile_id", businessId)
+        .eq("business_id", businessId)
         .order("day_of_week");
 
       if (error) throw error;
@@ -86,7 +86,7 @@ export function BusinessAppointmentsManager({ businessId }: BusinessAppointments
 
       if (existing) {
         const { error } = await supabase
-          .from("profile_availability")
+          .from("business_availability")
           .update({
             start_time: startTime,
             end_time: endTime,
@@ -97,9 +97,9 @@ export function BusinessAppointmentsManager({ businessId }: BusinessAppointments
         if (error) throw error;
       } else {
         const { error } = await supabase
-          .from("profile_availability")
+          .from("business_availability")
           .insert({
-            target_profile_id: businessId,
+            business_id: businessId,
             day_of_week: editingDay,
             start_time: startTime,
             end_time: endTime,
@@ -128,7 +128,7 @@ export function BusinessAppointmentsManager({ businessId }: BusinessAppointments
   const handleToggleDay = async (id: string, active: boolean) => {
     try {
       const { error } = await supabase
-        .from("profile_availability")
+        .from("business_availability")
         .update({ active: !active })
         .eq("id", id);
 
@@ -146,7 +146,7 @@ export function BusinessAppointmentsManager({ businessId }: BusinessAppointments
   const handleDeleteAvailability = async (id: string) => {
     try {
       const { error } = await supabase
-        .from("profile_availability")
+        .from("business_availability")
         .delete()
         .eq("id", id);
 

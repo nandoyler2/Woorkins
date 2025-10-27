@@ -340,10 +340,10 @@ export default function ProfileEdit() {
     
     // Carregar lista de perfis de negócio do usuário
     const { data: businesses } = await supabase
-      .from('profiles')
+      .from('business_profiles')
       .select('id, company_name, slug')
-      .eq('user_id', user?.id)
-      .eq('profile_type', 'business');
+      .eq('profile_id', data.id)
+      .or('deleted.is.null,deleted.eq.false');
     
     if (businesses) {
       setBusinessProfiles(businesses);
@@ -371,11 +371,10 @@ export default function ProfileEdit() {
     }
 
     const { data, error } = await supabase
-      .from('profiles')
+      .from('business_profiles')
       .select('*')
       .eq('id', id)
-      .eq('profile_type', 'business')
-      .eq('user_id', user?.id)
+      .eq('profile_id', userProfile.id)
       .maybeSingle();
 
     if (error || !data) {
@@ -394,10 +393,10 @@ export default function ProfileEdit() {
     
     // Carregar lista de perfis de negócio do usuário
     const { data: businesses } = await supabase
-      .from('profiles')
+      .from('business_profiles')
       .select('id, company_name, slug')
-      .eq('user_id', user?.id)
-      .eq('profile_type', 'business');
+      .eq('profile_id', userProfile.id)
+      .or('deleted.is.null,deleted.eq.false');
     
     if (businesses) {
       setBusinessProfiles(businesses);
@@ -1091,7 +1090,7 @@ export default function ProfileEdit() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => window.open(`/${profileType === 'business' ? profile.slug : profile.username}`, '_blank')}
+                      onClick={() => window.open(`/${profile.username}`, '_blank')}
                       className="gap-2"
                     >
                       <ExternalLink className="w-4 h-4" />
@@ -1131,7 +1130,7 @@ export default function ProfileEdit() {
                             </p>
                           </div>
                         </div>
-                        <Link to={`/${profileType === 'business' ? profile.slug : profile.username}`} target="_blank">
+                        <Link to={`/@${profile.username}`} target="_blank">
                           <Button variant="outline" size="lg" className="gap-2">
                             <ExternalLink className="w-4 h-4" />
                             Ver Perfil Público
@@ -1634,47 +1633,47 @@ export default function ProfileEdit() {
                       </Button>
 
                       {configuringFeature === 'banner' && (
-                        <GenericBannersManager entityId={profile.id} />
+                        <GenericBannersManager entityType="user" entityId={profile.id} />
                       )}
 
                       {configuringFeature === 'video' && (
-                        <GenericVideoManager profileId={profile.id} />
+                        <GenericVideoManager entityType="user" entityId={profile.id} />
                       )}
 
                       {configuringFeature === 'catalog' && (
-                        <GenericCatalogManager entityId={profile.id} />
+                        <GenericCatalogManager entityType="user" entityId={profile.id} />
                       )}
 
                       {configuringFeature === 'testimonials' && (
-                        <GenericTestimonialsManager profileId={profile.id} />
+                        <GenericTestimonialsManager entityType="user" entityId={profile.id} />
                       )}
 
                       {configuringFeature === 'certifications' && (
-                        <GenericCertificationsManager entityId={profile.id} />
+                        <GenericCertificationsManager entityType="user" entityId={profile.id} />
                       )}
 
                       {configuringFeature === 'appointments' && (
-                        <GenericAppointmentsManager entityId={profile.id} />
+                        <GenericAppointmentsManager entityType="user" entityId={profile.id} />
                       )}
 
                       {configuringFeature === 'linktree' && (
-                        <GenericLinktreeManager entityId={profile.id} />
+                        <GenericLinktreeManager entityType="user" entityId={profile.id} />
                       )}
 
                       {configuringFeature === 'vacancies' && (
-                        <GenericJobVacanciesManager entityId={profile.id} />
+                        <GenericJobVacanciesManager entityType="user" entityId={profile.id} />
                       )}
 
                       {configuringFeature === 'portfolio' && (
-                        <GenericPortfolioManager entityId={profile.id} />
+                        <GenericPortfolioManager entityType="user" entityId={profile.id} />
                       )}
 
                       {configuringFeature === 'whatsapp' && (
-                        <GenericWhatsAppManager profileId={profile.id} />
+                        <GenericWhatsAppManager entityType="user" entityId={profile.id} />
                       )}
 
                       {configuringFeature === 'social' && (
-                        <GenericSocialManager profileId={profile.id} />
+                        <GenericSocialManager entityType="user" entityId={profile.id} />
                       )}
 
                       {configuringFeature === 'negotiation' && (

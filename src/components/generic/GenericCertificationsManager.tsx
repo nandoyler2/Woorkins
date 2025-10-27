@@ -21,14 +21,19 @@ interface Certification {
 }
 
 interface GenericCertificationsManagerProps {
+  entityType: 'business' | 'user';
   entityId: string;
 }
 
-export function GenericCertificationsManager({ entityId }: GenericCertificationsManagerProps) {
+export function GenericCertificationsManager({ entityType, entityId }: GenericCertificationsManagerProps) {
   const [certifications, setCertifications] = useState<Certification[]>([]);
   const [editingCert, setEditingCert] = useState<Partial<Certification> | null>(null);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+
+  const tableName = entityType === 'business' ? 'business_certifications' : 'user_certifications';
+  const idColumn = entityType === 'business' ? 'business_id' : 'profile_id';
+  const storageBucket = entityType === 'business' ? 'business-media' : 'portfolio';
 
   useEffect(() => {
     loadCertifications();
@@ -37,13 +42,13 @@ export function GenericCertificationsManager({ entityId }: GenericCertifications
   const loadCertifications = async () => {
     try {
       const { data, error } = await supabase
-        .from("profile_certifications")
+        .from(tableName as any)
         .select("*")
-        .eq("target_profile_id", entityId)
+        .eq(idColumn, entityId)
         .order("order_index", { ascending: true });
 
       if (error) throw error;
-      setCertifications(data || []);
+      setCertifications((data || []) as any);
     } catch (error: any) {
       toast({
         title: "Erro ao carregar certificações",
@@ -66,7 +71,7 @@ export function GenericCertificationsManager({ entityId }: GenericCertifications
     setLoading(true);
     try {
       const certData = {
-        target_profile_id: entityId,
+        [idColumn]: entityId,
         title: editingCert.title,
         description: editingCert.description || null,
         issued_by: editingCert.issued_by || null,
@@ -78,13 +83,13 @@ export function GenericCertificationsManager({ entityId }: GenericCertifications
 
       if (editingCert.id) {
         const { error } = await supabase
-          .from("profile_certifications")
+          .from(tableName)
           .update(certData)
           .eq("id", editingCert.id);
 
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("profile_certifications").insert(certData);
+        const { error } = await supabase.from(tableName).insert(certData as any);
         if (error) throw error;
       }
 
@@ -110,7 +115,7 @@ export function GenericCertificationsManager({ entityId }: GenericCertifications
     if (!confirm("Deseja realmente remover esta certificação?")) return;
 
     try {
-      const { error } = await supabase.from("profile_certifications").delete().eq("id", id);
+      const { error } = await supabase.from(tableName).delete().eq("id", id);
 
       if (error) throw error;
 
@@ -214,7 +219,7 @@ export function GenericCertificationsManager({ entityId }: GenericCertifications
                   }
                   accept="image/*,application/pdf"
                   maxSizeMB={10}
-                  bucket="profile-photos"
+                  bucket={entityType === 'business' ? 'business-media' : 'user-media'}
                   folder={entityId}
                 />
               </div>

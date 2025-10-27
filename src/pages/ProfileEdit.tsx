@@ -286,6 +286,8 @@ export default function ProfileEdit() {
   useEffect(() => {
     if (businessId) {
       loadBusinessProfile(businessId);
+      // Ao entrar com businessId, abrir direto na aba de informações
+      setActiveSection('info');
     } else {
       loadProfile();
     }
@@ -590,13 +592,11 @@ export default function ProfileEdit() {
   const loadFeatures = async () => {
     if (!profile?.id) return;
 
-    const tableName = profileType === 'user' ? 'user_profile_features' : 'business_profile_features';
-    const idColumn = profileType === 'user' ? 'profile_id' : 'business_id';
-
+    // Usar sempre a tabela profile_features com profile_id
     const { data } = await supabase
-      .from(tableName as any)
+      .from('profile_features' as any)
       .select('*')
-      .eq(idColumn, profile.id);
+      .eq('profile_id', profile.id);
 
     const featuresMap = new Map(data?.map((f: any) => [f.feature_key, f.is_active]) || []);
     
@@ -652,19 +652,16 @@ export default function ProfileEdit() {
       setActiveSection('tools');
     }
 
-    // Usar a tabela correta baseado no tipo de perfil
-    const tableName = profileType === 'user' ? 'user_profile_features' : 'business_profile_features';
-    const idColumn = profileType === 'user' ? 'profile_id' : 'business_id';
-
+    // Usar sempre a tabela profile_features com profile_id
     const { error } = await supabase
-      .from(tableName as any)
+      .from('profile_features' as any)
       .upsert({
-        [idColumn]: profile.id,
+        profile_id: profile.id,
         feature_key: featureKey,
         is_active: newActiveState,
         settings: {}
       }, {
-        onConflict: `${idColumn},feature_key`
+        onConflict: 'profile_id,feature_key'
       });
 
     if (!error) {
@@ -748,13 +745,16 @@ export default function ProfileEdit() {
   const handleAvatarUpload = async (url: string) => {
     if (!profile) return;
 
+    // Para perfis profissionais, atualizar logo_url; para usuários, avatar_url
+    const updateField = profileType === 'business' ? 'logo_url' : 'avatar_url';
+
     const { error } = await supabase
       .from('profiles')
-      .update({ avatar_url: url })
+      .update({ [updateField]: url })
       .eq('id', profile.id);
 
     if (error) {
-      console.error('[ProfileEdit] Erro ao atualizar avatar:', {
+      console.error('[ProfileEdit] Erro ao atualizar foto:', {
         error,
         code: error.code,
         message: error.message,
@@ -767,7 +767,12 @@ export default function ProfileEdit() {
         variant: 'destructive'
       });
     } else {
-      setProfile({ ...profile, avatar_url: url });
+      // Atualizar o estado local com o campo correto
+      if (profileType === 'business') {
+        setProfile({ ...profile, logo_url: url });
+      } else {
+        setProfile({ ...profile, avatar_url: url });
+      }
       toast({ title: 'Foto de perfil atualizada!' });
     }
   };
@@ -802,13 +807,16 @@ export default function ProfileEdit() {
   const handleAvatarDelete = async () => {
     if (!profile) return;
 
+    // Para perfis profissionais, remover logo_url; para usuários, avatar_url
+    const updateField = profileType === 'business' ? 'logo_url' : 'avatar_url';
+
     const { error } = await supabase
       .from('profiles')
-      .update({ avatar_url: null })
+      .update({ [updateField]: null })
       .eq('id', profile.id);
 
     if (error) {
-      console.error('[ProfileEdit] Erro ao remover avatar:', {
+      console.error('[ProfileEdit] Erro ao remover foto:', {
         error,
         code: error.code,
         message: error.message,
@@ -821,7 +829,12 @@ export default function ProfileEdit() {
         variant: 'destructive'
       });
     } else {
-      setProfile({ ...profile, avatar_url: null });
+      // Atualizar o estado local com o campo correto
+      if (profileType === 'business') {
+        setProfile({ ...profile, logo_url: null });
+      } else {
+        setProfile({ ...profile, avatar_url: null });
+      }
       toast({ title: 'Foto de perfil removida!' });
     }
   };

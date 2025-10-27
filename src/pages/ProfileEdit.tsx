@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAIAssistant } from '@/contexts/AIAssistantContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -141,7 +141,8 @@ export default function ProfileEdit() {
   const navigate = useNavigate();
   const { openWithMessage } = useAIAssistant();
   const [searchParams] = useSearchParams();
-  const businessId = searchParams.get('businessId');
+  const { profileId: urlProfileId } = useParams();
+  const businessId = searchParams.get('businessId') || urlProfileId;
 
   useEffect(() => {
     document.title = 'Editar Perfil - Woorkins';

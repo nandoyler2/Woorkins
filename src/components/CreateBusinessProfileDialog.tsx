@@ -98,15 +98,32 @@ export function CreateBusinessProfileDialog({ open, onOpenChange, onSuccess }: C
 
     setCheckingSlug(true);
     try {
-      const { data, error } = await supabase
+      // Verificar se existe como slug de outro business
+      const { data: existingSlug, error: slugError } = await supabase
         .from('profiles')
         .select('slug')
         .eq('slug', slugToCheck)
         .eq('profile_type', 'business')
         .maybeSingle();
 
-      if (error) throw error;
-      setSlugAvailable(!data);
+      if (slugError) throw slugError;
+
+      if (existingSlug) {
+        setSlugAvailable(false);
+        setCheckingSlug(false);
+        return;
+      }
+
+      // Verificar se conflita com username de algum perfil user
+      const { data: existingUsername, error: usernameError } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('username', slugToCheck)
+        .maybeSingle();
+
+      if (usernameError) throw usernameError;
+
+      setSlugAvailable(!existingUsername);
     } catch (error) {
       console.error('Error checking slug:', error);
       setSlugAvailable(null);

@@ -26,14 +26,31 @@ export async function generateAvailableUsername(base: string): Promise<string> {
   // Se o base estiver vazio, usar fallback
   const finalBase = cleanBase || 'user';
 
-  // Tentar o base original primeiro
-  const { data: existing } = await supabase
-    .from('profiles')
-    .select('username')
-    .eq('username', finalBase)
-    .maybeSingle();
+  // Verificar se não existe como username OU como slug de business
+  const checkAvailability = async (candidate: string): Promise<boolean> => {
+    // Checar como username em qualquer perfil
+    const { data: existingUsername } = await supabase
+      .from('profiles')
+      .select('username')
+      .eq('username', candidate)
+      .maybeSingle();
 
-  if (!existing) {
+    if (existingUsername) return false;
+
+    // Checar se conflita com slug de algum business
+    const { data: existingSlug } = await supabase
+      .from('profiles')
+      .select('slug')
+      .eq('slug', candidate)
+      .eq('profile_type', 'business')
+      .maybeSingle();
+
+    return !existingSlug;
+  };
+
+  // Tentar o base original primeiro
+  const isAvailable = await checkAvailability(finalBase);
+  if (isAvailable) {
     return finalBase;
   }
 
@@ -42,13 +59,8 @@ export async function generateAvailableUsername(base: string): Promise<string> {
   let candidateUsername = `${finalBase}${attempt}`;
   
   while (attempt < 100) {
-    const { data: existingWithSuffix } = await supabase
-      .from('profiles')
-      .select('username')
-      .eq('username', candidateUsername)
-      .maybeSingle();
-
-    if (!existingWithSuffix) {
+    const available = await checkAvailability(candidateUsername);
+    if (available) {
       return candidateUsername;
     }
 

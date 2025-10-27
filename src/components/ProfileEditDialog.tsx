@@ -205,14 +205,32 @@ export function ProfileEditDialog({ open, onOpenChange, userId, profileId, onUpd
     setCheckingUsername(true);
 
     try {
-      const { data, error } = await supabase
+      // Verificar se existe como username em qualquer perfil
+      const { data: existingUsername, error: usernameError } = await supabase
         .from('profiles')
         .select('username')
         .eq('username', username)
         .maybeSingle();
 
-      if (error) throw error;
-      setUsernameAvailable(!data);
+      if (usernameError) throw usernameError;
+      
+      if (existingUsername) {
+        setUsernameAvailable(false);
+        setCheckingUsername(false);
+        return;
+      }
+
+      // Verificar se conflita com slug de algum perfil business
+      const { data: existingSlug, error: slugError } = await supabase
+        .from('profiles')
+        .select('slug')
+        .eq('slug', username)
+        .eq('profile_type', 'business')
+        .maybeSingle();
+
+      if (slugError) throw slugError;
+
+      setUsernameAvailable(!existingSlug);
     } catch (error) {
       console.error('Error checking username:', error);
       setUsernameAvailable(false);

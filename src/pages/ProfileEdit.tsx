@@ -318,35 +318,63 @@ export default function ProfileEdit() {
   const loadProfile = async () => {
     if (!user) return;
 
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('user_id', user.id)
-      .maybeSingle();
+    try {
+      // Buscar explicitamente o perfil do tipo 'user'
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('profile_type', 'user')
+        .maybeSingle();
 
-    if (error || !data) {
+      if (error) {
+        console.error('[ProfileEdit] Erro ao carregar perfil:', error);
+        throw error;
+      }
+
+      // Se não existe perfil user, criar um usando getOrCreateUserProfile
+      if (!data) {
+        console.log('[ProfileEdit] Perfil user não encontrado, criando...');
+        const { getOrCreateUserProfile } = await import('@/lib/profiles');
+        const profiles = await getOrCreateUserProfile(user);
+        const userProfile = profiles.find(p => (p as any).profile_type === 'user');
+        
+        if (!userProfile) {
+          toast({
+            title: 'Erro',
+            description: 'Não foi possível criar o perfil',
+            variant: 'destructive',
+          });
+          navigate('/painel');
+          return;
+        }
+
+        setProfile(userProfile as any);
+      } else {
+        setProfile(data);
+      }
+
+      setProfileType('user');
+      setLoading(false);
+      
+      // Carregar lista de perfis de negócio do usuário
+      const { data: businesses } = await supabase
+        .from('profiles')
+        .select('id, company_name, slug')
+        .eq('user_id', user?.id)
+        .eq('profile_type', 'business');
+      
+      if (businesses) {
+        setBusinessProfiles(businesses);
+      }
+    } catch (error) {
+      console.error('[ProfileEdit] Erro fatal:', error);
       toast({
         title: 'Erro',
-        description: 'Perfil não encontrado',
+        description: 'Não foi possível carregar o perfil',
         variant: 'destructive',
       });
       navigate('/painel');
-      return;
-    }
-
-    setProfile(data);
-    setProfileType('user');
-    setLoading(false);
-    
-    // Carregar lista de perfis de negócio do usuário
-    const { data: businesses } = await supabase
-      .from('profiles')
-      .select('id, company_name, slug')
-      .eq('user_id', user?.id)
-      .eq('profile_type', 'business');
-    
-    if (businesses) {
-      setBusinessProfiles(businesses);
     }
   };
 

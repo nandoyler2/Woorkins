@@ -296,6 +296,9 @@ export default function Dashboard() {
         
         console.log('[Dashboard] Selected profile:', profileData);
         
+        // Detectar e corrigir conflito username vs slug
+        await fixUsernameSlugConflict(profileData, profiles);
+        
         setProfile(profileData);
         await loadBusinessProfiles(profileData.id);
         await loadWoorkoinsBalanceForIds(profiles.map((p: any) => p.id));
@@ -317,6 +320,53 @@ export default function Dashboard() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fixUsernameSlugConflict = async (userProfile: Profile, allProfiles: any[]) => {
+    try {
+      const businessProfiles = allProfiles.filter((p: any) => p.profile_type === 'business');
+      
+      for (const business of businessProfiles) {
+        // Se username do user colide com slug do business
+        if (userProfile.username === business.slug) {
+          console.warn('[Dashboard] Conflito detectado! username:', userProfile.username, 'slug:', business.slug);
+          
+          // Tentar slugs alternativos para o business
+          const baseSlugs = [`${business.slug}-oficial`, `${business.slug}-empresa`, `${business.slug}1`];
+          let newSlug = null;
+          
+          for (const candidate of baseSlugs) {
+            const { data: existingSlug } = await supabase
+              .from('profiles')
+              .select('slug')
+              .eq('slug', candidate)
+              .maybeSingle();
+            
+            if (!existingSlug) {
+              newSlug = candidate;
+              break;
+            }
+          }
+          
+          // Se encontrou slug disponível, atualizar o business
+          if (newSlug) {
+            const { error } = await supabase
+              .from('profiles')
+              .update({ slug: newSlug })
+              .eq('id', business.id);
+            
+            if (!error) {
+              toast({
+                title: 'Conflito resolvido',
+                description: `O @ do seu perfil profissional foi ajustado para @${newSlug} para evitar conflitos.`,
+              });
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('[Dashboard] Error fixing conflicts:', error);
     }
   };
 

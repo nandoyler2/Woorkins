@@ -509,7 +509,7 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
           <InlinePhotoUpload
             currentPhotoUrl={profile.cover_url || undefined}
             userId={user!.id}
-            userName={profile.username}
+            userName={profileType === 'business' ? (profile.company_name || profile.slug || '') : profile.username}
             onPhotoUpdated={loadUserProfile}
             type="cover"
             className="w-full h-full"
@@ -681,7 +681,7 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
                       <PublicNegotiation 
                         entityType={profileType}
                         entityId={profile.id}
-                        username={profile.username || profile.slug}
+                        username={profileType === 'business' ? (profile.slug || '') : profile.username}
                         inline={true}
                       />
                     </div>
@@ -1173,7 +1173,9 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
                         onClick={handleEvaluateClick}
                         className="w-full"
                       >
-                        Avaliar {profile.full_name ? profile.full_name.split(' ')[0] : profile.username}
+                        Avaliar {profileType === 'business' 
+                          ? (profile.company_name || profile.slug) 
+                          : (profile.full_name ? profile.full_name.split(' ')[0] : profile.username)}
                       </Button>
                     )}
                   </div>
@@ -1290,10 +1292,10 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
 
 
               {/* Appointments */}
-              <PublicAppointments entityType={profileType} entityId={profile.id} username={profile.username || profile.slug} />
+              <PublicAppointments entityType={profileType} entityId={profile.id} username={profileType === 'business' ? (profile.slug || '') : profile.username} />
 
               {/* Negotiation */}
-              <PublicNegotiation entityType={profileType} entityId={profile.id} username={profile.username || profile.slug} />
+              <PublicNegotiation entityType={profileType} entityId={profile.id} username={profileType === 'business' ? (profile.slug || '') : profile.username} />
 
               {/* Certifications */}
               <PublicCertifications entityType={profileType} entityId={profile.id} />

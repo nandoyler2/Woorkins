@@ -11,53 +11,72 @@ export default function ProfileRouter() {
   useEffect(() => {
     const checkProfileType = async () => {
       if (!slug) {
+        console.log('[ProfileRouter] No slug provided');
         setProfileType('notfound');
         return;
       }
 
+      console.log('[ProfileRouter] Checking profile type for slug:', slug);
+
       // Primeiro verifica se é um slug de perfil profissional (business)
-      const { data: businessData } = await supabase
+      const { data: businessData, error: businessError } = await supabase
         .from('profiles')
         .select('id, slug')
         .eq('slug', slug)
         .eq('profile_type', 'business')
         .maybeSingle();
 
+      if (businessError) {
+        console.warn('[ProfileRouter] Business query error:', businessError);
+      }
+
       if (businessData) {
+        console.log('[ProfileRouter] Business profile found:', businessData.id);
         setProfileType('business');
         setProfileId(businessData.id);
         return;
       }
 
       // Se não for business, verifica se é um username de usuário pessoal
-      const { data: userData } = await supabase
+      const { data: userData, error: userError } = await supabase
         .from('profiles')
         .select('id, username')
         .eq('username', slug)
         .eq('profile_type', 'user')
         .maybeSingle();
 
+      if (userError) {
+        console.warn('[ProfileRouter] User query error:', userError);
+      }
+
       if (userData) {
+        console.log('[ProfileRouter] User profile found:', userData.id);
         setProfileType('user');
         setProfileId(userData.id);
         return;
       }
 
       // Fallback: verificar se existe business com esse username (legacy)
-      const { data: legacyBusinessData } = await supabase
+      const { data: legacyBusinessData, error: legacyError } = await supabase
         .from('profiles')
         .select('id, username, slug')
         .eq('username', slug)
         .eq('profile_type', 'business')
         .maybeSingle();
+
+      if (legacyError) {
+        console.warn('[ProfileRouter] Legacy query error:', legacyError);
+      }
         
       if (legacyBusinessData?.slug) {
+        console.log('[ProfileRouter] Legacy business found, redirecting to:', legacyBusinessData.slug);
         // Redirecionar para o slug correto do business
         window.location.replace(`/${legacyBusinessData.slug}`);
         return;
       }
 
       // Não encontrou nem perfil profissional nem usuário
+      console.log('[ProfileRouter] Profile not found for slug:', slug);
       setProfileType('notfound');
     };
 

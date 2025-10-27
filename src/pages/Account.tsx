@@ -533,7 +533,7 @@ export default function Account() {
               <ProfilePhotoUpload
                 currentPhotoUrl={profile.avatar_url}
                 userName={formatShortName(profile.full_name) || profile.username}
-                userId={user?.id || ''}
+                profileId={profile.id}
                 onPhotoUpdated={loadProfile}
               />
             </CardContent>

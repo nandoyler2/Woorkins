@@ -280,44 +280,44 @@ export default function Dashboard() {
   const loadProfile = async () => {
     if (!user) return;
     
-    console.log('[Dashboard] Loading profile for user:', user.id);
-    
-    // Buscar TODOS os profiles do usuário
-    const { data, error } = await supabase
-      .from('profiles' as any)
-      .select('*')
-      .eq('user_id', user.id);
-    
-    console.log('[Dashboard] Profile data:', data);
-    console.log('[Dashboard] Profile error:', error);
-    
-    if (!error && data && data.length > 0) {
-      // Priorizar profile do tipo 'user' para o Dashboard
-      // Se não existir, usar o primeiro disponível
-      const userProfile = data.find((p: any) => p.profile_type === 'user') || data[0];
-      const profileData = userProfile as unknown as Profile;
+    try {
+      console.log('[Dashboard] Loading profile for user:', user.id);
       
-      console.log('[Dashboard] Selected profile:', profileData);
+      // Usar helper que garante existência do perfil
+      const { getOrCreateUserProfile } = await import('@/lib/profiles');
+      const profiles = await getOrCreateUserProfile(user);
       
-      setProfile(profileData);
-      await loadBusinessProfiles(profileData.id);
-      await loadWoorkoinsBalanceForIds(data.map((p: any) => p.id));
-    } else if (error) {
-      console.error('[Dashboard] Error loading profile:', error);
+      console.log('[Dashboard] Profiles obtained:', profiles);
+      
+      if (profiles && profiles.length > 0) {
+        // Priorizar profile do tipo 'user' para o Dashboard
+        const userProfile = profiles.find((p: any) => p.profile_type === 'user') || profiles[0];
+        const profileData = userProfile as unknown as Profile;
+        
+        console.log('[Dashboard] Selected profile:', profileData);
+        
+        setProfile(profileData);
+        await loadBusinessProfiles(profileData.id);
+        await loadWoorkoinsBalanceForIds(profiles.map((p: any) => p.id));
+      } else {
+        // Improvável, mas caso aconteça
+        console.error('[Dashboard] getOrCreateUserProfile returned empty array');
+        toast({
+          title: 'Erro ao criar perfil',
+          description: 'Não foi possível criar seu perfil. Tente fazer logout e login novamente.',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      console.error('[Dashboard] Error in loadProfile:', error);
       toast({
         title: 'Erro ao carregar perfil',
         description: 'Não foi possível carregar seu perfil. Tente novamente.',
         variant: 'destructive',
       });
-    } else if (!data || data.length === 0) {
-      console.error('[Dashboard] No profile found for user');
-      toast({
-        title: 'Perfil não encontrado',
-        description: 'Nenhum perfil encontrado. Entre em contato com o suporte.',
-        variant: 'destructive',
-      });
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   // Calcular tarefas de conclusão do perfil
@@ -1441,6 +1441,7 @@ export default function Dashboard() {
             open={showProfileEdit}
             onOpenChange={setShowProfileEdit}
             userId={user.id}
+            profileId={profile.id}
             onUpdate={loadProfile}
           />
           <IdentityVerificationDialog

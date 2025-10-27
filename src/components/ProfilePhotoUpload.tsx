@@ -11,11 +11,11 @@ import { compressImage } from '@/lib/imageCompression';
 interface ProfilePhotoUploadProps {
   currentPhotoUrl?: string;
   userName: string;
-  userId: string;
+  profileId: string; // ID do perfil ao invés de userId para maior precisão
   onPhotoUpdated?: () => void;
 }
 
-export function ProfilePhotoUpload({ currentPhotoUrl, userName, userId, onPhotoUpdated }: ProfilePhotoUploadProps) {
+export function ProfilePhotoUpload({ currentPhotoUrl, userName, profileId, onPhotoUpdated }: ProfilePhotoUploadProps) {
   const { toast } = useToast();
   const [uploading, setUploading] = useState(false);
   const [moderating, setModerating] = useState(false);
@@ -111,7 +111,7 @@ export function ProfilePhotoUpload({ currentPhotoUrl, userName, userId, onPhotoU
       setUploading(true);
 
       const fileExt = originalFile.name.split('.').pop();
-      const fileName = `${userId}-${Date.now()}.${fileExt}`;
+      const fileName = `${profileId}-${Date.now()}.${fileExt}`;
 
       // Delete old avatar if exists
       if (currentPhotoUrl) {
@@ -136,11 +136,11 @@ export function ProfilePhotoUpload({ currentPhotoUrl, userName, userId, onPhotoU
         .from('avatars')
         .getPublicUrl(fileName);
 
-      // Update profile
+      // Update profile (usando profileId para maior precisão)
       const { error: updateError } = await supabase
         .from('profiles')
         .update({ avatar_url: publicUrl })
-        .eq('user_id', userId);
+        .eq('id', profileId);
 
       if (updateError) throw updateError;
 

@@ -39,10 +39,11 @@ interface ProfileEditDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   userId: string;
-  onUpdate: () => void;
+  profileId?: string; // ID do perfil a ser editado (opcional, melhora precisão)
+  onUpdate?: () => void;
 }
 
-export function ProfileEditDialog({ open, onOpenChange, userId, onUpdate }: ProfileEditDialogProps) {
+export function ProfileEditDialog({ open, onOpenChange, userId, profileId, onUpdate }: ProfileEditDialogProps) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [profile, setProfile] = useState({
@@ -71,36 +72,58 @@ export function ProfileEditDialog({ open, onOpenChange, userId, onUpdate }: Prof
 
   const loadProfile = async () => {
     try {
-      console.log('[ProfileEditDialog] Loading profile for userId:', userId);
+      console.log('[ProfileEditDialog] Loading profile - userId:', userId, 'profileId:', profileId);
 
-      // 1) Tenta buscar o perfil principal do tipo 'user'
-      const { data: userProfile, error: userProfileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('user_id', userId)
-        .eq('profile_type', 'user')
-        .maybeSingle();
+      let profileData = null;
 
-      if (userProfileError) {
-        console.warn('[ProfileEditDialog] user profile fetch error (will fallback):', userProfileError);
+      // Se profileId foi fornecido, carregar diretamente por ID (mais preciso)
+      if (profileId) {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', profileId)
+          .maybeSingle();
+
+        if (error) {
+          console.error('[ProfileEditDialog] Error loading by profileId:', error);
+        } else {
+          profileData = data;
+        }
       }
 
-      let profileData = userProfile;
-
-      // 2) Se não houver, pega o primeiro perfil do usuário (ex.: business)
+      // Se não carregou por ID, usar fallback por user_id priorizando 'user'
       if (!profileData) {
-        const { data: anyProfile, error: anyProfileError } = await supabase
+        console.log('[ProfileEditDialog] Fallback: loading by user_id');
+        
+        // 1) Tenta buscar o perfil principal do tipo 'user'
+        const { data: userProfile, error: userProfileError } = await supabase
           .from('profiles')
           .select('*')
           .eq('user_id', userId)
-          .order('created_at', { ascending: true })
-          .limit(1)
+          .eq('profile_type', 'user')
           .maybeSingle();
 
-        if (anyProfileError) {
-          console.error('[ProfileEditDialog] Fallback profile fetch error:', anyProfileError);
+        if (userProfileError) {
+          console.warn('[ProfileEditDialog] user profile fetch error (will fallback):', userProfileError);
         }
-        profileData = anyProfile || null;
+
+        profileData = userProfile;
+
+        // 2) Se não houver, pega o primeiro perfil do usuário (ex.: business)
+        if (!profileData) {
+          const { data: anyProfile, error: anyProfileError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('user_id', userId)
+            .order('created_at', { ascending: true })
+            .limit(1)
+            .maybeSingle();
+
+          if (anyProfileError) {
+            console.error('[ProfileEditDialog] Fallback profile fetch error:', anyProfileError);
+          }
+          profileData = anyProfile || null;
+        }
       }
 
       console.log('[ProfileEditDialog] Resolved profile data:', profileData);
@@ -359,7 +382,7 @@ export function ProfileEditDialog({ open, onOpenChange, userId, onUpdate }: Prof
                     <ProfilePhotoUpload
                       currentPhotoUrl={profile.avatar_url}
                       userName={formatShortName(profile.full_name) || profile.username}
-                      userId={userId}
+                      profileId={profile.id}
                       onPhotoUpdated={loadProfile}
                     />
                   </CardContent>

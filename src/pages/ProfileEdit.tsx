@@ -684,7 +684,7 @@ export default function ProfileEdit() {
 
     setSaving(true);
 
-    const tableName = profileType === 'user' ? 'profiles' : 'business_profiles';
+    // Sempre atualizar na tabela 'profiles' para ambos os tipos
     const updateData = profileType === 'user' 
       ? {
           full_name: profile.full_name,
@@ -700,7 +700,7 @@ export default function ProfileEdit() {
         };
 
     const { error } = await supabase
-      .from(tableName as any)
+      .from('profiles')
       .update(updateData)
       .eq('id', profile.id);
 
@@ -730,7 +730,7 @@ export default function ProfileEdit() {
     const { error } = await supabase
       .from('profiles')
       .update({ avatar_url: url })
-      .eq('user_id', profile.user_id);
+      .eq('id', profile.id);
 
     if (!error) {
       setProfile({ ...profile, avatar_url: url });
@@ -744,7 +744,7 @@ export default function ProfileEdit() {
     const { error } = await supabase
       .from('profiles')
       .update({ cover_url: url })
-      .eq('user_id', profile.user_id);
+      .eq('id', profile.id);
 
     if (!error) {
       setProfile({ ...profile, cover_url: url });
@@ -758,7 +758,7 @@ export default function ProfileEdit() {
     const { error } = await supabase
       .from('profiles')
       .update({ avatar_url: null })
-      .eq('user_id', profile.user_id);
+      .eq('id', profile.id);
 
     if (!error) {
       setProfile({ ...profile, avatar_url: null });
@@ -772,7 +772,7 @@ export default function ProfileEdit() {
     const { error } = await supabase
       .from('profiles')
       .update({ cover_url: null })
-      .eq('user_id', profile.user_id);
+      .eq('id', profile.id);
 
     if (!error) {
       setProfile({ ...profile, cover_url: null });

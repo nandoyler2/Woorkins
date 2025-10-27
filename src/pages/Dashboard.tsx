@@ -328,18 +328,10 @@ export default function Dashboard() {
       const businessProfiles = allProfiles.filter((p: any) => p.profile_type === 'business');
       
       for (const business of businessProfiles) {
-        let needsUpdate = false;
-        const updates: any = {};
-
-        // CRÍTICO: Perfis business não devem ter username, apenas slug
-        if (business.username) {
-          console.warn('[Dashboard] Perfil business com username inválido:', business.id, business.username);
-          updates.username = null;
-          needsUpdate = true;
-        }
-
         // Se username do user colide com slug do business
         if (userProfile.username === business.slug) {
+          let needsUpdate = false;
+          const updates: any = {};
           console.warn('[Dashboard] Conflito detectado! username:', userProfile.username, 'slug:', business.slug);
           
           // Tentar slugs alternativos para o business
@@ -363,24 +355,21 @@ export default function Dashboard() {
             updates.slug = newSlug;
             needsUpdate = true;
             
-            toast({
-              title: 'Conflito resolvido',
-              description: `O @ do seu perfil profissional foi ajustado para @${newSlug} para evitar conflitos.`,
-            });
-          }
-        }
-
-        // Aplicar updates se necessário
-        if (needsUpdate) {
-          const { error } = await supabase
-            .from('profiles')
-            .update(updates)
-            .eq('id', business.id);
-          
-          if (error) {
-            console.error('[Dashboard] Erro ao atualizar perfil business:', error);
-          } else {
-            console.log('[Dashboard] Perfil business atualizado:', business.id, updates);
+            // Aplicar updates
+            const { error } = await supabase
+              .from('profiles')
+              .update(updates)
+              .eq('id', business.id);
+            
+            if (error) {
+              console.error('[Dashboard] Erro ao atualizar perfil business:', error);
+            } else {
+              console.log('[Dashboard] Perfil business atualizado:', business.id, updates);
+              toast({
+                title: 'Conflito resolvido',
+                description: `O @ do seu perfil profissional foi ajustado para @${newSlug} para evitar conflitos.`,
+              });
+            }
           }
         }
       }

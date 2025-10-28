@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { formatDistanceToNow } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import { Header } from '@/components/Header';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { MapPin, Calendar, User as UserIcon, Star, Briefcase, MessageSquare, ThumbsUp, AlertCircle } from 'lucide-react';
+import { MapPin, Calendar, User as UserIcon, Star, Briefcase, MessageSquare, ThumbsUp, AlertCircle, Edit, Search, FolderOpen, Mail, BarChart3, Users, Trophy, Shield } from 'lucide-react';
 import { Footer } from '@/components/Footer';
 import { PublicWhatsAppWidget } from '@/components/generic/PublicWhatsAppWidget';
 import { PublicTestimonialsSlider } from '@/components/generic/PublicTestimonialsSlider';
@@ -36,6 +38,9 @@ import { FollowSuccessDialog } from '@/components/FollowSuccessDialog';
 import { useFollow } from '@/hooks/useFollow';
 import { useImageLuminance } from '@/hooks/useImageLuminance';
 import defaultCover from '@/assets/default-cover.jpg';
+import { QuickActionCard } from '@/components/profile/QuickActionCard';
+import { StatisticRow } from '@/components/profile/StatisticRow';
+import { AchievementItem } from '@/components/profile/AchievementItem';
 
 
 interface UserProfileData {
@@ -140,6 +145,9 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
   const [showUnfollowConfirm, setShowUnfollowConfirm] = useState(false);
   const { isFollowing, loading: followLoading, toggleFollow } = useFollow(profile?.id || '');
   const isCoverDark = useImageLuminance(profile?.cover_url || defaultCover);
+  const [followersCount, setFollowersCount] = useState(0);
+  const [followingCount, setFollowingCount] = useState(0);
+  const [evaluationsGivenCount, setEvaluationsGivenCount] = useState(0);
   
   const handleTabChange = (value: string) => {
     const basePath = `/${slug}`;
@@ -210,6 +218,12 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
       loadUserProfile();
     }
   }, [slug, propProfileType, propProfileId]);
+
+  useEffect(() => {
+    if (profile?.id) {
+      loadStatistics();
+    }
+  }, [profile?.id]);
 
   const loadProfileById = async (id: string, type: 'user' | 'business') => {
     try {
@@ -428,6 +442,79 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
       platinum: { color: 'bg-blue-400', label: 'Platina' },
     };
     return levels[level] || levels.bronze;
+  };
+
+  const loadStatistics = async () => {
+    if (!profile?.id) return;
+
+    try {
+      // Buscar seguidores
+      const { count: followers } = await supabase
+        .from('follows')
+        .select('*', { count: 'exact', head: true })
+        .eq('following_id', profile.id);
+      
+      setFollowersCount(followers || 0);
+
+      // Buscar seguindo
+      const { count: following } = await supabase
+        .from('follows')
+        .select('*', { count: 'exact', head: true })
+        .eq('follower_id', profile.id);
+      
+      setFollowingCount(following || 0);
+
+      // Buscar avaliações dadas
+      const { count: givenEvaluations } = await supabase
+        .from('evaluations')
+        .select('*', { count: 'exact', head: true })
+        .eq('author_profile_id', profile.id);
+      
+      setEvaluationsGivenCount(givenEvaluations || 0);
+    } catch (error) {
+      console.error('Error loading statistics:', error);
+    }
+  };
+
+  const getAchievements = () => {
+    if (!profile) return [];
+
+    const achievements = [];
+
+    // Primeira avaliação
+    if (evaluations.length > 0) {
+      achievements.push({
+        icon: Star,
+        title: 'Primeira Avaliação',
+        description: 'Recebeu sua primeira avaliação',
+        date: new Date(evaluations[evaluations.length - 1].created_at),
+        iconColor: 'bg-blue-500',
+      });
+    }
+
+    // Membro confiável
+    if (profile.trust_level && ['silver', 'gold', 'platinum'].includes(profile.trust_level)) {
+      achievements.push({
+        icon: Shield,
+        title: 'Membro Confiável',
+        description: `Alcançou nível ${getTrustLevelInfo(profile.trust_level).label}`,
+        date: new Date(profile.created_at),
+        iconColor: 'bg-teal-500',
+      });
+    }
+
+    // Socialização
+    if (followersCount >= 10) {
+      achievements.push({
+        icon: Users,
+        title: 'Socialização',
+        description: `${followersCount} seguidores`,
+        date: new Date(profile.created_at),
+        iconColor: 'bg-orange-500',
+      });
+    }
+
+    return achievements.slice(0, 3);
   };
 
   const handleSubmitResponse = async (evaluationId: string) => {
@@ -681,6 +768,40 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Quick Actions Grid */}
+              <div className="grid grid-cols-2 gap-3">
+                <QuickActionCard
+                  title="Escrever Avaliação"
+                  description="Compartilhe sua experiência"
+                  icon={Edit}
+                  gradient="bg-gradient-to-br from-blue-500 to-blue-600"
+                  onClick={handleEvaluateClick}
+                />
+                <QuickActionCard
+                  title="Encontrar Serviços"
+                  description="Veja o que oferecemos"
+                  icon={Search}
+                  gradient="bg-gradient-to-br from-teal-500 to-teal-600"
+                  onClick={() => handleTabChange('servicos')}
+                />
+                {isProfileOwner && (
+                  <QuickActionCard
+                    title="Atualizar Portfólio"
+                    description="Gerencie seus trabalhos"
+                    icon={FolderOpen}
+                    gradient="bg-gradient-to-br from-orange-500 to-orange-600"
+                    onClick={() => navigate('/profile-edit')}
+                  />
+                )}
+                <QuickActionCard
+                  title="Ver Mensagens"
+                  description="Converse conosco"
+                  icon={Mail}
+                  gradient="bg-gradient-to-br from-green-500 to-green-600"
+                  onClick={() => navigate('/messages')}
+                />
+              </div>
 
               {/* Tabs Navigation */}
               <Card className="bg-card/50 backdrop-blur-sm border-2 shadow-lg">
@@ -1133,6 +1254,66 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
 
             {/* Right Column - Info Sidebar */}
             <div className="space-y-4">
+              {/* Statistics Card */}
+              <Card className="bg-card/50 backdrop-blur-sm border-2 shadow-lg">
+                <CardContent className="p-6">
+                  <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+                    <BarChart3 className="w-5 h-5 text-primary" />
+                    Suas Estatísticas
+                  </h3>
+                  <div className="space-y-1">
+                    <StatisticRow
+                      icon={Star}
+                      label="Avaliações Dadas"
+                      value={evaluationsGivenCount}
+                      iconColor="bg-yellow-500"
+                    />
+                    <StatisticRow
+                      icon={MessageSquare}
+                      label="Avaliações Recebidas"
+                      value={evaluations.length}
+                      iconColor="bg-blue-500"
+                    />
+                    <StatisticRow
+                      icon={Users}
+                      label="Seguidores"
+                      value={followersCount}
+                      iconColor="bg-purple-500"
+                    />
+                    <StatisticRow
+                      icon={UserIcon}
+                      label="Seguindo"
+                      value={followingCount}
+                      iconColor="bg-green-500"
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Achievements Card */}
+              {getAchievements().length > 0 && (
+                <Card className="bg-card/50 backdrop-blur-sm border-2 shadow-lg">
+                  <CardContent className="p-6">
+                    <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+                      <Trophy className="w-5 h-5 text-primary" />
+                      Conquistas Recentes
+                    </h3>
+                    <div className="space-y-1">
+                      {getAchievements().map((achievement, idx) => (
+                        <AchievementItem
+                          key={idx}
+                          icon={achievement.icon}
+                          title={achievement.title}
+                          description={achievement.description}
+                          date={achievement.date}
+                          iconColor={achievement.iconColor}
+                        />
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
               {/* Rating Highlight Card */}
               <Card className="bg-gradient-to-br from-primary/10 to-secondary/10 border-2 border-primary/20 shadow-glow">
                 <CardContent className="p-6">

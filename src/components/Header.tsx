@@ -69,16 +69,19 @@ export const Header = () => {
     const loadProfile = async () => {
       if (!user) return;
       
-      const { data } = await supabase
+      // Priorizar perfil do tipo 'user' para o header
+      const { data: profiles } = await supabase
         .from('profiles')
-        .select('id, avatar_url, full_name, company_name')
+        .select('id, avatar_url, full_name, company_name, profile_type')
         .eq('user_id', user.id)
-        .single();
+        .order('created_at', { ascending: true });
       
-      if (data) {
-        setProfileId(data.id);
-        setProfileAvatar(data.avatar_url);
-        setProfileName(data.full_name || data.company_name || '');
+      if (profiles && profiles.length > 0) {
+        // Procurar perfil do tipo 'user' primeiro
+        const userProfile = profiles.find((p: any) => p.profile_type === 'user') || profiles[0];
+        setProfileId(userProfile.id);
+        setProfileAvatar(userProfile.avatar_url);
+        setProfileName(userProfile.full_name || userProfile.company_name || '');
       }
     };
 

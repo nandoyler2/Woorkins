@@ -530,8 +530,8 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
                   backgroundPosition: `center ${profile.cover_position || 50}%`
                 }}
               />
-              {/* Nome sobreposto na capa */}
-              <div className="absolute top-4 left-4 md:left-8">
+              {/* Nome sobreposto na capa - centralizado */}
+              <div className="absolute top-4 left-0 right-0 flex justify-center">
                 <h1 
                   className={`text-3xl md:text-4xl font-bold ${isCoverDark ? 'text-white' : 'text-black'}`}
                   style={{
@@ -559,8 +559,8 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
               backgroundPosition: `center ${profile.cover_position || 50}%`
             }}
           />
-          {/* Nome sobreposto na capa */}
-          <div className="absolute top-4 left-4 md:left-8">
+          {/* Nome sobreposto na capa - centralizado */}
+          <div className="absolute top-4 left-0 right-0 flex justify-center">
             <h1 
               className={`text-3xl md:text-4xl font-bold ${isCoverDark ? 'text-white' : 'text-black'}`}
               style={{

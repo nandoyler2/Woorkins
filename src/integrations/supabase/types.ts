@@ -3047,6 +3047,44 @@ export type Database = {
           },
         ]
       }
+      user_posts: {
+        Row: {
+          content: string | null
+          created_at: string
+          id: string
+          media_types: string[] | null
+          media_urls: string[] | null
+          profile_id: string
+          updated_at: string
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string
+          id?: string
+          media_types?: string[] | null
+          media_urls?: string[] | null
+          profile_id: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string | null
+          created_at?: string
+          id?: string
+          media_types?: string[] | null
+          media_urls?: string[] | null
+          profile_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_posts_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string

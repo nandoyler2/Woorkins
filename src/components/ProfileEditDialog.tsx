@@ -58,6 +58,8 @@ export function ProfileEditDialog({ open, onOpenChange, userId, profileId, onUpd
     website: '',
     birth_date: '',
     last_username_change: null as string | null,
+    profile_type: 'user' as 'user' | 'business',
+    slug: '',
   });
   const [originalUsername, setOriginalUsername] = useState('');
   const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
@@ -152,6 +154,8 @@ export function ProfileEditDialog({ open, onOpenChange, userId, profileId, onUpd
         website: profileData.website || '',
         birth_date: profileData.birth_date || '',
         last_username_change: profileData.last_username_change,
+        profile_type: (profileData.profile_type as 'user' | 'business') || 'user',
+        slug: profileData.slug || '',
       });
       setOriginalUsername(profileData.username || '');
     } catch (error: any) {
@@ -208,8 +212,9 @@ export function ProfileEditDialog({ open, onOpenChange, userId, profileId, onUpd
       // Verificar se existe como username em qualquer perfil
       const { data: existingUsername, error: usernameError } = await supabase
         .from('profiles')
-        .select('username')
+        .select('id, username')
         .eq('username', username)
+        .neq('id', profile.id)
         .maybeSingle();
 
       if (usernameError) throw usernameError;
@@ -223,9 +228,10 @@ export function ProfileEditDialog({ open, onOpenChange, userId, profileId, onUpd
       // Verificar se conflita com slug de algum perfil business
       const { data: existingSlug, error: slugError } = await supabase
         .from('profiles')
-        .select('slug')
+        .select('id, slug')
         .eq('slug', username)
         .eq('profile_type', 'business')
+        .neq('id', profile.id)
         .maybeSingle();
 
       if (slugError) throw slugError;
@@ -330,6 +336,10 @@ export function ProfileEditDialog({ open, onOpenChange, userId, profileId, onUpd
       if (profile.username !== originalUsername) {
         updateData.username = profile.username;
         updateData.last_username_change = new Date().toISOString();
+        // Sincronizar slug para perfis business e liberar identificador antigo
+        if (profile.profile_type === 'business') {
+          updateData.slug = profile.username;
+        }
       }
 
       // Validar e atualizar CPF se estiver sendo definido pela primeira vez

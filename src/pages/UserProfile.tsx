@@ -228,7 +228,13 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
           return;
         }
 
-        setProfile(profileData as UserProfileData);
+        // Add cache-busting timestamp to image URLs
+        const profileWithFreshImages = {
+          ...profileData,
+          avatar_url: profileData.avatar_url ? `${profileData.avatar_url}?t=${Date.now()}` : null,
+          cover_url: profileData.cover_url ? `${profileData.cover_url}?t=${Date.now()}` : null,
+        };
+        setProfile(profileWithFreshImages as UserProfileData);
         await Promise.all([
           loadProjects(profileData.id, 'user'),
           loadPosts(profileData.id, 'user'),
@@ -248,7 +254,14 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
           return;
         }
 
-        setProfile(profileData as unknown as UserProfileData);
+        // Add cache-busting timestamp to image URLs
+        const profileWithFreshImages = {
+          ...profileData,
+          avatar_url: profileData.avatar_url ? `${profileData.avatar_url}?t=${Date.now()}` : null,
+          logo_url: profileData.logo_url ? `${profileData.logo_url}?t=${Date.now()}` : null,
+          cover_url: profileData.cover_url ? `${profileData.cover_url}?t=${Date.now()}` : null,
+        };
+        setProfile(profileWithFreshImages as unknown as UserProfileData);
         await Promise.all([
           loadPosts(profileData.id, 'business'),
           loadEvaluations(profileData.id),
@@ -276,7 +289,14 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
 
       if (businessData) {
         setProfileType('business');
-        setProfile(businessData as unknown as UserProfileData);
+        // Add cache-busting timestamp to image URLs
+        const profileWithFreshImages = {
+          ...businessData,
+          avatar_url: businessData.avatar_url ? `${businessData.avatar_url}?t=${Date.now()}` : null,
+          logo_url: businessData.logo_url ? `${businessData.logo_url}?t=${Date.now()}` : null,
+          cover_url: businessData.cover_url ? `${businessData.cover_url}?t=${Date.now()}` : null,
+        };
+        setProfile(profileWithFreshImages as unknown as UserProfileData);
         await Promise.all([
           loadPosts(businessData.id, 'business'),
           loadEvaluations(businessData.id),
@@ -294,7 +314,13 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
 
       if (profileData) {
         setProfileType('user');
-        setProfile(profileData as UserProfileData);
+        // Add cache-busting timestamp to image URLs
+        const profileWithFreshImages = {
+          ...profileData,
+          avatar_url: profileData.avatar_url ? `${profileData.avatar_url}?t=${Date.now()}` : null,
+          cover_url: profileData.cover_url ? `${profileData.cover_url}?t=${Date.now()}` : null,
+        };
+        setProfile(profileWithFreshImages as UserProfileData);
         await Promise.all([
           loadProjects(profileData.id, 'user'),
           loadPosts(profileData.id, 'user'),
@@ -580,8 +606,9 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
                             className="cursor-pointer"
                             onClick={() => profile.avatar_url && setShowImageViewer(true)}
                           >
-                            {profile.avatar_url ? (
+                             {profile.avatar_url ? (
                               <SafeImage
+                                key={profile.avatar_url}
                                 src={profile.avatar_url}
                                 alt={profileType === 'business' 
                                   ? (profile.company_name || profile.username)
@@ -603,6 +630,7 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
                         >
                           {profile.avatar_url ? (
                             <SafeImage
+                              key={profile.avatar_url}
                               src={profile.avatar_url}
                               alt={profileType === 'business' 
                                 ? (profile.company_name || profile.username)

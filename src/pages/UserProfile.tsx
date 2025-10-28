@@ -547,7 +547,7 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
       )}
 
       {/* Main Content Container */}
-      <div className="container mx-auto px-4 -mt-16 relative z-10 max-w-woorkins">
+      <div className="container mx-auto px-4 -mt-24 relative z-10 max-w-woorkins">
         <div>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Left Column - Main Content */}
@@ -557,7 +557,7 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
                 <CardContent className="p-6">
                   <div className="flex flex-col md:flex-row gap-6">
                     {/* Avatar */}
-                    <div className="-mt-20 flex flex-col items-center gap-3">
+                    <div className="-mt-24 flex flex-col items-center gap-3">
                       {isProfileOwner ? (
                         <InlinePhotoUpload
                           currentPhotoUrl={profile.avatar_url || undefined}
@@ -630,7 +630,7 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
                     <div className="flex-1 space-y-3">
                       <div>
                         <div className="flex items-center gap-2 mb-1">
-                          <h1 className={`text-3xl font-bold ${isCoverDark ? 'text-white' : 'text-black'}`}>
+                          <h1 className={`text-[2rem] md:text-[2.2rem] font-bold ${isCoverDark ? 'text-white' : 'text-black'}`}>
                             {profileType === 'business' 
                               ? (profile.company_name || formatFullName(profile.full_name))
                               : formatFullName(profile.full_name)

@@ -1136,7 +1136,7 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
             </div>
 
             {/* Right Column - Info Sidebar */}
-            <div className="space-y-4">
+            <div className="space-y-4 pb-8">
               {/* Rating Highlight Card */}
               <Card className="bg-gradient-to-br from-primary/20 via-primary/10 to-secondary/10 border-2 border-primary/30 shadow-2xl hover:shadow-primary/20 transition-all duration-300 hover:scale-[1.02]">
                 <CardContent className="p-6">
@@ -1290,9 +1290,6 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
 
               {/* Appointments */}
               <PublicAppointments entityType={profileType} entityId={profile.id} username={profileType === 'business' ? (profile.slug || '') : profile.username} />
-
-              {/* Negotiation */}
-              <PublicNegotiation entityType={profileType} entityId={profile.id} username={profileType === 'business' ? (profile.slug || '') : profile.username} />
 
               {/* Certifications */}
               <PublicCertifications entityType={profileType} entityId={profile.id} />

@@ -1175,8 +1175,8 @@ export default function Dashboard() {
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
                     <Link to={`/${profile?.username}`}>
-                      <Button variant="outline" size="sm" className="text-xs h-7 px-2 border-blue-400 text-blue-600 hover:bg-blue-50">
-                        Ver perfil
+                      <Button variant="outline" size="sm" className="h-7 w-7 p-0 border-blue-400 text-blue-600 hover:bg-blue-50">
+                        <Eye className="w-3.5 h-3.5" />
                       </Button>
                     </Link>
                     <Link to="/perfil/editar">

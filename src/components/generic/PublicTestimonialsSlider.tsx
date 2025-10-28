@@ -66,25 +66,25 @@ export function PublicTestimonialsSlider({ entityType, entityId }: PublicTestimo
     <div className="mb-8">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-2xl font-bold flex items-center gap-2">
-          <ThumbsUp className="h-6 w-6" />
+          <ThumbsUp className="h-6 w-6 text-pink-500" />
           Depoimentos
         </h2>
         {averageRating > 0 && (
           <div className="flex items-center gap-2">
-            <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
-            <span className="font-semibold text-lg">{averageRating.toFixed(1)}</span>
+            <Star className="h-5 w-5 fill-yellow-400 text-yellow-400 drop-shadow-[0_0_8px_rgba(234,179,8,0.5)]" />
+            <span className="font-semibold text-lg bg-gradient-to-r from-pink-500 to-pink-600 bg-clip-text text-transparent">{averageRating.toFixed(1)}</span>
             <span className="text-muted-foreground">({testimonials.length})</span>
           </div>
         )}
       </div>
 
       {testimonials.length === 1 ? (
-        <Card>
+        <Card className="bg-gradient-to-br from-pink-500/10 to-pink-600/5 border-2 border-pink-500/20 hover:shadow-xl transition-all duration-300">
           <CardContent className="p-6">
             <div className="flex flex-col items-center text-center gap-4">
-              <Avatar className="h-20 w-20">
+              <Avatar className="h-20 w-20 ring-4 ring-pink-500/30">
                 <AvatarImage src={currentTestimonial.client_photo_url} />
-                <AvatarFallback className="text-2xl">
+                <AvatarFallback className="text-2xl bg-gradient-to-br from-pink-500 to-pink-600 text-white">
                   {currentTestimonial.client_name[0]?.toUpperCase()}
                 </AvatarFallback>
               </Avatar>
@@ -97,7 +97,7 @@ export function PublicTestimonialsSlider({ entityType, entityId }: PublicTestimo
                         key={i}
                         className={`h-5 w-5 ${
                           i < currentTestimonial.rating!
-                            ? "fill-yellow-400 text-yellow-400"
+                            ? "fill-yellow-400 text-yellow-400 drop-shadow-[0_0_6px_rgba(234,179,8,0.4)]"
                             : "text-gray-300"
                         }`}
                       />
@@ -111,12 +111,12 @@ export function PublicTestimonialsSlider({ entityType, entityId }: PublicTestimo
         </Card>
       ) : (
         <div className="relative">
-          <Card>
+          <Card className="bg-gradient-to-br from-pink-500/10 to-pink-600/5 border-2 border-pink-500/20 hover:shadow-xl transition-all duration-300">
             <CardContent className="p-6">
               <div className="flex flex-col items-center text-center gap-4 min-h-[300px] justify-center">
-                <Avatar className="h-20 w-20">
+                <Avatar className="h-20 w-20 ring-4 ring-pink-500/30">
                   <AvatarImage src={currentTestimonial.client_photo_url} />
-                  <AvatarFallback className="text-2xl">
+                  <AvatarFallback className="text-2xl bg-gradient-to-br from-pink-500 to-pink-600 text-white">
                     {currentTestimonial.client_name[0]?.toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
@@ -129,7 +129,7 @@ export function PublicTestimonialsSlider({ entityType, entityId }: PublicTestimo
                           key={i}
                           className={`h-5 w-5 ${
                             i < currentTestimonial.rating!
-                              ? "fill-yellow-400 text-yellow-400"
+                              ? "fill-yellow-400 text-yellow-400 drop-shadow-[0_0_6px_rgba(234,179,8,0.4)]"
                               : "text-gray-300"
                           }`}
                         />
@@ -147,19 +147,19 @@ export function PublicTestimonialsSlider({ entityType, entityId }: PublicTestimo
           <Button
             variant="outline"
             size="icon"
-            className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full shadow-lg"
+            className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full shadow-lg bg-gradient-to-r from-pink-500/10 to-pink-600/10 border-pink-500/30 hover:bg-pink-500/20 hover:scale-110 transition-all"
             onClick={prevSlide}
           >
-            <ChevronLeft className="h-6 w-6" />
+            <ChevronLeft className="h-6 w-6 text-pink-500" />
           </Button>
 
           <Button
             variant="outline"
             size="icon"
-            className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full shadow-lg"
+            className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full shadow-lg bg-gradient-to-r from-pink-500/10 to-pink-600/10 border-pink-500/30 hover:bg-pink-500/20 hover:scale-110 transition-all"
             onClick={nextSlide}
           >
-            <ChevronRight className="h-6 w-6" />
+            <ChevronRight className="h-6 w-6 text-pink-500" />
           </Button>
 
           <div className="flex justify-center gap-2 mt-4">
@@ -169,8 +169,8 @@ export function PublicTestimonialsSlider({ entityType, entityId }: PublicTestimo
                 onClick={() => setCurrentIndex(index)}
                 className={`h-2 rounded-full transition-all ${
                   index === currentIndex
-                    ? "w-8 bg-primary"
-                    : "w-2 bg-muted-foreground/30 hover:bg-muted-foreground/50"
+                    ? "w-8 bg-gradient-to-r from-pink-500 to-pink-600 shadow-lg shadow-pink-500/50"
+                    : "w-2 bg-muted-foreground/30 hover:bg-pink-500/50"
                 }`}
                 aria-label={`Ver depoimento ${index + 1}`}
               />

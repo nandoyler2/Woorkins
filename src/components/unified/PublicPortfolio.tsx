@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { SafeImage } from '@/components/ui/safe-image';
+import { Briefcase } from 'lucide-react';
 
 interface PortfolioItem {
   id: string;

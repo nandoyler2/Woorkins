@@ -102,14 +102,14 @@ export const PublicWhatsAppWidget = ({ entityType, entityId, entityName }: Publi
       {/* Floating Button */}
       <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3">
         {/* Tooltip - balãozinho discreto */}
-        <div className="bg-white border border-gray-200 rounded-lg px-3 py-2 shadow-md pointer-events-none">
-          <p className="text-xs text-gray-600">Fale com {entityName}</p>
+        <div className="bg-gradient-to-r from-[#25D366]/90 to-[#128C7E]/90 backdrop-blur-sm border border-[#25D366]/30 rounded-lg px-3 py-2 shadow-xl pointer-events-none">
+          <p className="text-xs text-white font-semibold">Fale com {entityName}</p>
         </div>
         
         {/* WhatsApp Icon Button - apenas o ícone oficial */}
         <button
           onClick={handleClick}
-          className="h-14 w-14 rounded-full shadow-lg bg-[#25D366] hover:bg-[#128C7E] transition-all duration-200 flex items-center justify-center hover:scale-110"
+          className="h-16 w-16 rounded-full shadow-2xl bg-gradient-to-r from-[#25D366] to-[#128C7E] hover:scale-125 hover:shadow-[#25D366]/50 transition-all duration-300 flex items-center justify-center ring-4 ring-[#25D366]/20 animate-pulse"
           aria-label={`Falar com ${entityName} pelo WhatsApp`}
         >
           <svg 
@@ -125,8 +125,11 @@ export const PublicWhatsAppWidget = ({ entityType, entityId, entityName }: Publi
       {isOpen && !config.auto_open && config.questions.length > 0 && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <Card className="w-full max-w-md max-h-[80vh] overflow-auto">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-              <CardTitle>Fale com {entityName}</CardTitle>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 bg-gradient-to-r from-[#25D366]/10 to-[#128C7E]/10 -m-6 mb-4 p-6 rounded-t-lg">
+              <CardTitle className="flex items-center gap-2">
+                <MessageCircle className="h-5 w-5 text-[#25D366]" />
+                Fale com {entityName}
+              </CardTitle>
               <Button
                 variant="ghost"
                 size="icon"
@@ -152,7 +155,7 @@ export const PublicWhatsAppWidget = ({ entityType, entityId, entityName }: Publi
                 </div>
               ))}
 
-              <Button onClick={handleOpenWhatsApp} className="w-full">
+              <Button onClick={handleOpenWhatsApp} className="w-full bg-gradient-to-r from-[#25D366] to-[#128C7E] hover:shadow-lg transition-all">
                 <MessageCircle className="h-4 w-4 mr-2" />
                 Abrir WhatsApp
               </Button>

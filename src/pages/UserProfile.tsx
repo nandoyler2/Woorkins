@@ -630,7 +630,7 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
                     <div className="flex-1 space-y-3">
                       <div>
                         <div className="flex items-center gap-2 mb-1">
-                          <h1 className="text-3xl font-bold">
+                          <h1 className={`text-3xl font-bold ${isCoverDark ? 'text-white' : 'text-black'}`}>
                             {profileType === 'business' 
                               ? (profile.company_name || formatFullName(profile.full_name))
                               : formatFullName(profile.full_name)

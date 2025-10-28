@@ -34,6 +34,7 @@ import { InlinePhotoUpload } from '@/components/InlinePhotoUpload';
 import { ImageViewerDialog } from '@/components/ImageViewerDialog';
 import { FollowSuccessDialog } from '@/components/FollowSuccessDialog';
 import { useFollow } from '@/hooks/useFollow';
+import { useImageLuminance } from '@/hooks/useImageLuminance';
 import defaultCover from '@/assets/default-cover.jpg';
 
 
@@ -138,6 +139,7 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
   const [showFollowSuccess, setShowFollowSuccess] = useState(false);
   const [showUnfollowConfirm, setShowUnfollowConfirm] = useState(false);
   const { isFollowing, loading: followLoading, toggleFollow } = useFollow(profile?.id || '');
+  const isCoverDark = useImageLuminance(profile?.cover_url || defaultCover);
   
   const handleTabChange = (value: string) => {
     const basePath = `/${slug}`;
@@ -528,6 +530,20 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
                   backgroundPosition: `center ${profile.cover_position || 50}%`
                 }}
               />
+              {/* Overlay gradiente para melhorar legibilidade */}
+              <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-transparent" />
+              {/* Nome do usuário sobre a capa */}
+              <div className="absolute top-4 left-4 md:left-8">
+                <h1 className={`text-2xl md:text-3xl font-bold ${isCoverDark ? 'text-white' : 'text-black'} drop-shadow-lg`}>
+                  {profileType === 'business' 
+                    ? (profile.company_name || formatFullName(profile.full_name))
+                    : formatFullName(profile.full_name)
+                  }
+                </h1>
+                <p className={`text-sm md:text-base ${isCoverDark ? 'text-white/90' : 'text-black/90'} drop-shadow-md`}>
+                  @{profile.username || profile.slug}
+                </p>
+              </div>
             </div>
           </InlinePhotoUpload>
         </div>
@@ -541,6 +557,20 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
               backgroundPosition: `center ${profile.cover_position || 50}%`
             }}
           />
+          {/* Overlay gradiente para melhorar legibilidade */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-transparent" />
+          {/* Nome do usuário sobre a capa */}
+          <div className="absolute top-4 left-4 md:left-8">
+            <h1 className={`text-2xl md:text-3xl font-bold ${isCoverDark ? 'text-white' : 'text-black'} drop-shadow-lg`}>
+              {profileType === 'business' 
+                ? (profile.company_name || formatFullName(profile.full_name))
+                : formatFullName(profile.full_name)
+              }
+            </h1>
+            <p className={`text-sm md:text-base ${isCoverDark ? 'text-white/90' : 'text-black/90'} drop-shadow-md`}>
+              @{profile.username || profile.slug}
+            </p>
+          </div>
         </div>
       )}
 
@@ -628,21 +658,12 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
                     <div className="flex-1 space-y-3">
                       <div>
                         <div className="flex items-center gap-2 mb-1">
-                          <h1 className="text-3xl font-bold">
-                            {profileType === 'business' 
-                              ? (profile.company_name || formatFullName(profile.full_name))
-                              : formatFullName(profile.full_name)
-                            }
-                          </h1>
                           {profile.verified && (
                             <Badge variant="default" className="text-xs">
                               ✓ Verificado
                             </Badge>
                           )}
                         </div>
-                        <p className="text-muted-foreground mb-2">
-                          @{profile.username || profile.slug}
-                        </p>
                         {profile.bio && (
                           <p className="text-sm text-muted-foreground leading-relaxed">
                             {profile.bio}

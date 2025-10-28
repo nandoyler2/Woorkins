@@ -191,7 +191,7 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
   useEffect(() => {
     if (profile) {
       const displayName = profileType === 'business' ? profile.company_name : formatFullName(profile.full_name);
-      const identifier = profileType === 'business' ? profile.slug : profile.username;
+      const identifier = profile.username || profile.slug;
       document.title = `${displayName} (@${identifier}) - Woorkins`;
     } else {
       document.title = 'Perfil - Woorkins';
@@ -634,7 +634,7 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
                           )}
                         </div>
                         <p className="text-muted-foreground mb-2">
-                          @{profileType === 'business' ? profile.slug : profile.username}
+                          @{profile.username || profile.slug}
                         </p>
                         {profile.bio && (
                           <p className="text-sm text-muted-foreground leading-relaxed">

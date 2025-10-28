@@ -1296,11 +1296,7 @@ export default function ProfileEdit() {
                           {profile.full_name || profile.username}
                         </h1>
                         <p className="text-muted-foreground text-sm">
-                          {(() => {
-                            const displayName = profileType === 'business' ? profile.slug : `@${profile.username}`;
-                            console.log('[ProfileEdit] Exibindo username:', { profileType, username: profile.username, slug: profile.slug, displayName });
-                            return displayName;
-                          })()}
+                          @{profile.username || profile.slug}
                         </p>
                       </div>
                     </div>

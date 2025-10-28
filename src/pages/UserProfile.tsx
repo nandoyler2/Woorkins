@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { MapPin, Calendar, User as UserIcon, Star, Briefcase, MessageSquare, ThumbsUp, AlertCircle, Edit, Search, FolderOpen, Mail, BarChart3, Users, Trophy, Shield } from 'lucide-react';
+import { MapPin, Calendar, User as UserIcon, Star, Briefcase, MessageSquare, ThumbsUp, AlertCircle } from 'lucide-react';
 import { Footer } from '@/components/Footer';
 import { PublicWhatsAppWidget } from '@/components/generic/PublicWhatsAppWidget';
 import { PublicTestimonialsSlider } from '@/components/generic/PublicTestimonialsSlider';
@@ -38,9 +38,6 @@ import { FollowSuccessDialog } from '@/components/FollowSuccessDialog';
 import { useFollow } from '@/hooks/useFollow';
 import { useImageLuminance } from '@/hooks/useImageLuminance';
 import defaultCover from '@/assets/default-cover.jpg';
-import { QuickActionCard } from '@/components/profile/QuickActionCard';
-import { StatisticRow } from '@/components/profile/StatisticRow';
-import { AchievementItem } from '@/components/profile/AchievementItem';
 
 
 interface UserProfileData {
@@ -145,9 +142,6 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
   const [showUnfollowConfirm, setShowUnfollowConfirm] = useState(false);
   const { isFollowing, loading: followLoading, toggleFollow } = useFollow(profile?.id || '');
   const isCoverDark = useImageLuminance(profile?.cover_url || defaultCover);
-  const [followersCount, setFollowersCount] = useState(0);
-  const [followingCount, setFollowingCount] = useState(0);
-  const [evaluationsGivenCount, setEvaluationsGivenCount] = useState(0);
   
   const handleTabChange = (value: string) => {
     const basePath = `/${slug}`;
@@ -219,11 +213,6 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
     }
   }, [slug, propProfileType, propProfileId]);
 
-  useEffect(() => {
-    if (profile?.id) {
-      loadStatistics();
-    }
-  }, [profile?.id]);
 
   const loadProfileById = async (id: string, type: 'user' | 'business') => {
     try {
@@ -444,78 +433,6 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
     return levels[level] || levels.bronze;
   };
 
-  const loadStatistics = async () => {
-    if (!profile?.id) return;
-
-    try {
-      // Buscar seguidores
-      const { count: followers } = await supabase
-        .from('follows')
-        .select('*', { count: 'exact', head: true })
-        .eq('following_id', profile.id);
-      
-      setFollowersCount(followers || 0);
-
-      // Buscar seguindo
-      const { count: following } = await supabase
-        .from('follows')
-        .select('*', { count: 'exact', head: true })
-        .eq('follower_id', profile.id);
-      
-      setFollowingCount(following || 0);
-
-      // Buscar avaliações dadas
-      const { count: givenEvaluations } = await supabase
-        .from('evaluations')
-        .select('*', { count: 'exact', head: true })
-        .eq('author_profile_id', profile.id);
-      
-      setEvaluationsGivenCount(givenEvaluations || 0);
-    } catch (error) {
-      console.error('Error loading statistics:', error);
-    }
-  };
-
-  const getAchievements = () => {
-    if (!profile) return [];
-
-    const achievements = [];
-
-    // Primeira avaliação
-    if (evaluations.length > 0) {
-      achievements.push({
-        icon: Star,
-        title: 'Primeira Avaliação',
-        description: 'Recebeu sua primeira avaliação',
-        date: new Date(evaluations[evaluations.length - 1].created_at),
-        iconColor: 'bg-blue-500',
-      });
-    }
-
-    // Membro confiável
-    if (profile.trust_level && ['silver', 'gold', 'platinum'].includes(profile.trust_level)) {
-      achievements.push({
-        icon: Shield,
-        title: 'Membro Confiável',
-        description: `Alcançou nível ${getTrustLevelInfo(profile.trust_level).label}`,
-        date: new Date(profile.created_at),
-        iconColor: 'bg-teal-500',
-      });
-    }
-
-    // Socialização
-    if (followersCount >= 10) {
-      achievements.push({
-        icon: Users,
-        title: 'Socialização',
-        description: `${followersCount} seguidores`,
-        date: new Date(profile.created_at),
-        iconColor: 'bg-orange-500',
-      });
-    }
-
-    return achievements.slice(0, 3);
-  };
 
   const handleSubmitResponse = async (evaluationId: string) => {
     const response = responseText[evaluationId];
@@ -640,7 +557,7 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
             {/* Left Column - Main Content */}
             <div className="lg:col-span-2 space-y-4">
               {/* Profile Header Card */}
-              <Card className="bg-card/50 backdrop-blur-sm border-2 shadow-lg">
+              <Card className="bg-gradient-to-br from-card/80 to-card/40 backdrop-blur-md border-2 border-primary/10 shadow-xl hover:shadow-2xl transition-all duration-300">
                 <CardContent className="p-6">
                   <div className="flex flex-col md:flex-row gap-6">
                     {/* Avatar */}
@@ -742,17 +659,17 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
                       {/* Informações unificadas */}
                       <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                         {profile.location && (
-                          <div className="flex items-center gap-1">
-                            <MapPin className="w-4 h-4" />
-                            <span>{profile.location}</span>
+                          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-blue-500/10 to-blue-600/10 rounded-full border border-blue-500/20">
+                            <MapPin className="w-4 h-4 text-blue-500" />
+                            <span className="text-foreground">{profile.location}</span>
                           </div>
                         )}
-                        <div className="flex items-center gap-1">
-                          <Calendar className="w-4 h-4" />
-                          <span>{profileType === 'business' ? 'Criado' : 'Membro desde'} {new Date(profile.created_at).toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' })}</span>
+                        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-purple-500/10 to-purple-600/10 rounded-full border border-purple-500/20">
+                          <Calendar className="w-4 h-4 text-purple-500" />
+                          <span className="text-foreground">{profileType === 'business' ? 'Criado' : 'Membro desde'} {new Date(profile.created_at).toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' })}</span>
                         </div>
                         {profileType === 'user' && (
-                          <Badge variant="outline" className={`${trustLevel.color} text-white border-0`}>
+                          <Badge variant="outline" className={`${trustLevel.color} text-white border-0 shadow-md`}>
                             {trustLevel.label}
                           </Badge>
                         )}
@@ -769,94 +686,65 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
                 </CardContent>
               </Card>
 
-              {/* Quick Actions Grid */}
-              <div className="grid grid-cols-2 gap-3">
-                <QuickActionCard
-                  title="Escrever Avaliação"
-                  description="Compartilhe sua experiência"
-                  icon={Edit}
-                  gradient="bg-gradient-to-br from-blue-500 to-blue-600"
-                  onClick={handleEvaluateClick}
-                />
-                <QuickActionCard
-                  title="Encontrar Serviços"
-                  description="Veja o que oferecemos"
-                  icon={Search}
-                  gradient="bg-gradient-to-br from-teal-500 to-teal-600"
-                  onClick={() => handleTabChange('servicos')}
-                />
-                {isProfileOwner && (
-                  <QuickActionCard
-                    title="Atualizar Portfólio"
-                    description="Gerencie seus trabalhos"
-                    icon={FolderOpen}
-                    gradient="bg-gradient-to-br from-orange-500 to-orange-600"
-                    onClick={() => navigate('/profile-edit')}
-                  />
-                )}
-                <QuickActionCard
-                  title="Ver Mensagens"
-                  description="Converse conosco"
-                  icon={Mail}
-                  gradient="bg-gradient-to-br from-green-500 to-green-600"
-                  onClick={() => navigate('/messages')}
-                />
-              </div>
-
               {/* Tabs Navigation */}
-              <Card className="bg-card/50 backdrop-blur-sm border-2 shadow-lg">
+              <Card className="bg-gradient-to-br from-card/80 to-card/40 backdrop-blur-md border-2 border-primary/10 shadow-xl">
                 <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
                   <TabsList className="w-full justify-start rounded-none border-b bg-transparent h-auto p-0 flex flex-nowrap overflow-x-auto scrollbar-hide">
                     <TabsTrigger 
                       value="inicio" 
-                      className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3 text-sm whitespace-nowrap flex-shrink-0"
+                      className="rounded-none border-b-3 border-transparent data-[state=active]:border-primary data-[state=active]:bg-gradient-to-b data-[state=active]:from-primary/10 data-[state=active]:to-transparent px-5 py-4 text-sm whitespace-nowrap flex-shrink-0 transition-all duration-200 hover:bg-primary/5"
                     >
+                      <Briefcase className="w-4 h-4 mr-2 text-orange-500" />
                       Início
                     </TabsTrigger>
                     {hasTestimonials && (
                       <TabsTrigger 
                         value="depoimentos"
-                        className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3 text-sm whitespace-nowrap flex-shrink-0"
+                        className="rounded-none border-b-3 border-transparent data-[state=active]:border-primary data-[state=active]:bg-gradient-to-b data-[state=active]:from-primary/10 data-[state=active]:to-transparent px-5 py-4 text-sm whitespace-nowrap flex-shrink-0 transition-all duration-200 hover:bg-primary/5"
                       >
+                        <MessageSquare className="w-4 h-4 mr-2 text-teal-500" />
                         Depoimentos
                       </TabsTrigger>
                     )}
                     {hasPortfolio && (
                       <TabsTrigger 
                         value="portfolio"
-                        className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3 text-sm whitespace-nowrap flex-shrink-0"
+                        className="rounded-none border-b-3 border-transparent data-[state=active]:border-primary data-[state=active]:bg-gradient-to-b data-[state=active]:from-primary/10 data-[state=active]:to-transparent px-5 py-4 text-sm whitespace-nowrap flex-shrink-0 transition-all duration-200 hover:bg-primary/5"
                       >
+                        <Briefcase className="w-4 h-4 mr-2 text-purple-500" />
                         Portfólio
                       </TabsTrigger>
                     )}
                     {hasCatalog && (
                       <TabsTrigger 
                         value="servicos"
-                        className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3 text-sm whitespace-nowrap flex-shrink-0"
+                        className="rounded-none border-b-3 border-transparent data-[state=active]:border-primary data-[state=active]:bg-gradient-to-b data-[state=active]:from-primary/10 data-[state=active]:to-transparent px-5 py-4 text-sm whitespace-nowrap flex-shrink-0 transition-all duration-200 hover:bg-primary/5"
                       >
+                        <Star className="w-4 h-4 mr-2 text-yellow-500" />
                         Serviços
                       </TabsTrigger>
                     )}
                     {hasJobVacancies && (
                       <TabsTrigger 
                         value="vagas"
-                        className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3 text-sm whitespace-nowrap flex-shrink-0"
+                        className="rounded-none border-b-3 border-transparent data-[state=active]:border-primary data-[state=active]:bg-gradient-to-b data-[state=active]:from-primary/10 data-[state=active]:to-transparent px-5 py-4 text-sm whitespace-nowrap flex-shrink-0 transition-all duration-200 hover:bg-primary/5"
                       >
+                        <Briefcase className="w-4 h-4 mr-2 text-green-500" />
                         Vagas
                       </TabsTrigger>
                     )}
                     <TabsTrigger 
                       value="positivas"
-                      className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3 text-sm whitespace-nowrap flex-shrink-0 flex items-center gap-1.5"
+                      className="rounded-none border-b-3 border-transparent data-[state=active]:border-green-500 data-[state=active]:bg-gradient-to-b data-[state=active]:from-green-500/10 data-[state=active]:to-transparent px-5 py-4 text-sm whitespace-nowrap flex-shrink-0 flex items-center gap-1.5 transition-all duration-200 hover:bg-green-500/5"
                     >
-                      <ThumbsUp className="w-4 h-4" />
+                      <ThumbsUp className="w-4 h-4 text-green-500" />
                       Avaliações ({positiveEvaluations.length})
                     </TabsTrigger>
                     <TabsTrigger 
                       value="reclamacoes"
-                      className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3 text-sm whitespace-nowrap flex-shrink-0 flex items-center gap-1.5"
+                      className="rounded-none border-b-3 border-transparent data-[state=active]:border-red-500 data-[state=active]:bg-gradient-to-b data-[state=active]:from-red-500/10 data-[state=active]:to-transparent px-5 py-4 text-sm whitespace-nowrap flex-shrink-0 flex items-center gap-1.5 transition-all duration-200 hover:bg-red-500/5"
                     >
-                      <AlertCircle className="w-4 h-4" />
+                      <AlertCircle className="w-4 h-4 text-red-500" />
                       Reclamações ({complaintEvaluations.length})
                     </TabsTrigger>
                   </TabsList>
@@ -917,7 +805,7 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
                       <div className="flex items-center justify-between mb-4">
                         <div>
                           <h2 className="text-xl font-bold flex items-center gap-2">
-                            <ThumbsUp className="w-5 h-5" />
+                            <ThumbsUp className="w-5 h-5 text-green-500" />
                             Avaliações Positivas
                           </h2>
                           {positiveEvaluations.length > 0 && (
@@ -959,8 +847,8 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
                         <>
                           <div className="space-y-4">
                             {positiveEvaluations.slice(0, showAllPositive ? undefined : 5).map((evaluation) => (
-                              <Card key={evaluation.id}>
-                                <CardContent className="p-4">
+                              <Card key={evaluation.id} className="border-l-4 border-l-green-500 bg-gradient-to-r from-green-500/5 to-transparent hover:shadow-lg hover:scale-[1.01] transition-all duration-300">
+                                <CardContent className="p-5">
                                   <div className="flex items-start gap-4">
                                     <ClickableProfile
                                       profileId={evaluation.user_id}
@@ -1086,7 +974,7 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
                       <div className="flex items-center justify-between mb-4">
                         <div>
                           <h2 className="text-xl font-bold flex items-center gap-2">
-                            <AlertCircle className="w-5 h-5" />
+                            <AlertCircle className="w-5 h-5 text-red-500" />
                             Reclamações
                           </h2>
                           {complaintEvaluations.length > 0 && (
@@ -1128,8 +1016,8 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
                         <>
                           <div className="space-y-4">
                             {complaintEvaluations.slice(0, showAllComplaints ? undefined : 5).map((evaluation) => (
-                              <Card key={evaluation.id}>
-                                <CardContent className="p-4">
+                              <Card key={evaluation.id} className="border-l-4 border-l-red-500 bg-gradient-to-r from-red-500/5 to-transparent hover:shadow-lg hover:scale-[1.01] transition-all duration-300">
+                                <CardContent className="p-5">
                                   <div className="flex items-start gap-4">
                                     <ClickableProfile
                                       profileId={evaluation.user_id}
@@ -1254,76 +1142,16 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
 
             {/* Right Column - Info Sidebar */}
             <div className="space-y-4">
-              {/* Statistics Card */}
-              <Card className="bg-card/50 backdrop-blur-sm border-2 shadow-lg">
-                <CardContent className="p-6">
-                  <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
-                    <BarChart3 className="w-5 h-5 text-primary" />
-                    Suas Estatísticas
-                  </h3>
-                  <div className="space-y-1">
-                    <StatisticRow
-                      icon={Star}
-                      label="Avaliações Dadas"
-                      value={evaluationsGivenCount}
-                      iconColor="bg-yellow-500"
-                    />
-                    <StatisticRow
-                      icon={MessageSquare}
-                      label="Avaliações Recebidas"
-                      value={evaluations.length}
-                      iconColor="bg-blue-500"
-                    />
-                    <StatisticRow
-                      icon={Users}
-                      label="Seguidores"
-                      value={followersCount}
-                      iconColor="bg-purple-500"
-                    />
-                    <StatisticRow
-                      icon={UserIcon}
-                      label="Seguindo"
-                      value={followingCount}
-                      iconColor="bg-green-500"
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Achievements Card */}
-              {getAchievements().length > 0 && (
-                <Card className="bg-card/50 backdrop-blur-sm border-2 shadow-lg">
-                  <CardContent className="p-6">
-                    <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
-                      <Trophy className="w-5 h-5 text-primary" />
-                      Conquistas Recentes
-                    </h3>
-                    <div className="space-y-1">
-                      {getAchievements().map((achievement, idx) => (
-                        <AchievementItem
-                          key={idx}
-                          icon={achievement.icon}
-                          title={achievement.title}
-                          description={achievement.description}
-                          date={achievement.date}
-                          iconColor={achievement.iconColor}
-                        />
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
               {/* Rating Highlight Card */}
-              <Card className="bg-gradient-to-br from-primary/10 to-secondary/10 border-2 border-primary/20 shadow-glow">
+              <Card className="bg-gradient-to-br from-primary/20 via-primary/10 to-secondary/10 border-2 border-primary/30 shadow-2xl hover:shadow-primary/20 transition-all duration-300 hover:scale-[1.02]">
                 <CardContent className="p-6">
                   <div 
                     className="text-center cursor-pointer hover:opacity-80 transition-opacity" 
                     onClick={handleEvaluateClick}
                   >
-                    <div className="flex items-center justify-center gap-2 mb-2">
-                      <Star className="w-8 h-8 text-primary fill-primary" />
-                      <span className="text-5xl font-bold text-primary">
+                    <div className="flex items-center justify-center gap-3 mb-2">
+                      <Star className="w-10 h-10 text-yellow-500 fill-yellow-500 drop-shadow-lg" />
+                      <span className="text-6xl font-bold bg-gradient-to-br from-primary to-primary/70 bg-clip-text text-transparent">
                         {averageRating > 0 ? averageRating.toFixed(1) : '0.0'}
                       </span>
                     </div>
@@ -1363,7 +1191,7 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
                       </h3>
                       <div className="space-y-3">
                         {positiveEvaluations.slice(0, 5).map((evaluation) => (
-                          <div key={evaluation.id} className="bg-background/60 rounded-lg p-3 border border-border/30">
+                          <div key={evaluation.id} className="bg-gradient-to-r from-green-500/10 to-transparent rounded-lg p-3 border-l-2 border-l-green-500 hover:shadow-md hover:scale-[1.02] transition-all duration-200 cursor-pointer" onClick={() => handleTabChange("positivas")}>
                             <div className="flex items-start gap-2 mb-2">
                               {evaluation.profiles?.avatar_url ? (
                                 <SafeImage
@@ -1412,12 +1240,12 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
                   {complaintEvaluations.length > 0 && (
                     <div className="mt-6 pt-6 border-t border-border/50">
                       <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
-                        <AlertCircle className="w-4 h-4 text-orange-500" />
+                        <AlertCircle className="w-4 h-4 text-red-500" />
                         Últimas Reclamações
                       </h3>
                       <div className="space-y-3">
                         {complaintEvaluations.slice(0, 5).map((evaluation) => (
-                          <div key={evaluation.id} className="bg-background/60 rounded-lg p-3 border border-border/30">
+                          <div key={evaluation.id} className="bg-gradient-to-r from-red-500/10 to-transparent rounded-lg p-3 border-l-2 border-l-red-500 hover:shadow-md hover:scale-[1.02] transition-all duration-200 cursor-pointer" onClick={() => handleTabChange("reclamacoes")}>
                             <div className="flex items-start gap-2 mb-2">
                               {evaluation.profiles?.avatar_url ? (
                                 <SafeImage

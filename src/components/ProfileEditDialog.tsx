@@ -339,6 +339,25 @@ export function ProfileEditDialog({ open, onOpenChange, userId, profileId, onUpd
         // Sincronizar slug para perfis business e liberar identificador antigo
         if (profile.profile_type === 'business') {
           updateData.slug = profile.username;
+          updateData.last_slug_change_at = new Date().toISOString();
+        }
+      }
+
+      // Validação crítica: para perfis business, garantir que slug está sincronizado
+      if (profile.profile_type === 'business' && profile.username !== originalUsername) {
+        if (!updateData.slug || updateData.slug !== profile.username) {
+          console.error('[ProfileEditDialog] ERRO: slug não foi configurado corretamente!', {
+            username: profile.username,
+            slug: updateData.slug,
+            profileType: profile.profile_type
+          });
+          toast({
+            title: 'Erro interno',
+            description: 'Falha ao sincronizar identificador. Contate o suporte.',
+            variant: 'destructive',
+          });
+          setLoading(false);
+          return;
         }
       }
 
@@ -356,10 +375,25 @@ export function ProfileEditDialog({ open, onOpenChange, userId, profileId, onUpd
         updateData.cpf = profile.cpf.replace(/\D/g, '');
       }
 
-      const { error } = await supabase
+      console.log('[ProfileEditDialog] Salvando perfil:', {
+        profileId: profile.id,
+        updateData: updateData,
+        originalUsername: originalUsername,
+        newUsername: profile.username,
+        profileType: profile.profile_type
+      });
+
+      const { error, data } = await supabase
         .from('profiles')
         .update(updateData)
-        .eq('id', profile.id);
+        .eq('id', profile.id)
+        .select();
+
+      console.log('[ProfileEditDialog] Resultado do update:', {
+        error: error,
+        data: data,
+        success: !error
+      });
 
       if (error) throw error;
 

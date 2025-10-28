@@ -519,33 +519,57 @@ export function InlinePhotoUpload({
               />
             )}
             
+            {/* Overlay central para capa padrão */}
+            {type === 'cover' && !localCoverUrl && !currentPhotoUrl && !coverPreview && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm z-10 group cursor-pointer">
+                <div className="text-center">
+                  <p className="text-white text-lg md:text-xl font-semibold mb-4">Altere a capa</p>
+                  <div className="flex gap-3 justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      className="bg-white/90 hover:bg-white px-4 py-2 rounded-lg shadow-lg transition-all hover:scale-105 text-sm font-medium"
+                    >
+                      Enviar Nova
+                    </button>
+                    <button
+                      onClick={() => setShowTemplateDialog(true)}
+                      className="bg-white/90 hover:bg-white px-4 py-2 rounded-lg shadow-lg transition-all hover:scale-105 text-sm font-medium flex items-center gap-2"
+                    >
+                      <Sparkles className="w-4 h-4" />
+                      <span>Usar Prontas</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Ícone de câmera - posição diferente para avatar e cover */}
             {!uploading && !moderating && isHovered && !imageToCrop && (
               <>
                 {type === 'cover' ? (
-                  <div className="absolute top-3 right-3 flex gap-2 z-10">
-                    <button
-                      onClick={() => setShowTemplateDialog(true)}
-                      className="bg-background/90 hover:bg-background px-3 py-1.5 rounded-lg shadow-lg transition-all hover:scale-105 border-2 border-border text-sm flex items-center gap-1.5"
-                    >
-                      <Sparkles className="w-3.5 h-3.5" />
-                      <span>Capas Prontas</span>
-                    </button>
-                    {(localCoverUrl || currentPhotoUrl) && (
+                  (localCoverUrl || currentPhotoUrl) && (
+                    <div className="absolute top-3 right-3 flex gap-2 z-10">
+                      <button
+                        onClick={() => setShowTemplateDialog(true)}
+                        className="bg-background/90 hover:bg-background px-3 py-1.5 rounded-lg shadow-lg transition-all hover:scale-105 border-2 border-border text-sm flex items-center gap-1.5"
+                      >
+                        <Sparkles className="w-3.5 h-3.5" />
+                        <span>Capas Prontas</span>
+                      </button>
                       <button
                         onClick={handleAdjustCover}
                         className="bg-background/90 hover:bg-background px-3 py-1.5 rounded-lg shadow-lg transition-all hover:scale-105 border-2 border-border text-sm"
                       >
                         Ajustar
                       </button>
-                    )}
-                    <button
-                      onClick={() => fileInputRef.current?.click()}
-                      className="bg-background/90 hover:bg-background p-2.5 rounded-full shadow-lg transition-all hover:scale-110 border-2 border-border"
-                    >
-                      <Camera className="w-4 h-4 text-foreground" />
-                    </button>
-                  </div>
+                      <button
+                        onClick={() => fileInputRef.current?.click()}
+                        className="bg-background/90 hover:bg-background p-2.5 rounded-full shadow-lg transition-all hover:scale-110 border-2 border-border"
+                      >
+                        <Camera className="w-4 h-4 text-foreground" />
+                      </button>
+                    </div>
+                  )
                 ) : (
                   <button
                     onClick={() => fileInputRef.current?.click()}

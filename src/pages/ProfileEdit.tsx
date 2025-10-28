@@ -684,12 +684,18 @@ export default function ProfileEdit() {
     setSaving(true);
 
     // Dados unificados para ambos tipos de perfil
-    const updateData = {
-      full_name: profile.full_name,
+    const updateData: any = {
       bio: profile.bio,
       location: profile.location,
       website: profile.website,
     };
+    
+    // Adicionar campo de nome correto baseado no tipo
+    if (profileType === 'business') {
+      updateData.company_name = profile.company_name;
+    } else {
+      updateData.full_name = profile.full_name;
+    }
 
     const { error } = await supabase
       .from('profiles')
@@ -863,10 +869,13 @@ export default function ProfileEdit() {
   const handleAvatarUpload = async (url: string) => {
     if (!profile) return;
 
-    // Campo unificado para ambos tipos
+    // Usar campo correto baseado no tipo de perfil
+    const fieldName = profileType === 'business' ? 'logo_url' : 'avatar_url';
+    const updateData = { [fieldName]: `${url}?t=${Date.now()}` }; // Cache busting
+
     const { error } = await supabase
       .from('profiles')
-      .update({ avatar_url: url })
+      .update(updateData)
       .eq('id', profile.id);
 
     if (error) {
@@ -883,7 +892,11 @@ export default function ProfileEdit() {
         variant: 'destructive'
       });
     } else {
-      setProfile({ ...profile, avatar_url: url });
+      if (profileType === 'business') {
+        setProfile({ ...profile, logo_url: updateData.logo_url });
+      } else {
+        setProfile({ ...profile, avatar_url: updateData.avatar_url });
+      }
       toast({ title: 'Foto de perfil atualizada!' });
     }
   };
@@ -918,10 +931,13 @@ export default function ProfileEdit() {
   const handleAvatarDelete = async () => {
     if (!profile) return;
 
-    // Campo unificado
+    // Usar campo correto baseado no tipo de perfil
+    const fieldName = profileType === 'business' ? 'logo_url' : 'avatar_url';
+    const updateData = { [fieldName]: null };
+
     const { error } = await supabase
       .from('profiles')
-      .update({ avatar_url: null })
+      .update(updateData)
       .eq('id', profile.id);
 
     if (error) {
@@ -938,7 +954,11 @@ export default function ProfileEdit() {
         variant: 'destructive'
       });
     } else {
-      setProfile({ ...profile, avatar_url: null });
+      if (profileType === 'business') {
+        setProfile({ ...profile, logo_url: null });
+      } else {
+        setProfile({ ...profile, avatar_url: null });
+      }
       toast({ title: 'Foto de perfil removida!' });
     }
   };
@@ -1550,11 +1570,11 @@ export default function ProfileEdit() {
                           
                           <div className="relative px-4 pb-4">
                             <div className="absolute -top-12 left-4">
-                              <div className="relative group w-32 h-32 rounded-xl border-4 border-background overflow-hidden bg-background shadow-xl">
-                                {profile.avatar_url ? (
+                          <div className="relative group w-32 h-32 rounded-xl border-4 border-background overflow-hidden bg-background shadow-xl">
+                                {(profileType === 'business' ? profile.logo_url : profile.avatar_url) ? (
                                   <img 
-                                    src={profile.avatar_url} 
-                                    alt="Avatar" 
+                                    src={profileType === 'business' ? profile.logo_url || '' : profile.avatar_url || ''} 
+                                    alt={profileType === 'business' ? 'Logo' : 'Avatar'} 
                                     className="w-full h-full object-cover"
                                   />
                                 ) : (
@@ -1593,7 +1613,7 @@ export default function ProfileEdit() {
                             <div className="pt-6 pl-40">
                               <div className="inline-block bg-background/95 backdrop-blur-sm px-6 py-2 rounded-lg shadow-sm border">
                                 <h2 className="text-2xl font-bold whitespace-nowrap">
-                                  {profile.full_name || profile.username}
+                                  {profileType === 'business' ? (profile.company_name || profile.username) : (profile.full_name || profile.username)}
                                 </h2>
                               </div>
                             </div>
@@ -1609,9 +1629,9 @@ export default function ProfileEdit() {
                       <div className="hidden">
                         <div data-upload-type="avatar">
                           <ImageUpload
-                            currentImageUrl={profile.avatar_url}
+                            currentImageUrl={profileType === 'business' ? profile.logo_url : profile.avatar_url}
                             onUpload={handleAvatarUpload}
-                            bucket="avatars"
+                            bucket={profileType === 'business' ? 'business-logos' : 'avatars'}
                             folder={profile.user_id}
                             type="logo"
                           />
@@ -2005,8 +2025,14 @@ export default function ProfileEdit() {
                             {profileType === 'business' ? 'Nome da Empresa / Razão Social' : 'Nome Completo'}
                           </Label>
                           <Input
-                            value={profile.full_name || ''}
-                            onChange={(e) => setProfile({ ...profile, full_name: e.target.value })}
+                            value={profileType === 'business' ? (profile.company_name || '') : (profile.full_name || '')}
+                            onChange={(e) => {
+                              if (profileType === 'business') {
+                                setProfile({ ...profile, company_name: e.target.value });
+                              } else {
+                                setProfile({ ...profile, full_name: e.target.value });
+                              }
+                            }}
                             placeholder={profileType === 'business' ? 'Nome da sua empresa' : 'Seu nome completo'}
                             className="text-base"
                           />

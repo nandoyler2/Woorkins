@@ -46,15 +46,18 @@ export function PublicCatalog({ entityType, entityId, onNegotiateClick }: Public
   if (items.length === 0) return null;
 
   return (
-    <Card className="mb-6">
+    <Card className="mb-6 bg-gradient-to-br from-green-500/10 to-green-600/5 border-l-4 border-l-green-500 hover:shadow-xl transition-all duration-300 backdrop-blur-sm">
       <CardHeader>
-        <CardTitle>Catálogo de Serviços</CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          <span className="text-green-500">💼</span>
+          Catálogo de Serviços
+        </CardTitle>
         <CardDescription>Conheça nossos produtos e serviços</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {items.map((item) => (
-            <Card key={item.id}>
+            <Card key={item.id} className="border-2 border-green-500/20 hover:shadow-xl hover:scale-[1.02] transition-all duration-300">
               {item.image_url && (
                 <div className="aspect-video overflow-hidden">
                   <SafeImage
@@ -67,17 +70,17 @@ export function PublicCatalog({ entityType, entityId, onNegotiateClick }: Public
               <CardContent className="p-4">
                 <h4 className="font-semibold mb-2">{item.name}</h4>
                 {item.category && (
-                  <Badge variant="secondary" className="mb-2">{item.category}</Badge>
+                  <Badge variant="secondary" className="mb-2 bg-gradient-to-r from-green-500/20 to-green-600/20 border-green-500/30">{item.category}</Badge>
                 )}
                 {item.description && (
                   <p className="text-sm text-muted-foreground mb-3 line-clamp-3">{item.description}</p>
                 )}
                 <div className="flex items-center justify-between">
-                  <span className="text-lg font-bold text-primary">
+                  <span className="text-lg font-bold bg-gradient-to-r from-green-500 to-green-600 bg-clip-text text-transparent">
                     R$ {item.price.toFixed(2)}
                   </span>
                   {onNegotiateClick && (
-                    <Button size="sm" onClick={() => onNegotiateClick(item)}>
+                    <Button size="sm" onClick={() => onNegotiateClick(item)} className="bg-gradient-to-r from-green-500 to-green-600 hover:shadow-lg transition-all">
                       Negociar
                     </Button>
                   )}

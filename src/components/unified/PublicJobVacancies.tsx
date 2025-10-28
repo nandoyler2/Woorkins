@@ -62,10 +62,10 @@ export function PublicJobVacancies({ entityType, entityId }: PublicJobVacanciesP
   };
 
   return (
-    <Card className="mb-6">
+    <Card className="mb-6 bg-gradient-to-br from-orange-500/10 to-orange-600/5 border-l-4 border-l-orange-500 hover:shadow-xl transition-all duration-300 backdrop-blur-sm">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Briefcase className="h-5 w-5" />
+          <Briefcase className="h-6 w-6 text-orange-500" />
           Vagas de Emprego
         </CardTitle>
         <CardDescription>Confira as oportunidades disponíveis</CardDescription>
@@ -73,25 +73,28 @@ export function PublicJobVacancies({ entityType, entityId }: PublicJobVacanciesP
       <CardContent>
         <div className="space-y-4">
           {vacancies.map((vacancy) => (
-            <Card key={vacancy.id}>
+            <Card key={vacancy.id} className="border-l-4 border-l-orange-500 bg-gradient-to-r from-orange-500/5 to-transparent hover:shadow-lg hover:scale-[1.01] transition-all duration-300">
               <CardContent className="p-4">
                 <div className="flex items-start justify-between mb-3">
               <div>
-                    <h4 className="font-semibold text-lg">{vacancy.title}</h4>
+                    <h4 className="font-semibold text-lg flex items-center gap-2">
+                      <Briefcase className="h-5 w-5 text-orange-500" />
+                      {vacancy.title}
+                    </h4>
                     <div className="flex items-center gap-3 mt-2 text-sm text-muted-foreground">
                       {vacancy.area && (
-                        <Badge variant="secondary">{vacancy.area}</Badge>
+                        <Badge variant="secondary" className="bg-gradient-to-r from-orange-500/20 to-orange-600/20 border-orange-500/30">{vacancy.area}</Badge>
                       )}
                       {vacancy.work_mode && (
                         <span className="flex items-center gap-1">
-                          <Briefcase className="h-4 w-4" />
+                          <Briefcase className="h-4 w-4 text-orange-500" />
                           {vacancy.work_mode}
                         </span>
                       )}
                     </div>
                   </div>
                   <span className="text-xs text-muted-foreground flex items-center gap-1">
-                    <Clock className="h-3 w-3" />
+                    <Clock className="h-3 w-3 text-orange-500" />
                     {getTimeAgo(vacancy.created_at)}
                   </span>
                 </div>
@@ -102,7 +105,7 @@ export function PublicJobVacancies({ entityType, entityId }: PublicJobVacanciesP
                 
                 <div className="flex items-center justify-between">
                   {(vacancy.salary_min || vacancy.salary_max) && (
-                    <span className="text-sm font-semibold text-primary">
+                    <span className="text-sm font-semibold bg-gradient-to-r from-orange-500 to-orange-600 bg-clip-text text-transparent">
                       {vacancy.salary_min && vacancy.salary_max
                         ? `R$ ${vacancy.salary_min.toLocaleString()} - R$ ${vacancy.salary_max.toLocaleString()}`
                         : vacancy.salary_min
@@ -110,7 +113,7 @@ export function PublicJobVacancies({ entityType, entityId }: PublicJobVacanciesP
                         : `Até R$ ${vacancy.salary_max?.toLocaleString()}`}
                     </span>
                   )}
-                  <Button size="sm">Ver Detalhes</Button>
+                  <Button size="sm" className="bg-gradient-to-r from-orange-500 to-orange-600 hover:shadow-lg transition-all">Ver Detalhes</Button>
                 </div>
               </CardContent>
             </Card>

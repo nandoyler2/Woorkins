@@ -54,9 +54,12 @@ export function PublicSocial({ entityType, entityId }: PublicSocialProps) {
   ].filter(item => item.url);
 
   return (
-    <Card className="mb-6">
+    <Card className="mb-6 bg-gradient-to-br from-teal-500/10 to-teal-600/5 border-l-4 border-l-teal-500 hover:shadow-xl transition-all duration-300 backdrop-blur-sm">
       <CardHeader>
-        <CardTitle>Redes Sociais</CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          <Globe className="h-6 w-6 text-teal-500" />
+          Redes Sociais
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -64,12 +67,12 @@ export function PublicSocial({ entityType, entityId }: PublicSocialProps) {
             <Button
               key={label}
               variant="outline"
-              className="h-auto py-4 flex flex-col items-center gap-2"
+              className="h-auto py-4 flex flex-col items-center gap-2 hover:scale-105 hover:shadow-lg transition-all duration-300"
               asChild
             >
               <a href={url!} target="_blank" rel="noopener noreferrer">
                 <Icon className={`h-6 w-6 ${color}`} />
-                <span className="text-xs">{label}</span>
+                <span className="text-xs font-medium">{label}</span>
               </a>
             </Button>
           ))}

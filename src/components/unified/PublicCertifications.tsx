@@ -43,10 +43,10 @@ export function PublicCertifications({ entityType, entityId }: PublicCertificati
   if (certifications.length === 0) return null;
 
   return (
-    <Card className="mb-6 bg-card/50 backdrop-blur-sm border-2 shadow-lg">
+    <Card className="mb-6 bg-gradient-to-br from-yellow-500/10 to-yellow-600/5 border-l-4 border-l-yellow-500 hover:shadow-xl transition-all duration-300 backdrop-blur-sm">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Award className="w-5 h-5" />
+          <Award className="h-6 w-6 text-yellow-500" />
           Certificações
         </CardTitle>
       </CardHeader>
@@ -55,9 +55,9 @@ export function PublicCertifications({ entityType, entityId }: PublicCertificati
           {certifications.map((cert) => (
             <div
               key={cert.id}
-              className="flex items-start gap-3 p-3 rounded-lg border bg-card hover:shadow-md transition-shadow"
+              className="flex items-start gap-3 p-4 rounded-lg border-l-2 border-l-yellow-500 bg-gradient-to-r from-yellow-500/5 to-transparent hover:shadow-lg hover:scale-[1.01] transition-all duration-200"
             >
-              <Award className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+              <Award className="w-5 h-5 text-yellow-500 shrink-0 mt-0.5" />
               <div className="flex-1 min-w-0">
                 <h4 className="font-semibold text-sm mb-1">{cert.title}</h4>
                 {cert.issued_by && (
@@ -71,8 +71,9 @@ export function PublicCertifications({ entityType, entityId }: PublicCertificati
               </div>
               <Button
                 size="sm"
-                variant="ghost"
+                variant="outline"
                 onClick={() => window.open(cert.file_url, '_blank')}
+                className="bg-gradient-to-r from-yellow-500/10 to-yellow-600/10 border-yellow-500/30 hover:bg-yellow-500/20"
               >
                 Ver
               </Button>

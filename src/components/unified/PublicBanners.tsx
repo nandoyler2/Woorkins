@@ -62,7 +62,7 @@ export function PublicBanners({ entityType, entityId }: PublicBannersProps) {
   );
 
   return (
-    <div className="w-full h-48 md:h-60 lg:h-72 relative overflow-hidden bg-muted rounded-lg mb-6">
+    <div className="w-full h-48 md:h-60 lg:h-72 relative overflow-hidden bg-muted rounded-lg mb-6 border-4 border-primary/20 shadow-2xl hover:scale-[1.01] transition-all duration-300">
       {currentBanner.link_url ? (
         <a
           href={currentBanner.link_url}
@@ -71,21 +71,25 @@ export function PublicBanners({ entityType, entityId }: PublicBannersProps) {
           className="block w-full h-full"
         >
           <BannerContent />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
         </a>
       ) : (
-        <BannerContent />
+        <>
+          <BannerContent />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
+        </>
       )}
 
       {banners.length > 1 && (
-        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2">
+        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2 z-10">
           {banners.map((_, idx) => (
             <button
               key={idx}
               onClick={() => setCurrentIndex(idx)}
-              className={`w-2 h-2 rounded-full transition-all ${
+              className={`h-3 rounded-full transition-all shadow-lg ${
                 idx === currentIndex
-                  ? "bg-white w-8"
-                  : "bg-white/50 hover:bg-white/75"
+                  ? "bg-white w-10 shadow-white/50"
+                  : "bg-white/50 hover:bg-white/75 w-3"
               }`}
             />
           ))}

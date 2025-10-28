@@ -34,6 +34,7 @@ import { GenericAppointmentsManager } from '@/components/generic/GenericAppointm
 import { GenericLinktreeManager } from '@/components/generic/GenericLinktreeManager';
 import { GenericJobVacanciesManager } from '@/components/generic/GenericJobVacanciesManager';
 import { GenericWhatsAppManager } from '@/components/generic/GenericWhatsAppManager';
+import { checkIdentifierAvailable, normalizeIdentifier, validateIdentifierFormat } from '@/lib/identifierValidation';
 import { Link } from 'react-router-dom';
 import {
   AlertDialog,
@@ -70,6 +71,7 @@ interface Profile {
   user_id: string;
   profile_id?: string;
   username: string;
+  username_last_changed?: string | null;
   slug?: string;
   full_name: string | null;
   company_name?: string;
@@ -174,6 +176,11 @@ export default function ProfileEdit() {
   const [viewsLastWeek, setViewsLastWeek] = useState<number>(0);
   const [canEditUsername, setCanEditUsername] = useState(true);
   const [daysUntilUsernameEdit, setDaysUntilUsernameEdit] = useState(0);
+  const [editingUsername, setEditingUsername] = useState(false);
+  const [newUsername, setNewUsername] = useState('');
+  const [usernameError, setUsernameError] = useState('');
+  const [checkingUsername, setCheckingUsername] = useState(false);
+  const [showUsernameConfirm, setShowUsernameConfirm] = useState(false);
   const imageInputRef = useRef<HTMLInputElement>(null);
   
   // Refs para inputs de upload
@@ -712,6 +719,126 @@ export default function ProfileEdit() {
       });
     }
 
+    setSaving(false);
+  };
+
+  // Função para calcular dias até próxima mudança de username
+  const getDaysUntilUsernameChange = (lastChanged: string | null | undefined): number => {
+    if (!lastChanged) return 0; // Nunca alterou, pode alterar
+    
+    const lastChangedDate = new Date(lastChanged);
+    const now = new Date();
+    const diffTime = now.getTime() - lastChangedDate.getTime();
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    
+    return Math.max(0, 7 - diffDays);
+  };
+
+  // Verificar se pode alterar username (primeira vez ou após 7 dias)
+  const canChangeUsername = (lastChanged: string | null | undefined): boolean => {
+    if (!lastChanged) return true; // Nunca alterou, pode alterar
+    return getDaysUntilUsernameChange(lastChanged) === 0;
+  };
+
+  // Validar username em tempo real
+  const validateUsername = async (username: string) => {
+    if (!username || username.trim() === '') {
+      setUsernameError('Username não pode estar vazio');
+      return false;
+    }
+
+    const normalized = normalizeIdentifier(username);
+    if (normalized !== username) {
+      setUsernameError('Use apenas letras minúsculas, números e hífens');
+      return false;
+    }
+
+    const formatValidation = validateIdentifierFormat(username);
+    if (!formatValidation.valid) {
+      setUsernameError(formatValidation.error || 'Username inválido');
+      return false;
+    }
+
+    // Se é o mesmo username atual, não precisa checar disponibilidade
+    if (username === profile?.username) {
+      setUsernameError('');
+      return true;
+    }
+
+    setCheckingUsername(true);
+    const isAvailable = await checkIdentifierAvailable(username);
+    setCheckingUsername(false);
+
+    if (!isAvailable) {
+      setUsernameError('Este username já está em uso');
+      return false;
+    }
+
+    setUsernameError('');
+    return true;
+  };
+
+  // Salvar novo username
+  const handleUsernameChange = async () => {
+    if (!profile || !newUsername) return;
+
+    const isValid = await validateUsername(newUsername);
+    if (!isValid) return;
+
+    // Verificar cooldown novamente (por segurança)
+    if (!canChangeUsername(profile.username_last_changed)) {
+      toast({
+        title: 'Alteração bloqueada',
+        description: `Você poderá alterar seu username em ${getDaysUntilUsernameChange(profile.username_last_changed)} dias`,
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setSaving(true);
+
+    // Atualizar username e username_last_changed
+    // Se username_last_changed for NULL, essa é a primeira alteração, então setamos o timestamp
+    const updateData: any = {
+      username: newUsername,
+    };
+
+    // Setar username_last_changed apenas se for NULL (primeira vez) ou após cooldown
+    if (!profile.username_last_changed) {
+      updateData.username_last_changed = new Date().toISOString();
+    }
+
+    const { error } = await supabase
+      .from('profiles')
+      .update(updateData)
+      .eq('id', profile.id);
+
+    if (error) {
+      console.error('[ProfileEdit] Erro ao alterar username:', error);
+      toast({
+        title: 'Erro ao alterar username',
+        description: error.message,
+        variant: 'destructive',
+      });
+      setSaving(false);
+      return;
+    }
+
+    // Atualizar estado local
+    setProfile({
+      ...profile,
+      username: newUsername,
+      username_last_changed: updateData.username_last_changed || profile.username_last_changed,
+    });
+
+    toast({
+      title: 'Username atualizado',
+      description: 'Seu username foi alterado com sucesso!',
+    });
+
+    setEditingUsername(false);
+    setNewUsername('');
+    setShowUsernameConfirm(false);
     setSaving(false);
   };
 
@@ -1954,15 +2081,112 @@ export default function ProfileEdit() {
                       <CardDescription>Gerencie as configurações da sua conta</CardDescription>
                     </div>
                     <CardContent className="p-6">
-                      <div className="space-y-4">
-                        <div className="flex items-center justify-between p-4 border rounded-lg">
-                          <div>
-                            <p className="font-medium">Username</p>
-                            <p className="text-sm text-muted-foreground">@{profile.username}</p>
+                      <div className="space-y-6">
+                        {/* Username Section */}
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <Label className="text-base font-semibold">Username</Label>
+                              <p className="text-sm text-muted-foreground mt-1">
+                                Seu identificador único na plataforma
+                              </p>
+                            </div>
                           </div>
-                          <Button variant="outline" size="sm" disabled>
-                            Alterar
-                          </Button>
+
+                          {editingUsername ? (
+                            <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
+                              <div className="space-y-2">
+                                <Label htmlFor="new-username">Novo Username</Label>
+                                <div className="flex gap-2">
+                                  <div className="flex-1">
+                                    <Input
+                                      id="new-username"
+                                      value={newUsername}
+                                      onChange={(e) => {
+                                        const value = e.target.value.toLowerCase();
+                                        setNewUsername(value);
+                                        if (value) validateUsername(value);
+                                      }}
+                                      placeholder="Digite o novo username"
+                                      className={usernameError ? 'border-red-500' : ''}
+                                      disabled={checkingUsername || saving}
+                                    />
+                                    {usernameError && (
+                                      <p className="text-sm text-red-500 mt-1">{usernameError}</p>
+                                    )}
+                                    {checkingUsername && (
+                                      <p className="text-sm text-muted-foreground mt-1">Verificando disponibilidade...</p>
+                                    )}
+                                    {!usernameError && newUsername && !checkingUsername && newUsername !== profile.username && (
+                                      <p className="text-sm text-green-600 mt-1">✓ Username disponível</p>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+
+                              {!canChangeUsername(profile.username_last_changed) && (
+                                <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+                                  <p className="text-sm text-amber-700 dark:text-amber-400">
+                                    <AlertTriangle className="w-4 h-4 inline mr-1" />
+                                    Você poderá alterar seu username em{' '}
+                                    <strong>{getDaysUntilUsernameChange(profile.username_last_changed)} dias</strong>
+                                  </p>
+                                </div>
+                              )}
+
+                              {!profile.username_last_changed && (
+                                <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                                  <p className="text-sm text-blue-700 dark:text-blue-400">
+                                    <Info className="w-4 h-4 inline mr-1" />
+                                    Esta é sua primeira alteração de username. Após salvar, você só poderá alterar novamente em 7 dias.
+                                  </p>
+                                </div>
+                              )}
+
+                              <div className="flex gap-2">
+                                <Button
+                                  onClick={() => setShowUsernameConfirm(true)}
+                                  disabled={!newUsername || !!usernameError || checkingUsername || saving || !canChangeUsername(profile.username_last_changed)}
+                                  className="flex-1"
+                                >
+                                  {saving ? 'Salvando...' : 'Salvar Username'}
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  onClick={() => {
+                                    setEditingUsername(false);
+                                    setNewUsername('');
+                                    setUsernameError('');
+                                  }}
+                                  disabled={saving}
+                                >
+                                  Cancelar
+                                </Button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="flex items-center justify-between p-4 border rounded-lg">
+                              <div>
+                                <p className="font-medium">@{profile.username}</p>
+                                {!canChangeUsername(profile.username_last_changed) && (
+                                  <p className="text-sm text-amber-600 dark:text-amber-400 mt-1">
+                                    Poderá alterar em {getDaysUntilUsernameChange(profile.username_last_changed)} dias
+                                  </p>
+                                )}
+                              </div>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setEditingUsername(true);
+                                  setNewUsername(profile.username);
+                                }}
+                                disabled={!canChangeUsername(profile.username_last_changed)}
+                              >
+                                Alterar
+                              </Button>
+                            </div>
+                          )}
                         </div>
 
                         <div className="p-4 border rounded-lg bg-muted/30">
@@ -1973,6 +2197,34 @@ export default function ProfileEdit() {
                         </div>
                       </div>
                     </CardContent>
+
+                    {/* Confirmation Dialog */}
+                    <AlertDialog open={showUsernameConfirm} onOpenChange={setShowUsernameConfirm}>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Confirmar alteração de username</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Você está prestes a alterar seu username de <strong>@{profile.username}</strong> para <strong>@{newUsername}</strong>.
+                            <br /><br />
+                            {!profile.username_last_changed ? (
+                              <span className="text-amber-600 dark:text-amber-400">
+                                Esta é sua primeira alteração. Após confirmar, você só poderá alterar novamente em 7 dias.
+                              </span>
+                            ) : (
+                              <span>
+                                Após confirmar, você só poderá alterar novamente em 7 dias.
+                              </span>
+                            )}
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                          <AlertDialogAction onClick={handleUsernameChange}>
+                            Confirmar alteração
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </Card>
                 </div>
               )}

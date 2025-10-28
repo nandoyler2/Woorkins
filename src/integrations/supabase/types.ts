@@ -1712,6 +1712,7 @@ export type Database = {
           user_id: string
           user_type: Database["public"]["Enums"]["user_type"]
           username: string | null
+          username_last_changed: string | null
           verified: boolean | null
           website: string | null
           website_url: string | null
@@ -1768,6 +1769,7 @@ export type Database = {
           user_id: string
           user_type?: Database["public"]["Enums"]["user_type"]
           username?: string | null
+          username_last_changed?: string | null
           verified?: boolean | null
           website?: string | null
           website_url?: string | null
@@ -1824,6 +1826,7 @@ export type Database = {
           user_id?: string
           user_type?: Database["public"]["Enums"]["user_type"]
           username?: string | null
+          username_last_changed?: string | null
           verified?: boolean | null
           website?: string | null
           website_url?: string | null
@@ -3467,6 +3470,10 @@ export type Database = {
       cleanup_expired_spam_blocks: { Args: never; Returns: undefined }
       cleanup_typing_indicators: { Args: never; Returns: undefined }
       delete_own_account: { Args: never; Returns: undefined }
+      generate_available_username: {
+        Args: { base_text: string }
+        Returns: string
+      }
       get_freelancer_wallet_balance: {
         Args: { freelancer_profile_id: string }
         Returns: {

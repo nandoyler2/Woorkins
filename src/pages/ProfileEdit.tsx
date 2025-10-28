@@ -872,7 +872,8 @@ export default function ProfileEdit() {
 
     // Usar campo correto baseado no tipo de perfil
     const fieldName = profileType === 'business' ? 'logo_url' : 'avatar_url';
-    const updateData = { [fieldName]: `${url}?t=${Date.now()}` }; // Cache busting
+    const updateData = { [fieldName]: url }; // Save clean URL to DB
+    const urlWithTimestamp = `${url}?t=${Date.now()}`; // Cache busting for local state
 
     const { error } = await supabase
       .from('profiles')
@@ -893,10 +894,11 @@ export default function ProfileEdit() {
         variant: 'destructive'
       });
     } else {
+      // Use URL with timestamp for local state to force cache refresh
       if (profileType === 'business') {
-        setProfile({ ...profile, logo_url: updateData.logo_url });
+        setProfile({ ...profile, logo_url: urlWithTimestamp });
       } else {
-        setProfile({ ...profile, avatar_url: updateData.avatar_url });
+        setProfile({ ...profile, avatar_url: urlWithTimestamp });
       }
       toast({ title: 'Foto de perfil atualizada!' });
     }
@@ -905,9 +907,12 @@ export default function ProfileEdit() {
   const handleCoverUpload = async (url: string) => {
     if (!profile) return;
 
+    // Add timestamp to force cache refresh
+    const urlWithTimestamp = `${url}?t=${Date.now()}`;
+
     const { error } = await supabase
       .from('profiles')
-      .update({ cover_url: url })
+      .update({ cover_url: url }) // Save without timestamp to DB
       .eq('id', profile.id);
 
     if (error) {
@@ -924,7 +929,8 @@ export default function ProfileEdit() {
         variant: 'destructive'
       });
     } else {
-      setProfile({ ...profile, cover_url: url });
+      // Use URL with timestamp for local state to force image refresh
+      setProfile({ ...profile, cover_url: urlWithTimestamp });
       toast({ title: 'Capa atualizada!' });
     }
   };
@@ -1536,6 +1542,7 @@ export default function ProfileEdit() {
                           {/* Capa */}
                           <div className="relative group h-48 w-full overflow-hidden rounded-t-lg">
                             <img 
+                              key={profile.cover_url}
                               src={profile.cover_url || defaultCover} 
                               alt="Capa" 
                               className="w-full h-full object-cover"
@@ -1573,6 +1580,7 @@ export default function ProfileEdit() {
                           <div className="relative group w-32 h-32 rounded-xl border-4 border-background overflow-hidden bg-background shadow-xl">
                                 {(profileType === 'business' ? profile.logo_url : profile.avatar_url) ? (
                                   <img 
+                                    key={profileType === 'business' ? profile.logo_url : profile.avatar_url}
                                     src={profileType === 'business' ? profile.logo_url || '' : profile.avatar_url || ''} 
                                     alt={profileType === 'business' ? 'Logo' : 'Avatar'} 
                                     className="w-full h-full object-cover"

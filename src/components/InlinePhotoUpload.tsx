@@ -5,6 +5,16 @@ import { Camera, Loader2, Sparkles, Trash2 } from 'lucide-react';
 import { PhotoCropDialog } from './PhotoCropDialog';
 import { compressImage } from '@/lib/imageCompression';
 import { CoverTemplateDialog } from './CoverTemplateDialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface InlinePhotoUploadProps {
   currentPhotoUrl?: string;
@@ -48,6 +58,7 @@ export function InlinePhotoUpload({
   const [localCoverUrl, setLocalCoverUrl] = useState<string | null>(null);
   const [isAdjusting, setIsAdjusting] = useState(false);
   const [showTemplateDialog, setShowTemplateDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -450,6 +461,7 @@ export function InlinePhotoUpload({
   const handleDeleteCover = async () => {
     if (!currentPhotoUrl && !localCoverUrl) return;
     
+    setShowDeleteDialog(false);
     setUploading(true);
     
     try {
@@ -625,7 +637,7 @@ export function InlinePhotoUpload({
                         <Camera className="w-4 h-4 text-foreground" />
                       </button>
                       <button
-                        onClick={handleDeleteCover}
+                        onClick={() => setShowDeleteDialog(true)}
                         className="bg-destructive/90 hover:bg-destructive p-2.5 rounded-full shadow-lg transition-all hover:scale-110 border-2 border-border"
                         title="Remover capa"
                       >
@@ -685,6 +697,23 @@ export function InlinePhotoUpload({
         onClose={() => setShowTemplateDialog(false)}
         onSelect={handleTemplateSelect}
       />
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remover capa?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja remover a capa? A capa padrão será exibida no lugar.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteCover} className="bg-destructive hover:bg-destructive/90">
+              Remover
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

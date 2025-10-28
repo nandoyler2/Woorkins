@@ -111,8 +111,12 @@ export function ProfilePhotoUpload({ currentPhotoUrl, userName, profileId, onPho
       // Upload approved photo
       setUploading(true);
 
+      // Get userId from auth
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Usuário não autenticado');
+
       const fileExt = originalFile.name.split('.').pop();
-      const fileName = `${profileId}-${Date.now()}.${fileExt}`;
+      const fileName = `${user.id}/${Date.now()}.${fileExt}`;
       
       // Determinar bucket e campo baseado no tipo de perfil
       const bucketName = profileType === 'business' ? 'business-logos' : 'avatars';
@@ -120,9 +124,15 @@ export function ProfilePhotoUpload({ currentPhotoUrl, userName, profileId, onPho
 
       // Delete old photo if exists
       if (currentPhotoUrl) {
-        const oldPath = currentPhotoUrl.split('/').pop();
-        if (oldPath) {
-          await supabase.storage.from(bucketName).remove([oldPath]);
+        try {
+          // Extract full path from URL
+          const urlParts = currentPhotoUrl.split(`${bucketName}/`);
+          if (urlParts.length > 1) {
+            const oldPath = urlParts[1].split('?')[0]; // Remove query params
+            await supabase.storage.from(bucketName).remove([oldPath]);
+          }
+        } catch (err) {
+          console.warn('Could not delete old photo:', err);
         }
       }
 

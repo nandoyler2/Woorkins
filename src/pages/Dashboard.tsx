@@ -549,7 +549,7 @@ export default function Dashboard() {
   const loadBusinessProfiles = async (profileId: string) => {
     const { data, error } = await supabase
     .from('profiles' as any)
-    .select('id, company_name, category, logo_url, slug')
+    .select('id, company_name, category, logo_url, slug, username')
     .eq('user_id', user?.id)
       .eq('profile_type', 'business');
     
@@ -1244,7 +1244,7 @@ export default function Dashboard() {
                           )}
                         </div>
                         <div className="flex gap-2 flex-shrink-0">
-                          <Link to={`/${business.slug || business.id}`}>
+                          <Link to={`/${(business as any).username || business.slug || business.id}`}>
                             <Button variant="outline" size="sm" className="h-7 w-7 p-0">
                               <Eye className="w-3.5 h-3.5" />
                             </Button>

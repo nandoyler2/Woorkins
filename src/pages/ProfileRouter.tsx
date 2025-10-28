@@ -18,12 +18,12 @@ export default function ProfileRouter() {
 
       console.log('[ProfileRouter] Checking profile type for slug:', slug);
 
-      // Primeiro verifica se é um slug de perfil profissional (business)
+      // Primeiro tenta resolver como perfil profissional (business) por slug OU username
       const { data: businessData, error: businessError } = await supabase
         .from('profiles')
-        .select('id, slug')
-        .eq('slug', slug)
+        .select('id, slug, username')
         .eq('profile_type', 'business')
+        .or(`slug.eq.${slug},username.eq.${slug}`)
         .maybeSingle();
 
       if (businessError) {
@@ -31,7 +31,7 @@ export default function ProfileRouter() {
       }
 
       if (businessData) {
-        console.log('[ProfileRouter] Business profile found:', businessData.id);
+        console.log('[ProfileRouter] Business profile found (by slug or username):', businessData.id);
         setProfileType('business');
         setProfileId(businessData.id);
         return;

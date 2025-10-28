@@ -552,143 +552,144 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Left Column - Main Content */}
             <div className="lg:col-span-2 space-y-4">
-              {/* Avatar e Nome fora da caixa */}
-              <div className="flex items-end gap-6 mb-4">
-                {/* Avatar */}
-                <div className="flex-shrink-0">
-                  {isProfileOwner ? (
-                    <InlinePhotoUpload
-                      currentPhotoUrl={profile.avatar_url || undefined}
-                      userId={user!.id}
-                      userName={profileType === 'business' 
-                        ? (profile.company_name || profile.username)
-                        : (profile.full_name || profile.username)
-                      }
-                      onPhotoUpdated={loadUserProfile}
-                      type="avatar"
-                      className="w-36 h-36 rounded-full"
-                      entityType={profileType}
-                      profileId={profile.id}
-                    >
-                      <div 
-                        className="cursor-pointer"
-                        onClick={() => profile.avatar_url && setShowImageViewer(true)}
-                      >
-                        {profile.avatar_url ? (
-                          <SafeImage
-                            src={profile.avatar_url}
-                            alt={profileType === 'business' 
-                              ? (profile.company_name || profile.username)
-                              : formatFullName(profile.full_name)
-                            }
-                            className="w-36 h-36 rounded-full object-cover bg-card border-4 border-background shadow-lg"
-                          />
-                        ) : (
-                          <div className="w-36 h-36 rounded-full bg-card border-4 border-background shadow-lg flex items-center justify-center">
-                            <UserIcon className="w-16 h-16 text-muted-foreground" />
-                          </div>
-                        )}
-                      </div>
-                    </InlinePhotoUpload>
-                  ) : (
-                    <div 
-                      className="cursor-pointer"
-                      onClick={() => profile.avatar_url && setShowImageViewer(true)}
-                    >
-                      {profile.avatar_url ? (
-                        <SafeImage
-                          src={profile.avatar_url}
-                          alt={profileType === 'business' 
-                            ? (profile.company_name || profile.username)
-                            : formatFullName(profile.full_name)
-                          }
-                          className="w-36 h-36 rounded-full object-cover bg-card border-4 border-background shadow-lg"
-                        />
-                      ) : (
-                        <div className="w-36 h-36 rounded-full bg-card border-4 border-background shadow-lg flex items-center justify-center">
-                          <UserIcon className="w-16 h-16 text-muted-foreground" />
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-                
-                {/* Nome ao lado do avatar */}
-                <div className="flex-1 pb-4">
-                  <h1 
-                    className={`text-3xl md:text-4xl font-bold ${isCoverDark ? 'text-white' : 'text-black'}`}
-                    style={{
-                      textShadow: isCoverDark 
-                        ? '2px 2px 4px rgba(0, 0, 0, 0.8)' 
-                        : '2px 2px 4px rgba(255, 255, 255, 0.8)'
-                    }}
-                  >
-                    {profileType === 'business' 
-                      ? (profile.company_name || formatFullName(profile.full_name))
-                      : formatFullName(profile.full_name)
-                    }
-                  </h1>
-                  {!isProfileOwner && (
-                    <Button
-                      variant={isFollowing ? 'secondary' : 'outline'}
-                      size="sm"
-                      className="rounded-full mt-2"
-                      onClick={handleFollowClick}
-                      disabled={followLoading}
-                    >
-                      {isFollowing ? 'Seguindo' : 'Seguir'}
-                    </Button>
-                  )}
-                </div>
-              </div>
-
-              {/* Profile Info Card */}
+              {/* Profile Header Card */}
               <Card className="bg-card/50 backdrop-blur-sm border-2 shadow-lg">
                 <CardContent className="p-6">
-                  <div className="space-y-3">
-                    <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        {profile.verified && (
-                          <Badge variant="default" className="text-xs">
-                            ✓ Verificado
+                  <div className="flex flex-col md:flex-row gap-6">
+                    {/* Avatar */}
+                    <div className="-mt-20 flex flex-col items-center gap-3">
+                      {isProfileOwner ? (
+                        <InlinePhotoUpload
+                          currentPhotoUrl={profile.avatar_url || undefined}
+                          userId={user!.id}
+                          userName={profileType === 'business' 
+                            ? (profile.company_name || profile.username)
+                            : (profile.full_name || profile.username)
+                          }
+                          onPhotoUpdated={loadUserProfile}
+                          type="avatar"
+                          className="w-36 h-36 rounded-full"
+                          entityType={profileType}
+                          profileId={profile.id}
+                        >
+                          <div 
+                            className="cursor-pointer"
+                            onClick={() => profile.avatar_url && setShowImageViewer(true)}
+                          >
+                            {profile.avatar_url ? (
+                              <SafeImage
+                                src={profile.avatar_url}
+                                alt={profileType === 'business' 
+                                  ? (profile.company_name || profile.username)
+                                  : formatFullName(profile.full_name)
+                                }
+                                className="w-36 h-36 rounded-full object-cover bg-card border-4 border-background shadow-lg"
+                              />
+                            ) : (
+                              <div className="w-36 h-36 rounded-full bg-card border-4 border-background shadow-lg flex items-center justify-center">
+                                <UserIcon className="w-16 h-16 text-muted-foreground" />
+                              </div>
+                            )}
+                          </div>
+                        </InlinePhotoUpload>
+                      ) : (
+                        <div 
+                          className="cursor-pointer"
+                          onClick={() => profile.avatar_url && setShowImageViewer(true)}
+                        >
+                          {profile.avatar_url ? (
+                            <SafeImage
+                              src={profile.avatar_url}
+                              alt={profileType === 'business' 
+                                ? (profile.company_name || profile.username)
+                                : formatFullName(profile.full_name)
+                              }
+                              className="w-36 h-36 rounded-full object-cover bg-card border-4 border-background shadow-lg"
+                            />
+                          ) : (
+                            <div className="w-36 h-36 rounded-full bg-card border-4 border-background shadow-lg flex items-center justify-center">
+                              <UserIcon className="w-16 h-16 text-muted-foreground" />
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      
+                      {/* Nome do usuário abaixo do avatar */}
+                      <div className="text-center">
+                        <h1 
+                          className={`text-2xl md:text-3xl font-bold ${isCoverDark ? 'text-white' : 'text-black'}`}
+                          style={{
+                            textShadow: isCoverDark 
+                              ? '2px 2px 4px rgba(0, 0, 0, 0.8)' 
+                              : '2px 2px 4px rgba(255, 255, 255, 0.8)'
+                          }}
+                        >
+                          {profileType === 'business' 
+                            ? (profile.company_name || formatFullName(profile.full_name))
+                            : formatFullName(profile.full_name)
+                          }
+                        </h1>
+                      </div>
+                      
+                      {!isProfileOwner && (
+                        <Button
+                          variant={isFollowing ? 'secondary' : 'outline'}
+                          size="sm"
+                          className="rounded-full w-32"
+                          onClick={handleFollowClick}
+                          disabled={followLoading}
+                        >
+                          {isFollowing ? 'Seguindo' : 'Seguir'}
+                        </Button>
+                      )}
+                    </div>
+
+                    {/* User/Business Info */}
+                    <div className="flex-1 space-y-3">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          {profile.verified && (
+                            <Badge variant="default" className="text-xs">
+                              ✓ Verificado
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-muted-foreground mb-2">
+                          @{profile.username || profile.slug}
+                        </p>
+                        {profile.bio && (
+                          <p className="text-sm text-muted-foreground leading-relaxed">
+                            {profile.bio}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Informações unificadas */}
+                      <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+                        {profile.location && (
+                          <div className="flex items-center gap-1">
+                            <MapPin className="w-4 h-4" />
+                            <span>{profile.location}</span>
+                          </div>
+                        )}
+                        <div className="flex items-center gap-1">
+                          <Calendar className="w-4 h-4" />
+                          <span>{profileType === 'business' ? 'Criado' : 'Membro desde'} {new Date(profile.created_at).toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' })}</span>
+                        </div>
+                        {profileType === 'user' && (
+                          <Badge variant="outline" className={`${trustLevel.color} text-white border-0`}>
+                            {trustLevel.label}
                           </Badge>
                         )}
                       </div>
-                      <p className="text-muted-foreground mb-2">
-                        @{profile.username || profile.slug}
-                      </p>
-                      {profile.bio && (
-                        <p className="text-sm text-muted-foreground leading-relaxed">
-                          {profile.bio}
-                        </p>
-                      )}
-                    </div>
 
-                    {/* Informações unificadas */}
-                    <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-                      {profile.location && (
-                        <div className="flex items-center gap-1">
-                          <MapPin className="w-4 h-4" />
-                          <span>{profile.location}</span>
-                        </div>
-                      )}
-                      <div className="flex items-center gap-1">
-                        <Calendar className="w-4 h-4" />
-                        <span>{profileType === 'business' ? 'Criado' : 'Membro desde'} {new Date(profile.created_at).toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' })}</span>
-                      </div>
-                      {profileType === 'user' && (
-                        <Badge variant="outline" className={`${trustLevel.color} text-white border-0`}>
-                          {trustLevel.label}
-                        </Badge>
-                      )}
+                      <PublicNegotiation 
+                        entityType={profileType}
+                        entityId={profile.id}
+                        username={profile.full_name || (profileType === 'business' ? profile.slug || '' : profile.username)}
+                        inline={true}
+                      />
                     </div>
-
-                    <PublicNegotiation 
-                      entityType={profileType}
-                      entityId={profile.id}
-                      username={profile.full_name || (profileType === 'business' ? profile.slug || '' : profile.username)}
-                      inline={true}
-                    />
                   </div>
                 </CardContent>
               </Card>

@@ -1169,9 +1169,9 @@ export default function Dashboard() {
                   </Avatar>
                   <div className="flex-1 min-w-0">
                     <h4 className="text-sm font-semibold text-slate-900 truncate">
-                      {formatShortName(profile?.full_name) || profile?.username}
+                      {profile?.full_name || profile?.username || 'Usuário'}
                     </h4>
-                    <p className="text-xs text-blue-600 truncate">@{profile?.username}</p>
+                    <p className="text-xs text-slate-600 truncate">{user?.email}</p>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
                     <Link to={`/${profile?.username}`}>

@@ -506,7 +506,7 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
     <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-secondary/10">
       <Header />
 
-      {/* Cover - sem nome */}
+      {/* Cover com nome sobreposto */}
       {isProfileOwner ? (
         <div className="w-full h-48 md:h-60 relative">
         <InlinePhotoUpload
@@ -530,6 +530,22 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
                   backgroundPosition: `center ${profile.cover_position || 50}%`
                 }}
               />
+              {/* Nome sobreposto na capa */}
+              <div className="absolute top-4 left-4 md:left-8">
+                <h1 
+                  className={`text-3xl md:text-4xl font-bold ${isCoverDark ? 'text-white' : 'text-black'}`}
+                  style={{
+                    textShadow: isCoverDark 
+                      ? '2px 2px 4px rgba(0, 0, 0, 0.8)' 
+                      : '2px 2px 4px rgba(255, 255, 255, 0.8)'
+                  }}
+                >
+                  {profileType === 'business' 
+                    ? (profile.company_name || formatFullName(profile.full_name))
+                    : formatFullName(profile.full_name)
+                  }
+                </h1>
+              </div>
             </div>
           </InlinePhotoUpload>
         </div>
@@ -543,6 +559,22 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
               backgroundPosition: `center ${profile.cover_position || 50}%`
             }}
           />
+          {/* Nome sobreposto na capa */}
+          <div className="absolute top-4 left-4 md:left-8">
+            <h1 
+              className={`text-3xl md:text-4xl font-bold ${isCoverDark ? 'text-white' : 'text-black'}`}
+              style={{
+                textShadow: isCoverDark 
+                  ? '2px 2px 4px rgba(0, 0, 0, 0.8)' 
+                  : '2px 2px 4px rgba(255, 255, 255, 0.8)'
+              }}
+            >
+              {profileType === 'business' 
+                ? (profile.company_name || formatFullName(profile.full_name))
+                : formatFullName(profile.full_name)
+              }
+            </h1>
+          </div>
         </div>
       )}
 
@@ -613,33 +645,20 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
                   )}
                 </div>
                 
-                {/* Nome ao lado do avatar */}
-                <div className="flex-1 pb-4">
-                  <h1 
-                    className={`text-3xl md:text-4xl font-bold ${isCoverDark ? 'text-white' : 'text-black'}`}
-                    style={{
-                      textShadow: isCoverDark 
-                        ? '2px 2px 4px rgba(0, 0, 0, 0.8)' 
-                        : '2px 2px 4px rgba(255, 255, 255, 0.8)'
-                    }}
-                  >
-                    {profileType === 'business' 
-                      ? (profile.company_name || formatFullName(profile.full_name))
-                      : formatFullName(profile.full_name)
-                    }
-                  </h1>
-                  {!isProfileOwner && (
+                {/* Botão seguir ao lado do avatar */}
+                {!isProfileOwner && (
+                  <div className="pb-4">
                     <Button
                       variant={isFollowing ? 'secondary' : 'outline'}
                       size="sm"
-                      className="rounded-full mt-2"
+                      className="rounded-full"
                       onClick={handleFollowClick}
                       disabled={followLoading}
                     >
                       {isFollowing ? 'Seguindo' : 'Seguir'}
                     </Button>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
 
               {/* Profile Info Card */}

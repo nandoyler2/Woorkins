@@ -27,6 +27,7 @@ export const Header = () => {
   const location = useLocation();
   const [isAdmin, setIsAdmin] = useState(false);
   const [profileId, setProfileId] = useState<string>('');
+  const [profileAvatar, setProfileAvatar] = useState<string | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const [projectsOpen, setProjectsOpen] = useState(false);
   const unreadCount = useUnreadMessages(profileId);
@@ -69,12 +70,13 @@ export const Header = () => {
       
       const { data } = await supabase
         .from('profiles')
-        .select('id')
+        .select('id, avatar_url')
         .eq('user_id', user.id)
         .single();
       
       if (data) {
         setProfileId(data.id);
+        setProfileAvatar(data.avatar_url);
       }
     };
 
@@ -209,7 +211,23 @@ export const Header = () => {
                   <User className="w-5 h-5" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
+              <DropdownMenuContent align="end" className="w-[240px] z-[110] bg-background">
+                <div className="flex flex-col items-center gap-2 p-3 border-b border-border">
+                  {profileAvatar ? (
+                    <SafeImage 
+                      src={profileAvatar} 
+                      alt="Foto de perfil" 
+                      className="w-16 h-16 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
+                      <User className="w-8 h-8 text-muted-foreground" />
+                    </div>
+                  )}
+                  <p className="text-sm text-center text-muted-foreground truncate w-full px-2">
+                    {user.email}
+                  </p>
+                </div>
                 {isAdmin && (
                   <DropdownMenuItem asChild>
                     <Link to="/admin" className="flex items-center gap-2">

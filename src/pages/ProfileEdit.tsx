@@ -2243,6 +2243,76 @@ export default function ProfileEdit() {
                             Para alterar seu email ou senha, vá para a página de Conta no menu principal.
                           </p>
                         </div>
+
+                        {/* Zona de Perigo - Apenas para perfis não-padrão */}
+                        {businessId && (
+                          <div className="border-t pt-6 mt-6">
+                            <div className="space-y-4">
+                              <div>
+                                <h3 className="text-lg font-semibold text-red-600 mb-2">Zona de Perigo</h3>
+                                <p className="text-sm text-muted-foreground mb-4">
+                                  Ações irreversíveis que afetam este perfil
+                                </p>
+                              </div>
+                              
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button
+                                    variant="destructive"
+                                    className="w-full"
+                                  >
+                                    <Trash2 className="w-4 h-4 mr-2" />
+                                    Excluir este perfil
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Tem certeza?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      Esta ação não pode ser desfeita. Isso irá permanentemente excluir este perfil
+                                      {profileType === 'business' && profile.company_name && (
+                                        <> (<strong>{profile.company_name}</strong>)</>
+                                      )}
+                                      {' '}e remover todos os dados associados a ele.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                    <AlertDialogAction
+                                      onClick={async () => {
+                                        try {
+                                          const { error } = await supabase
+                                            .from('profiles')
+                                            .delete()
+                                            .eq('id', profile.id);
+
+                                          if (error) throw error;
+
+                                          toast({
+                                            title: 'Perfil excluído',
+                                            description: 'O perfil foi excluído com sucesso.',
+                                          });
+
+                                          navigate('/painel');
+                                        } catch (error: any) {
+                                          console.error('Erro ao excluir perfil:', error);
+                                          toast({
+                                            title: 'Erro',
+                                            description: 'Não foi possível excluir o perfil.',
+                                            variant: 'destructive',
+                                          });
+                                        }
+                                      }}
+                                      className="bg-red-600 hover:bg-red-700"
+                                    >
+                                      Sim, excluir perfil
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </CardContent>
 

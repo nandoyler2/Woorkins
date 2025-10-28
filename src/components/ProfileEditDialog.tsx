@@ -49,6 +49,7 @@ export function ProfileEditDialog({ open, onOpenChange, userId, profileId, onUpd
   const [profile, setProfile] = useState({
     id: '',
     full_name: '',
+    company_name: '',
     username: '',
     email: '',
     cpf: '',
@@ -145,6 +146,7 @@ export function ProfileEditDialog({ open, onOpenChange, userId, profileId, onUpd
       setProfile({
         id: profileData.id,
         full_name: profileData.full_name || '',
+        company_name: profileData.company_name || '',
         username: profileData.username || '',
         email: user?.email || '',
         cpf: profileData.cpf || '',
@@ -209,34 +211,49 @@ export function ProfileEditDialog({ open, onOpenChange, userId, profileId, onUpd
     setCheckingUsername(true);
 
     try {
-      // Verificar se existe como username em qualquer perfil
-      const { data: existingUsername, error: usernameError } = await supabase
-        .from('profiles')
-        .select('id, username')
-        .eq('username', username)
-        .neq('id', profile.id)
-        .maybeSingle();
+      // Para perfis business, verificar conflito com slug de outros perfis business
+      if (profile.profile_type === 'business') {
+        const { data: conflictingSlug, error } = await supabase
+          .from('profiles')
+          .select('id, slug')
+          .eq('profile_type', 'business')
+          .eq('slug', username)
+          .neq('id', profile.id)
+          .maybeSingle();
 
-      if (usernameError) throw usernameError;
-      
-      if (existingUsername) {
-        setUsernameAvailable(false);
-        setCheckingUsername(false);
-        return;
+        if (error) throw error;
+        
+        setUsernameAvailable(!conflictingSlug);
+      } else {
+        // Para perfis user, verificar conflito com username de qualquer perfil
+        const { data: conflictingUsername, error } = await supabase
+          .from('profiles')
+          .select('id, username')
+          .eq('username', username)
+          .neq('id', profile.id)
+          .maybeSingle();
+
+        if (error) throw error;
+
+        if (conflictingUsername) {
+          setUsernameAvailable(false);
+          setCheckingUsername(false);
+          return;
+        }
+
+        // Também verificar se não conflita com slug de business
+        const { data: conflictingSlug, error: slugError } = await supabase
+          .from('profiles')
+          .select('id, slug')
+          .eq('profile_type', 'business')
+          .eq('slug', username)
+          .neq('id', profile.id)
+          .maybeSingle();
+
+        if (slugError) throw slugError;
+
+        setUsernameAvailable(!conflictingSlug);
       }
-
-      // Verificar se conflita com slug de algum perfil business
-      const { data: existingSlug, error: slugError } = await supabase
-        .from('profiles')
-        .select('id, slug')
-        .eq('slug', username)
-        .eq('profile_type', 'business')
-        .neq('id', profile.id)
-        .maybeSingle();
-
-      if (slugError) throw slugError;
-
-      setUsernameAvailable(!existingSlug);
     } catch (error) {
       console.error('Error checking username:', error);
       setUsernameAvailable(false);
@@ -326,11 +343,17 @@ export function ProfileEditDialog({ open, onOpenChange, userId, profileId, onUpd
       setLoading(true);
 
       const updateData: any = {
-        full_name: profile.full_name,
         location: profile.location,
         bio: profile.bio,
         website: profile.website,
       };
+
+      // Salvar o campo de nome correto conforme o tipo de perfil
+      if (profile.profile_type === 'business') {
+        updateData.company_name = profile.company_name;
+      } else {
+        updateData.full_name = profile.full_name;
+      }
 
       // Se username mudou, incluir na atualização
       if (profile.username !== originalUsername) {
@@ -443,7 +466,11 @@ export function ProfileEditDialog({ open, onOpenChange, userId, profileId, onUpd
                   <CardContent>
                     <ProfilePhotoUpload
                       currentPhotoUrl={profile.avatar_url}
-                      userName={formatShortName(profile.full_name) || profile.username}
+                      userName={
+                        profile.profile_type === 'business' 
+                          ? (profile.company_name || profile.username)
+                          : (formatShortName(profile.full_name) || profile.username)
+                      }
                       profileId={profile.id}
                       onPhotoUpdated={loadProfile}
                     />
@@ -461,15 +488,26 @@ export function ProfileEditDialog({ open, onOpenChange, userId, profileId, onUpd
                   <CardContent className="space-y-4">
                     <div className="grid gap-4 md:grid-cols-2">
                       <div className="space-y-2">
-                        <Label htmlFor="full_name">Nome Completo</Label>
+                        <Label htmlFor="profile_name">
+                          {profile.profile_type === 'business' ? 'Nome da Empresa' : 'Nome Completo'}
+                        </Label>
                         <Input
-                          id="full_name"
-                          value={formatFullName(profile.full_name)}
-                          onChange={(e) => setProfile({ ...profile, full_name: e.target.value })}
-                          disabled={!!profile.cpf}
-                          className={profile.cpf ? 'bg-muted' : ''}
+                          id="profile_name"
+                          value={profile.profile_type === 'business' 
+                            ? profile.company_name 
+                            : formatFullName(profile.full_name)
+                          }
+                          onChange={(e) => {
+                            if (profile.profile_type === 'business') {
+                              setProfile({ ...profile, company_name: e.target.value });
+                            } else {
+                              setProfile({ ...profile, full_name: e.target.value });
+                            }
+                          }}
+                          disabled={profile.profile_type === 'user' && !!profile.cpf}
+                          className={(profile.profile_type === 'user' && profile.cpf) ? 'bg-muted' : ''}
                         />
-                        {profile.cpf && (
+                        {profile.profile_type === 'user' && profile.cpf && (
                           <p className="text-xs text-muted-foreground">
                             Nome bloqueado após definir CPF
                           </p>

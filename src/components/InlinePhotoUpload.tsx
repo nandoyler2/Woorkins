@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Camera, Loader2, Sparkles } from 'lucide-react';
+import { Camera, Loader2, Sparkles, Trash2 } from 'lucide-react';
 import { PhotoCropDialog } from './PhotoCropDialog';
 import { compressImage } from '@/lib/imageCompression';
 import { CoverTemplateDialog } from './CoverTemplateDialog';
@@ -447,6 +447,62 @@ export function InlinePhotoUpload({
     }
   };
 
+  const handleDeleteCover = async () => {
+    if (!currentPhotoUrl && !localCoverUrl) return;
+    
+    setUploading(true);
+    
+    try {
+      const bucketName = entityType === 'business' ? 'business-covers' : 'user-covers';
+      const coverUrl = localCoverUrl || currentPhotoUrl;
+      
+      // Deletar arquivo do storage
+      if (coverUrl) {
+        try {
+          const url = new URL(coverUrl);
+          const needle = `/object/public/${bucketName}/`;
+          const idx = url.pathname.indexOf(needle);
+          const path = idx !== -1 ? url.pathname.slice(idx + needle.length) : null;
+          if (path) {
+            await supabase.storage.from(bucketName).remove([path]);
+          }
+        } catch (e) {
+          console.warn('Could not parse cover URL for deletion', e);
+        }
+      }
+
+      // Remover do banco de dados
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ 
+          cover_url: null,
+          cover_position: 50
+        })
+        .eq('id', profileId);
+
+      if (updateError) throw updateError;
+
+      setLocalCoverUrl(null);
+      setCoverPosition(50);
+
+      toast({
+        title: 'Capa removida',
+        description: 'A capa foi removida com sucesso.',
+      });
+      
+      onPhotoUpdated?.();
+    } catch (error) {
+      console.error('Error deleting cover:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Erro ao deletar',
+        description: 'Não foi possível remover a capa.',
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
+
   return (
     <>
       <div 
@@ -567,6 +623,13 @@ export function InlinePhotoUpload({
                         className="bg-background/90 hover:bg-background p-2.5 rounded-full shadow-lg transition-all hover:scale-110 border-2 border-border"
                       >
                         <Camera className="w-4 h-4 text-foreground" />
+                      </button>
+                      <button
+                        onClick={handleDeleteCover}
+                        className="bg-destructive/90 hover:bg-destructive p-2.5 rounded-full shadow-lg transition-all hover:scale-110 border-2 border-border"
+                        title="Remover capa"
+                      >
+                        <Trash2 className="w-4 h-4 text-destructive-foreground" />
                       </button>
                     </div>
                   )

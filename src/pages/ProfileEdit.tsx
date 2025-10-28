@@ -798,10 +798,15 @@ export default function ProfileEdit() {
     setSaving(true);
 
     // Atualizar username e username_last_changed
-    // Se username_last_changed for NULL, essa é a primeira alteração, então setamos o timestamp
+    // Se for business, também atualizar o slug para liberar o identificador antigo
     const updateData: any = {
       username: newUsername,
     };
+
+    // Se for perfil business, atualizar o slug também
+    if (profileType === 'business') {
+      updateData.slug = newUsername;
+    }
 
     // Setar username_last_changed apenas se for NULL (primeira vez) ou após cooldown
     if (!profile.username_last_changed) {
@@ -824,10 +829,11 @@ export default function ProfileEdit() {
       return;
     }
 
-    // Atualizar estado local
+    // Atualizar estado local (incluir slug se for business)
     const updatedProfile = {
       ...profile,
       username: newUsername,
+      slug: profileType === 'business' ? newUsername : profile.slug,
       username_last_changed: updateData.username_last_changed || profile.username_last_changed,
     };
     

@@ -1497,7 +1497,14 @@ export default function Dashboard() {
         <>
           <ProfileEditDialog
             open={showProfileEdit}
-            onOpenChange={setShowProfileEdit}
+            onOpenChange={(open) => {
+              setShowProfileEdit(open);
+              // Quando fechar, recarregar perfis para pegar slugs atualizados
+              if (!open && profile) {
+                loadProfile();
+                loadBusinessProfiles(profile.id);
+              }
+            }}
             userId={user.id}
             profileId={profile.id}
             onUpdate={loadProfile}

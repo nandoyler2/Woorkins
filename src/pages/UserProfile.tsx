@@ -531,6 +531,12 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
   }
 
   const trustLevel = getTrustLevelInfo(profile.trust_level || 'bronze');
+  
+  // Select the correct photo field based on profile type
+  const mainPhotoUrl = profileType === 'business' ? profile.logo_url : profile.avatar_url;
+  const mainPhotoAlt = profileType === 'business' 
+    ? (profile.company_name || profile.username)
+    : formatFullName(profile.full_name);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-secondary/10">
@@ -590,7 +596,7 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
                     <div className="-mt-20 flex flex-col items-center gap-3">
                       {isProfileOwner ? (
                         <InlinePhotoUpload
-                          currentPhotoUrl={profile.avatar_url || undefined}
+                          currentPhotoUrl={mainPhotoUrl || undefined}
                           userId={user!.id}
                           userName={profileType === 'business' 
                             ? (profile.company_name || profile.username)
@@ -604,16 +610,13 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
                         >
                           <div 
                             className="cursor-pointer"
-                            onClick={() => profile.avatar_url && setShowImageViewer(true)}
+                            onClick={() => mainPhotoUrl && setShowImageViewer(true)}
                           >
-                             {profile.avatar_url ? (
+                             {mainPhotoUrl ? (
                               <SafeImage
-                                key={profile.avatar_url}
-                                src={profile.avatar_url}
-                                alt={profileType === 'business' 
-                                  ? (profile.company_name || profile.username)
-                                  : formatFullName(profile.full_name)
-                                }
+                                key={mainPhotoUrl}
+                                src={mainPhotoUrl}
+                                alt={mainPhotoAlt}
                                 className="w-36 h-36 rounded-full object-cover bg-card border-4 border-background shadow-lg"
                               />
                             ) : (
@@ -626,16 +629,13 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
                       ) : (
                         <div 
                           className="cursor-pointer"
-                          onClick={() => profile.avatar_url && setShowImageViewer(true)}
+                          onClick={() => mainPhotoUrl && setShowImageViewer(true)}
                         >
-                          {profile.avatar_url ? (
+                          {mainPhotoUrl ? (
                             <SafeImage
-                              key={profile.avatar_url}
-                              src={profile.avatar_url}
-                              alt={profileType === 'business' 
-                                ? (profile.company_name || profile.username)
-                                : formatFullName(profile.full_name)
-                              }
+                              key={mainPhotoUrl}
+                              src={mainPhotoUrl}
+                              alt={mainPhotoAlt}
                               className="w-36 h-36 rounded-full object-cover bg-card border-4 border-background shadow-lg"
                             />
                           ) : (
@@ -1350,10 +1350,10 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
       )}
 
       {/* Image Viewer Modal */}
-      {profile?.avatar_url && (
+      {mainPhotoUrl && (
         <ImageViewerDialog
-          imageUrl={profile.avatar_url}
-          alt={formatFullName(profile.full_name)}
+          imageUrl={mainPhotoUrl}
+          alt={mainPhotoAlt}
           open={showImageViewer}
           onClose={() => setShowImageViewer(false)}
         />
@@ -1364,9 +1364,9 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
         <FollowSuccessDialog
           open={showFollowSuccess}
           onOpenChange={setShowFollowSuccess}
-          profileName={formatFullName(profile.full_name)}
-          profileAvatar={profile.avatar_url}
-          profileType="user"
+          profileName={profileType === 'business' ? (profile.company_name || profile.username) : formatFullName(profile.full_name)}
+          profileAvatar={mainPhotoUrl}
+          profileType={profileType}
         />
       )}
 

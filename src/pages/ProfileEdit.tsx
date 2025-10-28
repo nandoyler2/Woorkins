@@ -1306,23 +1306,26 @@ export default function ProfileEdit() {
                 <div className="mb-8">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-3">
-                      {profile.avatar_url ? (
+                      {(profileType === 'business' ? profile.logo_url : profile.avatar_url) ? (
                         <img 
-                          src={profile.avatar_url} 
-                          alt={profile.full_name || profile.username}
+                          src={profileType === 'business' ? profile.logo_url : profile.avatar_url} 
+                          alt={profileType === 'business' ? (profile.company_name || profile.username) : (profile.full_name || profile.username)}
                           className="w-12 h-12 rounded-full object-cover border-2 border-border"
                         />
                       ) : (
                         <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center border-2 border-border">
-                          <User className="w-6 h-6 text-muted-foreground" />
+                          {profileType === 'business' ? <Building2 className="w-6 h-6 text-muted-foreground" /> : <User className="w-6 h-6 text-muted-foreground" />}
                         </div>
                       )}
                       <div>
                         <h1 className="text-3xl font-bold">
-                          {profile.full_name || profile.username}
+                          {profileType === 'business' 
+                            ? (profile.company_name || profile.username)
+                            : (profile.full_name || profile.username)
+                          }
                         </h1>
                         <p className="text-muted-foreground text-sm">
-                          @{profile.username || profile.slug}
+                          @{profileType === 'business' ? profile.slug : profile.username}
                         </p>
                       </div>
                     </div>

@@ -557,7 +557,7 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
             {/* Left Column - Main Content */}
             <div className="lg:col-span-2 space-y-4">
               {/* Profile Header Card */}
-              <Card className="bg-gradient-to-br from-card/80 to-card/40 backdrop-blur-md border-2 border-primary/10 shadow-xl hover:shadow-2xl transition-all duration-300">
+              <Card className="bg-card/30 backdrop-blur-sm border-2 border-primary/10 shadow-xl hover:shadow-2xl transition-all duration-300">
                 <CardContent className="p-6">
                   <div className="flex flex-col md:flex-row gap-6">
                     {/* Avatar */}
@@ -664,23 +664,18 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
                             <span className="text-foreground">{profile.location}</span>
                           </div>
                         )}
-                        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-purple-500/10 to-purple-600/10 rounded-full border border-purple-500/20">
-                          <Calendar className="w-4 h-4 text-purple-500" />
-                          <span className="text-foreground">{profileType === 'business' ? 'Criado' : 'Membro desde'} {new Date(profile.created_at).toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' })}</span>
-                        </div>
+                        <PublicNegotiation 
+                          entityType={profileType}
+                          entityId={profile.id}
+                          username={profile.username}
+                          inline={true}
+                        />
                         {profileType === 'user' && (
                           <Badge variant="outline" className={`${trustLevel.color} text-white border-0 shadow-md`}>
                             {trustLevel.label}
                           </Badge>
                         )}
                       </div>
-
-                      <PublicNegotiation 
-                        entityType={profileType}
-                        entityId={profile.id}
-                        username={profile.full_name || (profileType === 'business' ? profile.slug || '' : profile.username)}
-                        inline={true}
-                      />
                     </div>
                   </div>
                 </CardContent>

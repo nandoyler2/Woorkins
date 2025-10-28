@@ -14,6 +14,11 @@ export const SafeImage: React.FC<SafeImageProps> = ({
 }) => {
   const [imgSrc, setImgSrc] = React.useState<string | undefined>(src as string);
 
+  // Update imgSrc when src prop changes
+  React.useEffect(() => {
+    setImgSrc(src as string);
+  }, [src]);
+
   return (
     <img
       src={imgSrc}

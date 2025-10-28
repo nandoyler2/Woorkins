@@ -506,7 +506,7 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
     <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-secondary/10">
       <Header />
 
-      {/* Cover - gradiente simples */}
+      {/* Cover - sem nome */}
       {isProfileOwner ? (
         <div className="w-full h-48 md:h-60 relative">
         <InlinePhotoUpload
@@ -613,6 +613,24 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
                           )}
                         </div>
                       )}
+                      
+                      {/* Nome do usuário abaixo do avatar */}
+                      <div className="text-center">
+                        <h1 
+                          className={`text-2xl md:text-3xl font-bold ${isCoverDark ? 'text-white' : 'text-black'}`}
+                          style={{
+                            textShadow: isCoverDark 
+                              ? '2px 2px 4px rgba(0, 0, 0, 0.8)' 
+                              : '2px 2px 4px rgba(255, 255, 255, 0.8)'
+                          }}
+                        >
+                          {profileType === 'business' 
+                            ? (profile.company_name || formatFullName(profile.full_name))
+                            : formatFullName(profile.full_name)
+                          }
+                        </h1>
+                      </div>
+                      
                       {!isProfileOwner && (
                         <Button
                           variant={isFollowing ? 'secondary' : 'outline'}
@@ -630,12 +648,6 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
                     <div className="flex-1 space-y-3">
                       <div>
                         <div className="flex items-center gap-2 mb-1">
-                          <h1 className={`text-3xl font-bold ${isCoverDark ? 'text-white' : 'text-black'}`}>
-                            {profileType === 'business' 
-                              ? (profile.company_name || formatFullName(profile.full_name))
-                              : formatFullName(profile.full_name)
-                            }
-                          </h1>
                           {profile.verified && (
                             <Badge variant="default" className="text-xs">
                               ✓ Verificado

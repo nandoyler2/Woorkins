@@ -1171,7 +1171,7 @@ export default function Dashboard() {
                     <h4 className="text-sm font-semibold text-slate-900 truncate">
                       {formatShortName(profile?.full_name) || profile?.username}
                     </h4>
-                    <p className="text-xs text-blue-600 truncate">@{profile?.username}</p>
+                    <p className="text-xs text-slate-600 truncate">@{profile?.username}</p>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
                     <Link to={`/${profile?.username}`}>
@@ -1239,9 +1239,9 @@ export default function Dashboard() {
                           <h4 className="text-sm font-semibold text-slate-900 truncate">
                             {business.company_name}
                           </h4>
-                          {business.category && (
-                            <p className="text-xs text-slate-600 truncate">{business.category}</p>
-                          )}
+                          <p className="text-xs text-slate-600 truncate">
+                            @{(business as any).username || business.slug}
+                          </p>
                         </div>
                         <div className="flex gap-2 flex-shrink-0">
                           <Link to={`/${(business as any).username || business.slug || business.id}`}>

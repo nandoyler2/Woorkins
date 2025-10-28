@@ -266,10 +266,12 @@ export const Header = () => {
                     Woorkoins
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleSignOut}>
-                  <LogOut className="w-4 h-4 mr-2" />
-                  {t('logout')}
-                </DropdownMenuItem>
+                <div className="border-t border-border mt-1 pt-1">
+                  <DropdownMenuItem onClick={handleSignOut} className="justify-end">
+                    <span className="mr-auto">{t('logout')}</span>
+                    <LogOut className="w-4 h-4" />
+                  </DropdownMenuItem>
+                </div>
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (

@@ -54,6 +54,7 @@ export function ProfileEditDialog({ open, onOpenChange, userId, profileId, onUpd
     email: '',
     cpf: '',
     avatar_url: '',
+    logo_url: '',
     location: '',
     bio: '',
     website: '',
@@ -151,6 +152,7 @@ export function ProfileEditDialog({ open, onOpenChange, userId, profileId, onUpd
         email: user?.email || '',
         cpf: profileData.cpf || '',
         avatar_url: profileData.avatar_url || '',
+        logo_url: profileData.logo_url || '',
         location: profileData.location || '',
         bio: profileData.bio || '',
         website: profileData.website || '',
@@ -350,8 +352,10 @@ export function ProfileEditDialog({ open, onOpenChange, userId, profileId, onUpd
 
       // Salvar o campo de nome correto conforme o tipo de perfil
       if (profile.profile_type === 'business') {
+        console.log('[ProfileEditDialog] Salvando company_name:', profile.company_name);
         updateData.company_name = profile.company_name;
       } else {
+        console.log('[ProfileEditDialog] Salvando full_name:', profile.full_name);
         updateData.full_name = profile.full_name;
       }
 
@@ -403,7 +407,9 @@ export function ProfileEditDialog({ open, onOpenChange, userId, profileId, onUpd
         updateData: updateData,
         originalUsername: originalUsername,
         newUsername: profile.username,
-        profileType: profile.profile_type
+        profileType: profile.profile_type,
+        company_name: profile.company_name,
+        full_name: profile.full_name
       });
 
       const { error, data } = await supabase
@@ -415,7 +421,9 @@ export function ProfileEditDialog({ open, onOpenChange, userId, profileId, onUpd
       console.log('[ProfileEditDialog] Resultado do update:', {
         error: error,
         data: data,
-        success: !error
+        success: !error,
+        updatedCompanyName: data?.[0]?.company_name,
+        updatedFullName: data?.[0]?.full_name
       });
 
       if (error) throw error;
@@ -465,7 +473,7 @@ export function ProfileEditDialog({ open, onOpenChange, userId, profileId, onUpd
                   </CardHeader>
                   <CardContent>
                     <ProfilePhotoUpload
-                      currentPhotoUrl={profile.avatar_url}
+                      currentPhotoUrl={profile.profile_type === 'business' ? profile.logo_url : profile.avatar_url}
                       userName={
                         profile.profile_type === 'business' 
                           ? (profile.company_name || profile.username)
@@ -473,6 +481,7 @@ export function ProfileEditDialog({ open, onOpenChange, userId, profileId, onUpd
                       }
                       profileId={profile.id}
                       onPhotoUpdated={loadProfile}
+                      profileType={profile.profile_type}
                     />
                   </CardContent>
                 </Card>

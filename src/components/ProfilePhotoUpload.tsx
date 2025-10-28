@@ -13,9 +13,10 @@ interface ProfilePhotoUploadProps {
   userName: string;
   profileId: string; // ID do perfil ao invés de userId para maior precisão
   onPhotoUpdated?: () => void;
+  profileType?: 'user' | 'business'; // Adicionar tipo de perfil
 }
 
-export function ProfilePhotoUpload({ currentPhotoUrl, userName, profileId, onPhotoUpdated }: ProfilePhotoUploadProps) {
+export function ProfilePhotoUpload({ currentPhotoUrl, userName, profileId, onPhotoUpdated, profileType = 'user' }: ProfilePhotoUploadProps) {
   const { toast } = useToast();
   const [uploading, setUploading] = useState(false);
   const [moderating, setModerating] = useState(false);
@@ -112,18 +113,22 @@ export function ProfilePhotoUpload({ currentPhotoUrl, userName, profileId, onPho
 
       const fileExt = originalFile.name.split('.').pop();
       const fileName = `${profileId}-${Date.now()}.${fileExt}`;
+      
+      // Determinar bucket e campo baseado no tipo de perfil
+      const bucketName = profileType === 'business' ? 'business-logos' : 'avatars';
+      const fieldName = profileType === 'business' ? 'logo_url' : 'avatar_url';
 
-      // Delete old avatar if exists
+      // Delete old photo if exists
       if (currentPhotoUrl) {
         const oldPath = currentPhotoUrl.split('/').pop();
         if (oldPath) {
-          await supabase.storage.from('avatars').remove([oldPath]);
+          await supabase.storage.from(bucketName).remove([oldPath]);
         }
       }
 
       // Upload compressed photo
       const { error: uploadError } = await supabase.storage
-        .from('avatars')
+        .from(bucketName)
         .upload(fileName, compressedBlob, { 
           upsert: true,
           contentType: 'image/jpeg'
@@ -133,13 +138,13 @@ export function ProfilePhotoUpload({ currentPhotoUrl, userName, profileId, onPho
 
       // Get public URL
       const { data: { publicUrl } } = supabase.storage
-        .from('avatars')
+        .from(bucketName)
         .getPublicUrl(fileName);
 
-      // Update profile (usando profileId para maior precisão)
+      // Update profile (usando profileId e campo correto)
       const { error: updateError } = await supabase
         .from('profiles')
-        .update({ avatar_url: publicUrl })
+        .update({ [fieldName]: publicUrl })
         .eq('id', profileId);
 
       if (updateError) throw updateError;

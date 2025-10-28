@@ -565,7 +565,10 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
                         <InlinePhotoUpload
                           currentPhotoUrl={profile.avatar_url || undefined}
                           userId={user!.id}
-                          userName={profile.full_name || profile.username}
+                          userName={profileType === 'business' 
+                            ? (profile.company_name || profile.username)
+                            : (profile.full_name || profile.username)
+                          }
                           onPhotoUpdated={loadUserProfile}
                           type="avatar"
                           className="w-36 h-36 rounded-full"
@@ -579,7 +582,10 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
                             {profile.avatar_url ? (
                               <SafeImage
                                 src={profile.avatar_url}
-                                alt={formatFullName(profile.full_name)}
+                                alt={profileType === 'business' 
+                                  ? (profile.company_name || profile.username)
+                                  : formatFullName(profile.full_name)
+                                }
                                 className="w-36 h-36 rounded-full object-cover bg-card border-4 border-background shadow-lg"
                               />
                             ) : (
@@ -597,7 +603,10 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
                           {profile.avatar_url ? (
                             <SafeImage
                               src={profile.avatar_url}
-                              alt={formatFullName(profile.full_name)}
+                              alt={profileType === 'business' 
+                                ? (profile.company_name || profile.username)
+                                : formatFullName(profile.full_name)
+                              }
                               className="w-36 h-36 rounded-full object-cover bg-card border-4 border-background shadow-lg"
                             />
                           ) : (
@@ -625,7 +634,10 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
                       <div>
                         <div className="flex items-center gap-2 mb-1">
                           <h1 className="text-3xl font-bold">
-                            {formatFullName(profile.full_name)}
+                            {profileType === 'business' 
+                              ? (profile.company_name || formatFullName(profile.full_name))
+                              : formatFullName(profile.full_name)
+                            }
                           </h1>
                           {profile.verified && (
                             <Badge variant="default" className="text-xs">

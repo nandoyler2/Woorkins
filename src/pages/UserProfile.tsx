@@ -34,6 +34,7 @@ import { InlinePhotoUpload } from '@/components/InlinePhotoUpload';
 import { ImageViewerDialog } from '@/components/ImageViewerDialog';
 import { FollowSuccessDialog } from '@/components/FollowSuccessDialog';
 import { useFollow } from '@/hooks/useFollow';
+import defaultCover from '@/assets/default-cover.jpg';
 
 
 interface UserProfileData {
@@ -519,34 +520,28 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
             profileId={profile.id}
           >
             <div className="w-full h-full relative overflow-hidden">
-              {profile.cover_url ? (
-                <div 
-                  className="w-full h-full"
-                  style={{ 
-                    backgroundImage: `url(${profile.cover_url})`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: `center ${profile.cover_position || 50}%`
-                  }}
-                />
-              ) : (
-                <div className="w-full h-full bg-gradient-to-br from-primary/20 to-secondary/20" />
-              )}
+              <div 
+                className="w-full h-full"
+                style={{ 
+                  backgroundImage: `url(${profile.cover_url || defaultCover})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: `center ${profile.cover_position || 50}%`
+                }}
+              />
             </div>
           </InlinePhotoUpload>
         </div>
-      ) : profile.cover_url ? (
+      ) : (
         <div className="w-full h-48 md:h-60 relative overflow-hidden">
           <div 
             className="w-full h-full"
             style={{ 
-              backgroundImage: `url(${profile.cover_url})`,
+              backgroundImage: `url(${profile.cover_url || defaultCover})`,
               backgroundSize: 'cover',
               backgroundPosition: `center ${profile.cover_position || 50}%`
             }}
           />
         </div>
-      ) : (
-        <div className="w-full h-48 md:h-60 relative overflow-hidden bg-gradient-to-br from-primary/20 to-secondary/20" />
       )}
 
       {/* Main Content Container */}

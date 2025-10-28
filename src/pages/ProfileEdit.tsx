@@ -36,6 +36,7 @@ import { GenericJobVacanciesManager } from '@/components/generic/GenericJobVacan
 import { GenericWhatsAppManager } from '@/components/generic/GenericWhatsAppManager';
 import { checkIdentifierAvailable, normalizeIdentifier, validateIdentifierFormat } from '@/lib/identifierValidation';
 import { Link } from 'react-router-dom';
+import defaultCover from '@/assets/default-cover.jpg';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -1534,15 +1535,11 @@ export default function ProfileEdit() {
                         <div className="relative w-full rounded-lg overflow-visible border-2 border-border bg-background">
                           {/* Capa */}
                           <div className="relative group h-48 w-full overflow-hidden rounded-t-lg">
-                            {profile.cover_url ? (
-                              <img 
-                                src={profile.cover_url} 
-                                alt="Capa" 
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <div className="w-full h-full bg-gradient-to-br from-primary/20 to-secondary/20" />
-                            )}
+                            <img 
+                              src={profile.cover_url || defaultCover} 
+                              alt="Capa" 
+                              className="w-full h-full object-cover"
+                            />
                             
                             {/* Hover Overlay para Capa */}
                             <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">

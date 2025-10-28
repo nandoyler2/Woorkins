@@ -825,11 +825,19 @@ export default function ProfileEdit() {
     }
 
     // Atualizar estado local
-    setProfile({
+    const updatedProfile = {
       ...profile,
       username: newUsername,
       username_last_changed: updateData.username_last_changed || profile.username_last_changed,
+    };
+    
+    console.log('[ProfileEdit] Atualizando username:', {
+      antigo: profile.username,
+      novo: newUsername,
+      profile: updatedProfile
     });
+    
+    setProfile(updatedProfile);
 
     toast({
       title: 'Username atualizado',
@@ -1288,7 +1296,11 @@ export default function ProfileEdit() {
                           {profile.full_name || profile.username}
                         </h1>
                         <p className="text-muted-foreground text-sm">
-                          {profileType === 'business' ? profile.slug : `@${profile.username}`}
+                          {(() => {
+                            const displayName = profileType === 'business' ? profile.slug : `@${profile.username}`;
+                            console.log('[ProfileEdit] Exibindo username:', { profileType, username: profile.username, slug: profile.slug, displayName });
+                            return displayName;
+                          })()}
                         </p>
                       </div>
                     </div>

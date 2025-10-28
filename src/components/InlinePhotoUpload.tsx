@@ -354,29 +354,7 @@ export function InlinePhotoUpload({
         .from(bucketName)
         .getPublicUrl(filePath);
 
-      setModerating(true);
-
-      const { data: moderationData, error: moderationError } = await supabase.functions.invoke(
-        'moderate-cover-photo',
-        {
-          body: { imageUrl: publicUrl, userId }
-        }
-      );
-
-      setModerating(false);
-
-      if (moderationError) throw moderationError;
-
-      if (!moderationData.approved) {
-        await supabase.storage.from(bucketName).remove([filePath]);
-        
-        toast({
-          variant: 'destructive',
-          title: 'Erro',
-          description: 'Não foi possível aplicar a capa',
-        });
-        return;
-      }
+      // Capas de template são pré-aprovadas, não precisam de moderação
 
       const { error: updateError } = await supabase
         .from('profiles')

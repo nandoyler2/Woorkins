@@ -8,6 +8,24 @@ interface Profile {
   profile_type: 'user' | 'business' | null;
   avatar_url: string | null;
   created_at: string;
+  company_name?: string | null;
+  slug?: string | null;
+}
+
+/**
+ * Retorna o nome de exibição correto baseado no tipo de perfil
+ * - Para business: retorna company_name
+ * - Para user: retorna full_name
+ */
+export function getProfileDisplayName(profile: {
+  profile_type?: 'user' | 'business' | null;
+  full_name?: string | null;
+  company_name?: string | null;
+}): string {
+  if (profile.profile_type === 'business' && profile.company_name) {
+    return profile.company_name;
+  }
+  return profile.full_name || 'Usuário';
 }
 
 /**

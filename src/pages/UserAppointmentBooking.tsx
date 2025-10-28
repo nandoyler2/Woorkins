@@ -23,6 +23,8 @@ interface ProfileData {
   full_name: string;
   username: string;
   avatar_url: string | null;
+  company_name: string | null;
+  profile_type: 'user' | 'business';
 }
 
 const dayNames = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
@@ -55,7 +57,7 @@ export default function UserAppointmentBooking() {
     try {
       const { data: profileData } = await supabase
         .from('profiles')
-        .select('id, full_name, username, avatar_url')
+        .select('id, full_name, username, avatar_url, company_name, profile_type')
         .eq('username', slug)
         .single();
 
@@ -69,7 +71,7 @@ export default function UserAppointmentBooking() {
         return;
       }
 
-      setProfile(profileData);
+      setProfile(profileData as ProfileData);
 
       const { data: availabilityData } = await supabase
         .from("user_availability")
@@ -169,7 +171,7 @@ export default function UserAppointmentBooking() {
           <CardHeader>
             <CardTitle className="flex items-center gap-3">
               <CalendarIcon className="w-6 h-6 text-primary" />
-              Agendar Horário com {profile.full_name}
+              Agendar Horário com {profile.profile_type === 'business' ? profile.company_name : profile.full_name}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">

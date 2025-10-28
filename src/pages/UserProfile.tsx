@@ -35,7 +35,6 @@ import { ImageViewerDialog } from '@/components/ImageViewerDialog';
 import { FollowSuccessDialog } from '@/components/FollowSuccessDialog';
 import { useFollow } from '@/hooks/useFollow';
 import defaultCover from '@/assets/default-cover.jpg';
-import defaultAvatar from '@/assets/default-avatar.png';
 
 
 interface UserProfileData {
@@ -575,14 +574,20 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
                             className="cursor-pointer"
                             onClick={() => profile.avatar_url && setShowImageViewer(true)}
                           >
-                            <SafeImage
-                              src={profile.avatar_url || defaultAvatar}
-                              alt={profileType === 'business' 
-                                ? (profile.company_name || profile.username)
-                                : formatFullName(profile.full_name)
-                              }
-                              className="w-36 h-36 rounded-full object-cover bg-card border-4 border-background shadow-lg"
-                            />
+                            {profile.avatar_url ? (
+                              <SafeImage
+                                src={profile.avatar_url}
+                                alt={profileType === 'business' 
+                                  ? (profile.company_name || profile.username)
+                                  : formatFullName(profile.full_name)
+                                }
+                                className="w-36 h-36 rounded-full object-cover bg-card border-4 border-background shadow-lg"
+                              />
+                            ) : (
+                              <div className="w-36 h-36 rounded-full bg-card border-4 border-background shadow-lg flex items-center justify-center">
+                                <UserIcon className="w-16 h-16 text-muted-foreground" />
+                              </div>
+                            )}
                           </div>
                         </InlinePhotoUpload>
                       ) : (
@@ -590,14 +595,20 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
                           className="cursor-pointer"
                           onClick={() => profile.avatar_url && setShowImageViewer(true)}
                         >
-                          <SafeImage
-                            src={profile.avatar_url || defaultAvatar}
-                            alt={profileType === 'business' 
-                              ? (profile.company_name || profile.username)
-                              : formatFullName(profile.full_name)
-                            }
-                            className="w-36 h-36 rounded-full object-cover bg-card border-4 border-background shadow-lg"
-                          />
+                          {profile.avatar_url ? (
+                            <SafeImage
+                              src={profile.avatar_url}
+                              alt={profileType === 'business' 
+                                ? (profile.company_name || profile.username)
+                                : formatFullName(profile.full_name)
+                              }
+                              className="w-36 h-36 rounded-full object-cover bg-card border-4 border-background shadow-lg"
+                            />
+                          ) : (
+                            <div className="w-36 h-36 rounded-full bg-card border-4 border-background shadow-lg flex items-center justify-center">
+                              <UserIcon className="w-16 h-16 text-muted-foreground" />
+                            </div>
+                          )}
                         </div>
                       )}
                       {!isProfileOwner && (
@@ -1171,11 +1182,17 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
                         {positiveEvaluations.slice(0, 5).map((evaluation) => (
                           <div key={evaluation.id} className="bg-background/60 rounded-lg p-3 border border-border/30">
                             <div className="flex items-start gap-2 mb-2">
-                              <SafeImage
-                                src={evaluation.profiles?.avatar_url || defaultAvatar}
-                                alt={evaluation.profiles.full_name}
-                                className="w-8 h-8 rounded-full object-cover flex-shrink-0"
-                              />
+                              {evaluation.profiles?.avatar_url ? (
+                                <SafeImage
+                                  src={evaluation.profiles.avatar_url}
+                                  alt={evaluation.profiles.full_name}
+                                  className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+                                />
+                              ) : (
+                                <div className="w-8 h-8 rounded-full bg-card flex items-center justify-center flex-shrink-0">
+                                  <UserIcon className="w-4 h-4 text-muted-foreground" />
+                                </div>
+                              )}
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-1 mb-1">
                                   {[1, 2, 3, 4, 5].map((star) => (
@@ -1219,11 +1236,17 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
                         {complaintEvaluations.slice(0, 5).map((evaluation) => (
                           <div key={evaluation.id} className="bg-background/60 rounded-lg p-3 border border-border/30">
                             <div className="flex items-start gap-2 mb-2">
-                              <SafeImage
-                                src={evaluation.profiles?.avatar_url || defaultAvatar}
-                                alt={evaluation.profiles.full_name}
-                                className="w-8 h-8 rounded-full object-cover flex-shrink-0"
-                              />
+                              {evaluation.profiles?.avatar_url ? (
+                                <SafeImage
+                                  src={evaluation.profiles.avatar_url}
+                                  alt={evaluation.profiles.full_name}
+                                  className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+                                />
+                              ) : (
+                                <div className="w-8 h-8 rounded-full bg-card flex items-center justify-center flex-shrink-0">
+                                  <UserIcon className="w-4 h-4 text-muted-foreground" />
+                                </div>
+                              )}
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-1 mb-1">
                                   {[1, 2, 3, 4, 5].map((star) => (

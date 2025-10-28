@@ -28,6 +28,7 @@ export const Header = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [profileId, setProfileId] = useState<string>('');
   const [profileAvatar, setProfileAvatar] = useState<string | null>(null);
+  const [profileName, setProfileName] = useState<string>('');
   const [searchOpen, setSearchOpen] = useState(false);
   const [projectsOpen, setProjectsOpen] = useState(false);
   const unreadCount = useUnreadMessages(profileId);
@@ -70,13 +71,14 @@ export const Header = () => {
       
       const { data } = await supabase
         .from('profiles')
-        .select('id, avatar_url')
+        .select('id, avatar_url, full_name, company_name')
         .eq('user_id', user.id)
         .single();
       
       if (data) {
         setProfileId(data.id);
         setProfileAvatar(data.avatar_url);
+        setProfileName(data.full_name || data.company_name || '');
       }
     };
 
@@ -224,7 +226,12 @@ export const Header = () => {
                       <User className="w-8 h-8 text-muted-foreground" />
                     </div>
                   )}
-                  <p className="text-sm text-center text-muted-foreground truncate w-full px-2">
+                  {profileName && (
+                    <p className="text-sm font-medium text-center truncate w-full px-2">
+                      {profileName}
+                    </p>
+                  )}
+                  <p className="text-xs text-center text-muted-foreground truncate w-full px-2">
                     {user.email}
                   </p>
                 </div>

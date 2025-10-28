@@ -1251,8 +1251,7 @@ export default function Dashboard() {
                           </Link>
                           <Link to={`/settings/profile/${business.id}`}>
                             <Button variant="default" size="sm" className="text-xs h-7 px-3">
-                              <Settings className="w-3 h-3 mr-1" />
-                              Gerenciar
+                              Editar
                             </Button>
                           </Link>
                         </div>

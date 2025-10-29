@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ImageIcon, Video, Type, Link as LinkIcon, Upload, Loader2 } from 'lucide-react';
+import { ImageIcon, Video, Type, Link as LinkIcon, Upload, Loader2, Camera } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { compressImage } from '@/lib/imageCompression';
@@ -37,6 +37,7 @@ const backgroundColors = [
 
 export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }: CreateStoryDialogProps) {
   const [type, setType] = useState<'image' | 'video' | 'text'>('image');
+  const [mediaType, setMediaType] = useState<'media' | 'text'>('media');
   const [selectedProfile, setSelectedProfile] = useState<string>(profiles[0]?.id || '');
   const [mediaFile, setMediaFile] = useState<File | null>(null);
   const [mediaPreview, setMediaPreview] = useState<string>('');
@@ -74,7 +75,7 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
       return;
     }
 
-    if (type !== 'text' && !mediaFile) {
+    if (mediaType === 'media' && !mediaFile) {
       toast({
         title: 'Erro',
         description: 'Selecione uma mídia para fazer upload',
@@ -83,7 +84,7 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
       return;
     }
 
-    if (type === 'text' && !textContent.trim()) {
+    if (mediaType === 'text' && !textContent.trim()) {
       toast({
         title: 'Erro',
         description: 'Digite um texto para o story',
@@ -98,7 +99,7 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
       let mediaUrl = null;
 
       // Upload de mídia se necessário
-      if (type !== 'text' && mediaFile) {
+      if (mediaType === 'media' && mediaFile) {
         let fileToUpload = mediaFile;
 
         // Comprimir imagem se necessário
@@ -133,10 +134,10 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
         .from('profile_stories')
         .insert({
           profile_id: selectedProfile,
-          type,
+          type: mediaType === 'text' ? 'text' : type,
           media_url: mediaUrl,
-          text_content: type === 'text' ? textContent : null,
-          background_color: type === 'text' ? backgroundColor : null,
+          text_content: mediaType === 'text' ? textContent : null,
+          background_color: mediaType === 'text' ? backgroundColor : null,
           link_url: linkUrl || null,
         });
 
@@ -167,23 +168,27 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
     setTextContent('');
     setLinkUrl('');
     setType('image');
+    setMediaType('media');
     onClose();
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-2xl font-bold">Criar Story</DialogTitle>
+      <DialogContent className="max-w-3xl max-h-[95vh] overflow-hidden bg-gradient-to-br from-background via-background to-muted/20">
+        <DialogHeader className="space-y-1 pb-4 border-b">
+          <DialogTitle className="text-3xl font-bold bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 bg-clip-text text-transparent">
+            Criar Story
+          </DialogTitle>
+          <p className="text-sm text-muted-foreground">Compartilhe um momento especial</p>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="space-y-6 overflow-y-auto max-h-[calc(95vh-180px)] pr-2">
           {/* Seleção de perfil (se tiver múltiplos) */}
           {profiles.length > 1 && (
-            <div className="space-y-2">
-              <Label>Postar como:</Label>
+            <div className="space-y-2 bg-muted/30 p-4 rounded-xl">
+              <Label className="text-sm font-semibold">Postar como:</Label>
               <Select value={selectedProfile} onValueChange={setSelectedProfile}>
-                <SelectTrigger>
+                <SelectTrigger className="bg-background">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -198,100 +203,75 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
           )}
 
           {/* Tabs de tipo */}
-          <Tabs value={type} onValueChange={(v) => setType(v as any)}>
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="image">
+          <Tabs value={mediaType} onValueChange={(v) => setMediaType(v as any)} className="w-full">
+            <TabsList className="grid w-full grid-cols-2 bg-muted/50 p-1">
+              <TabsTrigger value="media" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-pink-500 data-[state=active]:text-white">
                 <ImageIcon className="w-4 h-4 mr-2" />
-                Imagem
+                Foto/Vídeo
               </TabsTrigger>
-              <TabsTrigger value="video">
-                <Video className="w-4 h-4 mr-2" />
-                Vídeo
-              </TabsTrigger>
-              <TabsTrigger value="text">
+              <TabsTrigger value="text" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-pink-500 data-[state=active]:text-white">
                 <Type className="w-4 h-4 mr-2" />
                 Texto
               </TabsTrigger>
             </TabsList>
 
-            {/* Conteúdo - Imagem */}
-            <TabsContent value="image" className="space-y-4">
-              <div className="border-2 border-dashed rounded-lg p-8 text-center">
+            {/* Conteúdo - Mídia (Imagem/Vídeo unificados) */}
+            <TabsContent value="media" className="mt-6 space-y-4">
+              <div className="border-2 border-dashed border-primary/30 rounded-2xl p-8 text-center bg-gradient-to-br from-muted/30 to-transparent hover:border-primary/50 transition-all">
                 {mediaPreview ? (
-                  <div className="relative">
-                    <img
-                      src={mediaPreview}
-                      alt="Preview"
-                      className="max-h-96 mx-auto rounded-lg"
-                    />
+                  <div className="relative space-y-4">
+                    {type === 'image' ? (
+                      <img
+                        src={mediaPreview}
+                        alt="Preview"
+                        className="max-h-[400px] mx-auto rounded-xl shadow-2xl"
+                      />
+                    ) : (
+                      <video
+                        src={mediaPreview}
+                        controls
+                        className="max-h-[400px] mx-auto rounded-xl shadow-2xl"
+                      />
+                    )}
                     <Button
-                      variant="secondary"
-                      size="sm"
-                      className="mt-4"
+                      variant="outline"
+                      size="lg"
+                      className="bg-background/80 backdrop-blur-sm"
                       onClick={() => {
                         setMediaFile(null);
                         setMediaPreview('');
+                        setType('image');
                       }}
                     >
-                      Alterar imagem
+                      <Upload className="w-4 h-4 mr-2" />
+                      Alterar arquivo
                     </Button>
                   </div>
                 ) : (
-                  <label className="cursor-pointer block">
-                    <Upload className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-                    <p className="text-sm text-muted-foreground mb-2">
-                      Clique para selecionar uma imagem
+                  <label className="cursor-pointer block group">
+                    <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <Upload className="w-10 h-10 text-purple-500" />
+                    </div>
+                    <h3 className="text-lg font-semibold mb-2">Selecione uma foto ou vídeo</h3>
+                    <p className="text-sm text-muted-foreground mb-1">
+                      Imagens: JPG, PNG, WEBP ou GIF (máx. 10MB)
                     </p>
-                    <p className="text-xs text-muted-foreground">
-                      JPG, PNG, WEBP ou GIF (máx. 10MB)
+                    <p className="text-sm text-muted-foreground">
+                      Vídeos: MP4, WEBM ou MOV (máx. 50MB)
                     </p>
                     <input
                       type="file"
-                      accept="image/jpeg,image/png,image/webp,image/gif"
+                      accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,video/quicktime"
                       className="hidden"
-                      onChange={handleMediaChange}
-                    />
-                  </label>
-                )}
-              </div>
-            </TabsContent>
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
 
-            {/* Conteúdo - Vídeo */}
-            <TabsContent value="video" className="space-y-4">
-              <div className="border-2 border-dashed rounded-lg p-8 text-center">
-                {mediaPreview ? (
-                  <div className="relative">
-                    <video
-                      src={mediaPreview}
-                      controls
-                      className="max-h-96 mx-auto rounded-lg"
-                    />
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      className="mt-4"
-                      onClick={() => {
-                        setMediaFile(null);
-                        setMediaPreview('');
+                        // Detectar tipo automaticamente
+                        const isVideo = file.type.startsWith('video/');
+                        setType(isVideo ? 'video' : 'image');
+                        handleMediaChange(e);
                       }}
-                    >
-                      Alterar vídeo
-                    </Button>
-                  </div>
-                ) : (
-                  <label className="cursor-pointer block">
-                    <Upload className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-                    <p className="text-sm text-muted-foreground mb-2">
-                      Clique para selecionar um vídeo
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      MP4 ou WEBM (máx. 50MB)
-                    </p>
-                    <input
-                      type="file"
-                      accept="video/mp4,video/webm,video/quicktime"
-                      className="hidden"
-                      onChange={handleMediaChange}
                     />
                   </label>
                 )}
@@ -299,19 +279,19 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
             </TabsContent>
 
             {/* Conteúdo - Texto */}
-            <TabsContent value="text" className="space-y-4">
+            <TabsContent value="text" className="mt-6 space-y-6">
               <div className="space-y-4">
                 <div>
-                  <Label>Cor de fundo:</Label>
-                  <div className="grid grid-cols-6 gap-2 mt-2">
+                  <Label className="text-sm font-semibold mb-3 block">Escolha uma cor de fundo:</Label>
+                  <div className="grid grid-cols-6 gap-3">
                     {backgroundColors.map((color) => (
                       <button
                         key={color.value}
                         onClick={() => setBackgroundColor(color.value)}
-                        className={`w-full h-12 rounded-lg transition-all ${
+                        className={`w-full h-16 rounded-xl transition-all hover:scale-105 ${
                           backgroundColor === color.value
-                            ? 'ring-2 ring-primary ring-offset-2'
-                            : ''
+                            ? 'ring-4 ring-primary ring-offset-2 scale-105'
+                            : 'ring-2 ring-border'
                         }`}
                         style={{ backgroundColor: color.value }}
                         title={color.name}
@@ -321,62 +301,83 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
                 </div>
 
                 <div>
-                  <Label>Texto:</Label>
+                  <Label className="text-sm font-semibold mb-2 block">Seu texto:</Label>
                   <Textarea
                     value={textContent}
                     onChange={(e) => setTextContent(e.target.value)}
-                    placeholder="Escreva seu texto aqui..."
-                    className="min-h-32 text-lg"
+                    placeholder="Escreva algo inspirador..."
+                    className="min-h-32 text-lg resize-none bg-background/50"
                     maxLength={300}
                   />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {textContent.length}/300 caracteres
-                  </p>
+                  <div className="flex justify-between items-center mt-2">
+                    <p className="text-xs text-muted-foreground">
+                      {textContent.length}/300 caracteres
+                    </p>
+                  </div>
                 </div>
 
                 {/* Preview */}
-                <div
-                  className="rounded-lg p-6 min-h-48 flex items-center justify-center text-center"
-                  style={{ backgroundColor }}
-                >
-                  <p className="text-white text-xl font-bold break-words max-w-full">
-                    {textContent || 'Seu texto aparecerá aqui'}
-                  </p>
+                <div className="space-y-2">
+                  <Label className="text-sm font-semibold">Preview:</Label>
+                  <div
+                    className="rounded-2xl p-8 min-h-[300px] flex items-center justify-center text-center shadow-xl"
+                    style={{ backgroundColor }}
+                  >
+                    <p className="text-white text-2xl font-bold break-words max-w-full leading-relaxed drop-shadow-lg">
+                      {textContent || 'Seu texto aparecerá aqui'}
+                    </p>
+                  </div>
                 </div>
               </div>
             </TabsContent>
           </Tabs>
 
           {/* Link opcional */}
-          <div className="space-y-2">
-            <Label className="flex items-center gap-2">
+          <div className="space-y-2 bg-muted/30 p-4 rounded-xl">
+            <Label className="flex items-center gap-2 text-sm font-semibold">
               <LinkIcon className="w-4 h-4" />
               Link (opcional)
             </Label>
             <Input
               value={linkUrl}
               onChange={(e) => setLinkUrl(e.target.value)}
-              placeholder="https://..."
+              placeholder="https://seusite.com"
               type="url"
+              className="bg-background"
             />
+            <p className="text-xs text-muted-foreground">Adicione um link para seus seguidores acessarem</p>
           </div>
+        </div>
 
-          {/* Botões de ação */}
-          <div className="flex gap-3">
-            <Button variant="outline" onClick={handleClose} className="flex-1" disabled={isUploading}>
-              Cancelar
-            </Button>
-            <Button onClick={handlePublish} className="flex-1" disabled={isUploading}>
-              {isUploading ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Publicando...
-                </>
-              ) : (
-                'Publicar Story'
-              )}
-            </Button>
-          </div>
+        {/* Botões de ação */}
+        <div className="flex gap-3 pt-4 border-t">
+          <Button 
+            variant="outline" 
+            onClick={handleClose} 
+            className="flex-1" 
+            disabled={isUploading}
+            size="lg"
+          >
+            Cancelar
+          </Button>
+          <Button 
+            onClick={handlePublish} 
+            className="flex-1 bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 hover:from-purple-600 hover:via-pink-600 hover:to-orange-600" 
+            disabled={isUploading}
+            size="lg"
+          >
+            {isUploading ? (
+              <>
+                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                Publicando...
+              </>
+            ) : (
+              <>
+                <Camera className="w-5 h-5 mr-2" />
+                Publicar Story
+              </>
+            )}
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

@@ -443,14 +443,6 @@ export default function Messages() {
               <span>Disputa</span>
             </button>
           </nav>
-          
-          <div className="border-t pt-4 mt-4">
-            <h3 className="text-sm font-medium text-muted-foreground mb-2">Etiquetas</h3>
-            <button className="w-full flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground hover:bg-muted rounded-lg">
-              <Tag className="h-4 w-4" />
-              <span>+ Adicionar etiqueta...</span>
-            </button>
-          </div>
         </div>
 
         <div className="flex-1 flex overflow-hidden">

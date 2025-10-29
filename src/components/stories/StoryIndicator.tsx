@@ -80,7 +80,7 @@ export function StoryIndicator({
         hasActiveStories
           ? 'bg-gradient-to-tr from-purple-500 via-pink-500 to-orange-500'
           : 'bg-border'
-      } rounded-full ${paddingClasses[size]} cursor-pointer hover:scale-105 transition-transform ${className}`}
+      } rounded-full ${paddingClasses[size]} ${onClick ? 'cursor-pointer' : 'cursor-default'} hover:scale-105 transition-transform ${className}`}
       onClick={onClick}
       title={hasActiveStories ? 'Ver stories' : username}
     >

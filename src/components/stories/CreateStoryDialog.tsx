@@ -174,6 +174,17 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
       return;
     }
 
+    // Verificar se o perfil tem foto de perfil
+    const currentProfile = profiles.find(p => p.id === selectedProfile);
+    if (!currentProfile?.avatar_url) {
+      toast({
+        title: 'Foto de perfil obrigatória',
+        description: 'Você precisa adicionar uma foto de perfil antes de postar stories',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     if (type !== 'text' && !mediaFile) {
       toast({
         title: 'Erro',

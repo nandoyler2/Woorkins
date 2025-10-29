@@ -140,10 +140,21 @@ export function StoriesCarousel({ currentProfile, onCreateStory }: StoriesCarous
                 avatarUrl={currentProfile.avatar_url}
                 username={currentProfile.username}
                 size="lg"
-                onClick={currentUserHasStories ? () => setSelectedProfileId(currentProfile.id) : onCreateStory}
+                onClick={currentUserHasStories ? () => setSelectedProfileId(currentProfile.id) : currentProfile.avatar_url ? onCreateStory : () => {}}
+                className={!currentProfile.avatar_url && !currentUserHasStories ? 'opacity-50 cursor-not-allowed' : ''}
               />
               {!currentUserHasStories && (
-                <div className="absolute bottom-0 right-0 bg-primary text-primary-foreground rounded-full p-1">
+                <div 
+                  className={`absolute bottom-0 right-0 bg-primary text-primary-foreground rounded-full p-1 ${!currentProfile.avatar_url ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                  onClick={(e) => {
+                    if (!currentProfile.avatar_url) {
+                      e.stopPropagation();
+                    } else {
+                      onCreateStory();
+                    }
+                  }}
+                  title={!currentProfile.avatar_url ? 'Adicione uma foto de perfil para criar stories' : 'Criar story'}
+                >
                   <Plus className="w-4 h-4" />
                 </div>
               )}

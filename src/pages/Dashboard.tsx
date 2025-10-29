@@ -1273,7 +1273,7 @@ export default function Dashboard() {
                     <Building2 className="w-12 h-12 text-slate-300 mx-auto mb-2" />
                     <p className="text-sm text-slate-600 mb-3">Você ainda não criou nenhum perfil profissional</p>
                     <Button variant="default" size="sm" onClick={() => setShowCreateBusinessDialog(true)}>
-                      Criar Primeiro Perfil
+                      Criar Perfil
                     </Button>
                   </div>
                 ) : (

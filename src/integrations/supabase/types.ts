@@ -741,6 +741,7 @@ export type Database = {
           moderation_status: string | null
           negotiation_id: string
           read_at: string | null
+          rejection_reason: string | null
           sender_id: string
           sender_type: string
           status: string | null
@@ -760,6 +761,7 @@ export type Database = {
           moderation_status?: string | null
           negotiation_id: string
           read_at?: string | null
+          rejection_reason?: string | null
           sender_id: string
           sender_type: string
           status?: string | null
@@ -779,6 +781,7 @@ export type Database = {
           moderation_status?: string | null
           negotiation_id?: string
           read_at?: string | null
+          rejection_reason?: string | null
           sender_id?: string
           sender_type?: string
           status?: string | null
@@ -2104,6 +2107,7 @@ export type Database = {
           moderation_status: string | null
           proposal_id: string
           read_at: string | null
+          rejection_reason: string | null
           sender_id: string
           status: string | null
         }
@@ -2119,6 +2123,7 @@ export type Database = {
           moderation_status?: string | null
           proposal_id: string
           read_at?: string | null
+          rejection_reason?: string | null
           sender_id: string
           status?: string | null
         }
@@ -2134,6 +2139,7 @@ export type Database = {
           moderation_status?: string | null
           proposal_id?: string
           read_at?: string | null
+          rejection_reason?: string | null
           sender_id?: string
           status?: string | null
         }

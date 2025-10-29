@@ -12,12 +12,14 @@ interface Message {
   sender_avatar?: string;
   content: string;
   created_at: string;
-  status?: 'sending' | 'sent' | 'delivered' | 'read';
+  status?: 'sending' | 'moderating' | 'sent' | 'delivered' | 'read' | 'rejected';
   read_at?: string;
   media_url?: string;
   media_type?: string;
   media_name?: string;
   is_deleted?: boolean;
+  moderation_status?: 'pending' | 'approved' | 'rejected';
+  rejection_reason?: string;
 }
 
 interface UseRealtimeMessagingProps {
@@ -187,6 +189,8 @@ export const useRealtimeMessaging = ({
         (supabase.from(table) as any)
           .select('*')
           .eq(conversationType === 'negotiation' ? 'negotiation_id' : 'proposal_id', conversationId)
+          // Destinatário só vê mensagens aprovadas ou suas próprias mensagens
+          .or(`sender_id.eq.${currentUserId},moderation_status.eq.approved`)
           .order('created_at', { ascending: true }),
         supabase
           .from('profiles')
@@ -214,6 +218,8 @@ export const useRealtimeMessaging = ({
           media_type: msg.media_type,
           media_name: msg.media_name,
           is_deleted: msg.is_deleted || false,
+          moderation_status: msg.moderation_status,
+          rejection_reason: msg.rejection_reason,
         };
       });
 
@@ -400,259 +406,85 @@ export const useRealtimeMessaging = ({
     const tempId = `temp-${Date.now()}`;
     setIsSending(true);
 
-    // Upload attachment variables - declare here to be available in all scopes
+    // Upload attachment variables
     let uploadedMediaUrl: string | undefined;
     let mediaType: string | undefined;
     let mediaName: string | undefined;
-    let uploadedFileName: string | undefined;
 
     try {
-      // Check if moderation should be applied based on payment status
-      let shouldModerate = false;
-      
-      if (conversationType === 'proposal') {
-        // For proposals, check if it's still pending
-        shouldModerate = proposalStatus === 'pending';
-      } else if (conversationType === 'negotiation') {
-        // For negotiations, check if payment has been made
-        const { data: negotiation } = await supabase
-          .from('negotiations')
-          .select('payment_status')
-          .eq('id', conversationId)
-          .single();
-        
-        // Only moderate if payment hasn't been made (unpaid or pending)
-        shouldModerate = negotiation?.payment_status !== 'paid';
-      }
+      // Upload attachment FIRST if present
+      if (attachment) {
+        try {
+          let fileToUpload: File | Blob = attachment.file;
 
-      if (shouldModerate) {
-        // Get recent messages from this user for context (last 5 messages)
-        const recentUserMessages = messages
-          .filter(m => m.sender_id === currentUserId)
-          .slice(-5)
-          .map(m => m.content);
-
-        // Check payment status for moderation
-        let isPaid = false;
-        if (conversationType === 'proposal') {
-          const { data: proposal } = await supabase
-            .from('proposals')
-            .select('payment_status')
-            .eq('id', conversationId)
-            .single();
-          isPaid = proposal?.payment_status === 'paid';
-        } else if (conversationType === 'negotiation') {
-          const { data: negotiation } = await supabase
-            .from('negotiations')
-            .select('payment_status')
-            .eq('id', conversationId)
-            .single();
-          isPaid = negotiation?.payment_status === 'paid';
-        }
-
-        // Upload attachment FIRST if present (before moderation) to get public URL
-        if (attachment) {
-          try {
-            let fileToUpload: File | Blob = attachment.file;
-
-            // Compress images before upload
-            if (attachment.file.type.startsWith('image/')) {
-              console.log('Compressing message attachment...');
-              fileToUpload = await compressImage(attachment.file, {
-                maxWidth: 1920,
-                maxHeight: 1920,
-                quality: 0.85,
-                maxSizeMB: 2
-              });
-            }
-
-            const fileExt = attachment.file.name.split('.').pop();
-            const fileName = `${currentUserId}/${Date.now()}.${fileExt}`;
-            uploadedFileName = fileName;
-            
-            const { data: uploadData, error: uploadError } = await supabase.storage
-              .from('message-attachments')
-              .upload(fileName, fileToUpload, {
-                contentType: attachment.file.type.startsWith('image/') ? 'image/jpeg' : attachment.file.type
-              });
-
-            if (uploadError) throw uploadError;
-
-            const { data: { publicUrl } } = supabase.storage
-              .from('message-attachments')
-              .getPublicUrl(fileName);
-
-            uploadedMediaUrl = publicUrl;
-            mediaType = attachment.file.type;
-            mediaName = attachment.file.name;
-          } catch (uploadError) {
-            console.error('Error uploading attachment:', uploadError);
-            
-            // More detailed error message
-            let errorDescription = 'Não foi possível fazer upload do arquivo. ';
-            if (uploadError instanceof Error) {
-              if (uploadError.message.includes('size')) {
-                errorDescription += 'O arquivo excede o limite de 49MB.';
-              } else {
-                errorDescription += uploadError.message;
-              }
-            }
-            
-            if (!suppressToasts) {
-              toast({
-                variant: 'destructive',
-                title: 'Erro ao enviar anexo',
-                description: errorDescription,
-              });
-            }
-            setIsSending(false);
-            return;
-          }
-        }
-
-        // Call moderation function with context (including image if present)
-        const moderationBody: any = { 
-          content: content.trim(),
-          recentMessages: recentUserMessages,
-          isPaid,
-          profileId: currentUserId,
-          conversationType,
-          conversationId,
-          fileName: mediaName,
-          fileType: mediaType
-        };
-
-        // If there's an attachment and it's an image, include PUBLIC url in moderation
-        if (uploadedMediaUrl && attachment && attachment.file.type.startsWith('image/')) {
-          moderationBody.imageUrl = uploadedMediaUrl;
-        }
-
-        const { data: moderationResult, error: moderationError } = await supabase.functions.invoke(
-          'moderate-message',
-          { body: moderationBody }
-        );
-
-        console.log('Moderation result:', moderationResult);
-
-        // Check if message was rejected
-        if (moderationResult && !moderationResult.approved) {
-          // Delete uploaded file if moderation failed
-          if (uploadedFileName) {
-            await supabase.storage
-              .from('message-attachments')
-              .remove([uploadedFileName]);
+          // Compress images before upload
+          if (attachment.file.type.startsWith('image/')) {
+            console.log('Compressing message attachment...');
+            fileToUpload = await compressImage(attachment.file, {
+              maxWidth: 1920,
+              maxHeight: 1920,
+              quality: 0.85,
+              maxSizeMB: 2
+            });
           }
 
-          const violationResult = await trackViolation(moderationResult.reason || 'Violação das regras de moderação');
+          const fileExt = attachment.file.name.split('.').pop();
+          const fileName = `${currentUserId}/${Date.now()}.${fileExt}`;
           
-          let description = 'Você está tentando enviar uma forma de contato. Informações de contato só poderão ser passadas após o pagamento ser feito dentro do Woorkins.';
+          const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('message-attachments')
+            .upload(fileName, fileToUpload, {
+              contentType: attachment.file.type.startsWith('image/') ? 'image/jpeg' : attachment.file.type
+            });
+
+          if (uploadError) throw uploadError;
+
+          const { data: { publicUrl } } = supabase.storage
+            .from('message-attachments')
+            .getPublicUrl(fileName);
+
+          uploadedMediaUrl = publicUrl;
+          mediaType = attachment.file.type;
+          mediaName = attachment.file.name;
+        } catch (uploadError) {
+          console.error('Error uploading attachment:', uploadError);
           
-          if (violationResult) {
-            if (violationResult.newCount < 5) {
-              description += `\n\n━━━━━━━━━━━━━━━━━━\n\n⚠️ Atenção: Esta é sua ${violationResult.newCount}ª violação. Após 5 violações, você será bloqueado temporariamente.`;
-            } else if (violationResult.blockedUntil) {
-              const blockMinutes = Math.ceil((violationResult.blockedUntil.getTime() - Date.now()) / (1000 * 60));
-              description += `\n\n━━━━━━━━━━━━━━━━━━\n\n🚫 Você foi bloqueado por ${blockMinutes} minutos. Bloqueios aumentam progressivamente com violações repetidas (até 24h).`;
+          let errorDescription = 'Não foi possível fazer upload do arquivo. ';
+          if (uploadError instanceof Error) {
+            if (uploadError.message.includes('size')) {
+              errorDescription += 'O arquivo excede o limite de 49MB.';
+            } else {
+              errorDescription += uploadError.message;
             }
           }
-
+          
           if (!suppressToasts) {
             toast({
               variant: 'destructive',
-              title: '🚫 Mensagem Bloqueada',
-              description,
-              duration: 10000,
+              title: 'Erro ao enviar anexo',
+              description: errorDescription,
             });
           }
           setIsSending(false);
           return;
         }
-
-        // Check if message was flagged for bad conduct (warning only)
-        if (moderationResult?.flagged) {
-          if (!suppressToasts) {
-            toast({
-              variant: 'destructive',
-              title: '⚠️ Aviso de Conduta',
-              description: 'Detectamos um padrão suspeito em suas mensagens. Por favor, mantenha a comunicação dentro da plataforma. Violações repetidas resultarão em bloqueio.',
-              duration: 8000,
-            });
-          }
-        }
-      } else {
-        // If not moderating, still need to upload attachment
-        if (attachment) {
-          try {
-            let fileToUpload: File | Blob = attachment.file;
-
-            // Compress images before upload
-            if (attachment.file.type.startsWith('image/')) {
-              console.log('Compressing message attachment...');
-              fileToUpload = await compressImage(attachment.file, {
-                maxWidth: 1920,
-                maxHeight: 1920,
-                quality: 0.85,
-                maxSizeMB: 2
-              });
-            }
-
-            const fileExt = attachment.file.name.split('.').pop();
-            const fileName = `${currentUserId}/${Date.now()}.${fileExt}`;
-            uploadedFileName = fileName;
-            
-            const { data: uploadData, error: uploadError } = await supabase.storage
-              .from('message-attachments')
-              .upload(fileName, fileToUpload, {
-                contentType: attachment.file.type.startsWith('image/') ? 'image/jpeg' : attachment.file.type
-              });
-
-            if (uploadError) throw uploadError;
-
-            const { data: { publicUrl } } = supabase.storage
-              .from('message-attachments')
-              .getPublicUrl(fileName);
-
-            uploadedMediaUrl = publicUrl;
-            mediaType = attachment.file.type;
-            mediaName = attachment.file.name;
-          } catch (uploadError) {
-            console.error('Error uploading attachment:', uploadError);
-            
-            let errorDescription = 'Não foi possível fazer upload do arquivo. ';
-            if (uploadError instanceof Error) {
-              if (uploadError.message.includes('size')) {
-                errorDescription += 'O arquivo excede o limite de 49MB.';
-              } else {
-                errorDescription += uploadError.message;
-              }
-            }
-            
-            if (!suppressToasts) {
-              toast({
-                variant: 'destructive',
-                title: 'Erro ao enviar anexo',
-                description: errorDescription,
-              });
-            }
-            setIsSending(false);
-            return;
-          }
-        }
       }
 
+      // Optimistic UI update with "moderating" status
       const optimisticMessage: Message = {
         id: tempId,
         sender_id: currentUserId,
         sender_name: 'Você',
         content: content.trim(),
         created_at: new Date().toISOString(),
-        status: 'sending',
+        status: 'moderating',
+        moderation_status: 'pending',
         media_url: uploadedMediaUrl,
         media_type: mediaType,
         media_name: mediaName,
       };
 
-      // Optimistic UI update
+      // Show message immediately for sender
       setMessages(prev => [...prev, optimisticMessage]);
 
       const table = conversationType === 'negotiation' ? 'negotiation_messages' : 'proposal_messages';
@@ -662,7 +494,7 @@ export const useRealtimeMessaging = ({
         sender_id: currentUserId,
         content: content.trim(),
         status: 'sent',
-        moderation_status: 'approved',
+        moderation_status: 'pending', // Start with pending, will be moderated async
         media_url: uploadedMediaUrl,
         media_type: mediaType,
         media_name: mediaName,
@@ -701,13 +533,39 @@ export const useRealtimeMessaging = ({
               sender_avatar: senderData?.avatar_url,
               content: data.content,
               created_at: data.created_at,
-              status: 'sent',
+              status: 'moderating',
+              moderation_status: 'pending',
               media_url: data.media_url,
               media_type: data.media_type,
               media_name: data.media_name,
             }
           : msg
       ));
+
+      // Call moderation in background (no await)
+      console.log('🚀 Iniciando moderação assíncrona:', data.id);
+      supabase.functions.invoke('process-message-moderation', {
+        body: {
+          messageId: data.id,
+          conversationType
+        }
+      }).then(result => {
+        if (result.error) {
+          console.error('Erro na moderação assíncrona:', result.error);
+        } else {
+          console.log('✅ Moderação concluída:', result.data);
+          
+          // Show warning toast if flagged
+          if (result.data?.flagged && !suppressToasts) {
+            toast({
+              variant: 'destructive',
+              title: '⚠️ Aviso de Conduta',
+              description: 'Detectamos um padrão suspeito em suas mensagens. Por favor, mantenha a comunicação dentro da plataforma.',
+              duration: 8000,
+            });
+          }
+        }
+      });
 
       // Stop typing indicator
       await updateTypingIndicator(false);
@@ -797,6 +655,12 @@ export const useRealtimeMessaging = ({
         async (payload) => {
           const newMessage = payload.new as any;
           
+          // Skip pending messages for recipient (only show approved)
+          if (newMessage.sender_id !== currentUserId && newMessage.moderation_status === 'pending') {
+            console.log('⏳ Mensagem pendente de moderação, aguardando aprovação');
+            return;
+          }
+          
           // Fetch sender details
           const { data: senderData } = await supabase
             .from('profiles')
@@ -812,6 +676,8 @@ export const useRealtimeMessaging = ({
             content: newMessage.content,
             created_at: newMessage.created_at,
             status: newMessage.status || 'sent',
+            moderation_status: newMessage.moderation_status,
+            rejection_reason: newMessage.rejection_reason,
             media_url: newMessage.media_url,
             media_type: newMessage.media_type,
             media_name: newMessage.media_name,
@@ -841,7 +707,7 @@ export const useRealtimeMessaging = ({
           }
         }
       )
-      // Subscribe to message updates (read receipts)
+      // Subscribe to message updates (read receipts and moderation status)
       .on(
         'postgres_changes',
         {
@@ -852,11 +718,50 @@ export const useRealtimeMessaging = ({
         },
         (payload) => {
           const updated = payload.new as any;
-          setMessages(prev => prev.map(msg =>
-            msg.id === updated.id
-              ? { ...msg, status: updated.status, read_at: updated.read_at }
-              : msg
-          ));
+          
+          // Handle moderation status changes
+          if (updated.moderation_status === 'rejected') {
+            console.log('❌ Mensagem rejeitada:', updated.id);
+            setMessages(prev => prev.map(msg =>
+              msg.id === updated.id
+                ? { 
+                    ...msg, 
+                    status: 'rejected', 
+                    moderation_status: 'rejected',
+                    rejection_reason: updated.rejection_reason 
+                  }
+                : msg
+            ));
+            
+            // Show rejection notification to sender
+            if (updated.sender_id === currentUserId && !suppressToasts) {
+              toast({
+                variant: 'destructive',
+                title: '❌ Mensagem não entregue',
+                description: updated.rejection_reason || 'Violação das regras da plataforma',
+                duration: 10000,
+              });
+            }
+          } else if (updated.moderation_status === 'approved') {
+            console.log('✅ Mensagem aprovada:', updated.id);
+            setMessages(prev => prev.map(msg =>
+              msg.id === updated.id
+                ? { 
+                    ...msg, 
+                    status: 'sent', 
+                    moderation_status: 'approved',
+                    read_at: updated.read_at 
+                  }
+                : msg
+            ));
+          } else {
+            // Regular update (read receipts, etc)
+            setMessages(prev => prev.map(msg =>
+              msg.id === updated.id
+                ? { ...msg, status: updated.status, read_at: updated.read_at }
+                : msg
+            ));
+          }
         }
       )
       .on(

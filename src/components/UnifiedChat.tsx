@@ -1410,74 +1410,109 @@ useEffect(() => {
                       )}
                       
                        <div className={`flex flex-col max-w-[75%] ${isMine ? 'items-end' : 'items-start'}`}>
-                         <div
-                           className={`group rounded-2xl px-4 py-2.5 shadow-sm relative ${
-                             isDeleted
-                               ? 'bg-destructive/10 border-destructive/20 border'
-                               : isMine
-                               ? 'bg-primary text-primary-foreground rounded-tr-sm'
-                               : 'bg-card border rounded-tl-sm'
-                           }`}
-                         >
-                           {message.media_url && message.media_type?.startsWith('image/') && (
-                             <div 
-                               className="mb-2 cursor-pointer hover:opacity-80 transition-opacity"
-                               onClick={() => setViewingImage({ url: message.media_url!, name: message.media_name || 'imagem.jpg' })}
-                             >
-                               <img 
-                                 src={message.media_url} 
-                                 alt={message.media_name || 'Imagem'}
-                                 className="max-w-[300px] max-h-[300px] rounded-lg object-cover"
-                               />
-                             </div>
-                           )}
-                           {message.media_url && !message.media_type?.startsWith('image/') && (
-                             <div className="mb-2 flex items-center gap-2 p-2 bg-background/10 rounded-lg">
-                               {getFileIcon(message.media_type || '')}
-                               <span className="text-xs flex-1 truncate">{message.media_name}</span>
-                               <Button
-                                 variant="ghost"
-                                 size="icon"
-                                 className="h-6 w-6"
-                                 onClick={() => handleDownloadFile(message.media_url!, message.media_name || 'arquivo')}
-                               >
-                                 <Download className="h-3 w-3" />
-                               </Button>
-                             </div>
-                           )}
-                            {isDeleted ? (
-                              <p className="text-sm italic text-destructive">
-                                Apagado por violar as regras
-                              </p>
-                            ) : (
-                              <>
-                                {message.content && <p className="text-sm leading-relaxed break-words">{message.content}</p>}
-                              </>
-                            )}
-                            {isMine && !isDeleted && (! (conversationType === 'proposal' && proposalData?.status === 'accepted')) && (
-                              <button
-                                type="button"
-                                onClick={async () => {
-                                  const table = conversationType === 'negotiation' ? 'negotiation_messages' : 'proposal_messages';
-                                  await supabase.from(table).delete().eq('id', message.id);
-                                }}
-                                className={`absolute -top-2 ${isMine ? '-left-2' : '-right-2'} opacity-0 group-hover:opacity-100 transition-opacity text-xs px-1 py-0.5 rounded bg-destructive text-destructive-foreground`}
-                                title="Apagar mensagem"
-                              >
-                                Excluir
-                              </button>
-                            )}
-                          </div>
-                        <div className={`flex items-center gap-1.5 mt-1 ${isMine ? 'flex-row-reverse' : 'flex-row'}`}>
-                          <span className="text-xs text-muted-foreground">
-                            {formatDistanceToNow(new Date(message.created_at), {
-                              addSuffix: true,
-                              locale: ptBR,
-                            })}
-                          </span>
-                          {isMine && getMessageStatusIcon(message.status)}
-                        </div>
-                      </div>
+                          {/* Rejected message */}
+                          {message.status === 'rejected' && isMine ? (
+                            <div className="bg-red-50 dark:bg-red-950/20 border border-red-300 dark:border-red-800 rounded-2xl px-4 py-3 shadow-sm max-w-md">
+                              <div className="flex items-start gap-2">
+                                <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+                                <div className="flex-1">
+                                  <p className="font-semibold text-red-900 dark:text-red-100 text-sm mb-1">
+                                    ❌ Mensagem não entregue
+                                  </p>
+                                  {message.content && (
+                                    <p className="text-sm text-gray-700 dark:text-gray-300 line-through opacity-60 mb-2">
+                                      {message.content}
+                                    </p>
+                                  )}
+                                  {message.media_url && (
+                                    <p className="text-xs text-gray-600 dark:text-gray-400 italic mb-2">
+                                      📎 Arquivo: {message.media_name || 'anexo'}
+                                    </p>
+                                  )}
+                                  <p className="text-xs text-red-700 dark:text-red-300 bg-red-100 dark:bg-red-900/30 p-2 rounded">
+                                    🚫 {message.rejection_reason || 'Violação das regras da plataforma'}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          ) : (
+                            /* Normal message */
+                            <div
+                              className={`group rounded-2xl px-4 py-2.5 shadow-sm relative ${
+                                isDeleted
+                                  ? 'bg-destructive/10 border-destructive/20 border'
+                                  : isMine
+                                  ? 'bg-primary text-primary-foreground rounded-tr-sm'
+                                  : 'bg-card border rounded-tl-sm'
+                              }`}
+                            >
+                              {message.media_url && message.media_type?.startsWith('image/') && (
+                                <div 
+                                  className="mb-2 cursor-pointer hover:opacity-80 transition-opacity"
+                                  onClick={() => setViewingImage({ url: message.media_url!, name: message.media_name || 'imagem.jpg' })}
+                                >
+                                  <img 
+                                    src={message.media_url} 
+                                    alt={message.media_name || 'Imagem'}
+                                    className="max-w-[300px] max-h-[300px] rounded-lg object-cover"
+                                  />
+                                </div>
+                              )}
+                              {message.media_url && !message.media_type?.startsWith('image/') && (
+                                <div className="mb-2 flex items-center gap-2 p-2 bg-background/10 rounded-lg">
+                                  {getFileIcon(message.media_type || '')}
+                                  <span className="text-xs flex-1 truncate">{message.media_name}</span>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-6 w-6"
+                                    onClick={() => handleDownloadFile(message.media_url!, message.media_name || 'arquivo')}
+                                  >
+                                    <Download className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                              )}
+                              {isDeleted ? (
+                                <p className="text-sm italic text-destructive">
+                                  Apagado por violar as regras
+                                </p>
+                              ) : (
+                                <>
+                                  {message.content && <p className="text-sm leading-relaxed break-words">{message.content}</p>}
+                                  {/* Moderating indicator */}
+                                  {message.status === 'moderating' && isMine && (
+                                    <div className="flex items-center gap-1 mt-1 text-xs opacity-70">
+                                      <Loader2 className="h-3 w-3 animate-spin" />
+                                      <span>Verificando mensagem...</span>
+                                    </div>
+                                  )}
+                                </>
+                              )}
+                              {isMine && !isDeleted && (! (conversationType === 'proposal' && proposalData?.status === 'accepted')) && message.status !== 'rejected' && (
+                                <button
+                                  type="button"
+                                  onClick={async () => {
+                                    const table = conversationType === 'negotiation' ? 'negotiation_messages' : 'proposal_messages';
+                                    await supabase.from(table).delete().eq('id', message.id);
+                                  }}
+                                  className={`absolute -top-2 ${isMine ? '-left-2' : '-right-2'} opacity-0 group-hover:opacity-100 transition-opacity text-xs px-1 py-0.5 rounded bg-destructive text-destructive-foreground`}
+                                  title="Apagar mensagem"
+                                >
+                                  Excluir
+                                </button>
+                              )}
+                            </div>
+                          )}
+                         <div className={`flex items-center gap-1.5 mt-1 ${isMine ? 'flex-row-reverse' : 'flex-row'}`}>
+                           <span className="text-xs text-muted-foreground">
+                             {formatDistanceToNow(new Date(message.created_at), {
+                               addSuffix: true,
+                               locale: ptBR,
+                             })}
+                           </span>
+                           {isMine && message.status !== 'rejected' && getMessageStatusIcon(message.status)}
+                         </div>
+                       </div>
                     </div>
                   );
                 });

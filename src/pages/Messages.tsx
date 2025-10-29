@@ -71,8 +71,8 @@ export default function Messages() {
         setConversations(cachedConversations);
       }
       
-      // Depois buscar atualização em background
-      loadConversations();
+      // Forçar atualização para garantir dados frescos
+      loadConversations(true);
       
       // Subscribe to lightweight realtime updates for conversation list (avoid full reload)
       const channel = supabase

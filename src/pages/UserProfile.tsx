@@ -650,7 +650,7 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
                     {/* Avatar */}
                     <div className="-mt-20 flex flex-col items-center gap-3">
                       {isProfileOwner ? (
-                        <div className={hasActiveStories ? "relative p-[3px] rounded-full bg-gradient-to-tr from-purple-500 via-pink-500 to-orange-500 animate-[spin_3s_linear_infinite]" : ""}>
+                        <div className={hasActiveStories ? "relative p-1 rounded-full bg-gradient-to-tr from-purple-500 via-pink-500 to-orange-500" : ""}>
                           <InlinePhotoUpload
                             currentPhotoUrl={mainPhotoUrl || undefined}
                             userId={user!.id}
@@ -691,7 +691,7 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
                         </div>
                       ) : (
                         <div 
-                          className={hasActiveStories ? "relative p-[3px] rounded-full bg-gradient-to-tr from-purple-500 via-pink-500 to-orange-500 animate-[spin_3s_linear_infinite]" : ""}
+                          className={hasActiveStories ? "relative p-1 rounded-full bg-gradient-to-tr from-purple-500 via-pink-500 to-orange-500" : ""}
                           onClick={() => {
                             console.log('[UserProfile] Avatar clicked. hasActiveStories:', hasActiveStories, 'profile.id:', profile?.id);
                             setShowStoriesViewer(true);

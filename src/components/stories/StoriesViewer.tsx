@@ -52,7 +52,7 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId }: 
   const videoRef = useRef<HTMLVideoElement>(null);
   const { toast } = useToast();
 
-  console.log('[StoriesViewer] render', { isOpen, profileId, currentProfileId });
+  
 
   const STORY_DURATION = 15000; // 15 segundos
 
@@ -232,7 +232,7 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId }: 
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
-      <DialogContent className="z-[300] max-w-lg h-[90vh] p-0 bg-gradient-to-br from-purple-500/20 via-pink-500/20 to-orange-500/20 border-2 border-transparent rounded-3xl overflow-hidden backdrop-blur-sm relative before:absolute before:inset-0 before:rounded-3xl before:p-[2px] before:bg-gradient-to-tr before:from-purple-500 before:via-pink-500 before:to-orange-500 before:-z-10">
+      <DialogContent className="z-[9999] max-w-lg h-[90vh] p-0 bg-transparent border-0 shadow-none overflow-hidden">
         <DialogTitle className="sr-only">Stories</DialogTitle>
         <DialogDescription className="sr-only">Visualizador de stories</DialogDescription>
         {isLoading || stories.length === 0 ? (
@@ -243,7 +243,7 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId }: 
             </div>
           </div>
         ) : (
-          <div className="relative w-full h-full flex flex-col rounded-2xl overflow-hidden bg-black/80">
+          <div className="relative w-full h-full flex flex-col rounded-2xl overflow-hidden bg-black">
           {/* Progress bars */}
           <div className="absolute top-0 left-0 right-0 z-20 flex gap-1.5 p-3">
             {stories.map((_, idx) => (

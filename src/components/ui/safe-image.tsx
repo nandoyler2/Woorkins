@@ -12,12 +12,15 @@ export const SafeImage: React.FC<SafeImageProps> = ({
   fallbackSrc = "/placeholder.svg",
   ...props
 }) => {
-  const [imgSrc, setImgSrc] = React.useState<string | undefined>(src as string);
+  // Use fallback immediately if src is empty, null, or undefined
+  const initialSrc = src && src.toString().trim() !== '' ? src as string : fallbackSrc;
+  const [imgSrc, setImgSrc] = React.useState<string>(initialSrc);
 
   // Update imgSrc when src prop changes
   React.useEffect(() => {
-    setImgSrc(src as string);
-  }, [src]);
+    const newSrc = src && src.toString().trim() !== '' ? src as string : fallbackSrc;
+    setImgSrc(newSrc);
+  }, [src, fallbackSrc]);
 
   return (
     <img

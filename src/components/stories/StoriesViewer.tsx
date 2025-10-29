@@ -197,7 +197,7 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId }: 
                   src={currentStory.profile?.avatar_url || ''}
                   alt={currentStory.profile?.username || ''}
                   className="relative w-10 h-10 rounded-full border-2 border-white object-cover"
-                  fallbackSrc="https://api.dicebear.com/7.x/avataaars/svg?seed=default"
+                  fallbackSrc={`https://api.dicebear.com/7.x/avataaars/svg?seed=${currentStory.profile?.username || 'default'}`}
                 />
               </div>
               <div>

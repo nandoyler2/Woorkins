@@ -232,7 +232,7 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId }: 
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
-      <DialogContent className="z-[9999] max-w-lg h-[90vh] p-0 bg-transparent border-0 shadow-none overflow-hidden">
+      <DialogContent className="z-[9999] max-w-lg h-[90vh] p-0 bg-transparent border-0 shadow-none overflow-hidden [&>button]:hidden">
         <DialogTitle className="sr-only">Stories</DialogTitle>
         <DialogDescription className="sr-only">Visualizador de stories</DialogDescription>
         {isLoading || stories.length === 0 ? (

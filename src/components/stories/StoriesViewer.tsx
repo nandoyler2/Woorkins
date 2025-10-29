@@ -364,26 +364,16 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId }: 
               </div>
             </div>
 
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onClose}
-              className="text-white hover:bg-white/20"
-            >
-              <X className="w-5 h-5" />
-            </Button>
-
-            {/* Delete button for owner */}
-            {isOwner && (
+            <div className="flex items-center gap-2">
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => setShowDeleteDialog(true)}
-                className="text-white hover:bg-white/20 hover:bg-red-500/20"
+                onClick={onClose}
+                className="text-white hover:bg-white/20"
               >
-                <Trash2 className="w-5 h-5" />
+                <X className="w-5 h-5" />
               </Button>
-            )}
+            </div>
           </div>
 
           {/* Content */}
@@ -514,9 +504,21 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId }: 
             </div>
           )}
 
-          {/* Footer - Link apenas para mídia */}
-          {currentStory.link_url && currentStory.type !== 'text' && (
-            <div className="absolute bottom-4 left-4 right-4 z-20">
+          {/* Footer - Link apenas para mídia e Delete button */}
+          <div className="absolute bottom-4 left-4 right-4 z-20 flex items-end justify-between">
+            {/* Delete button for owner */}
+            {isOwner && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowDeleteDialog(true)}
+                className="bg-black/50 backdrop-blur-md text-white hover:bg-red-500/50 rounded-full"
+              >
+                <Trash2 className="w-5 h-5" />
+              </Button>
+            )}
+
+            {currentStory.link_url && currentStory.type !== 'text' && (
               <a
                 href={currentStory.link_url}
                 target="_blank"
@@ -526,8 +528,8 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId }: 
                 <ExternalLink className="w-4 h-4" />
                 <span className="text-sm font-medium">Ver link</span>
               </a>
-            </div>
-          )}
+            )}
+          </div>
 
           {/* View count (se for o dono) */}
           {isOwner && (

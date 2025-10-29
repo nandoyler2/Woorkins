@@ -1426,7 +1426,7 @@ useEffect(() => {
                         </Avatar>
                       )}
                       
-                       <div className={`flex flex-col max-w-[75%] ${isMine ? 'items-end' : 'items-start'}`}>
+                       <div className={`flex flex-col max-w-[75%] group ${isMine ? 'items-end' : 'items-start'}`}>
                           {/* Rejected message */}
                           {message.status === 'rejected' && isMine ? (
                             <div className="bg-red-50 dark:bg-red-950/20 border border-red-300 dark:border-red-800 rounded-2xl px-4 py-3 shadow-sm max-w-md">
@@ -1545,7 +1545,11 @@ useEffect(() => {
                                });
                              })()}
                            </span>
-                           {isMine && message.status !== 'rejected' && getMessageStatusIcon(message.status)}
+                           {isMine && message.status !== 'rejected' && (
+                             <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                               {getMessageStatusIcon(message.status)}
+                             </span>
+                           )}
                          </div>
                        </div>
                     </div>

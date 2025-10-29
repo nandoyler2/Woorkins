@@ -166,14 +166,9 @@ export function ProposalChatHeader({
             </Button>
           </>
         );
-      } else {
-        return (
-          <Badge variant="outline">
-            <Clock className="h-4 w-4 mr-2" />
-            Aguardando outra parte
-          </Badge>
-        );
       }
+      // Não mostrar badge "Aguardando outra parte"
+      return null;
     }
 
     // Freelancer pode refazer proposta se não está desbloqueada
@@ -190,34 +185,28 @@ export function ProposalChatHeader({
 
   return (
     <div className="border-b bg-card p-4">
-      {/* Layout compacto - tudo em uma seção */}
-      <div className="flex items-start justify-between gap-4">
-        {/* Coluna esquerda: Info do projeto + valor + status */}
+      <div className="flex items-center justify-between gap-4">
+        {/* Coluna esquerda: Info do projeto */}
         <div className="flex-1 min-w-0">
           {projectData && (
-            <div className="mb-2">
+            <div>
               <h2 className="text-xs font-medium text-muted-foreground">
                 {isOwner ? 'Seu Projeto' : `Projeto de ${projectData.ownerName}`}
               </h2>
               <h3 className="text-sm font-semibold truncate">{projectData.title}</h3>
             </div>
           )}
-          
-          <div className="flex items-center gap-3 flex-wrap">
-            <h3 className="font-semibold text-lg">
-              R$ {proposal.current_proposal_amount?.toLocaleString('pt-BR', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}
-            </h3>
-            {getStatusBadge()}
-          </div>
-          
-          {proposal.payment_status === 'paid_escrow' && !isOwner && (
-            <p className="text-xs text-muted-foreground mt-1">
-              💰 Valor em garantia - será liberado após conclusão
-            </p>
-          )}
+        </div>
+
+        {/* Centro: Valor + Status */}
+        <div className="flex flex-col items-center gap-2">
+          <h3 className="font-semibold text-lg whitespace-nowrap">
+            R$ {proposal.current_proposal_amount?.toLocaleString('pt-BR', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}
+          </h3>
+          {getStatusBadge()}
         </div>
 
         {/* Coluna direita: Botões de ação */}

@@ -20,6 +20,7 @@ import { ProfilePhotoUploadDialog } from '@/components/ProfilePhotoUploadDialog'
 import { IdentityVerificationDialog } from '@/components/IdentityVerificationDialog';
 import { CreateBusinessProfileDialog } from '@/components/CreateBusinessProfileDialog';
 import { FollowingSection } from '@/components/dashboard/FollowingSection';
+import { useUnreadMessages } from '@/hooks/useUnreadMessages';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -106,8 +107,11 @@ export default function Dashboard() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [businessProfiles, setBusinessProfiles] = useState<BusinessProfile[]>([]);
   const [loading, setLoading] = useState(true);
-  const [unreadMessages, setUnreadMessages] = useState(5);
+  const [lastUnreadMessage, setLastUnreadMessage] = useState<string>('');
   const [woorkoinsBalance, setWoorkoinsBalance] = useState(0);
+  
+  // Usar hook de mensagens não lidas
+  const unreadMessages = useUnreadMessages(profile?.id || '');
   const [showProfileEdit, setShowProfileEdit] = useState(false);
   const [showVerificationDialog, setShowVerificationDialog] = useState(false);
   const [showCreateBusinessDialog, setShowCreateBusinessDialog] = useState(false);
@@ -252,6 +256,7 @@ export default function Dashboard() {
   useEffect(() => {
     if (profile) {
       loadPendingInvites();
+      loadLastUnreadMessage();
     }
   }, [profile]);
 
@@ -266,6 +271,108 @@ export default function Dashboard() {
     
     if (!error && count !== null) {
       setPendingInvitesCount(count);
+    }
+  };
+
+  const loadLastUnreadMessage = async () => {
+    if (!profile) return;
+    
+    try {
+      // Buscar última mensagem não lida de negotiations
+      const { data: negAsUser } = await supabase
+        .from('negotiations')
+        .select('id')
+        .eq('client_user_id', profile.id);
+
+      const { data: negAsTarget } = await supabase
+        .from('negotiations')
+        .select('id')
+        .eq('target_profile_id', profile.id);
+
+      const negotiationIds = [
+        ...((negAsUser || []).map((n: any) => n.id)),
+        ...((negAsTarget || []).map((n: any) => n.id)),
+      ];
+
+      let lastNegMessage = null;
+      if (negotiationIds.length) {
+        const { data } = await supabase
+          .from('negotiation_messages')
+          .select('content, created_at')
+          .in('negotiation_id', negotiationIds)
+          .neq('sender_id', profile.id)
+          .in('status', ['sent', 'delivered'])
+          .eq('moderation_status', 'approved')
+          .neq('is_deleted', true)
+          .is('read_at', null)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        lastNegMessage = data;
+      }
+
+      // Buscar última mensagem não lida de proposals
+      const { data: propsAsFreelancer } = await supabase
+        .from('proposals')
+        .select('id')
+        .eq('freelancer_id', profile.id);
+
+      const { data: myProjects } = await supabase
+        .from('projects')
+        .select('id')
+        .eq('profile_id', profile.id);
+
+      const ownerProjectIds = (myProjects || []).map((p: any) => p.id);
+      const { data: propsAsOwner } = ownerProjectIds.length
+        ? await supabase
+            .from('proposals')
+            .select('id')
+            .in('project_id', ownerProjectIds)
+        : { data: [] };
+
+      const proposalIds = [
+        ...((propsAsFreelancer || []).map((p: any) => p.id)),
+        ...((propsAsOwner || []).map((p: any) => p.id)),
+      ];
+
+      let lastPropMessage = null;
+      if (proposalIds.length) {
+        const { data } = await supabase
+          .from('proposal_messages')
+          .select('content, created_at')
+          .in('proposal_id', proposalIds)
+          .neq('sender_id', profile.id)
+          .in('status', ['sent', 'delivered'])
+          .eq('moderation_status', 'approved')
+          .is('read_at', null)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        lastPropMessage = data;
+      }
+
+      // Pegar a mais recente entre as duas
+      let lastMessage = null;
+      if (lastNegMessage && lastPropMessage) {
+        lastMessage = new Date(lastNegMessage.created_at) > new Date(lastPropMessage.created_at)
+          ? lastNegMessage
+          : lastPropMessage;
+      } else {
+        lastMessage = lastNegMessage || lastPropMessage;
+      }
+
+      if (lastMessage?.content) {
+        // Limitar a 50 caracteres
+        const preview = lastMessage.content.length > 50 
+          ? lastMessage.content.substring(0, 50) + '...'
+          : lastMessage.content;
+        setLastUnreadMessage(preview);
+      } else {
+        setLastUnreadMessage('');
+      }
+    } catch (error) {
+      console.error('Error loading last unread message:', error);
+      setLastUnreadMessage('');
     }
   };
 
@@ -948,7 +1055,7 @@ export default function Dashboard() {
                 <Link to="/mensagens">
                   <CardContent className="p-5">
                     {unreadMessages > 0 && (
-                      <Badge className="absolute top-3 right-3 bg-red-500 text-white border-0 w-5 h-5 flex items-center justify-center p-0 text-xs">
+                      <Badge className="absolute top-3 right-3 bg-red-500 text-white border-0 min-w-[28px] h-7 flex items-center justify-center px-2 text-sm font-bold shadow-lg">
                         {unreadMessages}
                       </Badge>
                     )}
@@ -956,7 +1063,11 @@ export default function Dashboard() {
                       <MessageSquare className="w-5 h-5 text-white" />
                     </div>
                     <h3 className="text-base font-bold text-white mb-0.5">Ver Mensagens</h3>
-                    <p className="text-green-100 text-xs">Verificar conversas</p>
+                    <p className="text-green-100 text-xs line-clamp-2">
+                      {unreadMessages > 0 
+                        ? (lastUnreadMessage || 'Nova mensagem não lida')
+                        : 'Nenhuma mensagem não lida'}
+                    </p>
                   </CardContent>
                 </Link>
               </Card>

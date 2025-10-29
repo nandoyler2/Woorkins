@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, X, ExternalLink, Volume2, VolumeX } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X, ExternalLink, Volume2, VolumeX, User } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { SafeImage } from '@/components/ui/safe-image';
@@ -202,12 +202,17 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId }: 
             <div className="flex items-center gap-3 bg-black/30 backdrop-blur-md rounded-full pr-4 py-1.5 pl-1.5">
               <div className="relative">
                 <div className="absolute inset-0 bg-gradient-to-r from-primary to-orange rounded-full blur-sm opacity-75" />
-                <SafeImage
-                  src={currentStory.profile?.avatar_url || ''}
-                  alt={currentStory.profile?.username || ''}
-                  className="relative w-10 h-10 rounded-full border-2 border-white object-cover"
-                  fallbackSrc={`https://api.dicebear.com/7.x/avataaars/svg?seed=${currentStory.profile?.username || 'default'}`}
-                />
+                {currentStory.profile?.avatar_url ? (
+                  <SafeImage
+                    src={currentStory.profile.avatar_url}
+                    alt={currentStory.profile?.username || ''}
+                    className="relative w-10 h-10 rounded-full border-2 border-white object-cover"
+                  />
+                ) : (
+                  <div className="relative w-10 h-10 rounded-full border-2 border-white bg-muted flex items-center justify-center">
+                    <User className="w-6 h-6 text-muted-foreground" />
+                  </div>
+                )}
               </div>
               <div>
                 <p className="text-white font-semibold text-sm drop-shadow-lg">

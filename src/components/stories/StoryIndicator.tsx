@@ -22,6 +22,7 @@ export function StoryIndicator({
   className = '',
 }: StoryIndicatorProps) {
   const [hasActiveStories, setHasActiveStories] = useState(false);
+  const [latestStoryPreview, setLatestStoryPreview] = useState<string | null>(null);
 
   const sizeClasses = {
     sm: 'w-12 h-12',
@@ -62,13 +63,22 @@ export function StoryIndicator({
 
   const checkActiveStories = async () => {
     try {
-      const { count } = await supabase
+      const { data, count } = await supabase
         .from('profile_stories')
-        .select('id', { count: 'exact', head: true })
+        .select('media_url, type', { count: 'exact' })
         .eq('profile_id', profileId)
-        .gt('expires_at', new Date().toISOString());
+        .gt('expires_at', new Date().toISOString())
+        .order('created_at', { ascending: false })
+        .limit(1);
 
       setHasActiveStories((count || 0) > 0);
+      
+      // Se tem stories e é uma imagem, usar como preview
+      if (data && data.length > 0 && data[0].type === 'image' && data[0].media_url) {
+        setLatestStoryPreview(data[0].media_url);
+      } else {
+        setLatestStoryPreview(null);
+      }
     } catch (error) {
       console.error('Error checking stories:', error);
     }
@@ -86,7 +96,13 @@ export function StoryIndicator({
     >
       <div className="w-full h-full bg-background rounded-full p-[2px]">
         <Avatar className="w-full h-full">
-          {avatarUrl ? (
+          {latestStoryPreview && hasActiveStories ? (
+            <SafeImage
+              src={latestStoryPreview}
+              alt={username || 'Story preview'}
+              className="w-full h-full object-cover"
+            />
+          ) : avatarUrl ? (
             <SafeImage
               src={avatarUrl}
               alt={username || 'Avatar'}

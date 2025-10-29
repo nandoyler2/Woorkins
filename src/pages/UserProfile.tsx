@@ -37,6 +37,7 @@ import { ImageViewerDialog } from '@/components/ImageViewerDialog';
 import { FollowSuccessDialog } from '@/components/FollowSuccessDialog';
 import { useFollow } from '@/hooks/useFollow';
 import { useImageLuminance } from '@/hooks/useImageLuminance';
+import { StoriesViewer } from '@/components/stories/StoriesViewer';
 import defaultCover from '@/assets/default-cover.jpg';
 
 
@@ -142,6 +143,8 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
   const [showUnfollowConfirm, setShowUnfollowConfirm] = useState(false);
   const { isFollowing, loading: followLoading, toggleFollow } = useFollow(profile?.id || '');
   const isCoverDark = useImageLuminance(profile?.cover_url || defaultCover);
+  const [hasActiveStories, setHasActiveStories] = useState(false);
+  const [showStoriesViewer, setShowStoriesViewer] = useState(false);
   
   const handleTabChange = (value: string) => {
     const basePath = `/${slug}`;
@@ -212,6 +215,49 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
       loadUserProfile();
     }
   }, [slug, propProfileType, propProfileId]);
+
+  useEffect(() => {
+    if (profile?.id) {
+      checkActiveStories();
+
+      // Subscribe to stories changes
+      const channel = supabase
+        .channel(`profile-stories-${profile.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'profile_stories',
+            filter: `profile_id=eq.${profile.id}`,
+          },
+          () => {
+            checkActiveStories();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
+  }, [profile?.id]);
+
+  const checkActiveStories = async () => {
+    if (!profile?.id) return;
+    
+    try {
+      const { count } = await supabase
+        .from('profile_stories')
+        .select('id', { count: 'exact', head: true })
+        .eq('profile_id', profile.id)
+        .gt('expires_at', new Date().toISOString());
+
+      setHasActiveStories((count || 0) > 0);
+    } catch (error) {
+      console.error('Error checking stories:', error);
+    }
+  };
 
 
   const loadProfileById = async (id: string, type: 'user' | 'business') => {
@@ -632,21 +678,32 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
                         </InlinePhotoUpload>
                       ) : (
                         <div 
-                          className="cursor-pointer"
-                          onClick={() => mainPhotoUrl && setShowImageViewer(true)}
+                          className={`${hasActiveStories ? 'relative' : ''}`}
+                          onClick={() => {
+                            if (hasActiveStories) {
+                              setShowStoriesViewer(true);
+                            } else if (mainPhotoUrl) {
+                              setShowImageViewer(true);
+                            }
+                          }}
                         >
-                          {mainPhotoUrl ? (
-                            <SafeImage
-                              key={mainPhotoUrl}
-                              src={mainPhotoUrl}
-                              alt={mainPhotoAlt}
-                              className="w-36 h-36 rounded-full object-cover bg-card border-4 border-background shadow-lg"
-                            />
-                          ) : (
-                            <div className="w-36 h-36 rounded-full bg-card border-4 border-background shadow-lg flex items-center justify-center">
-                              <UserIcon className="w-16 h-16 text-muted-foreground" />
-                            </div>
+                          {hasActiveStories && (
+                            <div className="absolute -inset-[6px] bg-gradient-to-tr from-purple-500 via-pink-500 to-orange-500 rounded-full animate-[spin_3s_linear_infinite]" />
                           )}
+                          <div className={`relative ${hasActiveStories ? 'cursor-pointer' : mainPhotoUrl ? 'cursor-pointer' : ''}`}>
+                            {mainPhotoUrl ? (
+                              <SafeImage
+                                key={mainPhotoUrl}
+                                src={mainPhotoUrl}
+                                alt={mainPhotoAlt}
+                                className={`w-36 h-36 rounded-full object-cover bg-card shadow-lg ${hasActiveStories ? 'border-4 border-background' : 'border-4 border-background'}`}
+                              />
+                            ) : (
+                              <div className="w-36 h-36 rounded-full bg-card border-4 border-background shadow-lg flex items-center justify-center">
+                                <UserIcon className="w-16 h-16 text-muted-foreground" />
+                              </div>
+                            )}
+                          </div>
                         </div>
                       )}
                       {!isProfileOwner && (
@@ -1392,6 +1449,16 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Stories Viewer */}
+      {profile && showStoriesViewer && (
+        <StoriesViewer
+          profileId={profile.id}
+          isOpen={showStoriesViewer}
+          onClose={() => setShowStoriesViewer(false)}
+          currentProfileId={user?.id}
+        />
+      )}
     </div>
   );
 }

@@ -13,6 +13,7 @@ export const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRout
   const location = useLocation();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [profileComplete, setProfileComplete] = useState<boolean | null>(null);
+  const [emailConfirmed, setEmailConfirmed] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -23,6 +24,17 @@ export const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRout
       }
 
       try {
+        // Verificar confirmação de email
+        const { data: authData } = await supabase.auth.getUser();
+        const confirmed = Boolean((authData?.user as any)?.email_confirmed_at || (authData?.user as any)?.confirmed_at);
+        setEmailConfirmed(confirmed);
+
+        // Se não confirmado, não precisa checar mais nada aqui
+        if (!confirmed) {
+          setLoading(false);
+          return;
+        }
+
         // Verificar perfil completo (exceto se já estiver em /welcome)
         if (location.pathname !== '/welcome') {
           const onboardingCompleted = localStorage.getItem('onboarding_completed');
@@ -83,6 +95,12 @@ export const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRout
 
   if (!user) {
     return <Navigate to="/auth?mode=signin" replace />;
+  }
+
+  // Bloquear acesso se email não confirmado
+  if (emailConfirmed === false && location.pathname !== '/auth/pending-confirmation') {
+    const emailParam = encodeURIComponent(user.email ?? '');
+    return <Navigate to={`/auth/pending-confirmation?email=${emailParam}`} replace />;
   }
 
   // Redirecionar para welcome se perfil incompleto

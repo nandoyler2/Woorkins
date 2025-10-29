@@ -230,7 +230,7 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId }: 
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg h-[90vh] p-0 bg-gradient-to-br from-primary/20 via-background to-secondary/20 border-2 border-primary/30 rounded-3xl overflow-hidden backdrop-blur-sm">
+      <DialogContent className="max-w-lg h-[90vh] p-0 bg-gradient-to-br from-purple-500/20 via-pink-500/20 to-orange-500/20 border-2 border-transparent rounded-3xl overflow-hidden backdrop-blur-sm relative before:absolute before:inset-0 before:rounded-3xl before:p-[2px] before:bg-gradient-to-tr before:from-purple-500 before:via-pink-500 before:to-orange-500 before:-z-10">
         <div className="relative w-full h-full flex flex-col rounded-2xl overflow-hidden bg-black/80">
           {/* Progress bars */}
           <div className="absolute top-0 left-0 right-0 z-20 flex gap-1.5 p-3">
@@ -240,7 +240,7 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId }: 
                 className="flex-1 h-1 bg-white/20 rounded-full overflow-hidden backdrop-blur-sm"
               >
                 <div
-                  className="h-full bg-gradient-to-r from-primary via-orange to-primary transition-all duration-100 shadow-lg shadow-primary/50"
+                  className="h-full bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 transition-all duration-100 shadow-lg shadow-purple-500/50"
                   style={{
                     width: idx < currentIndex ? '100%' : idx === currentIndex ? `${progress}%` : '0%',
                   }}
@@ -253,7 +253,7 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId }: 
           <div className="absolute top-4 left-0 right-0 z-20 flex items-center justify-between px-4 mt-4">
             <div className="flex items-center gap-3 bg-black/30 backdrop-blur-md rounded-full pr-4 py-1.5 pl-1.5">
               <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-primary to-orange rounded-full blur-sm opacity-75" />
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 rounded-full blur-sm opacity-75" />
                 {currentStory.profile?.avatar_url ? (
                   <SafeImage
                     src={currentStory.profile.avatar_url}

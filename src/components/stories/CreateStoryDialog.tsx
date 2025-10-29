@@ -44,6 +44,7 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
   const [selectedProfile, setSelectedProfile] = useState<string>(profiles[0]?.id || '');
   const [mediaFile, setMediaFile] = useState<File | null>(null);
   const [mediaPreview, setMediaPreview] = useState<string>('');
+  const [originalImage, setOriginalImage] = useState<string>(''); // Imagem original para crop
   const [textContent, setTextContent] = useState('');
   const [backgroundColor, setBackgroundColor] = useState(backgroundStyles[0].value);
   const [customColor, setCustomColor] = useState('#8B5CF6');
@@ -52,7 +53,7 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
   const [textLink, setTextLink] = useState('');
   const [linkUrl, setLinkUrl] = useState('');
   const [showCropDialog, setShowCropDialog] = useState(false);
-  const [imageToCrop, setImageToCrop] = useState<string>('');
+  const [cropData, setCropData] = useState<any>(null); // Dados do último crop
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { toast } = useToast();
@@ -74,9 +75,10 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
 
     const previewUrl = URL.createObjectURL(file);
     
-    // Se for imagem, abrir crop dialog
+    // Se for imagem, guardar original e abrir crop
     if (type === 'image') {
-      setImageToCrop(previewUrl);
+      setOriginalImage(previewUrl);
+      setMediaFile(file);
       setShowCropDialog(true);
     } else {
       // Para vídeo, usar direto
@@ -87,12 +89,11 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
 
   const handleCroppedImage = async (croppedAreaPixels: any) => {
     try {
-      const croppedBlob = await getCroppedImg(imageToCrop, croppedAreaPixels);
-      const croppedFile = new File([croppedBlob], `story-${Date.now()}.jpg`, {
-        type: 'image/jpeg',
-      });
+      // Guardar dados do crop
+      setCropData(croppedAreaPixels);
       
-      setMediaFile(croppedFile);
+      // Criar preview cropado
+      const croppedBlob = await getCroppedImg(originalImage, croppedAreaPixels);
       setMediaPreview(URL.createObjectURL(croppedBlob));
       setShowCropDialog(false);
     } catch (error) {
@@ -191,6 +192,25 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
       return;
     }
 
+    // Se for imagem e tiver crop, aplicar o crop final
+    let finalMediaFile = mediaFile;
+    if (type === 'image' && cropData && originalImage) {
+      try {
+        const croppedBlob = await getCroppedImg(originalImage, cropData);
+        finalMediaFile = new File([croppedBlob], `story-${Date.now()}.jpg`, {
+          type: 'image/jpeg',
+        });
+      } catch (error) {
+        console.error('Error applying final crop:', error);
+        toast({
+          title: 'Erro ao processar imagem',
+          description: 'Tente novamente',
+          variant: 'destructive',
+        });
+        return;
+      }
+    }
+
     // Preparar metadados de formatação se for texto
     const metadata = type === 'text' && (textBold || textItalic) ? {
       text_bold: textBold,
@@ -201,7 +221,7 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
     await uploadStory({
       profileId: selectedProfile,
       type: type,
-      mediaFile: mediaFile || undefined,
+      mediaFile: finalMediaFile || undefined,
       textContent: type === 'text' ? textContent : undefined,
       backgroundColor: type === 'text' ? backgroundColor : undefined,
       linkUrl: type === 'text' && textLink ? textLink : (linkUrl || undefined),
@@ -217,6 +237,8 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
     setStep('select');
     setMediaFile(null);
     setMediaPreview('');
+    setOriginalImage('');
+    setCropData(null);
     setTextContent('');
     setTextLink('');
     setLinkUrl('');
@@ -418,7 +440,6 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
                                 variant="outline"
                                 size="lg"
                                 onClick={() => {
-                                  setImageToCrop(mediaPreview);
                                   setShowCropDialog(true);
                                 }}
                               >
@@ -432,6 +453,8 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
                               onClick={() => {
                                 setMediaFile(null);
                                 setMediaPreview('');
+                                setOriginalImage('');
+                                setCropData(null);
                               }}
                             >
                               <Upload className="w-4 h-4 mr-2" />
@@ -590,7 +613,7 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
       <ImageCropDialog
         open={showCropDialog}
         onClose={() => setShowCropDialog(false)}
-        imageSrc={imageToCrop}
+        imageSrc={originalImage}
         onCropComplete={handleCroppedImage}
         aspect={9 / 16}
       />

@@ -184,7 +184,7 @@ export function ProposalChatHeader({
   };
 
   return (
-    <div className="border-b bg-card p-4">
+    <div className="border-b bg-gradient-to-r from-card to-card/80 p-4">
       <div className="flex items-center justify-between gap-4">
         {/* Coluna esquerda: Info do projeto */}
         <div className="flex-1 min-w-0">
@@ -198,14 +198,18 @@ export function ProposalChatHeader({
           )}
         </div>
 
-        {/* Centro: Valor + Status */}
-        <div className="flex flex-col items-center gap-2">
-          <h3 className="font-semibold text-lg whitespace-nowrap">
-            R$ {proposal.current_proposal_amount?.toLocaleString('pt-BR', {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}
-          </h3>
+        {/* Centro: Valor + Status lado a lado */}
+        <div className="flex items-center gap-3 px-6 py-2 rounded-full bg-gradient-to-r from-primary/5 to-primary/10 border-2 border-primary/20">
+          <div className="flex items-baseline gap-1">
+            <span className="text-xs font-medium text-muted-foreground">R$</span>
+            <span className="text-2xl font-bold text-primary">
+              {proposal.current_proposal_amount?.toLocaleString('pt-BR', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
+            </span>
+          </div>
+          <div className="h-6 w-px bg-primary/20" />
           {getStatusBadge()}
         </div>
 

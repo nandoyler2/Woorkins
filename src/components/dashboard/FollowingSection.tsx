@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ClickableProfile } from '@/components/ClickableProfile';
-import { Users, Bell } from 'lucide-react';
+import { Users, Bell, TrendingUp } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { User } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 interface FollowedProfile {
   id: string;
@@ -157,14 +160,16 @@ export function FollowingSection({ profileId }: FollowingSectionProps) {
 
   if (loading) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="w-5 h-5" />
-            Seguindo
-          </CardTitle>
+      <Card className="bg-white shadow-sm border border-slate-200">
+        <CardHeader className="border-b border-slate-100 p-4">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 bg-primary/10 rounded-lg flex items-center justify-center">
+              <Users className="w-4 h-4 text-primary" />
+            </div>
+            <h3 className="text-base font-bold text-slate-900">Seguindo</h3>
+          </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-4">
           <div className="flex items-center justify-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
           </div>
@@ -175,15 +180,17 @@ export function FollowingSection({ profileId }: FollowingSectionProps) {
 
   if (following.length === 0) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="w-5 h-5" />
-            Seguindo
-          </CardTitle>
+      <Card className="bg-white shadow-sm border border-slate-200">
+        <CardHeader className="border-b border-slate-100 p-4">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 bg-primary/10 rounded-lg flex items-center justify-center">
+              <Users className="w-4 h-4 text-primary" />
+            </div>
+            <h3 className="text-base font-bold text-slate-900">Seguindo</h3>
+          </div>
         </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground text-center py-4">
+        <CardContent className="p-4">
+          <p className="text-sm text-slate-600 text-center py-4">
             Você ainda não está seguindo ninguém
           </p>
         </CardContent>
@@ -192,43 +199,51 @@ export function FollowingSection({ profileId }: FollowingSectionProps) {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Users className="w-5 h-5" />
-          Seguindo ({following.length})
-        </CardTitle>
+    <Card className="bg-white shadow-sm border border-slate-200">
+      <CardHeader className="border-b border-slate-100 p-4">
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 bg-primary/10 rounded-lg flex items-center justify-center">
+            <Users className="w-4 h-4 text-primary" />
+          </div>
+          <h3 className="text-base font-bold text-slate-900">Seguindo</h3>
+        </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-4">
         <ScrollArea className="h-[400px]">
-          <div className="space-y-3">
+          <div className="space-y-2">
             {following.map((profile) => (
-              <div
+              <Link 
                 key={profile.id}
-                className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors"
+                to={`/${profile.username}`}
                 onClick={() => {
                   if (profile.hasUpdate) {
                     markUpdatesAsRead(profile.id);
                   }
                 }}
               >
-                <ClickableProfile
-                  profileId={profile.id}
-                  username={profile.username}
-                  fullName={profile.full_name || undefined}
-                  avatarUrl={profile.avatar_url}
-                  showAvatar
-                  showName
-                  avatarSize="sm"
-                  className="flex-1"
-                />
-                {profile.hasUpdate && (
-                  <Badge variant="secondary" className="gap-1">
-                    <Bell className="w-3 h-3" />
-                    Nova atualização
-                  </Badge>
-                )}
-              </div>
+                <div className="flex items-center justify-between py-2 hover:bg-slate-50 transition-colors rounded-lg px-2">
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    <Avatar className="h-8 w-8 flex-shrink-0">
+                      {profile.avatar_url ? (
+                        <AvatarImage src={profile.avatar_url} alt={profile.username} />
+                      ) : (
+                        <AvatarFallback className="bg-slate-200 text-slate-600">
+                          <User className="w-4 h-4" />
+                        </AvatarFallback>
+                      )}
+                    </Avatar>
+                    <span className="text-sm text-slate-700 truncate">
+                      {profile.full_name || `@${profile.username}`}
+                    </span>
+                  </div>
+                  {profile.hasUpdate && (
+                    <Badge variant="secondary" className="gap-1 flex-shrink-0 bg-blue-100 text-blue-700 border-0 text-xs">
+                      <Bell className="w-3 h-3" />
+                      Novo
+                    </Badge>
+                  )}
+                </div>
+              </Link>
             ))}
           </div>
         </ScrollArea>

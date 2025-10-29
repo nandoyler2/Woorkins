@@ -45,15 +45,33 @@ export function ProposalHistoryDialog({
       setLoading(true);
       const { data, error } = await supabase
         .from('proposal_status_history')
-        .select(`
-          *,
-          profile:profiles!changed_by(full_name)
-        `)
+        .select('*')
         .eq('proposal_id', proposalId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setHistory(data || []);
+
+      // Load profile names separately
+      if (data && data.length > 0) {
+        const profileIds = [...new Set(data.map(d => d.changed_by))];
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, full_name')
+          .in('id', profileIds);
+
+        const profileMap = new Map(profiles?.map(p => [p.id, p.full_name]) || []);
+        
+        const historyWithProfiles = data.map(entry => ({
+          ...entry,
+          profile: {
+            full_name: profileMap.get(entry.changed_by) || 'Usuário',
+          },
+        }));
+
+        setHistory(historyWithProfiles);
+      } else {
+        setHistory([]);
+      }
     } catch (error) {
       console.error('Erro ao carregar histórico:', error);
     } finally {

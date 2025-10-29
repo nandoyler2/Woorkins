@@ -32,6 +32,8 @@ interface Conversation {
   projectId?: string;
   businessId?: string;
   freelancerId?: string;
+  hasDispute?: boolean;
+  disputeStatus?: string;
 }
 
 export default function Messages() {
@@ -42,7 +44,7 @@ export default function Messages() {
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [profileId, setProfileId] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeFilter, setActiveFilter] = useState<'all' | 'unread' | 'starred' | 'archived'>('all');
+  const [activeFilter, setActiveFilter] = useState<'all' | 'unread' | 'starred' | 'archived' | 'disputes'>('all');
   const location = useLocation();
 
   useEffect(() => {
@@ -294,6 +296,17 @@ export default function Messages() {
           .neq('sender_id', profileId)
           .in('status', ['sent', 'delivered']);
 
+        // Check for disputes
+        const { data: disputes } = await supabase
+          .from('project_disputes')
+          .select('id, status')
+          .eq('proposal_id', prop.id)
+          .order('created_at', { ascending: false })
+          .limit(1);
+
+        const hasDispute = disputes && disputes.length > 0;
+        const disputeStatus = disputes?.[0]?.status;
+
         return {
           id: prop.id,
           type: 'proposal' as const,
@@ -309,6 +322,8 @@ export default function Messages() {
           status: prop.status,
           projectId: prop.project.id,
           freelancerId: prop.freelancer_id,
+          hasDispute,
+          disputeStatus,
         };
       }));
 
@@ -365,10 +380,32 @@ export default function Messages() {
     return statusMap[status] || status;
   };
 
-  const filteredConversations = conversations.filter(conv =>
-    conv.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    conv.otherUser.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredConversations = conversations
+    .filter(conv => {
+      // Search filter
+      const matchesSearch = conv.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        conv.otherUser.name.toLowerCase().includes(searchQuery.toLowerCase());
+      
+      if (!matchesSearch) return false;
+
+      // Tab filters
+      switch (activeFilter) {
+        case 'unread':
+          return conv.unreadCount > 0;
+        case 'archived':
+          // Already filtered by archived in loadConversations
+          return true;
+        case 'starred':
+          // TODO: Implement starred functionality
+          return false;
+        case 'disputes':
+          // Only proposals with active disputes
+          return conv.type === 'proposal' && conv.hasDispute === true;
+        case 'all':
+        default:
+          return true;
+      }
+    });
 
   if (loading) {
     return (
@@ -438,7 +475,14 @@ export default function Messages() {
               <span>Arquivadas</span>
             </button>
             
-            <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-muted text-muted-foreground">
+            <button
+              onClick={() => setActiveFilter('disputes')}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${
+                activeFilter === 'disputes' 
+                  ? 'bg-gradient-primary text-primary-foreground shadow-md' 
+                  : 'hover:bg-muted text-muted-foreground'
+              }`}
+            >
               <AlertCircle className="h-5 w-5" />
               <span>Disputa</span>
             </button>
@@ -561,6 +605,12 @@ export default function Messages() {
                               <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-800">
                                 {conv.freelancerId === profileId ? 'Proposta enviada' : 'Proposta recebida'}
                               </span>
+                              {conv.hasDispute && (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+                                  <AlertCircle className="h-3 w-3 mr-1" />
+                                  {conv.disputeStatus === 'resolved' ? 'Disputa Resolvida' : 'Em Disputa'}
+                                </span>
+                              )}
                             </div>
                           )}
 

@@ -650,56 +650,60 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
                     {/* Avatar */}
                     <div className="-mt-20 flex flex-col items-center gap-3">
                       {isProfileOwner ? (
-                        <InlinePhotoUpload
-                          currentPhotoUrl={mainPhotoUrl || undefined}
-                          userId={user!.id}
-                          userName={profileType === 'business' 
-                            ? (profile.company_name || profile.username)
-                            : (profile.full_name || profile.username)
-                          }
-                          onPhotoUpdated={loadUserProfile}
-                          type="avatar"
-                          className="w-36 h-36 rounded-full"
-                          entityType={profileType}
-                          profileId={profile.id}
-                        >
-                          <div 
-                            className="cursor-pointer"
-                            onClick={() => mainPhotoUrl && setShowImageViewer(true)}
+                        <div className={hasActiveStories ? "relative rounded-full p-1.5 border-2 border-border" : ""}>
+                          <InlinePhotoUpload
+                            currentPhotoUrl={mainPhotoUrl || undefined}
+                            userId={user!.id}
+                            userName={profileType === 'business' 
+                              ? (profile.company_name || profile.username)
+                              : (profile.full_name || profile.username)
+                            }
+                            onPhotoUpdated={loadUserProfile}
+                            type="avatar"
+                            className="w-36 h-36 rounded-full"
+                            entityType={profileType}
+                            profileId={profile.id}
                           >
-                             {mainPhotoUrl ? (
-                              <SafeImage
-                                key={mainPhotoUrl}
-                                src={mainPhotoUrl}
-                                alt={mainPhotoAlt}
-                                className="w-36 h-36 rounded-full object-cover bg-card border-4 border-background shadow-lg"
-                              />
-                            ) : (
-                              <div className="w-36 h-36 rounded-full bg-card border-4 border-background shadow-lg flex items-center justify-center">
-                                <UserIcon className="w-16 h-16 text-muted-foreground" />
-                              </div>
-                            )}
-                          </div>
-                        </InlinePhotoUpload>
+                            <div 
+                              className="cursor-pointer"
+                              onClick={() => {
+                                if (hasActiveStories) {
+                                  setShowStoriesViewer(true);
+                                } else if (mainPhotoUrl) {
+                                  setShowImageViewer(true);
+                                }
+                              }}
+                            >
+                               {mainPhotoUrl ? (
+                                <SafeImage
+                                  key={mainPhotoUrl}
+                                  src={mainPhotoUrl}
+                                  alt={mainPhotoAlt}
+                                  className="w-36 h-36 rounded-full object-cover bg-card border-4 border-background shadow-lg"
+                                />
+                              ) : (
+                                <div className="w-36 h-36 rounded-full bg-card border-4 border-background shadow-lg flex items-center justify-center">
+                                  <UserIcon className="w-16 h-16 text-muted-foreground" />
+                                </div>
+                              )}
+                            </div>
+                          </InlinePhotoUpload>
+                        </div>
                       ) : (
                         <div 
-                          className={`${hasActiveStories ? 'relative' : ''}`}
+                          className={hasActiveStories ? "relative rounded-full p-1.5 border-2 border-border" : ""}
                           onClick={() => {
                             console.log('[UserProfile] Avatar clicked. hasActiveStories:', hasActiveStories, 'profile.id:', profile?.id);
-                            // Abre sempre o viewer de stories; se não houver, o viewer mostra loading/estado vazio
                             setShowStoriesViewer(true);
                           }}
                         >
-                          {hasActiveStories && (
-                            <div className="absolute -inset-[6px] bg-gradient-to-tr from-purple-500 via-pink-500 to-orange-500 rounded-full animate-[spin_3s_linear_infinite] pointer-events-none" />
-                          )}
-                          <div className={`relative cursor-pointer`}>
+                          <div className="relative cursor-pointer">
                             {mainPhotoUrl ? (
                               <SafeImage
                                 key={mainPhotoUrl}
                                 src={mainPhotoUrl}
                                 alt={mainPhotoAlt}
-                                className={`w-36 h-36 rounded-full object-cover bg-card shadow-lg border-4 border-background`}
+                                className="w-36 h-36 rounded-full object-cover bg-card shadow-lg border-4 border-background"
                               />
                             ) : (
                               <div className="w-36 h-36 rounded-full bg-card border-4 border-background shadow-lg flex items-center justify-center">

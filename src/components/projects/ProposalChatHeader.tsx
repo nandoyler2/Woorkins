@@ -139,15 +139,15 @@ export function ProposalChatHeader({
     // Proposta pendente de aceitação
     if (proposal.status === 'pending' && isOwner) {
       return (
-        <>
-          <Button size="sm" onClick={onAccept} className="bg-green-600 hover:bg-green-700">
-            <CheckCircle className="h-4 w-4 mr-2" />
+        <div className="flex flex-col gap-1.5">
+          <Button size="sm" onClick={onAccept} className="bg-green-600 hover:bg-green-700 h-8 text-xs">
+            <CheckCircle className="h-3.5 w-3.5 mr-1.5" />
             Aceitar Proposta
           </Button>
-          <Button size="sm" onClick={onMakeCounterProposal} variant="outline">
+          <Button size="sm" onClick={onMakeCounterProposal} variant="outline" className="h-8 text-xs">
             Fazer Contra-Proposta
           </Button>
-        </>
+        </div>
       );
     }
 
@@ -156,15 +156,15 @@ export function ProposalChatHeader({
       const isAwaiting = proposal.awaiting_acceptance_from === currentProfileId;
       if (isAwaiting) {
         return (
-          <>
-            <Button size="sm" onClick={onAccept} className="bg-green-600 hover:bg-green-700">
-              <CheckCircle className="h-4 w-4 mr-2" />
+          <div className="flex flex-col gap-1.5">
+            <Button size="sm" onClick={onAccept} className="bg-green-600 hover:bg-green-700 h-8 text-xs">
+              <CheckCircle className="h-3.5 w-3.5 mr-1.5" />
               Aceitar Contra-Proposta
             </Button>
-            <Button size="sm" onClick={onMakeCounterProposal} variant="outline">
+            <Button size="sm" onClick={onMakeCounterProposal} variant="outline" className="h-8 text-xs">
               Nova Contra-Proposta
             </Button>
-          </>
+          </div>
         );
       }
       // Não mostrar badge "Aguardando outra parte"
@@ -223,6 +223,18 @@ export function ProposalChatHeader({
 
         {/* Coluna direita: Botões de ação - melhorados */}
         <div className="flex items-center gap-2 flex-shrink-0">
+          {projectData && (
+            <Button 
+              variant="outline" 
+              size="sm"
+              className="shadow-sm hover:shadow-md transition-shadow"
+              onClick={() => window.open(`/projetos/${projectData.id}`, '_blank')}
+            >
+              <ExternalLink className="h-4 w-4 mr-2" />
+              Ver Projeto
+            </Button>
+          )}
+          
           {renderActionButtons()}
 
           <DropdownMenu>

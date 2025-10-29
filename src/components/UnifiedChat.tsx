@@ -416,6 +416,14 @@ useEffect(() => {
 
       if (error) throw error;
 
+      console.log('📥 Proposal Data Loaded:', {
+        awaiting_acceptance_from: data.awaiting_acceptance_from,
+        current_proposal_by: data.current_proposal_by,
+        freelancer_id: data.freelancer_id,
+        project_profile_id: data.project.profile_id,
+        status: data.status,
+      });
+
       setProposalData(data);
       setIsOwner(data.project.profile_id === profileId);
     } catch (error) {
@@ -563,6 +571,15 @@ useEffect(() => {
       // Determine who is making the counter-proposal
       const fromProfileId = profileId;
       const toProfileId = isOwner ? proposalData.freelancer_id : proposalData.project.profile_id;
+      
+      console.log('📤 Sending Counter Proposal:', {
+        fromProfileId,
+        toProfileId,
+        amount,
+        isOwner,
+        freelancer_id: proposalData.freelancer_id,
+        project_profile_id: proposalData.project.profile_id,
+      });
       
       // Insert into counter_proposals table
       const { error: counterError } = await supabase
@@ -855,6 +872,18 @@ useEffect(() => {
     
     const needsAction = status_type === 'counter_proposal' && 
       proposalData?.awaiting_acceptance_from === profileId;
+    
+    // Debug logs
+    if (status_type === 'counter_proposal') {
+      console.log('🔍 Counter Proposal Debug:', {
+        status_type,
+        awaiting_acceptance_from: proposalData?.awaiting_acceptance_from,
+        profileId,
+        needsAction,
+        proposalStatus: proposalData?.status,
+        isMine,
+      });
+    }
     
     return (
       <div

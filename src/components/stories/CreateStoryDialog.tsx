@@ -469,51 +469,35 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
                       </div>
                     ) : (
                       <div className="space-y-4">
-                        <div className="border-2 border-dashed border-primary/30 rounded-2xl p-6 text-center bg-gradient-to-br from-muted/30 to-transparent hover:border-primary/50 transition-all">
-                          {mediaPreview ? (
-                            <div className="relative space-y-4">
-                              {type === 'image' ? (
-                                <img
-                                  src={mediaPreview}
-                                  alt="Preview"
-                                  className="max-h-[300px] mx-auto rounded-xl shadow-2xl"
-                                />
-                              ) : (
-                                <video
-                                  src={mediaPreview}
-                                  controls
-                                  className="max-h-[300px] mx-auto rounded-xl shadow-2xl"
-                                />
-                              )}
-                              <div className="flex gap-2 justify-center">
-                                {type === 'image' && (
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => {
-                                      setImageToCrop(mediaPreview);
-                                      setShowCropDialog(true);
-                                    }}
-                                  >
-                                    <Crop className="w-4 h-4 mr-2" />
-                                    Ajustar Crop
-                                  </Button>
-                                )}
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="bg-background/80 backdrop-blur-sm"
-                                  onClick={() => {
-                                    setMediaFile(null);
-                                    setMediaPreview('');
-                                  }}
-                                >
-                                  <Upload className="w-4 h-4 mr-2" />
-                                  Alterar arquivo
-                                </Button>
-                              </div>
-                            </div>
-                          ) : (
+                        {mediaPreview ? (
+                          <div className="flex gap-2 justify-center p-4 bg-muted/30 rounded-xl">
+                            {type === 'image' && (
+                              <Button
+                                variant="outline"
+                                size="lg"
+                                onClick={() => {
+                                  setImageToCrop(mediaPreview);
+                                  setShowCropDialog(true);
+                                }}
+                              >
+                                <Crop className="w-4 h-4 mr-2" />
+                                Ajustar Crop
+                              </Button>
+                            )}
+                            <Button
+                              variant="outline"
+                              size="lg"
+                              onClick={() => {
+                                setMediaFile(null);
+                                setMediaPreview('');
+                              }}
+                            >
+                              <Upload className="w-4 h-4 mr-2" />
+                              Alterar arquivo
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="border-2 border-dashed border-primary/30 rounded-2xl p-8 text-center bg-gradient-to-br from-muted/30 to-transparent hover:border-primary/50 transition-all">
                             <label className="cursor-pointer block group">
                               <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
                                 <Upload className="w-8 h-8 text-purple-500" />
@@ -538,8 +522,8 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
                                 }}
                               />
                             </label>
-                          )}
-                        </div>
+                          </div>
+                        )}
 
                         {/* Link opcional para mídia */}
                         <div className="space-y-2 bg-muted/30 p-3 rounded-lg">

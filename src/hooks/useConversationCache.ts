@@ -33,6 +33,19 @@ interface ConversationCacheStore {
 
 const CACHE_DURATION = 2 * 60 * 1000; // 2 minutos
 
+// Debounce para saves do localStorage
+let saveTimeout: NodeJS.Timeout | null = null;
+const debouncedSave = (data: any) => {
+  if (saveTimeout) clearTimeout(saveTimeout);
+  saveTimeout = setTimeout(() => {
+    try {
+      localStorage.setItem('conversation-cache', JSON.stringify(data));
+    } catch (e) {
+      console.error('Error saving cache:', e);
+    }
+  }, 1000);
+};
+
 // Load from localStorage on init
 const loadFromStorage = () => {
   try {
@@ -62,12 +75,7 @@ export const useConversationCache = create<ConversationCacheStore>((set, get) =>
       lastFetched: Date.now(),
     };
     set(newState);
-    // Save to localStorage
-    try {
-      localStorage.setItem('conversation-cache', JSON.stringify(newState));
-    } catch (e) {
-      console.error('Error saving cache:', e);
-    }
+    debouncedSave(newState);
   },
 
   updateConversation: (id: string, type: 'negotiation' | 'proposal', updates: Partial<Conversation>) => {
@@ -80,15 +88,10 @@ export const useConversationCache = create<ConversationCacheStore>((set, get) =>
             : conv
         ),
       };
-      // Save to localStorage
-      try {
-        localStorage.setItem('conversation-cache', JSON.stringify({
-          conversations: newState.conversations,
-          lastFetched: newState.lastFetched,
-        }));
-      } catch (e) {
-        console.error('Error saving cache:', e);
-      }
+      debouncedSave({
+        conversations: newState.conversations,
+        lastFetched: newState.lastFetched,
+      });
       return newState;
     });
   },
@@ -100,6 +103,7 @@ export const useConversationCache = create<ConversationCacheStore>((set, get) =>
   clearCache: () => {
     set({ conversations: [], lastFetched: null });
     try {
+      if (saveTimeout) clearTimeout(saveTimeout);
       localStorage.removeItem('conversation-cache');
     } catch (e) {
       console.error('Error clearing cache:', e);

@@ -21,6 +21,7 @@ import { IdentityVerificationDialog } from '@/components/IdentityVerificationDia
 import { CreateBusinessProfileDialog } from '@/components/CreateBusinessProfileDialog';
 import { FollowingSection } from '@/components/dashboard/FollowingSection';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
+import { DashboardSkeleton } from '@/components/dashboard/DashboardSkeleton';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -278,61 +279,56 @@ export default function Dashboard() {
     if (!profile) return;
     
     try {
-      // Buscar última mensagem não lida de negotiations
-      const { data: negAsUser } = await supabase
-        .from('negotiations')
-        .select('id')
-        .eq('client_user_id', profile.id);
-
-      const { data: negAsTarget } = await supabase
-        .from('negotiations')
-        .select('id')
-        .eq('target_profile_id', profile.id);
+      // Fazer todas as queries em paralelo
+      const [negAsUser, negAsTarget, propsAsFreelancer, myProjects] = await Promise.all([
+        supabase.from('negotiations').select('id').eq('client_user_id', profile.id),
+        supabase.from('negotiations').select('id').eq('target_profile_id', profile.id),
+        supabase.from('proposals').select('id').eq('freelancer_id', profile.id),
+        supabase.from('projects').select('id').eq('profile_id', profile.id)
+      ]);
 
       const negotiationIds = [
-        ...((negAsUser || []).map((n: any) => n.id)),
-        ...((negAsTarget || []).map((n: any) => n.id)),
+        ...((negAsUser.data || []).map((n: any) => n.id)),
+        ...((negAsTarget.data || []).map((n: any) => n.id)),
       ];
 
-      let lastNegMessage = null;
+      const ownerProjectIds = (myProjects.data || []).map((p: any) => p.id);
+
+      // Buscar proposals do owner e mensagens em paralelo
+      const messageQueries = [];
+      
       if (negotiationIds.length) {
-        const { data } = await supabase
-          .from('negotiation_messages')
-          .select('content, created_at')
-          .in('negotiation_id', negotiationIds)
-          .neq('sender_id', profile.id)
-          .in('status', ['sent', 'delivered'])
-          .eq('moderation_status', 'approved')
-          .neq('is_deleted', true)
-          .is('read_at', null)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
-        lastNegMessage = data;
+        messageQueries.push(
+          supabase
+            .from('negotiation_messages')
+            .select('content, created_at')
+            .in('negotiation_id', negotiationIds)
+            .neq('sender_id', profile.id)
+            .in('status', ['sent', 'delivered'])
+            .eq('moderation_status', 'approved')
+            .neq('is_deleted', true)
+            .is('read_at', null)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle()
+        );
+      } else {
+        messageQueries.push(Promise.resolve({ data: null }));
       }
 
-      // Buscar última mensagem não lida de proposals
-      const { data: propsAsFreelancer } = await supabase
-        .from('proposals')
-        .select('id')
-        .eq('freelancer_id', profile.id);
+      if (ownerProjectIds.length) {
+        messageQueries.push(
+          supabase.from('proposals').select('id').in('project_id', ownerProjectIds)
+        );
+      } else {
+        messageQueries.push(Promise.resolve({ data: [] }));
+      }
 
-      const { data: myProjects } = await supabase
-        .from('projects')
-        .select('id')
-        .eq('profile_id', profile.id);
-
-      const ownerProjectIds = (myProjects || []).map((p: any) => p.id);
-      const { data: propsAsOwner } = ownerProjectIds.length
-        ? await supabase
-            .from('proposals')
-            .select('id')
-            .in('project_id', ownerProjectIds)
-        : { data: [] };
+      const [lastNegMessageResult, propsAsOwner] = await Promise.all(messageQueries);
 
       const proposalIds = [
-        ...((propsAsFreelancer || []).map((p: any) => p.id)),
-        ...((propsAsOwner || []).map((p: any) => p.id)),
+        ...((propsAsFreelancer.data || []).map((p: any) => p.id)),
+        ...((propsAsOwner.data || []).map((p: any) => p.id)),
       ];
 
       let lastPropMessage = null;
@@ -352,6 +348,7 @@ export default function Dashboard() {
       }
 
       // Pegar a mais recente entre as duas
+      const lastNegMessage = lastNegMessageResult.data;
       let lastMessage = null;
       if (lastNegMessage && lastPropMessage) {
         lastMessage = new Date(lastNegMessage.created_at) > new Date(lastPropMessage.created_at)
@@ -362,7 +359,6 @@ export default function Dashboard() {
       }
 
       if (lastMessage?.content) {
-        // Limitar a 50 caracteres
         const preview = lastMessage.content.length > 50 
           ? lastMessage.content.substring(0, 50) + '...'
           : lastMessage.content;
@@ -386,30 +382,22 @@ export default function Dashboard() {
     if (!user) return;
     
     try {
-      console.log('[Dashboard] Loading profile for user:', user.id);
-      
-      // Usar helper que garante existência do perfil
       const { getOrCreateUserProfile } = await import('@/lib/profiles');
       const profiles = await getOrCreateUserProfile(user);
       
-      console.log('[Dashboard] Profiles obtained:', profiles);
-      
       if (profiles && profiles.length > 0) {
-        // Priorizar profile do tipo 'user' para o Dashboard
         const userProfile = profiles.find((p: any) => p.profile_type === 'user') || profiles[0];
         const profileData = userProfile as unknown as Profile;
         
-        console.log('[Dashboard] Selected profile:', profileData);
-        
-        // Detectar e corrigir conflito username vs slug
-        await fixUsernameSlugConflict(profileData, profiles);
-        
         setProfile(profileData);
-        await loadBusinessProfiles(profileData.id);
-        await loadWoorkoinsBalanceForIds(profiles.map((p: any) => p.id));
+        
+        // Executar operações em paralelo
+        await Promise.all([
+          fixUsernameSlugConflict(profileData, profiles),
+          loadBusinessProfiles(profileData.id),
+          loadWoorkoinsBalanceForIds(profiles.map((p: any) => p.id))
+        ]);
       } else {
-        // Improvável, mas caso aconteça
-        console.error('[Dashboard] getOrCreateUserProfile returned empty array');
         toast({
           title: 'Erro ao criar perfil',
           description: 'Não foi possível criar seu perfil. Tente fazer logout e login novamente.',
@@ -862,11 +850,7 @@ export default function Dashboard() {
     }
   }, [profile]);
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
-    );
+    return <DashboardSkeleton />;
   }
 
   const accountType = 'Conta Grátis';

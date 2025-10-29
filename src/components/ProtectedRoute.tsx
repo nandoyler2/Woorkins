@@ -24,50 +24,56 @@ export const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRout
       }
 
       try {
-        // Verificar confirmação de email
-        const { data: authData } = await supabase.auth.getUser();
-        const confirmed = Boolean((authData?.user as any)?.email_confirmed_at || (authData?.user as any)?.confirmed_at);
+        // Fazer todas as verificações em paralelo
+        const checks = await Promise.all([
+          // Verificar email confirmado
+          supabase.auth.getUser(),
+          // Verificar perfil completo (se não for /welcome)
+          location.pathname !== '/welcome' 
+            ? supabase
+                .from('profiles')
+                .select('username, category')
+                .eq('user_id', user.id)
+                .eq('profile_type', 'user')
+                .limit(1)
+            : Promise.resolve({ data: null, error: null }),
+          // Verificar admin (se necessário)
+          requireAdmin
+            ? supabase.rpc('has_role', {
+                _user_id: user.id,
+                _role: 'admin'
+              })
+            : Promise.resolve({ data: null, error: null })
+        ]);
+
+        const [authResult, profileResult, adminResult] = checks;
+
+        // Email confirmado
+        const confirmed = Boolean(
+          (authResult.data?.user as any)?.email_confirmed_at || 
+          (authResult.data?.user as any)?.confirmed_at
+        );
         setEmailConfirmed(confirmed);
 
-        // Se não confirmado, não precisa checar mais nada aqui
-        if (!confirmed) {
-          setLoading(false);
-          return;
-        }
-
-        // Verificar perfil completo SEMPRE (não usar localStorage)
-        if (location.pathname !== '/welcome') {
-          const { data: profiles, error: profileError } = await supabase
-            .from('profiles')
-            .select('username, category')
-            .eq('user_id', user.id)
-            .eq('profile_type', 'user')
-            .limit(1);
-
-          if (profileError) throw profileError;
-
-          // Perfil completo = tem username válido E categoria
-          const hasValidUsername = profiles && profiles.length > 0 && profiles[0].username && profiles[0].username.length >= 3;
+        // Perfil completo
+        if (location.pathname !== '/welcome' && confirmed) {
+          const profiles = profileResult.data as any[];
+          const hasValidUsername = profiles && profiles.length > 0 && 
+            profiles[0].username && profiles[0].username.length >= 3;
           const hasCategory = profiles && profiles.length > 0 && profiles[0].category;
           setProfileComplete(Boolean(hasValidUsername && hasCategory));
         } else {
           setProfileComplete(true);
         }
 
-        // Verificar status admin
+        // Admin
         if (requireAdmin) {
-          const { data, error } = await supabase.rpc('has_role', {
-            _user_id: user.id,
-            _role: 'admin'
-          });
-
-          if (error) throw error;
-          setIsAdmin(Boolean(data));
+          setIsAdmin(Boolean(adminResult.data));
         }
       } catch (error) {
         console.error('Error checking user status:', error);
         setIsAdmin(false);
-        setProfileComplete(true); // Em caso de erro, deixa passar
+        setProfileComplete(true);
       } finally {
         setLoading(false);
       }
@@ -76,12 +82,14 @@ export const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRout
     checkUserStatus();
   }, [user, requireAdmin, location.pathname]);
 
-  if (authLoading || loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
-    );
+  // Renderizar imediatamente durante authLoading inicial
+  if (authLoading) {
+    return <>{children}</>;
+  }
+
+  // Pequeno delay para evitar flash - mas não bloqueia renderização
+  if (loading) {
+    return <>{children}</>;
   }
 
   if (!user) {

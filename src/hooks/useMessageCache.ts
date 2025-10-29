@@ -26,6 +26,19 @@ interface MessageCacheStore {
 
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
 
+// Debounce para saves do localStorage
+let saveTimeout: NodeJS.Timeout | null = null;
+const debouncedSave = (data: any) => {
+  if (saveTimeout) clearTimeout(saveTimeout);
+  saveTimeout = setTimeout(() => {
+    try {
+      localStorage.setItem('message-cache', JSON.stringify(data));
+    } catch (e) {
+      console.error('Error saving message cache:', e);
+    }
+  }, 1000);
+};
+
 // Load from localStorage on init
 const loadCacheFromStorage = () => {
   try {
@@ -81,13 +94,7 @@ export const useMessageCache = create<MessageCacheStore>((set, get) => ({
     };
     
     set({ cache: newCache });
-    
-    // Save to localStorage
-    try {
-      localStorage.setItem('message-cache', JSON.stringify(newCache));
-    } catch (e) {
-      console.error('Error saving message cache:', e);
-    }
+    debouncedSave(newCache);
 
     return messages;
   },
@@ -107,13 +114,7 @@ export const useMessageCache = create<MessageCacheStore>((set, get) => ({
         },
       };
       
-      // Save to localStorage
-      try {
-        localStorage.setItem('message-cache', JSON.stringify(newCache));
-      } catch (e) {
-        console.error('Error saving message cache:', e);
-      }
-
+      debouncedSave(newCache);
       return { cache: newCache };
     });
   },
@@ -123,17 +124,13 @@ export const useMessageCache = create<MessageCacheStore>((set, get) => ({
       set((state) => {
         const newCache = { ...state.cache };
         delete newCache[conversationId];
-        // Save to localStorage
-        try {
-          localStorage.setItem('message-cache', JSON.stringify(newCache));
-        } catch (e) {
-          console.error('Error saving message cache:', e);
-        }
+        debouncedSave(newCache);
         return { cache: newCache };
       });
     } else {
       set({ cache: {} });
       try {
+        if (saveTimeout) clearTimeout(saveTimeout);
         localStorage.removeItem('message-cache');
       } catch (e) {
         console.error('Error clearing message cache:', e);

@@ -34,11 +34,13 @@ interface StoriesViewerProps {
   onClose: () => void;
   currentProfileId?: string;
   onStoryDeleted?: () => void;
+  allStories?: any[];
+  initialStoryIndex?: number;
 }
 
-export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, onStoryDeleted }: StoriesViewerProps) {
+export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, onStoryDeleted, allStories, initialStoryIndex }: StoriesViewerProps) {
   const [stories, setStories] = useState<Story[]>([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [currentIndex, setCurrentIndex] = useState(initialStoryIndex || 0);
   const [progress, setProgress] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [isPaused, setIsPaused] = useState(false);
@@ -62,6 +64,26 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
   const STORY_DURATION = 15000; // 15 segundos
 
   const loadStories = useCallback(async () => {
+    // Se temos allStories (feed público), usar esses stories
+    if (allStories && allStories.length > 0) {
+      const mappedStories = allStories.map(story => ({
+        id: story.id,
+        profile_id: story.profile_id,
+        type: story.type,
+        media_url: story.media_url,
+        text_content: story.text_content,
+        background_color: null,
+        link_url: null,
+        created_at: story.created_at,
+        view_count: 0,
+        profile: story.profiles
+      }));
+      setStories(mappedStories);
+      setIsLoading(false);
+      return;
+    }
+
+    // Senão, buscar stories do perfil específico (comportamento original)
     setIsLoading(true);
     try {
       const { data, error } = await supabase
@@ -87,7 +109,7 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
     } finally {
       setIsLoading(false);
     }
-  }, [profileId, toast]);
+  }, [profileId, toast, allStories]);
 
   const registerView = useCallback(async (storyId: string) => {
     if (!currentProfileId || currentProfileId === profileId) return;
@@ -123,8 +145,12 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
   useEffect(() => {
     if (isOpen) {
       loadStories();
+      // Resetar índice quando initialStoryIndex mudar
+      if (initialStoryIndex !== undefined) {
+        setCurrentIndex(initialStoryIndex);
+      }
     }
-  }, [isOpen, loadStories]);
+  }, [isOpen, loadStories, initialStoryIndex]);
 
   useEffect(() => {
     if (!isOpen || stories.length === 0) return;
@@ -444,7 +470,7 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
             {currentStory.type === 'video' && currentStory.media_url && (
               <video
                 ref={videoRef}
-                src={currentStory.media_url}
+                src={`${currentStory.media_url}#t=5`}
                 autoPlay
                 muted={isMuted}
                 onLoadedMetadata={() => {

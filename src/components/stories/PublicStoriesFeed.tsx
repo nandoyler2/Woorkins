@@ -47,7 +47,7 @@ const getRelativeTime = (timestamp: string): string => {
 export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentProfileId }) => {
   const [stories, setStories] = useState<PublicStory[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
+  const [selectedStoryIndex, setSelectedStoryIndex] = useState<number>(0);
   const [isViewerOpen, setIsViewerOpen] = useState(false);
 
   const loadPublicStories = async () => {
@@ -111,8 +111,8 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
     };
   }, []);
 
-  const handleStoryClick = (profileId: string) => {
-    setSelectedProfileId(profileId);
+  const handleStoryClick = (storyIndex: number) => {
+    setSelectedStoryIndex(storyIndex);
     setIsViewerOpen(true);
   };
 
@@ -148,15 +148,16 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
         className="w-full"
       >
         <CarouselContent className="-ml-4">
-          {stories.map((story) => {
+          {stories.map((story, index) => {
             const isNew = new Date().getTime() - new Date(story.created_at).getTime() < 3600000; // 1 hour
             const displayImage = story.thumbnail_url || story.media_url || '/placeholder.svg';
+            const videoSrc = story.type === 'video' && story.media_url ? `${story.media_url}#t=5` : story.media_url;
 
             return (
               <CarouselItem key={story.id} className="pl-4 basis-auto">
                 <div
                   className="relative group cursor-pointer overflow-hidden rounded-xl transition-transform hover:scale-[1.02]"
-                  onClick={() => handleStoryClick(story.profile_id)}
+                  onClick={() => handleStoryClick(index)}
                 >
                   <div className="relative w-[180px] h-[320px]">
                     {story.type === 'text' ? (
@@ -165,9 +166,9 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
                           {story.text_content}
                         </p>
                       </div>
-                    ) : story.type === 'video' && story.media_url ? (
+                    ) : story.type === 'video' && videoSrc ? (
                       <video
-                        src={story.media_url}
+                        src={videoSrc}
                         className="w-full h-full object-cover"
                         preload="metadata"
                         muted
@@ -240,14 +241,16 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
         <CarouselNext className="right-2 bg-background/80 backdrop-blur-sm border-border hover:bg-background" />
       </Carousel>
 
-      {selectedProfileId && (
+      {isViewerOpen && stories.length > 0 && (
         <StoriesViewer
-          profileId={selectedProfileId}
+          profileId={stories[selectedStoryIndex].profile_id}
           isOpen={isViewerOpen}
           onClose={() => {
             setIsViewerOpen(false);
-            setSelectedProfileId(null);
           }}
+          allStories={stories}
+          initialStoryIndex={selectedStoryIndex}
+          currentProfileId={currentProfileId}
         />
       )}
     </>

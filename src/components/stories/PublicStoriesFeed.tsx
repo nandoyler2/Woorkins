@@ -165,6 +165,14 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
                           {story.text_content}
                         </p>
                       </div>
+                    ) : story.type === 'video' && story.media_url ? (
+                      <video
+                        src={story.media_url}
+                        className="w-full h-full object-cover"
+                        preload="metadata"
+                        muted
+                        playsInline
+                      />
                     ) : (
                       <SafeImage
                         src={displayImage}

@@ -76,6 +76,27 @@ serve(async (req) => {
 
     console.log(`Email atualizado de ${oldEmail} para ${newEmail}`);
 
+    // Enviar email de confirmação automaticamente
+    try {
+      const siteUrl = new URL(req.url).origin;
+      
+      const { error: emailError } = await supabaseAdmin.functions.invoke('resend-confirmation-email', {
+        body: {
+          email: newEmail,
+          site_url: siteUrl,
+        },
+      });
+
+      if (emailError) {
+        console.error("Erro ao enviar email de confirmação:", emailError);
+      } else {
+        console.log(`Email de confirmação enviado para ${newEmail}`);
+      }
+    } catch (emailError: any) {
+      console.error("Erro ao enviar email de confirmação:", emailError);
+      // Não falhar a requisição se o email não puder ser enviado
+    }
+
     return new Response(JSON.stringify({ success: true, newEmail }), {
       status: 200,
       headers: { "Content-Type": "application/json", ...corsHeaders },

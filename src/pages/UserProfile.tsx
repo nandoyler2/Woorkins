@@ -246,13 +246,17 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
   const checkActiveStories = async () => {
     if (!profile?.id) return;
     
+    console.log('[UserProfile] Checking stories for profile:', profile.id);
+    
     try {
-      const { count } = await supabase
+      const { count, error } = await supabase
         .from('profile_stories')
         .select('id', { count: 'exact', head: true })
         .eq('profile_id', profile.id)
         .gt('expires_at', new Date().toISOString());
 
+      console.log('[UserProfile] Stories count:', count, 'error:', error);
+      
       setHasActiveStories((count || 0) > 0);
     } catch (error) {
       console.error('Error checking stories:', error);
@@ -680,9 +684,12 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
                         <div 
                           className={`${hasActiveStories ? 'relative' : ''}`}
                           onClick={() => {
+                            console.log('[UserProfile] Avatar clicked. hasActiveStories:', hasActiveStories, 'profile.id:', profile?.id);
                             if (hasActiveStories) {
+                              console.log('[UserProfile] Opening stories viewer');
                               setShowStoriesViewer(true);
                             } else if (mainPhotoUrl) {
+                              console.log('[UserProfile] Opening image viewer');
                               setShowImageViewer(true);
                             }
                           }}
@@ -1452,12 +1459,18 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
 
       {/* Stories Viewer */}
       {profile && showStoriesViewer && (
-        <StoriesViewer
-          profileId={profile.id}
-          isOpen={showStoriesViewer}
-          onClose={() => setShowStoriesViewer(false)}
-          currentProfileId={user?.id}
-        />
+        <>
+          {console.log('[UserProfile] Rendering StoriesViewer. profile.id:', profile.id, 'user?.id:', user?.id, 'showStoriesViewer:', showStoriesViewer)}
+          <StoriesViewer
+            profileId={profile.id}
+            isOpen={showStoriesViewer}
+            onClose={() => {
+              console.log('[UserProfile] Closing stories viewer');
+              setShowStoriesViewer(false);
+            }}
+            currentProfileId={user?.id}
+          />
+        </>
       )}
     </div>
   );

@@ -249,15 +249,16 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
     console.log('[UserProfile] Checking stories for profile:', profile.id);
     
     try {
-      const { count, error } = await supabase
+      const { data, error } = await supabase
         .from('profile_stories')
-        .select('id', { count: 'exact', head: true })
+        .select('id, created_at')
         .eq('profile_id', profile.id)
-        .gt('expires_at', new Date().toISOString());
+        .gt('expires_at', new Date().toISOString())
+        .order('created_at', { ascending: false })
+        .limit(1);
 
-      console.log('[UserProfile] Stories count:', count, 'error:', error);
-      
-      setHasActiveStories((count || 0) > 0);
+      console.log('[UserProfile] Stories query result:', data, 'error:', error);
+      setHasActiveStories((data && data.length > 0) ? true : false);
     } catch (error) {
       console.error('Error checking stories:', error);
     }
@@ -685,25 +686,20 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
                           className={`${hasActiveStories ? 'relative' : ''}`}
                           onClick={() => {
                             console.log('[UserProfile] Avatar clicked. hasActiveStories:', hasActiveStories, 'profile.id:', profile?.id);
-                            if (hasActiveStories) {
-                              console.log('[UserProfile] Opening stories viewer');
-                              setShowStoriesViewer(true);
-                            } else if (mainPhotoUrl) {
-                              console.log('[UserProfile] Opening image viewer');
-                              setShowImageViewer(true);
-                            }
+                            // Abre sempre o viewer de stories; se não houver, o viewer mostra loading/estado vazio
+                            setShowStoriesViewer(true);
                           }}
                         >
                           {hasActiveStories && (
-                            <div className="absolute -inset-[6px] bg-gradient-to-tr from-purple-500 via-pink-500 to-orange-500 rounded-full animate-[spin_3s_linear_infinite]" />
+                            <div className="absolute -inset-[6px] bg-gradient-to-tr from-purple-500 via-pink-500 to-orange-500 rounded-full animate-[spin_3s_linear_infinite] pointer-events-none" />
                           )}
-                          <div className={`relative ${hasActiveStories ? 'cursor-pointer' : mainPhotoUrl ? 'cursor-pointer' : ''}`}>
+                          <div className={`relative cursor-pointer`}>
                             {mainPhotoUrl ? (
                               <SafeImage
                                 key={mainPhotoUrl}
                                 src={mainPhotoUrl}
                                 alt={mainPhotoAlt}
-                                className={`w-36 h-36 rounded-full object-cover bg-card shadow-lg ${hasActiveStories ? 'border-4 border-background' : 'border-4 border-background'}`}
+                                className={`w-36 h-36 rounded-full object-cover bg-card shadow-lg border-4 border-background`}
                               />
                             ) : (
                               <div className="w-36 h-36 rounded-full bg-card border-4 border-background shadow-lg flex items-center justify-center">

@@ -26,6 +26,7 @@ export default function Welcome() {
   const [profileId, setProfileId] = useState<string>('');
   const [currentPhotoUrl, setCurrentPhotoUrl] = useState<string>('');
   const [username, setUsername] = useState('');
+  const [originalUsername, setOriginalUsername] = useState('');
   const [bio, setBio] = useState('');
   const [category, setCategory] = useState<string>('');
   const [usernameValid, setUsernameValid] = useState<boolean | null>(null);
@@ -67,6 +68,7 @@ export default function Welcome() {
         const profile = profiles[0];
         setProfileId(profile.id);
         setUsername(profile.username || '');
+        setOriginalUsername(profile.username || '');
         setBio(profile.bio || '');
         setCurrentPhotoUrl(profile.avatar_url || '');
       }
@@ -90,6 +92,13 @@ export default function Welcome() {
         return;
       }
 
+      // Se o username é o mesmo do original, é válido
+      if (username.toLowerCase() === originalUsername.toLowerCase()) {
+        setUsernameValid(true);
+        setUsernameError('');
+        return;
+      }
+
       const validation = validateIdentifier(username);
       if (!validation.valid) {
         setUsernameValid(false);
@@ -109,7 +118,7 @@ export default function Welcome() {
 
     const timeout = setTimeout(checkUsername, 500);
     return () => clearTimeout(timeout);
-  }, [username]);
+  }, [username, originalUsername]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

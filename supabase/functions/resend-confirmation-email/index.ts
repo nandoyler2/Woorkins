@@ -1,7 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "https://esm.sh/resend@2.0.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { encode as base64Encode } from "https://deno.land/std@0.190.0/encoding/base64.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -11,7 +10,6 @@ const corsHeaders = {
 interface RequestBody {
   email: string;
   full_name?: string;
-  site_url?: string;
 }
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
@@ -20,16 +18,13 @@ const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") as string;
 
 const supabaseAdmin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
-// Logo do Woorkins em base64
-const WOORKINS_LOGO_BASE64 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
-
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { email, full_name, site_url }: RequestBody = await req.json();
+    const { email, full_name }: RequestBody = await req.json();
 
     if (!email) {
       return new Response(JSON.stringify({ error: "Email é obrigatório" }), {
@@ -82,7 +77,7 @@ serve(async (req) => {
           <table role="presentation" style="width: 600px; border-collapse: collapse; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
             <tr>
               <td style="padding: 40px 40px 32px; text-align: center; background-color: #ffffff; border-bottom: 1px solid #e5e7eb;">
-                <img src="cid:woorkins-logo" alt="Woorkins" style="width: 180px; height: auto; display: inline-block;" />
+                <img src="https://woorkins.com/assets/woorkins-DjD6e8af.png" alt="Woorkins" style="width: 180px; height: auto; display: inline-block;" />
               </td>
             </tr>
             <tr>
@@ -114,22 +109,12 @@ serve(async (req) => {
     </table>
   </body>
 </html>`;
-    // Attach inline logo via CID
-    const attachments: any[] = [];
-    try {
-      const logoBytes = await Deno.readFile(new URL('./logo-woorkins.png', import.meta.url));
-      const logoBase64 = base64Encode(logoBytes.buffer);
-      attachments.push({ filename: 'logo-woorkins.png', content: logoBase64, content_id: 'woorkins-logo' });
-    } catch (e) {
-      console.warn('Logo file not found, proceeding without inline logo.');
-    }
-
+    // Attach inline logo via CID - REMOVED, using direct URL instead
     const emailResponse = await resend.emails.send({
       from: "Woorkins <noreply@woorkins.com>",
       to: [email],
       subject: "Confirme seu email no Woorkins",
       html,
-      attachments,
     });
 
     console.log("Custom confirmation email sent:", emailResponse);

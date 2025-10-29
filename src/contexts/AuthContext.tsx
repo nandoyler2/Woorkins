@@ -73,7 +73,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           body: {
             email: data.user.email || email,
             full_name: fullName,
-            site_url: window.location.origin,
           },
         });
       } catch (emailError) {

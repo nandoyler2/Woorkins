@@ -208,7 +208,7 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-2xl h-[90vh] p-0 gap-0 overflow-hidden border-l-8 border-l-gradient-to-b from-purple-500 via-pink-500 to-orange-500">
+      <DialogContent className="max-w-6xl h-[90vh] p-0 gap-0 overflow-hidden border-l-8 border-l-gradient-to-b from-purple-500 via-pink-500 to-orange-500">
         <div className="flex flex-col h-full">
           {/* Header */}
           <DialogHeader className="px-6 pt-6 pb-4 border-b bg-gradient-to-br from-background via-background to-muted/20">
@@ -218,99 +218,102 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
             <p className="text-sm text-muted-foreground">Compartilhe um momento especial</p>
           </DialogHeader>
 
-          {/* Content - Scrollable */}
-          <div className="flex-1 overflow-y-auto px-6 py-6">
-            {step === 'select' ? (
-              <div className="space-y-6">
-                {/* Seleção de perfil (se tiver múltiplos) */}
-                {profiles.length > 1 && (
-                  <div className="space-y-3 bg-muted/30 p-4 rounded-xl">
-                    <Label className="text-sm font-semibold">Postar como:</Label>
-                    <Select value={selectedProfile} onValueChange={setSelectedProfile}>
-                      <SelectTrigger className="bg-background">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {profiles.map((profile) => (
-                          <SelectItem key={profile.id} value={profile.id}>
-                            {profile.full_name || profile.username}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
+          {/* Content - 2 colunas */}
+          <div className="flex-1 flex overflow-hidden">
+            {/* Coluna esquerda - Formulário */}
+            <div className="flex-1 overflow-y-auto px-6 py-6">
+              {step === 'select' ? (
+                <div className="space-y-6">
+                  {/* Seleção de perfil (se tiver múltiplos) */}
+                  {profiles.length > 1 && (
+                    <div className="space-y-3 bg-muted/30 p-4 rounded-xl">
+                      <Label className="text-sm font-semibold">Postar como:</Label>
+                      <Select value={selectedProfile} onValueChange={setSelectedProfile}>
+                        <SelectTrigger className="bg-background">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {profiles.map((profile) => (
+                            <SelectItem key={profile.id} value={profile.id}>
+                              {profile.full_name || profile.username}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
 
-                {/* Pergunta inicial */}
-                <div className="text-center py-8">
-                  <h3 className="text-2xl font-bold mb-2">O que gostaria de publicar no seu story?</h3>
-                  <p className="text-muted-foreground mb-8">Escolha o tipo de conteúdo</p>
+                  {/* Pergunta inicial */}
+                  <div className="text-center py-8">
+                    <h3 className="text-2xl font-bold mb-2">O que gostaria de publicar no seu story?</h3>
+                    <p className="text-muted-foreground mb-8">Escolha o tipo de conteúdo</p>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {/* Opção Imagem */}
-                    <button
-                      onClick={() => handleTypeSelect('image')}
-                      className="group relative p-8 rounded-2xl bg-gradient-to-br from-purple-500/10 to-purple-500/5 hover:from-purple-500/20 hover:to-purple-500/10 border-2 border-purple-500/30 hover:border-purple-500 transition-all hover:scale-105"
-                    >
-                      <div className="w-16 h-16 mx-auto mb-4 bg-purple-500/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                        <ImageIcon className="w-8 h-8 text-purple-500" />
-                      </div>
-                      <h4 className="font-bold text-lg mb-1">Imagem</h4>
-                      <p className="text-sm text-muted-foreground">Compartilhe uma foto</p>
-                    </button>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {/* Opção Imagem */}
+                      <button
+                        onClick={() => handleTypeSelect('image')}
+                        className="group relative p-8 rounded-2xl bg-gradient-to-br from-purple-500/10 to-purple-500/5 hover:from-purple-500/20 hover:to-purple-500/10 border-2 border-purple-500/30 hover:border-purple-500 transition-all hover:scale-105"
+                      >
+                        <div className="w-16 h-16 mx-auto mb-4 bg-purple-500/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                          <ImageIcon className="w-8 h-8 text-purple-500" />
+                        </div>
+                        <h4 className="font-bold text-lg mb-1">Imagem</h4>
+                        <p className="text-sm text-muted-foreground">Compartilhe uma foto</p>
+                      </button>
 
-                    {/* Opção Vídeo */}
-                    <button
-                      onClick={() => handleTypeSelect('video')}
-                      className="group relative p-8 rounded-2xl bg-gradient-to-br from-pink-500/10 to-pink-500/5 hover:from-pink-500/20 hover:to-pink-500/10 border-2 border-pink-500/30 hover:border-pink-500 transition-all hover:scale-105"
-                    >
-                      <div className="w-16 h-16 mx-auto mb-4 bg-pink-500/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                        <Video className="w-8 h-8 text-pink-500" />
-                      </div>
-                      <h4 className="font-bold text-lg mb-1">Vídeo</h4>
-                      <p className="text-sm text-muted-foreground">Grave um momento</p>
-                    </button>
+                      {/* Opção Vídeo */}
+                      <button
+                        onClick={() => handleTypeSelect('video')}
+                        className="group relative p-8 rounded-2xl bg-gradient-to-br from-pink-500/10 to-pink-500/5 hover:from-pink-500/20 hover:to-pink-500/10 border-2 border-pink-500/30 hover:border-pink-500 transition-all hover:scale-105"
+                      >
+                        <div className="w-16 h-16 mx-auto mb-4 bg-pink-500/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                          <Video className="w-8 h-8 text-pink-500" />
+                        </div>
+                        <h4 className="font-bold text-lg mb-1">Vídeo</h4>
+                        <p className="text-sm text-muted-foreground">Grave um momento</p>
+                      </button>
 
-                    {/* Opção Texto */}
-                    <button
-                      onClick={() => handleTypeSelect('text')}
-                      className="group relative p-8 rounded-2xl bg-gradient-to-br from-orange-500/10 to-orange-500/5 hover:from-orange-500/20 hover:to-orange-500/10 border-2 border-orange-500/30 hover:border-orange-500 transition-all hover:scale-105"
-                    >
-                      <div className="w-16 h-16 mx-auto mb-4 bg-orange-500/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                        <Type className="w-8 h-8 text-orange-500" />
-                      </div>
-                      <h4 className="font-bold text-lg mb-1">Texto</h4>
-                      <p className="text-sm text-muted-foreground">Escreva uma mensagem</p>
-                    </button>
+                      {/* Opção Texto */}
+                      <button
+                        onClick={() => handleTypeSelect('text')}
+                        className="group relative p-8 rounded-2xl bg-gradient-to-br from-orange-500/10 to-orange-500/5 hover:from-orange-500/20 hover:to-orange-500/10 border-2 border-orange-500/30 hover:border-orange-500 transition-all hover:scale-105"
+                      >
+                        <div className="w-16 h-16 mx-auto mb-4 bg-orange-500/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                          <Type className="w-8 h-8 text-orange-500" />
+                        </div>
+                        <h4 className="font-bold text-lg mb-1">Texto</h4>
+                        <p className="text-sm text-muted-foreground">Escreva uma mensagem</p>
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ) : (
-              <div className="space-y-6">
-                {/* Conteúdo baseado no tipo selecionado */}
-                {type === 'text' ? (
-                  <div className="space-y-4">
-                    <div>
-                      <Label className="text-sm font-semibold mb-3 block">Escolha um fundo:</Label>
-                      <div className="grid grid-cols-5 gap-3 mb-4">
-                        {backgroundStyles.map((style) => (
-                          <button
-                            key={style.value}
-                            onClick={() => setBackgroundColor(style.value)}
-                            className={`w-full h-20 rounded-xl transition-all hover:scale-105 ${
-                              backgroundColor === style.value
-                                ? 'ring-4 ring-primary ring-offset-2 scale-105'
-                                : 'ring-2 ring-border'
-                            }`}
-                            style={{ background: style.value }}
-                            title={style.name}
-                          />
-                        ))}
+              ) : (
+                <div className="space-y-4">
+                  {/* Conteúdo baseado no tipo selecionado */}
+                  {type === 'text' ? (
+                    <div className="space-y-4 max-h-[calc(90vh-250px)] overflow-y-auto pr-2">
+                      <div>
+                        <Label className="text-sm font-semibold mb-2 block">Escolha um fundo:</Label>
+                        <div className="grid grid-cols-5 gap-2">
+                          {backgroundStyles.map((style) => (
+                            <button
+                              key={style.value}
+                              onClick={() => setBackgroundColor(style.value)}
+                              className={`w-full h-12 rounded-lg transition-all hover:scale-105 ${
+                                backgroundColor === style.value
+                                  ? 'ring-2 ring-primary ring-offset-1 scale-105'
+                                  : 'ring-1 ring-border'
+                              }`}
+                              style={{ background: style.value }}
+                              title={style.name}
+                            />
+                          ))}
+                        </div>
                       </div>
                       
-                      {/* Cor personalizada */}
-                      <div className="flex items-center gap-3 bg-muted/30 p-3 rounded-xl">
-                        <Label className="text-sm font-semibold whitespace-nowrap">Cor personalizada:</Label>
+                      {/* Cor personalizada - compacta */}
+                      <div className="flex items-center gap-2 bg-muted/30 p-2 rounded-lg">
+                        <Label className="text-xs font-semibold whitespace-nowrap">Personalizada:</Label>
                         <input
                           type="color"
                           value={customColor}
@@ -318,7 +321,7 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
                             setCustomColor(e.target.value);
                             setBackgroundColor(e.target.value);
                           }}
-                          className="w-16 h-10 rounded-lg cursor-pointer border-2 border-border"
+                          className="w-10 h-8 rounded cursor-pointer border border-border"
                         />
                         <Input
                           value={customColor}
@@ -327,159 +330,205 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
                             setBackgroundColor(e.target.value);
                           }}
                           placeholder="#8B5CF6"
-                          className="flex-1 bg-background"
+                          className="flex-1 h-8 text-sm bg-background"
                         />
                       </div>
-                    </div>
 
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <Label className="text-sm font-semibold">Seu texto:</Label>
-                        {/* Botões de formatação */}
-                        <div className="flex gap-1">
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant={textBold ? "default" : "outline"}
-                            onClick={() => setTextBold(!textBold)}
-                            className="h-8 w-8 p-0"
-                          >
-                            <Bold className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant={textItalic ? "default" : "outline"}
-                            onClick={() => setTextItalic(!textItalic)}
-                            className="h-8 w-8 p-0"
-                          >
-                            <Italic className="w-4 h-4" />
-                          </Button>
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <Label className="text-sm font-semibold">Seu texto:</Label>
+                          {/* Botões de formatação */}
+                          <div className="flex gap-1">
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant={textBold ? "default" : "outline"}
+                              onClick={() => setTextBold(!textBold)}
+                              className="h-7 w-7 p-0"
+                            >
+                              <Bold className="w-3 h-3" />
+                            </Button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant={textItalic ? "default" : "outline"}
+                              onClick={() => setTextItalic(!textItalic)}
+                              className="h-7 w-7 p-0"
+                            >
+                              <Italic className="w-3 h-3" />
+                            </Button>
+                          </div>
                         </div>
-                      </div>
-                      <Textarea
-                        ref={textareaRef}
-                        value={textContent}
-                        onChange={(e) => setTextContent(e.target.value)}
-                        placeholder="Escreva algo inspirador..."
-                        className="min-h-32 text-lg resize-none bg-background/50"
-                        maxLength={300}
-                      />
-                      <div className="flex justify-between items-center mt-2">
-                        <p className="text-xs text-muted-foreground">
+                        <Textarea
+                          ref={textareaRef}
+                          value={textContent}
+                          onChange={(e) => setTextContent(e.target.value)}
+                          placeholder="Escreva algo inspirador..."
+                          className="min-h-24 text-base resize-none bg-background/50"
+                          maxLength={300}
+                        />
+                        <p className="text-xs text-muted-foreground mt-1">
                           {textContent.length}/300 caracteres
                         </p>
                       </div>
-                    </div>
 
-                    {/* Link no texto */}
-                    <div className="space-y-2 bg-muted/30 p-4 rounded-xl">
-                      <Label className="flex items-center gap-2 text-sm font-semibold">
-                        <Link2 className="w-4 h-4" />
-                        Link no texto (opcional)
-                      </Label>
-                      <Input
-                        value={textLink}
-                        onChange={(e) => setTextLink(e.target.value)}
-                        placeholder="https://seusite.com"
-                        type="url"
-                        className="bg-background"
-                      />
-                      <p className="text-xs text-muted-foreground">Adicione um link que abrirá ao clicar no texto</p>
-                    </div>
-
-                    {/* Preview */}
-                    <div className="space-y-2">
-                      <Label className="text-sm font-semibold">Preview:</Label>
-                      <div
-                        className="rounded-2xl p-8 min-h-[300px] flex items-center justify-center text-center shadow-xl overflow-hidden"
-                        style={{ background: backgroundColor }}
-                      >
-                        <p 
-                          className={`text-white text-2xl break-words max-w-full leading-relaxed drop-shadow-lg ${
-                            textBold ? 'font-bold' : 'font-semibold'
-                          } ${
-                            textItalic ? 'italic' : ''
-                          }`}
-                        >
-                          {textContent || 'Seu texto aparecerá aqui'}
-                        </p>
+                      {/* Link no texto */}
+                      <div className="space-y-2 bg-muted/30 p-3 rounded-lg">
+                        <Label className="flex items-center gap-2 text-xs font-semibold">
+                          <Link2 className="w-3 h-3" />
+                          Link no texto (opcional)
+                        </Label>
+                        <Input
+                          value={textLink}
+                          onChange={(e) => setTextLink(e.target.value)}
+                          placeholder="https://seusite.com"
+                          type="url"
+                          className="bg-background h-8 text-sm"
+                        />
+                        <p className="text-xs text-muted-foreground">Abrirá ao clicar no texto</p>
                       </div>
                     </div>
-                  </div>
-                ) : (
-                  <div className="border-2 border-dashed border-primary/30 rounded-2xl p-8 text-center bg-gradient-to-br from-muted/30 to-transparent hover:border-primary/50 transition-all">
-                    {mediaPreview ? (
-                      <div className="relative space-y-4">
-                        {type === 'image' ? (
+                  ) : (
+                    <div className="border-2 border-dashed border-primary/30 rounded-2xl p-8 text-center bg-gradient-to-br from-muted/30 to-transparent hover:border-primary/50 transition-all">
+                      {mediaPreview ? (
+                        <div className="relative space-y-4">
+                          {type === 'image' ? (
+                            <img
+                              src={mediaPreview}
+                              alt="Preview"
+                              className="max-h-[400px] mx-auto rounded-xl shadow-2xl"
+                            />
+                          ) : (
+                            <video
+                              src={mediaPreview}
+                              controls
+                              className="max-h-[400px] mx-auto rounded-xl shadow-2xl"
+                            />
+                          )}
+                          <Button
+                            variant="outline"
+                            size="lg"
+                            className="bg-background/80 backdrop-blur-sm"
+                            onClick={() => {
+                              setMediaFile(null);
+                              setMediaPreview('');
+                            }}
+                          >
+                            <Upload className="w-4 h-4 mr-2" />
+                            Alterar arquivo
+                          </Button>
+                        </div>
+                      ) : (
+                        <label className="cursor-pointer block group">
+                          <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <Upload className="w-10 h-10 text-purple-500" />
+                          </div>
+                          <h3 className="text-lg font-semibold mb-2">Selecione uma {type === 'image' ? 'foto' : 'vídeo'}</h3>
+                          <p className="text-sm text-muted-foreground mb-1">
+                            {type === 'image' 
+                              ? 'Imagens: JPG, PNG, WEBP ou GIF (máx. 10MB)'
+                              : 'Vídeos: MP4, WEBM ou MOV (máx. 50MB)'}
+                          </p>
+                          <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept={type === 'image' 
+                              ? 'image/jpeg,image/png,image/webp,image/gif'
+                              : 'video/mp4,video/webm,video/quicktime'}
+                            className="hidden"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (!file) return;
+                              handleMediaChange(e);
+                            }}
+                          />
+                        </label>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Link opcional para mídia */}
+                  {type !== 'text' && (
+                    <div className="space-y-2 bg-muted/30 p-3 rounded-lg">
+                      <Label className="flex items-center gap-2 text-xs font-semibold">
+                        <LinkIcon className="w-3 h-3" />
+                        Link (opcional)
+                      </Label>
+                      <Input
+                        value={linkUrl}
+                        onChange={(e) => setLinkUrl(e.target.value)}
+                        placeholder="https://seusite.com"
+                        type="url"
+                        className="bg-background h-8 text-sm"
+                      />
+                      <p className="text-xs text-muted-foreground">Link para seus seguidores acessarem</p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Coluna direita - Preview no celular */}
+            {step === 'create' && (
+              <div className="w-80 bg-muted/20 p-6 flex items-center justify-center border-l">
+                <div className="relative">
+                  {/* Frame do celular */}
+                  <div className="w-64 h-[520px] bg-black rounded-[3rem] p-3 shadow-2xl border-8 border-gray-800">
+                    {/* Notch */}
+                    <div className="absolute top-3 left-1/2 -translate-x-1/2 w-32 h-6 bg-black rounded-b-2xl z-10" />
+                    
+                    {/* Tela do celular */}
+                    <div className="w-full h-full bg-white rounded-[2.5rem] overflow-hidden relative">
+                      {type === 'text' ? (
+                        <div
+                          className="w-full h-full flex items-center justify-center p-6"
+                          style={{ background: backgroundColor }}
+                        >
+                          {textLink ? (
+                            <p
+                              className={`text-white text-lg text-center break-words leading-relaxed drop-shadow-lg ${
+                                textBold ? 'font-bold' : 'font-semibold'
+                              } ${
+                                textItalic ? 'italic' : ''
+                              }`}
+                            >
+                              {textContent || 'Seu texto aparecerá aqui'}
+                            </p>
+                          ) : (
+                            <p
+                              className={`text-white text-lg text-center break-words leading-relaxed drop-shadow-lg ${
+                                textBold ? 'font-bold' : 'font-semibold'
+                              } ${
+                                textItalic ? 'italic' : ''
+                              }`}
+                            >
+                              {textContent || 'Seu texto aparecerá aqui'}
+                            </p>
+                          )}
+                        </div>
+                      ) : mediaPreview ? (
+                        type === 'image' ? (
                           <img
                             src={mediaPreview}
                             alt="Preview"
-                            className="max-h-[400px] mx-auto rounded-xl shadow-2xl"
+                            className="w-full h-full object-cover"
                           />
                         ) : (
                           <video
                             src={mediaPreview}
-                            controls
-                            className="max-h-[400px] mx-auto rounded-xl shadow-2xl"
+                            className="w-full h-full object-cover"
                           />
-                        )}
-                        <Button
-                          variant="outline"
-                          size="lg"
-                          className="bg-background/80 backdrop-blur-sm"
-                          onClick={() => {
-                            setMediaFile(null);
-                            setMediaPreview('');
-                          }}
-                        >
-                          <Upload className="w-4 h-4 mr-2" />
-                          Alterar arquivo
-                        </Button>
-                      </div>
-                    ) : (
-                      <label className="cursor-pointer block group">
-                        <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                          <Upload className="w-10 h-10 text-purple-500" />
+                        )
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center">
+                          <p className="text-muted-foreground text-sm text-center px-4">
+                            Preview do seu story<br/>aparecerá aqui
+                          </p>
                         </div>
-                        <h3 className="text-lg font-semibold mb-2">Selecione uma {type === 'image' ? 'foto' : 'vídeo'}</h3>
-                        <p className="text-sm text-muted-foreground mb-1">
-                          {type === 'image' 
-                            ? 'Imagens: JPG, PNG, WEBP ou GIF (máx. 10MB)'
-                            : 'Vídeos: MP4, WEBM ou MOV (máx. 50MB)'}
-                        </p>
-                        <input
-                          ref={fileInputRef}
-                          type="file"
-                          accept={type === 'image' 
-                            ? 'image/jpeg,image/png,image/webp,image/gif'
-                            : 'video/mp4,video/webm,video/quicktime'}
-                          className="hidden"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (!file) return;
-                            handleMediaChange(e);
-                          }}
-                        />
-                      </label>
-                    )}
+                      )}
+                    </div>
                   </div>
-                )}
-
-                {/* Link opcional */}
-                <div className="space-y-2 bg-muted/30 p-4 rounded-xl">
-                  <Label className="flex items-center gap-2 text-sm font-semibold">
-                    <LinkIcon className="w-4 h-4" />
-                    Link (opcional)
-                  </Label>
-                  <Input
-                    value={linkUrl}
-                    onChange={(e) => setLinkUrl(e.target.value)}
-                    placeholder="https://seusite.com"
-                    type="url"
-                    className="bg-background"
-                  />
-                  <p className="text-xs text-muted-foreground">Adicione um link para seus seguidores acessarem</p>
+                  <p className="text-xs text-center text-muted-foreground mt-3">Preview</p>
                 </div>
               </div>
             )}

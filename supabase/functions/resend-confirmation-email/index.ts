@@ -46,7 +46,7 @@ serve(async (req) => {
 
     const baseUrl = "https://woorkins.com";
 
-    // Gerar link válido via magiclink (não requer senha)
+    // Gerar link de verificação via magiclink
     const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
       type: "magiclink",
       email,
@@ -71,10 +71,10 @@ serve(async (req) => {
       });
     }
 
-    // Extrair token_hash do link do Supabase e construir link customizado
-    const urlParams = new URL(actionLink);
-    const tokenHash = urlParams.searchParams.get('token_hash');
-    const confirmationLink = `${baseUrl}/auth/confirm?token_hash=${tokenHash}&type=email&redirect_to=/welcome`;
+    // Usar o actionLink exatamente como retornado pelo backend, apenas ajustar redirect_to
+    const confirmationUrl = new URL(actionLink);
+    confirmationUrl.searchParams.set('redirect_to', `${baseUrl}/welcome`);
+    const confirmationLink = confirmationUrl.toString();
 
     const html = `
 <!DOCTYPE html>

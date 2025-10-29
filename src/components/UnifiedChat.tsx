@@ -100,6 +100,13 @@ export function UnifiedChat({
 
   const { isVerified } = useDocumentVerification(profileId);
 
+  // Auto-close verification dialog when document is verified
+  useEffect(() => {
+    if (isVerified && showDocVerificationDialog) {
+      setShowDocVerificationDialog(false);
+    }
+  }, [isVerified, showDocVerificationDialog]);
+
   const {
     messages,
     isLoading: _isLoading,

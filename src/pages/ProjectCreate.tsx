@@ -46,6 +46,13 @@ export default function ProjectCreate() {
     document.title = 'Criar Projeto - Woorkins';
   }, []);
 
+  // Auto-close verification dialog when document is verified
+  useEffect(() => {
+    if (isVerified && showVerificationDialog) {
+      setShowVerificationDialog(false);
+    }
+  }, [isVerified, showVerificationDialog]);
+
   useEffect(() => {
     const checkRequirements = async () => {
       if (!user) {

@@ -66,22 +66,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       },
     });
     
-    // Enviar email de confirmação personalizado via Resend
+    // Enviar email de confirmação personalizado com link válido
     if (data.user && !error) {
       try {
-        await supabase.functions.invoke('send-confirmation-email', {
+        await supabase.functions.invoke('resend-confirmation-email', {
           body: {
-            user: { 
-              email: data.user.email || email,
-              full_name: fullName,
-            },
-            email_data: {
-              token: data.user.id,
-              token_hash: data.user.id,
-              redirect_to: redirectUrl,
-              email_action_type: 'signup',
-              site_url: window.location.origin,
-            },
+            email: data.user.email || email,
+            full_name: fullName,
+            site_url: window.location.origin,
           },
         });
       } catch (emailError) {

@@ -31,37 +31,38 @@ export default function PendingConfirmation() {
 
     setResending(true);
     try {
-      const { error } = await supabase.auth.resend({
-        type: 'signup',
-        email: email,
+      const { error } = await supabase.functions.invoke('resend-confirmation-email', {
+        body: {
+          email,
+          site_url: window.location.origin,
+        },
       });
 
-      if (error) {
-        // Detectar erro de rate limit
-        if (error.message?.includes('request this after') || error.message?.includes('rate limit')) {
-          const seconds = error.message.match(/\d+/)?.[0] || '60';
-          setCooldown(parseInt(seconds));
-          toast({
-            variant: 'destructive',
-            title: '⏱️ Aguarde um momento',
-            description: `Por segurança, você pode reenviar o email novamente em ${seconds} segundos.`,
-          });
-          return;
-        }
-        throw error;
-      }
+      if (error) throw error;
 
       toast({
-        title: '✅ Email Reenviado',
-        description: 'Verifique sua caixa de entrada e spam.',
+        title: '✅ Email reenviado',
+        description: 'Enviamos um novo email de confirmação personalizado. Verifique sua caixa de entrada e spam.',
       });
-      setCooldown(60); // Adicionar cooldown de 60 segundos após sucesso
+      setCooldown(60);
     } catch (error: any) {
-      toast({
-        variant: 'destructive',
-        title: 'Erro ao reenviar email',
-        description: error.message,
-      });
+      const message = error?.message || 'Tente novamente em alguns segundos.';
+      // Se vier um 429 do hook anterior por engano, mostramos mensagem amigável
+      if (/request this after/i.test(message)) {
+        const seconds = message.match(/\d+/)?.[0] || '60';
+        setCooldown(parseInt(seconds));
+        toast({
+          variant: 'destructive',
+          title: '⏱️ Aguarde um momento',
+          description: `Por segurança, você poderá reenviar novamente em ${seconds} segundos.`,
+        });
+      } else {
+        toast({
+          variant: 'destructive',
+          title: 'Erro ao reenviar email',
+          description: message,
+        });
+      }
     } finally {
       setResending(false);
     }

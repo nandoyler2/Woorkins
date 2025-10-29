@@ -1271,7 +1271,7 @@ export default function Dashboard() {
                 {businessProfiles.length === 0 ? (
                   <div className="text-center py-6">
                     <Building2 className="w-12 h-12 text-slate-300 mx-auto mb-2" />
-                    <p className="text-sm text-slate-600 mb-3">Você ainda não criou nenhum perfil profissional</p>
+                    <p className="text-sm text-slate-600 mb-3">Você pode criar outros perfis profissionais</p>
                     <Button variant="default" size="sm" onClick={() => setShowCreateBusinessDialog(true)}>
                       Criar novo perfil
                     </Button>

@@ -209,18 +209,18 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-6xl h-[90vh] p-0 gap-0 overflow-hidden border-l-8 border-l-gradient-to-b from-purple-500 via-pink-500 to-orange-500">
-        <div className="flex flex-col h-full">
-          {/* Header */}
-          <DialogHeader className="px-6 pt-6 pb-4 border-b bg-gradient-to-br from-background via-background to-muted/20">
-            <DialogTitle className="text-3xl font-bold bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 bg-clip-text text-transparent">
-              Criar Story
-            </DialogTitle>
-            <p className="text-sm text-muted-foreground">Compartilhe um momento especial</p>
-          </DialogHeader>
+        <div className="flex h-full">
+          {/* Coluna esquerda - Header, Formulário e Botões */}
+          <div className="flex-1 flex flex-col">
+            {/* Header */}
+            <DialogHeader className="px-6 pt-6 pb-4 border-b bg-gradient-to-br from-background via-background to-muted/20">
+              <DialogTitle className="text-3xl font-bold bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 bg-clip-text text-transparent">
+                Criar Story
+              </DialogTitle>
+              <p className="text-sm text-muted-foreground">Compartilhe um momento especial</p>
+            </DialogHeader>
 
-          {/* Content - 2 colunas */}
-          <div className="flex-1 flex overflow-hidden">
-            {/* Coluna esquerda - Formulário */}
+            {/* Formulário - Scrollable */}
             <div className="flex-1 overflow-y-auto px-6 py-6">
               {step === 'select' ? (
                 <div className="space-y-6">
@@ -291,7 +291,7 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
                 <div className="space-y-4">
                   {/* Conteúdo baseado no tipo selecionado */}
                   {type === 'text' ? (
-                    <div className="space-y-4 max-h-[calc(90vh-250px)] overflow-y-auto pr-2">
+                    <div className="space-y-4">
                       <div>
                         <Label className="text-sm font-semibold mb-2 block">Escolha um fundo:</Label>
                         <div className="flex gap-1.5 overflow-x-auto pb-2">
@@ -468,121 +468,121 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
               )}
             </div>
 
-            {/* Coluna direita - Preview no celular */}
-            {step === 'create' && (
-              <div className="w-80 bg-muted/20 p-6 flex items-center justify-center border-l">
-                <div className="relative">
-                  {/* Frame do celular */}
-                  <div className="w-64 h-[520px] bg-black rounded-[3rem] p-3 shadow-2xl border-8 border-gray-800">
-                    {/* Notch */}
-                    <div className="absolute top-3 left-1/2 -translate-x-1/2 w-32 h-6 bg-black rounded-b-2xl z-10" />
-                    
-                    {/* Tela do celular */}
-                    <div className="w-full h-full bg-white rounded-[2.5rem] overflow-hidden relative">
-                      {type === 'text' ? (
-                        <div
-                          className="w-full h-full flex items-center justify-center p-6"
-                          style={{ background: backgroundColor }}
-                        >
-                          {textLink ? (
-                            <p
-                              className={`text-white text-lg text-center break-words leading-relaxed drop-shadow-lg ${
-                                textBold ? 'font-bold' : 'font-semibold'
-                              } ${
-                                textItalic ? 'italic' : ''
-                              }`}
-                            >
-                              {textContent || 'Seu texto aparecerá aqui'}
-                            </p>
-                          ) : (
-                            <p
-                              className={`text-white text-lg text-center break-words leading-relaxed drop-shadow-lg ${
-                                textBold ? 'font-bold' : 'font-semibold'
-                              } ${
-                                textItalic ? 'italic' : ''
-                              }`}
-                            >
-                              {textContent || 'Seu texto aparecerá aqui'}
-                            </p>
-                          )}
-                        </div>
-                      ) : mediaPreview ? (
-                        type === 'image' ? (
-                          <img
-                            src={mediaPreview}
-                            alt="Preview"
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <video
-                            src={mediaPreview}
-                            className="w-full h-full object-cover"
-                          />
-                        )
-                      ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center">
-                          <p className="text-muted-foreground text-sm text-center px-4">
-                            Preview do seu story<br/>aparecerá aqui
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <p className="text-xs text-center text-muted-foreground mt-3">Preview</p>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Footer - Botões fixos */}
-          <div className="sticky bottom-0 px-6 py-4 border-t bg-background/95 backdrop-blur-sm">
-            <div className="flex gap-3">
-              {step === 'create' && (
+            {/* Footer - Botões */}
+            <div className="px-6 py-4 border-t bg-background/95 backdrop-blur-sm">
+              <div className="flex gap-3">
+                {step === 'create' && (
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      setStep('select');
+                      setMediaFile(null);
+                      setMediaPreview('');
+                      setTextContent('');
+                    }} 
+                    disabled={isUploading}
+                    size="lg"
+                  >
+                    Voltar
+                  </Button>
+                )}
                 <Button 
                   variant="outline" 
-                  onClick={() => {
-                    setStep('select');
-                    setMediaFile(null);
-                    setMediaPreview('');
-                    setTextContent('');
-                  }} 
+                  onClick={handleClose} 
+                  className="flex-1" 
                   disabled={isUploading}
                   size="lg"
                 >
-                  Voltar
+                  Cancelar
                 </Button>
-              )}
-              <Button 
-                variant="outline" 
-                onClick={handleClose} 
-                className="flex-1" 
-                disabled={isUploading}
-                size="lg"
-              >
-                Cancelar
-              </Button>
-              {step === 'create' && (
-                <Button 
-                  onClick={handlePublish} 
-                  className="flex-1 bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 hover:from-purple-600 hover:via-pink-600 hover:to-orange-600 text-white" 
-                  disabled={isUploading}
-                  size="lg"
-                >
-                  {isUploading ? (
-                    <>
-                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                      Publicando...
-                    </>
-                  ) : (
-                    <>
-                      <Camera className="w-5 h-5 mr-2" />
-                      Publicar Story
-                    </>
-                  )}
-                </Button>
-              )}
+                {step === 'create' && (
+                  <Button 
+                    onClick={handlePublish} 
+                    className="flex-1 bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 hover:from-purple-600 hover:via-pink-600 hover:to-orange-600 text-white" 
+                    disabled={isUploading}
+                    size="lg"
+                  >
+                    {isUploading ? (
+                      <>
+                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                        Publicando...
+                      </>
+                    ) : (
+                      <>
+                        <Camera className="w-5 h-5 mr-2" />
+                        Publicar Story
+                      </>
+                    )}
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
+
+          {/* Coluna direita - Preview no celular */}
+          {step === 'create' && (
+            <div className="w-80 bg-muted/20 flex items-center justify-center border-l">
+              <div className="relative">
+                {/* Frame do celular */}
+                <div className="w-64 h-[520px] bg-black rounded-[3rem] p-3 shadow-2xl border-8 border-gray-800">
+                  {/* Notch */}
+                  <div className="absolute top-3 left-1/2 -translate-x-1/2 w-32 h-6 bg-black rounded-b-2xl z-10" />
+                  
+                  {/* Tela do celular */}
+                  <div className="w-full h-full bg-white rounded-[2.5rem] overflow-hidden relative">
+                    {type === 'text' ? (
+                      <div
+                        className="w-full h-full flex items-center justify-center p-6"
+                        style={{ background: backgroundColor }}
+                      >
+                        {textLink ? (
+                          <p
+                            className={`text-white text-lg text-center break-words leading-relaxed drop-shadow-lg ${
+                              textBold ? 'font-bold' : 'font-semibold'
+                            } ${
+                              textItalic ? 'italic' : ''
+                            }`}
+                          >
+                            {textContent || 'Seu texto aparecerá aqui'}
+                          </p>
+                        ) : (
+                          <p
+                            className={`text-white text-lg text-center break-words leading-relaxed drop-shadow-lg ${
+                              textBold ? 'font-bold' : 'font-semibold'
+                            } ${
+                              textItalic ? 'italic' : ''
+                            }`}
+                          >
+                            {textContent || 'Seu texto aparecerá aqui'}
+                          </p>
+                        )}
+                      </div>
+                    ) : mediaPreview ? (
+                      type === 'image' ? (
+                        <img
+                          src={mediaPreview}
+                          alt="Preview"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <video
+                          src={mediaPreview}
+                          className="w-full h-full object-cover"
+                        />
+                      )
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center">
+                        <p className="text-muted-foreground text-sm text-center px-4">
+                          Preview do seu story<br/>aparecerá aqui
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <p className="text-xs text-center text-muted-foreground mt-3">Preview</p>
+              </div>
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>

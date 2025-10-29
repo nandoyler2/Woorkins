@@ -458,7 +458,14 @@ export default function Messages() {
         {/* Sidebar de Navegação */}
         <div className="w-64 bg-card shadow-lg border-r p-4 flex flex-col">
           <div className="mb-6">
-            <h2 className="text-lg font-semibold mb-4 text-foreground">Mensagens</h2>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 rounded-lg bg-gradient-primary">
+                <MessageCircle className="h-5 w-5 text-primary-foreground" />
+              </div>
+              <h2 className="text-xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+                Mensagens
+              </h2>
+            </div>
           </div>
           
           <nav className="space-y-1 flex-1">

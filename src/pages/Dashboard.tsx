@@ -9,6 +9,7 @@ import { Star, Search, Briefcase, MessageSquare, CheckCircle2, Phone, Building2,
 import woorkoinsIcon from '@/assets/woorkoins-icon-latest.png';
 import { Link, useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
+import { SearchSlideIn } from '@/components/SearchSlideIn';
 import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -137,6 +138,7 @@ export default function Dashboard() {
   const [showEvaluateDialog, setShowEvaluateDialog] = useState(false);
   const [availableProfiles, setAvailableProfiles] = useState<Array<{ id: string; username: string; full_name: string | null; avatar_url: string | null; type: 'user' | 'business'; company_name?: string; slug?: string }>>([]);
   const [profileSearchQuery, setProfileSearchQuery] = useState('');
+  const [showSearchSlideIn, setShowSearchSlideIn] = useState(false);
 
   const achievements: Achievement[] = [
     {
@@ -965,32 +967,6 @@ export default function Dashboard() {
 
             {/* Action Cards Grid */}
             <div className="grid grid-cols-2 gap-4">
-              <Card 
-                className="bg-gradient-to-br from-blue-500 to-blue-600 border-0 shadow-md hover:shadow-lg transition-all cursor-pointer group"
-                onClick={() => {
-                  loadAvailableProfiles();
-                  setShowEvaluateDialog(true);
-                }}
-              >
-                <CardContent className="p-5">
-                  <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                    <Star className="w-5 h-5 text-white" />
-                  </div>
-                  <h3 className="text-base font-bold text-white mb-0.5">Escrever Avaliação</h3>
-                  <p className="text-blue-100 text-xs">Compartilhe sua experiência</p>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-gradient-to-br from-teal-500 to-teal-600 border-0 shadow-md hover:shadow-lg transition-all cursor-pointer group">
-                <CardContent className="p-5">
-                  <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                    <Search className="w-5 h-5 text-white" />
-                  </div>
-                  <h3 className="text-base font-bold text-white mb-0.5">Encontrar Serviços</h3>
-                  <p className="text-teal-100 text-xs">Descubra negócios</p>
-                </CardContent>
-              </Card>
-
               <Card className="bg-gradient-to-br from-orange-500 to-orange-600 border-0 shadow-md hover:shadow-lg transition-all cursor-pointer group">
                 <CardContent className="p-5">
                   <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
@@ -1020,6 +996,35 @@ export default function Dashboard() {
                     </p>
                   </CardContent>
                 </Link>
+              </Card>
+
+              <Card 
+                className="bg-gradient-to-br from-blue-500 to-blue-600 border-0 shadow-md hover:shadow-lg transition-all cursor-pointer group"
+                onClick={() => {
+                  loadAvailableProfiles();
+                  setShowEvaluateDialog(true);
+                }}
+              >
+                <CardContent className="p-5">
+                  <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                    <Star className="w-5 h-5 text-white" />
+                  </div>
+                  <h3 className="text-base font-bold text-white mb-0.5">Escrever Avaliação</h3>
+                  <p className="text-blue-100 text-xs">Compartilhe sua experiência</p>
+                </CardContent>
+              </Card>
+
+              <Card 
+                className="bg-gradient-to-br from-teal-500 to-teal-600 border-0 shadow-md hover:shadow-lg transition-all cursor-pointer group"
+                onClick={() => setShowSearchSlideIn(true)}
+              >
+                <CardContent className="p-5">
+                  <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                    <Search className="w-5 h-5 text-white" />
+                  </div>
+                  <h3 className="text-base font-bold text-white mb-0.5">Encontrar Serviços</h3>
+                  <p className="text-teal-100 text-xs">Descubra negócios</p>
+                </CardContent>
               </Card>
             </div>
 
@@ -1677,6 +1682,11 @@ export default function Dashboard() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <SearchSlideIn 
+        isOpen={showSearchSlideIn} 
+        onClose={() => setShowSearchSlideIn(false)}
+      />
 
       <Footer />
     </div>

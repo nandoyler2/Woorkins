@@ -14,6 +14,8 @@ interface UploadTask {
 interface UploadContextType {
   currentUpload: UploadTask | null;
   uploadStory: (data: StoryUploadData) => Promise<void>;
+  onStoryUploaded?: () => void;
+  setOnStoryUploaded: (callback: (() => void) | undefined) => void;
 }
 
 interface StoryUploadData {
@@ -30,6 +32,7 @@ const UploadContext = createContext<UploadContextType | undefined>(undefined);
 
 export function UploadProvider({ children }: { children: ReactNode }) {
   const [currentUpload, setCurrentUpload] = useState<UploadTask | null>(null);
+  const [onStoryUploaded, setOnStoryUploaded] = useState<(() => void) | undefined>(undefined);
   const { toast } = useToast();
 
   // Aviso antes de sair se houver upload em andamento
@@ -134,6 +137,11 @@ export function UploadProvider({ children }: { children: ReactNode }) {
         message: 'Story publicado com sucesso! ✨',
       });
 
+      // Notificar que o story foi publicado
+      if (onStoryUploaded) {
+        onStoryUploaded();
+      }
+
     } catch (error) {
       console.error('Error uploading story:', error);
       setCurrentUpload({
@@ -150,10 +158,10 @@ export function UploadProvider({ children }: { children: ReactNode }) {
         variant: 'destructive',
       });
     }
-  }, [toast]);
+  }, [toast, onStoryUploaded]);
 
   return (
-    <UploadContext.Provider value={{ currentUpload, uploadStory }}>
+    <UploadContext.Provider value={{ currentUpload, uploadStory, onStoryUploaded, setOnStoryUploaded }}>
       {children}
     </UploadContext.Provider>
   );

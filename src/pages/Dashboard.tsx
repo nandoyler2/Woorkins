@@ -25,6 +25,7 @@ import { useUnreadMessages } from '@/hooks/useUnreadMessages';
 import { DashboardSkeleton } from '@/components/dashboard/DashboardSkeleton';
 import { StoriesCarousel } from '@/components/stories/StoriesCarousel';
 import { CreateStoryDialog } from '@/components/stories/CreateStoryDialog';
+import { useUpload } from '@/contexts/UploadContext';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -109,6 +110,7 @@ interface Notification {
 export default function Dashboard() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { setOnStoryUploaded } = useUpload();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [businessProfiles, setBusinessProfiles] = useState<BusinessProfile[]>([]);
   const [loadingProfile, setLoadingProfile] = useState(true);
@@ -255,6 +257,17 @@ export default function Dashboard() {
   useEffect(() => {
     document.title = 'Painel - Woorkins';
   }, []);
+
+  // Configurar callback para atualizar stories quando upload completar
+  useEffect(() => {
+    setOnStoryUploaded(() => () => {
+      setStoriesRefreshTrigger(prev => prev + 1);
+    });
+
+    return () => {
+      setOnStoryUploaded(undefined);
+    };
+  }, [setOnStoryUploaded]);
 
   useEffect(() => {
     if (user) {
@@ -972,6 +985,7 @@ export default function Dashboard() {
             {/* Stories Carousel */}
             {profile && (
               <StoriesCarousel
+                key={storiesRefreshTrigger}
                 currentProfile={{
                   id: profile.id,
                   username: profile.username,

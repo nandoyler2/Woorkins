@@ -223,11 +223,13 @@ export const useRealtimeMessaging = ({
       await markMessagesAsRead();
     } catch (error: any) {
       console.error('Error loading messages:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Erro',
-        description: 'Não foi possível carregar as mensagens',
-      });
+      if (!suppressToasts) {
+        toast({
+          variant: 'destructive',
+          title: 'Erro',
+          description: 'Não foi possível carregar as mensagens',
+        });
+      }
     }
   }, [conversationId, conversationType, currentUserId, getMessages]);
 
@@ -270,12 +272,14 @@ export const useRealtimeMessaging = ({
     // Check if user is blocked before sending
     const blocked = await checkBlockStatus();
     if (blocked) {
-      toast({
-        variant: 'destructive',
-        title: '🚫 Você está bloqueado',
-        description: blockReason,
-        duration: 8000,
-      });
+      if (!suppressToasts) {
+        toast({
+          variant: 'destructive',
+          title: '🚫 Você está bloqueado',
+          description: blockReason,
+          duration: 8000,
+        });
+      }
       return;
     }
 
@@ -292,12 +296,14 @@ export const useRealtimeMessaging = ({
     if (spamData?.blocked_until) {
       const blockedUntil = new Date(spamData.blocked_until);
       if (blockedUntil > new Date()) {
-        toast({
-          variant: 'destructive',
-          title: '🚫 Bloqueio Temporário',
-          description: 'Você está bloqueado temporariamente por enviar mensagens muito rápido.',
-          duration: 5000,
-        });
+        if (!suppressToasts) {
+          toast({
+            variant: 'destructive',
+            title: '🚫 Bloqueio Temporário',
+            description: 'Você está bloqueado temporariamente por enviar mensagens muito rápido.',
+            duration: 5000,
+          });
+        }
         return;
       }
     }
@@ -339,12 +345,14 @@ export const useRealtimeMessaging = ({
           
           if (newCount === 1) {
             // First warning
-            toast({
-              variant: 'default',
-              title: '⚠️ Atenção',
-              description: 'Evite enviar mensagens muito rápidas ou repetitivas.',
-              duration: 4000,
-            });
+            if (!suppressToasts) {
+              toast({
+                variant: 'default',
+                title: '⚠️ Atenção',
+                description: 'Evite enviar mensagens muito rápidas ou repetitivas.',
+                duration: 4000,
+              });
+            }
             
             await supabase
               .from('message_spam_tracking')
@@ -371,12 +379,14 @@ export const useRealtimeMessaging = ({
                 block_duration_minutes: blockMinutes,
               });
 
-            toast({
-              variant: 'destructive',
-              title: '🚫 Bloqueio Temporário',
-              description: `Você foi bloqueado por ${blockMinutes} minutos por spam.`,
-              duration: 5000,
-            });
+            if (!suppressToasts) {
+              toast({
+                variant: 'destructive',
+                title: '🚫 Bloqueio Temporário',
+                description: `Você foi bloqueado por ${blockMinutes} minutos por spam.`,
+                duration: 5000,
+              });
+            }
             return;
           }
         }
@@ -488,11 +498,13 @@ export const useRealtimeMessaging = ({
               }
             }
             
-            toast({
-              variant: 'destructive',
-              title: 'Erro ao enviar anexo',
-              description: errorDescription,
-            });
+            if (!suppressToasts) {
+              toast({
+                variant: 'destructive',
+                title: 'Erro ao enviar anexo',
+                description: errorDescription,
+              });
+            }
             setIsSending(false);
             return;
           }
@@ -544,24 +556,28 @@ export const useRealtimeMessaging = ({
             }
           }
 
-          toast({
-            variant: 'destructive',
-            title: '🚫 Mensagem Bloqueada',
-            description,
-            duration: 10000,
-          });
+          if (!suppressToasts) {
+            toast({
+              variant: 'destructive',
+              title: '🚫 Mensagem Bloqueada',
+              description,
+              duration: 10000,
+            });
+          }
           setIsSending(false);
           return;
         }
 
         // Check if message was flagged for bad conduct (warning only)
         if (moderationResult?.flagged) {
-          toast({
-            variant: 'destructive',
-            title: '⚠️ Aviso de Conduta',
-            description: 'Detectamos um padrão suspeito em suas mensagens. Por favor, mantenha a comunicação dentro da plataforma. Violações repetidas resultarão em bloqueio.',
-            duration: 8000,
-          });
+          if (!suppressToasts) {
+            toast({
+              variant: 'destructive',
+              title: '⚠️ Aviso de Conduta',
+              description: 'Detectamos um padrão suspeito em suas mensagens. Por favor, mantenha a comunicação dentro da plataforma. Violações repetidas resultarão em bloqueio.',
+              duration: 8000,
+            });
+          }
         }
       } else {
         // If not moderating, still need to upload attachment
@@ -611,11 +627,13 @@ export const useRealtimeMessaging = ({
               }
             }
             
-            toast({
-              variant: 'destructive',
-              title: 'Erro ao enviar anexo',
-              description: errorDescription,
-            });
+            if (!suppressToasts) {
+              toast({
+                variant: 'destructive',
+                title: 'Erro ao enviar anexo',
+                description: errorDescription,
+              });
+            }
             setIsSending(false);
             return;
           }
@@ -699,11 +717,13 @@ export const useRealtimeMessaging = ({
       // Remove optimistic message on error
       setMessages(prev => prev.filter(msg => msg.id !== tempId));
       
-      toast({
-        variant: 'destructive',
-        title: 'Erro ao enviar mensagem',
-        description: 'Tente novamente',
-      });
+      if (!suppressToasts) {
+        toast({
+          variant: 'destructive',
+          title: 'Erro ao enviar mensagem',
+          description: 'Tente novamente',
+        });
+      }
     } finally {
       setIsSending(false);
     }

@@ -145,9 +145,6 @@ export default function Welcome() {
 
       if (error) throw error;
 
-      // Marcar onboarding como completo
-      localStorage.setItem('onboarding_completed', 'true');
-
       toast({
         title: '🎉 Bem-vindo ao Woorkins!',
         description: 'Seu perfil foi configurado com sucesso.',

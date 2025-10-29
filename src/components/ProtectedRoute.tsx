@@ -35,30 +35,21 @@ export const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRout
           return;
         }
 
-        // Verificar perfil completo (exceto se já estiver em /welcome)
+        // Verificar perfil completo SEMPRE (não usar localStorage)
         if (location.pathname !== '/welcome') {
-          const onboardingCompleted = localStorage.getItem('onboarding_completed');
-          
-          if (!onboardingCompleted) {
-            const { data: profiles, error: profileError } = await supabase
-              .from('profiles')
-              .select('username')
-              .eq('user_id', user.id)
-              .eq('profile_type', 'user')
-              .limit(1);
+          const { data: profiles, error: profileError } = await supabase
+            .from('profiles')
+            .select('username, category')
+            .eq('user_id', user.id)
+            .eq('profile_type', 'user')
+            .limit(1);
 
-            if (profileError) throw profileError;
+          if (profileError) throw profileError;
 
-            // Se não tem username válido, perfil está incompleto
-            const hasValidUsername = profiles && profiles.length > 0 && profiles[0].username && profiles[0].username.length >= 3;
-            setProfileComplete(hasValidUsername);
-
-            if (hasValidUsername) {
-              localStorage.setItem('onboarding_completed', 'true');
-            }
-          } else {
-            setProfileComplete(true);
-          }
+          // Perfil completo = tem username válido E categoria
+          const hasValidUsername = profiles && profiles.length > 0 && profiles[0].username && profiles[0].username.length >= 3;
+          const hasCategory = profiles && profiles.length > 0 && profiles[0].category;
+          setProfileComplete(Boolean(hasValidUsername && hasCategory));
         } else {
           setProfileComplete(true);
         }

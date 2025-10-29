@@ -193,6 +193,7 @@ export function StoriesCarousel({ currentProfile, onCreateStory }: StoriesCarous
           isOpen={!!selectedProfileId}
           onClose={() => setSelectedProfileId(null)}
           currentProfileId={currentProfile.id}
+          onStoryDeleted={loadStoriesData}
         />
       )}
     </div>

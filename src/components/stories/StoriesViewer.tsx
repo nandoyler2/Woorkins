@@ -33,9 +33,10 @@ interface StoriesViewerProps {
   isOpen: boolean;
   onClose: () => void;
   currentProfileId?: string;
+  onStoryDeleted?: () => void;
 }
 
-export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId }: StoriesViewerProps) {
+export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, onStoryDeleted }: StoriesViewerProps) {
   const [stories, setStories] = useState<Story[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [progress, setProgress] = useState(0);
@@ -269,6 +270,11 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId }: 
       // Remover da lista local
       const newStories = stories.filter(s => s.id !== currentStory.id);
       setStories(newStories);
+
+      // Notificar o pai sobre a exclusão
+      if (onStoryDeleted) {
+        onStoryDeleted();
+      }
 
       // Se não tem mais stories, fechar
       if (newStories.length === 0) {

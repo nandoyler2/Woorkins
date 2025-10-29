@@ -340,6 +340,9 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
             ))}
           </div>
 
+          {/* Top shadow gradient for better visibility */}
+          <div className="absolute top-0 left-0 right-0 h-32 z-10 bg-gradient-to-b from-black/70 via-black/30 to-transparent pointer-events-none" />
+
           {/* Header */}
           <div className="absolute top-4 left-0 right-0 z-20 flex items-center justify-between px-4 mt-4">
             <div className="flex items-center gap-3 bg-black/30 backdrop-blur-md rounded-full pr-4 py-1.5 pl-1.5">

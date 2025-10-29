@@ -204,12 +204,13 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId }: 
   };
 
   const togglePause = () => {
-    setIsPaused(!isPaused);
+    const newPausedState = !isPaused;
+    setIsPaused(newPausedState);
     if (videoRef.current) {
-      if (isPaused) {
-        videoRef.current.play();
-      } else {
+      if (newPausedState) {
         videoRef.current.pause();
+      } else {
+        videoRef.current.play();
       }
     }
   };

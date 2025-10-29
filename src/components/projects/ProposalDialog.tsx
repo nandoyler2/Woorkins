@@ -65,8 +65,8 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle }: 
         .insert({
           project_id: projectId,
           freelancer_id: profileData.id,
-          amount: parseFloat(amount),
-          delivery_time: parseInt(deliveryTime),
+          budget: parseFloat(amount),
+          delivery_days: parseInt(deliveryTime),
           message: message,
           status: 'pending',
         });

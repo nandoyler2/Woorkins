@@ -41,6 +41,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Skeleton } from '@/components/ui/skeleton';
 import confetti from 'canvas-confetti';
 interface Profile {
   id: string;
@@ -107,7 +108,9 @@ export default function Dashboard() {
   const { toast } = useToast();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [businessProfiles, setBusinessProfiles] = useState<BusinessProfile[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loadingProfile, setLoadingProfile] = useState(true);
+  const [loadingMessages, setLoadingMessages] = useState(true);
+  const [loadingBalance, setLoadingBalance] = useState(true);
   const [lastUnreadMessage, setLastUnreadMessage] = useState<string>('');
   const [woorkoinsBalance, setWoorkoinsBalance] = useState(0);
   
@@ -254,12 +257,13 @@ export default function Dashboard() {
     }
   }, [user]);
 
+  // Carregar dados apenas uma vez quando o profile é carregado
   useEffect(() => {
     if (profile) {
       loadPendingInvites();
       loadLastUnreadMessage();
     }
-  }, [profile]);
+  }, [profile?.id]); // Apenas quando o ID muda
 
   const loadPendingInvites = async () => {
     if (!profile) return;
@@ -278,85 +282,38 @@ export default function Dashboard() {
   const loadLastUnreadMessage = async () => {
     if (!profile) return;
     
+    setLoadingMessages(true);
     try {
-      // Fazer todas as queries em paralelo
-      const [negAsUser, negAsTarget, propsAsFreelancer, myProjects] = await Promise.all([
-        supabase.from('negotiations').select('id').eq('client_user_id', profile.id),
-        supabase.from('negotiations').select('id').eq('target_profile_id', profile.id),
-        supabase.from('proposals').select('id').eq('freelancer_id', profile.id),
-        supabase.from('projects').select('id').eq('profile_id', profile.id)
-      ]);
-
-      const negotiationIds = [
-        ...((negAsUser.data || []).map((n: any) => n.id)),
-        ...((negAsTarget.data || []).map((n: any) => n.id)),
-      ];
-
-      const ownerProjectIds = (myProjects.data || []).map((p: any) => p.id);
-
-      // Buscar proposals do owner e mensagens em paralelo
-      const messageQueries = [];
-      
-      if (negotiationIds.length) {
-        messageQueries.push(
-          supabase
-            .from('negotiation_messages')
-            .select('content, created_at')
-            .in('negotiation_id', negotiationIds)
-            .neq('sender_id', profile.id)
-            .in('status', ['sent', 'delivered'])
-            .eq('moderation_status', 'approved')
-            .neq('is_deleted', true)
-            .is('read_at', null)
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .maybeSingle()
-        );
-      } else {
-        messageQueries.push(Promise.resolve({ data: null }));
-      }
-
-      if (ownerProjectIds.length) {
-        messageQueries.push(
-          supabase.from('proposals').select('id').in('project_id', ownerProjectIds)
-        );
-      } else {
-        messageQueries.push(Promise.resolve({ data: [] }));
-      }
-
-      const [lastNegMessageResult, propsAsOwner] = await Promise.all(messageQueries);
-
-      const proposalIds = [
-        ...((propsAsFreelancer.data || []).map((p: any) => p.id)),
-        ...((propsAsOwner.data || []).map((p: any) => p.id)),
-      ];
-
-      let lastPropMessage = null;
-      if (proposalIds.length) {
-        const { data } = await supabase
-          .from('proposal_messages')
+      // Buscar mensagens mais recentes de ambos os tipos em paralelo
+      const [negMessages, propMessages] = await Promise.all([
+        supabase
+          .from('negotiation_messages')
           .select('content, created_at')
-          .in('proposal_id', proposalIds)
           .neq('sender_id', profile.id)
-          .in('status', ['sent', 'delivered'])
-          .eq('moderation_status', 'approved')
           .is('read_at', null)
+          .eq('moderation_status', 'approved')
+          .neq('is_deleted', true)
           .order('created_at', { ascending: false })
           .limit(1)
-          .maybeSingle();
-        lastPropMessage = data;
-      }
+          .maybeSingle(),
+        
+        supabase
+          .from('proposal_messages')
+          .select('content, created_at')
+          .neq('sender_id', profile.id)
+          .is('read_at', null)
+          .eq('moderation_status', 'approved')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle()
+      ]);
 
-      // Pegar a mais recente entre as duas
-      const lastNegMessage = lastNegMessageResult.data;
-      let lastMessage = null;
-      if (lastNegMessage && lastPropMessage) {
-        lastMessage = new Date(lastNegMessage.created_at) > new Date(lastPropMessage.created_at)
-          ? lastNegMessage
-          : lastPropMessage;
-      } else {
-        lastMessage = lastNegMessage || lastPropMessage;
-      }
+      // Pegar a mensagem mais recente entre as duas
+      const lastMessage = negMessages.data && propMessages.data
+        ? (new Date(negMessages.data.created_at) > new Date(propMessages.data.created_at) 
+            ? negMessages.data 
+            : propMessages.data)
+        : (negMessages.data || propMessages.data);
 
       if (lastMessage?.content) {
         const preview = lastMessage.content.length > 50 
@@ -369,6 +326,8 @@ export default function Dashboard() {
     } catch (error) {
       console.error('Error loading last unread message:', error);
       setLastUnreadMessage('');
+    } finally {
+      setLoadingMessages(false);
     }
   };
 
@@ -381,6 +340,7 @@ export default function Dashboard() {
   const loadProfile = async () => {
     if (!user) return;
     
+    setLoadingProfile(true);
     try {
       const { getOrCreateUserProfile } = await import('@/lib/profiles');
       const profiles = await getOrCreateUserProfile(user);
@@ -391,12 +351,14 @@ export default function Dashboard() {
         
         setProfile(profileData);
         
-        // Executar operações em paralelo
-        await Promise.all([
-          fixUsernameSlugConflict(profileData, profiles),
+        // Executar operações em paralelo SEM aguardar fixUsernameSlugConflict
+        Promise.all([
           loadBusinessProfiles(profileData.id),
           loadWoorkoinsBalanceForIds(profiles.map((p: any) => p.id))
         ]);
+        
+        // Executar fix de conflitos em background (não bloqueia)
+        fixUsernameSlugConflict(profileData, profiles).catch(console.error);
       } else {
         toast({
           title: 'Erro ao criar perfil',
@@ -412,7 +374,7 @@ export default function Dashboard() {
         variant: 'destructive',
       });
     } finally {
-      setLoading(false);
+      setLoadingProfile(false);
     }
   };
 
@@ -537,7 +499,7 @@ export default function Dashboard() {
   // Animação de confete quando completar tudo (apenas uma vez)
   useEffect(() => {
     const allCompleted = profileTasks.every(t => t.completed);
-    if (allCompleted && !hasShownConfetti && !loading) {
+    if (allCompleted && !hasShownConfetti && !loadingProfile) {
       // Disparar confete
       const duration = 3000;
       const end = Date.now() + duration;
@@ -568,31 +530,28 @@ export default function Dashboard() {
       localStorage.setItem('woorkins_confetti_shown', 'true');
       setHasShownConfetti(true);
     }
-  }, [profileTasks, hasShownConfetti, loading]);
+  }, [profileTasks, hasShownConfetti, loadingProfile]);
 
-  const loadWoorkoinsBalance = async (profileId: string) => {
-    const { data, error } = await supabase
-      .from('woorkoins_balance')
-      .select('balance')
-      .eq('profile_id', profileId)
-      .maybeSingle();
-    
-    if (!error && data) {
-      setWoorkoinsBalance(data.balance || 0);
-    }
-  };
 
   // Soma o saldo de Woorkoins de todos os perfis do usuário
   const loadWoorkoinsBalanceForIds = async (profileIds: string[]) => {
     if (!profileIds?.length) return;
-    const { data, error } = await supabase
-      .from('woorkoins_balance')
-      .select('profile_id, balance')
-      .in('profile_id', profileIds);
+    setLoadingBalance(true);
+    try {
+      const { data, error } = await supabase
+        .from('woorkoins_balance')
+        .select('profile_id, balance')
+        .in('profile_id', profileIds);
 
-    if (!error && data) {
-      const total = data.reduce((sum: number, r: any) => sum + (r.balance || 0), 0);
-      setWoorkoinsBalance(total);
+      if (!error && data) {
+        const total = data.reduce((sum: number, r: any) => sum + (r.balance || 0), 0);
+        setWoorkoinsBalance(total);
+      }
+    } catch (error) {
+      console.error('Error loading woorkoins balance:', error);
+      setWoorkoinsBalance(0);
+    } finally {
+      setLoadingBalance(false);
     }
   };
 
@@ -849,9 +808,7 @@ export default function Dashboard() {
       loadFollowers();
     }
   }, [profile]);
-  if (loading) {
-    return <DashboardSkeleton />;
-  }
+  // Remover bloqueio de renderização - mostrar estrutura imediatamente
 
   const accountType = 'Conta Grátis';
   const points = 1250;
@@ -861,38 +818,47 @@ export default function Dashboard() {
     <div className="min-h-screen bg-slate-50">
       <Header />
       
-      <div className="container mx-auto px-4 py-6 max-w-7xl">
-        <div className="grid lg:grid-cols-12 gap-6">
-          {/* Main Content */}
-          <div className="lg:col-span-8 space-y-6">
-            {/* Welcome Section */}
-            <Card className="bg-white shadow-sm border border-slate-200">
-              <CardContent className="p-6">
-                <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <h1 className="text-2xl font-bold text-slate-900 mb-2">
-                      Bem-vindo de volta, {formatShortName(profile?.full_name) || profile?.username}! 👋
-                    </h1>
-                    <div className="flex items-center gap-3 mt-2">
-                      <Link to="/planos">
-                        <Badge 
-                          variant="secondary" 
-                          className="text-xs px-3 py-1 bg-primary/10 text-primary border border-primary/20 cursor-pointer hover:bg-primary/20 transition-colors"
+      {loadingProfile ? (
+        <DashboardSkeleton />
+      ) : (
+        <div className="container mx-auto px-4 py-6 max-w-7xl">
+          <div className="grid lg:grid-cols-12 gap-6">
+            {/* Main Content */}
+            <div className="lg:col-span-8 space-y-6">
+              {/* Welcome Section */}
+              <Card className="bg-white shadow-sm border border-slate-200">
+                <CardContent className="p-6">
+                  <div className="flex items-start justify-between mb-4">
+                    <div>
+                      <h1 className="text-2xl font-bold text-slate-900 mb-2">
+                        Bem-vindo de volta, {formatShortName(profile?.full_name) || profile?.username}! 👋
+                      </h1>
+                      <div className="flex items-center gap-3 mt-2">
+                        <Link to="/planos">
+                          <Badge 
+                            variant="secondary" 
+                            className="text-xs px-3 py-1 bg-primary/10 text-primary border border-primary/20 cursor-pointer hover:bg-primary/20 transition-colors"
+                          >
+                            <Award className="w-3 h-3 mr-1" />
+                            {accountType}
+                          </Badge>
+                        </Link>
+                        <Link 
+                          to="/woorkoins" 
+                          className="flex items-center gap-1.5 text-sm text-slate-600 hover:text-primary transition-colors cursor-pointer group"
                         >
-                          <Award className="w-3 h-3 mr-1" />
-                          {accountType}
-                        </Badge>
-                      </Link>
-                      <Link 
-                        to="/woorkoins" 
-                        className="flex items-center gap-1.5 text-sm text-slate-600 hover:text-primary transition-colors cursor-pointer group"
-                      >
-                        <img src={woorkoinsIcon} alt="Woorkoins" className="h-5 w-auto object-contain group-hover:scale-110 transition-transform" />
-                        <span className="font-semibold">{woorkoinsBalance.toLocaleString()}</span>
-                        <span>Woorkoins</span>
-                      </Link>
+                          <img src={woorkoinsIcon} alt="Woorkoins" className="h-5 w-auto object-contain group-hover:scale-110 transition-transform" />
+                          {loadingBalance ? (
+                            <Skeleton className="h-5 w-16" />
+                          ) : (
+                            <>
+                              <span className="font-semibold">{woorkoinsBalance.toLocaleString()}</span>
+                              <span>Woorkoins</span>
+                            </>
+                          )}
+                        </Link>
+                      </div>
                     </div>
-                  </div>
                   {!profileCompleted && (
                     <div className="text-right">
                       <div className="text-xs text-slate-600 mb-1">Conclusão do Perfil</div>
@@ -1583,6 +1549,7 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+      )}
 
       {/* Dialog de edição de perfil */}
       {user && profile && (

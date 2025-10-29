@@ -880,8 +880,10 @@ useEffect(() => {
       }
     };
     
-    const needsAction = status_type === 'counter_proposal' && 
-      proposalData?.awaiting_acceptance_from === profileId;
+    const needsAction = status_type === 'counter_proposal' &&
+      // Fallback: show action if the last counter proposal was made by the other side
+      (proposalData?.awaiting_acceptance_from === profileId ||
+       (proposalData?.status === 'pending' && proposalData?.current_proposal_by !== profileId));
     
     // Debug logs
     if (status_type === 'counter_proposal') {

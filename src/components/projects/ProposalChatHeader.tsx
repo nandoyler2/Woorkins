@@ -69,9 +69,6 @@ export function ProposalChatHeader({
     if (proposal.status === 'accepted') {
       return <Badge className="bg-blue-500">Aceita - Aguardando Pagamento</Badge>;
     }
-    if (proposal.awaiting_acceptance_from) {
-      return <Badge variant="outline">Aguardando Resposta</Badge>;
-    }
     if (proposal.status === 'pending') {
       return <Badge variant="secondary">Pendente</Badge>;
     }

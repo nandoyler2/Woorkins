@@ -25,6 +25,7 @@ import { useUnreadMessages } from '@/hooks/useUnreadMessages';
 import { DashboardSkeleton } from '@/components/dashboard/DashboardSkeleton';
 import { StoriesCarousel } from '@/components/stories/StoriesCarousel';
 import { CreateStoryDialog } from '@/components/stories/CreateStoryDialog';
+import { RequireProfilePhotoDialog } from '@/components/RequireProfilePhotoDialog';
 import { useUpload } from '@/contexts/UploadContext';
 import {
   AlertDialog,
@@ -145,15 +146,12 @@ export default function Dashboard() {
   const [showSearchSlideIn, setShowSearchSlideIn] = useState(false);
   const [showCreateStoryDialog, setShowCreateStoryDialog] = useState(false);
   const [storiesRefreshTrigger, setStoriesRefreshTrigger] = useState(0);
+  const [showStoryPhotoRequired, setShowStoryPhotoRequired] = useState(false);
 
   const handleCreateStoryClick = () => {
     // Verificar se o perfil principal tem foto
     if (!profile?.avatar_url) {
-      toast({
-        title: 'Foto de perfil obrigatória',
-        description: 'Você precisa adicionar uma foto de perfil antes de postar stories',
-        variant: 'destructive',
-      });
+      setShowStoryPhotoRequired(true);
       return;
     }
     setShowCreateStoryDialog(true);
@@ -1762,7 +1760,26 @@ export default function Dashboard() {
         />
       )}
 
-      <SearchSlideIn 
+      {/* Require Profile Photo for Story */}
+      {profile && (
+        <RequireProfilePhotoDialog
+          open={showStoryPhotoRequired}
+          userName={profile.full_name || profile.username}
+          userId={user?.id || ''}
+          onPhotoUploaded={() => {
+            setShowStoryPhotoRequired(false);
+            loadProfile();
+            toast({
+              title: 'Foto adicionada!',
+              description: 'Agora você pode criar seu story',
+            });
+          }}
+          onClose={() => setShowStoryPhotoRequired(false)}
+          context="project"
+        />
+      )}
+
+      <SearchSlideIn
         isOpen={showSearchSlideIn} 
         onClose={() => setShowSearchSlideIn(false)}
       />

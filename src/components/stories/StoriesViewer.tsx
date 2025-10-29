@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, X, ExternalLink, Volume2, VolumeX, User, Play, Pause } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X, ExternalLink, Volume2, VolumeX, User, Play, Pause, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { SafeImage } from '@/components/ui/safe-image';
@@ -49,6 +50,8 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId }: 
     return saved ? parseFloat(saved) : 1;
   });
   const [showVolumeSlider, setShowVolumeSlider] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const { toast } = useToast();
 
@@ -232,6 +235,64 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId }: 
     if (e.key === 'Escape') onClose();
   }, [currentIndex, stories.length]);
 
+  const handleDeleteStory = async () => {
+    if (!currentStory) return;
+    
+    setDeleting(true);
+    try {
+      // Se tiver mídia, deletar do storage
+      if (currentStory.media_url) {
+        const urlParts = currentStory.media_url.split('/');
+        const fileName = urlParts[urlParts.length - 1];
+        const { error: storageError } = await supabase.storage
+          .from('stories')
+          .remove([`${currentStory.profile_id}/${fileName}`]);
+        
+        if (storageError) {
+          console.error('Error deleting from storage:', storageError);
+        }
+      }
+
+      // Deletar do banco
+      const { error: dbError } = await supabase
+        .from('profile_stories')
+        .delete()
+        .eq('id', currentStory.id);
+
+      if (dbError) throw dbError;
+
+      toast({
+        title: 'Story excluído',
+        description: 'Seu story foi excluído com sucesso',
+      });
+
+      // Remover da lista local
+      const newStories = stories.filter(s => s.id !== currentStory.id);
+      setStories(newStories);
+
+      // Se não tem mais stories, fechar
+      if (newStories.length === 0) {
+        onClose();
+      } else {
+        // Se estava no último, voltar um
+        if (currentIndex >= newStories.length) {
+          setCurrentIndex(Math.max(0, newStories.length - 1));
+        }
+      }
+
+      setShowDeleteDialog(false);
+    } catch (error) {
+      console.error('Error deleting story:', error);
+      toast({
+        title: 'Erro ao excluir',
+        description: 'Não foi possível excluir o story',
+        variant: 'destructive',
+      });
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
@@ -311,6 +372,18 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId }: 
             >
               <X className="w-5 h-5" />
             </Button>
+
+            {/* Delete button for owner */}
+            {isOwner && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowDeleteDialog(true)}
+                className="text-white hover:bg-white/20 hover:bg-red-500/20"
+              >
+                <Trash2 className="w-5 h-5" />
+              </Button>
+            )}
           </div>
 
           {/* Content */}
@@ -488,6 +561,28 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId }: 
         </div>
         )}
       </DialogContent>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir story?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação não pode ser desfeita. Seu story será excluído permanentemente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteStory}
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? 'Excluindo...' : 'Excluir'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }

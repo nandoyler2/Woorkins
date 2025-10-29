@@ -294,12 +294,12 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
                     <div className="space-y-4 max-h-[calc(90vh-250px)] overflow-y-auto pr-2">
                       <div>
                         <Label className="text-sm font-semibold mb-2 block">Escolha um fundo:</Label>
-                        <div className="grid grid-cols-5 gap-2">
+                        <div className="flex gap-1.5 overflow-x-auto pb-2">
                           {backgroundStyles.map((style) => (
                             <button
                               key={style.value}
                               onClick={() => setBackgroundColor(style.value)}
-                              className={`w-full h-12 rounded-lg transition-all hover:scale-105 ${
+                              className={`min-w-[50px] h-10 rounded-lg transition-all hover:scale-105 flex-shrink-0 ${
                                 backgroundColor === style.value
                                   ? 'ring-2 ring-primary ring-offset-1 scale-105'
                                   : 'ring-1 ring-border'

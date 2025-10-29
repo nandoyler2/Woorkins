@@ -1,12 +1,19 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MoreVertical, CheckCircle, DollarSign, Clock, AlertCircle } from 'lucide-react';
+import { MoreVertical, CheckCircle, DollarSign, Clock, AlertCircle, ExternalLink } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+
+interface ProjectData {
+  id: string;
+  title: string;
+  ownerName: string;
+  freelancerName: string;
+}
 
 interface ProposalChatHeaderProps {
   proposal: {
@@ -18,6 +25,7 @@ interface ProposalChatHeaderProps {
     is_unlocked: boolean;
     awaiting_acceptance_from?: string;
   };
+  projectData?: ProjectData;
   currentProfileId: string;
   isOwner: boolean;
   onAccept?: () => void;
@@ -31,6 +39,7 @@ interface ProposalChatHeaderProps {
 
 export function ProposalChatHeader({
   proposal,
+  projectData,
   currentProfileId,
   isOwner,
   onAccept,
@@ -181,6 +190,29 @@ export function ProposalChatHeader({
 
   return (
     <div className="border-b bg-card p-4">
+      {/* Nova seção: Informações do Projeto */}
+      {projectData && (
+        <div className="mb-3 pb-3 border-b">
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              <h2 className="text-sm font-medium text-muted-foreground mb-1">
+                {isOwner ? 'Seu Projeto' : `Projeto de ${projectData.ownerName}`}
+              </h2>
+              <h3 className="text-base font-semibold">{projectData.title}</h3>
+            </div>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => window.open(`/projetos/${projectData.id}`, '_blank')}
+            >
+              <ExternalLink className="h-4 w-4 mr-2" />
+              Ver Projeto
+            </Button>
+          </div>
+        </div>
+      )}
+      
+      {/* Seção de valor e status */}
       <div className="flex items-center justify-between gap-4">
         <div className="flex-1">
           <div className="flex items-center gap-3">

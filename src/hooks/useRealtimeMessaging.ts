@@ -26,6 +26,7 @@ interface UseRealtimeMessagingProps {
   currentUserId: string;
   otherUserId: string;
   proposalStatus?: string;
+  suppressToasts?: boolean;
 }
 
 export const useRealtimeMessaging = ({
@@ -34,6 +35,7 @@ export const useRealtimeMessaging = ({
   currentUserId,
   otherUserId,
   proposalStatus,
+  suppressToasts = false,
 }: UseRealtimeMessagingProps) => {
   const { getMessages, addMessage } = useMessageCache();
   const [messages, setMessages] = useState<Message[]>([]);
@@ -743,9 +745,9 @@ export const useRealtimeMessaging = ({
 
   // Show browser notification - only if conversation is not active or document is hidden
   const showNotification = useCallback((message: Message) => {
-    // Don't show notification OR toast if user is actively in this conversation and window is focused
-    if (isConversationActive && !document.hidden) {
-      console.log('Notification suppressed - user is active in conversation');
+    // Don't show notification OR toast if suppressToasts is enabled OR if user is actively in this conversation and window is focused
+    if (suppressToasts || (isConversationActive && !document.hidden)) {
+      console.log('Notification suppressed - suppressToasts or user is active in conversation');
       return;
     }
     

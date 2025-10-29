@@ -688,6 +688,7 @@ export default function Messages() {
                 projectTitle={selectedConversation.type === 'proposal' ? selectedConversation.title : undefined}
                 businessName={selectedConversation.businessName}
                 businessId={selectedConversation.businessId}
+                suppressToasts={true}
                 onConversationDeleted={() => {
                   setSelectedConversation(null);
                   loadConversations();

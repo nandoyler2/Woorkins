@@ -53,6 +53,7 @@ interface UnifiedChatProps {
   projectTitle?: string;
   businessName?: string;
   businessId?: string;
+  suppressToasts?: boolean;
   onConversationDeleted?: () => void;
 }
 
@@ -65,6 +66,7 @@ export function UnifiedChat({
   projectTitle,
   businessName,
   businessId,
+  suppressToasts = false,
   onConversationDeleted
 }: UnifiedChatProps) {
   const { user } = useAuth();
@@ -113,6 +115,7 @@ export function UnifiedChat({
     currentUserId: profileId,
     otherUserId: otherUser.id,
     proposalStatus: proposalData?.status,
+    suppressToasts,
   });
 
   // Check for system-level messaging blocks
@@ -296,6 +299,47 @@ export function UnifiedChat({
     }
 }, [messages.length, conversationType]);
 
+  // Listener de realtime para mudanças na proposta
+  useEffect(() => {
+    if (conversationType !== 'proposal') return;
+    
+    const channel = supabase
+      .channel(`proposal-${conversationId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'proposals',
+          filter: `id=eq.${conversationId}`
+        },
+        (payload) => {
+          console.log('Proposta atualizada:', payload);
+          // Recarregar dados da proposta instantaneamente
+          loadProposalData();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'counter_proposals',
+          filter: `proposal_id=eq.${conversationId}`
+        },
+        (payload) => {
+          console.log('Nova contra-proposta:', payload);
+          // Recarregar dados da proposta instantaneamente
+          loadProposalData();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [conversationId, conversationType]);
+
 // Scroll quando conversa muda (sem dependência de messages para evitar loops)
 useEffect(() => {
   const scrollToBottom = () => {
@@ -327,7 +371,21 @@ useEffect(() => {
         .select(`
           *,
           project:projects!inner(
-            profile_id
+            id,
+            title,
+            profile_id,
+            profiles:profiles!projects_profile_id_fkey(
+              id,
+              full_name,
+              company_name,
+              avatar_url,
+              logo_url
+            )
+          ),
+          freelancer:profiles!proposals_freelancer_id_fkey(
+            id,
+            full_name,
+            company_name
           )
         `)
         .eq('id', conversationId)
@@ -862,6 +920,12 @@ useEffect(() => {
             is_unlocked: proposalData.is_unlocked,
             awaiting_acceptance_from: proposalData.awaiting_acceptance_from,
           }}
+          projectData={proposalData.project ? {
+            id: proposalData.project.id,
+            title: proposalData.project.title,
+            ownerName: proposalData.project.profiles?.company_name || proposalData.project.profiles?.full_name || 'Dono do Projeto',
+            freelancerName: proposalData.freelancer?.company_name || proposalData.freelancer?.full_name || 'Freelancer',
+          } : undefined}
           currentProfileId={profileId}
           isOwner={isOwner}
           onAccept={async () => {
@@ -881,7 +945,7 @@ useEffect(() => {
                 description: 'Agora você pode pagar para iniciar o trabalho',
               });
               
-              await loadProposalData();
+              // O listener de realtime vai atualizar automaticamente
             } finally {
               setIsLoading(false);
             }

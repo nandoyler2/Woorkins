@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { SafeImage } from "@/components/ui/safe-image";
-import { Sparkles, ChevronLeft, ChevronRight } from "lucide-react";
+import { Sparkles, ChevronLeft, ChevronRight, Video, Image, FileText, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StoriesViewer } from "./StoriesViewer";
@@ -176,10 +176,26 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
                     {/* Overlay gradient */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                     
-                    {/* NEW badge */}
+                    {/* NOVO badge */}
                     {isNew && (
                       <div className="absolute top-3 left-3 bg-gradient-to-r from-pink-500 to-purple-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
-                        NEW
+                        NOVO
+                      </div>
+                    )}
+                    
+                    {/* Media type indicator */}
+                    <div className="absolute top-3 right-3 bg-black/30 backdrop-blur-sm rounded-full p-2 shadow-lg">
+                      {story.type === 'video' && <Video className="w-4 h-4 text-white" />}
+                      {story.type === 'image' && <Image className="w-4 h-4 text-white" />}
+                      {story.type === 'text' && <FileText className="w-4 h-4 text-white" />}
+                    </div>
+                    
+                    {/* Play button overlay for videos */}
+                    {story.type === 'video' && (
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <div className="bg-black/50 backdrop-blur-sm rounded-full p-4 shadow-xl">
+                          <Play className="w-8 h-8 text-white fill-white" />
+                        </div>
                       </div>
                     )}
                     

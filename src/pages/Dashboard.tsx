@@ -24,6 +24,7 @@ import { FollowingSection } from '@/components/dashboard/FollowingSection';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
 import { DashboardSkeleton } from '@/components/dashboard/DashboardSkeleton';
 import { StoriesCarousel } from '@/components/stories/StoriesCarousel';
+import { PublicStoriesFeed } from '@/components/stories/PublicStoriesFeed';
 import { CreateStoryDialog } from '@/components/stories/CreateStoryDialog';
 import { RequireProfilePhotoDialog } from '@/components/RequireProfilePhotoDialog';
 import { useUpload } from '@/contexts/UploadContext';
@@ -1129,6 +1130,19 @@ export default function Dashboard() {
                 </CardContent>
               </Card>
             </div>
+
+            {/* Stories Públicos - Feed da Comunidade */}
+            <Card className="bg-card shadow-sm border">
+              <CardHeader className="border-b p-4">
+                <div className="flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4 text-primary" />
+                  <h2 className="text-base font-bold">Stories da Comunidade</h2>
+                </div>
+              </CardHeader>
+              <CardContent className="p-4">
+                <PublicStoriesFeed currentProfileId={profile.id} />
+              </CardContent>
+            </Card>
 
             {/* Social Feed */}
             <Card className="bg-white shadow-sm border border-slate-200">

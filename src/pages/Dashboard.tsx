@@ -146,6 +146,19 @@ export default function Dashboard() {
   const [showCreateStoryDialog, setShowCreateStoryDialog] = useState(false);
   const [storiesRefreshTrigger, setStoriesRefreshTrigger] = useState(0);
 
+  const handleCreateStoryClick = () => {
+    // Verificar se o perfil principal tem foto
+    if (!profile?.avatar_url) {
+      toast({
+        title: 'Foto de perfil obrigatória',
+        description: 'Você precisa adicionar uma foto de perfil antes de postar stories',
+        variant: 'destructive',
+      });
+      return;
+    }
+    setShowCreateStoryDialog(true);
+  };
+
   const achievements: Achievement[] = [
     {
       id: '1',
@@ -992,7 +1005,7 @@ export default function Dashboard() {
                   full_name: profile.full_name || '',
                   avatar_url: profile.avatar_url || undefined,
                 }}
-                onCreateStory={() => setShowCreateStoryDialog(true)}
+                onCreateStory={handleCreateStoryClick}
               />
             )}
 
@@ -1000,7 +1013,7 @@ export default function Dashboard() {
             <div className="grid grid-cols-2 gap-4">
               <Card 
                 className="bg-gradient-to-br from-purple-500 via-pink-500 to-orange-500 border-0 shadow-md hover:shadow-lg transition-all cursor-pointer group relative overflow-hidden"
-                onClick={() => setShowCreateStoryDialog(true)}
+                onClick={handleCreateStoryClick}
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-pulse" />
                 <CardContent className="p-5 relative z-10">

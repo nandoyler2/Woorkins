@@ -63,6 +63,9 @@ verify_jwt = true
 [functions.send-confirmation-email]
 verify_jwt = false
 
+[functions.resend-confirmation-email]
+verify_jwt = false
+
 [functions.send-email-verification-code]
 verify_jwt = true
 

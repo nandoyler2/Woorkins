@@ -228,8 +228,11 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
       text_italic: textItalic,
     } : undefined;
 
-    // Iniciar upload em background
-    await uploadStory({
+    // Fechar dialog imediatamente para mostrar o indicador de progresso
+    handleClose();
+    
+    // Iniciar upload em background (não usa await para não bloquear)
+    uploadStory({
       profileId: selectedProfile,
       type: type,
       mediaFile: finalMediaFile || undefined,
@@ -239,8 +242,7 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
       metadata,
     });
 
-    // Fechar dialog e limpar
-    handleClose();
+    // Notificar que story foi criado (o refresh acontecerá quando o upload completar)
     onStoryCreated();
   };
 

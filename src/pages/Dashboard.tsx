@@ -16,6 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { formatShortName } from '@/lib/utils';
 import { ProfileEditDialog } from '@/components/ProfileEditDialog';
+import { ProfilePhotoUploadDialog } from '@/components/ProfilePhotoUploadDialog';
 import { IdentityVerificationDialog } from '@/components/IdentityVerificationDialog';
 import { CreateBusinessProfileDialog } from '@/components/CreateBusinessProfileDialog';
 import { FollowingSection } from '@/components/dashboard/FollowingSection';
@@ -110,6 +111,7 @@ export default function Dashboard() {
   const [showProfileEdit, setShowProfileEdit] = useState(false);
   const [showVerificationDialog, setShowVerificationDialog] = useState(false);
   const [showCreateBusinessDialog, setShowCreateBusinessDialog] = useState(false);
+  const [showPhotoUploadDialog, setShowPhotoUploadDialog] = useState(false);
   const [emailConfirmed, setEmailConfirmed] = useState(false);
   const [pendingInvitesCount, setPendingInvitesCount] = useState(0);
   const [hasShownConfetti, setHasShownConfetti] = useState(() => {
@@ -385,18 +387,15 @@ export default function Dashboard() {
         icon: Camera,
         completed: !!profile.avatar_url,
         action: () => {
-          console.log('[Dashboard] Opening profile edit dialog');
-          console.log('[Dashboard] Current user:', user);
-          console.log('[Dashboard] Current profile:', profile);
           if (!user || !profile) {
             toast({
               title: 'Erro',
-              description: 'Não foi possível abrir o editor de perfil. Tente novamente.',
+              description: 'Não foi possível abrir o upload de foto. Tente novamente.',
               variant: 'destructive',
             });
             return;
           }
-          setShowProfileEdit(true);
+          setShowPhotoUploadDialog(true);
         },
       },
       {
@@ -436,6 +435,9 @@ export default function Dashboard() {
   const { tasks: profileTasks, completion: profileCompletion } = getProfileTasks();
   const pendingTasks = profileTasks.filter(t => !t.completed);
   const profileCompleted = profileTasks.every(t => t.completed);
+  
+  // Reordenar tarefas: pendentes primeiro, concluídas depois
+  const orderedTasks = [...pendingTasks, ...profileTasks.filter(t => t.completed)];
 
   // Animação de confete quando completar tudo (apenas uma vez)
   useEffect(() => {
@@ -824,7 +826,7 @@ export default function Dashboard() {
                           </p>
                         </div>
                         <div className="flex flex-wrap gap-2 ml-8">
-                          {profileTasks.map((task) => (
+                          {orderedTasks.map((task) => (
                             <Button
                               key={task.id}
                               variant="outline"
@@ -1515,6 +1517,14 @@ export default function Dashboard() {
             open={showCreateBusinessDialog}
             onOpenChange={setShowCreateBusinessDialog}
             onSuccess={() => profile && loadBusinessProfiles(profile.id)}
+          />
+          <ProfilePhotoUploadDialog
+            open={showPhotoUploadDialog}
+            onOpenChange={setShowPhotoUploadDialog}
+            currentPhotoUrl={profile.avatar_url || ''}
+            userName={user?.user_metadata?.full_name || 'Usuário'}
+            profileId={profile.id}
+            onPhotoUpdated={loadProfile}
           />
         </>
       )}

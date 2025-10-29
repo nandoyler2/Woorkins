@@ -1363,7 +1363,7 @@ useEffect(() => {
                   </Avatar>
                   
                   <div className="flex flex-col max-w-[80%]">
-                    <div className="rounded-2xl px-5 py-4 shadow-md bg-primary text-primary-foreground rounded-tl-sm">
+                    <div className="rounded-2xl px-5 py-4 shadow-md bg-accent text-accent-foreground rounded-tl-sm">
                       <div className="flex items-baseline gap-2 mb-3">
                         <p className="text-sm font-bold">Proposta Inicial</p>
                         <span className="text-xs opacity-80">

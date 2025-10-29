@@ -1457,41 +1457,6 @@ export default function Dashboard() {
                 ))}
               </CardContent>
             </Card>
-
-            {/* Recent Activity Card */}
-            <Card className="bg-white shadow-sm border border-slate-200">
-              <CardHeader className="border-b border-slate-100 p-4">
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <Clock className="w-4 h-4 text-blue-600" />
-                  </div>
-                  <h3 className="text-base font-bold text-slate-900">Atividade recente</h3>
-                </div>
-              </CardHeader>
-              <CardContent className="p-4 space-y-3">
-                {activities.map((activity) => (
-                  <div key={activity.id} className="flex items-start gap-3">
-                    <div className={`w-8 h-8 ${activity.iconColor} rounded-lg flex items-center justify-center flex-shrink-0`}>
-                      {activity.icon === 'info' && <Activity className="w-4 h-4 text-white" />}
-                      {activity.icon === 'user' && <Users className="w-4 h-4 text-white" />}
-                      {activity.icon === 'star' && <Star className="w-4 h-4 text-white" />}
-                      {activity.icon === 'award' && <Award className="w-4 h-4 text-white" />}
-                      {activity.icon === 'message' && <MessageSquare className="w-4 h-4 text-white" />}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-slate-900">
-                        {activity.title}
-                        {activity.description && (
-                          <span className="font-semibold"> {activity.description}</span>
-                        )}
-                      </p>
-                      <p className="text-xs text-slate-500 mt-0.5">{activity.time_ago}</p>
-                    </div>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-
             {/* Notifications Card */}
             <Card className="bg-white shadow-sm border border-slate-200">
               <CardHeader className="border-b border-slate-100 p-4">

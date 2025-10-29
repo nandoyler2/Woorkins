@@ -900,7 +900,7 @@ useEffect(() => {
                       description: 'Agora você pode pagar para iniciar o trabalho',
                     });
                   }}
-                  className="bg-green-600 hover:bg-green-700"
+                  className="bg-white hover:bg-slate-50 text-green-700 border-2 border-green-700 font-semibold shadow-md"
                 >
                   <CheckCircle className="h-4 w-4 mr-1" />
                   Aceitar

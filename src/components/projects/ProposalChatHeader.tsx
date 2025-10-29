@@ -196,7 +196,12 @@ export function ProposalChatHeader({
                   {isOwner ? 'Seu Projeto' : `Projeto de ${projectData.ownerName}`}
                 </h2>
               </div>
-              <h3 className="text-base font-bold truncate text-foreground">{projectData.title}</h3>
+              <h3 
+                className="text-base font-bold truncate text-foreground hover:text-primary cursor-pointer transition-colors"
+                onClick={() => window.open(`/projetos/${projectData.id}`, '_blank')}
+              >
+                {projectData.title}
+              </h3>
             </div>
           )}
         </div>
@@ -218,18 +223,6 @@ export function ProposalChatHeader({
 
         {/* Coluna direita: Botões de ação - melhorados */}
         <div className="flex items-center gap-2 flex-shrink-0">
-          {projectData && (
-            <Button 
-              variant="outline" 
-              size="sm"
-              className="shadow-sm hover:shadow-md transition-shadow"
-              onClick={() => window.open(`/projetos/${projectData.id}`, '_blank')}
-            >
-              <ExternalLink className="h-4 w-4 mr-2" />
-              Ver Projeto
-            </Button>
-          )}
-          
           {renderActionButtons()}
 
           <DropdownMenu>

@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Camera, Loader2, AlertTriangle } from 'lucide-react';
+import { Camera, Loader2, AlertTriangle, X } from 'lucide-react';
 import { ProfilePhotoCropDialog } from './ProfilePhotoCropDialog';
 
 interface RequireProfilePhotoDialogProps {
@@ -19,13 +19,17 @@ interface RequireProfilePhotoDialogProps {
   userName: string;
   userId: string;
   onPhotoUploaded: () => void;
+  onClose?: () => void;
+  context?: 'messaging' | 'project';
 }
 
 export function RequireProfilePhotoDialog({ 
   open, 
   userName, 
   userId, 
-  onPhotoUploaded 
+  onPhotoUploaded,
+  onClose,
+  context = 'messaging'
 }: RequireProfilePhotoDialogProps) {
   const { toast } = useToast();
   const [uploading, setUploading] = useState(false);
@@ -131,7 +135,9 @@ export function RequireProfilePhotoDialog({
 
       toast({
         title: '✅ Foto Aprovada!',
-        description: 'Agora você pode enviar mensagens.',
+        description: context === 'project' 
+          ? 'Agora você pode criar projetos.' 
+          : 'Agora você pode enviar mensagens.',
       });
 
       onPhotoUploaded();
@@ -155,15 +161,27 @@ export function RequireProfilePhotoDialog({
   return (
     <AlertDialog open={open}>
       <AlertDialogContent className="max-w-md">
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none"
+            disabled={isProcessing}
+          >
+            <X className="h-4 w-4" />
+            <span className="sr-only">Fechar</span>
+          </button>
+        )}
         <AlertDialogHeader>
           <AlertDialogTitle className="flex items-center gap-2 text-xl">
             <AlertTriangle className="h-6 w-6 text-destructive" />
-            Foto de Perfil Obrigatória
+            {context === 'project' 
+              ? 'Foto de perfil obrigatória para criar um projeto'
+              : 'Foto de Perfil Obrigatória'}
           </AlertDialogTitle>
           <AlertDialogDescription className="space-y-4">
             <Alert variant="destructive">
               <AlertDescription>
-                Para garantir a segurança de todos, você precisa adicionar uma <strong>foto REAL</strong> mostrando seu rosto antes de enviar mensagens.
+                Para garantir a segurança de todos, você precisa adicionar uma <strong>foto REAL</strong> mostrando seu rosto {context === 'project' ? 'antes de criar projeto' : 'antes de enviar mensagens'}.
               </AlertDescription>
             </Alert>
 

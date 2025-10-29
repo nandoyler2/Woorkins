@@ -309,6 +309,11 @@ export default function ProjectCreate() {
         open={showPhotoDialog}
         userName={registeredName}
         userId={user?.id || ''}
+        context="project"
+        onClose={() => {
+          setShowPhotoDialog(false);
+          navigate(-1);
+        }}
         onPhotoUploaded={() => {
           // Recarregar dados do perfil
           const reloadProfile = async () => {

@@ -409,7 +409,8 @@ useEffect(() => {
           freelancer:profiles!proposals_freelancer_id_fkey(
             id,
             full_name,
-            company_name
+            company_name,
+            avatar_url
           )
         `)
         .eq('id', conversationId)

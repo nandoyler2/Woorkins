@@ -769,20 +769,23 @@ useEffect(() => {
 
   // Componente para renderizar atividades
   const ActivityMessage = ({ activity }: { activity: any }) => {
-    const { status_type, new_value, old_value, message, created_at, changed_by_profile } = activity;
+    const { status_type, new_value, old_value, message, created_at, changed_by_profile, changed_by } = activity;
+    
+    // Determinar se a atividade é "minha" (eu fiz a ação)
+    const isMine = changed_by === profileId;
     
     const getActivityIcon = () => {
       switch (status_type) {
         case 'counter_proposal':
           return <ArrowLeftRight className="h-4 w-4" />;
         case 'accepted':
-          return <CheckCircle className="h-4 w-4 text-green-600" />;
+          return <CheckCircle className="h-4 w-4" />;
         case 'payment_made':
-          return <DollarSign className="h-4 w-4 text-blue-600" />;
+          return <DollarSign className="h-4 w-4" />;
         case 'freelancer_completed':
-          return <CheckCircle className="h-4 w-4 text-purple-600" />;
+          return <CheckCircle className="h-4 w-4" />;
         case 'completed':
-          return <CheckCircle className="h-4 w-4 text-green-600" />;
+          return <CheckCircle className="h-4 w-4" />;
         default:
           return <Info className="h-4 w-4" />;
       }
@@ -798,7 +801,7 @@ useEffect(() => {
           return (
             <div>
               <p className="font-semibold mb-1">
-                {userName} enviou uma contra-proposta
+                {isMine ? 'Você enviou' : `${userName} enviou`} uma contra-proposta
               </p>
               <p className="text-sm">
                 Novo valor: <span className="font-bold">R$ {newAmount?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
@@ -812,7 +815,7 @@ useEffect(() => {
         case 'accepted':
           return (
             <p>
-              <span className="font-semibold">{userName}</span> aceitou a proposta de{' '}
+              <span className="font-semibold">{isMine ? 'Você aceitou' : `${userName} aceitou`}</span> a proposta de{' '}
               <span className="font-bold">R$ {new_value?.amount?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
             </p>
           );
@@ -827,7 +830,7 @@ useEffect(() => {
         case 'freelancer_completed':
           return (
             <p>
-              <span className="font-semibold">{userName}</span> marcou o trabalho como concluído e aguarda confirmação
+              <span className="font-semibold">{isMine ? 'Você marcou' : `${userName} marcou`}</span> o trabalho como concluído e aguarda confirmação
             </p>
           );
         
@@ -847,59 +850,81 @@ useEffect(() => {
       proposalData?.awaiting_acceptance_from === profileId;
     
     return (
-      <div className="flex justify-center my-4">
-        <div className="max-w-md w-full bg-accent/30 border border-accent rounded-lg p-4">
-          <div className="flex items-start gap-3">
-            <div className="mt-0.5 p-2 rounded-full bg-background/80">
-              {getActivityIcon()}
-            </div>
-            <div className="flex-1">
-              <div className="text-sm">
+      <div
+        className={`flex gap-2 animate-in slide-in-from-bottom-2 ${
+          isMine ? 'flex-row-reverse' : 'flex-row'
+        }`}
+      >
+        {!isMine && (
+          <Avatar className="h-8 w-8 flex-shrink-0">
+            <AvatarImage src={changed_by_profile?.avatar_url || changed_by_profile?.logo_url} />
+            <AvatarFallback className="bg-primary/10 text-primary text-xs">
+              {(changed_by_profile?.company_name || changed_by_profile?.full_name || 'U').charAt(0).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+        )}
+        
+        <div className={`flex flex-col max-w-[75%] ${isMine ? 'items-end' : 'items-start'}`}>
+          <div
+            className={`rounded-2xl px-4 py-2.5 shadow-sm ${
+              isMine
+                ? 'bg-accent/80 text-accent-foreground rounded-tr-sm border border-accent'
+                : 'bg-accent/60 border border-accent rounded-tl-sm'
+            }`}
+          >
+            <div className="flex items-start gap-2">
+              <div className="mt-0.5">
+                {getActivityIcon()}
+              </div>
+              <div className="flex-1 text-sm">
                 {getActivityMessage()}
               </div>
-              <div className="text-xs text-muted-foreground mt-2">
-                {formatDistanceToNow(new Date(created_at), {
-                  addSuffix: true,
-                  locale: ptBR,
-                })}
-              </div>
-              
-              {needsAction && (
-                <div className="flex gap-2 mt-3">
-                  <Button
-                    size="sm"
-                    onClick={async () => {
-                      await supabase
-                        .from('proposals')
-                        .update({
-                          status: 'accepted',
-                          accepted_amount: new_value?.amount,
-                          awaiting_acceptance_from: null,
-                        })
-                        .eq('id', conversationId);
-                      
-                      toast({
-                        title: 'Contra-proposta aceita!',
-                        description: 'Agora você pode pagar para iniciar o trabalho',
-                      });
-                    }}
-                    className="bg-green-600 hover:bg-green-700"
-                  >
-                    <CheckCircle className="h-4 w-4 mr-1" />
-                    Aceitar
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => {
-                      setShowCounterDialog(true);
-                    }}
-                  >
-                    Fazer Nova Contra-Proposta
-                  </Button>
-                </div>
-              )}
             </div>
+            
+            {needsAction && (
+              <div className="flex gap-2 mt-3 pt-3 border-t border-accent">
+                <Button
+                  size="sm"
+                  onClick={async () => {
+                    await supabase
+                      .from('proposals')
+                      .update({
+                        status: 'accepted',
+                        accepted_amount: new_value?.amount,
+                        awaiting_acceptance_from: null,
+                      })
+                      .eq('id', conversationId);
+                    
+                    toast({
+                      title: 'Contra-proposta aceita!',
+                      description: 'Agora você pode pagar para iniciar o trabalho',
+                    });
+                  }}
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  <CheckCircle className="h-4 w-4 mr-1" />
+                  Aceitar
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setShowCounterDialog(true);
+                  }}
+                >
+                  Fazer Nova Contra-Proposta
+                </Button>
+              </div>
+            )}
+          </div>
+          
+          <div className={`flex items-center gap-1.5 mt-1 ${isMine ? 'flex-row-reverse' : 'flex-row'}`}>
+            <span className="text-xs text-muted-foreground">
+              {formatDistanceToNow(new Date(created_at), {
+                addSuffix: true,
+                locale: ptBR,
+              })}
+            </span>
           </div>
         </div>
       </div>

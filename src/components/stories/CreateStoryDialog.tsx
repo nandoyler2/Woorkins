@@ -6,10 +6,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ImageIcon, Video, Type, Link as LinkIcon, Upload, Loader2, Camera, Bold, Italic, Link2, Crop } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { compressImage } from '@/lib/imageCompression';
 import { ImageCropDialog } from '@/components/ImageCropDialog';
+import { useUpload } from '@/contexts/UploadContext';
 
 interface Profile {
   id: string;
@@ -52,12 +51,12 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
   const [textItalic, setTextItalic] = useState(false);
   const [textLink, setTextLink] = useState('');
   const [linkUrl, setLinkUrl] = useState('');
-  const [isUploading, setIsUploading] = useState(false);
   const [showCropDialog, setShowCropDialog] = useState(false);
   const [imageToCrop, setImageToCrop] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { toast } = useToast();
+  const { uploadStory, currentUpload } = useUpload();
 
   const handleMediaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -192,83 +191,26 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
       return;
     }
 
-    setIsUploading(true);
+    // Preparar metadados de formatação se for texto
+    const metadata = type === 'text' && (textBold || textItalic) ? {
+      text_bold: textBold,
+      text_italic: textItalic,
+    } : undefined;
 
-    try {
-      let mediaUrl = null;
+    // Iniciar upload em background
+    await uploadStory({
+      profileId: selectedProfile,
+      type: type,
+      mediaFile: mediaFile || undefined,
+      textContent: type === 'text' ? textContent : undefined,
+      backgroundColor: type === 'text' ? backgroundColor : undefined,
+      linkUrl: type === 'text' && textLink ? textLink : (linkUrl || undefined),
+      metadata,
+    });
 
-      // Upload de mídia se necessário
-      if (type !== 'text' && mediaFile) {
-        let fileToUpload = mediaFile;
-
-        // Comprimir imagem se necessário
-        if (type === 'image') {
-          const compressedBlob = await compressImage(mediaFile, {
-            maxSizeMB: 2,
-          });
-          // Converter Blob para File
-          fileToUpload = new File([compressedBlob], mediaFile.name, {
-            type: compressedBlob.type,
-          });
-        }
-
-        const fileExt = fileToUpload.name.split('.').pop();
-        const fileName = `${selectedProfile}/${Date.now()}.${fileExt}`;
-
-        const { error: uploadError, data } = await supabase.storage
-          .from('stories')
-          .upload(fileName, fileToUpload);
-
-        if (uploadError) throw uploadError;
-
-        const { data: { publicUrl } } = supabase.storage
-          .from('stories')
-          .getPublicUrl(fileName);
-
-        mediaUrl = publicUrl;
-      }
-
-      // Criar story no banco
-      const storyData: any = {
-        profile_id: selectedProfile,
-        type: type,
-        media_url: mediaUrl,
-        text_content: type === 'text' ? textContent : null,
-        background_color: type === 'text' ? backgroundColor : null,
-        link_url: type === 'text' && textLink ? textLink : (linkUrl || null),
-      };
-
-      // Adicionar metadados de formatação se for texto
-      if (type === 'text' && (textBold || textItalic)) {
-        storyData.metadata = {
-          text_bold: textBold,
-          text_italic: textItalic,
-        };
-      }
-
-      const { error: insertError } = await supabase
-        .from('profile_stories')
-        .insert(storyData);
-
-      if (insertError) throw insertError;
-
-      toast({
-        title: 'Story publicado! ✨',
-        description: 'Seu story foi publicado com sucesso',
-      });
-
-      onStoryCreated();
-      handleClose();
-    } catch (error) {
-      console.error('Error creating story:', error);
-      toast({
-        title: 'Erro ao publicar',
-        description: 'Não foi possível publicar o story. Tente novamente.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsUploading(false);
-    }
+    // Fechar dialog e limpar
+    handleClose();
+    onStoryCreated();
   };
 
   const handleClose = () => {
@@ -558,7 +500,7 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
                         setMediaPreview('');
                         setTextContent('');
                       }} 
-                      disabled={isUploading}
+                      disabled={currentUpload?.status === 'uploading'}
                       size="lg"
                     >
                       Voltar
@@ -568,7 +510,7 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
                     variant="outline" 
                     onClick={handleClose} 
                     className="flex-1" 
-                    disabled={isUploading}
+                    disabled={currentUpload?.status === 'uploading'}
                     size="lg"
                   >
                     Cancelar
@@ -577,20 +519,11 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
                     <Button 
                       onClick={handlePublish} 
                       className="flex-1 bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 hover:from-purple-600 hover:via-pink-600 hover:to-orange-600 text-white" 
-                      disabled={isUploading}
+                      disabled={currentUpload?.status === 'uploading'}
                       size="lg"
                     >
-                      {isUploading ? (
-                        <>
-                          <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                          Publicando...
-                        </>
-                      ) : (
-                        <>
-                          <Camera className="w-5 h-5 mr-2" />
-                          Publicar Story
-                        </>
-                      )}
+                      <Camera className="w-5 h-5 mr-2" />
+                      Publicar Story
                     </Button>
                   )}
                 </div>

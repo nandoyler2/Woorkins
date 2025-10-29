@@ -8,9 +8,11 @@ import { LanguageProvider } from "@/contexts/LanguageContext";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { AuthActionProvider } from "@/contexts/AuthActionContext";
 import { AIAssistantProvider } from "@/contexts/AIAssistantContext";
+import { UploadProvider } from "@/contexts/UploadContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AIAssistant } from "@/components/AIAssistant";
 import { AuthDialog } from "@/components/AuthDialog";
+import { UploadIndicator } from "@/components/UploadIndicator";
 import { SystemBlockAlert } from "@/components/SystemBlockAlert";
 import { useSystemBlock } from "@/hooks/useSystemBlock";
 import { useEffect, useState } from "react";
@@ -147,6 +149,7 @@ function AppContent() {
       </Suspense>
       <AuthDialog />
       <AIAssistant />
+      <UploadIndicator />
     </>
   );
 }
@@ -173,7 +176,9 @@ function App() {
             <AuthProvider>
               <AuthActionProvider>
                 <AIAssistantProvider>
-                  <AppContent />
+                  <UploadProvider>
+                    <AppContent />
+                  </UploadProvider>
                 </AIAssistantProvider>
               </AuthActionProvider>
             </AuthProvider>

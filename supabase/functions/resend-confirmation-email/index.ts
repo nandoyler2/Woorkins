@@ -19,6 +19,9 @@ const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") as string;
 
 const supabaseAdmin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
+// Logo do Woorkins em base64
+const WOORKINS_LOGO_BASE64 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -78,7 +81,7 @@ serve(async (req) => {
           <table role="presentation" style="width: 600px; border-collapse: collapse; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
             <tr>
               <td style="padding: 40px 40px 32px; text-align: center; background-color: #ffffff; border-bottom: 1px solid #e5e7eb;">
-                <img src="https://bvjulkcmzfzyfwobwlnx.supabase.co/storage/v1/object/public/business-logos/logo-woorkins-2.png" alt="Woorkins" style="width: 180px; height: auto; display: inline-block;" />
+                <img src="https://i.imgur.com/ZlYx8K4.png" alt="Woorkins" style="width: 180px; height: auto; display: inline-block;" />
               </td>
             </tr>
             <tr>

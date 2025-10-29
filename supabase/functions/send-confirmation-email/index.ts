@@ -55,10 +55,9 @@ const handler = async (req: Request): Promise<Response> => {
         <td align="center" style="padding: 40px 0;">
           <table role="presentation" style="width: 600px; border-collapse: collapse; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
             
-            <!-- Logo Section -->
             <tr>
               <td style="padding: 40px 40px 32px; text-align: center; background-color: #ffffff; border-bottom: 1px solid #e5e7eb;">
-                <img src="https://bvjulkcmzfzyfwobwlnx.supabase.co/storage/v1/object/public/business-logos/logo-woorkins-2.png" alt="Woorkins" style="width: 180px; height: auto; display: inline-block;">
+                <img src="https://i.imgur.com/ZlYx8K4.png" alt="Woorkins" style="width: 180px; height: auto; display: inline-block;">
               </td>
             </tr>
             

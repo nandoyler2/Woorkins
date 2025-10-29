@@ -112,10 +112,6 @@ export default function Dashboard() {
   const [showCreateBusinessDialog, setShowCreateBusinessDialog] = useState(false);
   const [emailConfirmed, setEmailConfirmed] = useState(false);
   const [pendingInvitesCount, setPendingInvitesCount] = useState(0);
-  const [profileCompleted, setProfileCompleted] = useState(() => {
-    // Se já foi mostrado, considerar como completo para não exibir novamente
-    return localStorage.getItem('woorkins_confetti_shown') === 'true';
-  });
   const [hasShownConfetti, setHasShownConfetti] = useState(() => {
     // Verificar se já foi mostrado anteriormente
     return localStorage.getItem('woorkins_confetti_shown') === 'true';
@@ -439,6 +435,7 @@ export default function Dashboard() {
 
   const { tasks: profileTasks, completion: profileCompletion } = getProfileTasks();
   const pendingTasks = profileTasks.filter(t => !t.completed);
+  const profileCompleted = profileTasks.every(t => t.completed);
 
   // Animação de confete quando completar tudo (apenas uma vez)
   useEffect(() => {
@@ -473,7 +470,6 @@ export default function Dashboard() {
       // Marcar como mostrado no localStorage permanentemente
       localStorage.setItem('woorkins_confetti_shown', 'true');
       setHasShownConfetti(true);
-      setProfileCompleted(true);
     }
   }, [profileTasks, hasShownConfetti, loading]);
 

@@ -14,7 +14,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Send, Loader2, Check, CheckCheck, Paperclip, Smile, ExternalLink, Lock, Shield, AlertTriangle, Trash2, X, Download, FileText, File, MoreVertical, Archive, Ban, Eye, DollarSign } from 'lucide-react';
+import { Send, Loader2, Check, CheckCheck, Paperclip, Smile, ExternalLink, Lock, Shield, AlertTriangle, Trash2, X, Download, FileText, File, MoreVertical, Archive, Ban, Eye, DollarSign, ArrowLeftRight, Info, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import {
   AlertDialog,
@@ -96,6 +96,7 @@ export function UnifiedChat({
   const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messageInputRef = useRef<HTMLInputElement>(null);
+  const [activities, setActivities] = useState<any[]>([]);
 
   const { isVerified } = useDocumentVerification(profileId);
 
@@ -289,6 +290,7 @@ export function UnifiedChat({
   useEffect(() => {
     if (conversationType === 'proposal') {
       loadProposalData();
+      loadActivities();
     }
   }, [conversationId, conversationType]);
 
@@ -299,7 +301,7 @@ export function UnifiedChat({
     }
 }, [messages.length, conversationType]);
 
-  // Listener de realtime para mudanças na proposta
+  // Listener de realtime para mudanças na proposta e atividades
   useEffect(() => {
     if (conversationType !== 'proposal') return;
     
@@ -331,6 +333,20 @@ export function UnifiedChat({
           console.log('Nova contra-proposta:', payload);
           // Recarregar dados da proposta instantaneamente
           loadProposalData();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'proposal_status_history',
+          filter: `proposal_id=eq.${conversationId}`
+        },
+        (payload) => {
+          console.log('Nova atividade:', payload);
+          // Recarregar atividades instantaneamente
+          loadActivities();
         }
       )
       .subscribe();
@@ -397,6 +413,34 @@ useEffect(() => {
       setIsOwner(data.project.profile_id === profileId);
     } catch (error) {
       console.error('Error loading proposal data:', error);
+    }
+  };
+
+  const loadActivities = async () => {
+    if (conversationType !== 'proposal') return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('proposal_status_history')
+        .select(`
+          *,
+          changed_by_profile:profiles!proposal_status_history_changed_by_fkey(
+            id,
+            full_name,
+            company_name,
+            avatar_url,
+            logo_url
+          )
+        `)
+        .eq('proposal_id', conversationId)
+        .order('created_at', { ascending: true });
+      
+      if (error) throw error;
+      if (data) {
+        setActivities(data);
+      }
+    } catch (error) {
+      console.error('Error loading activities:', error);
     }
   };
 
@@ -722,6 +766,145 @@ useEffect(() => {
   };
 
   const isMyMessage = (senderId: string) => senderId === profileId;
+
+  // Componente para renderizar atividades
+  const ActivityMessage = ({ activity }: { activity: any }) => {
+    const { status_type, new_value, old_value, message, created_at, changed_by_profile } = activity;
+    
+    const getActivityIcon = () => {
+      switch (status_type) {
+        case 'counter_proposal':
+          return <ArrowLeftRight className="h-4 w-4" />;
+        case 'accepted':
+          return <CheckCircle className="h-4 w-4 text-green-600" />;
+        case 'payment_made':
+          return <DollarSign className="h-4 w-4 text-blue-600" />;
+        case 'freelancer_completed':
+          return <CheckCircle className="h-4 w-4 text-purple-600" />;
+        case 'completed':
+          return <CheckCircle className="h-4 w-4 text-green-600" />;
+        default:
+          return <Info className="h-4 w-4" />;
+      }
+    };
+    
+    const getActivityMessage = () => {
+      const userName = changed_by_profile?.company_name || changed_by_profile?.full_name || 'Usuário';
+      
+      switch (status_type) {
+        case 'counter_proposal':
+          const newAmount = new_value?.amount;
+          const counterMessage = new_value?.message;
+          return (
+            <div>
+              <p className="font-semibold mb-1">
+                {userName} enviou uma contra-proposta
+              </p>
+              <p className="text-sm">
+                Novo valor: <span className="font-bold">R$ {newAmount?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+              </p>
+              {counterMessage && (
+                <p className="text-sm mt-1 italic">"{counterMessage}"</p>
+              )}
+            </div>
+          );
+        
+        case 'accepted':
+          return (
+            <p>
+              <span className="font-semibold">{userName}</span> aceitou a proposta de{' '}
+              <span className="font-bold">R$ {new_value?.amount?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+            </p>
+          );
+        
+        case 'payment_made':
+          return (
+            <p>
+              <span className="font-semibold">Pagamento realizado!</span> Valor em garantia até conclusão do trabalho.
+            </p>
+          );
+        
+        case 'freelancer_completed':
+          return (
+            <p>
+              <span className="font-semibold">{userName}</span> marcou o trabalho como concluído e aguarda confirmação
+            </p>
+          );
+        
+        case 'completed':
+          return (
+            <p className="font-semibold">
+              ✅ Projeto concluído! Pagamento liberado.
+            </p>
+          );
+        
+        default:
+          return <p>{message}</p>;
+      }
+    };
+    
+    const needsAction = status_type === 'counter_proposal' && 
+      proposalData?.awaiting_acceptance_from === profileId;
+    
+    return (
+      <div className="flex justify-center my-4">
+        <div className="max-w-md w-full bg-accent/30 border border-accent rounded-lg p-4">
+          <div className="flex items-start gap-3">
+            <div className="mt-0.5 p-2 rounded-full bg-background/80">
+              {getActivityIcon()}
+            </div>
+            <div className="flex-1">
+              <div className="text-sm">
+                {getActivityMessage()}
+              </div>
+              <div className="text-xs text-muted-foreground mt-2">
+                {formatDistanceToNow(new Date(created_at), {
+                  addSuffix: true,
+                  locale: ptBR,
+                })}
+              </div>
+              
+              {needsAction && (
+                <div className="flex gap-2 mt-3">
+                  <Button
+                    size="sm"
+                    onClick={async () => {
+                      await supabase
+                        .from('proposals')
+                        .update({
+                          status: 'accepted',
+                          accepted_amount: new_value?.amount,
+                          awaiting_acceptance_from: null,
+                        })
+                        .eq('id', conversationId);
+                      
+                      toast({
+                        title: 'Contra-proposta aceita!',
+                        description: 'Agora você pode pagar para iniciar o trabalho',
+                      });
+                    }}
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    <CheckCircle className="h-4 w-4 mr-1" />
+                    Aceitar
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setShowCounterDialog(true);
+                    }}
+                  >
+                    Fazer Nova Contra-Proposta
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   // Removido completamente - renderiza instantaneamente
 
@@ -1116,98 +1299,116 @@ useEffect(() => {
                 </div>
               )}
               
-              {messages.map((message) => {
-                const isMine = isMyMessage(message.sender_id);
-                const isDeleted = message.is_deleted || false;
-                
-                return (
-                  <div
-                    key={message.id}
-                    className={`flex gap-2 animate-in slide-in-from-bottom-2 ${
-                      isMine ? 'flex-row-reverse' : 'flex-row'
-                    }`}
-                  >
-                    {!isMine && (
-                      <Avatar className="h-8 w-8 flex-shrink-0">
-                        <AvatarImage src={message.sender_avatar} />
-                        <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                          {message.sender_name.charAt(0).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                    )}
-                    
-                     <div className={`flex flex-col max-w-[75%] ${isMine ? 'items-end' : 'items-start'}`}>
-                       <div
-                         className={`group rounded-2xl px-4 py-2.5 shadow-sm relative ${
-                           isDeleted
-                             ? 'bg-destructive/10 border-destructive/20 border'
-                             : isMine
-                             ? 'bg-primary text-primary-foreground rounded-tr-sm'
-                             : 'bg-card border rounded-tl-sm'
-                         }`}
-                       >
-                         {message.media_url && message.media_type?.startsWith('image/') && (
-                           <div 
-                             className="mb-2 cursor-pointer hover:opacity-80 transition-opacity"
-                             onClick={() => setViewingImage({ url: message.media_url!, name: message.media_name || 'imagem.jpg' })}
-                           >
-                             <img 
-                               src={message.media_url} 
-                               alt={message.media_name || 'Imagem'}
-                               className="max-w-[300px] max-h-[300px] rounded-lg object-cover"
-                             />
-                           </div>
-                         )}
-                         {message.media_url && !message.media_type?.startsWith('image/') && (
-                           <div className="mb-2 flex items-center gap-2 p-2 bg-background/10 rounded-lg">
-                             {getFileIcon(message.media_type || '')}
-                             <span className="text-xs flex-1 truncate">{message.media_name}</span>
-                             <Button
-                               variant="ghost"
-                               size="icon"
-                               className="h-6 w-6"
-                               onClick={() => handleDownloadFile(message.media_url!, message.media_name || 'arquivo')}
+              {/* Mesclar mensagens e atividades */}
+              {(() => {
+                const combinedItems = [
+                  ...messages.map(m => ({ type: 'message' as const, data: m, created_at: m.created_at })),
+                  ...activities.map(a => ({ type: 'activity' as const, data: a, created_at: a.created_at }))
+                ].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+
+                return combinedItems.map((item) => {
+                  if (item.type === 'activity') {
+                    return (
+                      <ActivityMessage 
+                        key={`activity-${item.data.id}`}
+                        activity={item.data}
+                      />
+                    );
+                  }
+                  
+                  const message = item.data;
+                  const isMine = isMyMessage(message.sender_id);
+                  const isDeleted = message.is_deleted || false;
+                  
+                  return (
+                    <div
+                      key={message.id}
+                      className={`flex gap-2 animate-in slide-in-from-bottom-2 ${
+                        isMine ? 'flex-row-reverse' : 'flex-row'
+                      }`}
+                    >
+                      {!isMine && (
+                        <Avatar className="h-8 w-8 flex-shrink-0">
+                          <AvatarImage src={message.sender_avatar} />
+                          <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                            {message.sender_name.charAt(0).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                      )}
+                      
+                       <div className={`flex flex-col max-w-[75%] ${isMine ? 'items-end' : 'items-start'}`}>
+                         <div
+                           className={`group rounded-2xl px-4 py-2.5 shadow-sm relative ${
+                             isDeleted
+                               ? 'bg-destructive/10 border-destructive/20 border'
+                               : isMine
+                               ? 'bg-primary text-primary-foreground rounded-tr-sm'
+                               : 'bg-card border rounded-tl-sm'
+                           }`}
+                         >
+                           {message.media_url && message.media_type?.startsWith('image/') && (
+                             <div 
+                               className="mb-2 cursor-pointer hover:opacity-80 transition-opacity"
+                               onClick={() => setViewingImage({ url: message.media_url!, name: message.media_name || 'imagem.jpg' })}
                              >
-                               <Download className="h-3 w-3" />
-                             </Button>
-                           </div>
-                         )}
-                          {isDeleted ? (
-                            <p className="text-sm italic text-destructive">
-                              Apagado por violar as regras
-                            </p>
-                          ) : (
-                            <>
-                              {message.content && <p className="text-sm leading-relaxed break-words">{message.content}</p>}
-                            </>
-                          )}
-                          {isMine && !isDeleted && (! (conversationType === 'proposal' && proposalData?.status === 'accepted')) && (
-                            <button
-                              type="button"
-                              onClick={async () => {
-                                const table = conversationType === 'negotiation' ? 'negotiation_messages' : 'proposal_messages';
-                                await supabase.from(table).delete().eq('id', message.id);
-                              }}
-                              className={`absolute -top-2 ${isMine ? '-left-2' : '-right-2'} opacity-0 group-hover:opacity-100 transition-opacity text-xs px-1 py-0.5 rounded bg-destructive text-destructive-foreground`}
-                              title="Apagar mensagem"
-                            >
-                              Excluir
-                            </button>
-                          )}
+                               <img 
+                                 src={message.media_url} 
+                                 alt={message.media_name || 'Imagem'}
+                                 className="max-w-[300px] max-h-[300px] rounded-lg object-cover"
+                               />
+                             </div>
+                           )}
+                           {message.media_url && !message.media_type?.startsWith('image/') && (
+                             <div className="mb-2 flex items-center gap-2 p-2 bg-background/10 rounded-lg">
+                               {getFileIcon(message.media_type || '')}
+                               <span className="text-xs flex-1 truncate">{message.media_name}</span>
+                               <Button
+                                 variant="ghost"
+                                 size="icon"
+                                 className="h-6 w-6"
+                                 onClick={() => handleDownloadFile(message.media_url!, message.media_name || 'arquivo')}
+                               >
+                                 <Download className="h-3 w-3" />
+                               </Button>
+                             </div>
+                           )}
+                            {isDeleted ? (
+                              <p className="text-sm italic text-destructive">
+                                Apagado por violar as regras
+                              </p>
+                            ) : (
+                              <>
+                                {message.content && <p className="text-sm leading-relaxed break-words">{message.content}</p>}
+                              </>
+                            )}
+                            {isMine && !isDeleted && (! (conversationType === 'proposal' && proposalData?.status === 'accepted')) && (
+                              <button
+                                type="button"
+                                onClick={async () => {
+                                  const table = conversationType === 'negotiation' ? 'negotiation_messages' : 'proposal_messages';
+                                  await supabase.from(table).delete().eq('id', message.id);
+                                }}
+                                className={`absolute -top-2 ${isMine ? '-left-2' : '-right-2'} opacity-0 group-hover:opacity-100 transition-opacity text-xs px-1 py-0.5 rounded bg-destructive text-destructive-foreground`}
+                                title="Apagar mensagem"
+                              >
+                                Excluir
+                              </button>
+                            )}
+                          </div>
+                        <div className={`flex items-center gap-1.5 mt-1 ${isMine ? 'flex-row-reverse' : 'flex-row'}`}>
+                          <span className="text-xs text-muted-foreground">
+                            {formatDistanceToNow(new Date(message.created_at), {
+                              addSuffix: true,
+                              locale: ptBR,
+                            })}
+                          </span>
+                          {isMine && getMessageStatusIcon(message.status)}
                         </div>
-                      <div className={`flex items-center gap-1.5 mt-1 ${isMine ? 'flex-row-reverse' : 'flex-row'}`}>
-                        <span className="text-xs text-muted-foreground">
-                          {formatDistanceToNow(new Date(message.created_at), {
-                            addSuffix: true,
-                            locale: ptBR,
-                          })}
-                        </span>
-                        {isMine && getMessageStatusIcon(message.status)}
                       </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                });
+              })()}
             </>
           )}
           <div ref={messagesEndRef} />

@@ -242,7 +242,7 @@ export function ProposalChatHeader({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={onViewHistory}>
-                Histórico de Alterações
+                Atividades
               </DropdownMenuItem>
               {proposal.payment_status === 'paid_escrow' && (
                 <DropdownMenuItem onClick={onOpenDispute}>

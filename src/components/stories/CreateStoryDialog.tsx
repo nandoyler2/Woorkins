@@ -397,6 +397,21 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
           {/* Footer - Botões fixos */}
           <div className="sticky bottom-0 px-6 py-4 border-t bg-background/95 backdrop-blur-sm">
             <div className="flex gap-3">
+              {step === 'create' && (
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setStep('select');
+                    setMediaFile(null);
+                    setMediaPreview('');
+                    setTextContent('');
+                  }} 
+                  disabled={isUploading}
+                  size="lg"
+                >
+                  Voltar
+                </Button>
+              )}
               <Button 
                 variant="outline" 
                 onClick={handleClose} 

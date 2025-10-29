@@ -421,6 +421,84 @@ export default function Messages() {
     return statusMap[status] || status;
   };
 
+  // Função para obter informações dinâmicas do badge baseado no status
+  const getProposalBadgeInfo = (conv: Conversation) => {
+    const isFreelancer = conv.freelancerId === profileId;
+    const status = conv.status;
+    
+    // Badges para propostas
+    if (conv.type === 'proposal') {
+      if (isFreelancer) {
+        // Perspectiva do Freelancer
+        switch (status) {
+          case 'pending':
+            return { text: 'Proposta enviada', color: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300' };
+          case 'counter_proposal':
+            // Verificar quem está aguardando
+            return { text: 'Contraproposta recebida', color: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300' };
+          case 'accepted':
+            return { text: 'Proposta aceita', color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' };
+          case 'payment_made':
+            return { text: 'Pago - Trabalhar', color: 'bg-green-500 text-white dark:bg-green-600' };
+          case 'in_progress':
+            return { text: 'Em andamento', color: 'bg-blue-500 text-white dark:bg-blue-600' };
+          case 'freelancer_completed':
+            return { text: 'Aguardando confirmação', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300' };
+          case 'completed':
+            return { text: 'Projeto finalizado', color: 'bg-green-700 text-white dark:bg-green-800' };
+          case 'rejected':
+            return { text: 'Proposta rejeitada', color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' };
+          case 'cancelled':
+            return { text: 'Cancelado', color: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300' };
+          default:
+            return { text: 'Proposta enviada', color: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300' };
+        }
+      } else {
+        // Perspectiva do Dono do Projeto
+        switch (status) {
+          case 'pending':
+            return { text: 'Proposta recebida', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' };
+          case 'counter_proposal':
+            return { text: 'Contraproposta enviada', color: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300' };
+          case 'accepted':
+            return { text: 'Aguardando pagamento', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300' };
+          case 'payment_made':
+            return { text: 'Projeto iniciado', color: 'bg-green-500 text-white dark:bg-green-600' };
+          case 'in_progress':
+            return { text: 'Em andamento', color: 'bg-blue-500 text-white dark:bg-blue-600' };
+          case 'freelancer_completed':
+            return { text: 'Concluído - Confirmar', color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' };
+          case 'completed':
+            return { text: 'Projeto finalizado', color: 'bg-green-700 text-white dark:bg-green-800' };
+          case 'rejected':
+            return { text: 'Proposta rejeitada', color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' };
+          case 'cancelled':
+            return { text: 'Cancelado', color: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300' };
+          default:
+            return { text: 'Proposta recebida', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' };
+        }
+      }
+    }
+    
+    // Badges para negociações
+    if (conv.type === 'negotiation') {
+      switch (status) {
+        case 'open':
+          return { text: 'Negociação aberta', color: 'bg-blue-500 text-white dark:bg-blue-600' };
+        case 'accepted':
+          return { text: 'Negociação aceita', color: 'bg-green-500 text-white dark:bg-green-600' };
+        case 'rejected':
+          return { text: 'Negociação rejeitada', color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' };
+        case 'completed':
+          return { text: 'Concluída', color: 'bg-green-700 text-white dark:bg-green-800' };
+        default:
+          return { text: 'Negociação', color: 'bg-slate-100 text-slate-800 dark:bg-slate-900/30 dark:text-slate-300' };
+      }
+    }
+    
+    return { text: 'Status', color: 'bg-slate-100 text-slate-800 dark:bg-slate-900/30 dark:text-slate-300' };
+  };
+
   const filteredConversations = conversations
     .filter(conv => {
       // Search filter
@@ -648,13 +726,18 @@ export default function Messages() {
                             )}
                           </div>
                           
-                          {conv.type === 'proposal' && (
+                          {(conv.type === 'proposal' || conv.type === 'negotiation') && (
                             <div className="flex items-center gap-1 mb-1">
-                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-800">
-                                {conv.freelancerId === profileId ? 'Proposta enviada' : 'Proposta recebida'}
-                              </span>
+                              {(() => {
+                                const badgeInfo = getProposalBadgeInfo(conv);
+                                return (
+                                  <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium transition-colors ${badgeInfo.color}`}>
+                                    {badgeInfo.text}
+                                  </span>
+                                );
+                              })()}
                               {conv.hasDispute && (
-                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300">
                                   <AlertCircle className="h-3 w-3 mr-1" />
                                   {conv.disputeStatus === 'resolved' ? 'Disputa Resolvida' : 'Em Disputa'}
                                 </span>

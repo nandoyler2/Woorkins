@@ -28,15 +28,15 @@ Deno.serve(async (req) => {
       );
     }
 
-    const moderationPrompt = `Você é um moderador EXTREMAMENTE RIGOROSO de fotos de perfil para uma plataforma profissional brasileira.
+    const moderationPrompt = `Você é um moderador de fotos de perfil para uma plataforma brasileira.
 
-REGRAS ABSOLUTAS - BLOQUEAR IMEDIATAMENTE:
+REGRAS - BLOQUEAR APENAS:
 
-🚫 CONTEÚDO SEXUAL/ADULTO:
+🚫 CONTEÚDO SEXUAL/INADEQUADO:
 - Nudez total ou parcial
-- Roupas íntimas ou reveladoras
+- Roupas íntimas (sutiã, cueca, lingerie)
 - Poses sugestivas ou sensuais
-- Conteúdo pornográfico de qualquer tipo
+- Conteúdo pornográfico ou explícito de qualquer tipo
 
 🚫 NÃO É PESSOA REAL:
 - Desenhos, ilustrações, cartoons, anime
@@ -45,34 +45,26 @@ REGRAS ABSOLUTAS - BLOQUEAR IMEDIATAMENTE:
 - Animais sozinhos (sem pessoa visível)
 - Objetos, paisagens, lugares
 - Memes, prints de tela
-- Fotos muito escuras onde não dá para ver o rosto
-- Silhuetas ou sombras
 
-🚫 ROUPAS E APRESENTAÇÃO NÃO PROFISSIONAL:
-- Camisas regata, tops, blusas de alça
-- Roupas de praia (biquíni, sunga, maiô)
-- Roupas íntimas ou muito reveladoras
-- Roupas muito desleixadas, rasgadas ou sujas
-- Sem camisa ou torso nu
-
-🚫 QUALIDADE E CONTEXTO INADEQUADOS:
-- Fotos muito desfocadas ou borradas
-- Resolução muito baixa que impede identificação
-- Fotos claramente em festas, bares, baladas (com bebidas alcoólicas, ambiente de festa)
-- Selfies em banheiros com espelhos sujos
-- Fundos extremamente bagunçados ou inadequados
+🚫 QUALIDADE MUITO BAIXA:
+- Fotos extremamente escuras onde não dá para ver o rosto
+- Fotos muito desfocadas/borradas que impedem identificação
+- Resolução muito baixa (pixelizada demais)
+- Silhuetas ou sombras (rosto não visível)
 
 ✅ APROVAR:
 - Foto REAL e CLARA de uma PESSOA
 - Rosto da pessoa VISÍVEL e IDENTIFICÁVEL
-- Boa iluminação e boa resolução
-- Vestimenta APRESENTÁVEL: camisetas limpas, polos, camisas, blusas, blazers são aceitos
-- Pessoa está apresentável e com postura adequada
-- Ambiente pode ser interno ou externo, desde que a pessoa esteja bem apresentada
-- Foto profissional ou casual-profissional (tipo LinkedIn, foto corporativa, ou foto apresentável)
+- Qualidade razoável (não precisa ser perfeita)
+- Pessoa está VESTIDA adequadamente (qualquer roupa casual normal é OK: camiseta, polo, camisa, blusa, etc)
+- Selfies casuais são OK desde que mostrem o rosto claramente
+- Ambiente casual é OK (não precisa ser profissional)
 
-🔍 ANÁLISE RIGOROSA:
-Analise CUIDADOSAMENTE a imagem fornecida.
+IMPORTANTE: 
+- Camisetas, polos e roupas casuais normais são APROVADAS
+- Fotos casuais/selfies são OK desde que mostrem bem o rosto
+- Seja razoável - a pessoa só precisa estar vestida e o rosto precisa estar visível
+- Só bloqueie conteúdo realmente inadequado (nudez, sexual, não-pessoa, qualidade péssima)
 
 Responda APENAS com um JSON válido no formato:
 {
@@ -85,46 +77,32 @@ EXEMPLOS DE RESPOSTAS:
 Desenho/Ilustração:
 {
   "approved": false,
-  "reason": "Esta é uma ilustração/desenho. Você precisa enviar uma FOTO REAL sua mostrando seu rosto claramente com vestimenta profissional."
+  "reason": "Esta é uma ilustração/desenho. Você precisa enviar uma FOTO REAL sua mostrando seu rosto claramente."
 }
 
 Logo/Objeto:
 {
   "approved": false,
-  "reason": "Esta imagem mostra um objeto/logo. Você precisa enviar uma FOTO REAL sua mostrando seu rosto claramente com vestimenta profissional."
+  "reason": "Esta imagem mostra um objeto/logo. Você precisa enviar uma FOTO REAL sua mostrando seu rosto claramente."
 }
 
-Foto muito escura ou baixa qualidade:
+Foto muito escura ou qualidade péssima:
 {
   "approved": false,
-  "reason": "A qualidade da foto está inadequada (muito escura, desfocada ou baixa resolução). Por favor, envie uma foto clara, bem iluminada e profissional."
+  "reason": "A qualidade da foto está muito baixa (muito escura, desfocada ou pixelizada). Por favor, envie uma foto mais clara onde seu rosto seja visível."
 }
 
-Roupa inadequada:
+Conteúdo sexual/nudez:
 {
   "approved": false,
-  "reason": "A vestimenta não é apropriada para uma plataforma profissional. Por favor, use roupas formais como camisa, blusa social ou blazer. Evite camisas regata, tops, roupas de praia ou muito informais."
+  "reason": "Conteúdo inadequado detectado. Por favor, envie uma foto apropriada onde você esteja vestido(a) e com o rosto visível."
 }
 
-Contexto inadequado:
-{
-  "approved": false,
-  "reason": "O contexto da foto não é profissional (festa, praia, ambiente informal). Por favor, envie uma foto em ambiente neutro ou profissional, tipo foto corporativa ou LinkedIn."
-}
-
-Conteúdo sexual:
-{
-  "approved": false,
-  "reason": "Conteúdo inadequado detectado. Por favor, envie uma foto de perfil apropriada e profissional com vestimenta formal."
-}
-
-Foto válida:
+Foto válida (casual OK):
 {
   "approved": true,
   "reason": "Foto de perfil aprovada!"
-}
-
-SEJA EXTREMAMENTE RIGOROSO. Em caso de QUALQUER dúvida, BLOQUEIE.`;
+}`;
 
     console.log('Calling Lovable AI for image moderation...');
 

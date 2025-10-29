@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, X, ExternalLink, Volume2, VolumeX, User } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X, ExternalLink, Volume2, VolumeX, User, Play, Pause } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { SafeImage } from '@/components/ui/safe-image';
@@ -329,13 +329,12 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId }: 
                 src={currentStory.media_url}
                 autoPlay
                 muted={isMuted}
-                onClick={togglePause}
                 onLoadedMetadata={() => {
                   if (videoRef.current) {
                     videoRef.current.volume = volume;
                   }
                 }}
-                className="w-full h-full object-contain cursor-pointer"
+                className="w-full h-full object-contain"
               />
             )}
 
@@ -372,34 +371,47 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId }: 
             )}
           </div>
 
-          {/* Volume control para vídeos */}
+          {/* Play/Pause e Volume control para vídeos */}
           {currentStory.type === 'video' && (
-            <div 
-              className="absolute top-20 right-4 z-20 flex items-center gap-2"
-              onMouseEnter={() => setShowVolumeSlider(true)}
-              onMouseLeave={() => setShowVolumeSlider(false)}
-            >
-              {showVolumeSlider && (
-                <div className="bg-black/50 backdrop-blur-md rounded-full px-3 py-2 flex items-center gap-2">
-                  <input
-                    type="range"
-                    min="0"
-                    max="1"
-                    step="0.1"
-                    value={volume}
-                    onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
-                    className="w-20 h-1 bg-white/30 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-moz-range-thumb]:w-3 [&::-moz-range-thumb]:h-3 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-0"
-                  />
-                </div>
-              )}
+            <div className="absolute top-20 right-4 z-20 flex items-center gap-2">
+              {/* Play/Pause button */}
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={toggleMute}
+                onClick={togglePause}
                 className="bg-black/30 backdrop-blur-md text-white hover:bg-black/50 rounded-full"
               >
-                {isMuted || volume === 0 ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+                {isPaused ? <Play className="w-5 h-5" /> : <Pause className="w-5 h-5" />}
               </Button>
+
+              {/* Volume control */}
+              <div 
+                className="flex items-center gap-2"
+                onMouseEnter={() => setShowVolumeSlider(true)}
+                onMouseLeave={() => setShowVolumeSlider(false)}
+              >
+                {showVolumeSlider && (
+                  <div className="bg-black/50 backdrop-blur-md rounded-full px-3 py-2 flex items-center gap-2">
+                    <input
+                      type="range"
+                      min="0"
+                      max="1"
+                      step="0.1"
+                      value={volume}
+                      onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
+                      className="w-20 h-1 bg-white/30 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-moz-range-thumb]:w-3 [&::-moz-range-thumb]:h-3 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-0"
+                    />
+                  </div>
+                )}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={toggleMute}
+                  className="bg-black/30 backdrop-blur-md text-white hover:bg-black/50 rounded-full"
+                >
+                  {isMuted || volume === 0 ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+                </Button>
+              </div>
             </div>
           )}
 

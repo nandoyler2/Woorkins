@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ImageIcon, Video, Type, Link as LinkIcon, Upload, Loader2, Camera } from 'lucide-react';
+import { ImageIcon, Video, Type, Link as LinkIcon, Upload, Loader2, Camera, Bold, Italic, Link2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { compressImage } from '@/lib/imageCompression';
@@ -25,13 +25,17 @@ interface CreateStoryDialogProps {
   onStoryCreated: () => void;
 }
 
-const backgroundColors = [
-  { name: 'Roxo', value: '#8B5CF6' },
-  { name: 'Rosa', value: '#EC4899' },
-  { name: 'Laranja', value: '#F97316' },
-  { name: 'Azul', value: '#3B82F6' },
-  { name: 'Verde', value: '#10B981' },
-  { name: 'Vermelho', value: '#EF4444' },
+const backgroundStyles = [
+  { name: 'Gradiente Roxo', value: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' },
+  { name: 'Gradiente Rosa', value: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' },
+  { name: 'Gradiente Laranja', value: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)' },
+  { name: 'Gradiente Azul', value: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)' },
+  { name: 'Gradiente Verde', value: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)' },
+  { name: 'Gradiente Vermelho', value: 'linear-gradient(135deg, #fa709a 0%, #d4145a 100%)' },
+  { name: 'Pôr do Sol', value: 'linear-gradient(135deg, #ff9a56 0%, #ff6a88 50%, #ff99ac 100%)' },
+  { name: 'Oceano', value: 'linear-gradient(135deg, #2af598 0%, #009efd 100%)' },
+  { name: 'Noite', value: 'linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #7e22ce 100%)' },
+  { name: 'Aurora', value: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)' },
 ];
 
 export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }: CreateStoryDialogProps) {
@@ -41,10 +45,15 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
   const [mediaFile, setMediaFile] = useState<File | null>(null);
   const [mediaPreview, setMediaPreview] = useState<string>('');
   const [textContent, setTextContent] = useState('');
-  const [backgroundColor, setBackgroundColor] = useState(backgroundColors[0].value);
+  const [backgroundColor, setBackgroundColor] = useState(backgroundStyles[0].value);
+  const [customColor, setCustomColor] = useState('#8B5CF6');
+  const [textBold, setTextBold] = useState(false);
+  const [textItalic, setTextItalic] = useState(false);
+  const [textLink, setTextLink] = useState('');
   const [linkUrl, setLinkUrl] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { toast } = useToast();
 
   const handleMediaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -142,16 +151,26 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
       }
 
       // Criar story no banco
+      const storyData: any = {
+        profile_id: selectedProfile,
+        type: type,
+        media_url: mediaUrl,
+        text_content: type === 'text' ? textContent : null,
+        background_color: type === 'text' ? backgroundColor : null,
+        link_url: type === 'text' && textLink ? textLink : (linkUrl || null),
+      };
+
+      // Adicionar metadados de formatação se for texto
+      if (type === 'text' && (textBold || textItalic)) {
+        storyData.metadata = {
+          text_bold: textBold,
+          text_italic: textItalic,
+        };
+      }
+
       const { error: insertError } = await supabase
         .from('profile_stories')
-        .insert({
-          profile_id: selectedProfile,
-          type: type,
-          media_url: mediaUrl,
-          text_content: type === 'text' ? textContent : null,
-          background_color: type === 'text' ? backgroundColor : null,
-          link_url: linkUrl || null,
-        });
+        .insert(storyData);
 
       if (insertError) throw insertError;
 
@@ -179,8 +198,11 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
     setMediaFile(null);
     setMediaPreview('');
     setTextContent('');
+    setTextLink('');
     setLinkUrl('');
     setType('image');
+    setTextBold(false);
+    setTextItalic(false);
     onClose();
   };
 
@@ -269,27 +291,74 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
                 {type === 'text' ? (
                   <div className="space-y-4">
                     <div>
-                      <Label className="text-sm font-semibold mb-3 block">Escolha uma cor de fundo:</Label>
-                      <div className="grid grid-cols-6 gap-3">
-                        {backgroundColors.map((color) => (
+                      <Label className="text-sm font-semibold mb-3 block">Escolha um fundo:</Label>
+                      <div className="grid grid-cols-5 gap-3 mb-4">
+                        {backgroundStyles.map((style) => (
                           <button
-                            key={color.value}
-                            onClick={() => setBackgroundColor(color.value)}
-                            className={`w-full h-16 rounded-xl transition-all hover:scale-105 ${
-                              backgroundColor === color.value
+                            key={style.value}
+                            onClick={() => setBackgroundColor(style.value)}
+                            className={`w-full h-20 rounded-xl transition-all hover:scale-105 ${
+                              backgroundColor === style.value
                                 ? 'ring-4 ring-primary ring-offset-2 scale-105'
                                 : 'ring-2 ring-border'
                             }`}
-                            style={{ backgroundColor: color.value }}
-                            title={color.name}
+                            style={{ background: style.value }}
+                            title={style.name}
                           />
                         ))}
+                      </div>
+                      
+                      {/* Cor personalizada */}
+                      <div className="flex items-center gap-3 bg-muted/30 p-3 rounded-xl">
+                        <Label className="text-sm font-semibold whitespace-nowrap">Cor personalizada:</Label>
+                        <input
+                          type="color"
+                          value={customColor}
+                          onChange={(e) => {
+                            setCustomColor(e.target.value);
+                            setBackgroundColor(e.target.value);
+                          }}
+                          className="w-16 h-10 rounded-lg cursor-pointer border-2 border-border"
+                        />
+                        <Input
+                          value={customColor}
+                          onChange={(e) => {
+                            setCustomColor(e.target.value);
+                            setBackgroundColor(e.target.value);
+                          }}
+                          placeholder="#8B5CF6"
+                          className="flex-1 bg-background"
+                        />
                       </div>
                     </div>
 
                     <div>
-                      <Label className="text-sm font-semibold mb-2 block">Seu texto:</Label>
+                      <div className="flex items-center justify-between mb-2">
+                        <Label className="text-sm font-semibold">Seu texto:</Label>
+                        {/* Botões de formatação */}
+                        <div className="flex gap-1">
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant={textBold ? "default" : "outline"}
+                            onClick={() => setTextBold(!textBold)}
+                            className="h-8 w-8 p-0"
+                          >
+                            <Bold className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant={textItalic ? "default" : "outline"}
+                            onClick={() => setTextItalic(!textItalic)}
+                            className="h-8 w-8 p-0"
+                          >
+                            <Italic className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
                       <Textarea
+                        ref={textareaRef}
                         value={textContent}
                         onChange={(e) => setTextContent(e.target.value)}
                         placeholder="Escreva algo inspirador..."
@@ -303,14 +372,36 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
                       </div>
                     </div>
 
+                    {/* Link no texto */}
+                    <div className="space-y-2 bg-muted/30 p-4 rounded-xl">
+                      <Label className="flex items-center gap-2 text-sm font-semibold">
+                        <Link2 className="w-4 h-4" />
+                        Link no texto (opcional)
+                      </Label>
+                      <Input
+                        value={textLink}
+                        onChange={(e) => setTextLink(e.target.value)}
+                        placeholder="https://seusite.com"
+                        type="url"
+                        className="bg-background"
+                      />
+                      <p className="text-xs text-muted-foreground">Adicione um link que abrirá ao clicar no texto</p>
+                    </div>
+
                     {/* Preview */}
                     <div className="space-y-2">
                       <Label className="text-sm font-semibold">Preview:</Label>
                       <div
-                        className="rounded-2xl p-8 min-h-[300px] flex items-center justify-center text-center shadow-xl"
-                        style={{ backgroundColor }}
+                        className="rounded-2xl p-8 min-h-[300px] flex items-center justify-center text-center shadow-xl overflow-hidden"
+                        style={{ background: backgroundColor }}
                       >
-                        <p className="text-white text-2xl font-bold break-words max-w-full leading-relaxed drop-shadow-lg">
+                        <p 
+                          className={`text-white text-2xl break-words max-w-full leading-relaxed drop-shadow-lg ${
+                            textBold ? 'font-bold' : 'font-semibold'
+                          } ${
+                            textItalic ? 'italic' : ''
+                          }`}
+                        >
                           {textContent || 'Seu texto aparecerá aqui'}
                         </p>
                       </div>

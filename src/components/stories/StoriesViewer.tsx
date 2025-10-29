@@ -16,6 +16,10 @@ interface Story {
   link_url: string | null;
   created_at: string;
   view_count: number;
+  metadata?: {
+    text_bold?: boolean;
+    text_italic?: boolean;
+  };
   profile?: {
     username: string;
     full_name: string;
@@ -248,17 +252,38 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId }: 
             {currentStory.type === 'text' && (
               <div
                 className="w-full h-full flex items-center justify-center p-8"
-                style={{ backgroundColor: currentStory.background_color || '#8B5CF6' }}
+                style={{ background: currentStory.background_color || '#8B5CF6' }}
               >
-                <p className="text-white text-2xl font-bold text-center break-words max-w-full">
-                  {currentStory.text_content}
-                </p>
+                {currentStory.link_url ? (
+                  <a
+                    href={currentStory.link_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`text-white text-2xl text-center break-words max-w-full leading-relaxed drop-shadow-lg hover:scale-105 transition-transform cursor-pointer ${
+                      currentStory.metadata?.text_bold ? 'font-bold' : 'font-semibold'
+                    } ${
+                      currentStory.metadata?.text_italic ? 'italic' : ''
+                    }`}
+                  >
+                    {currentStory.text_content}
+                  </a>
+                ) : (
+                  <p
+                    className={`text-white text-2xl text-center break-words max-w-full leading-relaxed drop-shadow-lg ${
+                      currentStory.metadata?.text_bold ? 'font-bold' : 'font-semibold'
+                    } ${
+                      currentStory.metadata?.text_italic ? 'italic' : ''
+                    }`}
+                  >
+                    {currentStory.text_content}
+                  </p>
+                )}
               </div>
             )}
           </div>
 
-          {/* Footer */}
-          {currentStory.link_url && (
+          {/* Footer - Link apenas para mídia */}
+          {currentStory.link_url && currentStory.type !== 'text' && (
             <div className="absolute bottom-4 left-4 right-4 z-20">
               <a
                 href={currentStory.link_url}

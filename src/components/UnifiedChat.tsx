@@ -31,6 +31,7 @@ import { ptBR } from 'date-fns/locale';
 import { useRealtimeMessaging } from '@/hooks/useRealtimeMessaging';
 import { ProposalNegotiationPanel } from './ProposalNegotiationPanel';
 import { ProposalChatHeader } from './projects/ProposalChatHeader';
+import { ProposalCounterDialog } from './projects/ProposalCounterDialog';
 import { BlockedMessageCountdown } from './BlockedMessageCountdown';
 import { ImageViewer } from './ImageViewer';
 import { RequireProfilePhotoDialog } from './RequireProfilePhotoDialog';
@@ -89,6 +90,8 @@ export function UnifiedChat({
   const [reportReason, setReportReason] = useState('');
   const [reportDescription, setReportDescription] = useState('');
   const [showBlockDialog, setShowBlockDialog] = useState(false);
+  const [showCounterDialog, setShowCounterDialog] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messageInputRef = useRef<HTMLInputElement>(null);
 
@@ -337,6 +340,182 @@ useEffect(() => {
     } catch (error) {
       console.error('Error loading proposal data:', error);
     }
+  };
+
+  // Payment handler - Opens Stripe checkout
+  const handlePay = async () => {
+    try {
+      setIsLoading(true);
+      const { data, error } = await supabase.functions.invoke('create-project-payment', {
+        body: { proposal_id: conversationId }
+      });
+      
+      if (error) throw error;
+      
+      if (data?.url) {
+        window.open(data.url, '_blank');
+        toast({
+          title: 'Redirecionando para pagamento',
+          description: 'Você será redirecionado para o Stripe para completar o pagamento',
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: 'Erro ao processar pagamento',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Owner confirms work completion and releases payment
+  const handleConfirmCompletion = async () => {
+    try {
+      setIsLoading(true);
+      const { data, error } = await supabase.functions.invoke('release-proposal-payment', {
+        body: { 
+          proposal_id: conversationId,
+          action: 'approve'
+        }
+      });
+      
+      if (error) throw error;
+      
+      toast({
+        title: 'Trabalho concluído!',
+        description: 'O pagamento foi liberado para o freelancer',
+      });
+      
+      await loadProposalData();
+    } catch (error: any) {
+      toast({
+        title: 'Erro ao confirmar conclusão',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Freelancer marks work as completed
+  const handleMarkCompleted = async () => {
+    try {
+      setIsLoading(true);
+      
+      const { error } = await supabase
+        .from('proposals')
+        .update({
+          work_status: 'freelancer_completed',
+          freelancer_completed_at: new Date().toISOString(),
+        })
+        .eq('id', conversationId);
+      
+      if (error) throw error;
+      
+      // Create status history record
+      await supabase.from('proposal_status_history').insert({
+        proposal_id: conversationId,
+        status_type: 'freelancer_completed',
+        changed_by: profileId,
+        new_value: { work_status: 'freelancer_completed' },
+        message: 'Freelancer marcou o trabalho como concluído',
+      });
+      
+      toast({
+        title: 'Trabalho marcado como concluído!',
+        description: 'Aguarde a confirmação do cliente',
+      });
+      
+      await loadProposalData();
+    } catch (error: any) {
+      toast({
+        title: 'Erro ao marcar como concluído',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Open counter proposal dialog
+  const handleMakeCounterProposal = () => {
+    setShowCounterDialog(true);
+  };
+
+  // Submit counter proposal
+  const handleSubmitCounterProposal = async (amount: number, message: string) => {
+    try {
+      setIsLoading(true);
+      
+      // Determine who is making the counter-proposal
+      const fromProfileId = profileId;
+      const toProfileId = isOwner ? proposalData.freelancer_id : proposalData.project.profile_id;
+      
+      // Insert into counter_proposals table
+      const { error: counterError } = await supabase
+        .from('counter_proposals')
+        .insert({
+          proposal_id: conversationId,
+          from_profile_id: fromProfileId,
+          to_profile_id: toProfileId,
+          amount,
+          message,
+          status: 'pending',
+        });
+      
+      if (counterError) throw counterError;
+      
+      // Update proposal with new amount and who should accept
+      const { error: updateError } = await supabase
+        .from('proposals')
+        .update({
+          current_proposal_amount: amount,
+          current_proposal_by: fromProfileId,
+          awaiting_acceptance_from: toProfileId,
+          status: 'pending', // Back to pending until acceptance
+        })
+        .eq('id', conversationId);
+      
+      if (updateError) throw updateError;
+      
+      // Create status history record
+      await supabase.from('proposal_status_history').insert({
+        proposal_id: conversationId,
+        status_type: 'counter_proposal',
+        changed_by: fromProfileId,
+        old_value: { amount: proposalData.current_proposal_amount || proposalData.budget },
+        new_value: { amount, message },
+        message: `${isOwner ? 'Cliente' : 'Freelancer'} fez uma contra-proposta`,
+      });
+      
+      toast({
+        title: 'Contra-proposta enviada!',
+        description: 'Aguarde a resposta da outra parte',
+      });
+      
+      await loadProposalData();
+      setShowCounterDialog(false);
+    } catch (error: any) {
+      toast({
+        title: 'Erro ao enviar contra-proposta',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Open dispute (placeholder)
+  const handleOpenDispute = () => {
+    toast({
+      title: 'Em desenvolvimento',
+      description: 'A funcionalidade de disputa será implementada em breve',
+    });
   };
 
   const handleSendMessage = async (e: React.FormEvent) => {
@@ -686,19 +865,38 @@ useEffect(() => {
           currentProfileId={profileId}
           isOwner={isOwner}
           onAccept={async () => {
-            await supabase
-              .from('proposals')
-              .update({
-                status: 'accepted',
-                accepted_amount: proposalData.current_proposal_amount || proposalData.budget,
-                awaiting_acceptance_from: null,
-              })
-              .eq('id', conversationId);
-            loadProposalData();
+            setIsLoading(true);
+            try {
+              await supabase
+                .from('proposals')
+                .update({
+                  status: 'accepted',
+                  accepted_amount: proposalData.current_proposal_amount || proposalData.budget,
+                  awaiting_acceptance_from: null,
+                })
+                .eq('id', conversationId);
+              
+              toast({
+                title: 'Proposta aceita!',
+                description: 'Agora você pode pagar para iniciar o trabalho',
+              });
+              
+              await loadProposalData();
+            } finally {
+              setIsLoading(false);
+            }
           }}
+          onPay={handlePay}
+          onConfirmCompletion={handleConfirmCompletion}
+          onMarkCompleted={handleMarkCompleted}
+          onMakeCounterProposal={handleMakeCounterProposal}
           onViewHistory={() => {
-            // TODO: Open history dialog
+            toast({
+              title: 'Em desenvolvimento',
+              description: 'O histórico de propostas será exibido em breve',
+            });
           }}
+          onOpenDispute={handleOpenDispute}
         />
       )}
       
@@ -1221,6 +1419,15 @@ useEffect(() => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Counter Proposal Dialog */}
+      <ProposalCounterDialog
+        open={showCounterDialog}
+        onOpenChange={setShowCounterDialog}
+        currentAmount={proposalData?.current_proposal_amount || proposalData?.budget || 0}
+        onSubmit={handleSubmitCounterProposal}
+        isOwner={isOwner}
+      />
     </div>
   );
 }

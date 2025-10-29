@@ -52,6 +52,8 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId }: 
   const videoRef = useRef<HTMLVideoElement>(null);
   const { toast } = useToast();
 
+  console.log('[StoriesViewer] render', { isOpen, profileId, currentProfileId });
+
   const STORY_DURATION = 15000; // 15 segundos
 
   const loadStories = useCallback(async () => {
@@ -230,7 +232,7 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId }: 
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg h-[90vh] p-0 bg-gradient-to-br from-purple-500/20 via-pink-500/20 to-orange-500/20 border-2 border-transparent rounded-3xl overflow-hidden backdrop-blur-sm relative before:absolute before:inset-0 before:rounded-3xl before:p-[2px] before:bg-gradient-to-tr before:from-purple-500 before:via-pink-500 before:to-orange-500 before:-z-10">
+      <DialogContent className="z-[300] max-w-lg h-[90vh] p-0 bg-gradient-to-br from-purple-500/20 via-pink-500/20 to-orange-500/20 border-2 border-transparent rounded-3xl overflow-hidden backdrop-blur-sm relative before:absolute before:inset-0 before:rounded-3xl before:p-[2px] before:bg-gradient-to-tr before:from-purple-500 before:via-pink-500 before:to-orange-500 before:-z-10">
         {isLoading || stories.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-white text-center">

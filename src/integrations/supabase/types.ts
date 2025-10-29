@@ -1533,6 +1533,7 @@ export type Database = {
           created_at: string
           expires_at: string
           id: string
+          like_count: number | null
           link_url: string | null
           media_url: string | null
           profile_id: string
@@ -1547,6 +1548,7 @@ export type Database = {
           created_at?: string
           expires_at?: string
           id?: string
+          like_count?: number | null
           link_url?: string | null
           media_url?: string | null
           profile_id: string
@@ -1561,6 +1563,7 @@ export type Database = {
           created_at?: string
           expires_at?: string
           id?: string
+          like_count?: number | null
           link_url?: string | null
           media_url?: string | null
           profile_id?: string
@@ -2369,6 +2372,128 @@ export type Database = {
             columns: ["reporter_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      story_likes: {
+        Row: {
+          created_at: string
+          id: string
+          profile_id: string
+          story_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          profile_id: string
+          story_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          profile_id?: string
+          story_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "story_likes_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "story_likes_story_id_fkey"
+            columns: ["story_id"]
+            isOneToOne: false
+            referencedRelation: "profile_stories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      story_sticker_responses: {
+        Row: {
+          created_at: string
+          id: string
+          profile_id: string
+          response_data: Json
+          sticker_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          profile_id: string
+          response_data?: Json
+          sticker_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          profile_id?: string
+          response_data?: Json
+          sticker_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "story_sticker_responses_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "story_sticker_responses_sticker_id_fkey"
+            columns: ["sticker_id"]
+            isOneToOne: false
+            referencedRelation: "story_stickers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      story_stickers: {
+        Row: {
+          content: Json
+          created_at: string
+          height: number | null
+          id: string
+          position_x: number
+          position_y: number
+          rotation: number | null
+          story_id: string
+          type: string
+          width: number | null
+        }
+        Insert: {
+          content?: Json
+          created_at?: string
+          height?: number | null
+          id?: string
+          position_x: number
+          position_y: number
+          rotation?: number | null
+          story_id: string
+          type: string
+          width?: number | null
+        }
+        Update: {
+          content?: Json
+          created_at?: string
+          height?: number | null
+          id?: string
+          position_x?: number
+          position_y?: number
+          rotation?: number | null
+          story_id?: string
+          type?: string
+          width?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "story_stickers_story_id_fkey"
+            columns: ["story_id"]
+            isOneToOne: false
+            referencedRelation: "profile_stories"
             referencedColumns: ["id"]
           },
         ]

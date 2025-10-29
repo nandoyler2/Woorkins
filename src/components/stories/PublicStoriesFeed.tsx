@@ -2,9 +2,11 @@ import React, { useEffect, useState, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { SafeImage } from "@/components/ui/safe-image";
-import { Sparkles, Video, Image, FileText, Play } from "lucide-react";
+import { Sparkles, Video, Image, FileText, Play, Heart, Plus } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StoriesViewer } from "./StoriesViewer";
+import { CreateStoryDialog } from "./CreateStoryDialog";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface PublicStory {
   id: string;
@@ -14,6 +16,7 @@ interface PublicStory {
   type: string;
   text_content: string | null;
   created_at: string;
+  like_count: number;
   profiles: {
     id: string;
     username: string;
@@ -24,6 +27,7 @@ interface PublicStory {
 
 interface PublicStoriesFeedProps {
   currentProfileId: string;
+  userProfiles?: any[];
 }
 
 const getRelativeTime = (timestamp: string): string => {
@@ -189,6 +193,21 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
           scrollbarColor: 'rgba(139, 92, 246, 0.2) transparent'
         }}
       >
+        {/* Botão de Criar Story */}
+        {userProfiles && userProfiles.length > 0 && (
+          <div
+            className="relative group cursor-pointer overflow-hidden rounded-xl transition-transform hover:scale-[1.02] flex-shrink-0"
+            onClick={() => setIsCreateDialogOpen(true)}
+          >
+            <div className="relative w-[180px] h-[320px] bg-gradient-to-br from-purple-500 via-pink-500 to-orange-500 flex flex-col items-center justify-center gap-4">
+              <div className="bg-white/20 backdrop-blur-sm rounded-full p-6">
+                <Plus className="w-12 h-12 text-white" />
+              </div>
+              <p className="text-white font-bold text-lg">Publicar Story</p>
+            </div>
+          </div>
+        )}
+
         {stories.map((story, index) => {
           const isNew = new Date().getTime() - new Date(story.created_at).getTime() < 3600000; // 1 hour
           const displayImage = story.thumbnail_url || story.media_url || '/placeholder.svg';

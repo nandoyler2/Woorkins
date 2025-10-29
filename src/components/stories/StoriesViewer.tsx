@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, X, ExternalLink, Volume2, VolumeX, User } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -231,8 +231,10 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId }: 
   const isOwner = currentProfileId === profileId;
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
       <DialogContent className="z-[300] max-w-lg h-[90vh] p-0 bg-gradient-to-br from-purple-500/20 via-pink-500/20 to-orange-500/20 border-2 border-transparent rounded-3xl overflow-hidden backdrop-blur-sm relative before:absolute before:inset-0 before:rounded-3xl before:p-[2px] before:bg-gradient-to-tr before:from-purple-500 before:via-pink-500 before:to-orange-500 before:-z-10">
+        <DialogTitle className="sr-only">Stories</DialogTitle>
+        <DialogDescription className="sr-only">Visualizador de stories</DialogDescription>
         {isLoading || stories.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-white text-center">

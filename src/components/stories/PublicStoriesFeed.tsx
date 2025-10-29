@@ -183,9 +183,11 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
 
   if (loading && stories.length === 0) {
     return (
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 pb-4">
+      <div className="flex gap-4 overflow-x-auto pb-4">
         {[1, 2, 3, 4, 5, 6].map((i) => (
-          <Skeleton key={i} className="w-full aspect-[9/16] rounded-xl" />
+          <div key={i} className="flex-shrink-0">
+            <Skeleton className="w-[180px] h-[320px] rounded-xl" />
+          </div>
         ))}
       </div>
     );
@@ -204,15 +206,20 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
   return (
     <>
       <div 
-        className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 pb-4"
+        ref={scrollContainerRef}
+        className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent"
+        style={{
+          scrollbarWidth: 'thin',
+          scrollbarColor: 'rgba(139, 92, 246, 0.2) transparent'
+        }}
       >
         {/* Botão de Criar Story */}
         {userProfiles && userProfiles.length > 0 && (
           <div
-            className="relative group cursor-pointer overflow-hidden rounded-xl transition-transform hover:scale-[1.02]"
+            className="relative group cursor-pointer overflow-hidden rounded-xl transition-transform hover:scale-[1.02] flex-shrink-0"
             onClick={() => setIsCreateDialogOpen(true)}
           >
-            <div className="relative w-full aspect-[9/16] bg-gradient-to-br from-purple-500 via-pink-500 to-orange-500 flex flex-col items-center justify-center gap-4">
+            <div className="relative w-[180px] h-[320px] bg-gradient-to-br from-purple-500 via-pink-500 to-orange-500 flex flex-col items-center justify-center gap-4">
               <div className="bg-white/20 backdrop-blur-sm rounded-full p-6">
                 <Plus className="w-12 h-12 text-white" />
               </div>
@@ -229,10 +236,10 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
           return (
             <div
               key={story.id}
-              className="relative group cursor-pointer overflow-hidden rounded-xl transition-transform hover:scale-[1.02]"
+              className="relative group cursor-pointer overflow-hidden rounded-xl transition-transform hover:scale-[1.02] flex-shrink-0"
               onClick={() => handleStoryClick(index)}
             >
-              <div className="relative w-full aspect-[9/16]">
+              <div className="relative w-[180px] h-[320px]">
                 {story.type === 'text' ? (
                   <div className="w-full h-full bg-gradient-to-br from-purple-500 via-pink-500 to-orange-500 flex items-center justify-center p-6">
                     <p className="text-white text-center text-lg font-medium break-words">
@@ -397,10 +404,10 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
 
         {/* Loading more indicator */}
         {hasMore && (
-          <div ref={observerTarget} className="col-span-full flex items-center justify-center py-8">
+          <div ref={observerTarget} className="flex-shrink-0 w-[180px] h-[320px] flex items-center justify-center">
             <div className="flex flex-col items-center gap-2">
               <div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
-              <p className="text-sm text-muted-foreground">Carregando mais...</p>
+              <p className="text-sm text-muted-foreground">Carregando...</p>
             </div>
           </div>
         )}

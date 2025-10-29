@@ -208,6 +208,51 @@ export type Database = {
           },
         ]
       }
+      dispute_messages: {
+        Row: {
+          attachments: Json | null
+          created_at: string | null
+          dispute_id: string
+          id: string
+          message: string
+          sender_id: string
+          sender_type: string
+        }
+        Insert: {
+          attachments?: Json | null
+          created_at?: string | null
+          dispute_id: string
+          id?: string
+          message: string
+          sender_id: string
+          sender_type: string
+        }
+        Update: {
+          attachments?: Json | null
+          created_at?: string | null
+          dispute_id?: string
+          id?: string
+          message?: string
+          sender_id?: string
+          sender_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dispute_messages_dispute_id_fkey"
+            columns: ["dispute_id"]
+            isOneToOne: false
+            referencedRelation: "project_disputes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dispute_messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       document_verifications: {
         Row: {
           ai_analysis: Json | null
@@ -1835,6 +1880,99 @@ export type Database = {
         }
         Relationships: []
       }
+      project_disputes: {
+        Row: {
+          admin_notes: string | null
+          against_profile_id: string
+          attachments: Json | null
+          created_at: string | null
+          description: string
+          id: string
+          negotiation_id: string | null
+          opened_by: string
+          proposal_id: string | null
+          reason: string
+          refund_amount: number | null
+          resolution: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          against_profile_id: string
+          attachments?: Json | null
+          created_at?: string | null
+          description: string
+          id?: string
+          negotiation_id?: string | null
+          opened_by: string
+          proposal_id?: string | null
+          reason: string
+          refund_amount?: number | null
+          resolution?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          against_profile_id?: string
+          attachments?: Json | null
+          created_at?: string | null
+          description?: string
+          id?: string
+          negotiation_id?: string | null
+          opened_by?: string
+          proposal_id?: string | null
+          reason?: string
+          refund_amount?: number | null
+          resolution?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_disputes_against_profile_id_fkey"
+            columns: ["against_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_disputes_negotiation_id_fkey"
+            columns: ["negotiation_id"]
+            isOneToOne: false
+            referencedRelation: "negotiations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_disputes_opened_by_fkey"
+            columns: ["opened_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_disputes_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "proposals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_disputes_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       projects: {
         Row: {
           budget_max: number | null
@@ -1944,6 +2082,54 @@ export type Database = {
           },
         ]
       }
+      proposal_status_history: {
+        Row: {
+          changed_by: string
+          created_at: string | null
+          id: string
+          message: string | null
+          new_value: Json | null
+          old_value: Json | null
+          proposal_id: string
+          status_type: string
+        }
+        Insert: {
+          changed_by: string
+          created_at?: string | null
+          id?: string
+          message?: string | null
+          new_value?: Json | null
+          old_value?: Json | null
+          proposal_id: string
+          status_type: string
+        }
+        Update: {
+          changed_by?: string
+          created_at?: string | null
+          id?: string
+          message?: string | null
+          new_value?: Json | null
+          old_value?: Json | null
+          proposal_id?: string
+          status_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proposal_status_history_changed_by_fkey"
+            columns: ["changed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proposal_status_history_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "proposals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       proposals: {
         Row: {
           accepted_amount: number | null
@@ -1956,13 +2142,16 @@ export type Database = {
           current_proposal_amount: number | null
           current_proposal_by: string | null
           delivery_days: number
+          dispute_id: string | null
           escrow_released_at: string | null
           freelancer_amount: number | null
+          freelancer_completed_at: string | null
           freelancer_id: string
           id: string
           is_unlocked: boolean | null
           message: string
           net_amount: number | null
+          owner_confirmed_at: string | null
           owner_has_messaged: boolean | null
           payment_captured_at: string | null
           payment_status: string | null
@@ -1972,6 +2161,7 @@ export type Database = {
           stripe_payment_intent_id: string | null
           stripe_processing_fee: number | null
           updated_at: string
+          work_status: string | null
         }
         Insert: {
           accepted_amount?: number | null
@@ -1984,13 +2174,16 @@ export type Database = {
           current_proposal_amount?: number | null
           current_proposal_by?: string | null
           delivery_days: number
+          dispute_id?: string | null
           escrow_released_at?: string | null
           freelancer_amount?: number | null
+          freelancer_completed_at?: string | null
           freelancer_id: string
           id?: string
           is_unlocked?: boolean | null
           message: string
           net_amount?: number | null
+          owner_confirmed_at?: string | null
           owner_has_messaged?: boolean | null
           payment_captured_at?: string | null
           payment_status?: string | null
@@ -2000,6 +2193,7 @@ export type Database = {
           stripe_payment_intent_id?: string | null
           stripe_processing_fee?: number | null
           updated_at?: string
+          work_status?: string | null
         }
         Update: {
           accepted_amount?: number | null
@@ -2012,13 +2206,16 @@ export type Database = {
           current_proposal_amount?: number | null
           current_proposal_by?: string | null
           delivery_days?: number
+          dispute_id?: string | null
           escrow_released_at?: string | null
           freelancer_amount?: number | null
+          freelancer_completed_at?: string | null
           freelancer_id?: string
           id?: string
           is_unlocked?: boolean | null
           message?: string
           net_amount?: number | null
+          owner_confirmed_at?: string | null
           owner_has_messaged?: boolean | null
           payment_captured_at?: string | null
           payment_status?: string | null
@@ -2028,6 +2225,7 @@ export type Database = {
           stripe_payment_intent_id?: string | null
           stripe_processing_fee?: number | null
           updated_at?: string
+          work_status?: string | null
         }
         Relationships: [
           {

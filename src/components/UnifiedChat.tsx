@@ -596,7 +596,7 @@ useEffect(() => {
       if (counterError) throw counterError;
       
       // Update proposal with new amount and who should accept
-      const { error: updateError } = await supabase
+      const { data: updateData, error: updateError } = await supabase
         .from('proposals')
         .update({
           current_proposal_amount: amount,
@@ -604,9 +604,19 @@ useEffect(() => {
           awaiting_acceptance_from: toProfileId,
           status: 'pending', // Back to pending until acceptance
         })
-        .eq('id', conversationId);
+        .eq('id', conversationId)
+        .select();
       
-      if (updateError) throw updateError;
+      console.log('✅ Proposal Updated:', {
+        updateData,
+        toProfileId,
+        fromProfileId,
+      });
+      
+      if (updateError) {
+        console.error('❌ Update Error:', updateError);
+        throw updateError;
+      }
       
       // Create status history record
       await supabase.from('proposal_status_history').insert({

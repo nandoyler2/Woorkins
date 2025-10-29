@@ -12,6 +12,7 @@ const corsHeaders = {
 interface EmailData {
   user: {
     email: string;
+    full_name?: string;
   };
   email_data: {
     token: string;
@@ -34,7 +35,10 @@ const handler = async (req: Request): Promise<Response> => {
     console.log("Received email request for:", payload.user.email);
 
     const { user, email_data } = payload;
-    const confirmationUrl = `${email_data.site_url}/auth/confirm?token_hash=${email_data.token_hash}&type=${email_data.email_action_type}&redirect_to=${encodeURIComponent(email_data.redirect_to || "/")}`;
+    const confirmationUrl = `${email_data.site_url}/auth/confirm?token_hash=${email_data.token_hash}&type=email&redirect_to=${encodeURIComponent('/welcome')}`;
+    
+    // Extract first name from full_name
+    const firstName = user.full_name?.split(' ')[0] || 'Usuário';
 
     // Create beautiful HTML email
     const html = `
@@ -66,7 +70,7 @@ const handler = async (req: Request): Promise<Response> => {
                 </h1>
                 
                 <p style="margin: 0 0 16px; color: #374151; font-size: 16px; line-height: 26px;">
-                  Olá <strong>${user.email}</strong>,
+                  Olá <strong>${firstName}</strong>,
                 </p>
                 
                 <p style="margin: 0 0 16px; color: #374151; font-size: 16px; line-height: 26px;">

@@ -54,7 +54,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signUp = async (email: string, password: string, fullName?: string, cpf?: string) => {
     const redirectUrl = `${window.location.origin}/welcome`;
     
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -65,6 +65,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         },
       },
     });
+    
+    // Enviar email de confirmação personalizado via Resend
+    if (data.user && !error) {
+      try {
+        await supabase.functions.invoke('send-confirmation-email', {
+          body: {
+            user: { 
+              email: data.user.email || email,
+              full_name: fullName,
+            },
+            email_data: {
+              token: data.user.id,
+              token_hash: data.user.id,
+              redirect_to: redirectUrl,
+              email_action_type: 'signup',
+              site_url: window.location.origin,
+            },
+          },
+        });
+      } catch (emailError) {
+        console.error('Erro ao enviar email de confirmação:', emailError);
+        // Não bloqueia o signup se o email falhar
+      }
+    }
     
     return { error };
   };

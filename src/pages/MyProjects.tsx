@@ -55,7 +55,8 @@ interface Proposal {
 const MyProjects = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [loading, setLoading] = useState(true);
+  const [loadingProjects, setLoadingProjects] = useState(true);
+  const [loadingProposals, setLoadingProposals] = useState(true);
   const [loadingPayment, setLoadingPayment] = useState(false);
   const [projects, setProjects] = useState<Project[]>([]);
   const [proposals, setProposals] = useState<Proposal[]>([]);
@@ -93,30 +94,31 @@ const MyProjects = () => {
       if (profile) {
         setCurrentProfileId(profile.id);
 
-        const { data: projectsData } = await supabase
-          .from('projects')
-          .select('*')
-          .eq('profile_id', profile.id)
-          .order('created_at', { ascending: false });
-
-        setProjects(projectsData || []);
-
-        if (projectsData && projectsData.length > 0) {
-          const projectIds = projectsData.map(p => p.id);
+        // Load projects and proposals in parallel
+        const [projectsResult, proposalsResult] = await Promise.all([
+          supabase
+            .from('projects')
+            .select('*')
+            .eq('profile_id', profile.id)
+            .order('created_at', { ascending: false }),
           
-          const { data: proposalsData } = await supabase
+          supabase
             .from('proposals')
             .select(`
               *,
-              project:project_id (id, title),
+              project:project_id!inner (id, title, profile_id),
               freelancer:freelancer_id (id, full_name, avatar_url),
               business:business_id (company_name)
             `)
-            .in('project_id', projectIds)
-            .order('created_at', { ascending: false });
+            .eq('project.profile_id', profile.id)
+            .order('created_at', { ascending: false })
+        ]);
 
-          setProposals(proposalsData as any || []);
-        }
+        setProjects(projectsResult.data || []);
+        setLoadingProjects(false);
+        
+        setProposals(proposalsResult.data as any || []);
+        setLoadingProposals(false);
       }
     } catch (error: any) {
       toast({
@@ -124,8 +126,8 @@ const MyProjects = () => {
         description: 'Erro ao carregar dados: ' + error.message,
         variant: 'destructive',
       });
-    } finally {
-      setLoading(false);
+      setLoadingProjects(false);
+      setLoadingProposals(false);
     }
   };
 
@@ -216,14 +218,6 @@ const MyProjects = () => {
     setChatOpen(true);
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-primary/5 to-secondary/10">
       <Header />
@@ -237,7 +231,23 @@ const MyProjects = () => {
           </TabsList>
 
           <TabsContent value="projects" className="space-y-4">
-            {projects.length === 0 ? (
+            {loadingProjects ? (
+              <div className="space-y-4">
+                {[1, 2, 3].map(i => (
+                  <Card key={i} className="bg-card/50 backdrop-blur-sm shadow-lg border-2">
+                    <CardHeader>
+                      <div className="animate-pulse space-y-2">
+                        <div className="h-6 bg-muted rounded w-3/4" />
+                        <div className="h-4 bg-muted rounded w-full" />
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="animate-pulse h-4 bg-muted rounded w-1/2" />
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : projects.length === 0 ? (
               <Card className="bg-card/50 backdrop-blur-sm shadow-lg border-2">
                 <CardContent className="pt-6 text-center text-muted-foreground">
                   Você ainda não criou nenhum projeto.
@@ -271,7 +281,26 @@ const MyProjects = () => {
           </TabsContent>
 
           <TabsContent value="proposals" className="space-y-4">
-            {proposals.length === 0 ? (
+            {loadingProposals ? (
+              <div className="space-y-4">
+                {[1, 2, 3].map(i => (
+                  <Card key={i} className="bg-card/50 backdrop-blur-sm shadow-lg border-2">
+                    <CardHeader>
+                      <div className="animate-pulse space-y-2">
+                        <div className="h-6 bg-muted rounded w-1/2" />
+                        <div className="h-4 bg-muted rounded w-3/4" />
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="animate-pulse space-y-2">
+                        <div className="h-4 bg-muted rounded w-full" />
+                        <div className="h-4 bg-muted rounded w-2/3" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : proposals.length === 0 ? (
               <Card className="bg-card/50 backdrop-blur-sm shadow-lg border-2">
                 <CardContent className="pt-6 text-center text-muted-foreground">
                   Você ainda não recebeu propostas.

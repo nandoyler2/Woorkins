@@ -124,7 +124,7 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
   const [positiveEvaluations, setPositiveEvaluations] = useState<Evaluation[]>([]);
   const [complaintEvaluations, setComplaintEvaluations] = useState<Evaluation[]>([]);
   const [averageRating, setAverageRating] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const [loadingProfile, setLoadingProfile] = useState(true);
   const activeTab = tab || 'inicio';
   const isProfileOwner = user?.id === (profile?.user_id || (profile as any)?.profile_id);
   const [showEvaluationForm, setShowEvaluationForm] = useState(false);
@@ -225,6 +225,7 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
 
         if (error || !profileData) {
           toast({ title: 'Erro', description: 'Usuário não encontrado', variant: 'destructive' });
+          setLoadingProfile(false);
           return;
         }
 
@@ -235,12 +236,15 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
           cover_url: profileData.cover_url ? `${profileData.cover_url}?t=${Date.now()}` : null,
         };
         setProfile(profileWithFreshImages as UserProfileData);
-        await Promise.all([
+        setLoadingProfile(false);
+
+        // Load additional content in background
+        Promise.all([
           loadProjects(profileData.id, 'user'),
           loadPosts(profileData.id, 'user'),
           loadEvaluations(profileData.id),
           checkContent(profileData.id, 'user')
-        ]);
+        ]).catch(console.error);
       } else {
         const { data: profileData, error } = await supabase
           .from('profiles')
@@ -251,6 +255,7 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
 
         if (error || !profileData) {
           toast({ title: 'Erro', description: 'Perfil não encontrado', variant: 'destructive' });
+          setLoadingProfile(false);
           return;
         }
 
@@ -262,16 +267,18 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
           cover_url: profileData.cover_url ? `${profileData.cover_url}?t=${Date.now()}` : null,
         };
         setProfile(profileWithFreshImages as unknown as UserProfileData);
-        await Promise.all([
+        setLoadingProfile(false);
+
+        // Load additional content in background
+        Promise.all([
           loadPosts(profileData.id, 'business'),
           loadEvaluations(profileData.id),
           checkContent(profileData.id, 'business')
-        ]);
+        ]).catch(console.error);
       }
     } catch (error) {
       console.error('Error loading profile:', error);
-    } finally {
-      setLoading(false);
+      setLoadingProfile(false);
     }
   };
 
@@ -297,11 +304,14 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
           cover_url: businessData.cover_url ? `${businessData.cover_url}?t=${Date.now()}` : null,
         };
         setProfile(profileWithFreshImages as unknown as UserProfileData);
-        await Promise.all([
+        setLoadingProfile(false);
+
+        // Load additional content in background
+        Promise.all([
           loadPosts(businessData.id, 'business'),
           loadEvaluations(businessData.id),
           checkContent(businessData.id, 'business')
-        ]);
+        ]).catch(console.error);
         return;
       }
 
@@ -321,19 +331,22 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
           cover_url: profileData.cover_url ? `${profileData.cover_url}?t=${Date.now()}` : null,
         };
         setProfile(profileWithFreshImages as UserProfileData);
-        await Promise.all([
+        setLoadingProfile(false);
+
+        // Load additional content in background
+        Promise.all([
           loadProjects(profileData.id, 'user'),
           loadPosts(profileData.id, 'user'),
           loadEvaluations(profileData.id),
           checkContent(profileData.id, 'user')
-        ]);
+        ]).catch(console.error);
       } else {
         toast({ title: 'Erro', description: 'Perfil não encontrado', variant: 'destructive' });
+        setLoadingProfile(false);
       }
     } catch (error) {
       console.error('Error loading user profile:', error);
-    } finally {
-      setLoading(false);
+      setLoadingProfile(false);
     }
   };
 
@@ -374,49 +387,40 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
     const idColumn = type === 'user' ? 'profile_id' : 'business_id';
 
     try {
-      // Check testimonials
-      const { data: testimonials } = await supabase
-        .from(`${prefix}_testimonials` as any)
-        .select('id')
-        .eq(idColumn, profileId)
-        .limit(1);
-      setHasTestimonials((testimonials?.length || 0) > 0);
+      // Check all content in parallel
+      const [testimonials, video, portfolio, catalog, vacancies] = await Promise.all([
+        supabase
+          .from(`${prefix}_testimonials` as any)
+          .select('id', { count: 'exact', head: true })
+          .eq(idColumn, profileId),
+        supabase
+          .from(`${prefix}_videos` as any)
+          .select('id')
+          .eq(idColumn, profileId)
+          .eq('active', true)
+          .maybeSingle(),
+        supabase
+          .from(`${prefix}_portfolio_items` as any)
+          .select('id', { count: 'exact', head: true })
+          .eq(idColumn, profileId)
+          .eq('active', true),
+        supabase
+          .from(`${prefix}_catalog_items` as any)
+          .select('id', { count: 'exact', head: true })
+          .eq(idColumn, profileId)
+          .eq('active', true),
+        supabase
+          .from(`${prefix}_job_vacancies` as any)
+          .select('id', { count: 'exact', head: true })
+          .eq(idColumn, profileId)
+          .eq('status', 'open')
+      ]);
 
-      // Check video
-      const { data: video } = await supabase
-        .from(`${prefix}_videos` as any)
-        .select('id')
-        .eq(idColumn, profileId)
-        .eq('active', true)
-        .maybeSingle();
-      setHasVideo(!!video);
-
-      // Check portfolio
-      const { data: portfolio } = await supabase
-        .from(`${prefix}_portfolio_items` as any)
-        .select('id')
-        .eq(idColumn, profileId)
-        .eq('active', true)
-        .limit(1);
-      setHasPortfolio((portfolio?.length || 0) > 0);
-
-      // Check catalog
-      const { data: catalog } = await supabase
-        .from(`${prefix}_catalog_items` as any)
-        .select('id')
-        .eq(idColumn, profileId)
-        .eq('active', true)
-        .limit(1);
-      setHasCatalog((catalog?.length || 0) > 0);
-
-      // Check job vacancies
-      const { data: vacancies } = await supabase
-        .from(`${prefix}_job_vacancies` as any)
-        .select('id')
-        .eq(idColumn, profileId)
-        .eq('status', 'open')
-        .limit(1);
-      setHasJobVacancies((vacancies?.length || 0) > 0);
+      setHasTestimonials((testimonials.count || 0) > 0);
+      setHasVideo(!!video.data);
+      setHasPortfolio((portfolio.count || 0) > 0);
+      setHasCatalog((catalog.count || 0) > 0);
+      setHasJobVacancies((vacancies.count || 0) > 0);
     } catch (error) {
       console.error('Error checking content:', error);
     }
@@ -510,7 +514,7 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
     }
   };
 
-  if (loading) {
+  if (loadingProfile) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>

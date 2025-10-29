@@ -147,6 +147,13 @@ export default function Dashboard() {
   const [showCreateStoryDialog, setShowCreateStoryDialog] = useState(false);
   const [storiesRefreshTrigger, setStoriesRefreshTrigger] = useState(0);
   const [showStoryPhotoRequired, setShowStoryPhotoRequired] = useState(false);
+  
+  // Statistics states
+  const [evaluationsGiven, setEvaluationsGiven] = useState(0);
+  const [evaluationsReceived, setEvaluationsReceived] = useState(0);
+  const [followersCount, setFollowersCount] = useState(0);
+  const [followingCount, setFollowingCount] = useState(0);
+  const [loadingStats, setLoadingStats] = useState(true);
 
   const handleCreateStoryClick = () => {
     // Verificar se o perfil principal tem foto
@@ -382,9 +389,11 @@ export default function Dashboard() {
         setProfile(profileData);
         
         // Executar operações em paralelo SEM aguardar fixUsernameSlugConflict
+        const allProfileIds = profiles.map((p: any) => p.id);
         Promise.all([
           loadBusinessProfiles(profileData.id),
-          loadWoorkoinsBalanceForIds(profiles.map((p: any) => p.id))
+          loadWoorkoinsBalanceForIds(allProfileIds),
+          loadStatistics(allProfileIds)
         ]);
         
         // Executar fix de conflitos em background (não bloqueia)
@@ -637,6 +646,53 @@ export default function Dashboard() {
     
     if (!error && data) {
       setBusinessProfiles(data as unknown as BusinessProfile[]);
+    }
+  };
+
+  const loadStatistics = async (profileIds: string[]) => {
+    if (!profileIds?.length) return;
+    
+    setLoadingStats(true);
+    try {
+      // Buscar todas as estatísticas em paralelo
+      const [evaluationsGivenData, evaluationsReceivedData, followersData, followingData] = await Promise.all([
+        // Avaliações dadas (perfis do usuário como autores)
+        supabase
+          .from('evaluations')
+          .select('id', { count: 'exact', head: true })
+          .in('author_profile_id', profileIds),
+        
+        // Avaliações recebidas (perfis do usuário como alvos)
+        supabase
+          .from('evaluations')
+          .select('id', { count: 'exact', head: true })
+          .in('target_profile_id', profileIds),
+        
+        // Seguidores (perfis do usuário são seguidos)
+        supabase
+          .from('follows')
+          .select('id', { count: 'exact', head: true })
+          .in('following_id', profileIds),
+        
+        // Seguindo (perfis do usuário seguem outros)
+        supabase
+          .from('follows')
+          .select('id', { count: 'exact', head: true })
+          .in('follower_id', profileIds)
+      ]);
+
+      setEvaluationsGiven(evaluationsGivenData.count || 0);
+      setEvaluationsReceived(evaluationsReceivedData.count || 0);
+      setFollowersCount(followersData.count || 0);
+      setFollowingCount(followingData.count || 0);
+    } catch (error) {
+      console.error('Error loading statistics:', error);
+      setEvaluationsGiven(0);
+      setEvaluationsReceived(0);
+      setFollowersCount(0);
+      setFollowingCount(0);
+    } finally {
+      setLoadingStats(false);
     }
   };
 
@@ -1395,7 +1451,11 @@ export default function Dashboard() {
                     </div>
                     <span className="text-sm text-slate-700">Avaliações Dadas</span>
                   </div>
-                  <span className="text-xl font-bold text-slate-900">23</span>
+                  {loadingStats ? (
+                    <Skeleton className="h-7 w-12" />
+                  ) : (
+                    <span className="text-xl font-bold text-slate-900">{evaluationsGiven}</span>
+                  )}
                 </div>
                 
                 <div className="flex items-center justify-between py-2">
@@ -1405,7 +1465,11 @@ export default function Dashboard() {
                     </div>
                     <span className="text-sm text-slate-700">Avaliações Recebidas</span>
                   </div>
-                  <span className="text-xl font-bold text-slate-900">18</span>
+                  {loadingStats ? (
+                    <Skeleton className="h-7 w-12" />
+                  ) : (
+                    <span className="text-xl font-bold text-slate-900">{evaluationsReceived}</span>
+                  )}
                 </div>
                 
                 <div className="flex items-center justify-between py-2">
@@ -1415,7 +1479,11 @@ export default function Dashboard() {
                     </div>
                     <span className="text-sm text-slate-700">Seguidores</span>
                   </div>
-                  <span className="text-xl font-bold text-slate-900">156</span>
+                  {loadingStats ? (
+                    <Skeleton className="h-7 w-12" />
+                  ) : (
+                    <span className="text-xl font-bold text-slate-900">{followersCount}</span>
+                  )}
                 </div>
                 
                 <div className="flex items-center justify-between py-2">
@@ -1425,7 +1493,11 @@ export default function Dashboard() {
                     </div>
                     <span className="text-sm text-slate-700">Seguindo</span>
                   </div>
-                  <span className="text-xl font-bold text-slate-900">89</span>
+                  {loadingStats ? (
+                    <Skeleton className="h-7 w-12" />
+                  ) : (
+                    <span className="text-xl font-bold text-slate-900">{followingCount}</span>
+                  )}
                 </div>
               </CardContent>
             </Card>

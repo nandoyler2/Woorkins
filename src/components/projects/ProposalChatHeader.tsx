@@ -190,32 +190,20 @@ export function ProposalChatHeader({
 
   return (
     <div className="border-b bg-card p-4">
-      {/* Nova seção: Informações do Projeto */}
-      {projectData && (
-        <div className="mb-3 pb-3 border-b">
-          <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <h2 className="text-sm font-medium text-muted-foreground mb-1">
+      {/* Layout compacto - tudo em uma seção */}
+      <div className="flex items-start justify-between gap-4">
+        {/* Coluna esquerda: Info do projeto + valor + status */}
+        <div className="flex-1 min-w-0">
+          {projectData && (
+            <div className="mb-2">
+              <h2 className="text-xs font-medium text-muted-foreground">
                 {isOwner ? 'Seu Projeto' : `Projeto de ${projectData.ownerName}`}
               </h2>
-              <h3 className="text-base font-semibold">{projectData.title}</h3>
+              <h3 className="text-sm font-semibold truncate">{projectData.title}</h3>
             </div>
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => window.open(`/projetos/${projectData.id}`, '_blank')}
-            >
-              <ExternalLink className="h-4 w-4 mr-2" />
-              Ver Projeto
-            </Button>
-          </div>
-        </div>
-      )}
-      
-      {/* Seção de valor e status */}
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex-1">
-          <div className="flex items-center gap-3">
+          )}
+          
+          <div className="flex items-center gap-3 flex-wrap">
             <h3 className="font-semibold text-lg">
               R$ {proposal.current_proposal_amount?.toLocaleString('pt-BR', {
                 minimumFractionDigits: 2,
@@ -224,14 +212,27 @@ export function ProposalChatHeader({
             </h3>
             {getStatusBadge()}
           </div>
+          
           {proposal.payment_status === 'paid_escrow' && !isOwner && (
-            <p className="text-sm text-muted-foreground mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               💰 Valor em garantia - será liberado após conclusão
             </p>
           )}
         </div>
 
-        <div className="flex items-center gap-2">
+        {/* Coluna direita: Botões de ação */}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {projectData && (
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => window.open(`/projetos/${projectData.id}`, '_blank')}
+            >
+              <ExternalLink className="h-4 w-4 mr-2" />
+              Ver Projeto
+            </Button>
+          )}
+          
           {renderActionButtons()}
 
           <DropdownMenu>

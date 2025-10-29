@@ -566,7 +566,7 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId }: 
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent className="z-[10000]">
+        <AlertDialogContent className="z-[10000] max-w-sm">
           <AlertDialogHeader>
             <AlertDialogTitle>Excluir story?</AlertDialogTitle>
             <AlertDialogDescription>

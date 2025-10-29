@@ -1354,42 +1354,47 @@ useEffect(() => {
               )}
 
               {/* Show proposal message as first message if it's a proposal chat */}
-              {conversationType === 'proposal' && proposalData && (
-                <div className="flex gap-3 animate-in slide-in-from-bottom-2">
-                  <Avatar className="h-12 w-12 flex-shrink-0 ring-2 ring-primary/20">
-                    <AvatarImage src={isOwner ? otherUser.avatar : proposalData.freelancer?.avatar_url} />
-                    <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
-                      {isOwner ? otherUser.name.charAt(0).toUpperCase() : (proposalData.freelancer?.full_name?.charAt(0) || proposalData.freelancer?.company_name?.charAt(0) || 'F').toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  
-                  <div className="flex flex-col max-w-[80%]">
-                    <div className="rounded-2xl px-5 py-4 shadow-md bg-accent text-accent-foreground rounded-tl-sm">
-                      <div className="flex items-baseline gap-2 mb-3">
-                        <p className="text-sm font-bold">Proposta Inicial</p>
-                        <span className="text-xs opacity-80">
-                          {new Date(proposalData.created_at).toLocaleString('pt-BR', {
-                            day: '2-digit',
-                            month: '2-digit',
-                            year: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
-                        </span>
-                      </div>
-                      <p className="text-base leading-relaxed break-words mb-3">{proposalData.message}</p>
-                      <div className="mt-3 pt-3 border-t border-primary-foreground/20 space-y-2">
-                        <p className="text-sm">
-                          <span className="font-bold">Valor:</span> R$ {proposalData.budget.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                        </p>
-                        <p className="text-sm">
-                          <span className="font-bold">Prazo:</span> {proposalData.delivery_days} dias
-                        </p>
+              {conversationType === 'proposal' && proposalData && (() => {
+                const isMyProposal = proposalData.freelancer_id === profileId;
+                return (
+                  <div className={`flex gap-3 animate-in slide-in-from-bottom-2 ${isMyProposal ? 'flex-row-reverse' : 'flex-row'}`}>
+                    {!isMyProposal && (
+                      <Avatar className="h-12 w-12 flex-shrink-0 ring-2 ring-primary/20">
+                        <AvatarImage src={proposalData.freelancer?.avatar_url} />
+                        <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
+                          {(proposalData.freelancer?.full_name?.charAt(0) || proposalData.freelancer?.company_name?.charAt(0) || 'F').toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                    )}
+                    
+                    <div className={`flex flex-col max-w-[80%] ${isMyProposal ? 'items-end' : 'items-start'}`}>
+                      <div className={`rounded-2xl px-5 py-4 shadow-md bg-accent text-accent-foreground ${isMyProposal ? 'rounded-tr-sm' : 'rounded-tl-sm'}`}>
+                        <div className="flex items-baseline gap-2 mb-3">
+                          <p className="text-sm font-bold">Proposta Inicial</p>
+                          <span className="text-xs opacity-80">
+                            {new Date(proposalData.created_at).toLocaleString('pt-BR', {
+                              day: '2-digit',
+                              month: '2-digit',
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </span>
+                        </div>
+                        <p className="text-base leading-relaxed break-words mb-3">{proposalData.message}</p>
+                        <div className="mt-3 pt-3 border-t border-primary-foreground/20 space-y-2">
+                          <p className="text-sm">
+                            <span className="font-bold">Valor:</span> R$ {proposalData.budget.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                          </p>
+                          <p className="text-sm">
+                            <span className="font-bold">Prazo:</span> {proposalData.delivery_days} dias
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              )}
+                );
+              })()}
               
               {messages.length === 0 && conversationType !== 'proposal' && (
                 <div className="text-center py-12">

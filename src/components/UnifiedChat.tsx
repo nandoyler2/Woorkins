@@ -858,7 +858,7 @@ useEffect(() => {
     
     return (
       <div
-        className={`flex gap-2 animate-in slide-in-from-bottom-2 ${
+        className={`flex gap-2 ${
           isMine ? 'flex-row-reverse' : 'flex-row'
         }`}
       >

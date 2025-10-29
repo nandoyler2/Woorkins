@@ -215,6 +215,17 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId }: 
     }
   };
 
+  const handleHoldPause = (shouldPause: boolean) => {
+    setIsPaused(shouldPause);
+    if (videoRef.current && currentStory.type === 'video') {
+      if (shouldPause) {
+        videoRef.current.pause();
+      } else {
+        videoRef.current.play();
+      }
+    }
+  };
+
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (e.key === 'ArrowRight') handleNext();
     if (e.key === 'ArrowLeft') handlePrevious();
@@ -305,10 +316,11 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId }: 
           {/* Content */}
           <div 
             className="flex-1 flex items-center justify-center relative"
-            onMouseDown={togglePause}
-            onMouseUp={togglePause}
-            onTouchStart={togglePause}
-            onTouchEnd={togglePause}
+            onMouseDown={() => handleHoldPause(true)}
+            onMouseUp={() => handleHoldPause(false)}
+            onMouseLeave={() => handleHoldPause(false)}
+            onTouchStart={() => handleHoldPause(true)}
+            onTouchEnd={() => handleHoldPause(false)}
           >
             {/* Navigation areas */}
             <div

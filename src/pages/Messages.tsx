@@ -136,14 +136,15 @@ export default function Messages() {
 
   const loadProfile = async () => {
     try {
-      const { data: profile } = await supabase
+      const { data: profiles } = await supabase
         .from('profiles')
         .select('id')
         .eq('user_id', user?.id)
-        .single();
+        .order('created_at', { ascending: true })
+        .limit(1);
 
-      if (profile) {
-        setProfileId(profile.id);
+      if (profiles && profiles.length > 0) {
+        setProfileId(profiles[0].id);
       }
     } catch (error) {
       console.error('Error loading profile:', error);

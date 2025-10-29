@@ -77,7 +77,6 @@ export function UnifiedChat({
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [proposalData, setProposalData] = useState<any>(null);
   const [isOwner, setIsOwner] = useState(false);
-  const [isLoadingProposal, setIsLoadingProposal] = useState(true);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -280,12 +279,10 @@ export function UnifiedChat({
     }
   };
 
-  // Load proposal data if it's a proposal conversation
+  // Load proposal data if it's a proposal conversation (background)
   useEffect(() => {
     if (conversationType === 'proposal') {
       loadProposalData();
-    } else {
-      setIsLoadingProposal(false);
     }
   }, [conversationId, conversationType]);
 
@@ -339,8 +336,6 @@ useEffect(() => {
       setIsOwner(data.project.profile_id === profileId);
     } catch (error) {
       console.error('Error loading proposal data:', error);
-    } finally {
-      setIsLoadingProposal(false);
     }
   };
 
@@ -491,14 +486,7 @@ useEffect(() => {
 
   const isMyMessage = (senderId: string) => senderId === profileId;
 
-  // Renderiza imediatamente sem loading
-  // if (_isLoading || isLoadingProposal) {
-  //   return (
-  //     <div className="h-full flex items-center justify-center">
-  //       <Loader2 className="h-8 w-8 animate-spin text-primary" />
-  //     </div>
-  //   );
-  // }
+  // Removido completamente - renderiza instantaneamente
 
   // Check if chat should be locked (proposal not unlocked, user is freelancer, and no messages yet)
   // Só bloqueia se realmente não há mensagens E já terminou de carregar

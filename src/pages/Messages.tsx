@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useConversationCache } from '@/hooks/useConversationCache';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -39,12 +40,18 @@ interface Conversation {
 export default function Messages() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
-  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const { 
+    conversations: cachedConversations, 
+    setConversations: setCachedConversations,
+    updateConversation,
+    isStale
+  } = useConversationCache();
+  const [conversations, setConversations] = useState<Conversation[]>(cachedConversations);
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [profileId, setProfileId] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<'all' | 'unread' | 'starred' | 'archived' | 'disputes'>('all');
+  const [isBackgroundLoading, setIsBackgroundLoading] = useState(false);
   const location = useLocation();
 
   useEffect(() => {
@@ -59,6 +66,12 @@ export default function Messages() {
 
   useEffect(() => {
     if (profileId) {
+      // Carregar do cache primeiro (instantâneo)
+      if (cachedConversations.length > 0) {
+        setConversations(cachedConversations);
+      }
+      
+      // Depois buscar atualização em background
       loadConversations();
       
       // Subscribe to lightweight realtime updates for conversation list (avoid full reload)
@@ -78,16 +91,21 @@ export default function Messages() {
                 if (c.type === 'negotiation' && c.id === m.negotiation_id) {
                   const isActive = selectedConversation?.type === 'negotiation' && selectedConversation?.id === c.id;
                   const inc = !isActive && m.sender_id !== profileId ? 1 : 0;
-                  return {
+                  const updatedConv = {
                     ...c,
                     lastMessageAt: m.created_at,
                     unreadCount: (c.unreadCount || 0) + inc,
                   };
+                  // Atualizar cache também
+                  updateConversation(c.id, 'negotiation', updatedConv);
+                  return updatedConv;
                 }
                 return c;
               });
               // Sort by last activity desc
-              return [...updated].sort((a, b) => new Date(b.lastMessageAt || 0).getTime() - new Date(a.lastMessageAt || 0).getTime());
+              const sorted = [...updated].sort((a, b) => new Date(b.lastMessageAt || 0).getTime() - new Date(a.lastMessageAt || 0).getTime());
+              setCachedConversations(sorted);
+              return sorted;
             });
           }
         )
@@ -105,15 +123,20 @@ export default function Messages() {
                 if (c.type === 'proposal' && c.id === m.proposal_id) {
                   const isActive = selectedConversation?.type === 'proposal' && selectedConversation?.id === c.id;
                   const inc = !isActive && m.sender_id !== profileId ? 1 : 0;
-                  return {
+                  const updatedConv = {
                     ...c,
                     lastMessageAt: m.created_at,
                     unreadCount: (c.unreadCount || 0) + inc,
                   };
+                  // Atualizar cache também
+                  updateConversation(c.id, 'proposal', updatedConv);
+                  return updatedConv;
                 }
                 return c;
               });
-              return [...updated].sort((a, b) => new Date(b.lastMessageAt || 0).getTime() - new Date(a.lastMessageAt || 0).getTime());
+              const sorted = [...updated].sort((a, b) => new Date(b.lastMessageAt || 0).getTime() - new Date(a.lastMessageAt || 0).getTime());
+              setCachedConversations(sorted);
+              return sorted;
             });
           }
         )
@@ -153,8 +176,14 @@ export default function Messages() {
     }
   };
 
-  const loadConversations = async () => {
-    setLoading(true);
+  const loadConversations = useCallback(async (forceRefresh = false) => {
+    // Se tem cache válido e não é refresh forçado, usar cache
+    if (!forceRefresh && !isStale()) {
+      setConversations(cachedConversations);
+      return;
+    }
+
+    setIsBackgroundLoading(true);
     try {
       // Load aggregated unread counts for this user once
       const { data: unreadRows } = await supabase
@@ -345,13 +374,15 @@ export default function Messages() {
           .upsert(aggregateRows, { onConflict: 'user_id,conversation_id,conversation_type' });
       }
 
+      // Atualizar tanto o estado local quanto o cache global
       setConversations(allConvos);
+      setCachedConversations(allConvos);
     } catch (error) {
       console.error('Error loading conversations:', error);
     } finally {
-      setLoading(false);
+      setIsBackgroundLoading(false);
     }
-  };
+  }, [profileId, activeFilter, isStale, cachedConversations, setCachedConversations]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -407,13 +438,7 @@ export default function Messages() {
       }
     });
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
+  // Removido loading bloqueante - renderiza imediatamente com cache
 
   return (
     <div className="h-screen flex flex-col bg-gradient-to-br from-background via-primary/5 to-secondary/10">
@@ -502,6 +527,12 @@ export default function Messages() {
                   className="pl-10"
                 />
               </div>
+              {isBackgroundLoading && (
+                <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  <span>Atualizando...</span>
+                </div>
+              )}
             </div>
             
             <div className="flex-1 overflow-y-auto">

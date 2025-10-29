@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { RealtimeChannel } from '@supabase/supabase-js';
 import { compressImage } from '@/lib/imageCompression';
+import { useMessageCache } from './useMessageCache';
 
 interface Message {
   id: string;
@@ -34,8 +35,8 @@ export const useRealtimeMessaging = ({
   otherUserId,
   proposalStatus,
 }: UseRealtimeMessagingProps) => {
+  const { getMessages, addMessage } = useMessageCache();
   const [messages, setMessages] = useState<Message[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [otherUserTyping, setOtherUserTyping] = useState(false);
@@ -43,7 +44,7 @@ export const useRealtimeMessaging = ({
   const [isBlocked, setIsBlocked] = useState(false);
   const [blockedUntil, setBlockedUntil] = useState<Date | null>(null);
   const [blockReason, setBlockReason] = useState<string>('');
-  const [isConversationActive, setIsConversationActive] = useState(true); // Track if user is actively in the conversation
+  const [isConversationActive, setIsConversationActive] = useState(true);
   
   const { toast } = useToast();
   const channelRef = useRef<RealtimeChannel | null>(null);
@@ -150,12 +151,36 @@ export const useRealtimeMessaging = ({
     }
   }, []);
 
-  // Load messages
+  // Load messages - retorna cache instantaneamente, busca em background
   const loadMessages = useCallback(async () => {
     try {
+      // 1. Retornar cache imediatamente
+      const cachedMessages = await getMessages(conversationId, conversationType);
+      if (cachedMessages.length > 0) {
+        // Mapear mensagens do cache com perfis
+        const profilesResult = await supabase
+          .from('profiles')
+          .select('id, full_name, avatar_url');
+        
+        const profilesMap = new Map(
+          (profilesResult.data || []).map(p => [p.id, p])
+        );
+
+        const messagesWithSenders = cachedMessages.map((msg: any) => {
+          const sender = profilesMap.get(msg.sender_id);
+          return {
+            ...msg,
+            sender_name: sender?.full_name || msg.sender_name || 'Usuário',
+            sender_avatar: sender?.avatar_url || msg.sender_avatar,
+          };
+        });
+
+        setMessages(messagesWithSenders);
+      }
+
+      // 2. Buscar atualização em background (sem bloquear UI)
       const table = conversationType === 'negotiation' ? 'negotiation_messages' : 'proposal_messages';
       
-      // Buscar mensagens e perfis em paralelo para ser mais rápido
       const [messagesResult, profilesResult] = await Promise.all([
         (supabase.from(table) as any)
           .select('*')
@@ -168,12 +193,10 @@ export const useRealtimeMessaging = ({
 
       if (messagesResult.error) throw messagesResult.error;
 
-      // Criar um mapa de perfis para acesso rápido
       const profilesMap = new Map(
         (profilesResult.data || []).map(p => [p.id, p])
       );
 
-      // Mapear mensagens com dados de perfil
       const messagesWithSenders = (messagesResult.data || []).map((msg: any) => {
         const sender = profilesMap.get(msg.sender_id);
         return {
@@ -203,10 +226,8 @@ export const useRealtimeMessaging = ({
         title: 'Erro',
         description: 'Não foi possível carregar as mensagens',
       });
-    } finally {
-      setIsLoading(false);
     }
-  }, [conversationId, conversationType, currentUserId]);
+  }, [conversationId, conversationType, currentUserId, getMessages]);
 
   // Mark messages as read
   const markMessagesAsRead = useCallback(async () => {
@@ -920,7 +941,7 @@ export const useRealtimeMessaging = ({
 
   return {
     messages,
-    isLoading,
+    isLoading: false, // Sempre false - renderiza instantaneamente
     isSending,
     isTyping,
     otherUserTyping,

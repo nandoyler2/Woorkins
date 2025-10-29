@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import { supabase } from '@/integrations/supabase/client';
 
 interface Message {
@@ -26,8 +27,10 @@ interface MessageCacheStore {
 
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
 
-export const useMessageCache = create<MessageCacheStore>((set, get) => ({
-  cache: {},
+export const useMessageCache = create<MessageCacheStore>()(
+  persist(
+    (set, get) => ({
+      cache: {},
 
   getMessages: async (conversationId: string, conversationType: 'negotiation' | 'proposal') => {
     const cacheKey = `${conversationType}-${conversationId}`;
@@ -100,4 +103,12 @@ export const useMessageCache = create<MessageCacheStore>((set, get) => ({
       set({ cache: {} });
     }
   },
-}));
+    }),
+    {
+      name: 'message-cache',
+      partialize: (state) => ({
+        cache: state.cache,
+      }),
+    }
+  )
+);

@@ -39,7 +39,7 @@ const handler = async (req: Request): Promise<Response> => {
     const baseUrl = "https://woorkins.com";
     const confirmationUrl = `${baseUrl}/auth/confirm?token_hash=${email_data.token_hash}&type=email&redirect_to=${encodeURIComponent('/welcome')}`;
     
-    // Extract first name from full_name
+    // Extract first name from full_name, fallback to a generic greeting
     const firstName = user.full_name?.split(' ')[0] || 'Usuário';
 
     // Create beautiful HTML email

@@ -65,7 +65,7 @@ serve(async (req) => {
       });
     }
 
-    const firstName = full_name?.split(" ")[0] || email.split("@")[0];
+    const firstName = full_name?.split(" ")[0] || "Usuário";
 
     const html = `
 <!DOCTYPE html>

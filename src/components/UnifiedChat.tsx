@@ -30,6 +30,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useRealtimeMessaging } from '@/hooks/useRealtimeMessaging';
 import { ProposalNegotiationPanel } from './ProposalNegotiationPanel';
+import { ProposalChatHeader } from './projects/ProposalChatHeader';
 import { BlockedMessageCountdown } from './BlockedMessageCountdown';
 import { ImageViewer } from './ImageViewer';
 import { RequireProfilePhotoDialog } from './RequireProfilePhotoDialog';
@@ -682,119 +683,35 @@ useEffect(() => {
 
   return (
     <div className="h-full flex flex-col bg-white relative">
-      {/* Unified Header with Proposal Info - 3 Columns Layout */}
+      {/* Header with Proposal Chat Header */}
       {conversationType === 'proposal' && proposalData && (
-        <div className="border-b bg-gradient-to-r from-slate-50 to-slate-100 flex-shrink-0">
-          <div className="px-4 py-3 grid grid-cols-[auto_1fr_auto] gap-4 items-center">
-            {/* Coluna 1: Foto e Nome do Usuário */}
-            <div className="flex items-center gap-3">
-              <div className="relative flex-shrink-0">
-                <Avatar className="h-10 w-10 ring-2 ring-background">
-                  <AvatarImage src={otherUser.avatar} />
-                  <AvatarFallback className="bg-primary/10 text-primary">
-                    {otherUser.name.charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 bg-green-500 rounded-full border-2 border-background" />
-              </div>
-              <div className="min-w-0">
-                <h3 className="font-semibold text-sm truncate">
-                  {proposalData.payment_status === 'paid' ? otherUser.name : (() => {
-                    const parts = otherUser.name.split(' ');
-                    return parts.length > 1 ? `${parts[0]} ${parts[1].charAt(0)}.` : parts[0];
-                  })()}
-                </h3>
-                <div className="flex items-center gap-2">
-                  {otherUserTyping ? (
-                    <span className="text-xs text-primary animate-pulse font-medium">Digitando...</span>
-                  ) : (
-                    <>
-                      <span className="text-xs text-green-600 dark:text-green-400 font-medium">Online</span>
-                      <span className="text-xs text-muted-foreground">•</span>
-                      <Badge variant="secondary" className="text-xs">
-                        Proposta de Projeto
-                      </Badge>
-                    </>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Coluna 2: Nome do Projeto e Valor - Centralizado */}
-            <div className="min-w-0 flex flex-col items-center justify-center">
-              <p className="text-sm font-semibold text-foreground truncate mb-2 text-center">{projectTitle}</p>
-              <div className="inline-flex items-center gap-3 bg-white rounded-full px-4 py-1.5 shadow-sm border">
-                <span className="text-sm font-bold text-primary">
-                  R$ {proposalData.budget.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                </span>
-                <div className="h-3 w-px bg-border" />
-                <span className="text-xs text-muted-foreground">
-                  Prazo: {proposalData.delivery_days} dia{proposalData.delivery_days > 1 ? 's' : ''}
-                </span>
-              </div>
-            </div>
-
-            {/* Coluna 3: Botão Refazer, Status e Menu */}
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 text-xs"
-              >
-                <DollarSign className="h-3 w-3 mr-1" />
-                Refazer Proposta
-              </Button>
-              
-              <Badge variant={proposalData.status === 'accepted' ? 'default' : 'secondary'} className="text-xs">
-                {proposalData.status === 'pending' ? 'Pendente' : 
-                 proposalData.status === 'accepted' ? 'Aceito' : 
-                 proposalData.status === 'rejected' ? 'Rejeitado' : proposalData.status}
-              </Badge>
-              
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-8 w-8">
-                    <MoreVertical className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
-                  {projectId && (
-                    <>
-                      <DropdownMenuItem onClick={() => window.open(`/projetos/${projectId}`, '_blank')}>
-                        <Eye className="h-4 w-4 mr-2" />
-                        Visualizar Projeto
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                    </>
-                  )}
-                  <DropdownMenuItem onClick={handleArchiveConversation}>
-                    <Archive className="h-4 w-4 mr-2" />
-                    Arquivar Conversa
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setShowBlockDialog(true)}>
-                    <Ban className="h-4 w-4 mr-2" />
-                    Bloquear Usuário
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setShowReportDialog(true)}>
-                    <AlertTriangle className="h-4 w-4 mr-2" />
-                    Denunciar
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    className="text-destructive focus:text-destructive"
-                    onClick={async () => {
-                      const canDelete = await checkCanDelete();
-                      if (canDelete) setShowDeleteDialog(true);
-                    }}
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Excluir Conversa
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </div>
-        </div>
+        <ProposalChatHeader
+          proposal={{
+            id: conversationId,
+            status: proposalData.status,
+            payment_status: proposalData.payment_status,
+            work_status: proposalData.work_status,
+            current_proposal_amount: proposalData.current_proposal_amount || proposalData.budget,
+            is_unlocked: proposalData.is_unlocked,
+            awaiting_acceptance_from: proposalData.awaiting_acceptance_from,
+          }}
+          currentProfileId={profileId}
+          isOwner={isOwner}
+          onAccept={async () => {
+            await supabase
+              .from('proposals')
+              .update({
+                status: 'accepted',
+                accepted_amount: proposalData.current_proposal_amount || proposalData.budget,
+                awaiting_acceptance_from: null,
+              })
+              .eq('id', conversationId);
+            loadProposalData();
+          }}
+          onViewHistory={() => {
+            // TODO: Open history dialog
+          }}
+        />
       )}
       
       {/* Header for Negotiations */}

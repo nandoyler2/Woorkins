@@ -89,6 +89,26 @@ All colors MUST be HSL.
   }
 }
 
+/* Story ring fill animation */
+@keyframes story-ring-fill {
+  0% {
+    background: conic-gradient(
+      from 0deg,
+      transparent 0deg,
+      transparent 360deg
+    );
+  }
+  100% {
+    background: conic-gradient(
+      from 0deg,
+      #a855f7 0deg,
+      #ec4899 120deg,
+      #f97316 240deg,
+      #a855f7 360deg
+    );
+  }
+}
+
 @layer base {
   * {
     @apply border-border;

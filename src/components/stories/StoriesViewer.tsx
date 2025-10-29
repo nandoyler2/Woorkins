@@ -53,6 +53,7 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
   const [showVolumeSlider, setShowVolumeSlider] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [mediaLoading, setMediaLoading] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
   const { toast } = useToast();
 
@@ -171,6 +172,7 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
     if (currentIndex < stories.length - 1) {
       setCurrentIndex(currentIndex + 1);
       setProgress(0);
+      setMediaLoading(true);
     } else {
       onClose();
     }
@@ -180,6 +182,7 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
     if (currentIndex > 0) {
       setCurrentIndex(currentIndex - 1);
       setProgress(0);
+      setMediaLoading(true);
     }
   };
 
@@ -412,12 +415,29 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
               onTouchEnd={(e) => e.stopPropagation()}
             />
 
+            {/* Loading Indicator */}
+            {mediaLoading && currentStory.type !== 'text' && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm z-20">
+                <div className="relative">
+                  <div className="absolute inset-0 bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 rounded-full blur-xl opacity-75 animate-pulse" />
+                  <div className="relative w-16 h-16 bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 rounded-full flex items-center justify-center animate-spin">
+                    <div className="w-12 h-12 bg-black rounded-full" />
+                  </div>
+                </div>
+                <p className="mt-4 text-white font-medium">Carregando...</p>
+              </div>
+            )}
+
             {/* Story content */}
             {currentStory.type === 'image' && currentStory.media_url && (
               <SafeImage
                 src={currentStory.media_url}
                 alt="Story"
-                className="w-full h-full object-contain"
+                className="w-full h-full object-contain transition-opacity duration-300"
+                style={{ opacity: mediaLoading ? 0 : 1 }}
+                onLoadStart={() => setMediaLoading(true)}
+                onLoad={() => setMediaLoading(false)}
+                onError={() => setMediaLoading(false)}
               />
             )}
 
@@ -432,7 +452,11 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
                     videoRef.current.volume = volume;
                   }
                 }}
-                className="w-full h-full object-contain"
+                onLoadStart={() => setMediaLoading(true)}
+                onLoadedData={() => setMediaLoading(false)}
+                onError={() => setMediaLoading(false)}
+                className="w-full h-full object-contain transition-opacity duration-300"
+                style={{ opacity: mediaLoading ? 0 : 1 }}
               />
             )}
 

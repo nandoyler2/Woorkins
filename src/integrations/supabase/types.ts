@@ -1538,6 +1538,7 @@ export type Database = {
           profile_id: string
           text_content: string | null
           text_formatting: Json | null
+          thumbnail_url: string | null
           type: string
           view_count: number | null
         }
@@ -1551,6 +1552,7 @@ export type Database = {
           profile_id: string
           text_content?: string | null
           text_formatting?: Json | null
+          thumbnail_url?: string | null
           type: string
           view_count?: number | null
         }
@@ -1564,6 +1566,7 @@ export type Database = {
           profile_id?: string
           text_content?: string | null
           text_formatting?: Json | null
+          thumbnail_url?: string | null
           type?: string
           view_count?: number | null
         }

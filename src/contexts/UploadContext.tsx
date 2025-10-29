@@ -68,52 +68,73 @@ export function UploadProvider({ children }: { children: ReactNode }) {
         type: 'story',
         status: 'uploading',
         progress: 0,
-        message: 'Preparando upload...',
+        message: 'Preparando mídia...',
       });
 
       let mediaUrl = null;
+      let thumbnailUrl = null;
 
       // Upload de mídia se necessário
       if (data.type !== 'text' && data.mediaFile) {
-        setCurrentUpload(prev => prev ? { ...prev, message: 'Processando mídia...', progress: 20 } : null);
+        setCurrentUpload(prev => prev ? { ...prev, message: 'Otimizando qualidade...', progress: 20 } : null);
 
-        let fileToUpload = data.mediaFile;
+        // Comprimir imagem para story (1080x1920, qualidade otimizada)
+        const { compressImageForStory, createThumbnail } = await import('@/lib/imageCompression');
+        const compressedBlob = await compressImageForStory(data.mediaFile);
+        const compressedFile = new File([compressedBlob], data.mediaFile.name, {
+          type: compressedBlob.type,
+        });
 
-        // Comprimir imagem se necessário
-        if (data.type === 'image') {
-          const compressedBlob = await compressImage(data.mediaFile, {
-            maxSizeMB: 2,
-          });
-          fileToUpload = new File([compressedBlob], data.mediaFile.name, {
-            type: compressedBlob.type,
-          });
-        }
+        setCurrentUpload(prev => prev ? { ...prev, message: 'Gerando miniatura...', progress: 40 } : null);
 
-        setCurrentUpload(prev => prev ? { ...prev, message: 'Enviando arquivo...', progress: 40 } : null);
+        // Criar thumbnail otimizada (200x200)
+        const thumbnailBlob = await createThumbnail(data.mediaFile);
+        const thumbnailFile = new File([thumbnailBlob], data.mediaFile.name, {
+          type: thumbnailBlob.type,
+        });
 
-        const fileExt = fileToUpload.name.split('.').pop();
-        const fileName = `${data.profileId}/${Date.now()}.${fileExt}`;
+        setCurrentUpload(prev => prev ? { ...prev, message: 'Enviando arquivo...', progress: 60 } : null);
 
+        const fileExt = data.mediaFile.name.split('.').pop();
+        const timestamp = Date.now();
+        const fileName = `${data.profileId}/${timestamp}.${fileExt}`;
+        const thumbName = `${data.profileId}/${timestamp}-thumb.${fileExt}`;
+
+        // Upload da imagem principal
         const { error: uploadError } = await supabase.storage
           .from('stories')
-          .upload(fileName, fileToUpload);
+          .upload(fileName, compressedFile);
 
         if (uploadError) throw uploadError;
 
+        // Upload da thumbnail
+        const { error: thumbError } = await supabase.storage
+          .from('stories')
+          .upload(thumbName, thumbnailFile);
+
+        if (thumbError) throw thumbError;
+
+        // Obter URLs públicas
         const { data: { publicUrl } } = supabase.storage
           .from('stories')
           .getPublicUrl(fileName);
 
+        const { data: { publicUrl: thumbPublicUrl } } = supabase.storage
+          .from('stories')
+          .getPublicUrl(thumbName);
+
         mediaUrl = publicUrl;
+        thumbnailUrl = thumbPublicUrl;
       }
 
-      setCurrentUpload(prev => prev ? { ...prev, message: 'Publicando story...', progress: 70 } : null);
+      setCurrentUpload(prev => prev ? { ...prev, message: 'Publicando story...', progress: 80 } : null);
 
       // Criar story no banco
       const storyData: any = {
         profile_id: data.profileId,
         type: data.type,
         media_url: mediaUrl,
+        thumbnail_url: thumbnailUrl,
         text_content: data.type === 'text' ? data.textContent : null,
         background_color: data.type === 'text' ? data.backgroundColor : null,
         link_url: data.linkUrl || null,

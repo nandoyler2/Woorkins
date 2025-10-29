@@ -17,6 +17,22 @@ const DEFAULT_OPTIONS: CompressionOptions = {
   maxSizeMB: 2,
 };
 
+// Configurações otimizadas para stories
+const STORY_OPTIONS: CompressionOptions = {
+  maxWidth: 1080,
+  maxHeight: 1920,
+  quality: 0.80,
+  maxSizeMB: 1.5,
+};
+
+// Configurações para miniaturas
+const THUMBNAIL_OPTIONS: CompressionOptions = {
+  maxWidth: 200,
+  maxHeight: 200,
+  quality: 0.7,
+  maxSizeMB: 0.1,
+};
+
 /**
  * Comprime e redimensiona uma imagem
  * @param file Arquivo de imagem original
@@ -118,4 +134,20 @@ export async function compressImages(
   options: CompressionOptions = {}
 ): Promise<Blob[]> {
   return Promise.all(files.map(file => compressImage(file, options)));
+}
+
+/**
+ * Comprime imagem especificamente para stories
+ * Dimensões otimizadas: 1080x1920 (vertical)
+ */
+export async function compressImageForStory(file: File): Promise<Blob> {
+  return compressImage(file, STORY_OPTIONS);
+}
+
+/**
+ * Cria miniatura otimizada para carrossel de stories
+ * Dimensões pequenas: 200x200
+ */
+export async function createThumbnail(file: File): Promise<Blob> {
+  return compressImage(file, THUMBNAIL_OPTIONS);
 }

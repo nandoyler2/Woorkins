@@ -65,7 +65,7 @@ export function StoryIndicator({
     try {
       const { data, count } = await supabase
         .from('profile_stories')
-        .select('media_url, type', { count: 'exact' })
+        .select('media_url, thumbnail_url, type', { count: 'exact' })
         .eq('profile_id', profileId)
         .gt('expires_at', new Date().toISOString())
         .order('created_at', { ascending: false })
@@ -73,9 +73,9 @@ export function StoryIndicator({
 
       setHasActiveStories((count || 0) > 0);
       
-      // Se tem stories e é uma imagem, usar como preview
-      if (data && data.length > 0 && data[0].type === 'image' && data[0].media_url) {
-        setLatestStoryPreview(data[0].media_url);
+      // Usar thumbnail otimizada como preview, ou fallback para media_url
+      if (data && data.length > 0 && (data[0].type === 'image' || data[0].type === 'video')) {
+        setLatestStoryPreview(data[0].thumbnail_url || data[0].media_url);
       } else {
         setLatestStoryPreview(null);
       }

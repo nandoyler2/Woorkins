@@ -32,6 +32,7 @@ import { useRealtimeMessaging } from '@/hooks/useRealtimeMessaging';
 import { ProposalNegotiationPanel } from './ProposalNegotiationPanel';
 import { ProposalChatHeader } from './projects/ProposalChatHeader';
 import { ProposalCounterDialog } from './projects/ProposalCounterDialog';
+import { ProposalHistoryDialog } from './projects/ProposalHistoryDialog';
 import { BlockedMessageCountdown } from './BlockedMessageCountdown';
 import { ImageViewer } from './ImageViewer';
 import { RequireProfilePhotoDialog } from './RequireProfilePhotoDialog';
@@ -93,6 +94,7 @@ export function UnifiedChat({
   const [reportDescription, setReportDescription] = useState('');
   const [showBlockDialog, setShowBlockDialog] = useState(false);
   const [showCounterDialog, setShowCounterDialog] = useState(false);
+  const [showHistoryDialog, setShowHistoryDialog] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messageInputRef = useRef<HTMLInputElement>(null);
@@ -1236,12 +1238,7 @@ useEffect(() => {
           onConfirmCompletion={handleConfirmCompletion}
           onMarkCompleted={handleMarkCompleted}
           onMakeCounterProposal={handleMakeCounterProposal}
-          onViewHistory={() => {
-            toast({
-              title: 'Em desenvolvimento',
-              description: 'O histórico de propostas será exibido em breve',
-            });
-          }}
+          onViewHistory={() => setShowHistoryDialog(true)}
           onOpenDispute={handleOpenDispute}
         />
       )}
@@ -1856,6 +1853,13 @@ useEffect(() => {
         currentAmount={proposalData?.current_proposal_amount || proposalData?.budget || 0}
         onSubmit={handleSubmitCounterProposal}
         isOwner={isOwner}
+      />
+
+      {/* Proposal History Dialog */}
+      <ProposalHistoryDialog
+        open={showHistoryDialog}
+        onOpenChange={setShowHistoryDialog}
+        proposalId={conversationId}
       />
     </div>
   );

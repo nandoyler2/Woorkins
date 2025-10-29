@@ -97,6 +97,7 @@ export function UnifiedChat({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messageInputRef = useRef<HTMLInputElement>(null);
   const [activities, setActivities] = useState<any[]>([]);
+  const [visibleTimestamps, setVisibleTimestamps] = useState<Record<string, boolean>>({});
 
   const { isVerified } = useDocumentVerification(profileId);
 
@@ -784,6 +785,13 @@ useEffect(() => {
     handleTyping();
   };
 
+  const showTimestamp = (id: string) => {
+    setVisibleTimestamps(prev => ({ ...prev, [id]: true }));
+    setTimeout(() => {
+      setVisibleTimestamps(prev => ({ ...prev, [id]: false }));
+    }, 2500);
+  };
+
   const getMessageStatusIcon = (status?: string) => {
     switch (status) {
       case 'read':
@@ -1413,7 +1421,7 @@ useEffect(() => {
                   return (
                     <div
                       key={message.id}
-                      className={`flex gap-2 animate-in slide-in-from-bottom-2 ${
+                      className={`flex gap-2 group animate-in slide-in-from-bottom-2 ${
                         isMine ? 'flex-row-reverse' : 'flex-row'
                       }`}
                     >
@@ -1426,7 +1434,7 @@ useEffect(() => {
                         </Avatar>
                       )}
                       
-                       <div className={`flex flex-col max-w-[75%] group ${isMine ? 'items-end' : 'items-start'}`}>
+                       <div className={`flex flex-col max-w-[75%] group ${isMine ? 'items-end' : 'items-start'}`} onClick={() => showTimestamp(message.id)}>
                           {/* Rejected message */}
                           {message.status === 'rejected' && isMine ? (
                             <div className="bg-red-50 dark:bg-red-950/20 border border-red-300 dark:border-red-800 rounded-2xl px-4 py-3 shadow-sm max-w-md">
@@ -1521,7 +1529,7 @@ useEffect(() => {
                             </div>
                           )}
                          <div className={`flex items-center gap-1.5 mt-1 ${isMine ? 'flex-row-reverse' : 'flex-row'}`}>
-                           <span className="text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                           <span className={`text-xs text-muted-foreground ${visibleTimestamps[message.id] ? 'opacity-100' : 'opacity-0'} group-hover:opacity-100 transition-opacity duration-200`}>
                              {(() => {
                                const messageDate = new Date(message.created_at);
                                const now = new Date();
@@ -1546,7 +1554,7 @@ useEffect(() => {
                              })()}
                            </span>
                            {isMine && message.status !== 'rejected' && (
-                             <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                             <span className={`transition-opacity duration-200 ${visibleTimestamps[message.id] ? 'opacity-100' : 'opacity-0'} group-hover:opacity-100`}>
                                {getMessageStatusIcon(message.status)}
                              </span>
                            )}

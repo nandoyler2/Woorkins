@@ -892,7 +892,7 @@ useEffect(() => {
     };
     
     const needsAction = status_type === 'counter_proposal' &&
-      // Fallback: show action if the last counter proposal was made by the other side
+      !isMine && // Only show action buttons to the person who RECEIVED the counter-proposal
       (proposalData?.awaiting_acceptance_from === profileId ||
        (proposalData?.status === 'pending' && proposalData?.current_proposal_by !== profileId));
     
@@ -927,8 +927,8 @@ useEffect(() => {
           <div
             className={`rounded-2xl px-4 py-2.5 shadow-sm ${
               isMine
-                ? 'bg-accent/80 text-accent-foreground rounded-tr-sm border border-accent'
-                : 'bg-accent/60 border border-accent rounded-tl-sm'
+                ? 'bg-accent/90 text-slate-800 dark:text-slate-900 rounded-tr-sm border border-accent'
+                : 'bg-accent/70 text-slate-800 dark:text-slate-900 border border-accent rounded-tl-sm'
             }`}
           >
             <div className="flex items-start gap-2">

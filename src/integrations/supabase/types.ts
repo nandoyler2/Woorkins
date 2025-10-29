@@ -1527,6 +1527,56 @@ export type Database = {
           },
         ]
       }
+      profile_stories: {
+        Row: {
+          background_color: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          link_url: string | null
+          media_url: string | null
+          profile_id: string
+          text_content: string | null
+          text_formatting: Json | null
+          type: string
+          view_count: number | null
+        }
+        Insert: {
+          background_color?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          link_url?: string | null
+          media_url?: string | null
+          profile_id: string
+          text_content?: string | null
+          text_formatting?: Json | null
+          type: string
+          view_count?: number | null
+        }
+        Update: {
+          background_color?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          link_url?: string | null
+          media_url?: string | null
+          profile_id?: string
+          text_content?: string | null
+          text_formatting?: Json | null
+          type?: string
+          view_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profile_stories_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profile_testimonials: {
         Row: {
           client_name: string
@@ -2305,6 +2355,42 @@ export type Database = {
           {
             foreignKeyName: "reports_reporter_id_fkey"
             columns: ["reporter_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      story_views: {
+        Row: {
+          id: string
+          story_id: string
+          viewed_at: string
+          viewer_profile_id: string
+        }
+        Insert: {
+          id?: string
+          story_id: string
+          viewed_at?: string
+          viewer_profile_id: string
+        }
+        Update: {
+          id?: string
+          story_id?: string
+          viewed_at?: string
+          viewer_profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "story_views_story_id_fkey"
+            columns: ["story_id"]
+            isOneToOne: false
+            referencedRelation: "profile_stories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "story_views_viewer_profile_id_fkey"
+            columns: ["viewer_profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -3704,6 +3790,7 @@ export type Database = {
       }
       cleanup_expired_email_verifications: { Args: never; Returns: undefined }
       cleanup_expired_spam_blocks: { Args: never; Returns: undefined }
+      cleanup_expired_stories: { Args: never; Returns: undefined }
       cleanup_typing_indicators: { Args: never; Returns: undefined }
       delete_own_account: { Args: never; Returns: undefined }
       generate_available_username: {

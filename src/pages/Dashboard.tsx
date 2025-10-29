@@ -23,6 +23,8 @@ import { CreateBusinessProfileDialog } from '@/components/CreateBusinessProfileD
 import { FollowingSection } from '@/components/dashboard/FollowingSection';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
 import { DashboardSkeleton } from '@/components/dashboard/DashboardSkeleton';
+import { StoriesCarousel } from '@/components/stories/StoriesCarousel';
+import { CreateStoryDialog } from '@/components/stories/CreateStoryDialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -139,6 +141,8 @@ export default function Dashboard() {
   const [availableProfiles, setAvailableProfiles] = useState<Array<{ id: string; username: string; full_name: string | null; avatar_url: string | null; type: 'user' | 'business'; company_name?: string; slug?: string }>>([]);
   const [profileSearchQuery, setProfileSearchQuery] = useState('');
   const [showSearchSlideIn, setShowSearchSlideIn] = useState(false);
+  const [showCreateStoryDialog, setShowCreateStoryDialog] = useState(false);
+  const [storiesRefreshTrigger, setStoriesRefreshTrigger] = useState(0);
 
   const achievements: Achievement[] = [
     {
@@ -965,15 +969,32 @@ export default function Dashboard() {
               </Card>
             )}
 
+            {/* Stories Carousel */}
+            {profile && (
+              <StoriesCarousel
+                currentProfile={{
+                  id: profile.id,
+                  username: profile.username,
+                  full_name: profile.full_name || '',
+                  avatar_url: profile.avatar_url || undefined,
+                }}
+                onCreateStory={() => setShowCreateStoryDialog(true)}
+              />
+            )}
+
             {/* Action Cards Grid */}
             <div className="grid grid-cols-2 gap-4">
-              <Card className="bg-gradient-to-br from-orange-500 to-orange-600 border-0 shadow-md hover:shadow-lg transition-all cursor-pointer group">
-                <CardContent className="p-5">
-                  <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                    <Briefcase className="w-5 h-5 text-white" />
+              <Card 
+                className="bg-gradient-to-br from-purple-500 via-pink-500 to-orange-500 border-0 shadow-md hover:shadow-lg transition-all cursor-pointer group relative overflow-hidden"
+                onClick={() => setShowCreateStoryDialog(true)}
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-pulse" />
+                <CardContent className="p-5 relative z-10">
+                  <div className="w-10 h-10 bg-white/30 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform backdrop-blur-sm">
+                    <Camera className="w-5 h-5 text-white" />
                   </div>
-                  <h3 className="text-base font-bold text-white mb-0.5">Atualizar Portfólio</h3>
-                  <p className="text-orange-100 text-xs">Mostre seu trabalho</p>
+                  <h3 className="text-base font-bold text-white mb-0.5">Postar Stories</h3>
+                  <p className="text-white/90 text-xs">Compartilhe seu dia</p>
                 </CardContent>
               </Card>
 
@@ -1682,6 +1703,37 @@ export default function Dashboard() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Create Story Dialog */}
+      {profile && (
+        <CreateStoryDialog
+          isOpen={showCreateStoryDialog}
+          onClose={() => setShowCreateStoryDialog(false)}
+          profiles={[
+            {
+              id: profile.id,
+              username: profile.username,
+              full_name: profile.full_name || '',
+              profile_type: 'user',
+              avatar_url: profile.avatar_url,
+            },
+            ...businessProfiles.map(bp => ({
+              id: bp.id,
+              username: bp.slug || '',
+              full_name: bp.company_name,
+              profile_type: 'business' as const,
+              avatar_url: bp.logo_url,
+            }))
+          ]}
+          onStoryCreated={() => {
+            setStoriesRefreshTrigger(prev => prev + 1);
+            toast({
+              title: 'Story publicado! ✨',
+              description: 'Seu story foi publicado com sucesso',
+            });
+          }}
+        />
+      )}
 
       <SearchSlideIn 
         isOpen={showSearchSlideIn} 

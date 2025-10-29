@@ -1504,11 +1504,29 @@ useEffect(() => {
                             </div>
                           )}
                          <div className={`flex items-center gap-1.5 mt-1 ${isMine ? 'flex-row-reverse' : 'flex-row'}`}>
-                           <span className="text-xs text-muted-foreground">
-                             {formatDistanceToNow(new Date(message.created_at), {
-                               addSuffix: true,
-                               locale: ptBR,
-                             })}
+                           <span className="text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                             {(() => {
+                               const messageDate = new Date(message.created_at);
+                               const now = new Date();
+                               const diffInHours = (now.getTime() - messageDate.getTime()) / (1000 * 60 * 60);
+                               
+                               // Após 24h, mostra data e hora exata
+                               if (diffInHours > 24) {
+                                 return messageDate.toLocaleString('pt-BR', {
+                                   day: '2-digit',
+                                   month: '2-digit',
+                                   year: 'numeric',
+                                   hour: '2-digit',
+                                   minute: '2-digit'
+                                 });
+                               }
+                               
+                               // Antes de 24h, mostra tempo relativo
+                               return formatDistanceToNow(messageDate, {
+                                 addSuffix: true,
+                                 locale: ptBR,
+                               });
+                             })()}
                            </span>
                            {isMine && message.status !== 'rejected' && getMessageStatusIcon(message.status)}
                          </div>

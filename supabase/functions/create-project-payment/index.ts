@@ -89,31 +89,48 @@ serve(async (req) => {
 
     const amount = Math.round(proposal.budget * 100); // Convert to cents
 
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount,
-      currency: 'brl',
-      capture_method: 'manual', // ESCROW: Don't capture immediately
-      payment_method_types: ['card', 'pix'],
-      metadata: {
-        proposal_id,
-        project_id: proposal.project.id,
-        freelancer_id: proposal.freelancer_id,
-        freelancer_profile_id: proposal.freelancer.id,
-        user_id: user.id,
-        freelancer_amount: split.freelancer_amount.toString(),
-        platform_commission: split.platform_commission.toString(),
-        stripe_fee: split.stripe_fee.toString(),
-        gross_amount: proposal.budget.toString(),
+    // Criar Stripe Checkout Session
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price_data: {
+            currency: 'brl',
+            product_data: {
+              name: `Projeto: ${proposal.project.title}`,
+              description: 'Pagamento de proposta',
+            },
+            unit_amount: amount,
+          },
+          quantity: 1,
+        },
+      ],
+      mode: 'payment',
+      success_url: `${req.headers.get('origin')}/messages?type=proposal&id=${proposal_id}&payment=success`,
+      cancel_url: `${req.headers.get('origin')}/messages?type=proposal&id=${proposal_id}&payment=cancelled`,
+      payment_intent_data: {
+        capture_method: 'manual',
+        metadata: {
+          proposal_id,
+          project_id: proposal.project.id,
+          freelancer_id: proposal.freelancer_id,
+          freelancer_profile_id: proposal.freelancer.id,
+          user_id: user.id,
+          freelancer_amount: split.freelancer_amount.toString(),
+          platform_commission: split.platform_commission.toString(),
+          stripe_fee: split.stripe_fee.toString(),
+          gross_amount: proposal.budget.toString(),
+        },
       },
     });
 
-    console.log('Payment Intent created:', paymentIntent.id);
+    console.log('Checkout Session created:', session.id);
 
     // Update proposal with payment info
     const { error: updateError } = await supabaseClient
       .from('proposals')
       .update({
-        stripe_payment_intent_id: paymentIntent.id,
+        stripe_payment_intent_id: session.payment_intent as string,
         payment_status: 'pending',
         accepted_amount: proposal.budget,
         freelancer_amount: split.freelancer_amount,
@@ -155,7 +172,7 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({
-        client_secret: paymentIntent.client_secret,
+        url: session.url,
         amount: proposal.budget,
         freelancer_amount: split.freelancer_amount,
         platform_commission: split.platform_commission,

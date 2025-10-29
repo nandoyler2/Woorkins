@@ -167,8 +167,13 @@ export function ProposalChatHeader({
           </div>
         );
       }
-      // Não mostrar badge "Aguardando outra parte"
-      return null;
+      // Mostrar "Aguardando..." quando a outra parte precisa responder
+      return (
+        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted">
+          <Clock className="h-4 w-4 text-muted-foreground animate-pulse" />
+          <span className="text-sm font-medium text-muted-foreground">Aguardando...</span>
+        </div>
+      );
     }
 
     // Freelancer pode refazer proposta se não está desbloqueada

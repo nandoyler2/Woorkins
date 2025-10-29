@@ -38,7 +38,7 @@ serve(async (req) => {
       });
     }
 
-    const baseUrl = site_url || Deno.env.get("SITE_URL") || "";
+    const baseUrl = "https://woorkins.com";
 
     // Gerar link válido via magiclink (não requer senha)
     const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({

@@ -78,12 +78,10 @@ serve(async (req) => {
 
     // Enviar email de confirmação automaticamente
     try {
-      const siteUrl = new URL(req.url).origin;
-      
       const { error: emailError } = await supabaseAdmin.functions.invoke('resend-confirmation-email', {
         body: {
           email: newEmail,
-          site_url: siteUrl,
+          site_url: "https://woorkins.com",
         },
       });
 

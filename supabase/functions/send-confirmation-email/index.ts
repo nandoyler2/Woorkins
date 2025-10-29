@@ -36,7 +36,8 @@ const handler = async (req: Request): Promise<Response> => {
     console.log("Received email request for:", payload.user.email);
 
     const { user, email_data } = payload;
-    const confirmationUrl = `${email_data.site_url}/auth/confirm?token_hash=${email_data.token_hash}&type=email&redirect_to=${encodeURIComponent('/welcome')}`;
+    const baseUrl = "https://woorkins.com";
+    const confirmationUrl = `${baseUrl}/auth/confirm?token_hash=${email_data.token_hash}&type=email&redirect_to=${encodeURIComponent('/welcome')}`;
     
     // Extract first name from full_name
     const firstName = user.full_name?.split(' ')[0] || 'Usuário';

@@ -122,19 +122,19 @@ export function UnifiedChat({
   // Load current user profile to check for avatar
   useEffect(() => {
     const loadCurrentUserProfile = async () => {
-      if (!user) return;
+      if (!profileId) return;
       
       const { data } = await supabase
         .from('profiles')
         .select('avatar_url, full_name')
-        .eq('user_id', user.id)
+        .eq('id', profileId)
         .single();
       
       setCurrentUserProfile(data);
     };
 
     loadCurrentUserProfile();
-  }, [user]);
+  }, [profileId]);
 
   useEffect(() => {
     const checkSystemBlock = async () => {

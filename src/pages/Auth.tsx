@@ -70,13 +70,23 @@ export default function Auth() {
         description: error.message,
         variant: 'destructive',
       });
+      setLoading(false);
     } else {
-      toast({
-        title: 'Conta criada!',
-        description: 'Você já pode fazer login.',
-      });
+      // Verificar se email foi auto-confirmado
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session?.user?.email_confirmed_at) {
+        // Email auto-confirmado, redirecionar direto para welcome
+        toast({
+          title: 'Conta criada!',
+          description: 'Bem-vindo ao Woorkins!',
+        });
+        navigate('/welcome');
+      } else {
+        // Email precisa ser confirmado manualmente
+        navigate(`/auth/pending-confirmation?email=${encodeURIComponent(email)}`);
+      }
     }
-    setLoading(false);
   };
 
   const handleSignIn = async (e: React.FormEvent) => {
@@ -86,13 +96,35 @@ export default function Auth() {
     const { error } = await signIn(email, password);
 
     if (error) {
-      toast({
-        title: 'Erro ao fazer login',
-        description: error.message,
-        variant: 'destructive',
-      });
+      // Verificar se é erro de email não confirmado
+      if (error.message.includes('Email not confirmed') || error.message.includes('email_not_confirmed')) {
+        toast({
+          title: 'Email não confirmado',
+          description: 'Por favor, confirme seu email antes de fazer login.',
+          variant: 'destructive',
+        });
+        navigate(`/auth/pending-confirmation?email=${encodeURIComponent(email)}`);
+      } else {
+        toast({
+          title: 'Erro ao fazer login',
+          description: error.message,
+          variant: 'destructive',
+        });
+      }
     } else {
-      navigate('/painel');
+      // Verificar se usuário confirmou email
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user && !user.email_confirmed_at) {
+        await supabase.auth.signOut();
+        toast({
+          title: 'Email não confirmado',
+          description: 'Por favor, confirme seu email antes de fazer login.',
+          variant: 'destructive',
+        });
+        navigate(`/auth/pending-confirmation?email=${encodeURIComponent(email)}`);
+      } else {
+        navigate('/painel');
+      }
     }
     setLoading(false);
   };

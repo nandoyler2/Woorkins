@@ -16,6 +16,8 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
+import PendingConfirmation from "./pages/PendingConfirmation";
+import Welcome from "./pages/Welcome";
 import Feed from "./pages/Feed";
 import Admin from "./pages/Admin";
 import Dashboard from "./pages/Dashboard";
@@ -82,6 +84,8 @@ function AppContent() {
       <Routes>
         <Route path="/" element={<Index />} />
         <Route path="/auth" element={<Auth />} />
+        <Route path="/auth/pending-confirmation" element={<PendingConfirmation />} />
+        <Route path="/welcome" element={<ProtectedRoute><Welcome /></ProtectedRoute>} />
         <Route path="/projetos" element={<Projects />} />
         <Route path="/projetos/:id" element={<ProjectDetails />} />
         <Route path="/projetos/novo" element={<ProtectedRoute><ProjectCreate /></ProtectedRoute>} />

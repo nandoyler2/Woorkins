@@ -253,8 +253,7 @@ export default function Messages() {
             profile_id,
             profiles!inner(
               full_name,
-              avatar_url,
-              user_id
+              avatar_url
             )
           )
         `)
@@ -272,15 +271,14 @@ export default function Messages() {
           updated_at,
           archived,
           freelancer_id,
+          freelancer:profiles!proposals_freelancer_id_fkey(
+            full_name,
+            avatar_url
+          ),
           project:projects!inner(
             id,
             title,
-            profile_id,
-            profiles!inner(
-              full_name,
-              avatar_url,
-              user_id
-            )
+            profile_id
           )
         `)
         .eq('project.profile_id', profileId)
@@ -336,15 +334,27 @@ export default function Messages() {
         const hasDispute = disputes && disputes.length > 0;
         const disputeStatus = disputes?.[0]?.status;
 
+        // Determine if current user is the project owner or freelancer
+        const isOwner = prop.project.profile_id === profileId;
+        
+        // If owner, show freelancer info; if freelancer, show owner info
+        const otherUserData = isOwner 
+          ? {
+              id: prop.freelancer_id,
+              name: formatFullName((prop as any).freelancer?.full_name || 'Freelancer'),
+              avatar: (prop as any).freelancer?.avatar_url,
+            }
+          : {
+              id: prop.project.profile_id,
+              name: formatFullName((prop as any).project?.profiles?.full_name || 'Cliente'),
+              avatar: (prop as any).project?.profiles?.avatar_url,
+            };
+
         return {
           id: prop.id,
           type: 'proposal' as const,
           title: prop.project.title,
-          otherUser: {
-            id: prop.project.profile_id,
-            name: formatFullName(prop.project.profiles.full_name),
-            avatar: prop.project.profiles.avatar_url,
-          },
+          otherUser: otherUserData,
           lastMessage: prop.message.substring(0, 60) + '...',
           lastMessageAt: prop.updated_at,
           unreadCount: unreadMap.get(`proposal-${prop.id}`) ?? (count || 0),

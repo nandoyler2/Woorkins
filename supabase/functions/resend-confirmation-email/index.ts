@@ -33,6 +33,17 @@ serve(async (req) => {
       });
     }
 
+    // Buscar o usuário completo para pegar o full_name
+    const { data: usersData, error: usersError } = await supabaseAdmin.auth.admin.listUsers();
+    
+    if (usersError) {
+      console.error("Erro ao buscar usuário:", usersError);
+    }
+
+    const user = usersData?.users?.find(u => u.email === email);
+    const userFullName = user?.user_metadata?.full_name || full_name || "Usuário";
+    const firstName = userFullName.split(" ")[0];
+
     const baseUrl = "https://woorkins.com";
 
     // Gerar link válido via magiclink (não requer senha)
@@ -60,7 +71,10 @@ serve(async (req) => {
       });
     }
 
-    const firstName = full_name?.split(" ")[0] || "Usuário";
+    // Extrair token_hash do link do Supabase e construir link customizado
+    const urlParams = new URL(actionLink);
+    const tokenHash = urlParams.searchParams.get('token_hash');
+    const confirmationLink = `${baseUrl}/auth/confirm?token_hash=${tokenHash}&type=email&redirect_to=/welcome`;
 
     const html = `
 <!DOCTYPE html>
@@ -88,12 +102,12 @@ serve(async (req) => {
                 <table role="presentation" style="width: 100%; margin: 32px 0;">
                   <tr>
                     <td align="center">
-                      <a href="${actionLink}" style="display: inline-block; background-color: #3b82f6; color: #ffffff; font-size: 16px; font-weight: bold; text-decoration: none; padding: 14px 40px; border-radius: 8px; cursor: pointer;">Confirmar Email</a>
+                      <a href="${confirmationLink}" style="display: inline-block; background-color: #3b82f6; color: #ffffff; font-size: 16px; font-weight: bold; text-decoration: none; padding: 14px 40px; border-radius: 8px; cursor: pointer;">Confirmar Email</a>
                     </td>
                   </tr>
                 </table>
                 <p style="margin: 24px 0 8px; color: #6b7280; font-size: 14px; line-height: 22px;">Ou copie e cole este link no navegador:</p>
-                <p style="margin: 0 0 16px; word-break: break-all;"><a href="${actionLink}" style="color: #3b82f6; font-size: 14px; text-decoration: none;">${actionLink}</a></p>
+                <p style="margin: 0 0 16px; word-break: break-all;"><a href="${confirmationLink}" style="color: #3b82f6; font-size: 14px; text-decoration: none;">${confirmationLink}</a></p>
                 <p style="margin: 24px 0 0; color: #6b7280; font-size: 14px; line-height: 22px;">Se você não criou uma conta no Woorkins, ignore este email.</p>
               </td>
             </tr>

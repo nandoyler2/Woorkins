@@ -223,7 +223,7 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId }: 
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleKeyDown]);
 
-  if (!isOpen || stories.length === 0) return null;
+  if (!isOpen) return null;
 
   const currentStory = stories[currentIndex];
   const isOwner = currentProfileId === profileId;
@@ -231,7 +231,15 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId }: 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-lg h-[90vh] p-0 bg-gradient-to-br from-purple-500/20 via-pink-500/20 to-orange-500/20 border-2 border-transparent rounded-3xl overflow-hidden backdrop-blur-sm relative before:absolute before:inset-0 before:rounded-3xl before:p-[2px] before:bg-gradient-to-tr before:from-purple-500 before:via-pink-500 before:to-orange-500 before:-z-10">
-        <div className="relative w-full h-full flex flex-col rounded-2xl overflow-hidden bg-black/80">
+        {isLoading || stories.length === 0 ? (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-white text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+              <p>Carregando stories...</p>
+            </div>
+          </div>
+        ) : (
+          <div className="relative w-full h-full flex flex-col rounded-2xl overflow-hidden bg-black/80">
           {/* Progress bars */}
           <div className="absolute top-0 left-0 right-0 z-20 flex gap-1.5 p-3">
             {stories.map((_, idx) => (
@@ -435,6 +443,7 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId }: 
             </Button>
           )}
         </div>
+        )}
       </DialogContent>
     </Dialog>
   );

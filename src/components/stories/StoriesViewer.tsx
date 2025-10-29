@@ -169,17 +169,17 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId }: 
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg h-[90vh] p-0 bg-black border-none">
-        <div className="relative w-full h-full flex flex-col">
+      <DialogContent className="max-w-lg h-[90vh] p-0 bg-gradient-to-br from-primary/20 via-background to-secondary/20 border-2 border-primary/30 rounded-3xl overflow-hidden backdrop-blur-sm">
+        <div className="relative w-full h-full flex flex-col rounded-2xl overflow-hidden bg-black/80">
           {/* Progress bars */}
-          <div className="absolute top-0 left-0 right-0 z-20 flex gap-1 p-2">
+          <div className="absolute top-0 left-0 right-0 z-20 flex gap-1.5 p-3">
             {stories.map((_, idx) => (
               <div
                 key={idx}
-                className="flex-1 h-1 bg-white/30 rounded-full overflow-hidden"
+                className="flex-1 h-1 bg-white/20 rounded-full overflow-hidden backdrop-blur-sm"
               >
                 <div
-                  className="h-full bg-white transition-all"
+                  className="h-full bg-gradient-to-r from-primary via-orange to-primary transition-all duration-100 shadow-lg shadow-primary/50"
                   style={{
                     width: idx < currentIndex ? '100%' : idx === currentIndex ? `${progress}%` : '0%',
                   }}
@@ -190,17 +190,21 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId }: 
 
           {/* Header */}
           <div className="absolute top-4 left-0 right-0 z-20 flex items-center justify-between px-4 mt-4">
-            <div className="flex items-center gap-3">
-              <SafeImage
-                src={currentStory.profile?.avatar_url || ''}
-                alt={currentStory.profile?.username || ''}
-                className="w-10 h-10 rounded-full border-2 border-white"
-              />
+            <div className="flex items-center gap-3 bg-black/30 backdrop-blur-md rounded-full pr-4 py-1.5 pl-1.5">
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-primary to-orange rounded-full blur-sm opacity-75" />
+                <SafeImage
+                  src={currentStory.profile?.avatar_url || ''}
+                  alt={currentStory.profile?.username || ''}
+                  className="relative w-10 h-10 rounded-full border-2 border-white object-cover"
+                  fallbackSrc="https://api.dicebear.com/7.x/avataaars/svg?seed=default"
+                />
+              </div>
               <div>
-                <p className="text-white font-semibold text-sm">
+                <p className="text-white font-semibold text-sm drop-shadow-lg">
                   {currentStory.profile?.full_name || currentStory.profile?.username}
                 </p>
-                <p className="text-white/70 text-xs">
+                <p className="text-white/80 text-xs drop-shadow-md">
                   {new Date(currentStory.created_at).toLocaleTimeString('pt-BR', {
                     hour: '2-digit',
                     minute: '2-digit',

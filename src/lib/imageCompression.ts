@@ -25,12 +25,60 @@ const STORY_OPTIONS: CompressionOptions = {
   maxSizeMB: 1.5,
 };
 
-// Configurações para miniaturas
+// Configurações para miniaturas genéricas
 const THUMBNAIL_OPTIONS: CompressionOptions = {
   maxWidth: 200,
   maxHeight: 200,
   quality: 0.7,
   maxSizeMB: 0.1,
+};
+
+// Configurações para avatares em tamanho cheio (visualização de perfil)
+const AVATAR_FULL_OPTIONS: CompressionOptions = {
+  maxWidth: 800,
+  maxHeight: 800,
+  quality: 0.85,
+  maxSizeMB: 0.8,
+};
+
+// Configurações para avatares pequenos (listagens, comentários, etc)
+const AVATAR_THUMBNAIL_OPTIONS: CompressionOptions = {
+  maxWidth: 150,
+  maxHeight: 150,
+  quality: 0.75,
+  maxSizeMB: 0.05,
+};
+
+// Configurações para capas em tamanho cheio
+const COVER_FULL_OPTIONS: CompressionOptions = {
+  maxWidth: 1920,
+  maxHeight: 600,
+  quality: 0.85,
+  maxSizeMB: 1.5,
+};
+
+// Configurações para capas em thumbnail (cards de perfil)
+const COVER_THUMBNAIL_OPTIONS: CompressionOptions = {
+  maxWidth: 600,
+  maxHeight: 200,
+  quality: 0.75,
+  maxSizeMB: 0.2,
+};
+
+// Configurações para logos de negócios
+const LOGO_OPTIONS: CompressionOptions = {
+  maxWidth: 400,
+  maxHeight: 400,
+  quality: 0.85,
+  maxSizeMB: 0.3,
+};
+
+// Configurações para logos em thumbnail
+const LOGO_THUMBNAIL_OPTIONS: CompressionOptions = {
+  maxWidth: 150,
+  maxHeight: 150,
+  quality: 0.75,
+  maxSizeMB: 0.05,
 };
 
 /**
@@ -150,4 +198,52 @@ export async function compressImageForStory(file: File): Promise<Blob> {
  */
 export async function createThumbnail(file: File): Promise<Blob> {
   return compressImage(file, THUMBNAIL_OPTIONS);
+}
+
+/**
+ * Comprime avatar em tamanho completo (800x800px)
+ * Para visualização de perfil
+ */
+export async function compressAvatar(file: File): Promise<Blob> {
+  return compressImage(file, AVATAR_FULL_OPTIONS);
+}
+
+/**
+ * Comprime avatar em thumbnail (150x150px)
+ * Para listagens, comentários, etc
+ */
+export async function compressAvatarThumbnail(file: File): Promise<Blob> {
+  return compressImage(file, AVATAR_THUMBNAIL_OPTIONS);
+}
+
+/**
+ * Comprime capa em tamanho completo (1920x600px)
+ * Para visualização de perfil
+ */
+export async function compressCover(file: File): Promise<Blob> {
+  return compressImage(file, COVER_FULL_OPTIONS);
+}
+
+/**
+ * Comprime capa em thumbnail (600x200px)
+ * Para cards de perfil
+ */
+export async function compressCoverThumbnail(file: File): Promise<Blob> {
+  return compressImage(file, COVER_THUMBNAIL_OPTIONS);
+}
+
+/**
+ * Comprime logo em tamanho completo (400x400px)
+ * Para visualização de perfil de negócios
+ */
+export async function compressLogo(file: File): Promise<Blob> {
+  return compressImage(file, LOGO_OPTIONS);
+}
+
+/**
+ * Comprime logo em thumbnail (150x150px)
+ * Para listagens de negócios
+ */
+export async function compressLogoThumbnail(file: File): Promise<Blob> {
+  return compressImage(file, LOGO_THUMBNAIL_OPTIONS);
 }

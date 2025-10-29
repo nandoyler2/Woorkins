@@ -1763,6 +1763,7 @@ export type Database = {
         Row: {
           active: boolean | null
           address: string | null
+          avatar_thumbnail_url: string | null
           avatar_url: string | null
           average_rating: number | null
           bio: string | null
@@ -1770,6 +1771,7 @@ export type Database = {
           category: string | null
           company_name: string | null
           cover_position: number | null
+          cover_thumbnail_url: string | null
           cover_url: string | null
           cpf: string | null
           created_at: string
@@ -1794,6 +1796,7 @@ export type Database = {
           linktree_slug: string | null
           linktree_social_links: Json | null
           location: string | null
+          logo_thumbnail_url: string | null
           logo_url: string | null
           nationality: string | null
           phone: string | null
@@ -1820,6 +1823,7 @@ export type Database = {
         Insert: {
           active?: boolean | null
           address?: string | null
+          avatar_thumbnail_url?: string | null
           avatar_url?: string | null
           average_rating?: number | null
           bio?: string | null
@@ -1827,6 +1831,7 @@ export type Database = {
           category?: string | null
           company_name?: string | null
           cover_position?: number | null
+          cover_thumbnail_url?: string | null
           cover_url?: string | null
           cpf?: string | null
           created_at?: string
@@ -1851,6 +1856,7 @@ export type Database = {
           linktree_slug?: string | null
           linktree_social_links?: Json | null
           location?: string | null
+          logo_thumbnail_url?: string | null
           logo_url?: string | null
           nationality?: string | null
           phone?: string | null
@@ -1877,6 +1883,7 @@ export type Database = {
         Update: {
           active?: boolean | null
           address?: string | null
+          avatar_thumbnail_url?: string | null
           avatar_url?: string | null
           average_rating?: number | null
           bio?: string | null
@@ -1884,6 +1891,7 @@ export type Database = {
           category?: string | null
           company_name?: string | null
           cover_position?: number | null
+          cover_thumbnail_url?: string | null
           cover_url?: string | null
           cpf?: string | null
           created_at?: string
@@ -1908,6 +1916,7 @@ export type Database = {
           linktree_slug?: string | null
           linktree_social_links?: Json | null
           location?: string | null
+          logo_thumbnail_url?: string | null
           logo_url?: string | null
           nationality?: string | null
           phone?: string | null

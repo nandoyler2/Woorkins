@@ -3,7 +3,14 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Camera, Loader2, Sparkles, Trash2 } from 'lucide-react';
 import { PhotoCropDialog } from './PhotoCropDialog';
-import { compressImage } from '@/lib/imageCompression';
+import { 
+  compressAvatar, 
+  compressAvatarThumbnail, 
+  compressCover, 
+  compressCoverThumbnail,
+  compressLogo,
+  compressLogoThumbnail 
+} from '@/lib/imageCompression';
 import { CoverTemplateDialog } from './CoverTemplateDialog';
 import {
   AlertDialog,
@@ -101,13 +108,21 @@ export function InlinePhotoUpload({
     setUploading(true);
 
     try {
-      // Comprimir a imagem original da capa
-      const compressedBlob = await compressImage(originalFile);
+      // Comprimir a imagem original da capa - versão completa
+      const compressedBlob = await compressCover(originalFile);
       const compressedFile = new File([compressedBlob], originalFile.name, { type: 'image/jpeg' });
-      const fileName = `${userId}-${Date.now()}.jpg`;
+      
+      // Comprimir thumbnail
+      const thumbnailBlob = await compressCoverThumbnail(originalFile);
+      
+      const timestamp = Date.now();
+      const fileName = `${userId}-${timestamp}.jpg`;
+      const thumbnailFileName = `${userId}-${timestamp}_thumb.jpg`;
       const bucketName = entityType === 'business' ? 'business-covers' : 'user-covers';
       const filePath = `${userId}/${fileName}`;
+      const thumbnailPath = `${userId}/${thumbnailFileName}`;
 
+      // Upload versão completa
       const { error: uploadError } = await supabase.storage
         .from(bucketName)
         .upload(filePath, compressedFile, {
@@ -117,9 +132,23 @@ export function InlinePhotoUpload({
 
       if (uploadError) throw uploadError;
 
+      // Upload thumbnail
+      const { error: thumbUploadError } = await supabase.storage
+        .from(bucketName)
+        .upload(thumbnailPath, thumbnailBlob, {
+          contentType: 'image/jpeg',
+          upsert: false,
+        });
+
+      if (thumbUploadError) throw thumbUploadError;
+
       const { data: { publicUrl } } = supabase.storage
         .from(bucketName)
         .getPublicUrl(filePath);
+
+      const { data: { publicUrl: thumbnailUrl } } = supabase.storage
+        .from(bucketName)
+        .getPublicUrl(thumbnailPath);
 
       setModerating(true);
 
@@ -135,7 +164,7 @@ export function InlinePhotoUpload({
       if (moderationError) throw moderationError;
 
       if (!moderationData.approved) {
-        await supabase.storage.from(bucketName).remove([filePath]);
+        await supabase.storage.from(bucketName).remove([filePath, thumbnailPath]);
         
         toast({
           variant: 'destructive',
@@ -149,6 +178,7 @@ export function InlinePhotoUpload({
         .from('profiles')
         .update({ 
           cover_url: publicUrl,
+          cover_thumbnail_url: thumbnailUrl,
           cover_position: Math.round(coverPosition)
         })
         .eq('id', profileId);
@@ -165,7 +195,8 @@ export function InlinePhotoUpload({
           const idx = url.pathname.indexOf(needle);
           const oldPath = idx !== -1 ? url.pathname.slice(idx + needle.length) : null;
           if (oldPath) {
-            await supabase.storage.from(bucketName).remove([oldPath]);
+            const oldThumbPath = oldPath.replace(/(\.[^.]+)$/, '_thumb$1');
+            await supabase.storage.from(bucketName).remove([oldPath, oldThumbPath]);
           }
         } catch (e) {
           console.warn('Could not parse old photo URL for deletion', e);
@@ -201,17 +232,34 @@ export function InlinePhotoUpload({
       // Converter Blob para File
       const file = new File([croppedImageBlob], `${userId}-${Date.now()}.jpg`, { type: 'image/jpeg' });
       
-      // Comprimir a imagem
-      const compressedBlob = await compressImage(file);
-      const compressedFile = new File([compressedBlob], file.name, { type: 'image/jpeg' });
-      const fileName = `${userId}-${Date.now()}.jpg`;
       // Determine bucket based on entity type and photo type
       const bucketName = entityType === 'business' 
         ? (type === 'avatar' ? 'business-logos' : 'business-covers')
         : (type === 'avatar' ? 'avatars' : 'user-covers');
+
+      const isAvatar = type === 'avatar';
+      const isBusinessLogo = entityType === 'business' && isAvatar;
+
+      // Comprimir a imagem - versão completa
+      const compressedBlob = isAvatar
+        ? (isBusinessLogo ? await compressLogo(file) : await compressAvatar(file))
+        : await compressCover(file);
+      
+      // Comprimir thumbnail
+      const thumbnailBlob = isAvatar
+        ? (isBusinessLogo ? await compressLogoThumbnail(file) : await compressAvatarThumbnail(file))
+        : await compressCoverThumbnail(file);
+
+      const compressedFile = new File([compressedBlob], file.name, { type: 'image/jpeg' });
+      const timestamp = Date.now();
+      const fileName = `${userId}-${timestamp}.jpg`;
+      const thumbnailFileName = `${userId}-${timestamp}_thumb.jpg`;
+      
       // Use a path that includes the user's id as the first folder to satisfy RLS policies
       const filePath = `${userId}/${fileName}`;
+      const thumbnailPath = `${userId}/${thumbnailFileName}`;
 
+      // Upload versão completa
       const { error: uploadError } = await supabase.storage
         .from(bucketName)
         .upload(filePath, compressedFile, {
@@ -221,9 +269,23 @@ export function InlinePhotoUpload({
 
       if (uploadError) throw uploadError;
 
+      // Upload thumbnail
+      const { error: thumbUploadError } = await supabase.storage
+        .from(bucketName)
+        .upload(thumbnailPath, thumbnailBlob, {
+          contentType: 'image/jpeg',
+          upsert: false,
+        });
+
+      if (thumbUploadError) throw thumbUploadError;
+
       const { data: { publicUrl } } = supabase.storage
         .from(bucketName)
         .getPublicUrl(filePath);
+
+      const { data: { publicUrl: thumbnailUrl } } = supabase.storage
+        .from(bucketName)
+        .getPublicUrl(thumbnailPath);
 
       setModerating(true);
 
@@ -241,7 +303,7 @@ export function InlinePhotoUpload({
       if (moderationError) throw moderationError;
 
       if (!moderationData.approved) {
-        await supabase.storage.from(bucketName).remove([filePath]);
+        await supabase.storage.from(bucketName).remove([filePath, thumbnailPath]);
         
         toast({
           variant: 'destructive',
@@ -251,13 +313,21 @@ export function InlinePhotoUpload({
         return;
       }
 
-      // Determine column based on entity type and photo type
+      // Determine columns based on entity type and photo type
       const column = entityType === 'business'
         ? (type === 'avatar' ? 'logo_url' : 'cover_url')
         : (type === 'avatar' ? 'avatar_url' : 'cover_url');
+      
+      const thumbnailColumn = entityType === 'business'
+        ? (type === 'avatar' ? 'logo_thumbnail_url' : 'cover_thumbnail_url')
+        : (type === 'avatar' ? 'avatar_thumbnail_url' : 'cover_thumbnail_url');
+
       const { error: updateError } = await supabase
         .from('profiles')
-        .update({ [column]: publicUrl })
+        .update({ 
+          [column]: publicUrl,
+          [thumbnailColumn]: thumbnailUrl
+        })
         .eq('id', profileId);
 
       if (updateError) throw updateError;
@@ -269,7 +339,8 @@ export function InlinePhotoUpload({
           const idx = url.pathname.indexOf(needle);
           const oldPath = idx !== -1 ? url.pathname.slice(idx + needle.length) : null;
           if (oldPath) {
-            await supabase.storage.from(bucketName).remove([oldPath]);
+            const oldThumbPath = oldPath.replace(/(\.[^.]+)$/, '_thumb$1');
+            await supabase.storage.from(bucketName).remove([oldPath, oldThumbPath]);
           }
         } catch (e) {
           console.warn('Could not parse old photo URL for deletion', e);
@@ -334,13 +405,21 @@ export function InlinePhotoUpload({
       const blob = await response.blob();
       const file = new File([blob], `template-${Date.now()}.jpg`, { type: 'image/jpeg' });
       
-      // Comprimir
-      const compressedBlob = await compressImage(file);
+      // Comprimir versão completa
+      const compressedBlob = await compressCover(file);
       const compressedFile = new File([compressedBlob], file.name, { type: 'image/jpeg' });
-      const fileName = `${userId}-${Date.now()}.jpg`;
+      
+      // Comprimir thumbnail
+      const thumbnailBlob = await compressCoverThumbnail(file);
+      
+      const timestamp = Date.now();
+      const fileName = `${userId}-${timestamp}.jpg`;
+      const thumbnailFileName = `${userId}-${timestamp}_thumb.jpg`;
       const bucketName = entityType === 'business' ? 'business-covers' : 'user-covers';
       const filePath = `${userId}/${fileName}`;
+      const thumbnailPath = `${userId}/${thumbnailFileName}`;
 
+      // Upload versão completa
       const { error: uploadError } = await supabase.storage
         .from(bucketName)
         .upload(filePath, compressedFile, {
@@ -350,9 +429,23 @@ export function InlinePhotoUpload({
 
       if (uploadError) throw uploadError;
 
+      // Upload thumbnail
+      const { error: thumbUploadError } = await supabase.storage
+        .from(bucketName)
+        .upload(thumbnailPath, thumbnailBlob, {
+          contentType: 'image/jpeg',
+          upsert: false,
+        });
+
+      if (thumbUploadError) throw thumbUploadError;
+
       const { data: { publicUrl } } = supabase.storage
         .from(bucketName)
         .getPublicUrl(filePath);
+
+      const { data: { publicUrl: thumbnailUrl } } = supabase.storage
+        .from(bucketName)
+        .getPublicUrl(thumbnailPath);
 
       // Capas de template são pré-aprovadas, não precisam de moderação
 
@@ -360,6 +453,7 @@ export function InlinePhotoUpload({
         .from('profiles')
         .update({ 
           cover_url: publicUrl,
+          cover_thumbnail_url: thumbnailUrl,
           cover_position: 50
         })
         .eq('id', profileId);
@@ -377,7 +471,8 @@ export function InlinePhotoUpload({
           const idx = url.pathname.indexOf(needle);
           const oldPath = idx !== -1 ? url.pathname.slice(idx + needle.length) : null;
           if (oldPath) {
-            await supabase.storage.from(bucketName).remove([oldPath]);
+            const oldThumbPath = oldPath.replace(/(\.[^.]+)$/, '_thumb$1');
+            await supabase.storage.from(bucketName).remove([oldPath, oldThumbPath]);
           }
         } catch (e) {
           console.warn('Could not parse old photo URL for deletion', e);

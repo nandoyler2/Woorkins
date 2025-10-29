@@ -6,7 +6,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Camera, Loader2, Upload } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ProfilePhotoCropDialog } from './ProfilePhotoCropDialog';
-import { compressImage } from '@/lib/imageCompression';
+import { compressAvatar, compressAvatarThumbnail, compressLogo, compressLogoThumbnail } from '@/lib/imageCompression';
 
 interface ProfilePhotoUploadProps {
   currentPhotoUrl?: string;
@@ -59,17 +59,20 @@ export function ProfilePhotoUpload({ currentPhotoUrl, userName, profileId, onPho
       setModerating(true);
       setImageToCrop(null);
 
-      // Compress cropped image
-      console.log('Compressing profile photo...');
-      const compressedBlob = await compressImage(
-        new File([croppedBlob], originalFile.name, { type: croppedBlob.type }),
-        {
-          maxWidth: 800,
-          maxHeight: 800,
-          quality: 0.85,
-          maxSizeMB: 1
-        }
-      );
+      const croppedFile = new File([croppedBlob], originalFile.name, { type: croppedBlob.type });
+
+      // Compress cropped image - versão completa
+      console.log('Compressing profile photo (full size)...');
+      const isLogo = profileType === 'business';
+      const compressedBlob = isLogo 
+        ? await compressLogo(croppedFile)
+        : await compressAvatar(croppedFile);
+
+      // Compress cropped image - thumbnail
+      console.log('Compressing profile photo (thumbnail)...');
+      const thumbnailBlob = isLogo
+        ? await compressLogoThumbnail(croppedFile)
+        : await compressAvatarThumbnail(croppedFile);
 
       // Convert compressed blob to base64 for moderation
       const reader = new FileReader();
@@ -116,11 +119,14 @@ export function ProfilePhotoUpload({ currentPhotoUrl, userName, profileId, onPho
       if (!user) throw new Error('Usuário não autenticado');
 
       const fileExt = originalFile.name.split('.').pop();
-      const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+      const timestamp = Date.now();
+      const fileName = `${user.id}/${timestamp}.${fileExt}`;
+      const thumbnailFileName = `${user.id}/${timestamp}_thumb.${fileExt}`;
       
       // Determinar bucket e campo baseado no tipo de perfil
       const bucketName = profileType === 'business' ? 'business-logos' : 'avatars';
       const fieldName = profileType === 'business' ? 'logo_url' : 'avatar_url';
+      const thumbnailFieldName = profileType === 'business' ? 'logo_thumbnail_url' : 'avatar_thumbnail_url';
 
       // Delete old photo if exists
       if (currentPhotoUrl) {
@@ -129,14 +135,15 @@ export function ProfilePhotoUpload({ currentPhotoUrl, userName, profileId, onPho
           const urlParts = currentPhotoUrl.split(`${bucketName}/`);
           if (urlParts.length > 1) {
             const oldPath = urlParts[1].split('?')[0]; // Remove query params
-            await supabase.storage.from(bucketName).remove([oldPath]);
+            const oldThumbPath = oldPath.replace(/(\.[^.]+)$/, '_thumb$1');
+            await supabase.storage.from(bucketName).remove([oldPath, oldThumbPath]);
           }
         } catch (err) {
           console.warn('Could not delete old photo:', err);
         }
       }
 
-      // Upload compressed photo
+      // Upload compressed photo (full size)
       const { error: uploadError } = await supabase.storage
         .from(bucketName)
         .upload(fileName, compressedBlob, { 
@@ -146,15 +153,32 @@ export function ProfilePhotoUpload({ currentPhotoUrl, userName, profileId, onPho
 
       if (uploadError) throw uploadError;
 
-      // Get public URL
+      // Upload thumbnail
+      const { error: thumbUploadError } = await supabase.storage
+        .from(bucketName)
+        .upload(thumbnailFileName, thumbnailBlob, { 
+          upsert: true,
+          contentType: 'image/jpeg'
+        });
+
+      if (thumbUploadError) throw thumbUploadError;
+
+      // Get public URLs
       const { data: { publicUrl } } = supabase.storage
         .from(bucketName)
         .getPublicUrl(fileName);
 
-      // Update profile (usando profileId e campo correto)
+      const { data: { publicUrl: thumbnailUrl } } = supabase.storage
+        .from(bucketName)
+        .getPublicUrl(thumbnailFileName);
+
+      // Update profile (usando profileId e ambos campos)
       const { error: updateError } = await supabase
         .from('profiles')
-        .update({ [fieldName]: publicUrl })
+        .update({ 
+          [fieldName]: publicUrl,
+          [thumbnailFieldName]: thumbnailUrl
+        })
         .eq('id', profileId);
 
       if (updateError) throw updateError;

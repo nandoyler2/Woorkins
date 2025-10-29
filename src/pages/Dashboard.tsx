@@ -1775,7 +1775,7 @@ export default function Dashboard() {
             });
           }}
           onClose={() => setShowStoryPhotoRequired(false)}
-          context="project"
+          context="story"
         />
       )}
 

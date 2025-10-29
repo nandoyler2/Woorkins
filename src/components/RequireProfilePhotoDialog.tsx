@@ -20,7 +20,7 @@ interface RequireProfilePhotoDialogProps {
   userId: string;
   onPhotoUploaded: () => void;
   onClose?: () => void;
-  context?: 'messaging' | 'project';
+  context?: 'messaging' | 'project' | 'story';
 }
 
 export function RequireProfilePhotoDialog({ 
@@ -137,6 +137,8 @@ export function RequireProfilePhotoDialog({
         title: '✅ Foto Aprovada!',
         description: context === 'project' 
           ? 'Agora você pode criar projetos.' 
+          : context === 'story'
+          ? 'Agora você pode criar stories.'
           : 'Agora você pode enviar mensagens.',
       });
 
@@ -176,12 +178,14 @@ export function RequireProfilePhotoDialog({
             <AlertTriangle className="h-6 w-6 text-destructive" />
             {context === 'project' 
               ? 'Foto de perfil obrigatória para criar um projeto'
+              : context === 'story'
+              ? 'Foto de perfil obrigatória para criar stories'
               : 'Foto de Perfil Obrigatória'}
           </AlertDialogTitle>
           <AlertDialogDescription className="space-y-4">
             <Alert variant="destructive">
               <AlertDescription>
-                Para garantir a segurança de todos, você precisa adicionar uma <strong>foto REAL</strong> mostrando seu rosto {context === 'project' ? 'antes de criar projeto' : 'antes de enviar mensagens'}.
+                Para garantir a segurança de todos, você precisa adicionar uma <strong>foto REAL</strong> mostrando seu rosto {context === 'project' ? 'antes de criar projeto' : context === 'story' ? 'antes de criar stories' : 'antes de enviar mensagens'}.
               </AlertDescription>
             </Alert>
 

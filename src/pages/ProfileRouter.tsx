@@ -1,7 +1,11 @@
 import { useState, useEffect } from 'react';
-import { useParams, Routes, Route } from 'react-router-dom';
+import { useParams, Routes, Route, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import UserProfile from './UserProfile';
+import { Header } from '@/components/Header';
+import { Footer } from '@/components/Footer';
+import { Button } from '@/components/ui/button';
+import { Home, Search } from 'lucide-react';
 
 export default function ProfileRouter() {
   const { slug } = useParams<{ slug: string }>();
@@ -93,11 +97,39 @@ export default function ProfileRouter() {
 
   if (profileType === 'notfound') {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-4xl font-bold mb-4">Perfil não encontrado</h1>
-          <p className="text-muted-foreground">Este perfil não existe ou foi removido.</p>
-        </div>
+      <div className="min-h-screen bg-background flex flex-col">
+        <Header />
+        <main className="flex-1 flex items-center justify-center px-4 py-20">
+          <div className="text-center max-w-2xl mx-auto space-y-6">
+            <div className="space-y-2">
+              <h1 className="text-6xl md:text-7xl font-bold text-foreground">
+                😕
+              </h1>
+              <h2 className="text-2xl md:text-3xl font-semibold text-foreground">
+                Perfil não encontrado
+              </h2>
+              <p className="text-muted-foreground text-lg">
+                O perfil que você está procurando não existe ou foi removido.
+              </p>
+            </div>
+            
+            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
+              <Button asChild size="lg">
+                <Link to="/">
+                  <Home className="mr-2 h-5 w-5" />
+                  Voltar ao Início
+                </Link>
+              </Button>
+              <Button asChild variant="outline" size="lg">
+                <Link to="/projects">
+                  <Search className="mr-2 h-5 w-5" />
+                  Explorar Projetos
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </main>
+        <Footer />
       </div>
     );
   }

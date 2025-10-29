@@ -137,7 +137,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send email via Resend
     const emailResponse = await resend.emails.send({
-      from: "Woorkins <onboarding@resend.dev>", // Você pode personalizar o domínio depois
+      from: "Woorkins <noreply@woorkins.com>",
       to: [user.email],
       subject: "Confirme seu email no Woorkins",
       html,

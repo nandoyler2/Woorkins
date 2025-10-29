@@ -96,7 +96,7 @@ const handler = async (req: Request): Promise<Response> => {
         "Authorization": `Bearer ${resendApiKey}`,
       },
       body: JSON.stringify({
-        from: "Woorkins <onboarding@resend.dev>",
+        from: "Woorkins <noreply@woorkins.com>",
         to: [newEmail],
         subject: "Confirme sua troca de email - Woorkins",
         html: `

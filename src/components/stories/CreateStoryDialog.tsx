@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ImageIcon, Video, Type, Link as LinkIcon, Upload, Loader2, Camera, Bold, Italic, Link2, Crop } from 'lucide-react';
+import { ImageIcon, Video, Type, Link as LinkIcon, Upload, Loader2, Camera, Bold, Italic, Link2, Crop, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ImageCropDialog } from '@/components/ImageCropDialog';
 import { useUpload } from '@/contexts/UploadContext';
@@ -434,32 +434,48 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
                     ) : (
                       <div className="space-y-4">
                         {mediaPreview ? (
-                          <div className="flex gap-2 justify-center p-4 bg-muted/30 rounded-xl">
-                            {type === 'image' && (
+                          <div className="space-y-3">
+                            {/* Info sobre mídia carregada */}
+                            <div className="flex items-center gap-2 p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
+                              <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-semibold text-green-700 dark:text-green-400">
+                                  {type === 'image' ? 'Imagem carregada!' : 'Vídeo carregado!'}
+                                </p>
+                                <p className="text-xs text-muted-foreground truncate">
+                                  {mediaFile?.name}
+                                </p>
+                              </div>
+                            </div>
+                            
+                            {/* Botões de controle */}
+                            <div className="flex gap-2 justify-center">
+                              {type === 'image' && (
+                                <Button
+                                  variant="outline"
+                                  size="lg"
+                                  onClick={() => {
+                                    setShowCropDialog(true);
+                                  }}
+                                >
+                                  <Crop className="w-4 h-4 mr-2" />
+                                  Ajustar Crop
+                                </Button>
+                              )}
                               <Button
                                 variant="outline"
                                 size="lg"
                                 onClick={() => {
-                                  setShowCropDialog(true);
+                                  setMediaFile(null);
+                                  setMediaPreview('');
+                                  setOriginalImage('');
+                                  setCropData(null);
                                 }}
                               >
-                                <Crop className="w-4 h-4 mr-2" />
-                                Ajustar Crop
+                                <Upload className="w-4 h-4 mr-2" />
+                                Alterar arquivo
                               </Button>
-                            )}
-                            <Button
-                              variant="outline"
-                              size="lg"
-                              onClick={() => {
-                                setMediaFile(null);
-                                setMediaPreview('');
-                                setOriginalImage('');
-                                setCropData(null);
-                              }}
-                            >
-                              <Upload className="w-4 h-4 mr-2" />
-                              Alterar arquivo
-                            </Button>
+                            </div>
                           </div>
                         ) : (
                           <div className="border-2 border-dashed border-primary/30 rounded-2xl p-8 text-center bg-gradient-to-br from-muted/30 to-transparent hover:border-primary/50 transition-all">
@@ -589,6 +605,10 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
                         ) : (
                           <video
                             src={mediaPreview}
+                            controls
+                            muted
+                            autoPlay
+                            loop
                             className="w-full h-full object-cover"
                           />
                         )

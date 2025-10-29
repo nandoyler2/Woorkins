@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, X, ExternalLink } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X, ExternalLink, Volume2, VolumeX } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { SafeImage } from '@/components/ui/safe-image';
@@ -39,6 +39,8 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId }: 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [progress, setProgress] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [isMuted, setIsMuted] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const { toast } = useToast();
 
   const STORY_DURATION = 15000; // 15 segundos
@@ -151,6 +153,13 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId }: 
     }
   };
 
+  const toggleMute = () => {
+    setIsMuted(!isMuted);
+    if (videoRef.current) {
+      videoRef.current.muted = !isMuted;
+    }
+  };
+
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (e.key === 'ArrowRight') handleNext();
     if (e.key === 'ArrowLeft') handlePrevious();
@@ -246,9 +255,10 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId }: 
 
             {currentStory.type === 'video' && currentStory.media_url && (
               <video
+                ref={videoRef}
                 src={currentStory.media_url}
                 autoPlay
-                muted
+                muted={isMuted}
                 className="w-full h-full object-contain"
               />
             )}
@@ -285,6 +295,18 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId }: 
               </div>
             )}
           </div>
+
+          {/* Volume control para vídeos */}
+          {currentStory.type === 'video' && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleMute}
+              className="absolute top-20 right-4 z-20 bg-black/30 backdrop-blur-md text-white hover:bg-black/50 rounded-full"
+            >
+              {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+            </Button>
+          )}
 
           {/* Footer - Link apenas para mídia */}
           {currentStory.link_url && currentStory.type !== 'text' && (

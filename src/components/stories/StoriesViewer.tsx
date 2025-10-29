@@ -39,7 +39,16 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId }: 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [progress, setProgress] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
-  const [isMuted, setIsMuted] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+  const [isMuted, setIsMuted] = useState(() => {
+    const saved = localStorage.getItem('stories-muted');
+    return saved ? JSON.parse(saved) : false;
+  });
+  const [volume, setVolume] = useState(() => {
+    const saved = localStorage.getItem('stories-volume');
+    return saved ? parseFloat(saved) : 1;
+  });
+  const [showVolumeSlider, setShowVolumeSlider] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const { toast } = useToast();
 
@@ -118,11 +127,26 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId }: 
       registerView(currentStory.id);
     }
 
+    setIsPaused(false);
     let progressInterval: NodeJS.Timeout;
     let startTime = Date.now();
+    let pausedTime = 0;
+    let lastPauseStart = 0;
 
     const updateProgress = () => {
-      const elapsed = Date.now() - startTime;
+      if (isPaused) {
+        if (lastPauseStart === 0) {
+          lastPauseStart = Date.now();
+        }
+        return;
+      }
+
+      if (lastPauseStart > 0) {
+        pausedTime += Date.now() - lastPauseStart;
+        lastPauseStart = 0;
+      }
+
+      const elapsed = Date.now() - startTime - pausedTime;
       const newProgress = (elapsed / STORY_DURATION) * 100;
 
       if (newProgress >= 100) {
@@ -135,7 +159,7 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId }: 
     progressInterval = setInterval(updateProgress, 100);
 
     return () => clearInterval(progressInterval);
-  }, [isOpen, stories, currentIndex, registerView]);
+  }, [isOpen, stories, currentIndex, registerView, isPaused]);
 
   const handleNext = () => {
     if (currentIndex < stories.length - 1) {
@@ -154,9 +178,37 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId }: 
   };
 
   const toggleMute = () => {
-    setIsMuted(!isMuted);
+    const newMuted = !isMuted;
+    setIsMuted(newMuted);
+    localStorage.setItem('stories-muted', JSON.stringify(newMuted));
     if (videoRef.current) {
-      videoRef.current.muted = !isMuted;
+      videoRef.current.muted = newMuted;
+    }
+  };
+
+  const handleVolumeChange = (newVolume: number) => {
+    setVolume(newVolume);
+    localStorage.setItem('stories-volume', newVolume.toString());
+    if (videoRef.current) {
+      videoRef.current.volume = newVolume;
+      if (newVolume === 0) {
+        setIsMuted(true);
+        localStorage.setItem('stories-muted', 'true');
+      } else if (isMuted) {
+        setIsMuted(false);
+        localStorage.setItem('stories-muted', 'false');
+      }
+    }
+  };
+
+  const togglePause = () => {
+    setIsPaused(!isPaused);
+    if (videoRef.current) {
+      if (isPaused) {
+        videoRef.current.play();
+      } else {
+        videoRef.current.pause();
+      }
     }
   };
 
@@ -264,7 +316,13 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId }: 
                 src={currentStory.media_url}
                 autoPlay
                 muted={isMuted}
-                className="w-full h-full object-contain"
+                onClick={togglePause}
+                onLoadedMetadata={() => {
+                  if (videoRef.current) {
+                    videoRef.current.volume = volume;
+                  }
+                }}
+                className="w-full h-full object-contain cursor-pointer"
               />
             )}
 
@@ -303,14 +361,33 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId }: 
 
           {/* Volume control para vídeos */}
           {currentStory.type === 'video' && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={toggleMute}
-              className="absolute top-20 right-4 z-20 bg-black/30 backdrop-blur-md text-white hover:bg-black/50 rounded-full"
+            <div 
+              className="absolute top-20 right-4 z-20 flex items-center gap-2"
+              onMouseEnter={() => setShowVolumeSlider(true)}
+              onMouseLeave={() => setShowVolumeSlider(false)}
             >
-              {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
-            </Button>
+              {showVolumeSlider && (
+                <div className="bg-black/50 backdrop-blur-md rounded-full px-3 py-2 flex items-center gap-2">
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.1"
+                    value={volume}
+                    onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
+                    className="w-20 h-1 bg-white/30 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-moz-range-thumb]:w-3 [&::-moz-range-thumb]:h-3 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-0"
+                  />
+                </div>
+              )}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={toggleMute}
+                className="bg-black/30 backdrop-blur-md text-white hover:bg-black/50 rounded-full"
+              >
+                {isMuted || volume === 0 ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+              </Button>
+            </div>
           )}
 
           {/* Footer - Link apenas para mídia */}

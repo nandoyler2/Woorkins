@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "https://esm.sh/resend@2.0.0";
+import { encode as base64Encode } from "https://deno.land/std@0.190.0/encoding/base64.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -57,7 +58,7 @@ const handler = async (req: Request): Promise<Response> => {
             
             <tr>
               <td style="padding: 40px 40px 32px; text-align: center; background-color: #ffffff; border-bottom: 1px solid #e5e7eb;">
-                <img src="https://i.imgur.com/ZlYx8K4.png" alt="Woorkins" style="width: 180px; height: auto; display: inline-block;">
+                <img src="cid:woorkins-logo" alt="Woorkins" style="width: 180px; height: auto; display: inline-block;">
               </td>
             </tr>
             
@@ -138,12 +139,23 @@ const handler = async (req: Request): Promise<Response> => {
 </html>
     `;
 
+    // Prepare inline logo attachment via CID
+    const attachments: any[] = [];
+    try {
+      const logoBytes = await Deno.readFile(new URL('./logo-woorkins.png', import.meta.url));
+      const logoBase64 = base64Encode(logoBytes.buffer);
+      attachments.push({ filename: 'logo-woorkins.png', content: logoBase64, content_id: 'woorkins-logo' });
+    } catch (e) {
+      console.warn('Logo file missing in send-confirmation-email, sending without logo.');
+    }
+
     // Send email via Resend
     const emailResponse = await resend.emails.send({
       from: "Woorkins <noreply@woorkins.com>",
       to: [user.email],
       subject: "Confirme seu email no Woorkins",
       html,
+      attachments,
     });
 
     console.log("Email sent successfully:", emailResponse);

@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "https://esm.sh/resend@2.0.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { encode as base64Encode } from "https://deno.land/std@0.190.0/encoding/base64.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -81,7 +82,7 @@ serve(async (req) => {
           <table role="presentation" style="width: 600px; border-collapse: collapse; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
             <tr>
               <td style="padding: 40px 40px 32px; text-align: center; background-color: #ffffff; border-bottom: 1px solid #e5e7eb;">
-                <img src="https://i.imgur.com/ZlYx8K4.png" alt="Woorkins" style="width: 180px; height: auto; display: inline-block;" />
+                <img src="cid:woorkins-logo" alt="Woorkins" style="width: 180px; height: auto; display: inline-block;" />
               </td>
             </tr>
             <tr>
@@ -113,12 +114,22 @@ serve(async (req) => {
     </table>
   </body>
 </html>`;
+    // Attach inline logo via CID
+    const attachments: any[] = [];
+    try {
+      const logoBytes = await Deno.readFile(new URL('./logo-woorkins.png', import.meta.url));
+      const logoBase64 = base64Encode(logoBytes.buffer);
+      attachments.push({ filename: 'logo-woorkins.png', content: logoBase64, content_id: 'woorkins-logo' });
+    } catch (e) {
+      console.warn('Logo file not found, proceeding without inline logo.');
+    }
 
     const emailResponse = await resend.emails.send({
       from: "Woorkins <noreply@woorkins.com>",
       to: [email],
       subject: "Confirme seu email no Woorkins",
       html,
+      attachments,
     });
 
     console.log("Custom confirmation email sent:", emailResponse);

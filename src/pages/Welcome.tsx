@@ -8,11 +8,12 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Check, X, Sparkles } from 'lucide-react';
+import { Loader2, Check, X, Sparkles, Briefcase, Building2, Users, Rocket, UserCheck, Package, GraduationCap, TrendingUp } from 'lucide-react';
 import logoWoorkins from '@/assets/logo-woorkins.png';
 import { SafeImage } from '@/components/ui/safe-image';
 import { useIdentifierValidation } from '@/hooks/useIdentifierValidation';
 import { ProfilePhotoUpload } from '@/components/ProfilePhotoUpload';
+import { cn } from '@/lib/utils';
 
 export default function Welcome() {
   const { user } = useAuth();
@@ -26,8 +27,20 @@ export default function Welcome() {
   const [currentPhotoUrl, setCurrentPhotoUrl] = useState<string>('');
   const [username, setUsername] = useState('');
   const [bio, setBio] = useState('');
+  const [category, setCategory] = useState<string>('');
   const [usernameValid, setUsernameValid] = useState<boolean | null>(null);
   const [usernameError, setUsernameError] = useState<string>('');
+
+  const profileCategories = [
+    { id: 'freelancer', label: 'Freelancer', description: 'Presto serviços e projetos', icon: Briefcase },
+    { id: 'empresa', label: 'Empresa / Contratante', description: 'Busco profissionais e equipes', icon: Building2 },
+    { id: 'agencia', label: 'Agência / Estúdio', description: 'Atuo como intermediário', icon: Users },
+    { id: 'startup', label: 'Startup / Negócio', description: 'Monto times e busco talentos', icon: Rocket },
+    { id: 'recrutador', label: 'Recrutador / RH', description: 'Gerencio contratações', icon: UserCheck },
+    { id: 'parceiro', label: 'Parceiro / Fornecedor', description: 'Ofereço ferramentas e suporte', icon: Package },
+    { id: 'estudante', label: 'Estudante / Iniciante', description: 'Busco aprender e crescer', icon: GraduationCap },
+    { id: 'investidor', label: 'Investidor / Mentor', description: 'Apoio projetos e talentos', icon: TrendingUp },
+  ];
 
   useEffect(() => {
     document.title = 'Bem-vindo ao Woorkins';
@@ -110,6 +123,15 @@ export default function Welcome() {
       return;
     }
 
+    if (!category) {
+      toast({
+        variant: 'destructive',
+        title: 'Categoria obrigatória',
+        description: 'Por favor, selecione como você se identifica na plataforma.',
+      });
+      return;
+    }
+
     setSaving(true);
     try {
       const { error } = await supabase
@@ -117,6 +139,7 @@ export default function Welcome() {
         .update({
           username: username.toLowerCase(),
           bio: bio.trim() || null,
+          category: category,
         })
         .eq('id', profileId);
 
@@ -187,6 +210,52 @@ export default function Welcome() {
               />
             </div>
 
+            {/* Category Selection */}
+            <div className="space-y-3">
+              <Label className="flex items-center gap-2">
+                Como você se identifica? <span className="text-destructive">*</span>
+              </Label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {profileCategories.map((cat) => {
+                  const Icon = cat.icon;
+                  return (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => setCategory(cat.id)}
+                      className={cn(
+                        "flex items-start gap-3 p-4 rounded-lg border-2 transition-all text-left hover:border-primary/50",
+                        category === cat.id
+                          ? "border-primary bg-primary/5 shadow-md"
+                          : "border-border bg-card hover:bg-accent/50"
+                      )}
+                    >
+                      <div className={cn(
+                        "rounded-full p-2 transition-colors",
+                        category === cat.id ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                      )}>
+                        <Icon className="w-5 h-5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className={cn(
+                          "font-semibold text-sm mb-1 transition-colors",
+                          category === cat.id ? "text-primary" : "text-foreground"
+                        )}>
+                          {cat.label}
+                        </h3>
+                        <p className="text-xs text-muted-foreground leading-tight">
+                          {cat.description}
+                        </p>
+                      </div>
+                      {category === cat.id && (
+                        <Check className="w-5 h-5 text-primary flex-shrink-0 mt-1" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             {/* Username */}
             <div className="space-y-2">
               <Label htmlFor="username" className="flex items-center gap-2">
@@ -235,7 +304,7 @@ export default function Welcome() {
             <Button
               type="submit"
               className="w-full h-11 text-base"
-              disabled={saving || !usernameValid}
+              disabled={saving || !usernameValid || !category}
             >
               {saving ? (
                 <>

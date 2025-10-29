@@ -12,14 +12,22 @@ export default function PendingConfirmation() {
   const [searchParams] = useSearchParams();
   const email = searchParams.get('email');
   const [resending, setResending] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
   const { toast } = useToast();
 
   useEffect(() => {
     document.title = 'Confirme seu Email - Woorkins';
   }, []);
 
+  useEffect(() => {
+    if (cooldown > 0) {
+      const timer = setTimeout(() => setCooldown(cooldown - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [cooldown]);
+
   const handleResendEmail = async () => {
-    if (!email) return;
+    if (!email || cooldown > 0) return;
 
     setResending(true);
     try {
@@ -28,12 +36,26 @@ export default function PendingConfirmation() {
         email: email,
       });
 
-      if (error) throw error;
+      if (error) {
+        // Detectar erro de rate limit
+        if (error.message?.includes('request this after') || error.message?.includes('rate limit')) {
+          const seconds = error.message.match(/\d+/)?.[0] || '60';
+          setCooldown(parseInt(seconds));
+          toast({
+            variant: 'destructive',
+            title: '⏱️ Aguarde um momento',
+            description: `Por segurança, você pode reenviar o email novamente em ${seconds} segundos.`,
+          });
+          return;
+        }
+        throw error;
+      }
 
       toast({
         title: '✅ Email Reenviado',
         description: 'Verifique sua caixa de entrada e spam.',
       });
+      setCooldown(60); // Adicionar cooldown de 60 segundos após sucesso
     } catch (error: any) {
       toast({
         variant: 'destructive',
@@ -94,13 +116,15 @@ export default function PendingConfirmation() {
             onClick={handleResendEmail}
             variant="outline"
             className="w-full h-11"
-            disabled={resending || !email}
+            disabled={resending || !email || cooldown > 0}
           >
             {resending ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 Reenviando...
               </>
+            ) : cooldown > 0 ? (
+              `Aguarde ${cooldown}s para reenviar`
             ) : (
               'Reenviar Email de Confirmação'
             )}

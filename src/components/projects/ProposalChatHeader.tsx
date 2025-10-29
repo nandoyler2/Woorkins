@@ -201,25 +201,19 @@ export function ProposalChatHeader({
           )}
         </div>
 
-        {/* Centro: Valor + Status - melhorado */}
-        <div className="flex items-center gap-4 px-6 py-3 rounded-xl bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 border-2 border-primary/30 shadow-lg">
-          <div className="flex flex-col items-center">
-            <span className="text-xs font-semibold text-primary/70 uppercase tracking-wider mb-0.5">Valor</span>
-            <div className="flex items-baseline gap-1">
-              <span className="text-sm font-bold text-primary/80">R$</span>
-              <span className="text-3xl font-black bg-gradient-to-br from-primary to-primary/70 bg-clip-text text-transparent">
-                {proposal.current_proposal_amount?.toLocaleString('pt-BR', {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}
-              </span>
-            </div>
+        {/* Centro: Valor + Status - tamanho reduzido */}
+        <div className="flex items-center gap-3 px-4 py-2 rounded-xl bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 border-2 border-primary/30 shadow-md">
+          <div className="flex items-baseline gap-1">
+            <span className="text-xs font-medium text-muted-foreground">R$</span>
+            <span className="text-2xl font-bold text-primary">
+              {proposal.current_proposal_amount?.toLocaleString('pt-BR', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
+            </span>
           </div>
-          <div className="h-12 w-px bg-gradient-to-b from-transparent via-primary/40 to-transparent" />
-          <div className="flex flex-col items-center gap-1">
-            <span className="text-xs font-semibold text-primary/70 uppercase tracking-wider">Status</span>
-            {getStatusBadge()}
-          </div>
+          <div className="h-6 w-px bg-primary/30" />
+          {getStatusBadge()}
         </div>
 
         {/* Coluna direita: Botões de ação - melhorados */}

@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
 
 interface Conversation {
   id: string;
@@ -34,49 +33,82 @@ interface ConversationCacheStore {
 
 const CACHE_DURATION = 2 * 60 * 1000; // 2 minutos
 
-export const useConversationCache = create<ConversationCacheStore>()(
-  persist(
-    (set, get) => ({
-      conversations: [],
-      lastFetched: null,
-
-      setConversations: (conversations: Conversation[]) => {
-        set({
-          conversations,
-          lastFetched: Date.now(),
-        });
-      },
-
-      updateConversation: (id: string, type: 'negotiation' | 'proposal', updates: Partial<Conversation>) => {
-        set((state) => ({
-          conversations: state.conversations.map((conv) =>
-            conv.id === id && conv.type === type
-              ? { ...conv, ...updates }
-              : conv
-          ),
-        }));
-      },
-
-      getConversation: (id: string, type: 'negotiation' | 'proposal') => {
-        return get().conversations.find((c) => c.id === id && c.type === type);
-      },
-
-      clearCache: () => {
-        set({ conversations: [], lastFetched: null });
-      },
-
-      isStale: () => {
-        const { lastFetched } = get();
-        if (!lastFetched) return true;
-        return Date.now() - lastFetched > CACHE_DURATION;
-      },
-    }),
-    {
-      name: 'conversation-cache',
-      partialize: (state) => ({
-        conversations: state.conversations,
-        lastFetched: state.lastFetched,
-      }),
+// Load from localStorage on init
+const loadFromStorage = () => {
+  try {
+    const stored = localStorage.getItem('conversation-cache');
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      return {
+        conversations: parsed.conversations || [],
+        lastFetched: parsed.lastFetched || null,
+      };
     }
-  )
-);
+  } catch (e) {
+    console.error('Error loading cache:', e);
+  }
+  return { conversations: [], lastFetched: null };
+};
+
+const initialState = loadFromStorage();
+
+export const useConversationCache = create<ConversationCacheStore>((set, get) => ({
+  conversations: initialState.conversations,
+  lastFetched: initialState.lastFetched,
+
+  setConversations: (conversations: Conversation[]) => {
+    const newState = {
+      conversations,
+      lastFetched: Date.now(),
+    };
+    set(newState);
+    // Save to localStorage
+    try {
+      localStorage.setItem('conversation-cache', JSON.stringify(newState));
+    } catch (e) {
+      console.error('Error saving cache:', e);
+    }
+  },
+
+  updateConversation: (id: string, type: 'negotiation' | 'proposal', updates: Partial<Conversation>) => {
+    set((state) => {
+      const newState = {
+        ...state,
+        conversations: state.conversations.map((conv) =>
+          conv.id === id && conv.type === type
+            ? { ...conv, ...updates }
+            : conv
+        ),
+      };
+      // Save to localStorage
+      try {
+        localStorage.setItem('conversation-cache', JSON.stringify({
+          conversations: newState.conversations,
+          lastFetched: newState.lastFetched,
+        }));
+      } catch (e) {
+        console.error('Error saving cache:', e);
+      }
+      return newState;
+    });
+  },
+
+  getConversation: (id: string, type: 'negotiation' | 'proposal') => {
+    return get().conversations.find((c) => c.id === id && c.type === type);
+  },
+
+  clearCache: () => {
+    set({ conversations: [], lastFetched: null });
+    try {
+      localStorage.removeItem('conversation-cache');
+    } catch (e) {
+      console.error('Error clearing cache:', e);
+    }
+  },
+
+  isStale: () => {
+    const { lastFetched } = get();
+    if (!lastFetched) return true;
+    return Date.now() - lastFetched > CACHE_DURATION;
+  },
+}));

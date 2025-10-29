@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
 import { supabase } from '@/integrations/supabase/client';
 
 interface Message {
@@ -27,10 +26,23 @@ interface MessageCacheStore {
 
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
 
-export const useMessageCache = create<MessageCacheStore>()(
-  persist(
-    (set, get) => ({
-      cache: {},
+// Load from localStorage on init
+const loadCacheFromStorage = () => {
+  try {
+    const stored = localStorage.getItem('message-cache');
+    if (stored) {
+      return JSON.parse(stored);
+    }
+  } catch (e) {
+    console.error('Error loading message cache:', e);
+  }
+  return {};
+};
+
+const initialCache = loadCacheFromStorage();
+
+export const useMessageCache = create<MessageCacheStore>((set, get) => ({
+  cache: initialCache,
 
   getMessages: async (conversationId: string, conversationType: 'negotiation' | 'proposal') => {
     const cacheKey = `${conversationType}-${conversationId}`;
@@ -60,15 +72,22 @@ export const useMessageCache = create<MessageCacheStore>()(
     const messages = data as any[] || [];
 
     // Atualizar cache
-    set((state) => ({
-      cache: {
-        ...state.cache,
-        [cacheKey]: {
-          messages,
-          lastFetched: now,
-        },
+    const newCache = {
+      ...get().cache,
+      [cacheKey]: {
+        messages,
+        lastFetched: now,
       },
-    }));
+    };
+    
+    set({ cache: newCache });
+    
+    // Save to localStorage
+    try {
+      localStorage.setItem('message-cache', JSON.stringify(newCache));
+    } catch (e) {
+      console.error('Error saving message cache:', e);
+    }
 
     return messages;
   },
@@ -80,15 +99,22 @@ export const useMessageCache = create<MessageCacheStore>()(
 
       if (!cached) return state;
 
-      return {
-        cache: {
-          ...state.cache,
-          [cacheKey]: {
-            ...cached,
-            messages: [...cached.messages, message],
-          },
+      const newCache = {
+        ...state.cache,
+        [cacheKey]: {
+          ...cached,
+          messages: [...cached.messages, message],
         },
       };
+      
+      // Save to localStorage
+      try {
+        localStorage.setItem('message-cache', JSON.stringify(newCache));
+      } catch (e) {
+        console.error('Error saving message cache:', e);
+      }
+
+      return { cache: newCache };
     });
   },
 
@@ -97,18 +123,21 @@ export const useMessageCache = create<MessageCacheStore>()(
       set((state) => {
         const newCache = { ...state.cache };
         delete newCache[conversationId];
+        // Save to localStorage
+        try {
+          localStorage.setItem('message-cache', JSON.stringify(newCache));
+        } catch (e) {
+          console.error('Error saving message cache:', e);
+        }
         return { cache: newCache };
       });
     } else {
       set({ cache: {} });
+      try {
+        localStorage.removeItem('message-cache');
+      } catch (e) {
+        console.error('Error clearing message cache:', e);
+      }
     }
   },
-    }),
-    {
-      name: 'message-cache',
-      partialize: (state) => ({
-        cache: state.cache,
-      }),
-    }
-  )
-);
+}));

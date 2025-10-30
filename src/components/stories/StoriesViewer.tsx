@@ -340,7 +340,7 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
-      <DialogContent className="z-[9999] p-0 bg-transparent border-0 shadow-none overflow-visible [&>button]:hidden">
+      <DialogContent className="z-[9999] p-0 bg-transparent border-0 shadow-none overflow-visible [&>button]:hidden sm:rounded-none outline-none focus:outline-none ring-0 focus:ring-0 focus-visible:outline-none focus-visible:ring-0">
         <DialogTitle className="sr-only">Stories</DialogTitle>
         <DialogDescription className="sr-only">Visualizador de stories</DialogDescription>
         {isLoading || stories.length === 0 ? (
@@ -365,7 +365,7 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
             )}
 
             {/* Container do Story */}
-            <div className="relative flex flex-col rounded-2xl overflow-hidden bg-black shadow-2xl" style={{ width: "min(90vw, 500px, calc((9/16) * 90vh))", aspectRatio: "9 / 16" }}>
+            <div className="relative flex flex-col rounded-none overflow-hidden bg-black" style={{ width: "min(90vw, 500px, calc((9/16) * 90vh))", aspectRatio: "9 / 16" }}>
           {/* Progress bars */}
           <div className="absolute top-0 left-0 right-0 z-20 flex gap-1.5 p-3">
             {stories.map((_, idx) => (

@@ -181,6 +181,38 @@ export default function Messages() {
             });
           }
         )
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'proposals'
+          },
+          (payload) => {
+            // Quando uma proposta é atualizada (status do trabalho ou pagamento), atualizar instantaneamente
+            const updated: any = payload.new;
+            setConversations(prev => {
+              const updatedList = prev.map(c => {
+                if (c.type === 'proposal' && c.id === updated.id) {
+                  const updatedConv = {
+                    ...c,
+                    status: updated.status,
+                    paymentStatus: updated.payment_status,
+                    workStatus: updated.work_status,
+                    lastMessageAt: updated.updated_at,
+                  };
+                  updateConversation(c.id, 'proposal', updatedConv);
+                  return updatedConv;
+                }
+                return c;
+              });
+              // Re-sort by last activity
+              const sorted = [...updatedList].sort((a, b) => new Date(b.lastMessageAt || 0).getTime() - new Date(a.lastMessageAt || 0).getTime());
+              setCachedConversations(sorted);
+              return sorted;
+            });
+          }
+        )
         .subscribe();
 
       return () => {

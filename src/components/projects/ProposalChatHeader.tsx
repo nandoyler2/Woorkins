@@ -262,12 +262,12 @@ export function ProposalChatHeader({
     <div className="border-b bg-gradient-to-br from-background via-primary/5 to-background p-4 shadow-sm">
       <div className="flex items-center gap-3 md:gap-6">
         {/* Coluna esquerda: Info do projeto */}
-        <div className="flex-1 min-w-0 bg-card/50 backdrop-blur-sm rounded-lg p-3 border border-border/50">
+        <div className="bg-card/50 backdrop-blur-sm rounded-lg p-3 border border-border/50 w-fit max-w-[60%]">
           {projectData && (
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-                <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                   {isOwner ? 'Seu Projeto' : `Projeto de ${projectData.ownerName}`}
                 </h2>
               </div>
@@ -275,7 +275,7 @@ export function ProposalChatHeader({
                 className="flex items-center gap-2 cursor-pointer group"
                 onClick={() => window.open(`/projetos/${projectData.id}`, '_blank')}
               >
-                <h3 ref={titleRef} className="text-sm md:text-base font-bold truncate text-foreground group-hover:text-primary transition-colors">
+                <h3 ref={titleRef} className="text-sm md:text-base font-bold text-foreground group-hover:text-primary transition-colors whitespace-nowrap">
                   {projectData.title}
                 </h3>
                 <ExternalLink className="h-3.5 w-3.5 md:h-4 md:w-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />

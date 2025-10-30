@@ -8,7 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-
+import { useEffect, useRef, useState } from 'react';
 interface ProjectData {
   id: string;
   title: string;
@@ -54,6 +54,27 @@ export function ProposalChatHeader({
 }: ProposalChatHeaderProps) {
   const { timeRemaining, isExpired } = useCompletionCountdown(proposal.owner_confirmation_deadline || null);
 
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  const [isTitleTruncated, setIsTitleTruncated] = useState(false);
+
+  useEffect(() => {
+    const el = titleRef.current;
+    if (!el) return;
+    const check = () => {
+      // Detecta truncamento (quando o conteúdo é maior que a largura disponível)
+      setIsTitleTruncated(el.scrollWidth > el.clientWidth + 1);
+    };
+    check();
+
+    const ro = new ResizeObserver(() => check());
+    ro.observe(el);
+
+    window.addEventListener('resize', check);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', check);
+    };
+  }, [projectData?.title]);
   const getStatusBadge = () => {
     if (proposal.work_status === 'completed') {
       return <Badge className="bg-green-500">Concluído</Badge>;
@@ -228,7 +249,7 @@ export function ProposalChatHeader({
                 className="flex items-center gap-2 cursor-pointer group"
                 onClick={() => window.open(`/projetos/${projectData.id}`, '_blank')}
               >
-                <h3 className="text-sm md:text-base font-bold truncate text-foreground group-hover:text-primary transition-colors">
+                <h3 ref={titleRef} className="text-sm md:text-base font-bold truncate text-foreground group-hover:text-primary transition-colors">
                   {projectData.title}
                 </h3>
                 <ExternalLink className="h-3.5 w-3.5 md:h-4 md:w-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
@@ -238,7 +259,8 @@ export function ProposalChatHeader({
         </div>
 
         {/* Centro: Valor + Status - visível apenas em telas médias ou maiores */}
-        <div className="hidden md:flex items-center gap-3 px-4 py-2 rounded-xl bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 border-2 border-primary/30 shadow-md">
+{/* Centro: Valor + Status - visível apenas em telas médias ou maiores e sempre oculto se o título truncar */}
+        <div className={`${isTitleTruncated ? 'hidden' : 'hidden md:flex'} items-center gap-3 px-4 py-2 rounded-xl bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 border-2 border-primary/30 shadow-md`}>
           <div className="flex items-baseline gap-1">
             <span className="text-xs font-medium text-muted-foreground">R$</span>
             <span className="text-2xl font-bold text-primary">
@@ -263,8 +285,8 @@ export function ProposalChatHeader({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
-              {/* Mostrar valor e status no dropdown em telas pequenas */}
-              <div className="md:hidden border-b pb-2 mb-2">
+              {/* Mostrar valor e status no dropdown quando não couber no título OU em telas pequenas */}
+              <div className={`border-b pb-2 mb-2 ${isTitleTruncated ? '' : 'md:hidden'}`}>
                 <DropdownMenuItem className="flex justify-between items-center">
                   <span className="text-muted-foreground text-xs">Valor:</span>
                   <span className="font-bold text-primary">

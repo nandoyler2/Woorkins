@@ -61,26 +61,44 @@ export function ProposalChatHeader({
   const { timeRemaining, isExpired } = useCompletionCountdown(proposal.owner_confirmation_deadline || null);
 
   const titleRef = useRef<HTMLHeadingElement>(null);
-  const [isTitleTruncated, setIsTitleTruncated] = useState(false);
+  const [compactHeader, setCompactHeader] = useState(false);
+  const debounceRef = useRef<number | null>(null);
 
   useEffect(() => {
     const el = titleRef.current;
     if (!el) return;
-    const check = () => {
-      // Detecta truncamento (quando o conteúdo é maior que a largura disponível)
-      setIsTitleTruncated(el.scrollWidth > el.clientWidth + 1);
+
+    const runCheck = () => {
+      // Histerese para evitar “piscar”: exige folga para reexibir
+      const client = el.clientWidth;
+      const scroll = el.scrollWidth;
+      if (!compactHeader) {
+        // Esconde assim que começar a cortar
+        if (scroll > client - 2) setCompactHeader(true);
+      } else {
+        // Só reexibe com folga de 40px
+        if (scroll <= client - 40) setCompactHeader(false);
+      }
     };
-    check();
 
-    const ro = new ResizeObserver(() => check());
+    const debounced = () => {
+      if (debounceRef.current) window.clearTimeout(debounceRef.current);
+      debounceRef.current = window.setTimeout(runCheck, 120);
+    };
+
+    // Primeira checagem
+    runCheck();
+
+    const ro = new ResizeObserver(debounced);
     ro.observe(el);
+    window.addEventListener('resize', debounced);
 
-    window.addEventListener('resize', check);
     return () => {
       ro.disconnect();
-      window.removeEventListener('resize', check);
+      window.removeEventListener('resize', debounced);
+      if (debounceRef.current) window.clearTimeout(debounceRef.current);
     };
-  }, [projectData?.title]);
+  }, [projectData?.title, compactHeader]);
   const getStatusBadge = () => {
     if (proposal.work_status === 'completed') {
       return <Badge className="bg-green-500">Concluído</Badge>;
@@ -290,9 +308,8 @@ export function ProposalChatHeader({
           )}
         </div>
 
-        {/* Centro: Valor + Status - visível apenas em telas médias ou maiores */}
-{/* Centro: Valor + Status - visível apenas em telas médias ou maiores e sempre oculto se o título truncar */}
-        <div className={`${isTitleTruncated ? 'hidden' : 'hidden md:flex'} items-center gap-3 px-4 py-2 rounded-xl bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 border-2 border-primary/30 shadow-md`}>
+        {/* Centro: Valor + Status - visível em md+ e oculto quando o título não tem folga (compactHeader) */}
+        <div className={`${compactHeader ? 'hidden' : 'hidden md:flex'} items-center gap-3 px-4 py-2 rounded-xl bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 border-2 border-primary/30 shadow-md`}>
           <div className="flex items-baseline gap-1">
             <span className="text-xs font-medium text-muted-foreground">R$</span>
             <span className="text-2xl font-bold text-primary">
@@ -318,7 +335,7 @@ export function ProposalChatHeader({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
               {/* Mostrar valor e status no dropdown quando não couber no título OU em telas pequenas */}
-              <div className={`border-b pb-2 mb-2 ${isTitleTruncated ? '' : 'md:hidden'}`}>
+              <div className={`border-b pb-2 mb-2 ${compactHeader ? '' : 'md:hidden'}`}>
                 <DropdownMenuItem className="flex justify-between items-center">
                   <span className="text-muted-foreground text-xs">Valor:</span>
                   <span className="font-bold text-primary">

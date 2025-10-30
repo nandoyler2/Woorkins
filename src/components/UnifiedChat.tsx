@@ -201,18 +201,21 @@ export function UnifiedChat({
       requestAnimationFrame(() => {
         const container = messagesContainerRef.current;
         if (container) {
-          // Método 1: scrollTop direto
-          container.scrollTop = container.scrollHeight;
+          // Método 1: scrollTop direto com smooth
+          container.scrollTo({
+            top: container.scrollHeight,
+            behavior: 'smooth'
+          });
           
           // Método 2: scrollIntoView como fallback
           const lastMessage = container.lastElementChild;
           if (lastMessage) {
-            lastMessage.scrollIntoView({ block: 'end', behavior: 'auto' });
+            lastMessage.scrollIntoView({ block: 'end', behavior: 'smooth' });
           }
         }
         
         // Método 3: ref como último recurso
-        messagesEndRef.current?.scrollIntoView({ block: 'end', behavior: 'auto' });
+        messagesEndRef.current?.scrollIntoView({ block: 'end', behavior: 'smooth' });
       });
     };
 
@@ -222,9 +225,8 @@ export function UnifiedChat({
     // Múltiplos timeouts para garantir após renderização
     const timeouts = [
       setTimeout(scrollToBottom, 50),
-      setTimeout(scrollToBottom, 100),
-      setTimeout(scrollToBottom, 200),
-      setTimeout(scrollToBottom, 400),
+      setTimeout(scrollToBottom, 150),
+      setTimeout(scrollToBottom, 300),
     ];
 
     // Scroll após imagens carregarem
@@ -257,9 +259,12 @@ export function UnifiedChat({
       requestAnimationFrame(() => {
         const container = messagesContainerRef.current;
         if (container) {
-          container.scrollTop = container.scrollHeight;
+          container.scrollTo({
+            top: container.scrollHeight,
+            behavior: 'smooth'
+          });
         }
-        messagesEndRef.current?.scrollIntoView({ block: 'end', behavior: 'auto' });
+        messagesEndRef.current?.scrollIntoView({ block: 'end', behavior: 'smooth' });
       });
     };
 
@@ -380,9 +385,12 @@ useEffect(() => {
     requestAnimationFrame(() => {
       const container = messagesContainerRef.current;
       if (container) {
-        container.scrollTop = container.scrollHeight;
+        container.scrollTo({
+          top: container.scrollHeight,
+          behavior: 'smooth'
+        });
       }
-      messagesEndRef.current?.scrollIntoView({ block: 'end', behavior: 'auto' });
+      messagesEndRef.current?.scrollIntoView({ block: 'end', behavior: 'smooth' });
     });
   };
 

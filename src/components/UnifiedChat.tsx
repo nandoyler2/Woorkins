@@ -1230,12 +1230,15 @@ useEffect(() => {
                 })
                 .eq('id', conversationId);
               
+              await loadProposalData();
+              
               toast({
                 title: 'Proposta aceita!',
                 description: 'Agora você pode pagar para iniciar o trabalho',
               });
               
-              // O listener de realtime vai atualizar automaticamente
+              // Abrir diálogo de pagamento
+              setShowPaymentDialog(true);
             } finally {
               setIsLoading(false);
             }

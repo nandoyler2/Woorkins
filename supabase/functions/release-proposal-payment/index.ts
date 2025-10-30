@@ -83,6 +83,7 @@ serve(async (req) => {
           .from('proposals')
           .update({
             work_status: 'completed',
+            payment_status: 'released',
             owner_confirmed_at: new Date().toISOString(),
             escrow_released: true,
             escrow_released_at: new Date().toISOString(),

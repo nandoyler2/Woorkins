@@ -34,6 +34,28 @@ export function ActiveWorksWidget({ profileId }: ActiveWorksWidgetProps) {
 
   useEffect(() => {
     loadActiveWorks();
+    
+    // Realtime subscription para updates em proposals
+    const channel = supabase
+      .channel('active-works-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'proposals'
+        },
+        (payload) => {
+          console.log('Proposal updated:', payload);
+          // Recarregar works quando houver mudanças
+          loadActiveWorks();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [profileId]);
 
   const calculateRemainingDays = (work: ActiveWork) => {
@@ -72,8 +94,8 @@ export function ActiveWorksWidget({ profileId }: ActiveWorksWidgetProps) {
         `)
         .eq('freelancer_id', profileId)
         .eq('status', 'accepted')
-        .in('payment_status', ['captured', 'paid_escrow', 'paid', 'released'])
-        .in('work_status', ['in_progress', 'freelancer_completed', 'owner_confirmed']);
+        .in('payment_status', ['captured', 'paid_escrow', 'paid'])
+        .in('work_status', ['in_progress', 'freelancer_completed']);
 
       if (freelancerError) throw freelancerError;
 
@@ -102,8 +124,8 @@ export function ActiveWorksWidget({ profileId }: ActiveWorksWidgetProps) {
         `)
         .eq('project.profile_id', profileId)
         .eq('status', 'accepted')
-        .in('payment_status', ['captured', 'paid_escrow', 'paid', 'released'])
-        .in('work_status', ['in_progress', 'freelancer_completed', 'owner_confirmed']);
+        .in('payment_status', ['captured', 'paid_escrow', 'paid'])
+        .in('work_status', ['in_progress', 'freelancer_completed']);
 
       if (ownerError) throw ownerError;
 

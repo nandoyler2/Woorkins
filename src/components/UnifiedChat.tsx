@@ -530,6 +530,20 @@ useEffect(() => {
       
       if (error) throw error;
       
+      // Verificar se o pagamento já foi processado anteriormente
+      if (data?.already_processed) {
+        setShowCompletionDialog(false);
+        if (!suppressToasts) {
+          toast({
+            title: 'Pagamento já liberado',
+            description: 'O pagamento já foi liberado anteriormente para esta proposta',
+            variant: 'default',
+          });
+        }
+        await loadProposalData();
+        return;
+      }
+      
       setShowCompletionDialog(false);
       
       if (!suppressToasts) {

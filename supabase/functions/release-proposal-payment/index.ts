@@ -68,6 +68,22 @@ serve(async (req) => {
         throw new Error('Unauthorized: Not the project owner');
       }
 
+      // Verificar se o pagamento já foi liberado
+      if (proposal.payment_status === 'released') {
+        console.log('⚠️ Payment already released for this proposal');
+        return new Response(
+          JSON.stringify({ 
+            success: false, 
+            message: 'O pagamento já foi liberado para esta proposta',
+            already_processed: true 
+          }),
+          { 
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
+      }
+
       if (action === 'approve') {
         console.log('🚀 Starting balance release process (pending → available)...');
 

@@ -36,6 +36,7 @@ import { ProposalHistoryDialog } from './projects/ProposalHistoryDialog';
 import { ProposalPaymentDialog } from './projects/ProposalPaymentDialog';
 import { ProposalCompletionDialog } from './projects/ProposalCompletionDialog';
 import { FreelancerCompletionDialog } from './projects/FreelancerCompletionDialog';
+import { ProposalDisputeDialog } from './projects/ProposalDisputeDialog';
 import { BlockedMessageCountdown } from './BlockedMessageCountdown';
 import { ImageViewer } from './ImageViewer';
 import { RequireProfilePhotoDialog } from './RequireProfilePhotoDialog';
@@ -101,6 +102,7 @@ export function UnifiedChat({
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   const [showCompletionDialog, setShowCompletionDialog] = useState(false);
   const [showFreelancerCompletionDialog, setShowFreelancerCompletionDialog] = useState(false);
+  const [showDisputeDialog, setShowDisputeDialog] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messageInputRef = useRef<HTMLInputElement>(null);
@@ -402,6 +404,7 @@ useEffect(() => {
         .from('proposals')
         .select(`
           *,
+          owner_confirmation_deadline,
           project:projects!inner(
             id,
             title,
@@ -936,6 +939,11 @@ useEffect(() => {
       proposalData?.status === 'pending' &&
       isLatestCounterProposal; // Only show on the latest counter-proposal
     
+    const needsOwnerConfirmation = status_type === 'freelancer_completed' &&
+      !isMine && // Não mostrar para quem marcou como concluído
+      isOwner && // Apenas para o owner
+      proposalData?.work_status === 'freelancer_completed'; // Ainda aguardando confirmação
+    
     // Debug logs
     if (status_type === 'counter_proposal') {
       console.log('🔍 Counter Proposal Debug:', {
@@ -1019,6 +1027,71 @@ useEffect(() => {
                 >
                   Fazer Nova Contra-Proposta
                 </Button>
+              </div>
+            )}
+            
+            {needsOwnerConfirmation && (
+              <div className="flex flex-col gap-2 mt-3 pt-3 border-t border-accent">
+                {proposalData?.owner_confirmation_deadline && (
+                  <div className="text-xs bg-orange-50 dark:bg-orange-950/20 text-orange-700 dark:text-orange-400 px-2 py-1 rounded">
+                    ⏰ Confirme em até 72h ou será liberado automaticamente
+                  </div>
+                )}
+                
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    onClick={async () => {
+                      try {
+                        const { error } = await supabase
+                          .from('proposals')
+                          .update({
+                            work_status: 'completed',
+                            payment_status: 'released',
+                            escrow_released_at: new Date().toISOString(),
+                          })
+                          .eq('id', conversationId);
+
+                        if (error) throw error;
+
+                        await supabase.from('proposal_status_history').insert({
+                          proposal_id: conversationId,
+                          status_type: 'completed',
+                          changed_by: profileId,
+                          message: 'Trabalho confirmado como concluído pelo cliente',
+                        });
+
+                        await loadProposalData();
+
+                        toast({
+                          title: '✅ Trabalho Concluído!',
+                          description: 'O pagamento foi liberado para o freelancer',
+                        });
+                      } catch (error) {
+                        console.error('Erro ao confirmar conclusão:', error);
+                        toast({
+                          variant: 'destructive',
+                          title: 'Erro',
+                          description: 'Não foi possível confirmar a conclusão',
+                        });
+                      }
+                    }}
+                    className="bg-white hover:bg-slate-50 text-green-700 border-2 border-green-700 font-semibold shadow-md"
+                  >
+                    ✅ Confirmar Conclusão
+                  </Button>
+                  
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="border-red-500 text-red-600 hover:bg-red-50"
+                    onClick={() => {
+                      setShowDisputeDialog(true);
+                    }}
+                  >
+                    ⚠️ Abrir Disputa
+                  </Button>
+                </div>
               </div>
             )}
           </div>
@@ -1964,6 +2037,16 @@ useEffect(() => {
         freelancerName={otherUser.name}
         onConfirm={handleFinalConfirmCompletion}
         isLoading={isLoading}
+      />
+
+      {/* Proposal Dispute Dialog */}
+      <ProposalDisputeDialog
+        open={showDisputeDialog}
+        onOpenChange={setShowDisputeDialog}
+        proposalId={conversationId}
+        freelancerId={proposalData?.freelancer_id || ''}
+        ownerId={proposalData?.project?.profile_id || ''}
+        currentProfileId={profileId}
       />
     </div>
   );

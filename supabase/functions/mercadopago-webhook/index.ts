@@ -51,14 +51,24 @@ serve(async (req) => {
       const payment = await response.json();
       logStep("Detalhes do pagamento", { status: payment.status });
 
-      // Buscar registro na tabela de pagamentos
+      // Buscar registro na tabela de pagamentos Woorkoins
       const { data: paymentRecord, error: findError } = await supabaseClient
         .from("woorkoins_mercadopago_payments")
         .select("*")
         .eq("payment_id", paymentId.toString())
         .single();
 
-      if (findError || !paymentRecord) {
+      // Buscar também se é um pagamento de proposta
+      const { data: proposalRecord } = await supabaseClient
+        .from("proposals")
+        .select(`
+          *,
+          freelancer:profiles!proposals_freelancer_id_fkey(id, user_id, full_name)
+        `)
+        .eq("mercadopago_payment_id", paymentId.toString())
+        .single();
+
+      if ((findError || !paymentRecord) && !proposalRecord) {
         logStep("Pagamento não encontrado no banco", { paymentId });
         return new Response(JSON.stringify({ status: "payment not found" }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -66,9 +76,54 @@ serve(async (req) => {
         });
       }
 
-      // Se pagamento foi aprovado (approved ou paid)
       const isPaid = (payment.status === "approved" || payment.status === "paid");
-      if (isPaid && paymentRecord.status !== "paid") {
+
+      // Processar pagamento de proposta
+      if (proposalRecord && isPaid && proposalRecord.payment_status !== "paid") {
+        logStep("Pagamento de proposta aprovado/pago", {
+          proposalId: proposalRecord.id,
+          status: payment.status,
+        });
+
+        // Atualizar status da proposta
+        await supabaseClient
+          .from("proposals")
+          .update({
+            payment_status: "paid",
+          })
+          .eq("id", proposalRecord.id);
+
+        // Atualizar carteira do freelancer
+        const { data: existingWallet } = await supabaseClient
+          .from('freelancer_wallet')
+          .select('*')
+          .eq('profile_id', proposalRecord.freelancer.id)
+          .single();
+
+        if (existingWallet) {
+          await supabaseClient
+            .from('freelancer_wallet')
+            .update({
+              pending_balance: (existingWallet.pending_balance || 0) + proposalRecord.freelancer_amount,
+            })
+            .eq('profile_id', proposalRecord.freelancer.id);
+        } else {
+          await supabaseClient
+            .from('freelancer_wallet')
+            .insert({
+              profile_id: proposalRecord.freelancer.id,
+              pending_balance: proposalRecord.freelancer_amount,
+              available_balance: 0,
+              total_earned: 0,
+              total_withdrawn: 0,
+            });
+        }
+
+        logStep("Proposta atualizada com sucesso no webhook");
+      }
+
+      // Processar pagamento de Woorkoins
+      if (paymentRecord && isPaid && paymentRecord.status !== "paid") {
         logStep("Pagamento aprovado/pago, creditando Woorkoins", {
           profileId: paymentRecord.profile_id,
           amount: paymentRecord.amount,

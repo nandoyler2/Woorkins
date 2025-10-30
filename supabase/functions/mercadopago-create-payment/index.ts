@@ -36,12 +36,13 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated");
     logStep("Usuário autenticado", { userId: user.id });
 
-    const { paymentMethod, amount, description, customer, woorkoins_amount, woorkoins_price, token, card } = await req.json();
+    const { paymentMethod, amount, description, customer, woorkoins_amount, woorkoins_price, token, card, proposal_id } = await req.json();
     logStep("Dados recebidos", { 
       paymentMethod, 
       amount, 
       hasToken: !!token,
       hasCard: !!card,
+      proposalId: proposal_id,
       customer: customer ? { name: customer.name, email: customer.email, hasDocument: !!customer.document } : null
     });
 
@@ -155,6 +156,91 @@ serve(async (req) => {
     const paymentResponse = await response.json();
     logStep("Pagamento criado", { paymentId: paymentResponse.id });
 
+    // Se for pagamento de proposta
+    if (proposal_id) {
+      const paymentStatus = paymentResponse.status === 'approved' ? 'paid' : 'pending';
+      
+      logStep("Processando pagamento de proposta", { proposalId: proposal_id, status: paymentStatus });
+
+      // Buscar dados da proposta
+      const { data: proposal, error: proposalError } = await supabaseClient
+        .from('proposals')
+        .select(`
+          *,
+          freelancer:profiles!proposals_freelancer_id_fkey(id, user_id, full_name),
+          project:projects(id, title, profile_id)
+        `)
+        .eq('id', proposal_id)
+        .single();
+
+      if (proposalError || !proposal) {
+        throw new Error('Proposta não encontrada');
+      }
+
+      // Calcular split do pagamento (10% comissão + taxas Mercado Pago)
+      const { data: splitData } = await supabaseClient
+        .rpc('calculate_payment_split', {
+          _amount: finalAmount,
+          _platform_commission_percent: 10,
+        });
+
+      if (!splitData || !Array.isArray(splitData) || splitData.length === 0) {
+        throw new Error('Falha ao calcular split do pagamento');
+      }
+
+      const split = splitData[0];
+      logStep("Split calculado", split);
+
+      // Atualizar proposta com informações do pagamento
+      const { error: updateError } = await supabaseClient
+        .from('proposals')
+        .update({
+          mercadopago_payment_id: paymentResponse.id.toString(),
+          payment_status: paymentStatus === 'paid' ? 'paid' : 'pending',
+          accepted_amount: finalAmount,
+          freelancer_amount: split.freelancer_amount,
+          platform_commission: split.platform_commission,
+          stripe_processing_fee: split.stripe_fee,
+        })
+        .eq('id', proposal_id);
+
+      if (updateError) {
+        logStep("Erro ao atualizar proposta", updateError);
+        throw updateError;
+      }
+
+      // Atualizar carteira do freelancer
+      const { data: existingWallet } = await supabaseClient
+        .from('freelancer_wallet')
+        .select('*')
+        .eq('profile_id', proposal.freelancer.id)
+        .single();
+
+      if (paymentStatus === 'paid') {
+        // Se já foi pago, adicionar ao pending_balance
+        if (existingWallet) {
+          await supabaseClient
+            .from('freelancer_wallet')
+            .update({
+              pending_balance: (existingWallet.pending_balance || 0) + split.freelancer_amount,
+            })
+            .eq('profile_id', proposal.freelancer.id);
+        } else {
+          await supabaseClient
+            .from('freelancer_wallet')
+            .insert({
+              profile_id: proposal.freelancer.id,
+              pending_balance: split.freelancer_amount,
+              available_balance: 0,
+              total_earned: 0,
+              total_withdrawn: 0,
+            });
+        }
+      }
+
+      logStep("Proposta atualizada com sucesso");
+    }
+    
     // Salvar na tabela de pagamentos se for para Woorkoins
     if (woorkoins_amount && woorkoins_price) {
       const paymentStatus = paymentResponse.status === 'approved' ? 'paid' : 'pending';

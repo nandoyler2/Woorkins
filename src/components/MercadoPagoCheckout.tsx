@@ -29,6 +29,7 @@ interface MercadoPagoCheckoutProps {
   onCancel: () => void;
   woorkoinsAmount?: number;
   woorkoinsPrice?: number;
+  proposalId?: string;
 }
 
 export default function MercadoPagoCheckout({
@@ -38,6 +39,7 @@ export default function MercadoPagoCheckout({
   onCancel,
   woorkoinsAmount,
   woorkoinsPrice,
+  proposalId,
 }: MercadoPagoCheckoutProps) {
   const { toast } = useToast();
   const [paymentMethod, setPaymentMethod] = useState<"pix" | "card" | null>(null);
@@ -198,6 +200,7 @@ export default function MercadoPagoCheckout({
           customer: profileData,
           ...(woorkoinsAmount && { woorkoins_amount: woorkoinsAmount }),
           ...(woorkoinsPrice && { woorkoins_price: woorkoinsPrice }),
+          ...(proposalId && { proposal_id: proposalId }),
         },
       });
 
@@ -243,6 +246,11 @@ export default function MercadoPagoCheckout({
       };
 
       console.log('Enviando para edge function:', paymentBody);
+
+      // Adicionar proposal_id se for pagamento de proposta
+      if (proposalId) {
+        (paymentBody as any).proposal_id = proposalId;
+      }
 
       const { data, error } = await supabase.functions.invoke("mercadopago-create-payment", {
         body: paymentBody,

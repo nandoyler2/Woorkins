@@ -404,8 +404,8 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
                 )}
               </div>
               <div>
-                <p className="text-white font-semibold text-sm drop-shadow-lg">
-                  {currentStory.profile?.full_name || currentStory.profile?.username}
+                <p className="text-white font-medium text-xs drop-shadow-lg">
+                  @{currentStory.profile?.username || 'usuario'}
                 </p>
                 <p className="text-white/80 text-xs drop-shadow-md">
                   {new Date(currentStory.created_at).toLocaleTimeString('pt-BR', {

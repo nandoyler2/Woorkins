@@ -13,7 +13,7 @@ const PixIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
-type PaymentStep = 'summary' | 'select-method' | 'checkout';
+type PaymentStep = 'summary' | 'checkout';
 
 interface ProposalPaymentDialogProps {
   open: boolean;
@@ -60,12 +60,12 @@ export function ProposalPaymentDialog({
       <DialogContent className="w-[95vw] max-w-4xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3">
-            {step !== 'summary' && (
+            {step === 'checkout' && (
               <Button
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8"
-                onClick={() => setStep(step === 'checkout' ? 'select-method' : 'summary')}
+                onClick={() => setStep('summary')}
               >
                 <ArrowLeft className="h-4 w-4" />
               </Button>
@@ -108,23 +108,6 @@ export function ProposalPaymentDialog({
               </ul>
             </div>
 
-            <Button
-              onClick={() => setStep('select-method')}
-              className="w-full h-14 text-lg"
-              size="lg"
-            >
-              <CreditCard className="mr-2 h-5 w-5" />
-              Pagar R$ {amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-            </Button>
-          </div>
-        )}
-
-        {step === 'select-method' && (
-          <div className="space-y-4">
-            <p className="text-center text-muted-foreground mb-4">
-              Escolha a forma de pagamento
-            </p>
-            
             <div className="grid grid-cols-2 gap-3">
               <Button
                 onClick={() => handleMethodSelect('pix')}
@@ -132,7 +115,7 @@ export function ProposalPaymentDialog({
                 size="lg"
               >
                 <PixIcon className="h-5 w-5 mr-2" />
-                PIX
+                Pagar com PIX
               </Button>
 
               <Button
@@ -141,7 +124,7 @@ export function ProposalPaymentDialog({
                 size="lg"
               >
                 <CreditCard className="h-5 w-5 mr-2" />
-                Cartão
+                Pagar com Cartão
               </Button>
             </div>
           </div>
@@ -153,7 +136,7 @@ export function ProposalPaymentDialog({
               amount={amount}
               description={`Pagamento de proposta - ${projectTitle}`}
               onSuccess={handleSuccess}
-              onCancel={() => setStep('select-method')}
+              onCancel={() => setStep('summary')}
               proposalId={proposalId}
             />
           </div>

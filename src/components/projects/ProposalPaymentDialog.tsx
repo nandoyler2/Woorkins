@@ -136,6 +136,7 @@ export function ProposalPaymentDialog({
               onSuccess={handleSuccess}
               onCancel={() => setStep('summary')}
               proposalId={proposalId}
+              preSelectedMethod={selectedMethod}
             />
           </div>
         )}

@@ -30,6 +30,7 @@ interface MercadoPagoCheckoutProps {
   woorkoinsAmount?: number;
   woorkoinsPrice?: number;
   proposalId?: string;
+  preSelectedMethod?: 'pix' | 'card';
 }
 
 export default function MercadoPagoCheckout({
@@ -40,9 +41,10 @@ export default function MercadoPagoCheckout({
   woorkoinsAmount,
   woorkoinsPrice,
   proposalId,
+  preSelectedMethod,
 }: MercadoPagoCheckoutProps) {
   const { toast } = useToast();
-  const [paymentMethod, setPaymentMethod] = useState<"pix" | "card" | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<"pix" | "card" | null>(preSelectedMethod || null);
   const [loading, setLoading] = useState(false);
   const [pixData, setPixData] = useState<any>(null);
   const [mpInitialized, setMpInitialized] = useState(false);
@@ -72,6 +74,25 @@ export default function MercadoPagoCheckout({
     };
     loadProfile();
   }, []);
+
+  // Auto-start payment if method is pre-selected
+  useEffect(() => {
+    if (preSelectedMethod === 'pix' && profileData && !pixData) {
+      handlePixPayment();
+    } else if (preSelectedMethod === 'card' && profileData) {
+      if (amount < CARD_MIN_AMOUNT) {
+        toast({
+          title: "Valor mínimo para cartão",
+          description: `O valor mínimo para pagamentos com cartão é R$ ${CARD_MIN_AMOUNT.toFixed(2)}. Escolha PIX ou aumente o valor.`,
+          variant: 'destructive',
+        });
+        setPaymentMethod(null);
+        return;
+      }
+      setLoadingMessage('Carregando...');
+      setLoading(true);
+    }
+  }, [preSelectedMethod, profileData]);
 
   useEffect(() => {
     if (!pixData?.payment_id || !woorkoinsAmount) return;

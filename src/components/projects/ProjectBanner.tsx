@@ -26,15 +26,19 @@ export function ProjectBanner() {
     // Alterna entre os banners baseado em qual foi mostrado por último
     const lastShown = localStorage.getItem('projectBannerLastShown');
     
-    if (canShowWoorkoins && (!lastShown || lastShown === 'stories' || lastShown === 'payment')) {
-      return 'woorkoins';
+    // Sequência fixa e escolha do próximo respeitando dismiss e última exibição
+    const sequence: BannerType[] = ['woorkoins', 'payment', 'stories'];
+    const startIndex = lastShown ? (sequence.indexOf(lastShown as BannerType) + 1) % sequence.length : 0;
+
+    // Tenta até 3 opções na ordem circular
+    for (let i = 0; i < sequence.length; i++) {
+      const candidate = sequence[(startIndex + i) % sequence.length];
+      if (candidate === 'woorkoins' && canShowWoorkoins) return 'woorkoins';
+      if (candidate === 'payment' && canShowPayment) return 'payment';
+      if (candidate === 'stories' && canShowStories) return 'stories';
     }
-    if (canShowPayment && (!lastShown || lastShown === 'woorkoins')) {
-      return 'payment';
-    }
-    if (canShowStories && (!lastShown || lastShown === 'payment')) {
-      return 'stories';
-    }
+
+    // Fallback: qualquer um disponível
     if (canShowWoorkoins) return 'woorkoins';
     if (canShowPayment) return 'payment';
     if (canShowStories) return 'stories';

@@ -35,6 +35,8 @@ interface Conversation {
   freelancerId?: string;
   hasDispute?: boolean;
   disputeStatus?: string;
+  paymentStatus?: string;
+  workStatus?: string;
 }
 
 export default function Messages() {
@@ -268,6 +270,8 @@ export default function Messages() {
           updated_at,
           archived,
           freelancer_id,
+          payment_status,
+          work_status,
           project:projects!inner(
             id,
             title,
@@ -292,6 +296,8 @@ export default function Messages() {
           updated_at,
           archived,
           freelancer_id,
+          payment_status,
+          work_status,
           freelancer:profiles!proposals_freelancer_id_fkey(
             full_name,
             avatar_url
@@ -384,6 +390,8 @@ export default function Messages() {
           freelancerId: prop.freelancer_id,
           hasDispute,
           disputeStatus,
+          paymentStatus: (prop as any).payment_status,
+          workStatus: (prop as any).work_status,
         };
       }));
 
@@ -490,6 +498,10 @@ export default function Messages() {
           case 'counter_proposal':
             return { text: 'Contraproposta enviada', color: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300' };
           case 'accepted':
+            // Verificar se já foi pago baseado em payment_status e work_status
+            if (conv.paymentStatus === 'captured' || conv.paymentStatus === 'paid_escrow' || conv.workStatus === 'in_progress') {
+              return { text: 'Projeto iniciado', color: 'bg-green-500 text-white dark:bg-green-600' };
+            }
             return { text: 'Aguardando pagamento', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300' };
           case 'payment_made':
             return { text: 'Projeto iniciado', color: 'bg-green-500 text-white dark:bg-green-600' };

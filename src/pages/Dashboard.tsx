@@ -29,6 +29,7 @@ import { CreateStoryDialog } from '@/components/stories/CreateStoryDialog';
 import { RequireProfilePhotoDialog } from '@/components/RequireProfilePhotoDialog';
 import { useUpload } from '@/contexts/UploadContext';
 import { ActiveWorkBanner } from '@/components/dashboard/ActiveWorkBanner';
+import { ActiveWorksWidget } from '@/components/dashboard/ActiveWorksWidget';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -1023,6 +1024,9 @@ export default function Dashboard() {
 
             {/* Active Work Banner */}
             {profile?.id && <ActiveWorkBanner profileId={profile.id} />}
+
+            {/* Active Works Widget */}
+            {profile?.id && <ActiveWorksWidget profileId={profile.id} />}
 
             {/* Pending Admin Invites Alert */}
             {pendingInvitesCount > 0 && (

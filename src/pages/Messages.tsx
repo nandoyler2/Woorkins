@@ -13,6 +13,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { UnifiedChat } from '@/components/UnifiedChat';
@@ -21,6 +22,7 @@ import { Footer } from '@/components/Footer';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { formatFullName } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 
 interface Conversation {
   id: string;
@@ -47,6 +49,7 @@ interface Conversation {
 
 export default function Messages() {
   const { user } = useAuth();
+  const { toast } = useToast();
   const navigate = useNavigate();
   const { 
     conversations: cachedConversations, 
@@ -524,6 +527,36 @@ export default function Messages() {
     return statusMap[status] || status;
   };
 
+  const handleArchiveConversation = async (conv: Conversation, archived: boolean) => {
+    try {
+      const table = conv.type === 'negotiation' ? 'negotiations' : 'proposals';
+      
+      const { error } = await supabase
+        .from(table)
+        .update({ archived })
+        .eq('id', conv.id);
+
+      if (error) throw error;
+
+      toast({
+        title: archived ? 'Conversa arquivada' : 'Conversa desarquivada',
+        description: archived 
+          ? 'A conversa foi movida para Arquivadas'
+          : 'A conversa foi restaurada',
+      });
+
+      // Recarregar conversas
+      loadConversations(true);
+    } catch (error) {
+      console.error('Error archiving conversation:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível arquivar a conversa',
+        variant: 'destructive',
+      });
+    }
+  };
+
   // Função para obter informações dinâmicas do badge baseado no status
   const getProposalBadgeInfo = (conv: Conversation) => {
     const isFreelancer = conv.freelancerId === profileId;
@@ -871,6 +904,16 @@ export default function Messages() {
                                       </span>
                                     </DropdownMenuItem>
                                   )}
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem 
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleArchiveConversation(conv, activeFilter !== 'archived');
+                                    }}
+                                  >
+                                    <Archive className="h-4 w-4 mr-2" />
+                                    {activeFilter === 'archived' ? 'Desarquivar' : 'Arquivar'}
+                                  </DropdownMenuItem>
                                 </DropdownMenuContent>
                               </DropdownMenu>
                             </div>

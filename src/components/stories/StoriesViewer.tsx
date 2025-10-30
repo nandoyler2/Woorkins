@@ -340,7 +340,7 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
-      <DialogContent className="z-[9999] p-0 bg-transparent border-0 shadow-none overflow-visible [&>button]:hidden sm:rounded-none outline-none focus:outline-none ring-0 focus:ring-0 focus-visible:outline-none focus-visible:ring-0">
+      <DialogContent className="z-[9999] p-0 bg-transparent border-0 shadow-none overflow-visible [&>button]:hidden sm:rounded-none outline-none focus:outline-none ring-0 focus:ring-0 focus-visible:outline-none focus-visible:ring-0 max-w-none lg:w-auto">
         <DialogTitle className="sr-only">Stories</DialogTitle>
         <DialogDescription className="sr-only">Visualizador de stories</DialogDescription>
         {isLoading || stories.length === 0 ? (
@@ -351,36 +351,58 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
             </div>
           </div>
         ) : (
-          <div className="relative flex items-center justify-center">
-            {/* Botão Anterior - Fora do story (oculto em mobile) */}
-            {currentIndex > 0 && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handlePrevious}
-                className="hidden md:flex absolute left-[-60px] top-1/2 -translate-y-1/2 text-white hover:bg-white/20 w-12 h-12 rounded-full bg-black/30 backdrop-blur-sm z-30"
-              >
-                <ChevronLeft className="w-8 h-8" />
-              </Button>
-            )}
+          <div className="relative flex items-center justify-center gap-4">
+            {/* Miniaturas Esquerda - Desktop Only */}
+            <div className="hidden lg:flex flex-col gap-3">
+              {stories.slice(Math.max(0, currentIndex - 3), currentIndex).map((story, idx) => {
+                const actualIndex = Math.max(0, currentIndex - 3) + idx;
+                return (
+                  <div
+                    key={story.id}
+                    onClick={() => setCurrentIndex(actualIndex)}
+                    className="cursor-pointer group relative w-20 rounded-xl overflow-hidden bg-black transition-all hover:scale-105"
+                    style={{ aspectRatio: "9 / 16" }}
+                  >
+                    <div className="absolute inset-0 bg-black/30 group-hover:bg-black/10 transition-colors z-10" />
+                    {story.type === 'image' && story.media_url && (
+                      <SafeImage
+                        src={story.media_url}
+                        alt="Story"
+                        className="w-full h-full object-cover"
+                      />
+                    )}
+                    {story.type === 'video' && story.media_url && (
+                      <video
+                        src={story.media_url}
+                        className="w-full h-full object-cover"
+                        muted
+                      />
+                    )}
+                    {story.type === 'text' && (
+                      <div
+                        className="w-full h-full flex items-center justify-center p-2"
+                        style={{ background: story.background_color || '#8B5CF6' }}
+                      >
+                        <p className="text-white text-[8px] text-center line-clamp-3">
+                          {story.text_content}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
 
-            {/* Container do Story */}
+            {/* Container do Story Principal */}
             <div className="relative flex flex-col rounded-2xl overflow-hidden bg-black" style={{ width: "min(90vw, 500px, calc((9/16) * 90vh))", aspectRatio: "9 / 16" }}>
-          {/* Progress bars */}
-          <div className="absolute top-0 left-0 right-0 z-20 flex gap-1.5 p-3">
-            {stories.map((_, idx) => (
+          {/* Progress bar - apenas do story atual */}
+          <div className="absolute top-0 left-0 right-0 z-20 p-3">
+            <div className="h-1 bg-white/20 rounded-full overflow-hidden backdrop-blur-sm">
               <div
-                key={idx}
-                className="flex-1 h-1 bg-white/20 rounded-full overflow-hidden backdrop-blur-sm"
-              >
-                <div
-                  className="h-full bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 transition-all duration-100 shadow-lg shadow-purple-500/50"
-                  style={{
-                    width: idx < currentIndex ? '100%' : idx === currentIndex ? `${progress}%` : '0%',
-                  }}
-                />
-              </div>
-            ))}
+                className="h-full bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 transition-all duration-100 shadow-lg shadow-purple-500/50"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
           </div>
 
           {/* Top shadow gradient for better visibility */}
@@ -614,13 +636,65 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
           {/* Navigation buttons - removidos, agora estão fora */}
         </div>
 
-            {/* Botão Próximo - Fora do story (oculto em mobile) */}
+            {/* Miniaturas Direita - Desktop Only */}
+            <div className="hidden lg:flex flex-col gap-3">
+              {stories.slice(currentIndex + 1, Math.min(stories.length, currentIndex + 4)).map((story, idx) => {
+                const actualIndex = currentIndex + 1 + idx;
+                return (
+                  <div
+                    key={story.id}
+                    onClick={() => setCurrentIndex(actualIndex)}
+                    className="cursor-pointer group relative w-20 rounded-xl overflow-hidden bg-black transition-all hover:scale-105"
+                    style={{ aspectRatio: "9 / 16" }}
+                  >
+                    <div className="absolute inset-0 bg-black/30 group-hover:bg-black/10 transition-colors z-10" />
+                    {story.type === 'image' && story.media_url && (
+                      <SafeImage
+                        src={story.media_url}
+                        alt="Story"
+                        className="w-full h-full object-cover"
+                      />
+                    )}
+                    {story.type === 'video' && story.media_url && (
+                      <video
+                        src={story.media_url}
+                        className="w-full h-full object-cover"
+                        muted
+                      />
+                    )}
+                    {story.type === 'text' && (
+                      <div
+                        className="w-full h-full flex items-center justify-center p-2"
+                        style={{ background: story.background_color || '#8B5CF6' }}
+                      >
+                        <p className="text-white text-[8px] text-center line-clamp-3">
+                          {story.text_content}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Botões de Navegação - Mobile */}
+            {currentIndex > 0 && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handlePrevious}
+                className="lg:hidden absolute left-4 top-1/2 -translate-y-1/2 text-white hover:bg-white/20 w-12 h-12 rounded-full bg-black/30 backdrop-blur-sm z-30"
+              >
+                <ChevronLeft className="w-8 h-8" />
+              </Button>
+            )}
+
             {currentIndex < stories.length - 1 && (
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={handleNext}
-                className="hidden md:flex absolute right-[-60px] top-1/2 -translate-y-1/2 text-white hover:bg-white/20 w-12 h-12 rounded-full bg-black/30 backdrop-blur-sm z-30"
+                className="lg:hidden absolute right-4 top-1/2 -translate-y-1/2 text-white hover:bg-white/20 w-12 h-12 rounded-full bg-black/30 backdrop-blur-sm z-30"
               >
                 <ChevronRight className="w-8 h-8" />
               </Button>

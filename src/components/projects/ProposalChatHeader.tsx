@@ -99,15 +99,15 @@ export function ProposalChatHeader({
     if (proposal.work_status === 'freelancer_completed' && isOwner) {
       return (
         <div className="flex flex-col gap-2">
-          <Button size="sm" onClick={onConfirmCompletion} className="bg-green-600 hover:bg-green-700">
+          <Button size="sm" onClick={onConfirmCompletion} className="bg-green-600 hover:bg-green-700 w-auto whitespace-nowrap px-3 h-9">
             <CheckCircle className="h-4 w-4 mr-2" />
             Trabalho Concluído
           </Button>
           {timeRemaining && !isExpired && (
-            <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800">
-              <Clock className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-              <span className="text-xs font-medium text-blue-700 dark:text-blue-300">
-                Conclusão automática em: {timeRemaining}
+            <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 w-auto">
+              <Clock className="h-3 w-3 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+              <span className="text-xs font-medium text-blue-700 dark:text-blue-300 whitespace-nowrap">
+                Conclusão em: {timeRemaining}
               </span>
             </div>
           )}
@@ -118,10 +118,10 @@ export function ProposalChatHeader({
     // Freelancer vê countdown também
     if (proposal.work_status === 'freelancer_completed' && !isOwner && timeRemaining && !isExpired) {
       return (
-        <div className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800">
-          <Clock className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-          <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
-            Aguardando confirmação: {timeRemaining}
+        <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 w-auto">
+          <Clock className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+          <span className="text-xs font-medium text-blue-700 dark:text-blue-300 whitespace-nowrap">
+            Aguardando: {timeRemaining}
           </span>
         </div>
       );
@@ -133,7 +133,7 @@ export function ProposalChatHeader({
         (proposal.payment_status === 'paid' || proposal.payment_status === 'paid_escrow')) {
       if (isOwner) {
         return (
-          <Button size="sm" onClick={onConfirmCompletion} className="bg-green-600 hover:bg-green-700">
+          <Button size="sm" onClick={onConfirmCompletion} className="bg-green-600 hover:bg-green-700 w-auto whitespace-nowrap px-3 h-9">
             <CheckCircle className="h-4 w-4 mr-2" />
             Trabalho Concluído
           </Button>
@@ -141,7 +141,7 @@ export function ProposalChatHeader({
       } else {
         // Freelancer pode marcar como finalizado
         return (
-          <Button size="sm" onClick={onMarkCompleted} className="bg-green-600 hover:bg-green-700">
+          <Button size="sm" onClick={onMarkCompleted} className="bg-green-600 hover:bg-green-700 w-auto whitespace-nowrap px-3 h-9">
             <CheckCircle className="h-4 w-4 mr-2" />
             Projeto Concluído
           </Button>
@@ -213,8 +213,8 @@ export function ProposalChatHeader({
 
   return (
     <div className="border-b bg-gradient-to-br from-background via-primary/5 to-background p-4 shadow-sm">
-      <div className="flex items-center gap-6">
-        {/* Coluna esquerda: Info do projeto - redesenhada */}
+      <div className="flex items-center gap-3 md:gap-6">
+        {/* Coluna esquerda: Info do projeto */}
         <div className="flex-1 min-w-0 bg-card/50 backdrop-blur-sm rounded-lg p-3 border border-border/50">
           {projectData && (
             <div>
@@ -228,17 +228,17 @@ export function ProposalChatHeader({
                 className="flex items-center gap-2 cursor-pointer group"
                 onClick={() => window.open(`/projetos/${projectData.id}`, '_blank')}
               >
-                <h3 className="text-base font-bold truncate text-foreground group-hover:text-primary transition-colors">
+                <h3 className="text-sm md:text-base font-bold truncate text-foreground group-hover:text-primary transition-colors">
                   {projectData.title}
                 </h3>
-                <ExternalLink className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
+                <ExternalLink className="h-3.5 w-3.5 md:h-4 md:w-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
               </div>
             </div>
           )}
         </div>
 
-        {/* Centro: Valor + Status - tamanho reduzido */}
-        <div className="flex items-center gap-3 px-4 py-2 rounded-xl bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 border-2 border-primary/30 shadow-md">
+        {/* Centro: Valor + Status - visível apenas em telas médias ou maiores */}
+        <div className="hidden md:flex items-center gap-3 px-4 py-2 rounded-xl bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 border-2 border-primary/30 shadow-md">
           <div className="flex items-baseline gap-1">
             <span className="text-xs font-medium text-muted-foreground">R$</span>
             <span className="text-2xl font-bold text-primary">
@@ -252,17 +252,34 @@ export function ProposalChatHeader({
           {getStatusBadge()}
         </div>
 
-        {/* Coluna direita: Botões de ação - melhorados */}
+        {/* Coluna direita: Botões de ação */}
         <div className="flex items-center gap-2 flex-shrink-0">
           {renderActionButtons()}
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="hover:bg-primary/10">
+              <Button variant="ghost" size="sm" className="hover:bg-primary/10 h-8 w-8 p-0">
                 <MoreVertical className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuContent align="end" className="w-56">
+              {/* Mostrar valor e status no dropdown em telas pequenas */}
+              <div className="md:hidden border-b pb-2 mb-2">
+                <DropdownMenuItem className="flex justify-between items-center">
+                  <span className="text-muted-foreground text-xs">Valor:</span>
+                  <span className="font-bold text-primary">
+                    R$ {proposal.current_proposal_amount?.toLocaleString('pt-BR', {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                  </span>
+                </DropdownMenuItem>
+                <DropdownMenuItem className="flex justify-between items-center">
+                  <span className="text-muted-foreground text-xs">Status:</span>
+                  {getStatusBadge()}
+                </DropdownMenuItem>
+              </div>
+              
               <DropdownMenuItem onClick={onViewHistory}>
                 Atividades
               </DropdownMenuItem>

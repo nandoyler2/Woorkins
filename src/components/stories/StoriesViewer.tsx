@@ -351,7 +351,48 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
             </div>
           </div>
         ) : (
-          <div className="relative flex flex-col items-center gap-4">
+          <div className="relative flex flex-row items-center gap-6">
+            {/* Miniaturas Esquerda - Desktop Only */}
+            <div className="hidden lg:flex flex-col items-center gap-2 justify-center">
+              {stories.slice(Math.max(0, currentIndex - 3), currentIndex).map((story, idx) => {
+                const actualIndex = Math.max(0, currentIndex - 3) + idx;
+                return (
+                  <div
+                    key={story.id}
+                    onClick={() => setCurrentIndex(actualIndex)}
+                    className="cursor-pointer group relative w-14 rounded-lg overflow-hidden bg-black transition-all hover:scale-105"
+                    style={{ aspectRatio: "9 / 16" }}
+                  >
+                    <div className="absolute inset-0 bg-black/30 group-hover:bg-black/10 transition-colors z-10" />
+                    {story.type === 'image' && story.media_url && (
+                      <SafeImage
+                        src={story.media_url}
+                        alt="Story"
+                        className="w-full h-full object-cover"
+                      />
+                    )}
+                    {story.type === 'video' && story.media_url && (
+                      <video
+                        src={story.media_url}
+                        className="w-full h-full object-cover"
+                        muted
+                      />
+                    )}
+                    {story.type === 'text' && (
+                      <div
+                        className="w-full h-full flex items-center justify-center p-1"
+                        style={{ background: story.background_color || '#8B5CF6' }}
+                      >
+                        <p className="text-white text-[6px] text-center line-clamp-2">
+                          {story.text_content}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
             {/* Container do Story Principal */}
             <div className="relative flex flex-col rounded-2xl overflow-hidden bg-black" style={{ width: "min(90vw, 500px, calc((9/16) * 90vh))", aspectRatio: "9 / 16" }}>
           {/* Progress bar - apenas do story atual */}
@@ -618,89 +659,45 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
           )}
         </div>
 
-            {/* Miniaturas Horizontais - Desktop Only */}
-            <div className="hidden lg:flex flex-row items-center gap-6 mt-2">
-              {/* Miniaturas Esquerda */}
-              <div className="flex flex-row gap-2">
-                {stories.slice(Math.max(0, currentIndex - 3), currentIndex).map((story, idx) => {
-                  const actualIndex = Math.max(0, currentIndex - 3) + idx;
-                  return (
-                    <div
-                      key={story.id}
-                      onClick={() => setCurrentIndex(actualIndex)}
-                      className="cursor-pointer group relative w-14 rounded-lg overflow-hidden bg-black transition-all hover:scale-105"
-                      style={{ aspectRatio: "9 / 16" }}
-                    >
-                      <div className="absolute inset-0 bg-black/30 group-hover:bg-black/10 transition-colors z-10" />
-                      {story.type === 'image' && story.media_url && (
-                        <SafeImage
-                          src={story.media_url}
-                          alt="Story"
-                          className="w-full h-full object-cover"
-                        />
-                      )}
-                      {story.type === 'video' && story.media_url && (
-                        <video
-                          src={story.media_url}
-                          className="w-full h-full object-cover"
-                          muted
-                        />
-                      )}
-                      {story.type === 'text' && (
-                        <div
-                          className="w-full h-full flex items-center justify-center p-1"
-                          style={{ background: story.background_color || '#8B5CF6' }}
-                        >
-                          <p className="text-white text-[6px] text-center line-clamp-2">
-                            {story.text_content}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Miniaturas Direita */}
-              <div className="flex flex-row gap-2">
-                {stories.slice(currentIndex + 1, Math.min(stories.length, currentIndex + 4)).map((story, idx) => {
-                  const actualIndex = currentIndex + 1 + idx;
-                  return (
-                    <div
-                      key={story.id}
-                      onClick={() => setCurrentIndex(actualIndex)}
-                      className="cursor-pointer group relative w-14 rounded-lg overflow-hidden bg-black transition-all hover:scale-105"
-                      style={{ aspectRatio: "9 / 16" }}
-                    >
-                      <div className="absolute inset-0 bg-black/30 group-hover:bg-black/10 transition-colors z-10" />
-                      {story.type === 'image' && story.media_url && (
-                        <SafeImage
-                          src={story.media_url}
-                          alt="Story"
-                          className="w-full h-full object-cover"
-                        />
-                      )}
-                      {story.type === 'video' && story.media_url && (
-                        <video
-                          src={story.media_url}
-                          className="w-full h-full object-cover"
-                          muted
-                        />
-                      )}
-                      {story.type === 'text' && (
-                        <div
-                          className="w-full h-full flex items-center justify-center p-1"
-                          style={{ background: story.background_color || '#8B5CF6' }}
-                        >
-                          <p className="text-white text-[6px] text-center line-clamp-2">
-                            {story.text_content}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
+            {/* Miniaturas Direita - Desktop Only */}
+            <div className="hidden lg:flex flex-col items-center gap-2 justify-center">
+              {stories.slice(currentIndex + 1, Math.min(stories.length, currentIndex + 4)).map((story, idx) => {
+                const actualIndex = currentIndex + 1 + idx;
+                return (
+                  <div
+                    key={story.id}
+                    onClick={() => setCurrentIndex(actualIndex)}
+                    className="cursor-pointer group relative w-14 rounded-lg overflow-hidden bg-black transition-all hover:scale-105"
+                    style={{ aspectRatio: "9 / 16" }}
+                  >
+                    <div className="absolute inset-0 bg-black/30 group-hover:bg-black/10 transition-colors z-10" />
+                    {story.type === 'image' && story.media_url && (
+                      <SafeImage
+                        src={story.media_url}
+                        alt="Story"
+                        className="w-full h-full object-cover"
+                      />
+                    )}
+                    {story.type === 'video' && story.media_url && (
+                      <video
+                        src={story.media_url}
+                        className="w-full h-full object-cover"
+                        muted
+                      />
+                    )}
+                    {story.type === 'text' && (
+                      <div
+                        className="w-full h-full flex items-center justify-center p-1"
+                        style={{ background: story.background_color || '#8B5CF6' }}
+                      >
+                        <p className="text-white text-[6px] text-center line-clamp-2">
+                          {story.text_content}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}

@@ -48,7 +48,22 @@ export const NotificationBell = ({ profileId }: { profileId: string }) => {
         },
         (payload) => {
           const newNotification = payload.new as Notification;
-          setNotifications(prev => [newNotification, ...prev]);
+          
+          // Agrupar notificações: substituir notificação anterior da mesma conversa
+          setNotifications(prev => {
+            // Se é notificação de mensagem, verificar se já existe uma da mesma conversa
+            if (newNotification.type === 'message' || newNotification.type === 'negotiation') {
+              // Remover notificações anteriores da mesma conversa (mesmo link)
+              const filtered = prev.filter(n => 
+                n.link !== newNotification.link || 
+                (n.type !== 'message' && n.type !== 'negotiation')
+              );
+              return [newNotification, ...filtered].slice(0, 10); // Manter apenas 10 notificações
+            }
+            // Para outros tipos, apenas adicionar
+            return [newNotification, ...prev].slice(0, 10);
+          });
+          
           setUnreadCount(prev => prev + 1);
           
           // Show toast for new notification with click action
@@ -66,12 +81,33 @@ export const NotificationBell = ({ profileId }: { profileId: string }) => {
           });
         }
       )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${profileId}`,
+        },
+        (payload) => {
+          // Atualizar notificação existente
+          const updatedNotification = payload.new as Notification;
+          setNotifications(prev =>
+            prev.map(n => n.id === updatedNotification.id ? updatedNotification : n)
+          );
+          // Recalcular contagem de não lidas
+          setUnreadCount(prev => {
+            const newCount = notifications.filter(n => !n.read).length;
+            return newCount;
+          });
+        }
+      )
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [profileId, toast]);
+  }, [profileId, toast, navigate]);
 
   const loadNotifications = async () => {
     const { data, error } = await supabase

@@ -153,6 +153,34 @@ export default function Messages() {
             });
           }
         )
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'message_unread_counts',
+            filter: `user_id=eq.${profileId}`
+          },
+          (payload) => {
+            // Quando contadores de não lidas são atualizados, atualizar instantaneamente
+            const update: any = payload.new;
+            setConversations(prev => {
+              const updated = prev.map(c => {
+                if (c.type === update.conversation_type && c.id === update.conversation_id) {
+                  const updatedConv = {
+                    ...c,
+                    unreadCount: update.unread_count || 0,
+                  };
+                  updateConversation(c.id, c.type, updatedConv);
+                  return updatedConv;
+                }
+                return c;
+              });
+              setCachedConversations(updated);
+              return updated;
+            });
+          }
+        )
         .subscribe();
 
       return () => {

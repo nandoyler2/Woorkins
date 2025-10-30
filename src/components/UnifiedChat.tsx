@@ -1404,7 +1404,7 @@ useEffect(() => {
             }
           }}
           onPay={handlePay}
-          onConfirmCompletion={handleConfirmCompletion}
+          onConfirmCompletion={handleFinalConfirmCompletion}
           onMarkCompleted={handleMarkCompleted}
           onMakeCounterProposal={handleMakeCounterProposal}
           onViewHistory={() => setShowHistoryDialog(true)}

@@ -49,6 +49,13 @@ export function MyBalance() {
 
       if (!profile) return;
 
+      // Recalculate wallet server-side based on accepted_amount and plan commission (idempotent)
+      try {
+        await supabase.functions.invoke('recalculate-my-wallet');
+      } catch (e) {
+        console.warn('recalculate-my-wallet failed (non-blocking):', e);
+      }
+
       // Get freelancer wallet balance
       const { data: walletData, error: walletError } = await supabase
         .rpc('get_freelancer_wallet_balance', { freelancer_profile_id: profile.id });

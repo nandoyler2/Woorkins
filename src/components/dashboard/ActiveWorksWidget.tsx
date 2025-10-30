@@ -105,16 +105,31 @@ export function ActiveWorksWidget({ profileId }: ActiveWorksWidgetProps) {
 
       // Get correct budget from counter proposals for each work
       const getCorrectBudget = async (proposalId: string, originalBudget: number): Promise<number> => {
-        const { data: counterProposal } = await supabase
-          .from('counter_proposals')
-          .select('amount')
-          .eq('proposal_id', proposalId)
-          .eq('status', 'accepted')
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .single();
+        console.log(`🔍 Buscando valor correto para proposal ${proposalId}, valor original: R$ ${originalBudget}`);
         
-        return counterProposal?.amount || originalBudget;
+        const { data: counterProposals, error } = await supabase
+          .from('counter_proposals')
+          .select('amount, status, created_at')
+          .eq('proposal_id', proposalId)
+          .order('created_at', { ascending: false });
+        
+        if (error) {
+          console.error('❌ Erro ao buscar contra-propostas:', error);
+          return originalBudget;
+        }
+
+        console.log(`📊 Contra-propostas encontradas:`, counterProposals);
+        
+        // Buscar a última aceita
+        const acceptedCounter = counterProposals?.find(cp => cp.status === 'accepted');
+        
+        if (acceptedCounter) {
+          console.log(`✅ Contra-proposta aceita encontrada: R$ ${acceptedCounter.amount}`);
+          return acceptedCounter.amount;
+        }
+        
+        console.log(`⚠️ Nenhuma contra-proposta aceita, usando valor original: R$ ${originalBudget}`);
+        return originalBudget;
       };
 
       // Combine and format

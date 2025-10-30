@@ -68,33 +68,21 @@ export function ProposalPaymentDialog({
               <span className="text-muted-foreground">Projeto:</span>
               <span className="font-medium">{projectTitle}</span>
             </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Valor da Proposta:</span>
-              <span className="font-medium">
+            <div className="border-t pt-2 flex justify-between font-semibold text-lg">
+              <span>Valor a Pagar:</span>
+              <span className="text-primary">
                 R$ {amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-              </span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Taxa da Plataforma (10%):</span>
-              <span className="font-medium">
-                R$ {(amount * 0.1).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-              </span>
-            </div>
-            <div className="border-t pt-2 flex justify-between font-semibold">
-              <span>Total a Pagar:</span>
-              <span>
-                R$ {(amount * 1.1).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
               </span>
             </div>
           </div>
 
-          <div className="bg-muted p-3 rounded-lg text-sm space-y-1">
-            <p className="font-medium">ℹ️ Como funciona o pagamento:</p>
+          <div className="bg-muted p-3 rounded-lg text-sm space-y-2">
+            <p className="font-medium">🔒 Pagamento 100% Seguro</p>
             <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-              <li>O valor ficará em garantia (escrow)</li>
-              <li>Será liberado ao freelancer após conclusão</li>
-              <li>Você precisa confirmar a entrega para liberar</li>
-              <li>Pagamento seguro via Stripe</li>
+              <li>O valor ficará retido em segurança na plataforma</li>
+              <li>O freelancer só receberá após você confirmar a conclusão</li>
+              <li>Você precisa validar que todo o trabalho foi finalizado</li>
+              <li>Seu dinheiro fica protegido até a entrega completa</li>
             </ul>
           </div>
 
@@ -112,7 +100,7 @@ export function ProposalPaymentDialog({
             ) : (
               <>
                 <CreditCard className="mr-2 h-4 w-4" />
-                Pagar R$ {(amount * 1.1).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                Pagar R$ {amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
               </>
             )}
           </Button>

@@ -352,51 +352,54 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
           </div>
         ) : (
           <div className="flex flex-col items-center gap-4 w-full max-w-7xl mx-auto px-4">
-            {/* Container fixo com story centralizado */}
-            <div className="min-h-screen w-full relative flex items-center justify-center">
-            {/* Miniaturas esquerdas - desktop apenas */}
-            <div className="hidden lg:flex flex-row gap-2 absolute left-1/2 top-1/2 -translate-y-1/2" style={{ transform: "translate(calc(-50% - min(90vw, 500px, calc((9/16) * 90vh))/2 - 1rem), -50%)" }}>
-              {stories.slice(Math.max(0, currentIndex - 3), currentIndex).map((story, idx) => {
-                const actualIndex = Math.max(0, currentIndex - 3) + idx;
-                return (
-                  <div
-                    key={story.id}
-                    onClick={() => setCurrentIndex(actualIndex)}
-                    className="cursor-pointer group relative w-28 rounded-lg overflow-hidden bg-black transition-all hover:scale-105"
-                    style={{ aspectRatio: "9 / 16" }}
-                  >
-                    <div className="absolute inset-0 bg-black/30 group-hover:bg-black/10 transition-colors z-10" />
-                    {story.type === 'image' && story.media_url && (
-                      <SafeImage
-                        src={story.media_url}
-                        alt="Story"
-                        className="w-full h-full object-cover"
-                      />
-                    )}
-                    {story.type === 'video' && story.media_url && (
-                      <video
-                        src={story.media_url}
-                        className="w-full h-full object-cover"
-                        muted
-                      />
-                    )}
-                    {story.type === 'text' && (
-                      <div
-                        className="w-full h-full flex items-center justify-center p-1"
-                        style={{ background: story.background_color || '#8B5CF6' }}
-                      >
-                        <p className="text-white text-[6px] text-center line-clamp-2">
-                          {story.text_content}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+            {/* Faixa única no rodapé (desktop) com miniaturas à esquerda/direita e story central */}
+            <div className="w-full">
+              <div className="min-h-screen flex items-end justify-center">
+                <div className="w-full pb-6">
+                  <div className="flex w-full items-center justify-center gap-4">
+                    {/* Grupo esquerdo (anteriores) - desktop apenas */}
+                    <div className="hidden lg:flex flex-row gap-2">
+                      {stories.slice(Math.max(0, currentIndex - 3), currentIndex).map((story, idx) => {
+                        const actualIndex = Math.max(0, currentIndex - 3) + idx;
+                        return (
+                          <div
+                            key={story.id}
+                            onClick={() => setCurrentIndex(actualIndex)}
+                            className="cursor-pointer group relative w-14 rounded-lg overflow-hidden bg-black transition-all hover:scale-105"
+                            style={{ aspectRatio: "9 / 16" }}
+                          >
+                            <div className="absolute inset-0 bg-black/30 group-hover:bg-black/10 transition-colors z-10" />
+                            {story.type === 'image' && story.media_url && (
+                              <SafeImage
+                                src={story.media_url}
+                                alt="Story"
+                                className="w-full h-full object-cover"
+                              />
+                            )}
+                            {story.type === 'video' && story.media_url && (
+                              <video
+                                src={story.media_url}
+                                className="w-full h-full object-cover"
+                                muted
+                              />
+                            )}
+                            {story.type === 'text' && (
+                              <div
+                                className="w-full h-full flex items-center justify-center p-1"
+                                style={{ background: story.background_color || '#8B5CF6' }}
+                              >
+                                <p className="text-white text-[6px] text-center line-clamp-2">
+                                  {story.text_content}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
 
-            {/* Container do Story Principal - sempre centralizado */}
-            <div className="relative flex flex-col rounded-2xl overflow-hidden bg-black" style={{ width: "min(90vw, 500px, calc((9/16) * 90vh))", aspectRatio: "9 / 16" }}>
+                    {/* Container do Story Principal (centro) */}
+                    <div className="relative flex flex-col rounded-2xl overflow-hidden bg-black" style={{ width: "min(90vw, 500px, calc((9/16) * 90vh))", aspectRatio: "9 / 16" }}>
           {/* Progress bar - apenas do story atual */}
           <div className="absolute top-0 left-0 right-0 z-20 p-3">
             <div className="h-1 bg-white/20 rounded-full overflow-hidden backdrop-blur-sm">
@@ -657,49 +660,52 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
               <ChevronRight className="w-8 h-8" />
             </Button>
           )}
-            </div>
+        </div>
 
-            {/* Miniaturas direitas - desktop apenas */}
-            <div className="hidden lg:flex flex-row gap-2 absolute left-1/2 top-1/2 -translate-y-1/2" style={{ transform: "translate(calc(-50% + min(90vw, 500px, calc((9/16) * 90vh))/2 + 1rem), -50%)" }}>
-              {stories.slice(currentIndex + 1, Math.min(stories.length, currentIndex + 4)).map((story, idx) => {
-                const actualIndex = currentIndex + 1 + idx;
-                return (
-                  <div
-                    key={story.id}
-                    onClick={() => setCurrentIndex(actualIndex)}
-                    className="cursor-pointer group relative w-28 rounded-lg overflow-hidden bg-black transition-all hover:scale-105"
-                    style={{ aspectRatio: "9 / 16" }}
-                  >
-                    <div className="absolute inset-0 bg-black/30 group-hover:bg-black/10 transition-colors z-10" />
-                    {story.type === 'image' && story.media_url && (
-                      <SafeImage
-                        src={story.media_url}
-                        alt="Story"
-                        className="w-full h-full object-cover"
-                      />
-                    )}
-                    {story.type === 'video' && story.media_url && (
-                      <video
-                        src={story.media_url}
-                        className="w-full h-full object-cover"
-                        muted
-                      />
-                    )}
-                    {story.type === 'text' && (
-                      <div
-                        className="w-full h-full flex items-center justify-center p-1"
-                        style={{ background: story.background_color || '#8B5CF6' }}
-                      >
-                        <p className="text-white text-[6px] text-center line-clamp-2">
-                          {story.text_content}
-                        </p>
-                      </div>
-                    )}
+                    {/* Grupo direito (próximos) - desktop apenas */}
+                    <div className="hidden lg:flex flex-row gap-2">
+                      {stories.slice(currentIndex + 1, Math.min(stories.length, currentIndex + 4)).map((story, idx) => {
+                        const actualIndex = currentIndex + 1 + idx;
+                        return (
+                          <div
+                            key={story.id}
+                            onClick={() => setCurrentIndex(actualIndex)}
+                            className="cursor-pointer group relative w-14 rounded-lg overflow-hidden bg-black transition-all hover:scale-105"
+                            style={{ aspectRatio: "9 / 16" }}
+                          >
+                            <div className="absolute inset-0 bg-black/30 group-hover:bg-black/10 transition-colors z-10" />
+                            {story.type === 'image' && story.media_url && (
+                              <SafeImage
+                                src={story.media_url}
+                                alt="Story"
+                                className="w-full h-full object-cover"
+                              />
+                            )}
+                            {story.type === 'video' && story.media_url && (
+                              <video
+                                src={story.media_url}
+                                className="w-full h-full object-cover"
+                                muted
+                              />
+                            )}
+                            {story.type === 'text' && (
+                              <div
+                                className="w-full h-full flex items-center justify-center p-1"
+                                style={{ background: story.background_color || '#8B5CF6' }}
+                              >
+                                <p className="text-white text-[6px] text-center line-clamp-2">
+                                  {story.text_content}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
-                );
-              })}
+                </div>
+              </div>
             </div>
-          </div>
           </div>
         )}
       </DialogContent>

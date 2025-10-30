@@ -63,10 +63,10 @@ export function ProposalChatHeader({
     if (proposal.work_status === 'in_progress') {
       return <Badge className="bg-yellow-500">Em Andamento</Badge>;
     }
-    if (proposal.payment_status === 'paid_escrow') {
+    if (proposal.payment_status === 'paid' || proposal.payment_status === 'paid_escrow') {
       return <Badge className="bg-yellow-500">Pago - Em Andamento</Badge>;
     }
-    if (proposal.status === 'accepted') {
+    if (proposal.status === 'accepted' && proposal.payment_status !== 'paid') {
       return <Badge className="bg-blue-500">Aceita - Aguardando Pagamento</Badge>;
     }
     if (proposal.status === 'pending') {
@@ -124,7 +124,7 @@ export function ProposalChatHeader({
     }
 
     // Proposta aceita - aguardando pagamento
-    if (proposal.status === 'accepted' && isOwner) {
+    if (proposal.status === 'accepted' && proposal.payment_status !== 'paid' && isOwner) {
       return (
         <Button size="sm" onClick={onPay} className="bg-green-600 hover:bg-green-700">
           <DollarSign className="h-4 w-4 mr-2" />

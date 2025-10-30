@@ -340,7 +340,7 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
-      <DialogContent className="z-[9999] max-w-lg h-[90vh] p-0 bg-transparent border-0 shadow-none overflow-hidden [&>button]:hidden">
+      <DialogContent className="z-[9999] max-w-[500px] w-full h-[min(90vh,800px)] p-0 bg-transparent border-0 shadow-none overflow-visible [&>button]:hidden">
         <DialogTitle className="sr-only">Stories</DialogTitle>
         <DialogDescription className="sr-only">Visualizador de stories</DialogDescription>
         {isLoading || stories.length === 0 ? (
@@ -351,7 +351,21 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
             </div>
           </div>
         ) : (
-          <div className="relative w-full h-full flex flex-col rounded-2xl overflow-hidden bg-black">
+          <div className="relative w-full h-full flex items-center justify-center gap-8">
+            {/* Botão Anterior - Fora do story */}
+            {currentIndex > 0 && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handlePrevious}
+                className="absolute left-[-60px] top-1/2 -translate-y-1/2 text-white hover:bg-white/20 w-12 h-12 rounded-full bg-black/30 backdrop-blur-sm z-30"
+              >
+                <ChevronLeft className="w-8 h-8" />
+              </Button>
+            )}
+
+            {/* Container do Story */}
+            <div className="relative w-full max-w-[400px] aspect-[9/16] flex flex-col rounded-2xl overflow-hidden bg-black shadow-2xl">
           {/* Progress bars */}
           <div className="absolute top-0 left-0 right-0 z-20 flex gap-1.5 p-3">
             {stories.map((_, idx) => (
@@ -423,9 +437,9 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
             onTouchStart={() => handleHoldPause(true)}
             onTouchEnd={() => handleHoldPause(false)}
           >
-            {/* Navigation areas */}
+            {/* Navigation areas - clique para navegar */}
             <div
-              className="absolute left-0 top-0 bottom-0 w-1/3 cursor-pointer z-10"
+              className="absolute left-0 top-0 bottom-0 w-1/2 cursor-pointer z-10"
               onClick={handlePrevious}
               onMouseDown={(e) => e.stopPropagation()}
               onMouseUp={(e) => e.stopPropagation()}
@@ -433,7 +447,7 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
               onTouchEnd={(e) => e.stopPropagation()}
             />
             <div
-              className="absolute right-0 top-0 bottom-0 w-1/3 cursor-pointer z-10"
+              className="absolute right-0 top-0 bottom-0 w-1/2 cursor-pointer z-10"
               onClick={handleNext}
               onMouseDown={(e) => e.stopPropagation()}
               onMouseUp={(e) => e.stopPropagation()}
@@ -597,29 +611,21 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
             </div>
           )}
 
-          {/* Navigation buttons */}
-          {currentIndex > 0 && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handlePrevious}
-              className="absolute left-2 top-1/2 -translate-y-1/2 z-20 text-white hover:bg-white/20"
-            >
-              <ChevronLeft className="w-6 h-6" />
-            </Button>
-          )}
-
-          {currentIndex < stories.length - 1 && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleNext}
-              className="absolute right-2 top-1/2 -translate-y-1/2 z-20 text-white hover:bg-white/20"
-            >
-              <ChevronRight className="w-6 h-6" />
-            </Button>
-          )}
+          {/* Navigation buttons - removidos, agora estão fora */}
         </div>
+
+            {/* Botão Próximo - Fora do story */}
+            {currentIndex < stories.length - 1 && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleNext}
+                className="absolute right-[-60px] top-1/2 -translate-y-1/2 text-white hover:bg-white/20 w-12 h-12 rounded-full bg-black/30 backdrop-blur-sm z-30"
+              >
+                <ChevronRight className="w-8 h-8" />
+              </Button>
+            )}
+          </div>
         )}
       </DialogContent>
 

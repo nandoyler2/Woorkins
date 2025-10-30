@@ -16,6 +16,8 @@ interface ActiveWork {
   freelancer_completed_at?: string;
   owner_confirmed_at?: string;
   created_at: string;
+  delivery_days: number;
+  payment_captured_at: string;
   is_freelancer: boolean;
   other_user_name: string;
 }
@@ -33,6 +35,14 @@ export function ActiveWorksWidget({ profileId }: ActiveWorksWidgetProps) {
     loadActiveWorks();
   }, [profileId]);
 
+  const calculateRemainingDays = (work: ActiveWork) => {
+    const capturedDate = new Date(work.payment_captured_at);
+    const now = new Date();
+    const daysPassed = Math.floor((now.getTime() - capturedDate.getTime()) / (1000 * 60 * 60 * 24));
+    const remainingDays = work.delivery_days - daysPassed;
+    return remainingDays;
+  };
+
   const loadActiveWorks = async () => {
     try {
       // Get works where user is freelancer
@@ -46,6 +56,8 @@ export function ActiveWorksWidget({ profileId }: ActiveWorksWidgetProps) {
           freelancer_completed_at,
           owner_confirmed_at,
           created_at,
+          delivery_days,
+          payment_captured_at,
           project:projects!inner(
             title,
             profile_id,
@@ -54,7 +66,7 @@ export function ActiveWorksWidget({ profileId }: ActiveWorksWidgetProps) {
         `)
         .eq('freelancer_id', profileId)
         .eq('status', 'accepted')
-        .eq('payment_status', 'captured')
+        .in('payment_status', ['captured', 'paid_escrow'])
         .in('work_status', ['in_progress', 'freelancer_completed', 'owner_confirmed']);
 
       if (freelancerError) throw freelancerError;
@@ -70,6 +82,8 @@ export function ActiveWorksWidget({ profileId }: ActiveWorksWidgetProps) {
           freelancer_completed_at,
           owner_confirmed_at,
           created_at,
+          delivery_days,
+          payment_captured_at,
           freelancer_id,
           freelancer:profiles!proposals_freelancer_id_fkey(full_name),
           project:projects!inner(
@@ -79,7 +93,7 @@ export function ActiveWorksWidget({ profileId }: ActiveWorksWidgetProps) {
         `)
         .eq('project.profile_id', profileId)
         .eq('status', 'accepted')
-        .eq('payment_status', 'captured')
+        .in('payment_status', ['captured', 'paid_escrow'])
         .in('work_status', ['in_progress', 'freelancer_completed', 'owner_confirmed']);
 
       if (ownerError) throw ownerError;
@@ -94,6 +108,8 @@ export function ActiveWorksWidget({ profileId }: ActiveWorksWidgetProps) {
         freelancer_completed_at: w.freelancer_completed_at,
         owner_confirmed_at: w.owner_confirmed_at,
         created_at: w.created_at,
+        delivery_days: w.delivery_days,
+        payment_captured_at: w.payment_captured_at,
         is_freelancer: true,
         other_user_name: w.project.owner.full_name,
       }));
@@ -107,6 +123,8 @@ export function ActiveWorksWidget({ profileId }: ActiveWorksWidgetProps) {
         freelancer_completed_at: w.freelancer_completed_at,
         owner_confirmed_at: w.owner_confirmed_at,
         created_at: w.created_at,
+        delivery_days: w.delivery_days,
+        payment_captured_at: w.payment_captured_at,
         is_freelancer: false,
         other_user_name: w.freelancer.full_name,
       }));
@@ -221,17 +239,30 @@ export function ActiveWorksWidget({ profileId }: ActiveWorksWidgetProps) {
               {getStatusBadge(work)}
             </div>
 
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1 text-sm font-semibold text-primary">
-                <DollarSign className="h-4 w-4" />
-                R$ {work.budget.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1 text-sm font-semibold text-primary">
+                  <DollarSign className="h-4 w-4" />
+                  R$ {work.budget.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                </div>
+                {work.work_status === 'in_progress' && (
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <Clock className="h-3 w-3" />
+                    {(() => {
+                      const remaining = calculateRemainingDays(work);
+                      return remaining < 0 
+                        ? `Atrasado ${Math.abs(remaining)}d`
+                        : `${remaining}d restantes`;
+                    })()}
+                  </div>
+                )}
               </div>
               <Button
                 size="sm"
                 variant={work.work_status === 'owner_confirmed' ? 'ghost' : 'default'}
                 onClick={() => navigate(`/mensagens?type=proposal&id=${work.id}`)}
               >
-                {getActionText(work)}
+                Ver Conversa
               </Button>
             </div>
           </div>

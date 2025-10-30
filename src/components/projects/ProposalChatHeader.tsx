@@ -97,7 +97,7 @@ export function ProposalChatHeader({
         <>
           <Button size="sm" onClick={onConfirmCompletion} className="bg-green-600 hover:bg-green-700">
             <CheckCircle className="h-4 w-4 mr-2" />
-            Confirmar Finalização
+            Trabalho Concluído
           </Button>
         </>
       );
@@ -107,9 +107,9 @@ export function ProposalChatHeader({
     if (proposal.work_status === 'in_progress') {
       if (isOwner) {
         return (
-          <Button size="sm" onClick={onConfirmCompletion} variant="outline">
+          <Button size="sm" onClick={onConfirmCompletion} className="bg-green-600 hover:bg-green-700">
             <CheckCircle className="h-4 w-4 mr-2" />
-            Confirmar Finalização
+            Trabalho Concluído
           </Button>
         );
       } else {
@@ -117,7 +117,7 @@ export function ProposalChatHeader({
         return (
           <Button size="sm" onClick={onMarkCompleted} className="bg-green-600 hover:bg-green-700">
             <CheckCircle className="h-4 w-4 mr-2" />
-            Finalizei o Serviço
+            Concluir Projeto
           </Button>
         );
       }

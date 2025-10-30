@@ -34,6 +34,7 @@ import { ProposalChatHeader } from './projects/ProposalChatHeader';
 import { ProposalCounterDialog } from './projects/ProposalCounterDialog';
 import { ProposalHistoryDialog } from './projects/ProposalHistoryDialog';
 import { ProposalPaymentDialog } from './projects/ProposalPaymentDialog';
+import { ProposalCompletionDialog } from './projects/ProposalCompletionDialog';
 import { BlockedMessageCountdown } from './BlockedMessageCountdown';
 import { ImageViewer } from './ImageViewer';
 import { RequireProfilePhotoDialog } from './RequireProfilePhotoDialog';
@@ -97,6 +98,7 @@ export function UnifiedChat({
   const [showCounterDialog, setShowCounterDialog] = useState(false);
   const [showHistoryDialog, setShowHistoryDialog] = useState(false);
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const [showCompletionDialog, setShowCompletionDialog] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messageInputRef = useRef<HTMLInputElement>(null);
@@ -494,7 +496,12 @@ useEffect(() => {
   };
 
   // Owner confirms work completion and releases payment
-  const handleConfirmCompletion = async () => {
+  const handleConfirmCompletion = () => {
+    // Abrir diálogo de confirmação
+    setShowCompletionDialog(true);
+  };
+
+  const handleFinalConfirmCompletion = async () => {
     try {
       setIsLoading(true);
       const { data, error } = await supabase.functions.invoke('release-proposal-payment', {
@@ -505,6 +512,8 @@ useEffect(() => {
       });
       
       if (error) throw error;
+      
+      setShowCompletionDialog(false);
       
       toast({
         title: 'Trabalho concluído!',
@@ -1891,6 +1900,16 @@ useEffect(() => {
         proposalId={conversationId}
         amount={proposalData?.accepted_amount || proposalData?.current_proposal_amount || proposalData?.budget || 0}
         projectTitle={projectTitle || ''}
+      />
+
+      {/* Proposal Completion Dialog */}
+      <ProposalCompletionDialog
+        open={showCompletionDialog}
+        onOpenChange={setShowCompletionDialog}
+        freelancerAmount={proposalData?.freelancer_amount || 0}
+        freelancerName={otherUser.name}
+        onConfirm={handleFinalConfirmCompletion}
+        isLoading={isLoading}
       />
     </div>
   );

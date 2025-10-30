@@ -1,150 +1,133 @@
 import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
-import { Loader2, CheckCircle } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Checkbox } from '@/components/ui/checkbox';
+import { AlertTriangle, CheckCircle2, Coins } from 'lucide-react';
 
 interface ProposalCompletionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  proposalId: string;
-  isFreelancer: boolean;
-  onSuccess: () => void;
+  freelancerAmount: number;
+  freelancerName: string;
+  onConfirm: () => void;
+  isLoading?: boolean;
 }
 
 export function ProposalCompletionDialog({
   open,
   onOpenChange,
-  proposalId,
-  isFreelancer,
-  onSuccess,
+  freelancerAmount,
+  freelancerName,
+  onConfirm,
+  isLoading = false,
 }: ProposalCompletionDialogProps) {
-  const [loading, setLoading] = useState(false);
-  const { toast } = useToast();
+  const [understood, setUnderstood] = useState(false);
 
-  const handleConfirm = async () => {
-    try {
-      setLoading(true);
-
-      if (isFreelancer) {
-        // Freelancer marcando como concluído
-        const { error } = await supabase
-          .from('proposals')
-          .update({
-            work_status: 'freelancer_completed',
-            freelancer_completed_at: new Date().toISOString(),
-          })
-          .eq('id', proposalId);
-
-        if (error) throw error;
-
-        // Criar entrada no histórico
-        const { data: proposal } = await supabase
-          .from('proposals')
-          .select('freelancer_id')
-          .eq('id', proposalId)
-          .single();
-
-        if (proposal) {
-          await supabase.from('proposal_status_history').insert({
-            proposal_id: proposalId,
-            status_type: 'freelancer_completed',
-            changed_by: proposal.freelancer_id,
-            message: 'Freelancer marcou o projeto como concluído',
-          });
-        }
-
-        toast({
-          title: 'Serviço marcado como finalizado',
-          description: 'Aguarde a confirmação do cliente para liberar o pagamento.',
-        });
-      } else {
-        // Cliente confirmando conclusão - liberar pagamento
-        const { error } = await supabase.functions.invoke('release-proposal-payment', {
-          body: { proposal_id: proposalId, action: 'approve' },
-        });
-
-        if (error) throw error;
-
-        toast({
-          title: 'Projeto concluído!',
-          description: 'O pagamento foi liberado para o freelancer.',
-        });
-      }
-
-      onSuccess();
-      onOpenChange(false);
-    } catch (error: any) {
-      console.error('Erro ao confirmar conclusão:', error);
-      toast({
-        title: 'Erro ao processar',
-        description: error.message,
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
+  const handleOpenChange = (newOpen: boolean) => {
+    if (!newOpen) {
+      setUnderstood(false);
     }
+    onOpenChange(newOpen);
+  };
+
+  const handleConfirm = () => {
+    setUnderstood(false);
+    onConfirm();
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <CheckCircle className="h-5 w-5 text-green-600" />
-            {isFreelancer ? 'Marcar como Finalizado' : 'Confirmar Conclusão'}
-          </DialogTitle>
-          <DialogDescription>
-            {isFreelancer ? (
-              <div className="space-y-2 text-left">
-                <p>Você está prestes a marcar este serviço como finalizado.</p>
-                <p className="font-medium">O que acontece a seguir:</p>
-                <ul className="list-disc list-inside space-y-1 text-sm">
-                  <li>O cliente será notificado</li>
-                  <li>O cliente precisará confirmar a entrega</li>
-                  <li>Após confirmação, o pagamento será liberado</li>
-                </ul>
+    <AlertDialog open={open} onOpenChange={handleOpenChange}>
+      <AlertDialogContent className="max-w-md">
+        <AlertDialogHeader>
+          <div className="flex items-center gap-2">
+            <div className="h-12 w-12 rounded-full bg-amber-500/10 flex items-center justify-center">
+              <AlertTriangle className="h-6 w-6 text-amber-600" />
+            </div>
+            <div>
+              <AlertDialogTitle className="text-xl">
+                Confirmar Conclusão do Trabalho
+              </AlertDialogTitle>
+            </div>
+          </div>
+          <AlertDialogDescription className="space-y-4 pt-4">
+            <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <CheckCircle2 className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                <div className="flex-1 text-sm text-blue-900 dark:text-blue-100">
+                  <p className="font-semibold mb-1">O trabalho foi concluído?</p>
+                  <p className="text-blue-700 dark:text-blue-300">
+                    Ao confirmar, o valor será liberado para <span className="font-semibold">{freelancerName}</span>.
+                  </p>
+                </div>
               </div>
-            ) : (
-              <div className="space-y-2 text-left">
-                <p>Você confirma que recebeu todo o trabalho conforme acordado?</p>
-                <p className="font-medium text-destructive">⚠️ Atenção:</p>
-                <ul className="list-disc list-inside space-y-1 text-sm">
-                  <li>Esta ação não pode ser desfeita</li>
-                  <li>O valor será liberado ao freelancer imediatamente</li>
-                  <li>Certifique-se de ter recebido tudo antes de confirmar</li>
-                </ul>
-              </div>
-            )}
-          </DialogDescription>
-        </DialogHeader>
+            </div>
 
-        <div className="flex gap-2 mt-4">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            className="flex-1"
-          >
-            Cancelar
-          </Button>
-          <Button
+            <div className="bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <Coins className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p className="text-sm text-green-900 dark:text-green-100 mb-2">
+                    Valor a ser liberado:
+                  </p>
+                  <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+                    R$ {freelancerAmount.toLocaleString('pt-BR', {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                <div className="flex-1 text-sm text-amber-900 dark:text-amber-100">
+                  <p className="font-semibold mb-1">⚠️ Atenção - Ação Irreversível</p>
+                  <ul className="list-disc list-inside space-y-1 text-amber-700 dark:text-amber-300">
+                    <li>O valor será creditado na carteira do freelancer</li>
+                    <li>Não será possível desfazer esta ação</li>
+                    <li>Certifique-se de que o trabalho foi concluído corretamente</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 pt-2">
+              <Checkbox
+                id="understood"
+                checked={understood}
+                onCheckedChange={(checked) => setUnderstood(checked === true)}
+                disabled={isLoading}
+              />
+              <label
+                htmlFor="understood"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+              >
+                Confirmo que o trabalho foi concluído e entendo que esta ação é irreversível
+              </label>
+            </div>
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={isLoading}>Cancelar</AlertDialogCancel>
+          <AlertDialogAction
             onClick={handleConfirm}
-            disabled={loading}
-            className="flex-1 bg-green-600 hover:bg-green-700"
+            disabled={!understood || isLoading}
+            className="bg-green-600 hover:bg-green-700"
           >
-            {loading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Processando...
-              </>
-            ) : (
-              'Confirmar'
-            )}
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+            {isLoading ? 'Processando...' : 'Confirmar e Liberar Pagamento'}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }

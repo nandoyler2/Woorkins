@@ -121,35 +121,27 @@ export function ProposalPaymentDialog({
 
         {step === 'select-method' && (
           <div className="space-y-4">
-            <p className="text-center text-muted-foreground mb-6">
+            <p className="text-center text-muted-foreground mb-4">
               Escolha a forma de pagamento
             </p>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-3">
               <Button
                 onClick={() => handleMethodSelect('pix')}
-                variant="outline"
-                className="h-32 flex-col gap-3 hover:border-primary hover:bg-primary/5"
+                className="h-14 bg-[#32BCAD] hover:bg-[#2BA89A] text-white"
                 size="lg"
               >
-                <PixIcon className="h-12 w-12 text-[#32BCAD]" />
-                <div className="text-center">
-                  <p className="font-semibold text-lg">PIX</p>
-                  <p className="text-xs text-muted-foreground">Aprovação instantânea</p>
-                </div>
+                <PixIcon className="h-5 w-5 mr-2" />
+                PIX
               </Button>
 
               <Button
                 onClick={() => handleMethodSelect('card')}
-                variant="outline"
-                className="h-32 flex-col gap-3 hover:border-primary hover:bg-primary/5"
+                className="h-14"
                 size="lg"
               >
-                <CreditCard className="h-12 w-12" />
-                <div className="text-center">
-                  <p className="font-semibold text-lg">Cartão de Crédito</p>
-                  <p className="text-xs text-muted-foreground">Parcelamento disponível</p>
-                </div>
+                <CreditCard className="h-5 w-5 mr-2" />
+                Cartão
               </Button>
             </div>
           </div>

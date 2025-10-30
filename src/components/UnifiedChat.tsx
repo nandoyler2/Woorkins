@@ -1253,14 +1253,6 @@ useEffect(() => {
     }
   };
 
-  // Check if conversation can be deleted
-        variant: 'destructive',
-        title: 'Erro ao arquivar',
-        description: error.message || 'Não foi possível arquivar a conversa',
-      });
-    }
-  };
-
   return (
     <div className="h-full flex flex-col bg-white relative">
       {/* Header with Proposal Chat Header */}
@@ -1274,6 +1266,7 @@ useEffect(() => {
             current_proposal_amount: proposalData.current_proposal_amount || proposalData.budget,
             is_unlocked: proposalData.is_unlocked,
             awaiting_acceptance_from: proposalData.awaiting_acceptance_from,
+            owner_confirmation_deadline: proposalData.owner_confirmation_deadline,
           }}
           projectData={proposalData.project ? {
             id: proposalData.project.id,

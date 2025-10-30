@@ -1,6 +1,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { MoreVertical, CheckCircle, DollarSign, Clock, AlertCircle, ExternalLink } from 'lucide-react';
+import { useCompletionCountdown } from '@/hooks/useCompletionCountdown';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,6 +25,7 @@ interface ProposalChatHeaderProps {
     current_proposal_amount: number;
     is_unlocked: boolean;
     awaiting_acceptance_from?: string;
+    owner_confirmation_deadline?: string | null;
   };
   projectData?: ProjectData;
   currentProfileId: string;
@@ -50,6 +52,8 @@ export function ProposalChatHeader({
   onViewHistory,
   onOpenDispute,
 }: ProposalChatHeaderProps) {
+  const { timeRemaining, isExpired } = useCompletionCountdown(proposal.owner_confirmation_deadline || null);
+
   const getStatusBadge = () => {
     if (proposal.work_status === 'completed') {
       return <Badge className="bg-green-500">Concluído</Badge>;
@@ -94,12 +98,32 @@ export function ProposalChatHeader({
     // Freelancer marcou como concluído - aguardando confirmação do dono
     if (proposal.work_status === 'freelancer_completed' && isOwner) {
       return (
-        <>
+        <div className="flex flex-col gap-2">
           <Button size="sm" onClick={onConfirmCompletion} className="bg-green-600 hover:bg-green-700">
             <CheckCircle className="h-4 w-4 mr-2" />
             Trabalho Concluído
           </Button>
-        </>
+          {timeRemaining && !isExpired && (
+            <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800">
+              <Clock className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+              <span className="text-xs font-medium text-blue-700 dark:text-blue-300">
+                Conclusão automática em: {timeRemaining}
+              </span>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // Freelancer vê countdown também
+    if (proposal.work_status === 'freelancer_completed' && !isOwner && timeRemaining && !isExpired) {
+      return (
+        <div className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800">
+          <Clock className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+          <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
+            Aguardando confirmação: {timeRemaining}
+          </span>
+        </div>
       );
     }
 

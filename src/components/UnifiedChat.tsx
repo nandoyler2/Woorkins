@@ -960,11 +960,13 @@ useEffect(() => {
                     
                     toast({
                       title: 'Contra-proposta aceita!',
-                      description: 'Agora você pode pagar para iniciar o trabalho',
+                      description: isOwner ? 'Agora você pode pagar para iniciar o trabalho' : 'O cliente foi notificado',
                     });
                     
-                    // Abrir diálogo de pagamento
-                    setShowPaymentDialog(true);
+                    // Só abre o diálogo de pagamento se for o criador do projeto
+                    if (isOwner) {
+                      setShowPaymentDialog(true);
+                    }
                   }}
                   className="bg-white hover:bg-slate-50 text-green-700 border-2 border-green-700 font-semibold shadow-md"
                 >

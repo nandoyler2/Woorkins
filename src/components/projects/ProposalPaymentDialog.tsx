@@ -57,7 +57,7 @@ export function ProposalPaymentDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] max-w-md">
+      <DialogContent className={`w-[95vw] ${step === 'checkout' ? 'max-w-2xl' : 'max-w-md'}`}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-lg">
             {step === 'checkout' && (

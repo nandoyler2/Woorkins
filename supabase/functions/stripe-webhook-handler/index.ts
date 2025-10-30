@@ -83,23 +83,154 @@ serve(async (req) => {
           
           console.log(`Added ${woorkoinsAmount} woorkoins to profile ${profileId}`);
         } else if (metadata.proposal_id) {
-          // Update proposal payment status
+          // Get proposal to check if already processed
+          const { data: proposal } = await supabase
+            .from('proposals')
+            .select('*, freelancer:profiles!proposals_freelancer_id_fkey(id, user_id)')
+            .eq('id', metadata.proposal_id)
+            .single();
+
+          if (!proposal) {
+            console.log('Proposal not found:', metadata.proposal_id);
+            break;
+          }
+
+          // IDEMPOTENCY: Skip if already processed
+          if (proposal.payment_status === 'paid_escrow' || proposal.payment_status === 'in_progress') {
+            console.log('⚠️ Proposal payment already processed (webhook):', metadata.proposal_id);
+            break;
+          }
+
+          // Recalculate with correct commission
+          const { data: planData } = await supabase
+            .from('user_subscription_plans')
+            .select('plan_type, subscription_plans(commission_percentage)')
+            .eq('user_id', proposal.freelancer.user_id)
+            .eq('is_active', true)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .single();
+
+          const commissionPercent = (planData?.subscription_plans as any)?.[0]?.commission_percentage || 10;
+          const baseAmount = proposal.accepted_amount || parseFloat(metadata.gross_amount || '0');
+          const platformCommission = Math.round((baseAmount * commissionPercent / 100) * 100) / 100;
+          const freelancerAmount = Math.round((baseAmount - platformCommission) * 100) / 100;
+
+          console.log('✅ Payment split (webhook):', {
+            proposal_id: metadata.proposal_id,
+            accepted_amount: baseAmount,
+            commission_percent: commissionPercent,
+            freelancer_amount: freelancerAmount
+          });
+
+          // Update proposal payment status with correct values
           await supabase
             .from('proposals')
             .update({
               payment_status: 'paid_escrow',
+              freelancer_amount: freelancerAmount,
+              platform_commission: platformCommission,
+              stripe_processing_fee: 0,
             })
             .eq('id', metadata.proposal_id);
 
+          // Credit pending balance (ONLY ONCE)
+          const { data: wallet } = await supabase
+            .from('freelancer_wallet')
+            .select('*')
+            .eq('profile_id', proposal.freelancer_id)
+            .single();
+
+          if (wallet) {
+            await supabase
+              .from('freelancer_wallet')
+              .update({
+                pending_balance: (wallet.pending_balance || 0) + freelancerAmount,
+              })
+              .eq('profile_id', proposal.freelancer_id);
+          } else {
+            await supabase
+              .from('freelancer_wallet')
+              .insert({
+                profile_id: proposal.freelancer_id,
+                pending_balance: freelancerAmount,
+                available_balance: 0,
+                total_earned: 0,
+                total_withdrawn: 0,
+              });
+          }
+
           console.log('Updated proposal payment status to paid_escrow');
         } else if (metadata.negotiation_id) {
-          // Update negotiation payment status
+          // Get negotiation to check if already processed
+          const { data: negotiation } = await supabase
+            .from('negotiations')
+            .select('*, target:profiles!negotiations_target_profile_id_fkey(id, user_id)')
+            .eq('id', metadata.negotiation_id)
+            .single();
+
+          if (!negotiation) {
+            console.log('Negotiation not found:', metadata.negotiation_id);
+            break;
+          }
+
+          // IDEMPOTENCY: Skip if already processed
+          if (negotiation.payment_status === 'paid_escrow' || negotiation.status === 'in_progress') {
+            console.log('⚠️ Negotiation payment already processed (webhook):', metadata.negotiation_id);
+            break;
+          }
+
+          // Recalculate with correct commission
+          const { data: planData } = await supabase
+            .from('user_subscription_plans')
+            .select('plan_type, subscription_plans(commission_percentage)')
+            .eq('user_id', negotiation.target.user_id)
+            .eq('is_active', true)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .single();
+
+          const commissionPercent = (planData?.subscription_plans as any)?.[0]?.commission_percentage || 10;
+          const baseAmount = negotiation.final_amount;
+          const platformCommission = Math.round((baseAmount * commissionPercent / 100) * 100) / 100;
+          const freelancerAmount = Math.round((baseAmount - platformCommission) * 100) / 100;
+
+          // Update negotiation payment status with correct values
           await supabase
             .from('negotiations')
             .update({
               payment_status: 'paid_escrow',
+              freelancer_amount: freelancerAmount,
+              platform_commission: platformCommission,
+              stripe_processing_fee: 0,
             })
             .eq('id', metadata.negotiation_id);
+
+          // Credit pending balance
+          const { data: wallet } = await supabase
+            .from('freelancer_wallet')
+            .select('*')
+            .eq('profile_id', negotiation.target_profile_id)
+            .single();
+
+          if (wallet) {
+            await supabase
+              .from('freelancer_wallet')
+              .update({
+                pending_balance: (wallet.pending_balance || 0) + freelancerAmount,
+              })
+              .eq('profile_id', negotiation.target_profile_id);
+          } else {
+            await supabase
+              .from('freelancer_wallet')
+              .insert({
+                profile_id: negotiation.target_profile_id,
+                pending_balance: freelancerAmount,
+                available_balance: 0,
+                total_earned: 0,
+                total_withdrawn: 0,
+              });
+          }
 
           console.log('Updated negotiation payment status to paid_escrow');
         }
@@ -140,64 +271,93 @@ serve(async (req) => {
         if (metadata.proposal_id) {
           const { data: proposal } = await supabase
             .from('proposals')
-            .select('freelancer_id, freelancer_amount')
+            .select('freelancer_id, freelancer_amount, payment_status')
             .eq('id', metadata.proposal_id)
             .single();
 
-          if (proposal && proposal.freelancer_amount) {
-            // Move from pending to available in wallet
-            const { data: wallet } = await supabase
-              .from('freelancer_wallet')
-              .select('*')
-              .eq('profile_id', proposal.freelancer_id)
-              .single();
+          if (proposal) {
+            // IDEMPOTENCY: Skip if already released
+            if (proposal.payment_status === 'released') {
+              console.log('⚠️ Proposal escrow already released (webhook):', metadata.proposal_id);
+              break;
+            }
 
-            if (wallet) {
-              await supabase
+            if (proposal.freelancer_amount) {
+              // Move from pending to available in wallet (ONLY ONCE)
+              const { data: wallet } = await supabase
                 .from('freelancer_wallet')
-                .update({
-                  available_balance: (wallet.available_balance || 0) + proposal.freelancer_amount,
-                  pending_balance: Math.max(0, (wallet.pending_balance || 0) - proposal.freelancer_amount),
-                  total_earned: (wallet.total_earned || 0) + proposal.freelancer_amount,
-                })
-                .eq('profile_id', proposal.freelancer_id);
+                .select('*')
+                .eq('profile_id', proposal.freelancer_id)
+                .single();
 
-              console.log('Updated freelancer wallet - funds now available for withdrawal');
+              if (wallet) {
+                const newAvailable = (wallet.available_balance || 0) + proposal.freelancer_amount;
+                const newPending = Math.max(0, (wallet.pending_balance || 0) - proposal.freelancer_amount);
+                const newTotalEarned = (wallet.total_earned || 0) + proposal.freelancer_amount;
+
+                console.log('💰 Releasing escrow (webhook):', {
+                  proposal_id: metadata.proposal_id,
+                  releasing: proposal.freelancer_amount,
+                  new_available: newAvailable,
+                  new_pending: newPending,
+                  new_total: newTotalEarned
+                });
+
+                await supabase
+                  .from('freelancer_wallet')
+                  .update({
+                    available_balance: newAvailable,
+                    pending_balance: newPending,
+                    total_earned: newTotalEarned,
+                  })
+                  .eq('profile_id', proposal.freelancer_id);
+
+                console.log('Updated freelancer wallet - funds now available for withdrawal');
+              }
             }
           }
         } else if (metadata.negotiation_id) {
           const { data: negotiation } = await supabase
             .from('negotiations')
-            .select('business_id')
+            .select('target_profile_id, freelancer_amount, payment_status')
             .eq('id', metadata.negotiation_id)
             .single();
 
-          if (negotiation && metadata.freelancer_amount) {
-            const freelancerAmount = parseFloat(metadata.freelancer_amount);
+          if (negotiation) {
+            // IDEMPOTENCY: Skip if already released
+            if (negotiation.payment_status === 'released') {
+              console.log('⚠️ Negotiation escrow already released (webhook):', metadata.negotiation_id);
+              break;
+            }
 
-            // Get business profile_id
-            const { data: businessProfile } = await supabase
-              .from('business_profiles')
-              .select('profile_id')
-              .eq('id', negotiation.business_id)
-              .single();
-
-            if (businessProfile) {
+            if (negotiation.freelancer_amount) {
               const { data: wallet } = await supabase
                 .from('freelancer_wallet')
                 .select('*')
-                .eq('profile_id', businessProfile.profile_id)
+                .eq('profile_id', negotiation.target_profile_id)
                 .single();
 
               if (wallet) {
+                const newAvailable = (wallet.available_balance || 0) + negotiation.freelancer_amount;
+                const newPending = Math.max(0, (wallet.pending_balance || 0) - negotiation.freelancer_amount);
+                const newTotalEarned = (wallet.total_earned || 0) + negotiation.freelancer_amount;
+
+                console.log('💰 Releasing negotiation escrow (webhook):', {
+                  negotiation_id: metadata.negotiation_id,
+                  releasing: negotiation.freelancer_amount,
+                  new_available: newAvailable,
+                  new_pending: newPending,
+                  new_total: newTotalEarned
+                });
+
                 await supabase
                   .from('freelancer_wallet')
                   .update({
-                    available_balance: (wallet.available_balance || 0) + freelancerAmount,
-                    pending_balance: Math.max(0, (wallet.pending_balance || 0) - freelancerAmount),
-                    total_earned: (wallet.total_earned || 0) + freelancerAmount,
+                    available_balance: newAvailable,
+                    pending_balance: newPending,
+                    total_earned: newTotalEarned,
                   })
-                  .eq('profile_id', businessProfile.profile_id);
+                  .eq('profile_id', negotiation.target_profile_id);
 
                 console.log('Updated business wallet - funds now available for withdrawal');
               }

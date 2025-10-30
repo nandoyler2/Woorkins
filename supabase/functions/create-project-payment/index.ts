@@ -51,6 +51,11 @@ serve(async (req) => {
       throw new Error('Proposal not found');
     }
 
+    // Verify accepted_amount is set
+    if (!proposal.accepted_amount || proposal.accepted_amount <= 0) {
+      throw new Error('Accepted amount not defined for this proposal');
+    }
+
     // Verify user is the project owner
     const { data: projectOwner } = await supabaseClient
       .from('profiles')
@@ -62,32 +67,36 @@ serve(async (req) => {
       throw new Error('Unauthorized: Not the project owner');
     }
 
-    // Calculate payment split (10% commission + Stripe fees)
-    const { data: splitData } = await supabaseClient
-      .rpc('calculate_payment_split', {
-        _amount: proposal.budget,
-        _platform_commission_percent: 10,
-      });
+    // Get freelancer's plan commission percentage
+    const { data: planData } = await supabaseClient
+      .from('user_subscription_plans')
+      .select('plan_type, subscription_plans(commission_percentage)')
+      .eq('user_id', proposal.freelancer.user_id)
+      .eq('is_active', true)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
 
-    if (!splitData || !Array.isArray(splitData) || splitData.length === 0) {
-      throw new Error('Failed to calculate payment split');
-    }
+    const commissionPercent = (planData?.subscription_plans as any)?.[0]?.commission_percentage || 10;
+    
+    // Calculate payment split (only Woorkins commission, NO Stripe fee deduction from freelancer)
+    const baseAmount = proposal.accepted_amount;
+    const platformCommission = Math.round((baseAmount * commissionPercent / 100) * 100) / 100;
+    const freelancerAmount = Math.round((baseAmount - platformCommission) * 100) / 100;
 
-    const split = splitData[0] as {
-      freelancer_amount: number;
-      platform_commission: number;
-      stripe_fee: number;
-      total_amount: number;
-    };
-
-    console.log('Payment split calculated:', split);
+    console.log('Payment split calculated:', {
+      accepted_amount: baseAmount,
+      commission_percent: commissionPercent,
+      platform_commission: platformCommission,
+      freelancer_amount: freelancerAmount
+    });
 
     // Create Stripe Payment Intent - TODO o dinheiro vai para NOSSA conta
     const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
       apiVersion: '2023-10-16',
     });
 
-    const amount = Math.round(proposal.budget * 100); // Convert to cents
+    const amount = Math.round(baseAmount * 100); // Convert to cents
 
     // Criar Stripe Checkout Session
     const session = await stripe.checkout.sessions.create({
@@ -116,26 +125,25 @@ serve(async (req) => {
           freelancer_id: proposal.freelancer_id,
           freelancer_profile_id: proposal.freelancer.id,
           user_id: user.id,
-          freelancer_amount: split.freelancer_amount.toString(),
-          platform_commission: split.platform_commission.toString(),
-          stripe_fee: split.stripe_fee.toString(),
-          gross_amount: proposal.budget.toString(),
+          freelancer_amount: freelancerAmount.toString(),
+          platform_commission: platformCommission.toString(),
+          stripe_fee: '0',
+          gross_amount: baseAmount.toString(),
         },
       },
     });
 
     console.log('Checkout Session created:', session.id);
 
-    // Update proposal with payment info
+    // Update proposal with payment info (DON'T credit wallet here - only on payment_intent.succeeded)
     const { error: updateError } = await supabaseClient
       .from('proposals')
       .update({
         stripe_payment_intent_id: session.payment_intent as string,
         payment_status: 'pending',
-        accepted_amount: proposal.budget,
-        freelancer_amount: split.freelancer_amount,
-        platform_commission: split.platform_commission,
-        stripe_processing_fee: split.stripe_fee,
+        freelancer_amount: freelancerAmount,
+        platform_commission: platformCommission,
+        stripe_processing_fee: 0,
       })
       .eq('id', proposal_id);
 
@@ -144,39 +152,13 @@ serve(async (req) => {
       throw updateError;
     }
 
-    // Create or update freelancer wallet - adiciona ao pending_balance
-    const { data: existingWallet } = await supabaseClient
-      .from('freelancer_wallet')
-      .select('*')
-      .eq('profile_id', proposal.freelancer.id)
-      .single();
-
-    if (existingWallet) {
-      await supabaseClient
-        .from('freelancer_wallet')
-        .update({
-          pending_balance: (existingWallet.pending_balance || 0) + split.freelancer_amount,
-        })
-        .eq('profile_id', proposal.freelancer.id);
-    } else {
-      await supabaseClient
-        .from('freelancer_wallet')
-        .insert({
-          profile_id: proposal.freelancer.id,
-          pending_balance: split.freelancer_amount,
-          available_balance: 0,
-          total_earned: 0,
-          total_withdrawn: 0,
-        });
-    }
-
     return new Response(
       JSON.stringify({
         url: session.url,
-        amount: proposal.budget,
-        freelancer_amount: split.freelancer_amount,
-        platform_commission: split.platform_commission,
-        stripe_fee: split.stripe_fee,
+        amount: baseAmount,
+        freelancer_amount: freelancerAmount,
+        platform_commission: platformCommission,
+        stripe_fee: 0,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

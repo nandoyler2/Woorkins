@@ -56,32 +56,46 @@ serve(async (req) => {
       throw new Error('Final amount not set');
     }
 
-    // Calculate payment split (10% commission + Stripe fees)
-    const { data: splitData } = await supabaseClient
-      .rpc('calculate_payment_split', {
-        _amount: negotiation.final_amount,
-        _platform_commission_percent: 10,
-      });
+    // Get target profile's plan commission percentage
+    const { data: targetProfile } = await supabaseClient
+      .from('profiles')
+      .select('user_id')
+      .eq('id', negotiation.target_profile_id)
+      .single();
 
-    if (!splitData || !Array.isArray(splitData) || splitData.length === 0) {
-      throw new Error('Failed to calculate payment split');
+    if (!targetProfile) {
+      throw new Error('Target profile not found');
     }
 
-    const split = splitData[0] as {
-      freelancer_amount: number;
-      platform_commission: number;
-      stripe_fee: number;
-      total_amount: number;
-    };
+    const { data: planData } = await supabaseClient
+      .from('user_subscription_plans')
+      .select('plan_type, subscription_plans(commission_percentage)')
+      .eq('user_id', targetProfile.user_id)
+      .eq('is_active', true)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
 
-    console.log('Payment split calculated:', split);
+    const commissionPercent = (planData?.subscription_plans as any)?.[0]?.commission_percentage || 10;
+    
+    // Calculate payment split (only Woorkins commission, NO Stripe fee deduction from freelancer)
+    const baseAmount = negotiation.final_amount;
+    const platformCommission = Math.round((baseAmount * commissionPercent / 100) * 100) / 100;
+    const freelancerAmount = Math.round((baseAmount - platformCommission) * 100) / 100;
+
+    console.log('Payment split calculated:', {
+      final_amount: baseAmount,
+      commission_percent: commissionPercent,
+      platform_commission: platformCommission,
+      freelancer_amount: freelancerAmount
+    });
 
     // Create Stripe Payment Intent - TODO o dinheiro vai para NOSSA conta
     const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
       apiVersion: '2023-10-16',
     });
 
-    const amount = Math.round(negotiation.final_amount * 100);
+    const amount = Math.round(baseAmount * 100);
 
     const paymentIntent = await stripe.paymentIntents.create({
       amount,
@@ -93,21 +107,24 @@ serve(async (req) => {
         business_id: negotiation.business_id,
         business_profile_id: negotiation.business.profile_id,
         user_id: user.id,
-        freelancer_amount: split.freelancer_amount.toString(),
-        platform_commission: split.platform_commission.toString(),
-        stripe_fee: split.stripe_fee.toString(),
-        gross_amount: negotiation.final_amount.toString(),
+        freelancer_amount: freelancerAmount.toString(),
+        platform_commission: platformCommission.toString(),
+        stripe_fee: '0',
+        gross_amount: baseAmount.toString(),
       },
     });
 
     console.log('Payment Intent created:', paymentIntent.id);
 
-    // Update negotiation with payment info
+    // Update negotiation with payment info (DON'T credit wallet here - only on payment_intent.succeeded)
     const { error: updateError } = await supabaseClient
       .from('negotiations')
       .update({
         stripe_payment_intent_id: paymentIntent.id,
         payment_status: 'pending',
+        freelancer_amount: freelancerAmount,
+        platform_commission: platformCommission,
+        stripe_processing_fee: 0,
       })
       .eq('id', negotiation_id);
 
@@ -116,39 +133,13 @@ serve(async (req) => {
       throw updateError;
     }
 
-    // Create or update business wallet - adiciona ao pending_balance
-    const { data: existingWallet } = await supabaseClient
-      .from('freelancer_wallet')
-      .select('*')
-      .eq('profile_id', negotiation.business.profile_id)
-      .single();
-
-    if (existingWallet) {
-      await supabaseClient
-        .from('freelancer_wallet')
-        .update({
-          pending_balance: (existingWallet.pending_balance || 0) + split.freelancer_amount,
-        })
-        .eq('profile_id', negotiation.business.profile_id);
-    } else {
-      await supabaseClient
-        .from('freelancer_wallet')
-        .insert({
-          profile_id: negotiation.business.profile_id,
-          pending_balance: split.freelancer_amount,
-          available_balance: 0,
-          total_earned: 0,
-          total_withdrawn: 0,
-        });
-    }
-
     return new Response(
       JSON.stringify({
-        client_secret: paymentIntent.client_secret,
-        amount: negotiation.final_amount,
-        freelancer_amount: split.freelancer_amount,
-        platform_commission: split.platform_commission,
-        stripe_fee: split.stripe_fee,
+        clientSecret: paymentIntent.client_secret,
+        amount: baseAmount,
+        freelancer_amount: freelancerAmount,
+        platform_commission: platformCommission,
+        stripe_fee: 0,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

@@ -76,8 +76,8 @@ export function ProposalChatHeader({
         // Esconde assim que começar a cortar
         if (scroll > client - 2) setCompactHeader(true);
       } else {
-        // Só reexibe com folga de 40px
-        if (scroll <= client - 40) setCompactHeader(false);
+        // Só reexibe com folga de 10px
+        if (scroll <= client - 10) setCompactHeader(false);
       }
     };
 

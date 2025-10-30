@@ -51,20 +51,98 @@ serve(async (req) => {
     const payment = await response.json();
     logStep("Status do pagamento no MP", { status: payment.status });
 
-    // Buscar registro no banco
-    const { data: paymentRecord, error: findError } = await supabaseClient
+    // Buscar registro no banco (Woorkoins ou Propostas)
+    const { data: paymentRecord } = await supabaseClient
       .from("woorkoins_mercadopago_payments")
       .select("*")
       .eq("payment_id", payment_id.toString())
       .single();
 
-    if (findError || !paymentRecord) {
+    const { data: proposalPaymentRecord } = await supabaseClient
+      .from("proposals_mercadopago_payments")
+      .select("*, proposal:proposals!inner(*, freelancer:profiles!proposals_freelancer_id_fkey(id, user_id))")
+      .eq("payment_id", payment_id.toString())
+      .single();
+
+    if (!paymentRecord && !proposalPaymentRecord) {
       throw new Error("Pagamento não encontrado no banco");
     }
 
     // Se o pagamento foi aprovado mas ainda não foi processado no banco
     const isPaid = (payment.status === "approved" || payment.status === "paid");
-    if (isPaid && paymentRecord.status !== "paid") {
+    
+    // Processar pagamento de proposta
+    if (proposalPaymentRecord && isPaid && proposalPaymentRecord.status !== "paid") {
+      logStep("Pagamento de proposta aprovado, processando", {
+        proposalId: proposalPaymentRecord.proposal_id,
+        amount: proposalPaymentRecord.amount,
+      });
+
+      // Atualizar status do pagamento
+      await supabaseClient
+        .from("proposals_mercadopago_payments")
+        .update({
+          status: "paid",
+          credited_at: new Date().toISOString(),
+          payment_data: payment,
+        })
+        .eq("payment_id", payment_id.toString());
+
+      // Atualizar status da proposta
+      await supabaseClient
+        .from("proposals")
+        .update({
+          payment_status: "paid",
+          status: "in_progress",
+        })
+        .eq("id", proposalPaymentRecord.proposal_id);
+
+      // Atualizar carteira do freelancer
+      const freelancerId = proposalPaymentRecord.proposal.freelancer_id;
+      const freelancerAmount = proposalPaymentRecord.proposal.freelancer_amount;
+
+      const { data: existingWallet } = await supabaseClient
+        .from('freelancer_wallet')
+        .select('*')
+        .eq('profile_id', freelancerId)
+        .single();
+
+      if (existingWallet) {
+        await supabaseClient
+          .from('freelancer_wallet')
+          .update({
+            pending_balance: (existingWallet.pending_balance || 0) + freelancerAmount,
+          })
+          .eq('profile_id', freelancerId);
+      } else {
+        await supabaseClient
+          .from('freelancer_wallet')
+          .insert({
+            profile_id: freelancerId,
+            pending_balance: freelancerAmount,
+            available_balance: 0,
+            total_earned: 0,
+            total_withdrawn: 0,
+          });
+      }
+
+      logStep("Proposta processada com sucesso");
+
+      return new Response(
+        JSON.stringify({ 
+          status: "paid",
+          credited: true,
+          message: "Pagamento confirmado e proposta atualizada"
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        }
+      );
+    }
+    
+    // Processar pagamento de Woorkoins
+    if (paymentRecord && isPaid && paymentRecord.status !== "paid") {
       logStep("Pagamento aprovado, creditando Woorkoins", {
         profileId: paymentRecord.profile_id,
         amount: paymentRecord.amount,
@@ -129,10 +207,11 @@ serve(async (req) => {
     }
 
     // Retornar status atual
+    const currentRecord = proposalPaymentRecord || paymentRecord;
     return new Response(
       JSON.stringify({ 
         status: isPaid ? "paid" : payment.status,
-        credited: paymentRecord.status === "paid"
+        credited: currentRecord.status === "paid"
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },

@@ -191,6 +191,27 @@ serve(async (req) => {
       const split = splitData[0];
       logStep("Split calculado", split);
 
+      // Salvar pagamento na tabela de rastreamento
+      const { error: insertPaymentError } = await supabaseClient
+        .from("proposals_mercadopago_payments")
+        .insert({
+          proposal_id: proposal_id,
+          user_id: user.id,
+          payment_id: paymentResponse.id.toString(),
+          amount: finalAmount,
+          status: paymentStatus,
+          payment_method: paymentMethod,
+          qr_code: paymentResponse.point_of_interaction?.transaction_data?.qr_code,
+          qr_code_base64: paymentResponse.point_of_interaction?.transaction_data?.qr_code_base64,
+          ticket_url: paymentResponse.point_of_interaction?.transaction_data?.ticket_url,
+          payment_data: paymentResponse,
+          credited_at: paymentStatus === 'paid' ? new Date().toISOString() : null,
+        });
+
+      if (insertPaymentError) {
+        logStep("Erro ao salvar pagamento na tabela de rastreamento", insertPaymentError);
+      }
+
       // Atualizar proposta com informações do pagamento
       const { error: updateError } = await supabaseClient
         .from('proposals')

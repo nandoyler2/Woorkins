@@ -58,17 +58,14 @@ serve(async (req) => {
         .eq("payment_id", paymentId.toString())
         .single();
 
-      // Buscar também se é um pagamento de proposta
-      const { data: proposalRecord } = await supabaseClient
-        .from("proposals")
-        .select(`
-          *,
-          freelancer:profiles!proposals_freelancer_id_fkey(id, user_id, full_name)
-        `)
-        .eq("mercadopago_payment_id", paymentId.toString())
+      // Buscar também se é um pagamento de proposta na nova tabela
+      const { data: proposalPaymentRecord } = await supabaseClient
+        .from("proposals_mercadopago_payments")
+        .select("*, proposal:proposals!inner(*)")
+        .eq("payment_id", paymentId.toString())
         .single();
 
-      if ((findError || !paymentRecord) && !proposalRecord) {
+      if ((findError || !paymentRecord) && !proposalPaymentRecord) {
         logStep("Pagamento não encontrado no banco", { paymentId });
         return new Response(JSON.stringify({ status: "payment not found" }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -78,45 +75,65 @@ serve(async (req) => {
 
       const isPaid = (payment.status === "approved" || payment.status === "paid");
 
-      // Processar pagamento de proposta
-      if (proposalRecord && isPaid && proposalRecord.payment_status !== "paid") {
-        logStep("Pagamento de proposta aprovado/pago", {
-          proposalId: proposalRecord.id,
+      // Processar pagamento de proposta via nova tabela
+      if (proposalPaymentRecord && isPaid && proposalPaymentRecord.status !== "paid") {
+        logStep("Pagamento de proposta aprovado/pago via webhook", {
+          proposalId: proposalPaymentRecord.proposal_id,
           status: payment.status,
         });
+
+        // Atualizar registro do pagamento
+        await supabaseClient
+          .from("proposals_mercadopago_payments")
+          .update({
+            status: "paid",
+            credited_at: new Date().toISOString(),
+            payment_data: payment,
+          })
+          .eq("payment_id", paymentId.toString());
 
         // Atualizar status da proposta
         await supabaseClient
           .from("proposals")
           .update({
             payment_status: "paid",
+            status: "in_progress",
           })
-          .eq("id", proposalRecord.id);
+          .eq("id", proposalPaymentRecord.proposal_id);
 
-        // Atualizar carteira do freelancer
-        const { data: existingWallet } = await supabaseClient
-          .from('freelancer_wallet')
-          .select('*')
-          .eq('profile_id', proposalRecord.freelancer.id)
+        // Buscar freelancer da proposta
+        const { data: proposal } = await supabaseClient
+          .from("proposals")
+          .select("freelancer_id, freelancer_amount")
+          .eq("id", proposalPaymentRecord.proposal_id)
           .single();
 
-        if (existingWallet) {
-          await supabaseClient
+        if (proposal) {
+          // Atualizar carteira do freelancer
+          const { data: existingWallet } = await supabaseClient
             .from('freelancer_wallet')
-            .update({
-              pending_balance: (existingWallet.pending_balance || 0) + proposalRecord.freelancer_amount,
-            })
-            .eq('profile_id', proposalRecord.freelancer.id);
-        } else {
-          await supabaseClient
-            .from('freelancer_wallet')
-            .insert({
-              profile_id: proposalRecord.freelancer.id,
-              pending_balance: proposalRecord.freelancer_amount,
-              available_balance: 0,
-              total_earned: 0,
-              total_withdrawn: 0,
-            });
+            .select('*')
+            .eq('profile_id', proposal.freelancer_id)
+            .single();
+
+          if (existingWallet) {
+            await supabaseClient
+              .from('freelancer_wallet')
+              .update({
+                pending_balance: (existingWallet.pending_balance || 0) + proposal.freelancer_amount,
+              })
+              .eq('profile_id', proposal.freelancer_id);
+          } else {
+            await supabaseClient
+              .from('freelancer_wallet')
+              .insert({
+                profile_id: proposal.freelancer_id,
+                pending_balance: proposal.freelancer_amount,
+                available_balance: 0,
+                total_earned: 0,
+                total_withdrawn: 0,
+              });
+          }
         }
 
         logStep("Proposta atualizada com sucesso no webhook");

@@ -2332,6 +2332,65 @@ export type Database = {
           },
         ]
       }
+      proposals_mercadopago_payments: {
+        Row: {
+          amount: number
+          created_at: string
+          credited_at: string | null
+          id: string
+          payment_data: Json | null
+          payment_id: string
+          payment_method: string | null
+          proposal_id: string
+          qr_code: string | null
+          qr_code_base64: string | null
+          status: string
+          ticket_url: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          credited_at?: string | null
+          id?: string
+          payment_data?: Json | null
+          payment_id: string
+          payment_method?: string | null
+          proposal_id: string
+          qr_code?: string | null
+          qr_code_base64?: string | null
+          status?: string
+          ticket_url?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          credited_at?: string | null
+          id?: string
+          payment_data?: Json | null
+          payment_id?: string
+          payment_method?: string | null
+          proposal_id?: string
+          qr_code?: string | null
+          qr_code_base64?: string | null
+          status?: string
+          ticket_url?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proposals_mercadopago_payments_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "proposals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reports: {
         Row: {
           admin_notes: string | null

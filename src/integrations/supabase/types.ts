@@ -2220,6 +2220,7 @@ export type Database = {
           freelancer_id: string
           id: string
           is_unlocked: boolean | null
+          mercadopago_payment_id: string | null
           message: string
           net_amount: number | null
           owner_confirmed_at: string | null
@@ -2252,6 +2253,7 @@ export type Database = {
           freelancer_id: string
           id?: string
           is_unlocked?: boolean | null
+          mercadopago_payment_id?: string | null
           message: string
           net_amount?: number | null
           owner_confirmed_at?: string | null
@@ -2284,6 +2286,7 @@ export type Database = {
           freelancer_id?: string
           id?: string
           is_unlocked?: boolean | null
+          mercadopago_payment_id?: string | null
           message?: string
           net_amount?: number | null
           owner_confirmed_at?: string | null

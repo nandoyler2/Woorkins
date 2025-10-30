@@ -9,7 +9,9 @@ interface ActiveWork {
   project_id: string;
   project_title: string;
   delivery_days: number;
-  payment_captured_at: string;
+  payment_captured_at: string | null;
+  created_at: string;
+  updated_at: string;
   is_freelancer: boolean;
   other_user_name: string;
 }
@@ -36,6 +38,8 @@ export function ActiveWorkBanner({ profileId }: ActiveWorkBannerProps) {
           id,
           delivery_days,
           payment_captured_at,
+          created_at,
+          updated_at,
           project:projects!inner(
             id,
             title,
@@ -45,7 +49,7 @@ export function ActiveWorkBanner({ profileId }: ActiveWorkBannerProps) {
         `)
         .eq('freelancer_id', profileId)
         .eq('status', 'accepted')
-        .in('payment_status', ['captured', 'paid_escrow'])
+        .in('payment_status', ['captured', 'paid_escrow', 'paid'])
         .eq('work_status', 'in_progress')
         .order('payment_captured_at', { ascending: false })
         .limit(1)
@@ -58,6 +62,8 @@ export function ActiveWorkBanner({ profileId }: ActiveWorkBannerProps) {
           project_title: asFreelancer.project.title,
           delivery_days: asFreelancer.delivery_days,
           payment_captured_at: asFreelancer.payment_captured_at,
+          created_at: asFreelancer.created_at,
+          updated_at: asFreelancer.updated_at,
           is_freelancer: true,
           other_user_name: asFreelancer.project.owner.full_name,
         });
@@ -72,6 +78,8 @@ export function ActiveWorkBanner({ profileId }: ActiveWorkBannerProps) {
           id,
           delivery_days,
           payment_captured_at,
+          created_at,
+          updated_at,
           freelancer:profiles!proposals_freelancer_id_fkey(full_name),
           project:projects!inner(
             id,
@@ -81,7 +89,7 @@ export function ActiveWorkBanner({ profileId }: ActiveWorkBannerProps) {
         `)
         .eq('project.profile_id', profileId)
         .eq('status', 'accepted')
-        .in('payment_status', ['captured', 'paid_escrow'])
+        .in('payment_status', ['captured', 'paid_escrow', 'paid'])
         .eq('work_status', 'in_progress')
         .order('payment_captured_at', { ascending: false })
         .limit(1)
@@ -94,6 +102,8 @@ export function ActiveWorkBanner({ profileId }: ActiveWorkBannerProps) {
           project_title: asOwner.project.title,
           delivery_days: asOwner.delivery_days,
           payment_captured_at: asOwner.payment_captured_at,
+          created_at: asOwner.created_at,
+          updated_at: asOwner.updated_at,
           is_freelancer: false,
           other_user_name: asOwner.freelancer.full_name,
         });
@@ -107,12 +117,12 @@ export function ActiveWorkBanner({ profileId }: ActiveWorkBannerProps) {
 
   const calculateRemainingDays = () => {
     if (!work) return 0;
-    
-    const capturedDate = new Date(work.payment_captured_at);
+    const base = work.payment_captured_at || work.updated_at || work.created_at;
+    const baseDate = new Date(base);
+    if (isNaN(baseDate.getTime())) return work.delivery_days;
     const now = new Date();
-    const daysPassed = Math.floor((now.getTime() - capturedDate.getTime()) / (1000 * 60 * 60 * 24));
+    const daysPassed = Math.floor((now.getTime() - baseDate.getTime()) / (1000 * 60 * 60 * 24));
     const remainingDays = work.delivery_days - daysPassed;
-    
     return remainingDays;
   };
 

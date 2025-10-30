@@ -16,8 +16,9 @@ interface ActiveWork {
   freelancer_completed_at?: string;
   owner_confirmed_at?: string;
   created_at: string;
+  updated_at?: string;
   delivery_days: number;
-  payment_captured_at: string;
+  payment_captured_at: string | null;
   is_freelancer: boolean;
   other_user_name: string;
 }
@@ -36,9 +37,11 @@ export function ActiveWorksWidget({ profileId }: ActiveWorksWidgetProps) {
   }, [profileId]);
 
   const calculateRemainingDays = (work: ActiveWork) => {
-    const capturedDate = new Date(work.payment_captured_at);
+    const base = work.payment_captured_at || work.updated_at || work.created_at;
+    const baseDate = new Date(base as string);
+    if (isNaN(baseDate.getTime())) return work.delivery_days;
     const now = new Date();
-    const daysPassed = Math.floor((now.getTime() - capturedDate.getTime()) / (1000 * 60 * 60 * 24));
+    const daysPassed = Math.floor((now.getTime() - baseDate.getTime()) / (1000 * 60 * 60 * 24));
     const remainingDays = work.delivery_days - daysPassed;
     return remainingDays;
   };
@@ -56,6 +59,7 @@ export function ActiveWorksWidget({ profileId }: ActiveWorksWidgetProps) {
           freelancer_completed_at,
           owner_confirmed_at,
           created_at,
+          updated_at,
           delivery_days,
           payment_captured_at,
           project:projects!inner(
@@ -66,7 +70,7 @@ export function ActiveWorksWidget({ profileId }: ActiveWorksWidgetProps) {
         `)
         .eq('freelancer_id', profileId)
         .eq('status', 'accepted')
-        .in('payment_status', ['captured', 'paid_escrow'])
+        .in('payment_status', ['captured', 'paid_escrow', 'paid'])
         .in('work_status', ['in_progress', 'freelancer_completed', 'owner_confirmed']);
 
       if (freelancerError) throw freelancerError;
@@ -82,6 +86,7 @@ export function ActiveWorksWidget({ profileId }: ActiveWorksWidgetProps) {
           freelancer_completed_at,
           owner_confirmed_at,
           created_at,
+          updated_at,
           delivery_days,
           payment_captured_at,
           freelancer_id,
@@ -93,7 +98,7 @@ export function ActiveWorksWidget({ profileId }: ActiveWorksWidgetProps) {
         `)
         .eq('project.profile_id', profileId)
         .eq('status', 'accepted')
-        .in('payment_status', ['captured', 'paid_escrow'])
+        .in('payment_status', ['captured', 'paid_escrow', 'paid'])
         .in('work_status', ['in_progress', 'freelancer_completed', 'owner_confirmed']);
 
       if (ownerError) throw ownerError;
@@ -108,6 +113,7 @@ export function ActiveWorksWidget({ profileId }: ActiveWorksWidgetProps) {
         freelancer_completed_at: w.freelancer_completed_at,
         owner_confirmed_at: w.owner_confirmed_at,
         created_at: w.created_at,
+        updated_at: w.updated_at,
         delivery_days: w.delivery_days,
         payment_captured_at: w.payment_captured_at,
         is_freelancer: true,
@@ -123,6 +129,7 @@ export function ActiveWorksWidget({ profileId }: ActiveWorksWidgetProps) {
         freelancer_completed_at: w.freelancer_completed_at,
         owner_confirmed_at: w.owner_confirmed_at,
         created_at: w.created_at,
+        updated_at: w.updated_at,
         delivery_days: w.delivery_days,
         payment_captured_at: w.payment_captured_at,
         is_freelancer: false,

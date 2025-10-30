@@ -1,3 +1,4 @@
+import { useRef, useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { MoreVertical, CheckCircle, DollarSign, Clock, AlertCircle, ExternalLink } from 'lucide-react';
@@ -58,7 +59,7 @@ export function ProposalChatHeader({
   onOpenDispute,
 }: ProposalChatHeaderProps) {
   const { timeRemaining, isExpired } = useCompletionCountdown(proposal.owner_confirmation_deadline || null);
-
+  
   const titleRef = useRef<HTMLHeadingElement>(null);
   const [compactHeader, setCompactHeader] = useState(false);
   const debounceRef = useRef<number | null>(null);
@@ -68,7 +69,7 @@ export function ProposalChatHeader({
     if (!el) return;
 
     const runCheck = () => {
-      // Histerese para evitar “piscar”: exige folga para reexibir
+      // Histerese para evitar "piscar": exige folga para reexibir
       const client = el.clientWidth;
       const scroll = el.scrollWidth;
       if (!compactHeader) {
@@ -274,7 +275,7 @@ export function ProposalChatHeader({
                 className="flex items-center gap-2 cursor-pointer group"
                 onClick={() => window.open(`/projetos/${projectData.id}`, '_blank')}
               >
-                <h3 className="text-sm md:text-base font-bold truncate text-foreground group-hover:text-primary transition-colors">
+                <h3 ref={titleRef} className="text-sm md:text-base font-bold truncate text-foreground group-hover:text-primary transition-colors">
                   {projectData.title}
                 </h3>
                 <ExternalLink className="h-3.5 w-3.5 md:h-4 md:w-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />

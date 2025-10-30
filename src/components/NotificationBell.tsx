@@ -146,15 +146,17 @@ export const NotificationBell = ({ profileId }: { profileId: string }) => {
     const unreadIds = notifications.filter(n => !n.read).map(n => n.id);
     if (unreadIds.length === 0) return;
 
-    await supabase
-      .from('notifications')
-      .update({ read: true })
-      .in('id', unreadIds);
-    
+    // Atualizar estado local imediatamente para feedback instantâneo
     setNotifications(prev =>
       prev.map(n => ({ ...n, read: true }))
     );
     setUnreadCount(0);
+
+    // Atualizar no banco em background
+    await supabase
+      .from('notifications')
+      .update({ read: true })
+      .in('id', unreadIds);
     
     toast({
       title: "Notificações marcadas",

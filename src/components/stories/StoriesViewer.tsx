@@ -340,7 +340,7 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
-      <DialogContent className="z-[9999] max-w-[500px] w-full h-[min(90vh,800px)] p-0 bg-transparent border-0 shadow-none overflow-visible [&>button]:hidden">
+      <DialogContent className="z-[9999] w-[95vw] sm:w-[90vw] md:w-[500px] lg:w-[450px] xl:w-[500px] h-[90vh] sm:h-[85vh] md:h-[80vh] max-h-[900px] p-0 bg-transparent border-0 shadow-none overflow-visible [&>button]:hidden">
         <DialogTitle className="sr-only">Stories</DialogTitle>
         <DialogDescription className="sr-only">Visualizador de stories</DialogDescription>
         {isLoading || stories.length === 0 ? (
@@ -351,21 +351,21 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
             </div>
           </div>
         ) : (
-          <div className="relative w-full h-full flex items-center justify-center gap-8">
-            {/* Botão Anterior - Fora do story */}
+          <div className="relative w-full h-full flex items-center justify-center">
+            {/* Botão Anterior - Fora do story (oculto em mobile) */}
             {currentIndex > 0 && (
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={handlePrevious}
-                className="absolute left-[-60px] top-1/2 -translate-y-1/2 text-white hover:bg-white/20 w-12 h-12 rounded-full bg-black/30 backdrop-blur-sm z-30"
+                className="hidden md:flex absolute left-[-60px] top-1/2 -translate-y-1/2 text-white hover:bg-white/20 w-12 h-12 rounded-full bg-black/30 backdrop-blur-sm z-30"
               >
                 <ChevronLeft className="w-8 h-8" />
               </Button>
             )}
 
             {/* Container do Story */}
-            <div className="relative w-full max-w-[400px] aspect-[9/16] flex flex-col rounded-2xl overflow-hidden bg-black shadow-2xl">
+            <div className="relative w-full h-full flex flex-col rounded-2xl overflow-hidden bg-black shadow-2xl">
           {/* Progress bars */}
           <div className="absolute top-0 left-0 right-0 z-20 flex gap-1.5 p-3">
             {stories.map((_, idx) => (
@@ -614,13 +614,13 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
           {/* Navigation buttons - removidos, agora estão fora */}
         </div>
 
-            {/* Botão Próximo - Fora do story */}
+            {/* Botão Próximo - Fora do story (oculto em mobile) */}
             {currentIndex < stories.length - 1 && (
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={handleNext}
-                className="absolute right-[-60px] top-1/2 -translate-y-1/2 text-white hover:bg-white/20 w-12 h-12 rounded-full bg-black/30 backdrop-blur-sm z-30"
+                className="hidden md:flex absolute right-[-60px] top-1/2 -translate-y-1/2 text-white hover:bg-white/20 w-12 h-12 rounded-full bg-black/30 backdrop-blur-sm z-30"
               >
                 <ChevronRight className="w-8 h-8" />
               </Button>

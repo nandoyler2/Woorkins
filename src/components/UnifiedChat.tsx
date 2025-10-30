@@ -1070,41 +1070,7 @@ useEffect(() => {
                 <div className="flex gap-2">
                   <Button
                     size="sm"
-                    onClick={async () => {
-                      try {
-                        const { error } = await supabase
-                          .from('proposals')
-                          .update({
-                            work_status: 'completed',
-                            payment_status: 'released',
-                            escrow_released_at: new Date().toISOString(),
-                          })
-                          .eq('id', conversationId);
-
-                        if (error) throw error;
-
-                        await supabase.from('proposal_status_history').insert({
-                          proposal_id: conversationId,
-                          status_type: 'completed',
-                          changed_by: profileId,
-                          message: 'Trabalho confirmado como concluído pelo cliente',
-                        });
-
-                        await loadProposalData();
-
-                        toast({
-                          title: '✅ Trabalho Concluído!',
-                          description: 'O pagamento foi liberado para o freelancer',
-                        });
-                      } catch (error) {
-                        console.error('Erro ao confirmar conclusão:', error);
-                        toast({
-                          variant: 'destructive',
-                          title: 'Erro',
-                          description: 'Não foi possível confirmar a conclusão',
-                        });
-                      }
-                    }}
+                    onClick={() => setShowCompletionDialog(true)}
                     className="bg-white hover:bg-slate-50 text-green-700 border-2 border-green-700 font-semibold shadow-md"
                   >
                     ✅ Confirmar Conclusão

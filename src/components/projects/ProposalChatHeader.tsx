@@ -123,6 +123,11 @@ export function ProposalChatHeader({
       }
     }
 
+    // Se já foi pago, não mostrar mais botões de aceitação/contra-proposta
+    if (proposal.payment_status === 'paid' || proposal.payment_status === 'paid_escrow') {
+      return null;
+    }
+
     // Proposta aceita - aguardando pagamento
     if (proposal.status === 'accepted' && proposal.payment_status !== 'paid' && isOwner) {
       return (

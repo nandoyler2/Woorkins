@@ -351,9 +351,9 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
             </div>
           </div>
         ) : (
-          <div className="relative flex items-center justify-center gap-4">
+          <div className="relative flex items-end justify-center gap-4">
             {/* Miniaturas Esquerda - Desktop Only */}
-            <div className="hidden lg:flex flex-col gap-3">
+            <div className="hidden lg:flex flex-col gap-3 mb-8">
               {stories.slice(Math.max(0, currentIndex - 3), currentIndex).map((story, idx) => {
                 const actualIndex = Math.max(0, currentIndex - 3) + idx;
                 return (
@@ -637,7 +637,7 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
         </div>
 
             {/* Miniaturas Direita - Desktop Only */}
-            <div className="hidden lg:flex flex-col gap-3">
+            <div className="hidden lg:flex flex-col gap-3 mb-8">
               {stories.slice(currentIndex + 1, Math.min(stories.length, currentIndex + 4)).map((story, idx) => {
                 const actualIndex = currentIndex + 1 + idx;
                 return (

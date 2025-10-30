@@ -260,9 +260,9 @@ export function ProposalChatHeader({
 
   return (
     <div className="border-b bg-gradient-to-br from-background via-primary/5 to-background p-4 shadow-sm">
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex items-center justify-between gap-4 relative">
         {/* Coluna esquerda: Info do projeto */}
-        <div className="bg-card/50 backdrop-blur-sm rounded-lg p-3 border border-border/50 w-fit flex-shrink-0">
+        <div className="bg-card/50 backdrop-blur-sm rounded-lg p-3 border border-border/50 w-fit flex-shrink-0 z-10">
           {projectData && (
             <div>
               <div className="flex items-center gap-2 mb-1">
@@ -284,8 +284,8 @@ export function ProposalChatHeader({
           )}
         </div>
 
-        {/* Centro: Valor - visível em md+ */}
-        <div className={`hidden md:flex flex-col items-center px-3 py-1.5 rounded-lg border-2 shadow-md flex-shrink-0 ${
+        {/* Centro: Valor - SEMPRE no meio absoluto */}
+        <div className={`absolute left-1/2 -translate-x-1/2 hidden md:flex flex-col items-center px-3 py-1.5 rounded-lg border-2 shadow-md z-20 ${
           proposal.payment_status === 'paid' || proposal.payment_status === 'paid_escrow' || proposal.payment_status === 'captured'
             ? 'bg-gradient-to-r from-green-500/10 via-green-500/5 to-green-500/10 border-green-500/30'
             : 'bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 border-primary/30'
@@ -311,7 +311,7 @@ export function ProposalChatHeader({
         </div>
 
         {/* Coluna direita: Botões de ação */}
-        <div className="flex items-center gap-2 flex-shrink-0 ml-auto">
+        <div className="flex items-center gap-2 flex-shrink-0 ml-auto z-10">
           {renderActionButtons()}
 
           <DropdownMenu>

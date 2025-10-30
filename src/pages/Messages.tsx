@@ -382,7 +382,7 @@ export default function Messages() {
           type: 'proposal' as const,
           title: prop.project.title,
           otherUser: otherUserData,
-          lastMessage: prop.message.substring(0, 60) + '...',
+          lastMessage: prop.message ? prop.message.substring(0, 60) + '...' : undefined,
           lastMessageAt: prop.updated_at,
           unreadCount: unreadMap.get(`proposal-${prop.id}`) ?? (count || 0),
           status: prop.status,
@@ -461,28 +461,49 @@ export default function Messages() {
   // Função para obter informações dinâmicas do badge baseado no status
   const getProposalBadgeInfo = (conv: Conversation) => {
     const isFreelancer = conv.freelancerId === profileId;
+    const isOwner = !isFreelancer;
     const status = conv.status;
     
-    // Badges para propostas
+    // Badges para propostas - PRIORIZAR work_status e payment_status
     if (conv.type === 'proposal') {
+      const ws = conv.workStatus;
+      const isPaid = ['captured', 'paid_escrow', 'paid', 'released'].includes(conv.paymentStatus || '');
+      
+      // Estados de trabalho têm prioridade máxima
+      if (ws === 'freelancer_completed') {
+        return isOwner
+          ? { text: 'Concluído - Confirmar', color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' }
+          : { text: 'Aguardando confirmação', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300' };
+      }
+      if (ws === 'in_progress') {
+        return { text: 'Em andamento', color: 'bg-blue-500 text-white dark:bg-blue-600' };
+      }
+      if (ws === 'owner_confirmed') {
+        return { text: 'Confirmado', color: 'bg-green-500 text-white dark:bg-green-600' };
+      }
+      if (ws === 'completed') {
+        return { text: 'Projeto finalizado', color: 'bg-green-700 text-white dark:bg-green-800' };
+      }
+
+      // Pagamento efetuado, mas sem work_status avançado
+      if (isPaid) {
+        return isOwner
+          ? { text: 'Projeto iniciado', color: 'bg-green-500 text-white dark:bg-green-600' }
+          : { text: 'Pago - Trabalhar', color: 'bg-green-500 text-white dark:bg-green-600' };
+      }
+
+      // Status de proposta aceita sem pagamento
+      if (status === 'accepted') {
+        return { text: 'Aguardando pagamento', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300' };
+      }
+
+      // Demais status de proposta baseados na perspectiva
       if (isFreelancer) {
-        // Perspectiva do Freelancer
         switch (status) {
           case 'pending':
             return { text: 'Proposta enviada', color: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300' };
           case 'counter_proposal':
-            // Verificar quem está aguardando
             return { text: 'Contraproposta recebida', color: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300' };
-          case 'accepted':
-            return { text: 'Proposta aceita', color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' };
-          case 'payment_made':
-            return { text: 'Pago - Trabalhar', color: 'bg-green-500 text-white dark:bg-green-600' };
-          case 'in_progress':
-            return { text: 'Em andamento', color: 'bg-blue-500 text-white dark:bg-blue-600' };
-          case 'freelancer_completed':
-            return { text: 'Aguardando confirmação', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300' };
-          case 'completed':
-            return { text: 'Projeto finalizado', color: 'bg-green-700 text-white dark:bg-green-800' };
           case 'rejected':
             return { text: 'Proposta rejeitada', color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' };
           case 'cancelled':
@@ -497,20 +518,6 @@ export default function Messages() {
             return { text: 'Proposta recebida', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' };
           case 'counter_proposal':
             return { text: 'Contraproposta enviada', color: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300' };
-          case 'accepted':
-            // Verificar se já foi pago baseado em payment_status e work_status
-            if (conv.paymentStatus === 'captured' || conv.paymentStatus === 'paid_escrow' || conv.workStatus === 'in_progress') {
-              return { text: 'Projeto iniciado', color: 'bg-green-500 text-white dark:bg-green-600' };
-            }
-            return { text: 'Aguardando pagamento', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300' };
-          case 'payment_made':
-            return { text: 'Projeto iniciado', color: 'bg-green-500 text-white dark:bg-green-600' };
-          case 'in_progress':
-            return { text: 'Em andamento', color: 'bg-blue-500 text-white dark:bg-blue-600' };
-          case 'freelancer_completed':
-            return { text: 'Concluído - Confirmar', color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' };
-          case 'completed':
-            return { text: 'Projeto finalizado', color: 'bg-green-700 text-white dark:bg-green-800' };
           case 'rejected':
             return { text: 'Proposta rejeitada', color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' };
           case 'cancelled':

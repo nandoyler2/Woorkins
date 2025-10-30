@@ -152,9 +152,9 @@ export function ProposalChatHeader({
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <div className="flex items-center gap-1.5 px-3 py-1 rounded bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 w-auto cursor-help min-w-[150px] justify-center">
+                  <div className="flex items-center gap-1.5 px-3 py-1 rounded bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 w-[240px] cursor-help justify-center">
                     <Clock className="h-3 w-3 text-blue-600 dark:text-blue-400 flex-shrink-0" />
-                    <span className="text-xs font-medium text-blue-700 dark:text-blue-300 whitespace-nowrap">
+                    <span className="text-xs font-medium text-blue-700 dark:text-blue-300 whitespace-nowrap tabular-nums text-center">
                       Conclusão em: {timeRemaining}
                     </span>
                   </div>
@@ -179,9 +179,9 @@ export function ProposalChatHeader({
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 w-auto cursor-help min-w-[140px] justify-center">
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 w-[240px] cursor-help justify-center">
                 <Clock className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
-                <span className="text-xs font-medium text-blue-700 dark:text-blue-300 whitespace-nowrap">
+                <span className="text-xs font-medium text-blue-700 dark:text-blue-300 whitespace-nowrap tabular-nums text-center">
                   Aguardando: {timeRemaining}
                 </span>
               </div>

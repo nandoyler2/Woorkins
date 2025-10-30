@@ -103,6 +103,16 @@ export default function PaymentSettings() {
     }
   };
 
+  const normalizeString = (str: string): string => {
+    return str
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z\s]/g, '')
+      .trim()
+      .replace(/\s+/g, ' ');
+  };
+
   const handleSave = async () => {
     if (!pixKey || !pixKeyType || !accountHolder) {
       toast({
@@ -117,11 +127,25 @@ export default function PaymentSettings() {
     try {
       const { data: profile } = await supabase
         .from('profiles')
-        .select('id')
+        .select('id, full_name')
         .eq('user_id', user?.id)
         .single();
 
       if (!profile) throw new Error('Profile not found');
+
+      // Validar nome do titular
+      const normalizedAccountHolder = normalizeString(accountHolder);
+      const normalizedProfileName = normalizeString(profile.full_name);
+
+      if (normalizedAccountHolder !== normalizedProfileName) {
+        toast({
+          title: 'Nome não corresponde',
+          description: 'O nome do titular deve ser o mesmo do seu perfil. Seu nome no perfil: ' + profile.full_name,
+          variant: 'destructive',
+        });
+        setSaving(false);
+        return;
+      }
 
       if (paymentSettings) {
         // Update existing
@@ -186,8 +210,23 @@ export default function PaymentSettings() {
       return;
     }
 
+    if (!accountHolder) {
+      toast({
+        title: 'Nome do titular não cadastrado',
+        description: 'Preencha o nome do titular da conta antes de solicitar saques.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setWithdrawing(true);
+    
     try {
+      toast({
+        title: 'Processando saque...',
+        description: 'Aguarde enquanto validamos seus dados e processamos a transferência PIX.',
+      });
+
       const { data: profile } = await supabase
         .from('profiles')
         .select('id')
@@ -196,8 +235,8 @@ export default function PaymentSettings() {
 
       if (!profile) throw new Error('Profile not found');
 
-      // Create withdrawal request
-      const { error } = await supabase
+      // Criar withdrawal request
+      const { data: withdrawal, error: insertError } = await supabase
         .from('withdrawal_requests')
         .insert({
           profile_id: profile.id,
@@ -205,21 +244,37 @@ export default function PaymentSettings() {
           pix_key: pixKey,
           pix_key_type: pixKeyType,
           status: 'pending',
-        });
+        })
+        .select()
+        .single();
 
-      if (error) throw error;
+      if (insertError) throw insertError;
+
+      // Processar saque imediatamente via edge function
+      const { data, error: functionError } = await supabase.functions.invoke(
+        'process-withdrawal-mercadopago',
+        {
+          body: { withdrawal_id: withdrawal.id }
+        }
+      );
+
+      if (functionError) throw functionError;
+
+      if (!data.success) {
+        throw new Error(data.error || 'Erro ao processar saque');
+      }
 
       toast({
-        title: 'Saque solicitado!',
-        description: `Sua solicitação de saque de R$ ${balance.available.toFixed(2)} foi enviada e será processada em até 2 dias úteis.`,
+        title: 'Saque processado com sucesso!',
+        description: `R$ ${balance.available.toFixed(2)} foi enviado via PIX para ${pixKeyType.toUpperCase()}: ${data.pix_key_masked}`,
       });
 
       await loadData();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error requesting withdrawal:', error);
       toast({
-        title: 'Erro ao solicitar saque',
-        description: 'Não foi possível processar sua solicitação de saque.',
+        title: 'Erro ao processar saque',
+        description: error.message || 'Não foi possível processar sua solicitação de saque.',
         variant: 'destructive',
       });
     } finally {
@@ -265,7 +320,7 @@ export default function PaymentSettings() {
               </div>
             </div>
 
-            {balance.available > 0 && pixKey && (
+            {balance.available > 0 && pixKey && accountHolder && (
               <Button 
                 onClick={handleWithdraw} 
                 disabled={withdrawing}
@@ -274,12 +329,27 @@ export default function PaymentSettings() {
                 {withdrawing ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Processando...
+                    Processando saque via PIX...
                   </>
                 ) : (
-                  `Solicitar Saque (R$ ${balance.available.toFixed(2)})`
+                  `Solicitar Saque Imediato (R$ ${balance.available.toFixed(2)})`
                 )}
               </Button>
+            )}
+            {balance.available > 0 && (!pixKey || !accountHolder) && (
+              <div className="bg-yellow-50 dark:bg-yellow-950 p-4 rounded-lg">
+                <div className="flex items-start gap-2">
+                  <AlertCircle className="h-5 w-5 text-yellow-600 dark:text-yellow-400 mt-0.5" />
+                  <div>
+                    <p className="font-medium text-yellow-900 dark:text-yellow-100">
+                      Configure sua chave PIX
+                    </p>
+                    <p className="text-sm text-yellow-800 dark:text-yellow-200 mt-1">
+                      Cadastre sua chave PIX e nome do titular para poder solicitar saques.
+                    </p>
+                  </div>
+                </div>
+              </div>
             )}
           </Card>
 
@@ -325,6 +395,9 @@ export default function PaymentSettings() {
                   onChange={(e) => setAccountHolder(e.target.value)}
                   placeholder="Nome completo do titular"
                 />
+                <p className="text-xs text-muted-foreground">
+                  ⚠️ O nome do titular deve ser o mesmo cadastrado no seu perfil
+                </p>
               </div>
 
               <Button 

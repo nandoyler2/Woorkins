@@ -34,6 +34,7 @@ export default function Financeiro() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [pixKey, setPixKey] = useState('');
   const [pixKeyType, setPixKeyType] = useState('cpf');
+  const [accountHolder, setAccountHolder] = useState('');
   const [withdrawAmount, setWithdrawAmount] = useState('');
 
   useEffect(() => {
@@ -63,13 +64,14 @@ export default function Financeiro() {
     // Buscar configurações de pagamento
     const { data: paymentSettings } = await supabase
       .from('payment_settings')
-      .select('pix_key, pix_key_type')
+      .select('pix_key, pix_key_type, bank_account_holder')
       .eq('profile_id', profileData.id)
       .maybeSingle();
 
     if (paymentSettings) {
       setPixKey(paymentSettings.pix_key || '');
       setPixKeyType(paymentSettings.pix_key_type || 'cpf');
+      setAccountHolder(paymentSettings.bank_account_holder || '');
     }
 
     // Buscar transações
@@ -85,6 +87,16 @@ export default function Financeiro() {
     }
   };
 
+  const normalizeString = (str: string): string => {
+    return str
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z\s]/g, '')
+      .trim()
+      .replace(/\s+/g, ' ');
+  };
+
   const handleSavePixKey = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -92,11 +104,23 @@ export default function Financeiro() {
     try {
       const { data: profileData } = await supabase
         .from('profiles')
-        .select('id')
+        .select('id, full_name')
         .eq('user_id', user?.id)
         .single();
 
       if (!profileData) throw new Error('Perfil não encontrado');
+
+      if (!accountHolder) {
+        throw new Error('Preencha o nome do titular da conta');
+      }
+
+      // Validar nome do titular
+      const normalizedAccountHolder = normalizeString(accountHolder);
+      const normalizedProfileName = normalizeString(profileData.full_name);
+
+      if (normalizedAccountHolder !== normalizedProfileName) {
+        throw new Error('O nome do titular deve ser o mesmo do seu perfil: ' + profileData.full_name);
+      }
 
       const { error } = await supabase
         .from('payment_settings')
@@ -104,6 +128,7 @@ export default function Financeiro() {
           profile_id: profileData.id,
           pix_key: pixKey,
           pix_key_type: pixKeyType,
+          bank_account_holder: accountHolder,
         });
 
       if (error) throw error;
@@ -154,9 +179,23 @@ export default function Financeiro() {
       return;
     }
 
+    if (!accountHolder) {
+      toast({
+        title: 'Nome do titular não cadastrado',
+        description: 'Cadastre o nome do titular antes de solicitar um saque.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
+      toast({
+        title: 'Processando saque...',
+        description: 'Aguarde enquanto validamos seus dados e processamos a transferência PIX.',
+      });
+
       const { data: profileData } = await supabase
         .from('profiles')
         .select('id')
@@ -165,7 +204,8 @@ export default function Financeiro() {
 
       if (!profileData) throw new Error('Perfil não encontrado');
 
-      const { error } = await supabase
+      // Criar withdrawal request
+      const { data: withdrawal, error: insertError } = await supabase
         .from('withdrawal_requests')
         .insert({
           profile_id: profileData.id,
@@ -173,21 +213,37 @@ export default function Financeiro() {
           pix_key: pixKey,
           pix_key_type: pixKeyType,
           status: 'pending',
-        });
+        })
+        .select()
+        .single();
 
-      if (error) throw error;
+      if (insertError) throw insertError;
+
+      // Processar saque imediatamente via edge function
+      const { data, error: functionError } = await supabase.functions.invoke(
+        'process-withdrawal-mercadopago',
+        {
+          body: { withdrawal_id: withdrawal.id }
+        }
+      );
+
+      if (functionError) throw functionError;
+
+      if (!data.success) {
+        throw new Error(data.error || 'Erro ao processar saque');
+      }
 
       toast({
-        title: 'Saque solicitado!',
-        description: 'Sua solicitação foi enviada e será processada em breve.',
+        title: 'Saque processado com sucesso!',
+        description: `R$ ${amount.toFixed(2)} foi enviado via PIX para ${pixKeyType.toUpperCase()}: ${data.pix_key_masked}`,
       });
 
       setWithdrawAmount('');
       loadFinancialData();
     } catch (error: any) {
       toast({
-        title: 'Erro ao solicitar saque',
-        description: error.message,
+        title: 'Erro ao processar saque',
+        description: error.message || 'Não foi possível processar sua solicitação.',
         variant: 'destructive',
       });
     } finally {
@@ -295,6 +351,17 @@ export default function Financeiro() {
                         placeholder="Digite sua chave PIX"
                       />
                     </div>
+                    <div className="space-y-2">
+                      <Label>Titular da Conta</Label>
+                      <Input
+                        value={accountHolder}
+                        onChange={(e) => setAccountHolder(e.target.value)}
+                        placeholder="Nome completo do titular"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        ⚠️ O nome do titular deve ser o mesmo cadastrado no seu perfil
+                      </p>
+                    </div>
                     <Button 
                       type="submit" 
                       className="w-full bg-gradient-primary hover:shadow-glow transition-all" 
@@ -341,10 +408,10 @@ export default function Financeiro() {
                     <Button 
                       type="submit" 
                       className="w-full bg-gradient-primary hover:shadow-glow transition-all" 
-                      disabled={loading || !withdrawAmount || !pixKey}
+                      disabled={loading || !withdrawAmount || !pixKey || !accountHolder}
                     >
                       <Download className="w-4 h-4 mr-2" />
-                      {loading ? 'Processando...' : 'Solicitar Saque'}
+                      {loading ? 'Processando saque via PIX...' : 'Solicitar Saque Imediato'}
                     </Button>
                   </form>
                 </CardContent>

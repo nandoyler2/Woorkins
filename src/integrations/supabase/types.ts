@@ -3762,6 +3762,7 @@ export type Database = {
           created_at: string | null
           error_message: string | null
           id: string
+          mercadopago_transfer_id: string | null
           pix_key: string
           pix_key_type: string
           processed_at: string | null
@@ -3777,6 +3778,7 @@ export type Database = {
           created_at?: string | null
           error_message?: string | null
           id?: string
+          mercadopago_transfer_id?: string | null
           pix_key: string
           pix_key_type: string
           processed_at?: string | null
@@ -3792,6 +3794,7 @@ export type Database = {
           created_at?: string | null
           error_message?: string | null
           id?: string
+          mercadopago_transfer_id?: string | null
           pix_key?: string
           pix_key_type?: string
           processed_at?: string | null

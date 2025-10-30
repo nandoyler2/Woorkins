@@ -95,3 +95,9 @@ verify_jwt = false
 
 [functions.proposal-auto-complete]
 verify_jwt = false
+
+[functions.process-withdrawal-mercadopago]
+verify_jwt = true
+
+[functions.mercadopago-transfer-webhook]
+verify_jwt = false

@@ -122,6 +122,7 @@ export default function Dashboard() {
   const [loadingBalance, setLoadingBalance] = useState(true);
   const [lastUnreadMessage, setLastUnreadMessage] = useState<string>('');
   const [woorkoinsBalance, setWoorkoinsBalance] = useState(0);
+  const [availableBalance, setAvailableBalance] = useState(0);
   
   // Usar hook de mensagens não lidas
   const unreadMessages = useUnreadMessages(profile?.id || '');
@@ -589,9 +590,21 @@ export default function Dashboard() {
         const total = data.reduce((sum: number, r: any) => sum + (r.balance || 0), 0);
         setWoorkoinsBalance(total);
       }
+      
+      // Carregar saldo disponível do freelancer_wallet
+      const { data: walletData } = await supabase
+        .from('freelancer_wallet')
+        .select('available_balance')
+        .in('profile_id', profileIds);
+      
+      if (walletData) {
+        const totalAvailable = walletData.reduce((sum: number, w: any) => sum + (w.available_balance || 0), 0);
+        setAvailableBalance(totalAvailable);
+      }
     } catch (error) {
       console.error('Error loading woorkoins balance:', error);
       setWoorkoinsBalance(0);
+      setAvailableBalance(0);
     } finally {
       setLoadingBalance(false);
     }
@@ -932,6 +945,20 @@ export default function Dashboard() {
                             {accountType}
                           </Badge>
                         </Link>
+                        
+                        {/* Saldo disponível - apenas se > 0 */}
+                        {!loadingBalance && availableBalance > 0 && (
+                          <Link 
+                            to="/financeiro" 
+                            className="flex items-center gap-1.5 text-sm text-green-600 hover:text-green-700 transition-colors cursor-pointer group font-medium"
+                          >
+                            <span className="text-xs">Saldo disponível:</span>
+                            <span className="font-bold">
+                              R$ {availableBalance.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </span>
+                          </Link>
+                        )}
+                        
                         <Link 
                           to="/woorkoins" 
                           className="flex items-center gap-1.5 text-sm text-slate-600 hover:text-primary transition-colors cursor-pointer group"

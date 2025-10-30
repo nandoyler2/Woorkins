@@ -948,14 +948,13 @@ export default function Dashboard() {
                         
                         {/* Saldo disponível - apenas se > 0 */}
                         {!loadingBalance && availableBalance > 0 && (
-                          <Link 
-                            to="/financeiro" 
-                            className="flex items-center gap-1.5 text-sm text-green-600 hover:text-green-700 transition-colors cursor-pointer group font-medium"
-                          >
-                            <span className="text-xs">Saldo disponível:</span>
-                            <span className="font-bold">
-                              R$ {availableBalance.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                            </span>
+                          <Link to="/financeiro">
+                            <Badge 
+                              variant="secondary" 
+                              className="text-xs px-3 py-1 bg-green-500/10 text-green-700 dark:text-green-500 border border-green-500/20 cursor-pointer hover:bg-green-500/20 transition-colors"
+                            >
+                              <span>Saldo: R$ {availableBalance.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                            </Badge>
                           </Link>
                         )}
                         

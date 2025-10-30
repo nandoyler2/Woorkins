@@ -308,8 +308,8 @@ export function ProposalChatHeader({
           )}
         </div>
 
-        {/* Centro: Valor + Status - visível em md+ e oculto quando o título não tem folga (compactHeader) */}
-        <div className={`${compactHeader ? 'hidden' : 'hidden md:flex'} items-center gap-3 px-4 py-2 rounded-xl bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 border-2 border-primary/30 shadow-md`}>
+        {/* Centro: Valor + Status - visível em md+ */}
+        <div className="hidden md:flex items-center gap-3 px-4 py-2 rounded-xl bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 border-2 border-primary/30 shadow-md">
           <div className="flex items-baseline gap-1">
             <span className="text-xs font-medium text-muted-foreground">R$</span>
             <span className="text-2xl font-bold text-primary">
@@ -335,7 +335,7 @@ export function ProposalChatHeader({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
               {/* Mostrar valor e status no dropdown quando não couber no título OU em telas pequenas */}
-              <div className={`border-b pb-2 mb-2 ${compactHeader ? '' : 'md:hidden'}`}>
+              <div className="border-b pb-2 mb-2 md:hidden">
                 <DropdownMenuItem className="flex justify-between items-center">
                   <span className="text-muted-foreground text-xs">Valor:</span>
                   <span className="font-bold text-primary">

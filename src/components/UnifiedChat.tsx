@@ -815,7 +815,7 @@ useEffect(() => {
   const isMyMessage = (senderId: string) => senderId === profileId;
 
   // Componente para renderizar atividades
-  const ActivityMessage = ({ activity }: { activity: any }) => {
+  const ActivityMessage = ({ activity, isLatestCounterProposal }: { activity: any; isLatestCounterProposal?: boolean }) => {
     const { status_type, new_value, old_value, message, created_at, changed_by_profile, changed_by } = activity;
     
     // Determinar se a atividade é "minha" (eu fiz a ação)
@@ -895,7 +895,8 @@ useEffect(() => {
     
     const needsAction = status_type === 'counter_proposal' &&
       !isMine && // Only show action buttons to the person who RECEIVED the counter-proposal
-      proposalData?.status === 'pending';
+      proposalData?.status === 'pending' &&
+      isLatestCounterProposal; // Only show on the latest counter-proposal
     
     // Debug logs
     if (status_type === 'counter_proposal') {
@@ -1419,12 +1420,22 @@ useEffect(() => {
                   ...activities.map(a => ({ type: 'activity' as const, data: a, created_at: a.created_at }))
                 ].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
 
+                // Find the latest counter_proposal activity
+                const counterProposals = activities.filter(a => a.status_type === 'counter_proposal');
+                const latestCounterProposalId = counterProposals.length > 0 
+                  ? counterProposals[counterProposals.length - 1].id 
+                  : null;
+
                 return combinedItems.map((item) => {
                   if (item.type === 'activity') {
+                    const isLatestCounterProposal = item.data.status_type === 'counter_proposal' && 
+                                                     item.data.id === latestCounterProposalId;
+                    
                     return (
                       <ActivityMessage 
                         key={`activity-${item.data.id}`}
                         activity={item.data}
+                        isLatestCounterProposal={isLatestCounterProposal}
                       />
                     );
                   }

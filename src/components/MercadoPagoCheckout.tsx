@@ -95,7 +95,10 @@ export default function MercadoPagoCheckout({
   }, [preSelectedMethod, profileData]);
 
   useEffect(() => {
-    if (!pixData?.payment_id || !woorkoinsAmount) return;
+    if (!pixData?.payment_id) return;
+    
+    // Verifica se é pagamento de woorkoins ou proposta
+    if (!woorkoinsAmount && !proposalId) return;
 
     console.log('Iniciando polling de verificação de pagamento:', pixData.payment_id);
     
@@ -109,10 +112,17 @@ export default function MercadoPagoCheckout({
           console.log('Status do pagamento:', data);
           if (data.status === 'paid' && data.credited) {
             console.log('Pagamento confirmado via polling!');
-            toast({
-              title: "Pagamento PIX confirmado! 🎉",
-              description: `${woorkoinsAmount} Woorkoins creditados com sucesso!`,
-            });
+            if (woorkoinsAmount) {
+              toast({
+                title: "Pagamento PIX confirmado! 🎉",
+                description: `${woorkoinsAmount} Woorkoins creditados com sucesso!`,
+              });
+            } else {
+              toast({
+                title: "Pagamento PIX confirmado! 🎉",
+                description: 'Pagamento da proposta confirmado com sucesso!',
+              });
+            }
             onSuccess();
           }
         }
@@ -129,30 +139,40 @@ export default function MercadoPagoCheckout({
       clearTimeout(timeout);
       clearInterval(interval);
     };
-  }, [pixData, woorkoinsAmount, toast, onSuccess]);
+  }, [pixData, woorkoinsAmount, proposalId, toast, onSuccess]);
 
   useEffect(() => {
-    if (!pixData?.payment_id || !woorkoinsAmount) return;
+    if (!pixData?.payment_id) return;
+    
+    // Verifica se é pagamento de woorkoins ou proposta
+    if (!woorkoinsAmount && !proposalId) return;
 
     console.log('Configurando listener de pagamento PIX:', pixData.payment_id);
 
     const channel = supabase
-      .channel(`woorkoins-pix-${pixData.payment_id}`)
+      .channel(`${proposalId ? 'proposal' : 'woorkoins'}-pix-${pixData.payment_id}`)
       .on(
         'postgres_changes',
         {
           event: 'UPDATE',
           schema: 'public',
-          table: 'woorkoins_mercadopago_payments',
+          table: proposalId ? 'proposals_mercadopago_payments' : 'woorkoins_mercadopago_payments',
           filter: `payment_id=eq.${pixData.payment_id}`,
         },
         (payload: any) => {
           console.log('Pagamento PIX atualizado em tempo real:', payload);
           if (payload.new.status === 'paid') {
-            toast({
-              title: "Pagamento PIX confirmado! 🎉",
-              description: `${woorkoinsAmount} Woorkoins creditados com sucesso!`,
-            });
+            if (woorkoinsAmount) {
+              toast({
+                title: "Pagamento PIX confirmado! 🎉",
+                description: `${woorkoinsAmount} Woorkoins creditados com sucesso!`,
+              });
+            } else {
+              toast({
+                title: "Pagamento PIX confirmado! 🎉",
+                description: 'Pagamento da proposta confirmado com sucesso!',
+              });
+            }
             onSuccess();
           }
         }
@@ -163,7 +183,7 @@ export default function MercadoPagoCheckout({
       console.log('Removendo listener de pagamento PIX');
       supabase.removeChannel(channel);
     };
-  }, [pixData, woorkoinsAmount, toast, onSuccess]);
+  }, [pixData, woorkoinsAmount, proposalId, toast, onSuccess]);
 
   useEffect(() => {
     const loadMercadoPagoKey = async () => {

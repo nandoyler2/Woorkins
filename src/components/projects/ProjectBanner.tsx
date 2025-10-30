@@ -124,9 +124,9 @@ export function ProjectBanner() {
           <Button 
             variant="secondary" 
             className="bg-white text-emerald-600 hover:bg-white/90 font-semibold"
-            onClick={() => window.location.href = '/financeiro'}
+            onClick={() => window.open('https://instagram.com/woorkinsbrasil', '_blank')}
           >
-            Sacar Agora
+            Siga-nos no Instagram
           </Button>
         </div>
         <div className="hidden md:flex items-center justify-center">

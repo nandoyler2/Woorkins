@@ -594,7 +594,7 @@ export default function AdminUsers() {
                         <DropdownMenuLabel>Ações</DropdownMenuLabel>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
-                          onClick={() => navigate(`/admin/users/${usr.id}/messages`)}
+                          onClick={() => navigate(`/admin/users/${usr.id}/mensagens`)}
                         >
                           <History className="mr-2 h-4 w-4" />
                           Histórico de Mensagens

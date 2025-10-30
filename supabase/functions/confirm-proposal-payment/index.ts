@@ -134,7 +134,7 @@ serve(async (req) => {
           type: 'payment',
           title: 'Pagamento recebido',
           message: `O pagamento do projeto "${project.title}" foi confirmado!`,
-          link: `/messages?type=proposal&id=${proposalId}`,
+          link: `/mensagens?type=proposal&id=${proposalId}`,
         });
 
         // Notify project owner
@@ -143,7 +143,7 @@ serve(async (req) => {
           type: 'payment',
           title: 'Pagamento confirmado',
           message: `Seu pagamento foi confirmado e o projeto "${project.title}" foi iniciado!`,
-          link: `/messages?type=proposal&id=${proposalId}`,
+          link: `/mensagens?type=proposal&id=${proposalId}`,
         });
       }
 

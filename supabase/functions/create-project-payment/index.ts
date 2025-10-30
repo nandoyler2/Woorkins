@@ -106,8 +106,8 @@ serve(async (req) => {
         },
       ],
       mode: 'payment',
-      success_url: `${req.headers.get('origin')}/messages?type=proposal&id=${proposal_id}&payment=success`,
-      cancel_url: `${req.headers.get('origin')}/messages?type=proposal&id=${proposal_id}&payment=cancelled`,
+      success_url: `${req.headers.get('origin')}/mensagens?type=proposal&id=${proposal_id}&payment=success`,
+      cancel_url: `${req.headers.get('origin')}/mensagens?type=proposal&id=${proposal_id}&payment=cancelled`,
       payment_intent_data: {
         capture_method: 'manual',
         metadata: {

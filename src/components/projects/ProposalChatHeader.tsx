@@ -3,6 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { MoreVertical, CheckCircle, DollarSign, Clock, AlertCircle, ExternalLink } from 'lucide-react';
 import { useCompletionCountdown } from '@/hooks/useCompletionCountdown';
+import { ProposalCompletionDialog } from './ProposalCompletionDialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -62,7 +63,19 @@ export function ProposalChatHeader({
   
   const titleRef = useRef<HTMLHeadingElement>(null);
   const [compactHeader, setCompactHeader] = useState(false);
+  const [showCompletionDialog, setShowCompletionDialog] = useState(false);
+  const [isConfirming, setIsConfirming] = useState(false);
   const debounceRef = useRef<number | null>(null);
+
+  const handleConfirmCompletion = async () => {
+    setIsConfirming(true);
+    try {
+      await onConfirmCompletion?.();
+      setShowCompletionDialog(false);
+    } finally {
+      setIsConfirming(false);
+    }
+  };
 
   useEffect(() => {
     const el = titleRef.current;
@@ -114,7 +127,7 @@ export function ProposalChatHeader({
     if (proposal.work_status === 'freelancer_completed' && isOwner) {
       return (
         <div className="flex flex-col gap-2">
-          <Button size="sm" onClick={onConfirmCompletion} className="bg-green-600 hover:bg-green-700 w-auto whitespace-nowrap px-3 h-9">
+          <Button size="sm" onClick={() => setShowCompletionDialog(true)} className="bg-green-600 hover:bg-green-700 w-auto whitespace-nowrap px-3 h-9">
             <CheckCircle className="h-4 w-4 mr-2" />
             Trabalho Concluído
           </Button>
@@ -138,7 +151,7 @@ export function ProposalChatHeader({
         (proposal.payment_status === 'paid' || proposal.payment_status === 'paid_escrow')) {
       if (isOwner) {
         return (
-          <Button size="sm" onClick={onConfirmCompletion} className="bg-green-600 hover:bg-green-700 w-auto whitespace-nowrap px-3 h-9">
+          <Button size="sm" onClick={() => setShowCompletionDialog(true)} className="bg-green-600 hover:bg-green-700 w-auto whitespace-nowrap px-3 h-9">
             <CheckCircle className="h-4 w-4 mr-2" />
             Trabalho Concluído
           </Button>
@@ -291,6 +304,15 @@ export function ProposalChatHeader({
           </DropdownMenu>
         </div>
       </div>
+
+      <ProposalCompletionDialog
+        open={showCompletionDialog}
+        onOpenChange={setShowCompletionDialog}
+        freelancerAmount={proposal.current_proposal_amount}
+        freelancerName={projectData?.freelancerName || 'o freelancer'}
+        onConfirm={handleConfirmCompletion}
+        isLoading={isConfirming}
+      />
     </div>
   );
 }

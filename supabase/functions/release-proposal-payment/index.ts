@@ -69,26 +69,7 @@ serve(async (req) => {
       }
 
       if (action === 'approve') {
-        console.log('🚀 Starting payment release process...');
-        
-        // For Stripe payments: Capture the payment intent (release from escrow)
-        if (proposal.stripe_payment_intent_id) {
-          console.log('💳 Capturing Stripe payment:', proposal.stripe_payment_intent_id);
-          try {
-            const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
-              apiVersion: '2023-10-16',
-            });
-
-            await stripe.paymentIntents.capture(proposal.stripe_payment_intent_id);
-            console.log('✅ Stripe payment captured successfully');
-          } catch (stripeError) {
-            console.error('❌ Error capturing Stripe payment:', stripeError);
-            const errorMsg = stripeError instanceof Error ? stripeError.message : String(stripeError);
-            throw new Error('Falha ao capturar pagamento no Stripe: ' + errorMsg);
-          }
-        } else {
-          console.log('ℹ️ No Stripe payment intent, proceeding with direct wallet update');
-        }
+        console.log('🚀 Starting balance release process (pending → available)...');
 
         // Update proposal status
         console.log('📝 Updating proposal status...');
@@ -124,12 +105,11 @@ serve(async (req) => {
         if (wallet) {
           const newAvailable = (wallet.available_balance || 0) + proposal.freelancer_amount;
           const newPending = Math.max((wallet.pending_balance || 0) - proposal.freelancer_amount, 0);
-          const newTotal = (wallet.total_earned || 0) + proposal.freelancer_amount;
           
-          console.log('📊 Wallet update:', {
+          console.log('📊 Balance transfer (pending → available):', {
             available: `${wallet.available_balance} → ${newAvailable}`,
             pending: `${wallet.pending_balance} → ${newPending}`,
-            total: `${wallet.total_earned} → ${newTotal}`
+            total_earned: `${wallet.total_earned} (unchanged)`
           });
 
           const { error: walletError } = await supabaseClient
@@ -137,7 +117,6 @@ serve(async (req) => {
             .update({
               available_balance: newAvailable,
               pending_balance: newPending,
-              total_earned: newTotal,
               updated_at: new Date().toISOString(),
             })
             .eq('profile_id', proposal.freelancer_id);
@@ -165,9 +144,9 @@ serve(async (req) => {
         }
         console.log('✅ Status history created successfully');
 
-        console.log('🎉 Payment release completed successfully!');
+        console.log('🎉 Balance release completed successfully!');
         return new Response(
-          JSON.stringify({ success: true, message: 'Pagamento liberado com sucesso!' }),
+          JSON.stringify({ success: true, message: 'Saldo liberado com sucesso!' }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       } else if (action === 'dispute') {

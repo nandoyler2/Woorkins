@@ -8,6 +8,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { useEffect, useRef, useState } from 'react';
 interface ProjectData {
   id: string;
@@ -125,12 +131,25 @@ export function ProposalChatHeader({
             Trabalho Concluído
           </Button>
           {timeRemaining && !isExpired && (
-            <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 w-auto">
-              <Clock className="h-3 w-3 text-blue-600 dark:text-blue-400 flex-shrink-0" />
-              <span className="text-xs font-medium text-blue-700 dark:text-blue-300 whitespace-nowrap">
-                Conclusão em: {timeRemaining}
-              </span>
-            </div>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 w-auto cursor-help">
+                    <Clock className="h-3 w-3 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+                    <span className="text-xs font-medium text-blue-700 dark:text-blue-300 whitespace-nowrap">
+                      Conclusão em: {timeRemaining}
+                    </span>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent className="max-w-xs">
+                  <p className="font-semibold mb-1">⏰ Confirmação Automática</p>
+                  <p className="text-sm">
+                    Você tem 72 horas para confirmar a conclusão do trabalho. Se não confirmar dentro deste prazo, 
+                    o sistema irá confirmar automaticamente e liberar o pagamento para o freelancer.
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           )}
         </div>
       );
@@ -139,12 +158,25 @@ export function ProposalChatHeader({
     // Freelancer vê countdown também
     if (proposal.work_status === 'freelancer_completed' && !isOwner && timeRemaining && !isExpired) {
       return (
-        <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 w-auto">
-          <Clock className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
-          <span className="text-xs font-medium text-blue-700 dark:text-blue-300 whitespace-nowrap">
-            Aguardando: {timeRemaining}
-          </span>
-        </div>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 w-auto cursor-help">
+                <Clock className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+                <span className="text-xs font-medium text-blue-700 dark:text-blue-300 whitespace-nowrap">
+                  Aguardando: {timeRemaining}
+                </span>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent className="max-w-xs">
+              <p className="font-semibold mb-1">⏰ Aguardando Confirmação</p>
+              <p className="text-sm">
+                O cliente tem 72 horas para confirmar a conclusão do trabalho. Se o cliente não confirmar dentro deste prazo, 
+                o sistema irá confirmar automaticamente e você receberá o pagamento.
+              </p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       );
     }
 

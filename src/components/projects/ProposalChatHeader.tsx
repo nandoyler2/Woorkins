@@ -14,7 +14,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { useEffect, useRef, useState } from 'react';
 interface ProjectData {
   id: string;
   title: string;
@@ -99,30 +98,6 @@ export function ProposalChatHeader({
       if (debounceRef.current) window.clearTimeout(debounceRef.current);
     };
   }, [projectData?.title, compactHeader]);
-  const getStatusBadge = () => {
-    if (proposal.work_status === 'completed') {
-      return <Badge className="bg-green-500">Concluído</Badge>;
-    }
-    if (proposal.work_status === 'disputed') {
-      return <Badge variant="destructive">Em Disputa</Badge>;
-    }
-    if (proposal.work_status === 'freelancer_completed') {
-      return <Badge className="bg-blue-500">Aguardando Confirmação</Badge>;
-    }
-    if (proposal.work_status === 'in_progress') {
-      return <Badge className="bg-yellow-500">Em Andamento</Badge>;
-    }
-    if (proposal.payment_status === 'paid' || proposal.payment_status === 'paid_escrow') {
-      return <Badge className="bg-yellow-500">Pago - Em Andamento</Badge>;
-    }
-    if (proposal.status === 'accepted' && proposal.payment_status !== 'paid') {
-      return <Badge className="bg-blue-500">Aceita - Aguardando Pagamento</Badge>;
-    }
-    if (proposal.status === 'pending') {
-      return <Badge variant="secondary">Pendente</Badge>;
-    }
-    return <Badge variant="secondary">{proposal.status}</Badge>;
-  };
 
   const renderActionButtons = () => {
     // Projeto concluído
@@ -299,7 +274,7 @@ export function ProposalChatHeader({
                 className="flex items-center gap-2 cursor-pointer group"
                 onClick={() => window.open(`/projetos/${projectData.id}`, '_blank')}
               >
-                <h3 ref={titleRef} className="text-sm md:text-base font-bold truncate text-foreground group-hover:text-primary transition-colors">
+                <h3 className="text-sm md:text-base font-bold truncate text-foreground group-hover:text-primary transition-colors">
                   {projectData.title}
                 </h3>
                 <ExternalLink className="h-3.5 w-3.5 md:h-4 md:w-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
@@ -308,19 +283,17 @@ export function ProposalChatHeader({
           )}
         </div>
 
-        {/* Centro: Valor + Status - visível em md+ */}
-        <div className="hidden md:flex items-center gap-3 px-4 py-2 rounded-xl bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 border-2 border-primary/30 shadow-md">
+        {/* Centro: Valor - visível em md+ */}
+        <div className="hidden md:flex items-center px-3 py-1.5 rounded-lg bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 border-2 border-primary/30 shadow-md">
           <div className="flex items-baseline gap-1">
             <span className="text-xs font-medium text-muted-foreground">R$</span>
-            <span className="text-2xl font-bold text-primary">
+            <span className="text-xl font-bold text-primary">
               {proposal.current_proposal_amount?.toLocaleString('pt-BR', {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2,
               })}
             </span>
           </div>
-          <div className="h-6 w-px bg-primary/30" />
-          {getStatusBadge()}
         </div>
 
         {/* Coluna direita: Botões de ação */}
@@ -334,7 +307,7 @@ export function ProposalChatHeader({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
-              {/* Mostrar valor e status no dropdown quando não couber no título OU em telas pequenas */}
+              {/* Mostrar valor no dropdown em telas pequenas */}
               <div className="border-b pb-2 mb-2 md:hidden">
                 <DropdownMenuItem className="flex justify-between items-center">
                   <span className="text-muted-foreground text-xs">Valor:</span>
@@ -344,10 +317,6 @@ export function ProposalChatHeader({
                       maximumFractionDigits: 2,
                     })}
                   </span>
-                </DropdownMenuItem>
-                <DropdownMenuItem className="flex justify-between items-center">
-                  <span className="text-muted-foreground text-xs">Status:</span>
-                  {getStatusBadge()}
                 </DropdownMenuItem>
               </div>
               

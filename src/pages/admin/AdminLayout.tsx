@@ -11,7 +11,8 @@ import {
   FileCheck,
   MessageCircle,
   ArrowLeft,
-  Ban
+  Ban,
+  Wallet
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -37,6 +38,7 @@ const adminMenuItems = [
   { title: "Negócios", url: "/admin/businesses", icon: Briefcase },
   { title: "Conteúdo", url: "/admin/content", icon: FileCheck },
   { title: "Financeiro", url: "/admin/financial", icon: CreditCard },
+  { title: "Solicitações de Saques", url: "/admin/withdrawals", icon: Wallet },
   { title: "Suporte", url: "/admin/support", icon: MessageCircle },
   { title: "Configurações", url: "/admin/settings", icon: Settings },
 ];
@@ -62,6 +64,8 @@ function AdminSidebar() {
         return counts.support;
       case '/admin/users':
         return counts.documentVerifications + counts.systemBlocks;
+      case '/admin/withdrawals':
+        return counts.withdrawalRequests;
       default:
         return 0;
     }

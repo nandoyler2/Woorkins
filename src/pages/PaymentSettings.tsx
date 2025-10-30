@@ -192,10 +192,6 @@ export default function PaymentSettings() {
     setWithdrawing(true);
     
     try {
-      toast({
-        title: 'Processando saque...',
-        description: 'Aguarde enquanto validamos seus dados e processamos a transferência PIX.',
-      });
 
       const { data: profile } = await supabase
         .from('profiles')
@@ -205,8 +201,8 @@ export default function PaymentSettings() {
 
       if (!profile) throw new Error('Profile not found');
 
-      // Criar withdrawal request
-      const { data: withdrawal, error: insertError } = await supabase
+      // Criar apenas a solicitação de saque com status pending
+      const { error: insertError } = await supabase
         .from('withdrawal_requests')
         .insert({
           profile_id: profile.id,
@@ -214,29 +210,13 @@ export default function PaymentSettings() {
           pix_key: pixKey,
           pix_key_type: pixKeyType,
           status: 'pending',
-        })
-        .select()
-        .single();
+        });
 
       if (insertError) throw insertError;
 
-      // Processar saque imediatamente via edge function
-      const { data, error: functionError } = await supabase.functions.invoke(
-        'process-withdrawal-mercadopago',
-        {
-          body: { withdrawal_id: withdrawal.id }
-        }
-      );
-
-      if (functionError) throw functionError;
-
-      if (!data.success) {
-        throw new Error(data.error || 'Erro ao processar saque');
-      }
-
       toast({
-        title: 'Saque processado com sucesso!',
-        description: `R$ ${balance.available.toFixed(2)} foi enviado via PIX para ${pixKeyType.toUpperCase()}: ${data.pix_key_masked}`,
+        title: 'Solicitação enviada!',
+        description: 'Seu saque será processado em breve. Você será notificado quando o pagamento for realizado.',
       });
 
       await loadData();
@@ -299,10 +279,10 @@ export default function PaymentSettings() {
                 {withdrawing ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Processando saque via PIX...
+                    Enviando solicitação...
                   </>
                 ) : (
-                  `Solicitar Saque Imediato (R$ ${balance.available.toFixed(2)})`
+                  `Solicitar Saque (R$ ${balance.available.toFixed(2)})`
                 )}
               </Button>
             )}

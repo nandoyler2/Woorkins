@@ -164,10 +164,6 @@ export default function Financeiro() {
     setLoading(true);
 
     try {
-      toast({
-        title: 'Processando saque...',
-        description: 'Aguarde enquanto validamos seus dados e processamos a transferência PIX.',
-      });
 
       const { data: profileData } = await supabase
         .from('profiles')
@@ -177,8 +173,8 @@ export default function Financeiro() {
 
       if (!profileData) throw new Error('Perfil não encontrado');
 
-      // Criar withdrawal request
-      const { data: withdrawal, error: insertError } = await supabase
+      // Criar apenas a solicitação de saque com status pending
+      const { error: insertError } = await supabase
         .from('withdrawal_requests')
         .insert({
           profile_id: profileData.id,
@@ -186,29 +182,13 @@ export default function Financeiro() {
           pix_key: pixKey,
           pix_key_type: pixKeyType,
           status: 'pending',
-        })
-        .select()
-        .single();
+        });
 
       if (insertError) throw insertError;
 
-      // Processar saque imediatamente via edge function
-      const { data, error: functionError } = await supabase.functions.invoke(
-        'process-withdrawal-mercadopago',
-        {
-          body: { withdrawal_id: withdrawal.id }
-        }
-      );
-
-      if (functionError) throw functionError;
-
-      if (!data.success) {
-        throw new Error(data.error || 'Erro ao processar saque');
-      }
-
       toast({
-        title: 'Saque processado com sucesso!',
-        description: `R$ ${amount.toFixed(2)} foi enviado via PIX para ${pixKeyType.toUpperCase()}: ${data.pix_key_masked}`,
+        title: 'Solicitação enviada!',
+        description: 'Seu saque será processado em breve. Você será notificado quando o pagamento for realizado.',
       });
 
       setWithdrawAmount('');

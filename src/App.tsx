@@ -57,6 +57,7 @@ const UsersManagement = lazy(() => import("./pages/admin/UsersManagement"));
 const ModerationManagement = lazy(() => import("./pages/admin/ModerationManagement"));
 const ContentManagement = lazy(() => import("./pages/admin/ContentManagement"));
 const FinancialManagement = lazy(() => import("./pages/admin/FinancialManagement"));
+const WithdrawalRequests = lazy(() => import("./pages/admin/WithdrawalRequests"));
 const AdminSupport = lazy(() => import("./pages/admin/Support"));
 const SettingsManagement = lazy(() => import("./pages/admin/SettingsManagement"));
 const UserMessages = lazy(() => import("./pages/admin/UserMessages"));
@@ -139,6 +140,7 @@ function AppContent() {
             <Route path="businesses" element={<AdminBusinesses />} />
             <Route path="content" element={<ContentManagement />} />
             <Route path="financial" element={<FinancialManagement />} />
+            <Route path="withdrawals" element={<WithdrawalRequests />} />
             <Route path="support" element={<AdminSupport />} />
             <Route path="settings" element={<SettingsManagement />} />
             <Route path="user-messages" element={<UserMessages />} />

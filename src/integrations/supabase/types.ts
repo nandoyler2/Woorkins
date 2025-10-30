@@ -3757,6 +3757,7 @@ export type Database = {
       }
       withdrawal_requests: {
         Row: {
+          admin_notes: string | null
           amount: number
           completed_at: string | null
           created_at: string | null
@@ -3766,13 +3767,16 @@ export type Database = {
           pix_key: string
           pix_key_type: string
           processed_at: string | null
+          processed_by: string | null
           profile_id: string
+          receipt_url: string | null
           requested_at: string | null
           status: string
           stripe_payout_id: string | null
           updated_at: string | null
         }
         Insert: {
+          admin_notes?: string | null
           amount: number
           completed_at?: string | null
           created_at?: string | null
@@ -3782,13 +3786,16 @@ export type Database = {
           pix_key: string
           pix_key_type: string
           processed_at?: string | null
+          processed_by?: string | null
           profile_id: string
+          receipt_url?: string | null
           requested_at?: string | null
           status?: string
           stripe_payout_id?: string | null
           updated_at?: string | null
         }
         Update: {
+          admin_notes?: string | null
           amount?: number
           completed_at?: string | null
           created_at?: string | null
@@ -3798,13 +3805,22 @@ export type Database = {
           pix_key?: string
           pix_key_type?: string
           processed_at?: string | null
+          processed_by?: string | null
           profile_id?: string
+          receipt_url?: string | null
           requested_at?: string | null
           status?: string
           stripe_payout_id?: string | null
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "withdrawal_requests_processed_by_fkey"
+            columns: ["processed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "withdrawal_requests_profile_id_fkey"
             columns: ["profile_id"]

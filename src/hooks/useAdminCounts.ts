@@ -6,6 +6,7 @@ interface AdminCounts {
   support: number;
   documentVerifications: number;
   systemBlocks: number;
+  withdrawalRequests: number;
 }
 
 export const useAdminCounts = () => {
@@ -13,7 +14,8 @@ export const useAdminCounts = () => {
     moderation: 0,
     support: 0,
     documentVerifications: 0,
-    systemBlocks: 0
+    systemBlocks: 0,
+    withdrawalRequests: 0
   });
   const [loading, setLoading] = useState(true);
 
@@ -43,11 +45,18 @@ export const useAdminCounts = () => {
           .select('*', { count: 'exact', head: true })
           .or('is_permanent.eq.true,blocked_until.gt.now()');
 
+        // Contagem de solicitações de saque pendentes
+        const { count: withdrawalsCount } = await supabase
+          .from('withdrawal_requests')
+          .select('*', { count: 'exact', head: true })
+          .eq('status', 'pending');
+
         setCounts({
           moderation: moderationCount || 0,
           support: supportCount || 0,
           documentVerifications: verificationCount || 0,
-          systemBlocks: blocksCount || 0
+          systemBlocks: blocksCount || 0,
+          withdrawalRequests: withdrawalsCount || 0
         });
       } catch (error) {
         console.error('Error loading admin counts:', error);

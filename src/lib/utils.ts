@@ -101,6 +101,25 @@ export function formatDateTimeSaoPaulo(date: Date | string): string {
 /**
  * Formata apenas a hora para o timezone de São Paulo
  */
+export function maskPixKey(key: string, type: string): string {
+  if (!key) return '';
+  
+  if (type === 'cpf') {
+    return key.replace(/(\d{3})\d{6}(\d{2})/, '$1.***.**$2-**');
+  }
+  if (type === 'cnpj') {
+    return key.replace(/(\d{2})\d{8}(\d{4})/, '$1.***.***/$2-**');
+  }
+  if (type === 'email') {
+    const [user, domain] = key.split('@');
+    return `${user.slice(0, 3)}***@${domain}`;
+  }
+  if (type === 'phone' || type === 'telefone') {
+    return key.replace(/(\d{2})\d{5}(\d{4})/, '($1) *****-$2');
+  }
+  return `${key.slice(0, 10)}***`;
+}
+
 export function formatTimeSaoPaulo(date: Date | string): string {
   const dateObj = typeof date === 'string' ? new Date(date) : date;
   

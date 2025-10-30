@@ -103,8 +103,9 @@ export function ProposalChatHeader({
       );
     }
 
-    // Trabalho em andamento
-    if (proposal.work_status === 'in_progress') {
+    // Trabalho em andamento - mostrar botão tanto para pago quanto para aceito
+    if (proposal.work_status === 'in_progress' || 
+        (proposal.payment_status === 'paid' || proposal.payment_status === 'paid_escrow')) {
       if (isOwner) {
         return (
           <Button size="sm" onClick={onConfirmCompletion} className="bg-green-600 hover:bg-green-700">
@@ -121,11 +122,6 @@ export function ProposalChatHeader({
           </Button>
         );
       }
-    }
-
-    // Se já foi pago, não mostrar mais botões de aceitação/contra-proposta
-    if (proposal.payment_status === 'paid' || proposal.payment_status === 'paid_escrow') {
-      return null;
     }
 
     // Proposta aceita - aguardando pagamento

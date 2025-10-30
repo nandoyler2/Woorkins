@@ -540,6 +540,7 @@ useEffect(() => {
       }
       
       await loadProposalData();
+      await loadActivities();
     } catch (error: any) {
       if (!suppressToasts) {
         toast({

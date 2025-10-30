@@ -69,57 +69,103 @@ serve(async (req) => {
       }
 
       if (action === 'approve') {
+        console.log('🚀 Starting payment release process...');
+        
         // For Stripe payments: Capture the payment intent (release from escrow)
         if (proposal.stripe_payment_intent_id) {
-          const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
-            apiVersion: '2023-10-16',
-          });
+          console.log('💳 Capturing Stripe payment:', proposal.stripe_payment_intent_id);
+          try {
+            const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
+              apiVersion: '2023-10-16',
+            });
 
-          await stripe.paymentIntents.capture(proposal.stripe_payment_intent_id);
+            await stripe.paymentIntents.capture(proposal.stripe_payment_intent_id);
+            console.log('✅ Stripe payment captured successfully');
+          } catch (stripeError) {
+            console.error('❌ Error capturing Stripe payment:', stripeError);
+            const errorMsg = stripeError instanceof Error ? stripeError.message : String(stripeError);
+            throw new Error('Falha ao capturar pagamento no Stripe: ' + errorMsg);
+          }
+        } else {
+          console.log('ℹ️ No Stripe payment intent, proceeding with direct wallet update');
         }
 
         // Update proposal status
-        await supabaseClient
+        console.log('📝 Updating proposal status...');
+        const { error: proposalError } = await supabaseClient
           .from('proposals')
           .update({
             work_status: 'completed',
             payment_status: 'released',
             owner_confirmed_at: new Date().toISOString(),
-            escrow_released: true,
             escrow_released_at: new Date().toISOString(),
           })
           .eq('id', proposal_id);
 
+        if (proposalError) {
+          console.error('❌ Error updating proposal:', proposalError);
+          throw new Error('Falha ao atualizar proposta: ' + proposalError.message);
+        }
+        console.log('✅ Proposal status updated successfully');
+
         // Move freelancer payment from pending to available
-        const { data: wallet } = await supabaseClient
+        console.log('💰 Updating freelancer wallet...');
+        const { data: wallet, error: walletFetchError } = await supabaseClient
           .from('freelancer_wallet')
           .select('*')
           .eq('profile_id', proposal.freelancer_id)
           .single();
 
+        if (walletFetchError) {
+          console.error('❌ Error fetching wallet:', walletFetchError);
+          throw new Error('Falha ao buscar carteira: ' + walletFetchError.message);
+        }
+
         if (wallet) {
-          await supabaseClient
+          const newAvailable = (wallet.available_balance || 0) + proposal.freelancer_amount;
+          const newPending = Math.max((wallet.pending_balance || 0) - proposal.freelancer_amount, 0);
+          const newTotal = (wallet.total_earned || 0) + proposal.freelancer_amount;
+          
+          console.log('📊 Wallet update:', {
+            available: `${wallet.available_balance} → ${newAvailable}`,
+            pending: `${wallet.pending_balance} → ${newPending}`,
+            total: `${wallet.total_earned} → ${newTotal}`
+          });
+
+          const { error: walletError } = await supabaseClient
             .from('freelancer_wallet')
             .update({
-              available_balance: (wallet.available_balance || 0) + proposal.freelancer_amount,
-              pending_balance: (wallet.pending_balance || 0) - proposal.freelancer_amount,
-              total_earned: (wallet.total_earned || 0) + proposal.freelancer_amount,
+              available_balance: newAvailable,
+              pending_balance: newPending,
+              total_earned: newTotal,
               updated_at: new Date().toISOString(),
             })
             .eq('profile_id', proposal.freelancer_id);
+
+          if (walletError) {
+            console.error('❌ Error updating wallet:', walletError);
+            throw new Error('Falha ao atualizar carteira: ' + walletError.message);
+          }
+          console.log('✅ Wallet updated successfully');
         }
 
-        // Create status history
-        await supabaseClient.from('proposal_status_history').insert({
+        // Create status history with 'completed' type
+        console.log('📜 Creating status history...');
+        const { error: historyError } = await supabaseClient.from('proposal_status_history').insert({
           proposal_id,
-          status_type: 'owner_confirmed',
+          status_type: 'completed',
           changed_by: proposal.project.profile_id,
           new_value: { status: 'completed' },
           message: 'Projeto concluído e pagamento liberado!',
         });
 
-        // Notifications are handled by the webhook
+        if (historyError) {
+          console.error('❌ Error creating status history:', historyError);
+          throw new Error('Falha ao criar histórico: ' + historyError.message);
+        }
+        console.log('✅ Status history created successfully');
 
+        console.log('🎉 Payment release completed successfully!');
         return new Response(
           JSON.stringify({ success: true, message: 'Pagamento liberado com sucesso!' }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

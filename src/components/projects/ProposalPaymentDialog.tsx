@@ -57,50 +57,50 @@ export function ProposalPaymentDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] max-w-4xl">
+      <DialogContent className="w-[95vw] max-w-md">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-3">
+          <DialogTitle className="flex items-center gap-2 text-lg">
             {step === 'checkout' && (
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8"
+                className="h-7 w-7"
                 onClick={() => setStep('summary')}
               >
                 <ArrowLeft className="h-4 w-4" />
               </Button>
             )}
             <span>Pagar Proposta</span>
-            <span className="text-base font-normal text-muted-foreground">
+            <span className="text-sm font-normal text-muted-foreground">
               {projectTitle}
             </span>
           </DialogTitle>
         </DialogHeader>
 
         {step === 'summary' && (
-          <div className="space-y-4">
-            <div className="rounded-lg border p-6 bg-card">
-              <div className="flex items-start justify-between mb-4">
+          <div className="space-y-3">
+            <div className="rounded-lg border p-4 bg-card">
+              <div className="flex items-start justify-between mb-3">
                 <div>
-                  <p className="text-sm text-muted-foreground mb-1">Projeto:</p>
-                  <p className="font-medium">{projectTitle}</p>
+                  <p className="text-xs text-muted-foreground mb-0.5">Projeto:</p>
+                  <p className="text-sm font-medium">{projectTitle}</p>
                 </div>
               </div>
               
-              <div className="flex justify-between items-center pt-4 border-t">
-                <span className="text-lg font-semibold">Valor a Pagar:</span>
-                <span className="text-3xl font-bold text-primary">
+              <div className="flex justify-between items-center pt-3 border-t">
+                <span className="text-sm font-semibold">Valor a Pagar:</span>
+                <span className="text-2xl font-bold text-primary">
                   R$ {amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 </span>
               </div>
             </div>
 
-            <div className="bg-muted p-4 rounded-lg text-sm space-y-2">
-              <p className="font-medium flex items-center gap-2">
-                <span className="text-lg">🔒</span>
+            <div className="bg-muted p-3 rounded-lg text-xs space-y-1.5">
+              <p className="font-medium flex items-center gap-1.5 text-sm">
+                <span>🔒</span>
                 Pagamento 100% Seguro
               </p>
-              <ul className="list-disc list-inside space-y-1 text-muted-foreground ml-1">
+              <ul className="list-disc list-inside space-y-0.5 text-muted-foreground ml-1">
                 <li>O valor ficará retido em segurança na plataforma</li>
                 <li>O freelancer só receberá após você confirmar a conclusão</li>
                 <li>Você precisa validar que todo o trabalho foi finalizado</li>
@@ -108,22 +108,20 @@ export function ProposalPaymentDialog({
               </ul>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-2">
               <Button
                 onClick={() => handleMethodSelect('pix')}
-                className="h-14 bg-[#32BCAD] hover:bg-[#2BA89A] text-white"
-                size="lg"
+                className="h-11 bg-[#32BCAD] hover:bg-[#2BA89A] text-white text-sm"
               >
-                <PixIcon className="h-5 w-5 mr-2" />
+                <PixIcon className="h-4 w-4 mr-1.5" />
                 Pagar com PIX
               </Button>
 
               <Button
                 onClick={() => handleMethodSelect('card')}
-                className="h-14"
-                size="lg"
+                className="h-11 text-sm"
               >
-                <CreditCard className="h-5 w-5 mr-2" />
+                <CreditCard className="h-4 w-4 mr-1.5" />
                 Pagar com Cartão
               </Button>
             </div>

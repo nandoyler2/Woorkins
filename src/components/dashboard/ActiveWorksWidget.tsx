@@ -54,6 +54,8 @@ export function ActiveWorksWidget({ profileId }: ActiveWorksWidgetProps) {
         .select(`
           id,
           budget,
+          accepted_amount,
+          current_proposal_amount,
           work_status,
           payment_status,
           freelancer_completed_at,
@@ -81,6 +83,8 @@ export function ActiveWorksWidget({ profileId }: ActiveWorksWidgetProps) {
         .select(`
           id,
           budget,
+          accepted_amount,
+          current_proposal_amount,
           work_status,
           payment_status,
           freelancer_completed_at,
@@ -103,38 +107,40 @@ export function ActiveWorksWidget({ profileId }: ActiveWorksWidgetProps) {
 
       if (ownerError) throw ownerError;
 
-      // Get correct budget from counter proposals for each work
-      const getCorrectBudget = async (proposalId: string, originalBudget: number): Promise<number> => {
-        console.log(`🔍 Buscando valor correto para proposal ${proposalId}, valor original: R$ ${originalBudget}`);
+      // Get correct budget from proposals - priority order:
+      // 1. accepted_amount (valor final aceito)
+      // 2. current_proposal_amount (valor da última contra-proposta)
+      // 3. budget (valor original da proposta)
+      const getCorrectBudget = (proposal: any): number => {
+        const accepted = proposal.accepted_amount;
+        const current = proposal.current_proposal_amount;
+        const original = proposal.budget;
         
-        const { data: counterProposals, error } = await supabase
-          .from('counter_proposals')
-          .select('amount, status, created_at')
-          .eq('proposal_id', proposalId)
-          .order('created_at', { ascending: false });
+        console.log(`🔍 Determinando valor correto para proposal ${proposal.id}:`);
+        console.log(`   💰 accepted_amount: ${accepted}`);
+        console.log(`   📋 current_proposal_amount: ${current}`);
+        console.log(`   🎯 budget original: ${original}`);
         
-        if (error) {
-          console.error('❌ Erro ao buscar contra-propostas:', error);
-          return originalBudget;
-        }
-
-        console.log(`📊 Contra-propostas encontradas:`, counterProposals);
-        
-        // Buscar a última aceita
-        const acceptedCounter = counterProposals?.find(cp => cp.status === 'accepted');
-        
-        if (acceptedCounter) {
-          console.log(`✅ Contra-proposta aceita encontrada: R$ ${acceptedCounter.amount}`);
-          return acceptedCounter.amount;
+        // Se tem valor aceito (final), usar esse
+        if (accepted !== null && accepted !== undefined) {
+          console.log(`✅ Usando accepted_amount: R$ ${accepted}`);
+          return accepted;
         }
         
-        console.log(`⚠️ Nenhuma contra-proposta aceita, usando valor original: R$ ${originalBudget}`);
-        return originalBudget;
+        // Se tem contra-proposta em andamento, usar essa
+        if (current !== null && current !== undefined) {
+          console.log(`📝 Usando current_proposal_amount: R$ ${current}`);
+          return current;
+        }
+        
+        // Fallback para valor original
+        console.log(`🔄 Usando budget original: R$ ${original}`);
+        return original;
       };
 
       // Combine and format
       const freelancerWorks: ActiveWork[] = await Promise.all((asFreelancer || []).map(async (w: any) => {
-        const correctBudget = await getCorrectBudget(w.id, w.budget);
+        const correctBudget = getCorrectBudget(w);
         
         return {
           id: w.id,
@@ -154,7 +160,7 @@ export function ActiveWorksWidget({ profileId }: ActiveWorksWidgetProps) {
       }));
 
       const ownerWorks: ActiveWork[] = await Promise.all((asOwner || []).map(async (w: any) => {
-        const correctBudget = await getCorrectBudget(w.id, w.budget);
+        const correctBudget = getCorrectBudget(w);
         
         return {
           id: w.id,

@@ -285,16 +285,29 @@ export function ProposalChatHeader({
         </div>
 
         {/* Centro: Valor - visível em md+ */}
-        <div className="hidden md:flex items-center px-3 py-1.5 rounded-lg bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 border-2 border-primary/30 shadow-md flex-shrink-0">
+        <div className={`hidden md:flex flex-col items-center px-3 py-1.5 rounded-lg border-2 shadow-md flex-shrink-0 ${
+          proposal.payment_status === 'paid' || proposal.payment_status === 'paid_escrow' || proposal.payment_status === 'captured'
+            ? 'bg-gradient-to-r from-green-500/10 via-green-500/5 to-green-500/10 border-green-500/30'
+            : 'bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 border-primary/30'
+        }`}>
           <div className="flex items-baseline gap-1">
             <span className="text-xs font-medium text-muted-foreground">R$</span>
-            <span className="text-xl font-bold text-primary">
+            <span className={`text-xl font-bold ${
+              proposal.payment_status === 'paid' || proposal.payment_status === 'paid_escrow' || proposal.payment_status === 'captured'
+                ? 'text-green-600 dark:text-green-500'
+                : 'text-primary'
+            }`}>
               {proposal.current_proposal_amount?.toLocaleString('pt-BR', {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2,
               })}
             </span>
           </div>
+          <span className="text-[10px] font-medium text-muted-foreground mt-0.5">
+            {proposal.payment_status === 'paid' || proposal.payment_status === 'paid_escrow' || proposal.payment_status === 'captured'
+              ? 'Projeto pago'
+              : 'Proposta'}
+          </span>
         </div>
 
         {/* Coluna direita: Botões de ação */}

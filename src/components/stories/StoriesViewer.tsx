@@ -365,7 +365,7 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
                           <div
                             key={story.id}
                             onClick={() => setCurrentIndex(actualIndex)}
-                            className="cursor-pointer group relative w-14 rounded-lg overflow-hidden bg-black transition-all hover:scale-105"
+                            className="cursor-pointer group relative w-28 rounded-lg overflow-hidden bg-black transition-all hover:scale-105"
                             style={{ aspectRatio: "9 / 16" }}
                           >
                             <div className="absolute inset-0 bg-black/30 group-hover:bg-black/10 transition-colors z-10" />
@@ -670,7 +670,7 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
                           <div
                             key={story.id}
                             onClick={() => setCurrentIndex(actualIndex)}
-                            className="cursor-pointer group relative w-14 rounded-lg overflow-hidden bg-black transition-all hover:scale-105"
+                            className="cursor-pointer group relative w-28 rounded-lg overflow-hidden bg-black transition-all hover:scale-105"
                             style={{ aspectRatio: "9 / 16" }}
                           >
                             <div className="absolute inset-0 bg-black/30 group-hover:bg-black/10 transition-colors z-10" />

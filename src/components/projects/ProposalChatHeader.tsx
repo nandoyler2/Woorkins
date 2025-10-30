@@ -260,9 +260,9 @@ export function ProposalChatHeader({
 
   return (
     <div className="border-b bg-gradient-to-br from-background via-primary/5 to-background p-4 shadow-sm">
-      <div className="flex items-center gap-3 md:gap-6">
+      <div className="flex items-center justify-between gap-4">
         {/* Coluna esquerda: Info do projeto */}
-        <div className="bg-card/50 backdrop-blur-sm rounded-lg p-3 border border-border/50 w-fit max-w-[60%]">
+        <div className="bg-card/50 backdrop-blur-sm rounded-lg p-3 border border-border/50 w-fit flex-shrink-0">
           {projectData && (
             <div>
               <div className="flex items-center gap-2 mb-1">
@@ -285,7 +285,7 @@ export function ProposalChatHeader({
         </div>
 
         {/* Centro: Valor - visível em md+ */}
-        <div className="hidden md:flex items-center px-3 py-1.5 rounded-lg bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 border-2 border-primary/30 shadow-md">
+        <div className="hidden md:flex items-center px-3 py-1.5 rounded-lg bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 border-2 border-primary/30 shadow-md flex-shrink-0">
           <div className="flex items-baseline gap-1">
             <span className="text-xs font-medium text-muted-foreground">R$</span>
             <span className="text-xl font-bold text-primary">
@@ -298,7 +298,7 @@ export function ProposalChatHeader({
         </div>
 
         {/* Coluna direita: Botões de ação */}
-        <div className="flex items-center gap-2 flex-shrink-0">
+        <div className="flex items-center gap-2 flex-shrink-0 ml-auto">
           {renderActionButtons()}
 
           <DropdownMenu>

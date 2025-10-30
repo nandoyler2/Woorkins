@@ -33,6 +33,7 @@ import { ProposalNegotiationPanel } from './ProposalNegotiationPanel';
 import { ProposalChatHeader } from './projects/ProposalChatHeader';
 import { ProposalCounterDialog } from './projects/ProposalCounterDialog';
 import { ProposalHistoryDialog } from './projects/ProposalHistoryDialog';
+import { ProposalPaymentDialog } from './projects/ProposalPaymentDialog';
 import { BlockedMessageCountdown } from './BlockedMessageCountdown';
 import { ImageViewer } from './ImageViewer';
 import { RequireProfilePhotoDialog } from './RequireProfilePhotoDialog';
@@ -95,6 +96,7 @@ export function UnifiedChat({
   const [showBlockDialog, setShowBlockDialog] = useState(false);
   const [showCounterDialog, setShowCounterDialog] = useState(false);
   const [showHistoryDialog, setShowHistoryDialog] = useState(false);
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messageInputRef = useRef<HTMLInputElement>(null);
@@ -953,10 +955,15 @@ useEffect(() => {
                       })
                       .eq('id', conversationId);
                     
+                    await loadProposalData();
+                    
                     toast({
                       title: 'Contra-proposta aceita!',
                       description: 'Agora você pode pagar para iniciar o trabalho',
                     });
+                    
+                    // Abrir diálogo de pagamento
+                    setShowPaymentDialog(true);
                   }}
                   className="bg-white hover:bg-slate-50 text-green-700 border-2 border-green-700 font-semibold shadow-md"
                 >
@@ -1859,6 +1866,15 @@ useEffect(() => {
         open={showHistoryDialog}
         onOpenChange={setShowHistoryDialog}
         proposalId={conversationId}
+      />
+
+      {/* Proposal Payment Dialog */}
+      <ProposalPaymentDialog
+        open={showPaymentDialog}
+        onOpenChange={setShowPaymentDialog}
+        proposalId={conversationId}
+        amount={proposalData?.accepted_amount || proposalData?.current_proposal_amount || proposalData?.budget || 0}
+        projectTitle={projectTitle || ''}
       />
     </div>
   );

@@ -340,7 +340,7 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
-      <DialogContent className="z-[9999] w-[95vw] sm:w-[90vw] md:w-[500px] lg:w-[450px] xl:w-[500px] h-[90vh] sm:h-[85vh] md:h-[80vh] max-h-[900px] p-0 bg-transparent border-0 shadow-none overflow-visible [&>button]:hidden">
+      <DialogContent className="z-[9999] w-[90vw] sm:w-[85vw] md:w-[450px] lg:w-[500px] max-w-[500px] h-[85vh] max-h-[calc(100vh-80px)] p-0 bg-transparent border-0 shadow-none overflow-visible [&>button]:hidden">
         <DialogTitle className="sr-only">Stories</DialogTitle>
         <DialogDescription className="sr-only">Visualizador de stories</DialogDescription>
         {isLoading || stories.length === 0 ? (

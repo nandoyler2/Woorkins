@@ -257,14 +257,14 @@ export function ProposalChatHeader({
 
         {/* Centro: Valor - SEMPRE no meio absoluto */}
         <div className={`absolute left-1/2 -translate-x-1/2 flex flex-col items-center px-2 md:px-3 py-1 md:py-1.5 rounded-lg border-2 shadow-md z-20 ${
-          proposal.payment_status === 'paid' || proposal.payment_status === 'paid_escrow' || proposal.payment_status === 'captured'
+          proposal.payment_status === 'paid' || proposal.payment_status === 'paid_escrow' || proposal.payment_status === 'captured' || proposal.payment_status === 'released'
             ? 'bg-gradient-to-r from-green-500/10 via-green-500/5 to-green-500/10 border-green-500/30'
             : 'bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 border-primary/30'
         }`}>
           <div className="flex items-baseline gap-1">
             <span className="text-[10px] md:text-xs font-medium text-muted-foreground">R$</span>
             <span className={`text-base md:text-xl font-bold ${
-              proposal.payment_status === 'paid' || proposal.payment_status === 'paid_escrow' || proposal.payment_status === 'captured'
+              proposal.payment_status === 'paid' || proposal.payment_status === 'paid_escrow' || proposal.payment_status === 'captured' || proposal.payment_status === 'released'
                 ? 'text-green-600 dark:text-green-500'
                 : 'text-primary'
             }`}>
@@ -275,7 +275,7 @@ export function ProposalChatHeader({
             </span>
           </div>
           <span className="text-[8px] md:text-[10px] font-medium text-muted-foreground mt-0.5 whitespace-nowrap">
-            {proposal.payment_status === 'paid' || proposal.payment_status === 'paid_escrow' || proposal.payment_status === 'captured'
+            {proposal.payment_status === 'paid' || proposal.payment_status === 'paid_escrow' || proposal.payment_status === 'captured' || proposal.payment_status === 'released'
               ? 'Projeto pago'
               : 'Proposta'}
           </span>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -52,6 +52,8 @@ export default function Messages() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<'all' | 'unread' | 'starred' | 'archived' | 'disputes'>('all');
   const [isBackgroundLoading, setIsBackgroundLoading] = useState(false);
+  const isLoadingRef = useRef(false);
+  const loadingTimeoutRef = useRef<NodeJS.Timeout>();
   const location = useLocation();
 
   useEffect(() => {
@@ -71,10 +73,13 @@ export default function Messages() {
         setConversations(cachedConversations);
       }
       
-      // Forçar atualização para garantir dados frescos
-      loadConversations(true);
+      // Forçar atualização para garantir dados frescos com debounce
+      const timer = setTimeout(() => {
+        loadConversations(true);
+      }, 400);
       
       // Subscribe to lightweight realtime updates for conversation list (avoid full reload)
+      // IMPORTANTE: Remover selectedConversation das dependências para não recriar canal
       const channel = supabase
         .channel('conversations-updates')
         .on(
@@ -143,10 +148,11 @@ export default function Messages() {
         .subscribe();
 
       return () => {
+        clearTimeout(timer);
         supabase.removeChannel(channel);
       };
     }
-  }, [profileId, selectedConversation, activeFilter]);
+  }, [profileId, activeFilter]);
 
   // Auto-select conversation from query params (only from notifications)
   useEffect(() => {
@@ -177,13 +183,28 @@ export default function Messages() {
   };
 
   const loadConversations = useCallback(async (forceRefresh = false) => {
+    // Controle de concorrência: não iniciar se já estiver carregando
+    if (isLoadingRef.current) {
+      console.log('⏭️ Carregamento já em andamento, pulando...');
+      return;
+    }
+
     // Se tem cache válido e não é refresh forçado, usar cache
     if (!forceRefresh && !isStale()) {
       setConversations(cachedConversations);
       return;
     }
 
+    isLoadingRef.current = true;
     setIsBackgroundLoading(true);
+
+    // Timeout de segurança: 10s max
+    loadingTimeoutRef.current = setTimeout(() => {
+      console.warn('⚠️ Timeout de carregamento, limpando flag');
+      setIsBackgroundLoading(false);
+      isLoadingRef.current = false;
+    }, 10000);
+
     try {
       // Load aggregated unread counts for this user once
       const { data: unreadRows } = await supabase
@@ -379,9 +400,13 @@ export default function Messages() {
         last_read_at: c.unreadCount === 0 ? new Date().toISOString() : null,
       }));
       if (aggregateRows.length) {
-        await supabase
-          .from('message_unread_counts')
-          .upsert(aggregateRows, { onConflict: 'user_id,conversation_id,conversation_type' });
+        try {
+          await supabase
+            .from('message_unread_counts')
+            .upsert(aggregateRows, { onConflict: 'user_id,conversation_id,conversation_type' });
+        } catch (upsertError) {
+          console.warn('Erro ao atualizar unread counts (RLS):', upsertError);
+        }
       }
 
       // Atualizar tanto o estado local quanto o cache global
@@ -390,7 +415,11 @@ export default function Messages() {
     } catch (error) {
       console.error('Error loading conversations:', error);
     } finally {
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current);
+      }
       setIsBackgroundLoading(false);
+      isLoadingRef.current = false;
     }
   }, [profileId, activeFilter, isStale, cachedConversations, setCachedConversations]);
 

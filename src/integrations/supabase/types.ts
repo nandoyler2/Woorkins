@@ -2206,9 +2206,11 @@ export type Database = {
           accepted_amount: number | null
           archived: boolean | null
           archived_at: string | null
+          auto_completed: boolean | null
           awaiting_acceptance_from: string | null
           budget: number
           business_id: string | null
+          completion_requested_at: string | null
           created_at: string
           current_proposal_amount: number | null
           current_proposal_by: string | null
@@ -2223,6 +2225,7 @@ export type Database = {
           mercadopago_payment_id: string | null
           message: string
           net_amount: number | null
+          owner_confirmation_deadline: string | null
           owner_confirmed_at: string | null
           owner_has_messaged: boolean | null
           payment_captured_at: string | null
@@ -2239,9 +2242,11 @@ export type Database = {
           accepted_amount?: number | null
           archived?: boolean | null
           archived_at?: string | null
+          auto_completed?: boolean | null
           awaiting_acceptance_from?: string | null
           budget: number
           business_id?: string | null
+          completion_requested_at?: string | null
           created_at?: string
           current_proposal_amount?: number | null
           current_proposal_by?: string | null
@@ -2256,6 +2261,7 @@ export type Database = {
           mercadopago_payment_id?: string | null
           message: string
           net_amount?: number | null
+          owner_confirmation_deadline?: string | null
           owner_confirmed_at?: string | null
           owner_has_messaged?: boolean | null
           payment_captured_at?: string | null
@@ -2272,9 +2278,11 @@ export type Database = {
           accepted_amount?: number | null
           archived?: boolean | null
           archived_at?: string | null
+          auto_completed?: boolean | null
           awaiting_acceptance_from?: string | null
           budget?: number
           business_id?: string | null
+          completion_requested_at?: string | null
           created_at?: string
           current_proposal_amount?: number | null
           current_proposal_by?: string | null
@@ -2289,6 +2297,7 @@ export type Database = {
           mercadopago_payment_id?: string | null
           message?: string
           net_amount?: number | null
+          owner_confirmation_deadline?: string | null
           owner_confirmed_at?: string | null
           owner_has_messaged?: boolean | null
           payment_captured_at?: string | null

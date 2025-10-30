@@ -105,6 +105,7 @@ export function ProposalChatHeader({
 
     // Trabalho em andamento - mostrar botão tanto para pago quanto para aceito
     if (proposal.work_status === 'in_progress' || 
+        proposal.payment_status === 'captured' ||
         (proposal.payment_status === 'paid' || proposal.payment_status === 'paid_escrow')) {
       if (isOwner) {
         return (
@@ -118,7 +119,7 @@ export function ProposalChatHeader({
         return (
           <Button size="sm" onClick={onMarkCompleted} className="bg-green-600 hover:bg-green-700">
             <CheckCircle className="h-4 w-4 mr-2" />
-            Concluir Projeto
+            Projeto Concluído
           </Button>
         );
       }

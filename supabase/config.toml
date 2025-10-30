@@ -89,3 +89,6 @@ verify_jwt = true
 
 [functions.update-unconfirmed-email]
 verify_jwt = false
+
+[functions.proposal-auto-complete]
+verify_jwt = false

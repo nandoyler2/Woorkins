@@ -655,12 +655,6 @@ export const useRealtimeMessaging = ({
         async (payload) => {
           const newMessage = payload.new as any;
           
-          // Skip pending messages for recipient (only show approved)
-          if (newMessage.sender_id !== currentUserId && newMessage.moderation_status === 'pending') {
-            console.log('⏳ Mensagem pendente de moderação, aguardando aprovação');
-            return;
-          }
-          
           // Fetch sender details
           const { data: senderData } = await supabase
             .from('profiles')

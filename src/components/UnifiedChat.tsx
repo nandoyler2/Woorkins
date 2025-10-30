@@ -35,6 +35,7 @@ import { ProposalCounterDialog } from './projects/ProposalCounterDialog';
 import { ProposalHistoryDialog } from './projects/ProposalHistoryDialog';
 import { ProposalPaymentDialog } from './projects/ProposalPaymentDialog';
 import { ProposalCompletionDialog } from './projects/ProposalCompletionDialog';
+import { FreelancerCompletionDialog } from './projects/FreelancerCompletionDialog';
 import { BlockedMessageCountdown } from './BlockedMessageCountdown';
 import { ImageViewer } from './ImageViewer';
 import { RequireProfilePhotoDialog } from './RequireProfilePhotoDialog';
@@ -99,6 +100,7 @@ export function UnifiedChat({
   const [showHistoryDialog, setShowHistoryDialog] = useState(false);
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   const [showCompletionDialog, setShowCompletionDialog] = useState(false);
+  const [showFreelancerCompletionDialog, setShowFreelancerCompletionDialog] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messageInputRef = useRef<HTMLInputElement>(null);
@@ -479,17 +481,21 @@ useEffect(() => {
       
       if (data?.url) {
         window.open(data.url, '_blank');
-        toast({
-          title: 'Redirecionando para pagamento',
-          description: 'Você será redirecionado para o Stripe para completar o pagamento',
-        });
+        if (!suppressToasts) {
+          toast({
+            title: 'Redirecionando para pagamento',
+            description: 'Você será redirecionado para o Stripe para completar o pagamento',
+          });
+        }
       }
     } catch (error: any) {
-      toast({
-        title: 'Erro ao processar pagamento',
-        description: error.message,
-        variant: 'destructive',
-      });
+      if (!suppressToasts) {
+        toast({
+          title: 'Erro ao processar pagamento',
+          description: error.message,
+          variant: 'destructive',
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -515,33 +521,46 @@ useEffect(() => {
       
       setShowCompletionDialog(false);
       
-      toast({
-        title: 'Trabalho concluído!',
-        description: 'O pagamento foi liberado para o freelancer',
-      });
+      if (!suppressToasts) {
+        toast({
+          title: 'Trabalho concluído!',
+          description: 'O pagamento foi liberado para o freelancer',
+        });
+      }
       
       await loadProposalData();
     } catch (error: any) {
-      toast({
-        title: 'Erro ao confirmar conclusão',
-        description: error.message,
-        variant: 'destructive',
-      });
+      if (!suppressToasts) {
+        toast({
+          title: 'Erro ao confirmar conclusão',
+          description: error.message,
+          variant: 'destructive',
+        });
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Freelancer marks work as completed
-  const handleMarkCompleted = async () => {
+  // Freelancer marks work as completed - opens dialog first
+  const handleMarkCompleted = () => {
+    setShowFreelancerCompletionDialog(true);
+  };
+
+  // Confirm freelancer completion (after dialog confirmation)
+  const handleConfirmFreelancerCompletion = async () => {
     try {
       setIsLoading(true);
       
+      const deadline = new Date();
+      deadline.setHours(deadline.getHours() + 72); // 72 horas = 3 dias
+
       const { error } = await supabase
         .from('proposals')
         .update({
           work_status: 'freelancer_completed',
-          freelancer_completed_at: new Date().toISOString(),
+          completion_requested_at: new Date().toISOString(),
+          owner_confirmation_deadline: deadline.toISOString(),
         })
         .eq('id', conversationId);
       
@@ -553,21 +572,27 @@ useEffect(() => {
         status_type: 'freelancer_completed',
         changed_by: profileId,
         new_value: { work_status: 'freelancer_completed' },
-        message: 'Freelancer marcou o trabalho como concluído',
+        message: 'Freelancer marcou o trabalho como concluído. Cliente tem 72h para confirmar.',
       });
       
-      toast({
-        title: 'Trabalho marcado como concluído!',
-        description: 'Aguarde a confirmação do cliente',
-      });
+      setShowFreelancerCompletionDialog(false);
+      
+      if (!suppressToasts) {
+        toast({
+          title: 'Trabalho marcado como concluído!',
+          description: 'O cliente tem 72h para confirmar. Após esse prazo, o pagamento será liberado automaticamente.',
+        });
+      }
       
       await loadProposalData();
     } catch (error: any) {
-      toast({
-        title: 'Erro ao marcar como concluído',
-        description: error.message,
-        variant: 'destructive',
-      });
+      if (!suppressToasts) {
+        toast({
+          title: 'Erro ao marcar como concluído',
+          description: error.message,
+          variant: 'destructive',
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -720,12 +745,14 @@ useEffect(() => {
     // Check total files limit (10 files max)
     const currentCount = selectedFiles.length;
     if (currentCount + files.length > 10) {
-      toast({
-        variant: 'destructive',
-        title: 'Limite de arquivos',
-        description: 'Você pode enviar no máximo 10 arquivos por vez',
-        duration: 5000
-      });
+      if (!suppressToasts) {
+        toast({
+          variant: 'destructive',
+          title: 'Limite de arquivos',
+          description: 'Você pode enviar no máximo 10 arquivos por vez',
+          duration: 5000
+        });
+      }
       return;
     }
 
@@ -744,12 +771,14 @@ useEffect(() => {
     });
 
     if (invalidFiles.length > 0) {
-      toast({
-        variant: 'destructive',
-        title: 'Arquivos muito grandes',
-        description: `Os seguintes arquivos ultrapassam ${maxSizeMB}MB e não podem ser enviados:\n${invalidFiles.join('\n')}`,
-        duration: 8000,
-      });
+      if (!suppressToasts) {
+        toast({
+          variant: 'destructive',
+          title: 'Arquivos muito grandes',
+          description: `Os seguintes arquivos ultrapassam ${maxSizeMB}MB e não podem ser enviados:\n${invalidFiles.join('\n')}`,
+          duration: 8000,
+        });
+      }
     }
 
     if (validFiles.length > 0) {
@@ -1097,10 +1126,12 @@ useEffect(() => {
         .delete()
         .eq('conversation_id', conversationId);
       
-      toast({
-        title: 'Conversa excluída',
-        description: 'A conversa foi excluída com sucesso para ambas as partes.',
-      });
+      if (!suppressToasts) {
+        toast({
+          title: 'Conversa excluída',
+          description: 'A conversa foi excluída com sucesso para ambas as partes.',
+        });
+      }
       
       // Call parent callback to refresh conversations list
       if (onConversationDeleted) {
@@ -1108,11 +1139,13 @@ useEffect(() => {
       }
     } catch (error: any) {
       console.error('Error deleting conversation:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Erro ao excluir',
-        description: error.message || 'Não foi possível excluir a conversa. Tente novamente.',
-      });
+      if (!suppressToasts) {
+        toast({
+          variant: 'destructive',
+          title: 'Erro ao excluir',
+          description: error.message || 'Não foi possível excluir a conversa. Tente novamente.',
+        });
+      }
     }
   };
 
@@ -1130,21 +1163,25 @@ useEffect(() => {
         setShowReportDialog(true);
       }
     } catch (error: any) {
-      toast({
-        variant: 'destructive',
-        title: 'Erro ao bloquear',
-        description: error.message,
-      });
+      if (!suppressToasts) {
+        toast({
+          variant: 'destructive',
+          title: 'Erro ao bloquear',
+          description: error.message,
+        });
+      }
     }
   };
 
   const handleReport = async () => {
     if (!reportReason.trim()) {
-      toast({
-        variant: 'destructive',
-        title: 'Erro',
-        description: 'Selecione um motivo para a denúncia',
-      });
+      if (!suppressToasts) {
+        toast({
+          variant: 'destructive',
+          title: 'Erro',
+          description: 'Selecione um motivo para a denúncia',
+        });
+      }
       return;
     }
 
@@ -1159,20 +1196,24 @@ useEffect(() => {
 
       if (error) throw error;
 
-      toast({
-        title: 'Denúncia enviada',
-        description: 'Sua denúncia foi registrada e será analisada pela nossa equipe',
-      });
+      if (!suppressToasts) {
+        toast({
+          title: 'Denúncia enviada',
+          description: 'Sua denúncia foi registrada e será analisada pela nossa equipe',
+        });
+      }
 
       setShowReportDialog(false);
       setReportReason('');
       setReportDescription('');
     } catch (error: any) {
-      toast({
-        variant: 'destructive',
-        title: 'Erro ao enviar denúncia',
-        description: error.message,
-      });
+      if (!suppressToasts) {
+        toast({
+          variant: 'destructive',
+          title: 'Erro ao enviar denúncia',
+          description: error.message,
+        });
+      }
     }
   };
 
@@ -1190,17 +1231,29 @@ useEffect(() => {
 
       if (error) throw error;
 
-      toast({
-        title: 'Conversa arquivada',
-        description: 'A conversa foi arquivada com sucesso',
-      });
+      if (!suppressToasts) {
+        toast({
+          title: 'Conversa arquivada',
+          description: 'A conversa foi arquivada com sucesso',
+        });
+      }
 
       if (onConversationDeleted) {
         onConversationDeleted();
       }
     } catch (error: any) {
       console.error('Error archiving conversation:', error);
-      toast({
+      if (!suppressToasts) {
+        toast({
+          variant: 'destructive',
+          title: 'Erro ao arquivar',
+          description: error.message,
+        });
+      }
+    }
+  };
+
+  // Check if conversation can be deleted
         variant: 'destructive',
         title: 'Erro ao arquivar',
         description: error.message || 'Não foi possível arquivar a conversa',
@@ -1900,6 +1953,14 @@ useEffect(() => {
         proposalId={conversationId}
         amount={proposalData?.accepted_amount || proposalData?.current_proposal_amount || proposalData?.budget || 0}
         projectTitle={projectTitle || ''}
+      />
+
+      {/* Freelancer Completion Dialog */}
+      <FreelancerCompletionDialog
+        open={showFreelancerCompletionDialog}
+        onOpenChange={setShowFreelancerCompletionDialog}
+        onConfirm={handleConfirmFreelancerCompletion}
+        isLoading={isLoading}
       />
 
       {/* Proposal Completion Dialog */}

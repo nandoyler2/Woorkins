@@ -928,7 +928,7 @@ useEffect(() => {
             <div className="font-semibold">
               <p className="mb-2">✅ Projeto concluído! Pagamento liberado.</p>
               <p className="text-sm font-normal mb-2">
-                O valor de <span className="font-bold text-green-600">R$ {releasedAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span> já está disponível para você solicitar o saque.
+                O valor de <span className="font-bold text-white">R$ {releasedAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span> já está disponível para você solicitar o saque.
               </p>
               <button
                 onClick={() => window.location.href = '/financeiro'}

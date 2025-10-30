@@ -923,10 +923,20 @@ useEffect(() => {
           );
         
         case 'completed':
+          const releasedAmount = proposalData?.current_proposal_amount || new_value?.amount || 0;
           return (
-            <p className="font-semibold">
-              ✅ Projeto concluído! Pagamento liberado.
-            </p>
+            <div className="font-semibold">
+              <p className="mb-2">✅ Projeto concluído! Pagamento liberado.</p>
+              <p className="text-sm font-normal mb-2">
+                O valor de <span className="font-bold text-green-600">R$ {releasedAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span> já está disponível para você solicitar o saque.
+              </p>
+              <button
+                onClick={() => window.location.href = '/financeiro'}
+                className="text-sm text-blue-600 hover:text-blue-700 underline font-medium cursor-pointer"
+              >
+                Clique aqui para solicitar saque
+              </button>
+            </div>
           );
         
         default:

@@ -101,18 +101,12 @@ export function ProposalChatHeader({
   }, [projectData?.title, compactHeader]);
 
   const renderActionButtons = () => {
-    // Projeto concluído
-    if (proposal.work_status === 'completed') {
-      return null;
-    }
-
-    // Em disputa
-    if (proposal.work_status === 'disputed') {
+    // Projeto concluído ou em disputa - mostrar badge "Projeto Finalizado"
+    if (proposal.work_status === 'completed' || proposal.work_status === 'disputed') {
       return (
-        <Button size="sm" variant="outline" onClick={onViewHistory}>
-          <AlertCircle className="h-4 w-4 mr-2" />
-          Ver Disputa
-        </Button>
+        <Badge className="bg-green-600 text-white px-4 py-2 text-sm font-semibold">
+          {proposal.work_status === 'completed' ? 'Projeto Finalizado' : 'Em Disputa'}
+        </Badge>
       );
     }
 
@@ -124,53 +118,17 @@ export function ProposalChatHeader({
             <CheckCircle className="h-4 w-4 mr-2" />
             Trabalho Concluído
           </Button>
-          {timeRemaining && !isExpired && (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className="flex items-center gap-1.5 px-3 py-1 rounded bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 w-[240px] cursor-help justify-center">
-                    <Clock className="h-3 w-3 text-blue-600 dark:text-blue-400 flex-shrink-0" />
-                    <span className="text-xs font-medium text-blue-700 dark:text-blue-300 whitespace-nowrap tabular-nums text-center">
-                      Conclusão em: {timeRemaining}
-                    </span>
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent className="max-w-xs">
-                  <p className="font-semibold mb-1">⏰ Confirmação Automática</p>
-                  <p className="text-sm">
-                    Você tem 72 horas para confirmar a conclusão do trabalho. Se não confirmar dentro deste prazo, 
-                    o sistema irá confirmar automaticamente e liberar o pagamento para o freelancer.
-                  </p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          )}
+          {/* Não mostrar mais o cronômetro aqui, apenas botão */}
         </div>
       );
     }
 
-    // Freelancer vê countdown também
-    if (proposal.work_status === 'freelancer_completed' && !isOwner && timeRemaining && !isExpired) {
+    // Freelancer vê badge quando marcou como concluído
+    if (proposal.work_status === 'freelancer_completed' && !isOwner) {
       return (
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 w-[240px] cursor-help justify-center">
-                <Clock className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
-                <span className="text-xs font-medium text-blue-700 dark:text-blue-300 whitespace-nowrap tabular-nums text-center">
-                  Aguardando: {timeRemaining}
-                </span>
-              </div>
-            </TooltipTrigger>
-            <TooltipContent className="max-w-xs">
-              <p className="font-semibold mb-1">⏰ Aguardando Confirmação</p>
-              <p className="text-sm">
-                O cliente tem 72 horas para confirmar a conclusão do trabalho. Se o cliente não confirmar dentro deste prazo, 
-                o sistema irá confirmar automaticamente e você receberá o pagamento.
-              </p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        <Badge className="bg-blue-500 text-white px-3 py-1.5 text-xs">
+          Aguardando confirmação
+        </Badge>
       );
     }
 

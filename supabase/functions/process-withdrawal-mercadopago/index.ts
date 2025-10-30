@@ -18,26 +18,10 @@ interface WithdrawalRequest {
 interface PaymentSettings {
   pix_key: string;
   pix_key_type: string;
-  bank_account_holder: string;
-}
-
-interface Profile {
-  id: string;
-  full_name: string;
 }
 
 interface FreelancerWallet {
   available_balance: number;
-}
-
-function normalizeString(str: string): string {
-  return str
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '') // Remove accents
-    .replace(/[^a-z\s]/g, '')
-    .trim()
-    .replace(/\s+/g, ' ');
 }
 
 function maskPixKey(key: string, type: string): string {
@@ -85,7 +69,7 @@ serve(async (req) => {
     // 2. Buscar payment settings
     const { data: paymentSettings, error: settingsError } = await supabaseClient
       .from('payment_settings')
-      .select('pix_key, pix_key_type, bank_account_holder')
+      .select('pix_key, pix_key_type')
       .eq('profile_id', withdrawal.profile_id)
       .single();
 
@@ -97,30 +81,7 @@ serve(async (req) => {
       throw new Error('Chave PIX não cadastrada');
     }
 
-    if (!paymentSettings.bank_account_holder) {
-      throw new Error('Nome do titular da conta não cadastrado');
-    }
-
-    // 3. Buscar profile
-    const { data: profile, error: profileError } = await supabaseClient
-      .from('profiles')
-      .select('id, full_name')
-      .eq('id', withdrawal.profile_id)
-      .single();
-
-    if (profileError || !profile) {
-      throw new Error('Perfil não encontrado');
-    }
-
-    // 4. Validar nome do titular
-    const normalizedAccountHolder = normalizeString(paymentSettings.bank_account_holder);
-    const normalizedProfileName = normalizeString(profile.full_name);
-
-    if (normalizedAccountHolder !== normalizedProfileName) {
-      throw new Error('O nome do titular da conta PIX não corresponde ao nome cadastrado no seu perfil');
-    }
-
-    // 5. Buscar wallet balance
+    // 3. Buscar wallet balance
     const { data: wallet, error: walletError } = await supabaseClient
       .from('freelancer_wallet')
       .select('available_balance')
@@ -135,13 +96,13 @@ serve(async (req) => {
       throw new Error('Saldo insuficiente');
     }
 
-    // 6. Atualizar status para processing
+    // 4. Atualizar status para processing
     await supabaseClient
       .from('withdrawal_requests')
       .update({ status: 'processing' })
       .eq('id', withdrawal_id);
 
-    // 7. Preparar chamada ao Mercado Pago
+    // 5. Preparar chamada ao Mercado Pago
     const mercadoPagoToken = Deno.env.get('MERCADOPAGO_ACCESS_TOKEN');
     
     if (!mercadoPagoToken) {
@@ -186,7 +147,7 @@ serve(async (req) => {
       throw new Error(mpData.message || 'Erro ao processar transferência no Mercado Pago');
     }
 
-    // 8. Atualizar withdrawal como completed
+    // 6. Atualizar withdrawal como completed
     await supabaseClient
       .from('withdrawal_requests')
       .update({
@@ -196,7 +157,7 @@ serve(async (req) => {
       })
       .eq('id', withdrawal_id);
 
-    // 9. Atualizar wallet
+    // 7. Atualizar wallet
     await supabaseClient
       .from('freelancer_wallet')
       .update({
@@ -208,7 +169,7 @@ serve(async (req) => {
       })
       .eq('profile_id', withdrawal.profile_id);
 
-    // 10. Criar registro de transação
+    // 8. Criar registro de transação
     const maskedKey = maskPixKey(paymentSettings.pix_key, paymentSettings.pix_key_type);
     
     await supabaseClient

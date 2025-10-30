@@ -35,6 +35,7 @@ export default function Financeiro() {
   const [pixKey, setPixKey] = useState('');
   const [pixKeyType, setPixKeyType] = useState('cpf');
   const [accountHolder, setAccountHolder] = useState('');
+  const [profileName, setProfileName] = useState('');
   const [withdrawAmount, setWithdrawAmount] = useState('');
 
   useEffect(() => {
@@ -47,11 +48,13 @@ export default function Financeiro() {
     // Buscar perfil
     const { data: profileData } = await supabase
       .from('profiles')
-      .select('id')
+      .select('id, full_name')
       .eq('user_id', user.id)
       .single();
 
     if (!profileData) return;
+    
+    setProfileName(profileData.full_name);
 
     // Buscar saldo
     const { data: walletData } = await supabase
@@ -87,16 +90,6 @@ export default function Financeiro() {
     }
   };
 
-  const normalizeString = (str: string): string => {
-    return str
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-z\s]/g, '')
-      .trim()
-      .replace(/\s+/g, ' ');
-  };
-
   const handleSavePixKey = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -110,25 +103,13 @@ export default function Financeiro() {
 
       if (!profileData) throw new Error('Perfil não encontrado');
 
-      if (!accountHolder) {
-        throw new Error('Preencha o nome do titular da conta');
-      }
-
-      // Validar nome do titular
-      const normalizedAccountHolder = normalizeString(accountHolder);
-      const normalizedProfileName = normalizeString(profileData.full_name);
-
-      if (normalizedAccountHolder !== normalizedProfileName) {
-        throw new Error('O nome do titular deve ser o mesmo do seu perfil: ' + profileData.full_name);
-      }
-
       const { error } = await supabase
         .from('payment_settings')
         .upsert({
           profile_id: profileData.id,
           pix_key: pixKey,
           pix_key_type: pixKeyType,
-          bank_account_holder: accountHolder,
+          bank_account_holder: profileData.full_name,
         });
 
       if (error) throw error;
@@ -179,14 +160,6 @@ export default function Financeiro() {
       return;
     }
 
-    if (!accountHolder) {
-      toast({
-        title: 'Nome do titular não cadastrado',
-        description: 'Cadastre o nome do titular antes de solicitar um saque.',
-        variant: 'destructive',
-      });
-      return;
-    }
 
     setLoading(true);
 
@@ -353,13 +326,11 @@ export default function Financeiro() {
                     </div>
                     <div className="space-y-2">
                       <Label>Titular da Conta</Label>
-                      <Input
-                        value={accountHolder}
-                        onChange={(e) => setAccountHolder(e.target.value)}
-                        placeholder="Nome completo do titular"
-                      />
+                      <div className="p-3 bg-muted rounded-lg border border-border">
+                        <p className="text-sm font-medium">{profileName || 'Carregando...'}</p>
+                      </div>
                       <p className="text-xs text-muted-foreground">
-                        ⚠️ O nome do titular deve ser o mesmo cadastrado no seu perfil
+                        ℹ️ O nome do titular é o mesmo cadastrado no seu perfil
                       </p>
                     </div>
                     <Button 
@@ -408,7 +379,7 @@ export default function Financeiro() {
                     <Button 
                       type="submit" 
                       className="w-full bg-gradient-primary hover:shadow-glow transition-all" 
-                      disabled={loading || !withdrawAmount || !pixKey || !accountHolder}
+                      disabled={loading || !withdrawAmount || !pixKey}
                     >
                       <Download className="w-4 h-4 mr-2" />
                       {loading ? 'Processando saque via PIX...' : 'Solicitar Saque Imediato'}

@@ -44,6 +44,7 @@ export default function PaymentSettings() {
   
   const [pixKey, setPixKey] = useState('');
   const [pixKeyType, setPixKeyType] = useState('');
+  const [profileName, setProfileName] = useState('');
   const [accountHolder, setAccountHolder] = useState('');
 
   useEffect(() => {
@@ -57,11 +58,13 @@ export default function PaymentSettings() {
       // Get user's profile
       const { data: profile } = await supabase
         .from('profiles')
-        .select('id')
+        .select('id, full_name')
         .eq('user_id', user?.id)
         .single();
 
       if (!profile) return;
+      
+      setProfileName(profile.full_name);
 
       // Get payment settings
       const { data: settings, error: settingsError } = await supabase
@@ -103,21 +106,11 @@ export default function PaymentSettings() {
     }
   };
 
-  const normalizeString = (str: string): string => {
-    return str
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-z\s]/g, '')
-      .trim()
-      .replace(/\s+/g, ' ');
-  };
-
   const handleSave = async () => {
-    if (!pixKey || !pixKeyType || !accountHolder) {
+    if (!pixKey || !pixKeyType) {
       toast({
         title: 'Campos obrigatórios',
-        description: 'Preencha todos os campos para continuar.',
+        description: 'Preencha a chave PIX e o tipo para continuar.',
         variant: 'destructive',
       });
       return;
@@ -133,20 +126,6 @@ export default function PaymentSettings() {
 
       if (!profile) throw new Error('Profile not found');
 
-      // Validar nome do titular
-      const normalizedAccountHolder = normalizeString(accountHolder);
-      const normalizedProfileName = normalizeString(profile.full_name);
-
-      if (normalizedAccountHolder !== normalizedProfileName) {
-        toast({
-          title: 'Nome não corresponde',
-          description: 'O nome do titular deve ser o mesmo do seu perfil. Seu nome no perfil: ' + profile.full_name,
-          variant: 'destructive',
-        });
-        setSaving(false);
-        return;
-      }
-
       if (paymentSettings) {
         // Update existing
         const { error } = await supabase
@@ -154,7 +133,7 @@ export default function PaymentSettings() {
           .update({
             pix_key: pixKey,
             pix_key_type: pixKeyType,
-            bank_account_holder: accountHolder,
+            bank_account_holder: profile.full_name,
           })
           .eq('id', paymentSettings.id);
 
@@ -167,7 +146,7 @@ export default function PaymentSettings() {
             profile_id: profile.id,
             pix_key: pixKey,
             pix_key_type: pixKeyType,
-            bank_account_holder: accountHolder,
+            bank_account_holder: profile.full_name,
           });
 
         if (error) throw error;
@@ -205,15 +184,6 @@ export default function PaymentSettings() {
       toast({
         title: 'Configure sua chave PIX',
         description: 'Você precisa configurar uma chave PIX antes de solicitar saques.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    if (!accountHolder) {
-      toast({
-        title: 'Nome do titular não cadastrado',
-        description: 'Preencha o nome do titular da conta antes de solicitar saques.',
         variant: 'destructive',
       });
       return;
@@ -320,7 +290,7 @@ export default function PaymentSettings() {
               </div>
             </div>
 
-            {balance.available > 0 && pixKey && accountHolder && (
+            {balance.available > 0 && pixKey && (
               <Button 
                 onClick={handleWithdraw} 
                 disabled={withdrawing}
@@ -336,7 +306,7 @@ export default function PaymentSettings() {
                 )}
               </Button>
             )}
-            {balance.available > 0 && (!pixKey || !accountHolder) && (
+            {balance.available > 0 && !pixKey && (
               <div className="bg-yellow-50 dark:bg-yellow-950 p-4 rounded-lg">
                 <div className="flex items-start gap-2">
                   <AlertCircle className="h-5 w-5 text-yellow-600 dark:text-yellow-400 mt-0.5" />
@@ -345,7 +315,7 @@ export default function PaymentSettings() {
                       Configure sua chave PIX
                     </p>
                     <p className="text-sm text-yellow-800 dark:text-yellow-200 mt-1">
-                      Cadastre sua chave PIX e nome do titular para poder solicitar saques.
+                      Cadastre sua chave PIX para poder solicitar saques.
                     </p>
                   </div>
                 </div>
@@ -389,14 +359,11 @@ export default function PaymentSettings() {
 
               <div className="space-y-2">
                 <Label htmlFor="accountHolder">Titular da Conta</Label>
-                <Input
-                  id="accountHolder"
-                  value={accountHolder}
-                  onChange={(e) => setAccountHolder(e.target.value)}
-                  placeholder="Nome completo do titular"
-                />
+                <div className="p-3 bg-muted rounded-lg border border-border">
+                  <p className="text-sm font-medium">{profileName || 'Carregando...'}</p>
+                </div>
                 <p className="text-xs text-muted-foreground">
-                  ⚠️ O nome do titular deve ser o mesmo cadastrado no seu perfil
+                  ℹ️ O nome do titular é o mesmo cadastrado no seu perfil
                 </p>
               </div>
 

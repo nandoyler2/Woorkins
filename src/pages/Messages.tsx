@@ -8,7 +8,13 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { MessageCircle, Loader2, Search, Inbox, Mail, Star, Archive, AlertCircle, Tag } from 'lucide-react';
+import { MessageCircle, Loader2, Search, Inbox, Mail, Star, Archive, AlertCircle, Tag, MoreVertical } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { UnifiedChat } from '@/components/UnifiedChat';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
@@ -764,34 +770,69 @@ export default function Messages() {
                                 {conv.otherUser.name}
                               </p>
                             </div>
-                            {conv.lastMessageAt && (
-                              <span className="text-xs text-slate-500 flex-shrink-0">
-                                {formatDistanceToNow(new Date(conv.lastMessageAt), {
-                                  addSuffix: false,
-                                  locale: ptBR,
-                                })}
+                            <div className="flex items-center gap-2">
+                              {conv.lastMessageAt && (
+                                <span className="text-xs text-slate-500 flex-shrink-0">
+                                  {formatDistanceToNow(new Date(conv.lastMessageAt), {
+                                    addSuffix: false,
+                                    locale: ptBR,
+                                  })}
+                                </span>
+                              )}
+                              
+                              {/* Menu dropdown - sempre visível */}
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    className="h-6 w-6 p-0 hover:bg-muted"
+                                  >
+                                    <MoreVertical className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-56">
+                                  {(conv.type === 'proposal' || conv.type === 'negotiation') && (() => {
+                                    const badgeInfo = getProposalBadgeInfo(conv);
+                                    return (
+                                      <DropdownMenuItem className="flex justify-between">
+                                        <span className="text-muted-foreground">Status:</span>
+                                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${badgeInfo.color}`}>
+                                          {badgeInfo.text}
+                                        </span>
+                                      </DropdownMenuItem>
+                                    );
+                                  })()}
+                                  {conv.hasDispute && (
+                                    <DropdownMenuItem className="flex justify-between">
+                                      <span className="text-muted-foreground">Disputa:</span>
+                                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300">
+                                        {conv.disputeStatus === 'resolved' ? 'Resolvida' : 'Em Disputa'}
+                                      </span>
+                                    </DropdownMenuItem>
+                                  )}
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
+                          </div>
+                          
+                          {/* Status - visível apenas em telas maiores (lg+) */}
+                          <div className="hidden lg:flex items-center gap-2 mb-1">
+                            {(conv.type === 'proposal' || conv.type === 'negotiation') && (() => {
+                              const badgeInfo = getProposalBadgeInfo(conv);
+                              return (
+                                <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium transition-colors ${badgeInfo.color}`}>
+                                  {badgeInfo.text}
+                                </span>
+                              );
+                            })()}
+                            {conv.hasDispute && (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300">
+                                <AlertCircle className="h-3 w-3 mr-1" />
+                                {conv.disputeStatus === 'resolved' ? 'Disputa Resolvida' : 'Em Disputa'}
                               </span>
                             )}
                           </div>
-                          
-                          {(conv.type === 'proposal' || conv.type === 'negotiation') && (
-                            <div className="flex items-center gap-1 mb-1">
-                              {(() => {
-                                const badgeInfo = getProposalBadgeInfo(conv);
-                                return (
-                                  <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium transition-colors ${badgeInfo.color}`}>
-                                    {badgeInfo.text}
-                                  </span>
-                                );
-                              })()}
-                              {conv.hasDispute && (
-                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300">
-                                  <AlertCircle className="h-3 w-3 mr-1" />
-                                  {conv.disputeStatus === 'resolved' ? 'Disputa Resolvida' : 'Em Disputa'}
-                                </span>
-                              )}
-                            </div>
-                          )}
 
                           {conv.lastMessage && (
                             <p className="text-xs text-slate-600 truncate">

@@ -42,6 +42,8 @@ interface Project {
     username: string;
     full_name: string;
     user_id: string;
+    avatar_url?: string | null;
+    avatar_thumbnail_url?: string | null;
   };
 }
 
@@ -191,7 +193,9 @@ export default function ProjectDetails() {
           profiles:profile_id (
             username,
             full_name,
-            user_id
+            user_id,
+            avatar_url,
+            avatar_thumbnail_url
           )
         `)
         .eq('id', id)
@@ -307,9 +311,9 @@ export default function ProjectDetails() {
 
   const formatBudget = (min: number | null, max: number | null) => {
     if (!min && !max) return 'A combinar';
-    if (min && max) return `R$ ${min} - ${max}`;
-    if (min) return `A partir de R$ ${min}`;
-    return `Até R$ ${max}`;
+    if (min && max) return `R$ ${min.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} - R$ ${max.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    if (min) return `A partir de R$ ${min.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    return `Até R$ ${max?.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
 
   if (loading) {
@@ -490,6 +494,7 @@ export default function ProjectDetails() {
                     <ProfileAvatarWithHover
                       profileId={project.profile_id}
                       username={project.profiles.username}
+                      avatarUrl={project.profiles.avatar_thumbnail_url || project.profiles.avatar_url}
                       size="lg"
                     />
                     <div>

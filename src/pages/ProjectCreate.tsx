@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, ChevronRight, ChevronLeft, CheckCircle2, FileText, DollarSign, Calendar as CalendarIcon, Eye, Shield, Lock, Lightbulb, Target, MessageCircle, Clock } from 'lucide-react';
+import { ArrowLeft, ChevronRight, ChevronLeft, CheckCircle2, FileText, DollarSign, Calendar as CalendarIcon, Eye, X, Shield, Lock, Lightbulb, Target, MessageCircle, Clock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useDocumentVerification } from '@/hooks/useDocumentVerification';
@@ -166,25 +166,26 @@ export default function ProjectCreate() {
   }, [title, description]);
 
   const nextStep = () => {
-    if (currentStep === 1 && !title.trim()) {
-      setTitleError(true);
-      setTimeout(() => setTitleError(false), 2000);
-      return;
+    if (currentStep === 1) {
+      if (!title.trim()) {
+        setTitleError(true);
+        setTimeout(() => setTitleError(false), 2000);
+        return;
+      }
+      if (!description.trim()) {
+        setDescriptionError(true);
+        setTimeout(() => setDescriptionError(false), 2000);
+        return;
+      }
     }
     
-    if (currentStep === 2 && !description.trim()) {
-      setDescriptionError(true);
-      setTimeout(() => setDescriptionError(false), 2000);
-      return;
-    }
-    
-    if (currentStep === 3 && !budgetRange) {
+    if (currentStep === 2 && !budgetRange) {
       setBudgetError(true);
       setTimeout(() => setBudgetError(false), 2000);
       return;
     }
     
-    setCurrentStep(prev => Math.min(prev + 1, 4));
+    setCurrentStep(prev => Math.min(prev + 1, 3));
   };
 
   const prevStep = () => {
@@ -280,10 +281,9 @@ export default function ProjectCreate() {
   };
 
   const steps = [
-    { number: 1, title: 'Básico', icon: FileText },
-    { number: 2, title: 'Descrição', icon: FileText },
-    { number: 3, title: 'Orçamento', icon: DollarSign },
-    { number: 4, title: 'Revisão', icon: Eye },
+    { number: 1, title: 'Informações', icon: FileText },
+    { number: 2, title: 'Orçamento', icon: DollarSign },
+    { number: 3, title: 'Revisão', icon: Eye },
   ];
 
   const getBudgetRangeText = () => {
@@ -430,15 +430,8 @@ export default function ProjectCreate() {
                         ⚠️ Por favor, preencha o título do projeto
                       </p>
                     )}
-                    <p className="text-xs text-muted-foreground">
-                      💡 O sistema irá detectar automaticamente a categoria e tags baseado no seu título e descrição
-                    </p>
                   </div>
-                </div>
-              )}
 
-              {currentStep === 2 && (
-                <div className="space-y-6 animate-fade-in max-w-2xl mx-auto">
                   <div className="space-y-2">
                     <Label htmlFor="description" className="text-base font-semibold flex items-center gap-2">
                       <FileText className="w-4 h-4 text-blue-600" />
@@ -452,7 +445,7 @@ export default function ProjectCreate() {
                         if (descriptionError) setDescriptionError(false);
                       }}
                       placeholder="Descreva em detalhes o que você precisa...&#10;&#10;Inclua:&#10;• O que precisa ser feito&#10;• Referências ou exemplos&#10;• Requisitos específicos&#10;• Entregas esperadas"
-                      rows={12}
+                      rows={10}
                       className={cn(
                         "text-base resize-none border-blue-200 focus:border-blue-600 dark:border-blue-800 transition-all",
                         descriptionError && "border-red-500 dark:border-red-500 animate-shake bg-red-50 dark:bg-red-950/20"
@@ -464,14 +457,14 @@ export default function ProjectCreate() {
                       </p>
                     ) : (
                       <p className="text-sm text-muted-foreground">
-                        💡 Quanto mais detalhes você fornecer, melhores serão as propostas recebidas
+                        💡 O sistema irá detectar automaticamente a categoria e tags baseado no seu título e descrição
                       </p>
                     )}
                   </div>
                 </div>
               )}
 
-              {currentStep === 3 && (
+              {currentStep === 2 && (
                 <div className="space-y-6 animate-fade-in max-w-2xl mx-auto">
                   <div className="space-y-4">
                     <Label className={cn(
@@ -579,7 +572,7 @@ export default function ProjectCreate() {
                 </div>
               )}
 
-              {currentStep === 4 && (
+              {currentStep === 3 && (
                 <div className="space-y-6 animate-fade-in max-w-2xl mx-auto">
                   <div className="bg-gradient-to-br from-blue-50 to-teal-50 dark:from-blue-950 dark:to-teal-900 rounded-lg p-6 border-2 border-blue-200 dark:border-blue-800">
                     <h3 className="text-lg font-bold mb-4 flex items-center gap-2 text-blue-900 dark:text-blue-100">
@@ -593,37 +586,77 @@ export default function ProjectCreate() {
                         <p className="text-base">{title}</p>
                       </div>
 
-                      {detectedCategory && (
-                        <div>
-                          <p className="text-sm font-semibold text-blue-900 dark:text-blue-200 mb-1 flex items-center gap-2">
-                            Categoria Detectada
-                            <Badge variant="outline" className="bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 border-blue-300">
-                              ✨ Automático
-                            </Badge>
-                          </p>
-                          <p className="text-base capitalize">{detectedCategory}</p>
-                        </div>
-                      )}
-
-                      {detectedTags.length > 0 && (
-                        <div>
-                          <p className="text-sm font-semibold text-blue-900 dark:text-blue-200 mb-1 flex items-center gap-2">
-                            Tags Sugeridas
-                            <Badge variant="outline" className="bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 border-blue-300">
-                              ✨ Automático
-                            </Badge>
-                          </p>
-                          <div className="flex flex-wrap gap-2 mt-2">
-                            {detectedTags.map((tag) => (
-                              <Badge key={tag} variant="secondary">{tag}</Badge>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
                       <div>
                         <p className="text-sm font-semibold text-blue-900 dark:text-blue-200 mb-1">Descrição</p>
                         <p className="text-base whitespace-pre-wrap">{description}</p>
+                      </div>
+
+                      <div>
+                        <Label htmlFor="edit-category" className="text-sm font-semibold text-blue-900 dark:text-blue-200 flex items-center gap-2 mb-2">
+                          Categoria Detectada
+                          <Badge variant="outline" className="bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 border-blue-300">
+                            ✨ Automático
+                          </Badge>
+                        </Label>
+                        <Input
+                          id="edit-category"
+                          value={detectedCategory}
+                          onChange={(e) => setDetectedCategory(e.target.value)}
+                          placeholder="Ex: Design, Desenvolvimento, Marketing"
+                          className="h-10 text-base bg-white dark:bg-slate-900"
+                        />
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Você pode editar a categoria se necessário
+                        </p>
+                      </div>
+
+                      <div>
+                        <Label className="text-sm font-semibold text-blue-900 dark:text-blue-200 flex items-center gap-2 mb-2">
+                          Tags Sugeridas
+                          <Badge variant="outline" className="bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 border-blue-300">
+                            ✨ Automático
+                          </Badge>
+                        </Label>
+                        <div className="flex flex-wrap gap-2">
+                          {detectedTags.map((tag, index) => (
+                            <div key={tag} className="flex items-center gap-1">
+                              <Input
+                                value={tag}
+                                onChange={(e) => {
+                                  const newTags = [...detectedTags];
+                                  newTags[index] = e.target.value;
+                                  setDetectedTags(newTags);
+                                }}
+                                className="h-8 w-32 text-sm bg-white dark:bg-slate-900"
+                              />
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() => {
+                                  setDetectedTags(detectedTags.filter((_, i) => i !== index));
+                                }}
+                              >
+                                <X className="w-3 h-3" />
+                              </Button>
+                            </div>
+                          ))}
+                          {detectedTags.length < 5 && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setDetectedTags([...detectedTags, ''])}
+                              className="h-8"
+                            >
+                              + Adicionar Tag
+                            </Button>
+                          )}
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Você pode editar, remover ou adicionar tags (máximo 5)
+                        </p>
                       </div>
 
                       <div className="grid grid-cols-2 gap-4">
@@ -664,7 +697,7 @@ export default function ProjectCreate() {
                 Voltar
               </Button>
 
-              {currentStep < 4 ? (
+              {currentStep < 3 ? (
                 <Button
                   type="button"
                   onClick={nextStep}

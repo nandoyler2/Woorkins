@@ -538,56 +538,56 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
                   ref={editorRef}
                   contentEditable
                   onInput={handleMessageChange}
-                  className="border-2 border-blue-200 dark:border-blue-800 focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 transition-all rounded-b-lg p-3 min-h-[140px] max-h-[220px] overflow-y-auto text-sm focus:outline-none bg-white dark:bg-slate-950"
+                  className="border-x-2 border-blue-200 dark:border-blue-800 focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 transition-all p-3 min-h-[140px] max-h-[220px] overflow-y-auto text-sm focus:outline-none bg-white dark:bg-slate-950"
                   style={{ whiteSpace: 'pre-wrap' }}
                   data-placeholder="Descreva sua experiência, metodologia e por que você é ideal para este projeto..."
                 />
-              </div>
-
-              {/* Seção de anexos */}
-              <div className="pt-2">
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  multiple
-                  accept="image/*,.pdf,.doc,.docx,.txt"
-                  onChange={handleFileChange}
-                  className="hidden"
-                />
-                <div className="flex items-center gap-2">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleAttachmentClick}
-                    className="h-8 gap-1.5 text-xs hover:bg-blue-100 dark:hover:bg-blue-900 text-blue-900 dark:text-blue-100"
-                    title="Adicionar anexos (Pro/Premium)"
-                  >
-                    <Paperclip className="w-3.5 h-3.5" />
-                    Enviar anexo ({attachments.length}/3)
-                  </Button>
-                  
-                  {attachments.length > 0 && (
-                    <div className="flex gap-1 flex-1 overflow-x-auto">
-                      {attachments.map((file, index) => (
-                        <div key={index} className="flex items-center gap-1 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-700 rounded px-2 py-1 text-xs shrink-0">
-                          <span className="max-w-[100px] truncate">{file.name}</span>
-                          <button
-                            type="button"
-                            onClick={() => removeAttachment(index)}
-                            className="text-red-500 hover:text-red-700"
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                
+                {/* Seção de anexos grudada na caixa */}
+                <div className="border-2 border-t-0 border-blue-200 dark:border-blue-800 rounded-b-lg p-2 bg-blue-50/30 dark:bg-blue-950/20">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    accept="image/*,.pdf,.doc,.docx,.txt"
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleAttachmentClick}
+                      className="h-7 gap-1.5 text-xs hover:bg-blue-100 dark:hover:bg-blue-900 text-blue-900 dark:text-blue-100"
+                      title="Adicionar anexos (Pro/Premium)"
+                    >
+                      <Paperclip className="w-3.5 h-3.5" />
+                      Enviar anexo ({attachments.length}/3)
+                    </Button>
+                    
+                    {attachments.length > 0 && (
+                      <div className="flex gap-1 flex-1 overflow-x-auto">
+                        {attachments.map((file, index) => (
+                          <div key={index} className="flex items-center gap-1 bg-white dark:bg-slate-900 border border-blue-200 dark:border-blue-700 rounded px-2 py-1 text-xs shrink-0">
+                            <span className="max-w-[100px] truncate">{file.name}</span>
+                            <button
+                              type="button"
+                              onClick={() => removeAttachment(index)}
+                              className="text-red-500 hover:text-red-700"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
               {/* Botões de ação */}
-              <div className="flex gap-2 justify-end">
+              <div className="flex gap-2 justify-end mt-2">
                 <Button
                   type="button"
                   variant="outline"

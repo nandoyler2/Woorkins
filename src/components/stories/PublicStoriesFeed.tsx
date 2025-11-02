@@ -101,6 +101,7 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [dialogProfiles, setDialogProfiles] = useState<any[]>(userProfiles || []);
   const [hasPostedToday, setHasPostedToday] = useState(false);
+  const [newStoryIds, setNewStoryIds] = useState<Set<string>>(new Set());
 
   const STORIES_PER_PAGE = 20;
 
@@ -301,6 +302,20 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
         },
         (payload) => {
           if (payload.eventType === 'INSERT') {
+            const newStoryId = payload.new.id as string;
+            
+            // Marcar como novo
+            setNewStoryIds(prev => new Set(prev).add(newStoryId));
+            
+            // Remover a marcação de novo após 5 segundos
+            setTimeout(() => {
+              setNewStoryIds(prev => {
+                const updated = new Set(prev);
+                updated.delete(newStoryId);
+                return updated;
+              });
+            }, 5000);
+            
             loadPublicStories(0);
             setPage(0);
             checkIfPostedToday(); // Atualizar status quando novo story for adicionado
@@ -462,14 +477,16 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
         )}
 
         {stories.map((story, index) => {
-          const isNew = new Date().getTime() - new Date(story.created_at).getTime() < 3600000;
+          const isRecentlyAdded = newStoryIds.has(story.id);
           const displayImage = story.thumbnail_url || story.media_url || '/placeholder.svg';
           const videoSrc = story.type === 'video' && story.media_url ? `${story.media_url}#t=5` : story.media_url;
 
           return (
             <div
               key={story.id}
-              className="relative group cursor-pointer overflow-hidden rounded-xl transition-transform hover:scale-[1.02]"
+              className={`relative group cursor-pointer overflow-hidden rounded-xl transition-all duration-300 hover:scale-[1.02] ${
+                isRecentlyAdded ? 'animate-pulse ring-4 ring-primary/50' : ''
+              }`}
               onClick={() => handleStoryClick(index)}
             >
               <div className="relative w-full aspect-[9/16]">
@@ -627,6 +644,15 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
                     </>
                   )}
                 </div>
+                
+                {/* Badge NOVO no centro quando é recém adicionado */}
+                {isRecentlyAdded && (
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20 animate-in fade-in zoom-in duration-500">
+                    <div className="bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 text-white font-black text-sm px-6 py-2 rounded-full shadow-2xl animate-pulse">
+                      NOVO
+                    </div>
+                  </div>
+                )}
                 
                 {story.type === 'video' && (
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none">

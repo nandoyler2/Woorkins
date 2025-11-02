@@ -118,7 +118,7 @@ export function ProfileHoverCard({ profileId, children, side = 'top' }: ProfileH
                   <div className="flex flex-col items-center gap-1">
                     <div className="flex items-center gap-1">
                       {[1, 2, 3, 4, 5].map((starIndex) => {
-                        const rating = data.profile.average_rating || 0;
+                        const rating = data.profile.average_rating || 5.0;
                         const isFilled = starIndex <= Math.round(rating);
                         return (
                           <Star
@@ -132,7 +132,7 @@ export function ProfileHoverCard({ profileId, children, side = 'top' }: ProfileH
                         );
                       })}
                       <span className="font-semibold text-sm ml-1">
-                        {data.profile.average_rating?.toFixed(1) || '0.0'}
+                        {data.profile.average_rating?.toFixed(1) || '5.0'}
                       </span>
                     </div>
                     {data.profile.total_reviews > 0 && (

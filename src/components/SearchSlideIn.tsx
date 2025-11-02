@@ -52,7 +52,7 @@ export const SearchSlideIn = ({ isOpen, onClose }: SearchSlideInProps) => {
             category: item.category,
             description: item.description,
             logo_url: item.logo_url || item.avatar_url,
-            average_rating: item.average_rating || 0,
+            average_rating: item.average_rating || 5.0,
             total_reviews: item.total_reviews || 0
           })) as SearchResult[]);
         } else {

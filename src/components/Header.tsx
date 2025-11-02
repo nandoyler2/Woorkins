@@ -32,6 +32,8 @@ export const Header = () => {
   const [profileName, setProfileName] = useState<string>('');
   const [searchOpen, setSearchOpen] = useState(false);
   const [projectsOpen, setProjectsOpen] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
   const unreadCount = useUnreadMessages(profileId);
   const activeSupportCount = useActiveSupportCount();
 
@@ -90,8 +92,33 @@ export const Header = () => {
     loadProfile();
   }, [user]);
 
+  // Handle scroll to hide/show header
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      
+      // Mostrar header quando rolar para cima ou estiver no topo
+      if (currentScrollY < lastScrollY || currentScrollY < 10) {
+        setIsVisible(true);
+      } 
+      // Esconder header quando rolar para baixo (após 10px)
+      else if (currentScrollY > lastScrollY && currentScrollY > 80) {
+        setIsVisible(false);
+      }
+      
+      setLastScrollY(currentScrollY);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [lastScrollY]);
+
   return (
-    <header className="sticky top-0 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-[100]">
+    <header 
+      className={`fixed top-0 left-0 right-0 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-[100] transition-transform duration-300 ${
+        isVisible ? 'translate-y-0' : '-translate-y-full'
+      }`}
+    >
       <div className="container mx-auto px-4 h-16 flex items-center justify-between max-w-woorkins">
           <Link to="/" className="flex items-center gap-3 hover-scale">
             <SafeImage src={logoWoorkins} alt="Logo Woorkins" className="h-10 w-auto" />

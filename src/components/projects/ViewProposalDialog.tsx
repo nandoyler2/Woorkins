@@ -1,8 +1,12 @@
 import { Dialog, DialogContent, DialogHeader } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Clock, FileText, DollarSign, Calendar, X } from "lucide-react";
+import { Clock, FileText, DollarSign, Calendar, X, Edit, Sparkles } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { useState, useEffect } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ViewProposalDialogProps {
   open: boolean;
@@ -17,7 +21,40 @@ interface ViewProposalDialogProps {
 }
 
 export function ViewProposalDialog({ open, onOpenChange, proposal, projectTitle }: ViewProposalDialogProps) {
+  const { user } = useAuth();
+  const [showPremiumDialog, setShowPremiumDialog] = useState(false);
+  const [userPlan, setUserPlan] = useState<string>('free');
+
+  useEffect(() => {
+    const fetchUserPlan = async () => {
+      if (!user) return;
+      
+      const { data } = await supabase
+        .from('profiles' as any)
+        .select('subscription_plan')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      
+      if (data) {
+        setUserPlan((data as any).subscription_plan || 'free');
+      }
+    };
+
+    if (open && user) {
+      fetchUserPlan();
+    }
+  }, [user, open]);
+
   if (!proposal) return null;
+
+  const handleEditClick = () => {
+    if (userPlan === 'free') {
+      setShowPremiumDialog(true);
+    } else {
+      // TODO: Implementar funcionalidade de edição para Pro/Premium
+      console.log('Editar proposta para usuários Pro/Premium');
+    }
+  };
 
   const formatTimeAgo = (dateString: string) => {
     try {
@@ -97,8 +134,16 @@ export function ViewProposalDialog({ open, onOpenChange, proposal, projectTitle 
             </div>
           </div>
 
-          {/* Botão Fechar */}
-          <div className="flex justify-end pt-2">
+          {/* Botão Fechar e Editar */}
+          <div className="flex justify-between items-center pt-2">
+            <Button 
+              onClick={handleEditClick}
+              variant="outline"
+              className="gap-2"
+            >
+              <Edit className="w-4 h-4" />
+              Editar Proposta
+            </Button>
             <Button 
               onClick={() => onOpenChange(false)}
               className="bg-gradient-to-r from-blue-600 via-teal-600 to-blue-600 hover:from-blue-700 hover:via-teal-700 hover:to-blue-700"
@@ -107,6 +152,44 @@ export function ViewProposalDialog({ open, onOpenChange, proposal, projectTitle 
             </Button>
           </div>
         </div>
+
+        {/* Dialog para usuários free */}
+        <AlertDialog open={showPremiumDialog} onOpenChange={setShowPremiumDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-amber-500" />
+                Recurso Pro/Premium
+              </AlertDialogTitle>
+              <AlertDialogDescription className="space-y-2">
+                <p>A edição de propostas é um recurso exclusivo para usuários Pro e Premium.</p>
+                <p className="font-semibold text-foreground">Com um plano premium você pode:</p>
+                <ul className="list-disc list-inside space-y-1 text-sm">
+                  <li>Editar propostas já enviadas</li>
+                  <li>Enviar até 3 anexos por proposta</li>
+                  <li>Arquivos de até 5MB cada</li>
+                  <li>Impressionar clientes com portfólio anexado</li>
+                  <li>Taxas de transação reduzidas e muito mais</li>
+                </ul>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <Button variant="outline" onClick={() => setShowPremiumDialog(false)}>
+                Ver depois
+              </Button>
+              <Button 
+                className="bg-gradient-to-r from-blue-600 via-teal-600 to-blue-600 hover:from-blue-700 hover:via-teal-700 hover:to-blue-700"
+                onClick={() => {
+                  window.open('https://woorkins.com/planos', '_blank');
+                  setShowPremiumDialog(false);
+                }}
+              >
+                <Sparkles className="w-4 h-4 mr-2" />
+                Ver Planos
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </DialogContent>
     </Dialog>
   );

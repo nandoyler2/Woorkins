@@ -323,7 +323,7 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
                     {/* Pergunta inicial */}
                     <div className="text-center py-8">
                       <h3 className="text-2xl font-bold mb-2 bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 bg-clip-text text-transparent">O que gostaria de publicar no seu story?</h3>
-                      <p className="text-muted-foreground mb-8">Escolha o tipo de conteúdo</p>
+                      <p className="text-muted-foreground mb-8">Use o storie para postar conteúdos profissionais sobre você</p>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
                         {/* Opção Mídia (Imagem ou Vídeo) */}

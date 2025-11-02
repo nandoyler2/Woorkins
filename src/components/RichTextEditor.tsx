@@ -169,7 +169,6 @@ export function RichTextEditor({
           !value && !isFocused && "text-muted-foreground",
           className
         )}
-        data-placeholder={placeholder}
         style={{
           minHeight: '200px',
           maxHeight: '400px'

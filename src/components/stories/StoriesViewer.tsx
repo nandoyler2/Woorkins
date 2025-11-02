@@ -424,7 +424,7 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
             {/* Container fixo com story centralizado */}
             <div className="min-h-screen w-full grid grid-cols-[auto_auto_auto] items-center justify-items-center gap-6">
             {/* Miniaturas esquerdas - desktop apenas */}
-            <div className="hidden lg:flex flex-col items-end gap-3">
+            <div className="hidden lg:flex flex-col items-end gap-1">
               {stories.slice(Math.max(0, currentIndex - 3), currentIndex).map((story, idx) => {
                 const actualIndex = Math.max(0, currentIndex - 3) + idx;
                 return (
@@ -550,23 +550,6 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
                 <Heart className="w-24 h-24 fill-white text-white drop-shadow-2xl" />
               </div>
             ))}
-            {/* Navigation areas - clique para navegar */}
-            <div
-              className="absolute left-0 top-0 bottom-0 w-1/3 z-10 cursor-pointer"
-              onClick={handlePrevious}
-              onMouseDown={(e) => e.stopPropagation()}
-              onMouseUp={(e) => e.stopPropagation()}
-              onTouchStart={(e) => e.stopPropagation()}
-              onTouchEnd={(e) => e.stopPropagation()}
-            />
-            <div
-              className="absolute right-0 top-0 bottom-0 w-1/3 z-10 cursor-pointer"
-              onClick={handleNext}
-              onMouseDown={(e) => e.stopPropagation()}
-              onMouseUp={(e) => e.stopPropagation()}
-              onTouchStart={(e) => e.stopPropagation()}
-              onTouchEnd={(e) => e.stopPropagation()}
-            />
 
             {/* Loading Indicator */}
             {mediaLoading && currentStory.type !== 'text' && (
@@ -790,34 +773,10 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
               )}
             </div>
           </div>
-
-
-          {/* Botões de Navegação - Mobile */}
-          {currentIndex > 0 && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handlePrevious}
-              className="lg:hidden absolute left-4 top-1/2 -translate-y-1/2 text-white hover:bg-white/20 w-12 h-12 rounded-full bg-black/30 backdrop-blur-sm z-30"
-            >
-              <ChevronLeft className="w-8 h-8" />
-            </Button>
-          )}
-
-          {currentIndex < stories.length - 1 && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleNext}
-              className="lg:hidden absolute right-4 top-1/2 -translate-y-1/2 text-white hover:bg-white/20 w-12 h-12 rounded-full bg-black/30 backdrop-blur-sm z-30"
-            >
-              <ChevronRight className="w-8 h-8" />
-            </Button>
-          )}
             </div>
 
             {/* Miniaturas direitas - desktop apenas */}
-            <div className="hidden lg:flex flex-col items-start gap-3">
+            <div className="hidden lg:flex flex-col items-start gap-1">
               {stories.slice(currentIndex + 1, Math.min(stories.length, currentIndex + 4)).map((story, idx) => {
                 const actualIndex = currentIndex + 1 + idx;
                 return (

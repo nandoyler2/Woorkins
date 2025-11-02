@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
-import { Heart, Send, MessageCircle, Repeat2 } from 'lucide-react';
+import { Heart, Send, MessageCircle, Repeat2, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { formatShortName } from '@/lib/utils';
 
 interface StoryComment {
@@ -27,14 +27,16 @@ interface StoryCommentSectionProps {
   onToggleLike: () => void;
   isOwner: boolean;
   onRepost?: () => void;
+  onCommentsToggle?: (isOpen: boolean) => void;
 }
 
-export function StoryCommentSection({ storyId, currentProfileId, isLiked, onToggleLike, isOwner, onRepost }: StoryCommentSectionProps) {
+export function StoryCommentSection({ storyId, currentProfileId, isLiked, onToggleLike, isOwner, onRepost, onCommentsToggle }: StoryCommentSectionProps) {
   const [commentText, setCommentText] = useState('');
   const [comments, setComments] = useState<StoryComment[]>([]);
   const [recentComments, setRecentComments] = useState<StoryComment[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [commentCount, setCommentCount] = useState(0);
+  const [showAllComments, setShowAllComments] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
@@ -167,38 +169,95 @@ export function StoryCommentSection({ storyId, currentProfileId, isLiked, onTogg
     }
   };
 
+  const toggleComments = () => {
+    const newState = !showAllComments;
+    setShowAllComments(newState);
+    onCommentsToggle?.(newState);
+  };
+
   return (
     <>
       {/* Sombra degradê inferior para melhor visibilidade */}
       <div className="absolute bottom-0 left-0 right-0 h-32 z-20 bg-gradient-to-t from-black/70 via-black/30 to-transparent pointer-events-none" />
 
       {/* Comentários recentes flutuantes */}
-      <div className="absolute bottom-24 left-4 right-4 z-30 space-y-2 pointer-events-none">
-        {recentComments.map((comment, index) => (
-          <div
-            key={comment.id}
-            className="bg-black/60 backdrop-blur-md rounded-2xl p-3 animate-in slide-in-from-bottom-4 fade-in duration-300"
-            style={{ animationDelay: `${index * 100}ms` }}
-          >
-            <div className="flex items-start gap-2">
-              <Avatar className="w-6 h-6 flex-shrink-0">
-                <AvatarImage src={comment.profiles.avatar_url || undefined} />
-                <AvatarFallback className="text-xs">
-                  {formatShortName(comment.profiles.full_name)?.[0]?.toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1 min-w-0">
-                <p className="text-white text-xs font-semibold">
-                  {formatShortName(comment.profiles.full_name) || comment.profiles.username}
-                </p>
-                <p className="text-white/90 text-sm break-words">
-                  {comment.comment_text}
-                </p>
+      {!showAllComments && (
+        <div className="absolute bottom-24 left-4 right-4 z-30 space-y-2 pointer-events-none">
+          {recentComments.slice(0, 3).map((comment, index) => (
+            <div
+              key={comment.id}
+              className="bg-black/60 backdrop-blur-md rounded-2xl p-3 animate-in slide-in-from-bottom-4 fade-in duration-300"
+              style={{ animationDelay: `${index * 100}ms` }}
+            >
+              <div className="flex items-start gap-2">
+                <Avatar className="w-6 h-6 flex-shrink-0">
+                  <AvatarImage src={comment.profiles.avatar_url || undefined} />
+                  <AvatarFallback className="text-xs">
+                    {formatShortName(comment.profiles.full_name)?.[0]?.toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                  <p className="text-white text-xs font-semibold">
+                    {formatShortName(comment.profiles.full_name) || comment.profiles.username}
+                  </p>
+                  <p className="text-white/90 text-sm break-words">
+                    {comment.comment_text}
+                  </p>
+                </div>
               </div>
             </div>
+          ))}
+        </div>
+      )}
+
+      {/* Tela de comentários expandida */}
+      {showAllComments && (
+        <div className="absolute inset-0 bg-black/95 z-40 flex flex-col animate-in slide-in-from-bottom duration-300">
+          <div className="flex items-center justify-between p-4 border-b border-white/10">
+            <h3 className="text-white font-semibold text-lg">Comentários ({commentCount})</h3>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleComments}
+              className="text-white hover:bg-white/10"
+            >
+              <X className="w-5 h-5" />
+            </Button>
           </div>
-        ))}
-      </div>
+          <ScrollArea className="flex-1 px-4 py-6">
+            <div className="space-y-6">
+              {comments.map((comment) => (
+                <div key={comment.id} className="flex gap-3 animate-fade-in">
+                  <Avatar className="w-10 h-10 flex-shrink-0 ring-2 ring-white/20">
+                    <AvatarImage src={comment.profiles.avatar_url || undefined} />
+                    <AvatarFallback className="bg-white/10 text-white font-semibold">
+                      {formatShortName(comment.profiles.full_name)?.[0]?.toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-baseline gap-2 mb-1">
+                      <p className="text-sm font-semibold text-white">
+                        {formatShortName(comment.profiles.full_name) || comment.profiles.username}
+                      </p>
+                      <p className="text-xs text-white/60">
+                        {new Date(comment.created_at).toLocaleDateString('pt-BR', {
+                          day: '2-digit',
+                          month: '2-digit',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </p>
+                    </div>
+                    <p className="text-sm text-white/90 break-words leading-relaxed">
+                      {comment.comment_text}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
+        </div>
+      )}
 
       {/* Barra de comentários inferior */}
       <div className="absolute bottom-4 left-4 right-4 z-30 flex items-center gap-3">
@@ -215,55 +274,14 @@ export function StoryCommentSection({ storyId, currentProfileId, isLiked, onTogg
           />
           
           {/* Contador de comentários dentro do input */}
-          {commentCount > 0 && (
-            <Sheet>
-              <SheetTrigger asChild>
-                <button className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 text-white/80 hover:text-white transition-colors">
-                  <MessageCircle className="w-4 h-4" />
-                  <span className="text-xs font-semibold">{commentCount}</span>
-                </button>
-              </SheetTrigger>
-              <SheetContent 
-                side="bottom" 
-                className="h-[75vh] rounded-t-3xl border-t-0 animate-slide-in-bottom"
-              >
-                <SheetHeader className="border-b pb-4">
-                  <SheetTitle className="text-center text-lg font-bold">
-                    Comentários ({commentCount})
-                  </SheetTitle>
-                </SheetHeader>
-                <div className="mt-6 space-y-6 overflow-y-auto h-[calc(100%-80px)] pr-2">
-                  {comments.map((comment) => (
-                    <div key={comment.id} className="flex gap-3 animate-fade-in">
-                      <Avatar className="w-10 h-10 flex-shrink-0 ring-2 ring-border">
-                        <AvatarImage src={comment.profiles.avatar_url || undefined} />
-                        <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-                          {formatShortName(comment.profiles.full_name)?.[0]?.toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-baseline gap-2 mb-1">
-                          <p className="text-sm font-semibold text-foreground">
-                            {formatShortName(comment.profiles.full_name) || comment.profiles.username}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {new Date(comment.created_at).toLocaleDateString('pt-BR', {
-                              day: '2-digit',
-                              month: '2-digit',
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })}
-                          </p>
-                        </div>
-                        <p className="text-sm text-foreground/90 break-words leading-relaxed">
-                          {comment.comment_text}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </SheetContent>
-            </Sheet>
+          {commentCount > 0 && !showAllComments && (
+            <button 
+              onClick={toggleComments}
+              className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 text-white/80 hover:text-white transition-colors"
+            >
+              <MessageCircle className="w-4 h-4" />
+              <span className="text-xs font-semibold">{commentCount}</span>
+            </button>
           )}
         </div>
 

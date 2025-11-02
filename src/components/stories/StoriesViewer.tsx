@@ -67,6 +67,7 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
   const [deleting, setDeleting] = useState(false);
   const [mediaLoading, setMediaLoading] = useState(true);
   const [showRepostDialog, setShowRepostDialog] = useState(false);
+  const [commentsOpen, setCommentsOpen] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const { toast } = useToast();
 
@@ -182,7 +183,7 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
     let lastPauseStart = 0;
 
     const updateProgress = () => {
-      if (isPaused) {
+      if (isPaused || commentsOpen) {
         if (lastPauseStart === 0) {
           lastPauseStart = Date.now();
         }
@@ -207,7 +208,7 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
     progressInterval = setInterval(updateProgress, 100);
 
     return () => clearInterval(progressInterval);
-  }, [isOpen, stories, currentIndex, registerView, isPaused]);
+  }, [isOpen, stories, currentIndex, registerView, isPaused, commentsOpen]);
 
   const handleNext = () => {
     if (currentIndex < stories.length - 1) {
@@ -705,6 +706,7 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
               onToggleLike={storyLikes.toggleLike}
               isOwner={isOwner}
               onRepost={() => setShowRepostDialog(true)}
+              onCommentsToggle={setCommentsOpen}
             />
           )}
 

@@ -297,19 +297,10 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (user) {
-      loadProfile();
+      loadAllDashboardData();
       checkEmailConfirmation();
     }
   }, [user]);
-
-  // Carregar dados apenas uma vez quando o profile é carregado
-  useEffect(() => {
-    if (profile) {
-      loadPendingInvites();
-      loadLastUnreadMessage();
-      loadNewProjectsCount();
-    }
-  }, [profile?.id]); // Apenas quando o ID muda
 
   const loadNewProjectsCount = async () => {
     try {
@@ -328,13 +319,14 @@ export default function Dashboard() {
     }
   };
 
-  const loadPendingInvites = async () => {
-    if (!profile) return;
+  const loadPendingInvites = async (profileData?: Profile) => {
+    const currentProfile = profileData || profile;
+    if (!currentProfile) return;
     
     const { count, error } = await supabase
       .from('profile_admins')
       .select('*', { count: 'exact', head: true })
-      .eq('profile_id', profile.id)
+      .eq('profile_id', currentProfile.id)
       .eq('status', 'pending');
     
     if (!error && count !== null) {
@@ -342,8 +334,9 @@ export default function Dashboard() {
     }
   };
 
-  const loadLastUnreadMessage = async () => {
-    if (!profile) return;
+  const loadLastUnreadMessage = async (profileData?: Profile) => {
+    const currentProfile = profileData || profile;
+    if (!currentProfile) return;
     
     setLoadingMessages(true);
     try {
@@ -352,7 +345,7 @@ export default function Dashboard() {
         supabase
           .from('negotiation_messages')
           .select('content, created_at')
-          .neq('sender_id', profile.id)
+          .neq('sender_id', currentProfile.id)
           .is('read_at', null)
           .eq('moderation_status', 'approved')
           .neq('is_deleted', true)
@@ -363,7 +356,7 @@ export default function Dashboard() {
         supabase
           .from('proposal_messages')
           .select('content, created_at')
-          .neq('sender_id', profile.id)
+          .neq('sender_id', currentProfile.id)
           .is('read_at', null)
           .eq('moderation_status', 'approved')
           .order('created_at', { ascending: false })
@@ -400,42 +393,53 @@ export default function Dashboard() {
     setEmailConfirmed(!!authUser?.email_confirmed_at);
   };
   
-  const loadProfile = async () => {
+  // Consolidar todo o carregamento de dados em uma única função otimizada
+  const loadAllDashboardData = async () => {
     if (!user) return;
     
     setLoadingProfile(true);
     try {
+      // 1. Carregar perfil primeiro
       const { getOrCreateUserProfile } = await import('@/lib/profiles');
       const profiles = await getOrCreateUserProfile(user);
       
-      if (profiles && profiles.length > 0) {
-        const userProfile = profiles.find((p: any) => p.profile_type === 'user') || profiles[0];
-        const profileData = userProfile as unknown as Profile;
-        
-        setProfile(profileData);
-        
-        // Executar operações em paralelo SEM aguardar fixUsernameSlugConflict
-        const allProfileIds = profiles.map((p: any) => p.id);
-        Promise.all([
-          loadBusinessProfiles(profileData.id),
-          loadWoorkoinsBalanceForIds(allProfileIds),
-          loadStatistics(allProfileIds)
-        ]);
-        
-        // Executar fix de conflitos em background (não bloqueia)
-        fixUsernameSlugConflict(profileData, profiles).catch(console.error);
-      } else {
+      if (!profiles || profiles.length === 0) {
         toast({
           title: 'Erro ao criar perfil',
           description: 'Não foi possível criar seu perfil. Tente fazer logout e login novamente.',
           variant: 'destructive',
         });
+        return;
       }
+
+      const userProfile = profiles.find((p: any) => p.profile_type === 'user') || profiles[0];
+      const profileData = userProfile as unknown as Profile;
+      setProfile(profileData);
+      
+      const allProfileIds = profiles.map((p: any) => p.id);
+      
+      // 2. Carregar TODOS os dados críticos em paralelo de uma vez
+      await Promise.all([
+        loadBusinessProfiles(profileData.id),
+        loadWoorkoinsBalanceForIds(allProfileIds),
+        loadStatistics(allProfileIds),
+        loadPendingInvites(profileData),
+        loadLastUnreadMessage(profileData),
+        loadNewProjectsCount(),
+      ]);
+      
+      // 3. Carregar dados menos críticos depois (não bloqueantes)
+      loadFeedPosts(profileData).catch(console.error);
+      loadFollowers(profileData).catch(console.error);
+      
+      // 4. Executar fix de conflitos em background (não bloqueia)
+      fixUsernameSlugConflict(profileData, profiles).catch(console.error);
+      
     } catch (error) {
-      console.error('[Dashboard] Error in loadProfile:', error);
+      console.error('[Dashboard] Error in loadAllDashboardData:', error);
       toast({
-        title: 'Erro ao carregar perfil',
-        description: 'Não foi possível carregar seu perfil. Tente novamente.',
+        title: 'Erro ao carregar dados',
+        description: 'Não foi possível carregar seus dados. Tente novamente.',
         variant: 'destructive',
       });
     } finally {
@@ -743,34 +747,36 @@ export default function Dashboard() {
     }
   };
 
-  const loadFeedPosts = async () => {
-    if (!profile) return;
+  const loadFeedPosts = async (profileData?: Profile) => {
+    const currentProfile = profileData || profile;
+    if (!currentProfile) return;
     
     setLoadingPosts(true);
     try {
-      // Buscar posts sem relacionamento (não há FK configurada no banco)
+      // Buscar apenas 5 posts mais recentes com JOIN direto
       const { data: posts, error } = await supabase
         .from('profile_posts')
-        .select('*')
-        .eq('profile_id', profile.id)
+        .select(`
+          *,
+          profiles!inner(
+            id,
+            full_name,
+            username,
+            avatar_url,
+            company_name,
+            logo_url,
+            slug,
+            profile_type
+          )
+        `)
+        .eq('profile_id', currentProfile.id)
         .order('created_at', { ascending: false })
-        .limit(10);
+        .limit(5);
 
       if (error) throw error;
 
-      // Buscar perfis autores dos posts manualmente
-      const profileIds = Array.from(new Set((posts || []).map((p: any) => p.profile_id).filter(Boolean)));
-      let profilesById: Record<string, any> = {};
-      if (profileIds.length) {
-        const { data: authors } = await supabase
-          .from('profiles' as any)
-          .select('id, full_name, username, avatar_url, company_name, logo_url, slug, profile_type')
-          .in('id', profileIds);
-        profilesById = Object.fromEntries((authors || []).map((a: any) => [a.id, a]));
-      }
-
       const postsWithStats = (posts || []).map((post: any) => {
-        const postProfile = profilesById[post.profile_id] || {};
+        const postProfile = post.profiles || {};
 
         // Calcular "tempo atrás"
         const createdAt = new Date(post.created_at);
@@ -895,18 +901,19 @@ export default function Dashboard() {
     alert('Link copiado para a área de transferência!');
   };
 
-  const loadFollowers = async () => {
+  const loadFollowers = async (profileData?: Profile) => {
+    const currentProfile = profileData || profile;
+    if (!currentProfile) return;
+    
     try {
       // Carregar quem o usuário está seguindo
-      if (profile) {
-        const { data: following } = await supabase
-          .from('follows')
-          .select('following_id')
-          .eq('follower_id', profile.id);
+      const { data: following } = await supabase
+        .from('follows')
+        .select('following_id')
+        .eq('follower_id', currentProfile.id);
 
-        if (following) {
-          setFollowingProfiles(new Set(following.map(f => f.following_id)));
-        }
+      if (following) {
+        setFollowingProfiles(new Set(following.map(f => f.following_id)));
       }
 
       // Carregar contadores de seguidores para os perfis dos posts
@@ -943,12 +950,6 @@ export default function Dashboard() {
     }
   };
 
-  useEffect(() => {
-    if (profile) {
-      loadFeedPosts();
-      loadFollowers();
-    }
-  }, [profile]);
   // Remover bloqueio de renderização - mostrar estrutura imediatamente
 
   const accountType = 'Conta Grátis';
@@ -1471,13 +1472,13 @@ export default function Dashboard() {
               setShowProfileEdit(open);
               // Quando fechar, recarregar perfis para pegar slugs atualizados
               if (!open && profile) {
-                loadProfile();
+                loadAllDashboardData();
                 loadBusinessProfiles(profile.id);
               }
             }}
             userId={user.id}
             profileId={profile.id}
-            onUpdate={loadProfile}
+            onUpdate={loadAllDashboardData}
           />
           <IdentityVerificationDialog
             open={showVerificationDialog}
@@ -1497,7 +1498,7 @@ export default function Dashboard() {
             currentPhotoUrl={profile.avatar_url || ''}
             userName={user?.user_metadata?.full_name || 'Usuário'}
             profileId={profile.id}
-            onPhotoUpdated={loadProfile}
+            onPhotoUpdated={loadAllDashboardData}
           />
         </>
       )}
@@ -1628,7 +1629,7 @@ export default function Dashboard() {
           userId={user?.id || ''}
           onPhotoUploaded={() => {
             setShowStoryPhotoRequired(false);
-            loadProfile();
+            loadAllDashboardData();
             toast({
               title: 'Foto adicionada!',
               description: 'Agora você pode criar seu story',

@@ -94,8 +94,31 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
   const observerTarget = useRef<HTMLDivElement>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [dialogProfiles, setDialogProfiles] = useState<any[]>(userProfiles || []);
+  const [hasPostedToday, setHasPostedToday] = useState(false);
 
   const STORIES_PER_PAGE = 20;
+
+  // Verificar se o usuário postou stories hoje
+  const checkIfPostedToday = useCallback(async () => {
+    if (!currentProfileId) return;
+    
+    try {
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+      
+      const { data, error } = await supabase
+        .from('profile_stories')
+        .select('id')
+        .eq('profile_id', currentProfileId)
+        .gte('created_at', todayStart.toISOString())
+        .limit(1)
+        .maybeSingle();
+      
+      setHasPostedToday(!!data);
+    } catch (error) {
+      console.error('Error checking if posted today:', error);
+    }
+  }, [currentProfileId]);
 
   // Carrega ou garante perfis para o dialog (quando prop não for passada)
   useEffect(() => {
@@ -114,7 +137,8 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
       }
     };
     ensureProfiles();
-  }, [user, userProfiles]);
+    checkIfPostedToday();
+  }, [user, userProfiles, checkIfPostedToday]);
 
   const loadPublicStories = useCallback(async (pageNum: number) => {
     try {
@@ -234,6 +258,7 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
 
   useEffect(() => {
     loadPublicStories(0);
+    checkIfPostedToday();
 
     // Realtime updates
     const channel = supabase
@@ -249,6 +274,7 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
           if (payload.eventType === 'INSERT') {
             loadPublicStories(0);
             setPage(0);
+            checkIfPostedToday(); // Atualizar status quando novo story for adicionado
           } else if (payload.eventType === 'DELETE') {
             setStories(prev => prev.filter(s => s.id !== payload.old.id));
           }
@@ -259,7 +285,7 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [loadPublicStories]);
+  }, [loadPublicStories, checkIfPostedToday]);
 
   // Infinite scroll observer
   useEffect(() => {
@@ -397,7 +423,11 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
               <div className="relative bg-white/20 backdrop-blur-sm rounded-full p-6">
                 <Plus className="w-12 h-12 text-white" />
               </div>
-              <p className="relative text-white font-bold text-lg text-center">Publicar Storie</p>
+              <p className="relative text-white font-bold text-sm text-center px-4">
+                {hasPostedToday 
+                  ? 'Adicione mais stories e movimente seu perfil' 
+                  : 'Você ainda não publicou stories hoje'}
+              </p>
             </div>
           </div>
         )}

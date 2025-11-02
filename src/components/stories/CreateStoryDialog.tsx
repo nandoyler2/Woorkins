@@ -253,42 +253,31 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
       text_italic: textItalic,
     } : undefined;
 
-    setIsPublishing(true);
+    // Fechar dialog imediatamente
+    handleClose();
+    onStoryCreated();
 
-    try {
-      // Aguardar o upload e moderação
-      await uploadStory({
-        profileId: selectedProfile,
-        type: type,
-        mediaFile: finalMediaFile || undefined,
-        textContent: type === 'text' ? textContent : undefined,
-        backgroundColor: type === 'text' ? backgroundColor : undefined,
-        metadata,
-        stickers: stickers.map(s => ({
-          type: s.type,
-          position_x: s.position_x,
-          position_y: s.position_y,
-          width: s.width,
-          height: s.height,
-          rotation: s.rotation,
-          content: s.content
-        }))
-      });
-
-      // Se chegou aqui, foi aprovado e publicado com sucesso
-      handleClose();
-      onStoryCreated();
-    } catch (error) {
-      // Se for erro de moderação, mostrar no dialog
-      const errorMessage = error instanceof Error ? error.message : 'Erro ao publicar storie';
-      toast({
-        title: 'Storie não publicado',
-        description: errorMessage,
-        variant: 'destructive',
-      });
-    } finally {
-      setIsPublishing(false);
-    }
+    // Upload continua em background
+    uploadStory({
+      profileId: selectedProfile,
+      type: type,
+      mediaFile: finalMediaFile || undefined,
+      textContent: type === 'text' ? textContent : undefined,
+      backgroundColor: type === 'text' ? backgroundColor : undefined,
+      metadata,
+      stickers: stickers.map(s => ({
+        type: s.type,
+        position_x: s.position_x,
+        position_y: s.position_y,
+        width: s.width,
+        height: s.height,
+        rotation: s.rotation,
+        content: s.content
+      }))
+    }).catch(error => {
+      // Erros já são tratados no uploadStory
+      console.error('Story upload failed:', error);
+    });
   };
 
   const handleClose = () => {

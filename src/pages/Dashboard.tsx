@@ -1262,7 +1262,7 @@ export default function Dashboard() {
               </CardHeader>
               <CardContent className="p-4">
                 <Suspense fallback={<div className="space-y-4">{Array(3).fill(0).map((_, i) => <Skeleton key={i} className="h-48 w-full" />)}</div>}>
-                  <PublicStoriesFeed currentProfileId={profile.id} />
+                  <PublicStoriesFeed key={storiesRefreshTrigger} currentProfileId={profile.id} />
                 </Suspense>
               </CardContent>
             </Card>
@@ -1619,10 +1619,6 @@ export default function Dashboard() {
           ]}
           onStoryCreated={() => {
             setStoriesRefreshTrigger(prev => prev + 1);
-            toast({
-              title: 'Story publicado! ✨',
-              description: 'Seu story foi publicado com sucesso',
-            });
           }}
         />
       )}

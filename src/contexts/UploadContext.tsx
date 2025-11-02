@@ -274,12 +274,6 @@ export function UploadProvider({ children }: { children: ReactNode }) {
         progress: 0,
         message: errorMessage,
       });
-
-      toast({
-        title: 'Erro ao publicar',
-        description: errorMessage,
-        variant: 'destructive',
-      });
       
       throw error;
     }

@@ -9,8 +9,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import { OptimizedAvatar } from "@/components/ui/optimized-avatar";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Clock, FileText, DollarSign, Calendar, Sparkles, CheckCircle2, Bold, Italic, List, ListOrdered } from "lucide-react";
+import { Clock, FileText, DollarSign, Calendar, Sparkles, CheckCircle2, Bold, Italic, List, ListOrdered, Paperclip, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 interface ProposalDialogProps {
   open: boolean;
@@ -36,8 +37,11 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
     premium: 2.0,
   });
   const editorRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const draftKey = `proposalDraft:${user?.id || 'anon'}:${projectId}`;
   const maxChars = 3000;
+  const [attachments, setAttachments] = useState<File[]>([]);
+  const [showPremiumDialog, setShowPremiumDialog] = useState(false);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -91,6 +95,11 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
       fetchUserProfile();
       loadPlatformFees();
       setSuccess(false);
+    }
+    
+    // Limpa anexos quando fechar o diálogo
+    if (!open) {
+      setAttachments([]);
     }
   }, [user, open]);
 
@@ -151,6 +160,7 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
       setAmountFormatted("");
       setDeliveryTime("");
       setMessage("");
+      setAttachments([]);
     } catch (error: any) {
       console.error('Error creating proposal:', error);
       toast({
@@ -223,6 +233,48 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
         setMessage(editorRef.current.innerText || '');
       }
     }, 0);
+  };
+
+  const handleAttachmentClick = () => {
+    const plan = userProfile?.subscription_plan || 'free';
+    if (plan === 'free') {
+      setShowPremiumDialog(true);
+      return;
+    }
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    
+    // Validar número de arquivos
+    if (attachments.length + files.length > 3) {
+      toast({
+        title: "Limite de arquivos",
+        description: "Você pode enviar no máximo 3 anexos por proposta",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validar tamanho dos arquivos (5MB cada)
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    const invalidFiles = files.filter(f => f.size > maxSize);
+    if (invalidFiles.length > 0) {
+      toast({
+        title: "Arquivo muito grande",
+        description: "Cada arquivo deve ter no máximo 5MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setAttachments(prev => [...prev, ...files]);
+    if (e.target) e.target.value = '';
+  };
+
+  const removeAttachment = (index: number) => {
+    setAttachments(prev => prev.filter((_, i) => i !== index));
   };
 
   // Carrega rascunho ao abrir
@@ -482,18 +534,60 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
                     {message.length}/{maxChars}
                   </span>
                 </div>
-                <div
-                  ref={editorRef}
-                  contentEditable
-                  onInput={handleMessageChange}
-                  className="border-2 border-blue-200 dark:border-blue-800 focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 transition-all rounded-b-lg p-3 min-h-[140px] max-h-[220px] overflow-y-auto text-sm focus:outline-none bg-white dark:bg-slate-950"
-                  style={{ whiteSpace: 'pre-wrap' }}
-                  data-placeholder="Descreva sua experiência, metodologia e por que você é ideal para este projeto..."
-                />
+                <div className="relative">
+                  <div
+                    ref={editorRef}
+                    contentEditable
+                    onInput={handleMessageChange}
+                    className="border-2 border-blue-200 dark:border-blue-800 focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 transition-all rounded-b-lg p-3 pb-12 min-h-[140px] max-h-[220px] overflow-y-auto text-sm focus:outline-none bg-white dark:bg-slate-950"
+                    style={{ whiteSpace: 'pre-wrap' }}
+                    data-placeholder="Descreva sua experiência, metodologia e por que você é ideal para este projeto..."
+                  />
+                  
+                  {/* Botão de anexos e lista de arquivos */}
+                  <div className="absolute bottom-0 left-0 right-0 border-t border-blue-200 dark:border-blue-800 bg-blue-50/50 dark:bg-blue-950/30 p-2 rounded-b-lg flex items-center gap-2">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      multiple
+                      accept="image/*,.pdf,.doc,.docx,.txt"
+                      onChange={handleFileChange}
+                      className="hidden"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleAttachmentClick}
+                      className="h-7 gap-1.5 text-xs hover:bg-blue-100 dark:hover:bg-blue-900"
+                      title="Adicionar anexos (Pro/Premium)"
+                    >
+                      <Paperclip className="w-3.5 h-3.5" />
+                      Anexos ({attachments.length}/3)
+                    </Button>
+                    
+                    {attachments.length > 0 && (
+                      <div className="flex gap-1 flex-1 overflow-x-auto">
+                        {attachments.map((file, index) => (
+                          <div key={index} className="flex items-center gap-1 bg-white dark:bg-slate-900 border border-blue-200 dark:border-blue-700 rounded px-2 py-1 text-xs shrink-0">
+                            <span className="max-w-[100px] truncate">{file.name}</span>
+                            <button
+                              type="button"
+                              onClick={() => removeAttachment(index)}
+                              className="text-red-500 hover:text-red-700"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
 
               {/* Botões de ação */}
-              <div className="flex gap-2 justify-end pt-2 border-t border-blue-200 dark:border-blue-800">
+              <div className="flex gap-2 justify-end pt-2">
                 <Button
                   type="button"
                   variant="outline"
@@ -527,6 +621,43 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
           </>
         )}
       </DialogContent>
+
+      {/* Dialog para usuários free */}
+      <AlertDialog open={showPremiumDialog} onOpenChange={setShowPremiumDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-amber-500" />
+              Recurso Premium
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              <p>O envio de anexos em propostas é um recurso exclusivo para usuários Pro e Premium.</p>
+              <p className="font-semibold text-foreground">Com um plano premium você pode:</p>
+              <ul className="list-disc list-inside space-y-1 text-sm">
+                <li>Enviar até 3 anexos por proposta</li>
+                <li>Arquivos de até 5MB cada</li>
+                <li>Impressionar clientes com portfólio anexado</li>
+                <li>Taxas de transação reduzidas</li>
+              </ul>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <Button variant="outline" onClick={() => setShowPremiumDialog(false)}>
+              Cancelar
+            </Button>
+            <Button 
+              className="bg-gradient-to-r from-blue-600 via-teal-600 to-blue-600 hover:from-blue-700 hover:via-teal-700 hover:to-blue-700"
+              onClick={() => {
+                window.open(`${window.location.origin}/planos`, '_blank');
+                setShowPremiumDialog(false);
+              }}
+            >
+              <Sparkles className="w-4 h-4 mr-2" />
+              Ver Planos
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }

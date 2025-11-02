@@ -60,21 +60,25 @@ const getFirstName = (fullName: string | null, username: string): string => {
   
   const words = fullName.trim().split(' ').filter(w => w.length > 0);
   if (words.length === 0) return username;
-  if (words.length === 1) return words[0];
+  if (words.length === 1) {
+    const name = words[0].toLowerCase();
+    return name.charAt(0).toUpperCase() + name.slice(1);
+  }
   
   const prepositions = ['de', 'da', 'do', 'dos', 'das', 'e'];
-  const firstName = words[0];
+  const firstName = words[0].toLowerCase();
+  const formattedFirstName = firstName.charAt(0).toUpperCase() + firstName.slice(1);
   
   // Encontrar o primeiro sobrenome que não seja preposição
   for (let i = 1; i < words.length; i++) {
     const word = words[i].toLowerCase();
     if (!prepositions.includes(word)) {
-      return `${firstName} ${word[0].toUpperCase()}.`;
+      return `${formattedFirstName} ${word[0].toUpperCase()}.`;
     }
   }
   
   // Se todos os sobrenomes são preposições, retornar só o primeiro nome
-  return firstName;
+  return formattedFirstName;
 };
 
 export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentProfileId, userProfiles = [] }) => {

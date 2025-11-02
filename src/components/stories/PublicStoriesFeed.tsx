@@ -55,6 +55,12 @@ const getRelativeTime = (timestamp: string): string => {
   return `há ${diffDays} ${diffDays === 1 ? 'dia' : 'dias'}`;
 };
 
+const getFirstName = (fullName: string | null, username: string): string => {
+  if (!fullName) return username;
+  const firstName = fullName.trim().split(' ')[0];
+  return firstName || username;
+};
+
 export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentProfileId, userProfiles = [] }) => {
   const { user } = useAuth();
   const [stories, setStories] = useState<PublicStory[]>([]);
@@ -386,26 +392,26 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
                   </div>
                 )}
                 
-                <div className="absolute bottom-0 left-0 right-0 p-3 text-white">
-                  <div className="flex items-center gap-2">
-                    <Avatar className="w-7 h-7 border-2 border-white shadow-lg flex-shrink-0">
+                <div className="absolute bottom-0 left-0 right-0 p-2 text-white">
+                  <div className="flex items-center gap-1.5">
+                    <Avatar className="w-5 h-5 border border-white shadow-lg flex-shrink-0">
                       <AvatarImage src={story.profiles.avatar_url || undefined} />
-                      <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-                        {formatShortName(story.profiles.full_name || story.profiles.username)?.[0]?.toUpperCase()}
+                      <AvatarFallback className="bg-primary text-primary-foreground text-[10px]">
+                        {getFirstName(story.profiles.full_name, story.profiles.username)?.[0]?.toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-semibold truncate drop-shadow-lg">
-                        {formatShortName(story.profiles.full_name) || story.profiles.username}
+                      <p className="text-[10px] font-semibold truncate drop-shadow-lg leading-tight">
+                        {getFirstName(story.profiles.full_name, story.profiles.username)}
                       </p>
-                      <p className="text-[10px] drop-shadow-lg">
+                      <p className="text-[9px] drop-shadow-lg leading-tight opacity-90">
                         {getRelativeTime(story.created_at)}
                       </p>
                     </div>
                     {story.like_count > 0 && (
-                      <div className="flex items-center gap-1 flex-shrink-0">
-                        <Heart className="w-4 h-4 text-red-500 fill-red-500" />
-                        <span className="text-xs font-bold">{story.like_count}</span>
+                      <div className="flex items-center gap-0.5 flex-shrink-0">
+                        <Heart className="w-3 h-3 text-red-500 fill-red-500" />
+                        <span className="text-[10px] font-bold">{story.like_count}</span>
                       </div>
                     )}
                   </div>

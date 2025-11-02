@@ -555,7 +555,7 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
                   />
                   <div className="grid grid-cols-3 gap-2 items-center">
                     {/* Coluna esquerda: botão de anexo e arquivos */}
-                    <div className="flex flex-col gap-1 col-span-2">
+                    <div className="flex flex-col col-span-2">
                       <div className="flex items-center gap-2">
                         <Button
                           type="button"
@@ -586,7 +586,7 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
                           </div>
                         )}
                       </div>
-                      <p className="text-[10px] text-amber-600 dark:text-amber-400 font-medium italic">
+                      <p className="text-[10px] text-amber-600 dark:text-amber-400 font-medium italic pl-2">
                         Envie portfólio ou apresentação e destaque sua proposta
                       </p>
                     </div>

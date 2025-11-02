@@ -193,82 +193,55 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
 
   if (stories.length === 0) {
     return (
-      <div className="max-w-2xl mx-auto px-4">
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-500 via-pink-500 to-orange-500 p-8 shadow-2xl">
-          {/* Padrão de fundo decorativo */}
-          <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.8),transparent_50%)]" />
-          
-          <div className="relative text-center text-white">
-            {/* Ícone animado */}
-            <div className="mb-6 flex justify-center">
-              <div className="bg-white/20 backdrop-blur-sm rounded-full p-6 animate-pulse">
-                <Sparkles className="w-16 h-16 text-white" />
-              </div>
-            </div>
-
-            {/* Título principal */}
-            <h2 className="text-3xl font-bold mb-3">
-              Compartilhe Seus Momentos!
-            </h2>
-            
-            {/* Subtítulo */}
-            <p className="text-white/90 text-lg mb-8">
-              Seja o primeiro a postar um story e inspirar a comunidade
-            </p>
-
-            {/* Lista de vantagens */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8 text-left">
-              <div className="flex items-start gap-3 bg-white/10 backdrop-blur-sm rounded-lg p-4">
-                <Sparkles className="w-5 h-5 mt-0.5 flex-shrink-0" />
-                <div>
-                  <p className="font-semibold">Destaque na Comunidade</p>
-                  <p className="text-sm text-white/80">Apareça em primeiro lugar</p>
-                </div>
-              </div>
-              
-              <div className="flex items-start gap-3 bg-white/10 backdrop-blur-sm rounded-lg p-4">
-                <Eye className="w-5 h-5 mt-0.5 flex-shrink-0" />
-                <div>
-                  <p className="font-semibold">Alcance Milhares</p>
-                  <p className="text-sm text-white/80">Conecte-se com todos</p>
-                </div>
-              </div>
-              
-              <div className="flex items-start gap-3 bg-white/10 backdrop-blur-sm rounded-lg p-4">
-                <Zap className="w-5 h-5 mt-0.5 flex-shrink-0" />
-                <div>
-                  <p className="font-semibold">Conteúdo Efêmero</p>
-                  <p className="text-sm text-white/80">Desaparece em 24h</p>
-                </div>
-              </div>
-              
-              <div className="flex items-start gap-3 bg-white/10 backdrop-blur-sm rounded-lg p-4">
-                <Heart className="w-5 h-5 mt-0.5 flex-shrink-0" />
-                <div>
-                  <p className="font-semibold">Interação Real</p>
-                  <p className="text-sm text-white/80">Curtidas em tempo real</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Botão de ação - só aparece se usuário logado */}
-            {userProfiles && userProfiles.length > 0 && (
-              <button
-                onClick={() => setIsCreateDialogOpen(true)}
-                className="bg-white text-purple-600 font-bold px-8 py-4 rounded-full text-lg shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200 inline-flex items-center gap-2"
-              >
-                <Plus className="w-6 h-6" />
-                Postar Meu Primeiro Story
-              </button>
-            )}
-            
-            {/* Mensagem se não estiver logado */}
-            {(!userProfiles || userProfiles.length === 0) && (
-              <p className="text-white/80 text-sm">
-                Faça login para começar a compartilhar seus momentos!
-              </p>
-            )}
+      <div className="max-w-xl mx-auto px-4 py-12">
+        <div className="text-center space-y-6">
+          {/* Ícone */}
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-purple-500 via-pink-500 to-orange-500 animate-pulse">
+            <Sparkles className="w-10 h-10 text-white" />
           </div>
+
+          {/* Título */}
+          <div className="space-y-2">
+            <h2 className="text-2xl font-bold text-foreground">
+              Nenhum story no momento
+            </h2>
+            <p className="text-muted-foreground text-base">
+              Seja o primeiro a compartilhar!
+            </p>
+          </div>
+
+          {/* Benefícios */}
+          <div className="bg-muted/50 rounded-lg p-6 space-y-3 text-left max-w-md mx-auto">
+            <div className="flex items-start gap-3">
+              <Eye className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+              <p className="text-sm text-foreground">
+                <span className="font-semibold">Aumente sua visibilidade:</span> Stories aparecem no topo do feed para todos os usuários
+              </p>
+            </div>
+            
+            <div className="flex items-start gap-3">
+              <Zap className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+              <p className="text-sm text-foreground">
+                <span className="font-semibold">Destaque-se profissionalmente:</span> Contratantes e freelancers verão seu conteúdo primeiro
+              </p>
+            </div>
+            
+            <div className="flex items-start gap-3">
+              <Heart className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+              <p className="text-sm text-foreground">
+                <span className="font-semibold">Engajamento instantâneo:</span> Receba curtidas e gere conexões em tempo real
+              </p>
+            </div>
+          </div>
+
+          {/* Botão de ação */}
+          <button
+            onClick={() => setIsCreateDialogOpen(true)}
+            className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 text-white font-semibold px-8 py-3 rounded-lg shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200"
+          >
+            <Plus className="w-5 h-5" />
+            Postar Story
+          </button>
         </div>
       </div>
     );

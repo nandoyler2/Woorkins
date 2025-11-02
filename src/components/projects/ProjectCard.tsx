@@ -153,7 +153,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
           />
         ) : (
           <div className="flex items-center gap-2">
-            <Avatar className="h-6 w-6">
+            <Avatar className="h-3 w-3">
               {project.profiles.avatar_url ? (
                 <img 
                   src={project.profiles.avatar_url} 
@@ -161,7 +161,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
                   className="h-full w-full object-cover"
                 />
               ) : (
-                <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                <AvatarFallback className="bg-primary text-primary-foreground text-[6px]">
                   {formatShortName(project.profiles.full_name || project.profiles.username)?.[0]?.toUpperCase()}
                 </AvatarFallback>
               )}

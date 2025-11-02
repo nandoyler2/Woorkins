@@ -476,31 +476,31 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
                 
                 {/* Curtidas e comentários juntos no topo esquerdo - apenas se tiver */}
                 {(story.like_count > 0 || story.comment_count > 0) && (
-                  <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-black/50 backdrop-blur-sm rounded-full px-2.5 py-1 shadow-lg">
+                  <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-black/50 backdrop-blur-sm rounded-full px-2 py-0.5 shadow-lg">
                     {story.like_count > 0 && (
                       <>
-                        <Heart className="w-3.5 h-3.5 text-red-500 fill-red-500" />
-                        <span className="text-white text-xs font-bold drop-shadow-md">{story.like_count}</span>
+                        <Heart className="w-3 h-3 text-red-500 fill-red-500" />
+                        <span className="text-white text-[10px] font-bold drop-shadow-md">{story.like_count}</span>
                       </>
                     )}
                     {story.comment_count > 0 && (
                       <>
-                        <MessageCircle className="w-3.5 h-3.5 text-white fill-white" />
-                        <span className="text-white text-xs font-bold drop-shadow-md">{story.comment_count}</span>
+                        <MessageCircle className="w-3 h-3 text-white fill-white" />
+                        <span className="text-white text-[10px] font-bold drop-shadow-md">{story.comment_count}</span>
                       </>
                     )}
                   </div>
                 )}
                 
                 {/* Ícone do tipo de post ou repost no topo direito */}
-                <div className="absolute top-3 right-3 bg-black/50 backdrop-blur-sm rounded-full p-1.5 shadow-lg">
+                <div className="absolute top-3 right-3 bg-black/50 backdrop-blur-sm rounded-full p-1 shadow-lg">
                   {story.original_story_id ? (
-                    <Repeat2 className="w-3.5 h-3.5 text-white" />
+                    <Repeat2 className="w-3 h-3 text-white" />
                   ) : (
                     <>
-                      {story.type === 'video' && <Video className="w-3.5 h-3.5 text-white" />}
-                      {story.type === 'image' && <Image className="w-3.5 h-3.5 text-white" />}
-                      {story.type === 'text' && <FileText className="w-3.5 h-3.5 text-white" />}
+                      {story.type === 'video' && <Video className="w-3 h-3 text-white" />}
+                      {story.type === 'image' && <Image className="w-3 h-3 text-white" />}
+                      {story.type === 'text' && <FileText className="w-3 h-3 text-white" />}
                     </>
                   )}
                 </div>

@@ -473,7 +473,7 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
                 
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                 
-                {/* Curtidas e comentários no topo */}
+                {/* Curtidas e comentários no topo esquerdo - apenas se tiver */}
                 {(story.like_count > 0 || story.comment_count > 0) && (
                   <div className="absolute top-3 left-3 flex items-center gap-2">
                     {story.like_count > 0 && (
@@ -491,11 +491,17 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
                   </div>
                 )}
                 
-                {/* Ícone do tipo de mídia */}
-                <div className="absolute top-3 right-3 bg-black/30 backdrop-blur-sm rounded-full p-1.5 shadow-lg">
-                  {story.type === 'video' && <Video className="w-3.5 h-3.5 text-white" />}
-                  {story.type === 'image' && <Image className="w-3.5 h-3.5 text-white" />}
-                  {story.type === 'text' && <FileText className="w-3.5 h-3.5 text-white" />}
+                {/* Ícone do tipo de post ou repost no topo direito */}
+                <div className="absolute top-3 right-3 bg-black/50 backdrop-blur-sm rounded-full p-1.5 shadow-lg">
+                  {story.original_story_id ? (
+                    <Repeat2 className="w-3.5 h-3.5 text-white" />
+                  ) : (
+                    <>
+                      {story.type === 'video' && <Video className="w-3.5 h-3.5 text-white" />}
+                      {story.type === 'image' && <Image className="w-3.5 h-3.5 text-white" />}
+                      {story.type === 'text' && <FileText className="w-3.5 h-3.5 text-white" />}
+                    </>
+                  )}
                 </div>
                 
                 {story.type === 'video' && (

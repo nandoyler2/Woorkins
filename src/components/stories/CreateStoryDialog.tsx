@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -273,7 +273,7 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
                 <DialogTitle className="text-3xl font-bold bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 bg-clip-text text-transparent">
                   Criar Story
                 </DialogTitle>
-                <p className="text-sm text-muted-foreground">Compartilhe um momento especial</p>
+                <DialogDescription className="text-sm text-muted-foreground">Compartilhe um momento especial</DialogDescription>
               </DialogHeader>
 
               {/* Formulário - Scrollable */}

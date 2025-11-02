@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { StoriesViewer } from "./StoriesViewer";
 import { CreateStoryDialog } from "./CreateStoryDialog";
 import { useAuth } from "@/contexts/AuthContext";
-
+import { getOrCreateUserProfile } from "@/lib/profiles";
 interface PublicStory {
   id: string;
   profile_id: string;
@@ -47,6 +47,7 @@ const getRelativeTime = (timestamp: string): string => {
 };
 
 export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentProfileId, userProfiles = [] }) => {
+  const { user } = useAuth();
   const [stories, setStories] = useState<PublicStory[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedStoryIndex, setSelectedStoryIndex] = useState<number>(0);
@@ -56,8 +57,28 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const observerTarget = useRef<HTMLDivElement>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [dialogProfiles, setDialogProfiles] = useState<any[]>(userProfiles || []);
 
   const STORIES_PER_PAGE = 20;
+
+  // Carrega ou garante perfis para o dialog (quando prop não for passada)
+  useEffect(() => {
+    const ensureProfiles = async () => {
+      try {
+        if (userProfiles && userProfiles.length > 0) {
+          setDialogProfiles(userProfiles);
+          return;
+        }
+        if (user) {
+          const profiles = await getOrCreateUserProfile({ id: user.id, email: user.email || undefined });
+          setDialogProfiles(profiles as any[]);
+        }
+      } catch (err) {
+        console.error('Erro ao carregar perfis para postar story:', err);
+      }
+    };
+    ensureProfiles();
+  }, [user, userProfiles]);
 
   const loadPublicStories = useCallback(async (pageNum: number) => {
     try {
@@ -247,11 +268,11 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
         </div>
 
         {/* Dialog de criação de story */}
-        {userProfiles && userProfiles.length > 0 && (
+        {dialogProfiles && dialogProfiles.length > 0 && (
           <CreateStoryDialog
             isOpen={isCreateDialogOpen}
             onClose={() => setIsCreateDialogOpen(false)}
-            profiles={userProfiles}
+            profiles={dialogProfiles}
             onStoryCreated={() => {
               setIsCreateDialogOpen(false);
               loadPublicStories(0);
@@ -269,7 +290,7 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
         className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 pb-4"
       >
         {/* Botão de Criar Story */}
-        {userProfiles && userProfiles.length > 0 && (
+        {dialogProfiles && dialogProfiles.length > 0 && (
           <div
             className="relative group cursor-pointer overflow-hidden rounded-xl transition-transform hover:scale-[1.02]"
             onClick={() => setIsCreateDialogOpen(true)}
@@ -393,11 +414,11 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
         />
       )}
 
-      {userProfiles && userProfiles.length > 0 && (
+      {dialogProfiles && dialogProfiles.length > 0 && (
         <CreateStoryDialog
           isOpen={isCreateDialogOpen}
           onClose={() => setIsCreateDialogOpen(false)}
-          profiles={userProfiles}
+          profiles={dialogProfiles}
           onStoryCreated={() => {
             setIsCreateDialogOpen(false);
             loadPublicStories(0);

@@ -291,6 +291,15 @@ export default function ProjectCreate() {
         budgetMax = null;
       }
 
+      // Calcular data de deadline baseada no número de dias
+      let deadlineDate = null;
+      if (deadline) {
+        const days = parseInt(deadline);
+        const futureDate = new Date();
+        futureDate.setDate(futureDate.getDate() + days);
+        deadlineDate = futureDate.toISOString().split('T')[0]; // Formato YYYY-MM-DD
+      }
+
       const { data, error } = await supabase
         .from('projects' as any)
         .insert({
@@ -300,7 +309,7 @@ export default function ProjectCreate() {
           category: detectedCategory || 'geral',
           budget_min: budgetMin,
           budget_max: budgetMax,
-          deadline: deadline ? parseInt(deadline) : null,
+          deadline: deadlineDate,
         })
         .select()
         .single();

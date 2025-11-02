@@ -86,6 +86,7 @@ export const ProfileHoverCard = forwardRef<ProfileHoverCardRef, ProfileHoverCard
   };
 
   const handleViewStories = (index: number = 0) => {
+    console.log('[ProfileHoverCard] Opening stories at index:', index, 'Total stories:', data.stories.length);
     setSelectedStoryIndex(index);
     setShowStoriesViewer(true);
   };
@@ -371,13 +372,34 @@ export const ProfileHoverCard = forwardRef<ProfileHoverCardRef, ProfileHoverCard
       </HoverCardContent>
       
       {/* Stories Viewer */}
-      {showStoriesViewer && data.profile && (
+      {showStoriesViewer && data.profile && data.stories.length > 0 && (
         <StoriesViewer
           profileId={profileId}
           isOpen={showStoriesViewer}
           onClose={() => setShowStoriesViewer(false)}
           currentProfileId={user?.id || ''}
           onStoryDeleted={() => {}}
+          allStories={data.stories.map((story, idx) => {
+            console.log(`[ProfileHoverCard] Story ${idx}:`, {
+              id: story.id,
+              type: story.type,
+              isRepost: !!story.original_story_id,
+              hasOriginalProfile: !!story.original_profile,
+            });
+            return {
+              id: story.id,
+              profile_id: profileId,
+              type: story.type,
+              media_url: story.media_url,
+              text_content: story.text_content,
+              thumbnail_url: story.thumbnail_url,
+              created_at: story.created_at,
+              original_story_id: story.original_story_id,
+              original_profile_id: story.original_profile_id,
+              profiles: data.profile,
+              original_profile: story.original_profile,
+            };
+          })}
           initialStoryIndex={selectedStoryIndex}
         />
       )}

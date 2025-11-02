@@ -77,15 +77,36 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
 
   // Atualizar currentIndex quando initialStoryIndex mudar
   useEffect(() => {
-    if (initialStoryIndex !== undefined) {
+    if (initialStoryIndex !== undefined && initialStoryIndex !== currentIndex) {
+      console.log('[StoriesViewer] Setting initial index:', initialStoryIndex);
       setCurrentIndex(initialStoryIndex);
       setProgress(0);
+      setMediaLoading(true);
     }
   }, [initialStoryIndex]);
+
+  // Reset index quando stories mudarem e initialStoryIndex for definido
+  useEffect(() => {
+    if (stories.length > 0 && initialStoryIndex !== undefined) {
+      console.log('[StoriesViewer] Stories loaded, setting index:', initialStoryIndex, 'Total stories:', stories.length);
+      setCurrentIndex(initialStoryIndex);
+      setProgress(0);
+      setMediaLoading(true);
+    }
+  }, [stories.length, initialStoryIndex]);
 
   const loadStories = useCallback(async () => {
     // Se temos allStories (feed público), usar esses stories
     if (allStories && allStories.length > 0) {
+      console.log('[StoriesViewer] Using allStories:', allStories.length, 'stories');
+      allStories.forEach((story, idx) => {
+        console.log(`[StoriesViewer] Story ${idx}:`, {
+          id: story.id,
+          type: story.type,
+          isRepost: !!story.original_story_id,
+          hasOriginalProfile: !!story.original_profile,
+        });
+      });
       const mappedStories = allStories.map(story => ({
         id: story.id,
         profile_id: story.profile_id,
@@ -118,7 +139,7 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
         `)
         .eq('profile_id', profileId)
         .gt('expires_at', new Date().toISOString())
-        .order('created_at', { ascending: true });
+        .order('created_at', { ascending: false }); // Mudado para descendente para manter consistência
 
       if (error) throw error;
 

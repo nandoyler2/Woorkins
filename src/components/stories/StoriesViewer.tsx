@@ -428,27 +428,28 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
           <div className="absolute top-0 left-0 right-0 h-32 z-10 bg-gradient-to-b from-black/70 via-black/30 to-transparent pointer-events-none" />
 
           {/* Header */}
-          <div className="absolute top-4 left-0 right-0 z-20 flex items-center justify-between px-4 mt-4">
-            <div className="flex items-center gap-3 bg-black/30 backdrop-blur-md rounded-full pr-4 py-1.5 pl-1.5">
+          <div className="absolute top-4 left-0 right-0 z-20 flex items-center justify-between px-4 mt-2">
+            <div className="flex items-center gap-2 bg-black/30 backdrop-blur-md rounded-full pr-3 py-1 pl-1">
               <div className="relative">
                 <div className="absolute inset-0 bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 rounded-full blur-sm opacity-75" />
                 {currentStory.profile?.avatar_url ? (
                   <SafeImage
                     src={currentStory.profile.avatar_url}
                     alt={currentStory.profile?.username || ''}
-                    className="relative w-10 h-10 rounded-full border-2 border-white object-cover"
+                    className="relative w-7 h-7 rounded-full border border-white object-cover"
                   />
                 ) : (
-                  <div className="relative w-10 h-10 rounded-full border-2 border-white bg-muted flex items-center justify-center">
-                    <User className="w-6 h-6 text-muted-foreground" />
+                  <div className="relative w-7 h-7 rounded-full border border-white bg-muted flex items-center justify-center">
+                    <User className="w-4 h-4 text-muted-foreground" />
                   </div>
                 )}
               </div>
-              <div>
-                <p className="text-white font-medium text-xs drop-shadow-lg">
+              <div className="flex items-center gap-1.5">
+                <p className="text-white font-medium text-[11px] drop-shadow-lg">
                   @{currentStory.profile?.username || 'usuario'}
                 </p>
-                <p className="text-white/80 text-xs drop-shadow-md">
+                <span className="text-white/60 text-[11px]">•</span>
+                <p className="text-white/70 text-[11px] drop-shadow-md">
                   {new Date(currentStory.created_at).toLocaleTimeString('pt-BR', {
                     hour: '2-digit',
                     minute: '2-digit',

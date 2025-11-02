@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Heart, Send, MessageCircle, Repeat2, X } from 'lucide-react';
+import { Heart, Send, MessageCircle, Repeat2, X, CornerUpLeft } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -13,11 +13,14 @@ interface StoryComment {
   profile_id: string;
   comment_text: string;
   created_at: string;
+  parent_comment_id?: string | null;
+  like_count: number;
   profiles: {
     username: string;
     full_name: string;
     avatar_url: string | null;
   };
+  isLikedByUser?: boolean;
 }
 
 interface StoryCommentSectionProps {
@@ -37,6 +40,7 @@ export function StoryCommentSection({ storyId, currentProfileId, isLiked, onTogg
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [commentCount, setCommentCount] = useState(0);
   const [showAllComments, setShowAllComments] = useState(false);
+  const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
@@ -49,12 +53,23 @@ export function StoryCommentSection({ storyId, currentProfileId, isLiked, onTogg
       .on(
         'postgres_changes',
         {
-          event: 'INSERT',
+          event: '*',
           schema: 'public',
           table: 'story_comments',
           filter: `story_id=eq.${storyId}`,
         },
-        (payload) => {
+        () => {
+          loadComments();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'story_comment_likes',
+        },
+        () => {
           loadComments();
         }
       )
@@ -69,8 +84,9 @@ export function StoryCommentSection({ storyId, currentProfileId, isLiked, onTogg
     try {
       const { data: commentsData, error } = await supabase
         .from('story_comments')
-        .select('id, story_id, profile_id, comment_text, created_at')
+        .select('id, story_id, profile_id, comment_text, created_at, parent_comment_id, like_count')
         .eq('story_id', storyId)
+        .is('parent_comment_id', null) // Apenas comentários principais
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -86,12 +102,24 @@ export function StoryCommentSection({ storyId, currentProfileId, isLiked, onTogg
 
         const profilesMap = new Map(profilesData?.map(p => [p.id, p]) || []);
 
+        // Verificar quais comentários o usuário curtiu
+        const { data: userLikes } = await supabase
+          .from('story_comment_likes')
+          .select('comment_id')
+          .eq('profile_id', currentProfileId)
+          .in('comment_id', commentsData.map(c => c.id));
+
+        const likedCommentIds = new Set(userLikes?.map(l => l.comment_id) || []);
+
         const formattedComments = (commentsData || []).map((comment) => ({
           id: comment.id,
           profile_id: comment.profile_id,
           comment_text: comment.comment_text,
           created_at: comment.created_at,
+          parent_comment_id: comment.parent_comment_id,
+          like_count: comment.like_count || 0,
           profiles: profilesMap.get(comment.profile_id) || { username: '', full_name: '', avatar_url: null },
+          isLikedByUser: likedCommentIds.has(comment.id),
         }));
 
         setComments(formattedComments);
@@ -102,6 +130,43 @@ export function StoryCommentSection({ storyId, currentProfileId, isLiked, onTogg
       }
     } catch (error) {
       console.error('Error loading comments:', error);
+    }
+  };
+
+  const handleToggleCommentLike = async (commentId: string, isLiked: boolean) => {
+    if (!currentProfileId) return;
+
+    try {
+      if (isLiked) {
+        // Unlike
+        await supabase
+          .from('story_comment_likes')
+          .delete()
+          .eq('comment_id', commentId)
+          .eq('profile_id', currentProfileId);
+      } else {
+        // Like
+        await supabase
+          .from('story_comment_likes')
+          .insert({
+            comment_id: commentId,
+            profile_id: currentProfileId,
+          });
+      }
+
+      // Atualizar estado local
+      setComments(prev => prev.map(c => {
+        if (c.id === commentId) {
+          return {
+            ...c,
+            isLikedByUser: !isLiked,
+            like_count: isLiked ? Math.max(0, c.like_count - 1) : c.like_count + 1,
+          };
+        }
+        return c;
+      }));
+    } catch (error) {
+      console.error('Error toggling comment like:', error);
     }
   };
 
@@ -117,8 +182,9 @@ export function StoryCommentSection({ storyId, currentProfileId, isLiked, onTogg
           story_id: storyId,
           profile_id: currentProfileId,
           comment_text: commentText.trim(),
+          parent_comment_id: replyingTo,
         })
-        .select('id, story_id, profile_id, comment_text, created_at')
+        .select('id, story_id, profile_id, comment_text, created_at, parent_comment_id, like_count')
         .single();
 
       if (error) {
@@ -138,18 +204,24 @@ export function StoryCommentSection({ storyId, currentProfileId, isLiked, onTogg
         profile_id: data.profile_id,
         comment_text: data.comment_text,
         created_at: data.created_at,
+        parent_comment_id: data.parent_comment_id,
+        like_count: 0,
         profiles: profileData || { username: '', full_name: '', avatar_url: null },
+        isLikedByUser: false,
       };
 
       // Adicionar aos comentários recentes (aparece temporariamente)
-      setRecentComments(prev => [newComment, ...prev]);
-      
-      // Remover dos recentes após 3 segundos
-      setTimeout(() => {
-        setRecentComments(prev => prev.filter(c => c.id !== newComment.id));
-      }, 3000);
+      if (!replyingTo) {
+        setRecentComments(prev => [newComment, ...prev]);
+        
+        // Remover dos recentes após 3 segundos
+        setTimeout(() => {
+          setRecentComments(prev => prev.filter(c => c.id !== newComment.id));
+        }, 3000);
+      }
 
       setCommentText('');
+      setReplyingTo(null);
     } catch (error) {
       console.error('Error sending comment:', error);
       toast({
@@ -173,6 +245,17 @@ export function StoryCommentSection({ storyId, currentProfileId, isLiked, onTogg
     const newState = !showAllComments;
     setShowAllComments(newState);
     onCommentsToggle?.(newState);
+  };
+
+  const handleReply = (commentId: string, username: string) => {
+    setReplyingTo(commentId);
+    setCommentText(`@${username} `);
+    inputRef.current?.focus();
+  };
+
+  const cancelReply = () => {
+    setReplyingTo(null);
+    setCommentText('');
   };
 
   return (
@@ -248,9 +331,30 @@ export function StoryCommentSection({ storyId, currentProfileId, isLiked, onTogg
                         })}
                       </p>
                     </div>
-                    <p className="text-sm text-white/90 break-words leading-relaxed">
+                    <p className="text-sm text-white/90 break-words leading-relaxed mb-2">
                       {comment.comment_text}
                     </p>
+                    
+                    {/* Ações do comentário */}
+                    <div className="flex items-center gap-4 text-white/70">
+                      <button
+                        onClick={() => handleToggleCommentLike(comment.id, comment.isLikedByUser || false)}
+                        className="flex items-center gap-1 hover:text-white transition-colors"
+                      >
+                        <Heart className={`w-4 h-4 ${comment.isLikedByUser ? 'fill-red-500 text-red-500' : ''}`} />
+                        {comment.like_count > 0 && (
+                          <span className="text-xs font-medium">{comment.like_count}</span>
+                        )}
+                      </button>
+                      
+                      <button
+                        onClick={() => handleReply(comment.id, comment.profiles.username)}
+                        className="flex items-center gap-1 hover:text-white transition-colors"
+                      >
+                        <CornerUpLeft className="w-4 h-4" />
+                        <span className="text-xs font-medium">Responder</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -260,51 +364,64 @@ export function StoryCommentSection({ storyId, currentProfileId, isLiked, onTogg
       )}
 
       {/* Barra de comentários inferior */}
-      <div className="absolute bottom-4 left-4 right-4 z-30 flex items-center gap-3">
-        <div className="flex-1 relative">
-          <Input
-            ref={inputRef}
-            value={commentText}
-            onChange={(e) => setCommentText(e.target.value)}
-            onKeyPress={handleKeyPress}
-            placeholder="Comentar..."
-            className="bg-transparent border-2 border-white/60 text-white placeholder:text-white/70 rounded-full pr-12 h-12 focus:border-white focus-visible:ring-0 focus-visible:ring-offset-0"
-            maxLength={200}
-            disabled={isSubmitting}
-          />
-          
-          {/* Contador de comentários dentro do input */}
-          {commentCount > 0 && !showAllComments && (
-            <button 
-              onClick={toggleComments}
-              className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 text-white/80 hover:text-white transition-colors"
-            >
-              <MessageCircle className="w-4 h-4" />
-              <span className="text-xs font-semibold">{commentCount}</span>
+      <div className="absolute bottom-4 left-4 right-4 z-30">
+        {/* Indicador de resposta */}
+        {replyingTo && (
+          <div className="mb-2 flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-3 py-2">
+            <CornerUpLeft className="w-3 h-3 text-white/70" />
+            <span className="text-xs text-white/70 flex-1">Respondendo...</span>
+            <button onClick={cancelReply} className="text-white/70 hover:text-white">
+              <X className="w-4 h-4" />
             </button>
-          )}
+          </div>
+        )}
+        
+        <div className="flex items-center gap-3">
+          <div className="flex-1 relative">
+            <Input
+              ref={inputRef}
+              value={commentText}
+              onChange={(e) => setCommentText(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="Comentar..."
+              className="bg-transparent border-2 border-white/60 text-white placeholder:text-white/70 rounded-full pr-12 h-12 focus:border-white focus-visible:ring-0 focus-visible:ring-offset-0"
+              maxLength={200}
+              disabled={isSubmitting}
+            />
+            
+            {/* Contador de comentários dentro do input */}
+            {commentCount > 0 && !showAllComments && (
+              <button 
+                onClick={toggleComments}
+                className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 text-white/80 hover:text-white transition-colors"
+              >
+                <MessageCircle className="w-4 h-4" />
+                <span className="text-xs font-semibold">{commentCount}</span>
+              </button>
+            )}
+          </div>
+
+          {/* Botão de curtir */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onToggleLike}
+            className="bg-transparent border-0 text-white hover:bg-transparent hover:scale-110 transition-transform rounded-full h-10 w-10 flex-shrink-0"
+          >
+            <Heart className={`w-5 h-5 ${isLiked ? 'fill-red-500 text-red-500' : ''}`} />
+          </Button>
+
+          {/* Botão de repost - sempre visível, desabilitado se for dono */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onRepost}
+            disabled={isOwner}
+            className="bg-transparent border-0 text-white hover:bg-transparent hover:scale-110 transition-transform rounded-full h-10 w-10 flex-shrink-0 disabled:opacity-30 disabled:hover:scale-100"
+          >
+            <Repeat2 className="w-5 h-5" />
+          </Button>
         </div>
-
-        {/* Botão de curtir */}
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onToggleLike}
-          className="bg-transparent border-0 text-white hover:bg-transparent hover:scale-110 transition-transform rounded-full h-10 w-10 flex-shrink-0"
-        >
-          <Heart className={`w-5 h-5 ${isLiked ? 'fill-red-500 text-red-500' : ''}`} />
-        </Button>
-
-        {/* Botão de repost - sempre visível, desabilitado se for dono */}
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onRepost}
-          disabled={isOwner}
-          className="bg-transparent border-0 text-white hover:bg-transparent hover:scale-110 transition-transform rounded-full h-10 w-10 flex-shrink-0 disabled:opacity-30 disabled:hover:scale-100"
-        >
-          <Repeat2 className="w-5 h-5" />
-        </Button>
       </div>
     </>
   );

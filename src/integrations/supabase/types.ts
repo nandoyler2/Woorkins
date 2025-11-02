@@ -2473,11 +2473,49 @@ export type Database = {
           },
         ]
       }
+      story_comment_likes: {
+        Row: {
+          comment_id: string
+          created_at: string | null
+          id: string
+          profile_id: string
+        }
+        Insert: {
+          comment_id: string
+          created_at?: string | null
+          id?: string
+          profile_id: string
+        }
+        Update: {
+          comment_id?: string
+          created_at?: string | null
+          id?: string
+          profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "story_comment_likes_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "story_comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "story_comment_likes_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       story_comments: {
         Row: {
           comment_text: string
           created_at: string
           id: string
+          like_count: number | null
+          parent_comment_id: string | null
           profile_id: string
           story_id: string
         }
@@ -2485,6 +2523,8 @@ export type Database = {
           comment_text: string
           created_at?: string
           id?: string
+          like_count?: number | null
+          parent_comment_id?: string | null
           profile_id: string
           story_id: string
         }
@@ -2492,10 +2532,19 @@ export type Database = {
           comment_text?: string
           created_at?: string
           id?: string
+          like_count?: number | null
+          parent_comment_id?: string | null
           profile_id?: string
           story_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "story_comments_parent_comment_id_fkey"
+            columns: ["parent_comment_id"]
+            isOneToOne: false
+            referencedRelation: "story_comments"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "story_comments_story_id_fkey"
             columns: ["story_id"]

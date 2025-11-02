@@ -9,20 +9,23 @@ import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { Badge } from '@/components/ui/badge';
 import { PlanCheckout } from '@/components/PlanCheckout';
-
 interface Plan {
   id: string;
   name: string;
   slug: string;
   commission_percentage: number;
-  features: Array<{ text: string; included: boolean }>;
+  features: Array<{
+    text: string;
+    included: boolean;
+  }>;
   display_order: number;
   recommended: boolean;
   price: number;
 }
-
 export default function Plans() {
-  const { user } = useAuth();
+  const {
+    user
+  } = useAuth();
   const [plans, setPlans] = useState<Plan[]>([]);
   const [currentPlan, setCurrentPlan] = useState<string>('free');
   const [loading, setLoading] = useState(true);
@@ -30,64 +33,60 @@ export default function Plans() {
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [clientSecret, setClientSecret] = useState('');
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
-  const { toast } = useToast();
-
+  const {
+    toast
+  } = useToast();
   useEffect(() => {
     document.title = 'Planos - Woorkins';
   }, []);
-
   useEffect(() => {
     loadPlans();
     if (user) {
       loadCurrentPlan();
     }
   }, [user]);
-
   const loadPlans = async () => {
     try {
-      const { data, error } = await supabase
-        .from('subscription_plans')
-        .select('*')
-        .eq('active', true)
-        .order('display_order');
-
+      const {
+        data,
+        error
+      } = await supabase.from('subscription_plans').select('*').eq('active', true).order('display_order');
       if (error) throw error;
-      
+
       // Definir preços dos planos
       const planPrices: Record<string, number> = {
         'free': 0,
         'pro': 49.90,
         'premium': 149.90
       };
-      
+
       // Buscar comissões do banco de dados
-      const { data: commissionData } = await supabase
-        .from('platform_settings')
-        .select('setting_key, setting_value')
-        .in('setting_key', ['stripe_commission_free', 'stripe_commission_pro', 'stripe_commission_premium']);
-      
+      const {
+        data: commissionData
+      } = await supabase.from('platform_settings').select('setting_key, setting_value').in('setting_key', ['stripe_commission_free', 'stripe_commission_pro', 'stripe_commission_premium']);
       const planCommissions: Record<string, number> = {
-        'free': 10,    // fallback padrão
-        'pro': 8,      // fallback padrão
-        'premium': 6   // fallback padrão
+        'free': 10,
+        // fallback padrão
+        'pro': 8,
+        // fallback padrão
+        'premium': 6 // fallback padrão
       };
-      
+
       // Atualizar com valores do banco
       if (commissionData) {
-        commissionData.forEach((setting) => {
+        commissionData.forEach(setting => {
           const plan = setting.setting_key.replace('stripe_commission_', '');
-          const value = setting.setting_value as { percentage: number };
+          const value = setting.setting_value as {
+            percentage: number;
+          };
           planCommissions[plan] = value.percentage || planCommissions[plan];
         });
       }
-
       setPlans((data || []).map(p => ({
         ...p,
         price: planPrices[p.slug] || 0,
         commission_percentage: planCommissions[p.slug] ?? 10,
-        features: typeof p.features === 'string' 
-          ? JSON.parse(p.features) 
-          : (p.features as any)
+        features: typeof p.features === 'string' ? JSON.parse(p.features) : p.features as any
       })));
     } catch (error: any) {
       toast({
@@ -99,20 +98,14 @@ export default function Plans() {
       setLoading(false);
     }
   };
-
   const loadCurrentPlan = async () => {
     if (!user) return;
-
     try {
-      const { data: subscription } = await supabase
-        .from('user_subscription_plans')
-        .select('plan_type')
-        .eq('user_id', user.id)
-        .eq('is_active', true)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
+      const {
+        data: subscription
+      } = await supabase.from('user_subscription_plans').select('plan_type').eq('user_id', user.id).eq('is_active', true).order('created_at', {
+        ascending: false
+      }).limit(1).maybeSingle();
       if (subscription?.plan_type) {
         setCurrentPlan(subscription.plan_type);
       } else {
@@ -125,7 +118,6 @@ export default function Plans() {
       setCurrentPlan('free');
     }
   };
-
   const handleSelectPlan = async (plan: Plan) => {
     if (!user) {
       toast({
@@ -138,11 +130,10 @@ export default function Plans() {
 
     // Verificar se já está no plano
     const isCurrentlyOnPlan = currentPlan === plan.slug;
-    
     if (isCurrentlyOnPlan) {
       toast({
         title: '✓ Plano já ativo',
-        description: `Você já está utilizando o plano ${plan.name}. Para mudar, escolha outro plano.`,
+        description: `Você já está utilizando o plano ${plan.name}. Para mudar, escolha outro plano.`
       });
       return;
     }
@@ -151,23 +142,18 @@ export default function Plans() {
     if (plan.price === 0) {
       toast({
         title: 'Plano Grátis',
-        description: 'Este é o plano gratuito padrão.',
+        description: 'Este é o plano gratuito padrão.'
       });
       return;
     }
-
     setLoadingPayment(true);
     setSelectedPlan(plan);
-
     try {
       // Verificar gateway ativo
-      const { data: gatewayConfig } = await supabase
-        .from("payment_gateway_config")
-        .select("active_gateway")
-        .single();
-
+      const {
+        data: gatewayConfig
+      } = await supabase.from("payment_gateway_config").select("active_gateway").single();
       const activeGateway = gatewayConfig?.active_gateway || "stripe";
-
       if (activeGateway === "mercadopago" || activeGateway === "efi") {
         setCheckoutOpen(true);
         setLoadingPayment(false);
@@ -176,13 +162,13 @@ export default function Plans() {
 
       // Para Stripe, criar payment intent
       const response = await supabase.functions.invoke('buy-plan', {
-        body: { plan_id: plan.id },
+        body: {
+          plan_id: plan.id
+        }
       });
-
       if (response.error) {
         throw response.error;
       }
-
       if (response.data?.clientSecret) {
         setClientSecret(response.data.clientSecret);
         setCheckoutOpen(true);
@@ -195,47 +181,39 @@ export default function Plans() {
       toast({
         title: 'Erro',
         description: error.message || 'Não foi possível iniciar a compra.',
-        variant: 'destructive',
+        variant: 'destructive'
       });
       setLoadingPayment(false);
     }
   };
-
   const handlePaymentSuccess = async () => {
     if (!user || !selectedPlan) return;
-
     try {
       const piId = clientSecret?.split('_secret_')[0];
       if (piId) {
         await supabase.functions.invoke('confirm-plan-payment', {
-          body: { payment_intent_id: piId },
+          body: {
+            payment_intent_id: piId
+          }
         });
       }
     } catch (e: any) {
       console.error('Confirm plan payment error:', e);
     }
-
     await loadCurrentPlan();
-
     toast({
       title: 'Plano ativado!',
-      description: `Bem-vindo ao plano ${selectedPlan.name}!`,
+      description: `Bem-vindo ao plano ${selectedPlan.name}!`
     });
-
     setCheckoutOpen(false);
     setLoadingPayment(false);
   };
-
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
+    return <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-muted/20 to-background">
+  return <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-muted/20 to-background">
       <Header />
       <main className="flex-1 container mx-auto px-4 py-12">
         <div className="text-center mb-12 space-y-4">
@@ -245,103 +223,68 @@ export default function Plans() {
           <p className="text-muted-foreground text-xl max-w-2xl mx-auto">
             Quanto melhor o plano, menor a taxa e mais recursos você tem!
           </p>
-          {user && currentPlan && (
-            <div className="flex items-center justify-center gap-2">
+          {user && currentPlan && <div className="flex items-center justify-center gap-2">
               <Badge variant="secondary" className="text-sm py-1 px-3">
                 Seu plano atual: <span className="font-bold ml-1 capitalize">
                   {currentPlan === 'free' ? 'Grátis' : currentPlan}
                 </span>
               </Badge>
-            </div>
-          )}
+            </div>}
         </div>
 
         <div className="flex justify-center">
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl w-full mb-12">
-          {plans.map((plan) => {
+          {plans.map(plan => {
             // Verificar se é o plano atual
             const isCurrentPlan = currentPlan === plan.slug;
             const isFree = plan.price === 0;
             const isPremium = plan.slug === 'premium';
-            
-            return (
-              <Card
-                key={plan.id}
-                className={`relative overflow-hidden transition-all duration-300 hover:shadow-2xl ${
-                  isPremium
-                    ? 'border-yellow-500/60 border-2 shadow-lg shadow-yellow-500/20 bg-gradient-to-br from-yellow-50/50 via-card to-card dark:from-yellow-900/10 dark:via-card dark:to-card'
-                    : isFree
-                    ? 'border-[#27B0B3]/60 border-2 shadow-lg shadow-[#27B0B3]/20 bg-gradient-to-br from-[#27B0B3]/5 via-card to-card dark:from-[#27B0B3]/10 dark:via-card dark:to-card'
-                    : isCurrentPlan
-                    ? 'border-primary border-3 shadow-xl ring-2 ring-primary/20'
-                    : plan.recommended
-                    ? 'border-primary/60 border-2 shadow-lg'
-                    : 'border-border hover:border-primary/30'
-                } ${plan.recommended || isCurrentPlan || isPremium || isFree ? 'pt-8' : ''}`}
-              >
+            return <Card key={plan.id} className={`relative overflow-hidden transition-all duration-300 hover:shadow-2xl ${isPremium ? 'border-yellow-500/60 border-2 shadow-lg shadow-yellow-500/20 bg-gradient-to-br from-yellow-50/50 via-card to-card dark:from-yellow-900/10 dark:via-card dark:to-card' : isFree ? 'border-[#27B0B3]/60 border-2 shadow-lg shadow-[#27B0B3]/20 bg-gradient-to-br from-[#27B0B3]/5 via-card to-card dark:from-[#27B0B3]/10 dark:via-card dark:to-card' : isCurrentPlan ? 'border-primary border-3 shadow-xl ring-2 ring-primary/20' : plan.recommended ? 'border-primary/60 border-2 shadow-lg' : 'border-border hover:border-primary/30'} ${plan.recommended || isCurrentPlan || isPremium || isFree ? 'pt-8' : ''}`}>
                 {/* Badge Seu Plano */}
-                {isCurrentPlan && (
-                  <div className="absolute top-3 left-1/2 -translate-x-1/2 z-10">
+                {isCurrentPlan && <div className="absolute top-3 left-1/2 -translate-x-1/2 z-10">
                     <Badge className="bg-gradient-primary shadow-glow">
                       <Crown className="w-3 h-3 mr-1" />
                       Seu Plano
                     </Badge>
-                  </div>
-                )}
+                  </div>}
 
                 {/* Badge Avançado para Premium */}
-                {isPremium && !isCurrentPlan && (
-                  <div className="absolute top-3 left-1/2 -translate-x-1/2 z-10">
+                {isPremium && !isCurrentPlan && <div className="absolute top-3 left-1/2 -translate-x-1/2 z-10">
                     <Badge className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white shadow-lg shadow-yellow-500/50">
                       <Crown className="w-3 h-3 mr-1" />
                       Avançado
                     </Badge>
-                  </div>
-                )}
+                  </div>}
 
                 {/* Badge Ativo para Grátis */}
-                {isFree && !isCurrentPlan && (
-                  <div className="absolute top-3 left-1/2 -translate-x-1/2 z-10">
+                {isFree && !isCurrentPlan && <div className="absolute top-3 left-1/2 -translate-x-1/2 z-10">
                     <Badge className="bg-[#27B0B3] text-white shadow-lg shadow-[#27B0B3]/50">
                       <Check className="w-3 h-3 mr-1" />
                       Ativo
                     </Badge>
-                  </div>
-                )}
+                  </div>}
 
                 {/* Badge Recomendado */}
-                {plan.recommended && !isCurrentPlan && !isPremium && !isFree && (
-                  <div className="absolute top-3 left-1/2 -translate-x-1/2 z-10">
+                {plan.recommended && !isCurrentPlan && !isPremium && !isFree && <div className="absolute top-3 left-1/2 -translate-x-1/2 z-10">
                     <Badge className="bg-primary text-primary-foreground shadow-md">
                       <Sparkles className="w-3 h-3 mr-1" />
                       Recomendado
                     </Badge>
-                  </div>
-                )}
+                  </div>}
 
                 {/* Gradiente de fundo para plano atual */}
-                {isCurrentPlan && (
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-transparent pointer-events-none" />
-                )}
+                {isCurrentPlan && <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-transparent pointer-events-none" />}
 
                 <div className="p-6 space-y-6 flex flex-col h-full">
                   {/* Cabeçalho do Plano */}
                   <div className="text-center space-y-3">
                     <div className="flex items-center justify-center gap-2">
-                      <h3 className={`text-2xl font-bold ${
-                        isPremium 
-                          ? 'bg-gradient-to-r from-yellow-500 to-yellow-600 bg-clip-text text-transparent' 
-                          : isFree
-                          ? 'text-[#27B0B3]'
-                          : ''
-                      }`}>
+                      <h3 className={`text-2xl font-bold ${isPremium ? 'bg-gradient-to-r from-yellow-500 to-yellow-600 bg-clip-text text-transparent' : isFree ? 'text-[#27B0B3]' : ''}`}>
                         {plan.name}
                       </h3>
-                      {isCurrentPlan && (
-                        <Badge className="bg-primary text-primary-foreground">
+                      {isCurrentPlan && <Badge className="bg-primary text-primary-foreground">
                           Ativo
-                        </Badge>
-                      )}
+                        </Badge>}
                     </div>
                   </div>
 
@@ -353,62 +296,36 @@ export default function Plans() {
                         Taxa de recebimento: <span className="font-semibold">{plan.commission_percentage}%</span>
                       </span>
                     </div>
-                    {plan.slug === 'pro' && (
-                      <div className="flex items-start gap-3">
+                    {plan.slug === 'pro' && <div className="flex items-start gap-3">
                         <Sparkles className="h-5 w-5 text-primary shrink-0 mt-0.5" />
                         <p className="text-sm text-foreground font-bold">
                           Tudo do plano grátis
                         </p>
-                      </div>
-                    )}
-                    {plan.slug === 'premium' && (
-                      <div className="flex items-start gap-3">
+                      </div>}
+                    {plan.slug === 'premium' && <div className="flex items-start gap-3">
                         <Crown className="h-5 w-5 text-yellow-500 shrink-0 mt-0.5" />
                         <p className="text-sm text-foreground font-bold">
                           Tudo do plano grátis e pro
                         </p>
-                      </div>
-                    )}
+                      </div>}
                   </div>
 
                   {/* Features */}
-                  {isFree ? (
-                    <ul className="space-y-3 flex-1">
-                      {plan.features
-                        .filter((feature) => 
-                          !feature.text.includes('Suporte prioritário') && 
-                          !feature.text.includes('Badge especial no perfil') &&
-                          !feature.text.toLowerCase().includes('mensagens')
-                        )
-                        .map((feature, idx) => {
-                          // Substituir texto específico de propostas
-                          let featureText = feature.text;
-                          if (featureText.toLowerCase().includes('enviar proposta')) {
-                            featureText = 'Enviar proposta a cada 15 minutos';
-                          }
-                          
-                          return (
-                            <li key={idx} className="flex items-start gap-3">
-                              {feature.included ? (
-                                <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
-                              ) : (
-                                <X className="h-5 w-5 text-muted-foreground/40 shrink-0 mt-0.5" />
-                              )}
-                              <span
-                                className={`text-sm ${
-                                  feature.included
-                                    ? 'text-foreground'
-                                    : 'text-muted-foreground/60 line-through'
-                                }`}
-                              >
+                  {isFree ? <ul className="space-y-3 flex-1">
+                      {plan.features.filter(feature => !feature.text.includes('Suporte prioritário') && !feature.text.includes('Badge especial no perfil') && !feature.text.toLowerCase().includes('mensagens')).map((feature, idx) => {
+                    // Substituir texto específico de propostas
+                    let featureText = feature.text;
+                    if (featureText.toLowerCase().includes('enviar proposta')) {
+                      featureText = 'Enviar proposta a cada 15 minutos';
+                    }
+                    return <li key={idx} className="flex items-start gap-3">
+                              {feature.included ? <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" /> : <X className="h-5 w-5 text-muted-foreground/40 shrink-0 mt-0.5" />}
+                              <span className={`text-sm ${feature.included ? 'text-foreground' : 'text-muted-foreground/60 line-through'}`}>
                                 {featureText}
                               </span>
-                            </li>
-                          );
-                        })}
-                    </ul>
-                  ) : plan.slug === 'pro' ? (
-                    <ul className="space-y-3 flex-1">
+                            </li>;
+                  })}
+                    </ul> : plan.slug === 'pro' ? <ul className="space-y-3 flex-1">
                       <li className="flex items-start gap-3">
                         <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
                         <span className="text-sm text-foreground">
@@ -457,9 +374,7 @@ export default function Plans() {
                           Promova por 24h 2x por mês
                         </span>
                       </li>
-                    </ul>
-                  ) : plan.slug === 'premium' ? (
-                    <ul className="space-y-3 flex-1">
+                    </ul> : plan.slug === 'premium' ? <ul className="space-y-3 flex-1">
                       <li className="flex items-start gap-3">
                         <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
                         <span className="text-sm text-foreground">
@@ -468,9 +383,7 @@ export default function Plans() {
                       </li>
                       <li className="flex items-start gap-3">
                         <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
-                        <span className="text-sm text-foreground">
-                          Veja as propostas enviadas nos projetos
-                        </span>
+                        <span className="text-sm text-foreground">Veja as propostas enviadas nos projetos antes de enviar a sua</span>
                       </li>
                       <li className="flex items-start gap-3">
                         <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
@@ -502,8 +415,7 @@ export default function Plans() {
                           Promova por 24h 5x por mês
                         </span>
                       </li>
-                    </ul>
-                  ) : null}
+                    </ul> : null}
 
                   {/* Preço no Final */}
                   <div className="pt-4 border-t border-border">
@@ -517,32 +429,17 @@ export default function Plans() {
                   </div>
 
                   {/* Botão de Ação */}
-                  <Button
-                    className={`w-full ${isCurrentPlan && isFree ? 'bg-[#27B0B3] hover:bg-[#27B0B3]/90 text-white' : ''}`}
-                    size="lg"
-                    variant={isCurrentPlan ? 'secondary' : plan.recommended ? 'default' : 'outline'}
-                    disabled={loadingPayment && selectedPlan?.id === plan.id}
-                    onClick={() => handleSelectPlan(plan)}
-                  >
-                    {loadingPayment && selectedPlan?.id === plan.id ? (
-                      <>
+                  <Button className={`w-full ${isCurrentPlan && isFree ? 'bg-[#27B0B3] hover:bg-[#27B0B3]/90 text-white' : ''}`} size="lg" variant={isCurrentPlan ? 'secondary' : plan.recommended ? 'default' : 'outline'} disabled={loadingPayment && selectedPlan?.id === plan.id} onClick={() => handleSelectPlan(plan)}>
+                    {loadingPayment && selectedPlan?.id === plan.id ? <>
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                         Processando...
-                      </>
-                    ) : isCurrentPlan ? (
-                      <>
+                      </> : isCurrentPlan ? <>
                         <Check className="w-4 h-4 mr-2" />
                         Plano Ativo
-                      </>
-                    ) : isFree ? (
-                      'Plano Grátis'
-                    ) : (
-                      `Assinar Plano ${plan.name}`
-                    )}
+                      </> : isFree ? 'Plano Grátis' : `Assinar Plano ${plan.name}`}
                   </Button>
                 </div>
-              </Card>
-            );
+              </Card>;
           })}
           </div>
         </div>
@@ -571,17 +468,6 @@ export default function Plans() {
       <Footer />
 
       {/* Checkout Dialog */}
-      {selectedPlan && (
-        <PlanCheckout
-          open={checkoutOpen}
-          onOpenChange={setCheckoutOpen}
-          planId={selectedPlan.id}
-          planName={selectedPlan.name}
-          planPrice={selectedPlan.price}
-          onSuccess={handlePaymentSuccess}
-          clientSecret={clientSecret}
-        />
-      )}
-    </div>
-  );
+      {selectedPlan && <PlanCheckout open={checkoutOpen} onOpenChange={setCheckoutOpen} planId={selectedPlan.id} planName={selectedPlan.name} planPrice={selectedPlan.price} onSuccess={handlePaymentSuccess} clientSecret={clientSecret} />}
+    </div>;
 }

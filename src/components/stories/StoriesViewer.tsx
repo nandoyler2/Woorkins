@@ -425,9 +425,9 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
         ) : (
           <div className="flex flex-col items-center gap-4 w-full max-w-7xl mx-auto px-4">
             {/* Container fixo com story centralizado */}
-            <div className="min-h-screen w-full grid grid-cols-[auto_auto_auto] items-center justify-items-center gap-6">
+            <div className="min-h-screen w-full grid grid-cols-[1fr_auto_1fr] items-center justify-items-center gap-6">
             {/* Miniaturas esquerdas - desktop apenas */}
-            <div className="hidden lg:flex flex-row items-center gap-2">
+            <div className="hidden lg:flex w-full flex-row items-center justify-end gap-2">
               {stories.slice(Math.max(0, currentIndex - 3), currentIndex).map((story, idx) => {
                 const actualIndex = Math.max(0, currentIndex - 3) + idx;
                 return (
@@ -779,7 +779,7 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
             </div>
 
             {/* Miniaturas direitas - desktop apenas */}
-            <div className="hidden lg:flex flex-row items-center gap-2">
+            <div className="hidden lg:flex w-full flex-row items-center justify-start gap-2">
               {stories.slice(currentIndex + 1, Math.min(stories.length, currentIndex + 4)).map((story, idx) => {
                 const actualIndex = currentIndex + 1 + idx;
                 return (

@@ -29,6 +29,7 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
   const [deliveryTime, setDeliveryTime] = useState("");
   const [message, setMessage] = useState("");
   const [userProfile, setUserProfile] = useState<any>(null);
+  const [success, setSuccess] = useState(false);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -47,6 +48,7 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
 
     if (open) {
       fetchUserProfile();
+      setSuccess(false);
     }
   }, [user, open]);
 
@@ -100,12 +102,7 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
 
       if (error) throw error;
 
-      toast({
-        title: "Sucesso!",
-        description: "Sua proposta foi enviada com sucesso",
-      });
-
-      onOpenChange(false);
+      setSuccess(true);
       setAmount("");
       setDeliveryTime("");
       setMessage("");
@@ -138,42 +135,59 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px]">
-        <DialogHeader className="space-y-4">
-          {/* User Info */}
-          <div className="flex items-center gap-3">
-            <OptimizedAvatar
-              fullUrl={userProfile?.avatar_url}
-              thumbnailUrl={userProfile?.avatar_thumbnail_url}
-              fallback={getInitials(userProfile?.full_name)}
-              size="md"
-            />
-            <div>
-              <p className="text-sm font-medium">
-                Enviando como {userProfile?.full_name || "Usuário"}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                Freelancer nível {userProfile?.freelancer_level || 1}
-              </p>
-            </div>
+        {success ? (
+          <div className="flex flex-col items-center justify-center py-8 space-y-4 text-center">
+            <div className="text-6xl">✅</div>
+            <h3 className="text-xl font-bold">Proposta enviada com sucesso!</h3>
+            <p className="text-muted-foreground">
+              Agora é só aguardar a resposta do cliente.<br />
+              Enquanto isso, que tal conferir outros projetos incríveis..
+            </p>
+            <Button 
+              onClick={() => onOpenChange(false)} 
+              className="mt-4"
+            >
+              Fechar
+            </Button>
           </div>
-
-          {/* Project Info */}
-          <div className="bg-muted/50 rounded-lg p-4 space-y-2">
-            <h3 className="font-semibold text-base">{projectTitle}</h3>
-            <div className="flex items-center gap-4 text-sm text-muted-foreground">
-              <div className="flex items-center gap-1.5">
-                <Clock className="w-4 h-4" />
-                <span>{formatTimeAgo(projectCreatedAt)}</span>
+        ) : (
+          <>
+            <DialogHeader className="space-y-4">
+              {/* User Info */}
+              <div className="flex items-center gap-3">
+                <OptimizedAvatar
+                  fullUrl={userProfile?.avatar_url}
+                  thumbnailUrl={userProfile?.avatar_thumbnail_url}
+                  fallback={getInitials(userProfile?.full_name)}
+                  size="md"
+                />
+                <div>
+                  <p className="text-sm font-medium">
+                    Enviando como {userProfile?.full_name || "Usuário"}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Freelancer nível {userProfile?.freelancer_level || 1}
+                  </p>
+                </div>
               </div>
-              <div className="flex items-center gap-1.5">
-                <FileText className="w-4 h-4" />
-                <span>{proposalsCount || 0} {proposalsCount === 1 ? 'proposta' : 'propostas'}</span>
-              </div>
-            </div>
-          </div>
-        </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Project Info */}
+              <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+                <h3 className="font-semibold text-base">{projectTitle}</h3>
+                <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-1.5">
+                    <Clock className="w-4 h-4" />
+                    <span>{formatTimeAgo(projectCreatedAt)}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <FileText className="w-4 h-4" />
+                    <span>{proposalsCount || 0} {proposalsCount === 1 ? 'proposta' : 'propostas'}</span>
+                  </div>
+                </div>
+              </div>
+            </DialogHeader>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="amount">Valor da Proposta (R$) *</Label>
@@ -227,6 +241,8 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
             </Button>
           </div>
         </form>
+          </>
+        )}
       </DialogContent>
     </Dialog>
   );

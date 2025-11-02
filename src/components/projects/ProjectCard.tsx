@@ -5,12 +5,14 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MapPin, Star, CheckCircle, Clock, MessageSquare } from "lucide-react";
 import { formatShortName } from "@/lib/utils";
 import { Link } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAuthAction } from "@/contexts/AuthActionContext";
 import { ProposalDialog } from "./ProposalDialog";
 import { LoginPromptDialog } from "./LoginPromptDialog";
 import { ClickableProfile } from "@/components/ClickableProfile";
+import { ViewProposalDialog } from "./ViewProposalDialog";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ProjectCardProps {
   project: {
@@ -39,8 +41,55 @@ export function ProjectCard({ project }: ProjectCardProps) {
   const { requireAuth } = useAuthAction();
   const [proposalDialogOpen, setProposalDialogOpen] = useState(false);
   const [loginDialogOpen, setLoginDialogOpen] = useState(false);
+  const [viewProposalDialogOpen, setViewProposalDialogOpen] = useState(false);
+  const [userProposal, setUserProposal] = useState<any>(null);
+  const [hasProposal, setHasProposal] = useState(false);
+
+  useEffect(() => {
+    const checkUserProposal = async () => {
+      if (!user) {
+        setHasProposal(false);
+        return;
+      }
+
+      try {
+        const { data: profile } = await supabase
+          .from('profiles' as any)
+          .select('id')
+          .eq('user_id', user.id)
+          .single();
+
+        if (!profile) return;
+
+        const profileData = profile as any;
+
+        const { data: proposal } = await supabase
+          .from('proposals' as any)
+          .select('budget, delivery_days, message, created_at')
+          .eq('project_id', project.id)
+          .eq('freelancer_id', profileData.id)
+          .single();
+
+        if (proposal) {
+          setUserProposal(proposal);
+          setHasProposal(true);
+        } else {
+          setHasProposal(false);
+        }
+      } catch (error) {
+        setHasProposal(false);
+      }
+    };
+
+    checkUserProposal();
+  }, [user, project.id]);
 
   const handleMakeProposal = () => {
+    if (hasProposal) {
+      setViewProposalDialogOpen(true);
+      return;
+    }
+    
     if (requireAuth(() => setProposalDialogOpen(true))) {
       setProposalDialogOpen(true);
     }
@@ -49,6 +98,41 @@ export function ProjectCard({ project }: ProjectCardProps) {
   const handleLoginSuccess = () => {
     setLoginDialogOpen(false);
     setProposalDialogOpen(true);
+  };
+
+  const handleProposalSuccess = () => {
+    setProposalDialogOpen(false);
+    // Recarregar a proposta
+    const checkUserProposal = async () => {
+      if (!user) return;
+
+      try {
+        const { data: profile } = await supabase
+          .from('profiles' as any)
+          .select('id')
+          .eq('user_id', user.id)
+          .single();
+
+        if (!profile) return;
+
+        const profileData = profile as any;
+
+        const { data: proposal } = await supabase
+          .from('proposals' as any)
+          .select('budget, delivery_days, message, created_at')
+          .eq('project_id', project.id)
+          .eq('freelancer_id', profileData.id)
+          .single();
+
+        if (proposal) {
+          setUserProposal(proposal);
+          setHasProposal(true);
+        }
+      } catch (error) {
+        console.error('Error fetching proposal:', error);
+      }
+    };
+    checkUserProposal();
   };
 
   const formatBudget = (min: number | null, max: number | null) => {
@@ -100,8 +184,9 @@ export function ProjectCard({ project }: ProjectCardProps) {
             size="sm" 
             className="whitespace-nowrap"
             onClick={handleMakeProposal}
+            style={hasProposal ? { backgroundColor: '#11AA9B' } : undefined}
           >
-            Fazer uma proposta
+            {hasProposal ? 'Você já enviou a proposta' : 'Fazer uma proposta'}
           </Button>
         </div>
       </div>
@@ -176,11 +261,23 @@ export function ProjectCard({ project }: ProjectCardProps) {
       {/* Dialogs */}
       <ProposalDialog
         open={proposalDialogOpen}
-        onOpenChange={setProposalDialogOpen}
+        onOpenChange={(open) => {
+          setProposalDialogOpen(open);
+          if (!open) {
+            handleProposalSuccess();
+          }
+        }}
         projectId={project.id}
         projectTitle={project.title}
         projectCreatedAt={project.created_at}
         proposalsCount={project.proposals_count}
+      />
+
+      <ViewProposalDialog
+        open={viewProposalDialogOpen}
+        onOpenChange={setViewProposalDialogOpen}
+        proposal={userProposal}
+        projectTitle={project.title}
       />
 
       <LoginPromptDialog

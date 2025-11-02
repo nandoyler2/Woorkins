@@ -15,7 +15,7 @@ import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { formatFullName } from '@/lib/utils';
+import { formatShortName } from '@/lib/utils';
 
 interface Notification {
   id: string;

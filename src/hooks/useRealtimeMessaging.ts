@@ -4,7 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import { RealtimeChannel } from '@supabase/supabase-js';
 import { compressImage } from '@/lib/imageCompression';
 import { useMessageCache } from './useMessageCache';
-import { formatFullName } from '@/lib/utils';
+import { formatShortName } from '@/lib/utils';
 
 interface Message {
   id: string;

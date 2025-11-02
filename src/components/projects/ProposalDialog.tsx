@@ -299,7 +299,7 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
               </DialogHeader>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-3 p-5 overflow-y-auto flex-1 bg-gradient-to-b from-slate-50 to-white dark:from-slate-950 dark:to-background">
+            <form onSubmit={handleSubmit} className="space-y-1 p-5 overflow-y-auto flex-1 bg-gradient-to-b from-slate-50 to-white dark:from-slate-950 dark:to-background">
               {/* Valores e Prazo - Grid compacto */}
               <div className="grid grid-cols-5 gap-3">
                 <div className="col-span-3 space-y-1.5">
@@ -349,7 +349,7 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
                     const netAmountPremium = amount * (1 - platformFees.premium / 100);
                     
                     return (
-                      <div className="grid grid-cols-5 gap-3 mt-2">
+                      <div className="grid grid-cols-5 gap-3">
                         {/* Valor que receberá - Lado esquerdo (3 colunas) */}
                         <div className="col-span-3 bg-gradient-to-br from-blue-50 to-teal-50 dark:from-blue-950 dark:to-teal-900 border border-blue-300 dark:border-blue-700 rounded-lg p-3 shadow-sm space-y-1.5">
                           <div className="flex items-center justify-between">

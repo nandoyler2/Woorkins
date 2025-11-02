@@ -30,6 +30,11 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
   const [message, setMessage] = useState("");
   const [userProfile, setUserProfile] = useState<any>(null);
   const [success, setSuccess] = useState(false);
+  const [platformFees, setPlatformFees] = useState<{ free: number; pro: number; premium: number }>({
+    free: 5.0,
+    pro: 3.0,
+    premium: 2.0,
+  });
   const editorRef = useRef<HTMLDivElement>(null);
   const draftKey = `proposalDraft:${user?.id || 'anon'}:${projectId}`;
   const maxChars = 3000;
@@ -65,8 +70,26 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
       }
     };
 
+    const loadPlatformFees = async () => {
+      const { data, error } = await supabase
+        .from('platform_settings')
+        .select('setting_key, setting_value')
+        .in('setting_key', ['stripe_commission_free', 'stripe_commission_pro', 'stripe_commission_premium']);
+      
+      if (!error && data) {
+        const fees: any = { free: 5.0, pro: 3.0, premium: 2.0 };
+        data.forEach((setting) => {
+          const plan = setting.setting_key.replace('stripe_commission_', '');
+          const value = setting.setting_value as { percentage: number };
+          fees[plan] = value.percentage || 5.0;
+        });
+        setPlatformFees(fees);
+      }
+    };
+
     if (open && user) {
       fetchUserProfile();
+      loadPlatformFees();
       setSuccess(false);
     }
   }, [user, open]);
@@ -316,19 +339,28 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
                       className="border-2 focus:border-accent transition-colors pl-10"
                     />
                   </div>
-                  {amountFormatted && parseCurrencyToNumber(amountFormatted) > 0 && (
-                    <div className="mt-2 p-2 bg-accent/10 border border-accent/20 rounded-md space-y-1">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-muted-foreground">Você receberá:</span>
-                        <span className="font-bold text-accent">
-                          R$ {(parseCurrencyToNumber(amountFormatted) * (1 - (userProfile?.subscription_plan === 'free' ? 0.15 : userProfile?.subscription_plan === 'basic' ? 0.10 : userProfile?.subscription_plan === 'premium' ? 0.05 : 0.15))).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        </span>
+                  {amountFormatted && parseCurrencyToNumber(amountFormatted) > 0 && (() => {
+                    const plan = userProfile?.subscription_plan || 'free';
+                    const feePercentage = plan === 'premium' ? platformFees.premium : plan === 'pro' ? platformFees.pro : platformFees.free;
+                    const amount = parseCurrencyToNumber(amountFormatted);
+                    const netAmount = amount * (1 - feePercentage / 100);
+                    
+                    return (
+                      <div className="mt-2 p-2 bg-accent/10 border border-accent/20 rounded-md space-y-1">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-muted-foreground">Você receberá:</span>
+                          <span className="font-bold text-accent">
+                            R$ {netAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </span>
+                        </div>
+                        <p className="text-[10px] text-muted-foreground leading-tight">
+                          Como usuário <span className="font-semibold capitalize">
+                            {plan === 'premium' ? 'Premium' : plan === 'pro' ? 'Pro' : 'Gratuito'}
+                          </span>, a taxa é de <span className="font-semibold">{feePercentage.toFixed(1)}%</span>
+                        </p>
                       </div>
-                      <p className="text-[10px] text-muted-foreground leading-tight">
-                        Como usuário <span className="font-semibold capitalize">{userProfile?.subscription_plan === 'free' ? 'Gratuito' : userProfile?.subscription_plan === 'basic' ? 'Básico' : userProfile?.subscription_plan === 'premium' ? 'Premium' : 'Gratuito'}</span>, a taxa é de <span className="font-semibold">{userProfile?.subscription_plan === 'free' ? '15%' : userProfile?.subscription_plan === 'basic' ? '10%' : userProfile?.subscription_plan === 'premium' ? '5%' : '15%'}</span>
-                      </p>
-                    </div>
-                  )}
+                    );
+                  })()}
                 </div>
 
                 <div className="space-y-1.5">

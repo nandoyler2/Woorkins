@@ -393,7 +393,11 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
                     {/* Pergunta inicial */}
                     <div className="text-center py-8">
                       <h3 className="text-2xl font-bold mb-2 bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 bg-clip-text text-transparent">
-                        {(profiles.find(p => p.id === selectedProfile)?.full_name || profiles.find(p => p.id === selectedProfile)?.username || '').split(' ')[0]}, o que irá publicar no seu storie?
+                        {(() => {
+                          const fullName = profiles.find(p => p.id === selectedProfile)?.full_name || profiles.find(p => p.id === selectedProfile)?.username || '';
+                          const firstName = fullName.split(' ')[0];
+                          return firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
+                        })()}, o que irá publicar no seu storie?
                       </h3>
                       <p className="text-muted-foreground mb-8">Use o storie para postar conteúdos profissionais sobre você</p>
 

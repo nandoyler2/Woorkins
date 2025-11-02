@@ -431,17 +431,28 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
                   </div>
                 )}
                 
-                <div className="absolute top-3 right-3 bg-black/30 backdrop-blur-sm rounded-full p-1.5 shadow-lg">
-                  {story.original_story_id ? (
-                    <Repeat2 className="w-3.5 h-3.5 text-white" />
-                  ) : (
-                    <>
-                      {story.type === 'video' && <Video className="w-3.5 h-3.5 text-white" />}
-                      {story.type === 'image' && <Image className="w-3.5 h-3.5 text-white" />}
-                      {story.type === 'text' && <FileText className="w-3.5 h-3.5 text-white" />}
-                    </>
-                  )}
-                </div>
+                {/* Indicador do autor original para reposts */}
+                {story.original_story_id && story.original_profile && (
+                  <div className="absolute top-3 left-3 right-3 flex items-center gap-1.5 bg-black/50 backdrop-blur-md rounded-lg px-2 py-1.5 shadow-lg">
+                    <Avatar className="w-5 h-5 border border-white/50 flex-shrink-0">
+                      <AvatarImage src={story.original_profile.avatar_url || undefined} />
+                      <AvatarFallback className="bg-primary text-primary-foreground text-[10px]">
+                        {getFirstName(story.original_profile.full_name, story.original_profile.username)?.[0]?.toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="text-white text-[11px] font-semibold truncate drop-shadow-lg">
+                      {getFirstName(story.original_profile.full_name, story.original_profile.username)}
+                    </span>
+                  </div>
+                )}
+                
+                {!story.original_story_id && (
+                  <div className="absolute top-3 right-3 bg-black/30 backdrop-blur-sm rounded-full p-1.5 shadow-lg">
+                    {story.type === 'video' && <Video className="w-3.5 h-3.5 text-white" />}
+                    {story.type === 'image' && <Image className="w-3.5 h-3.5 text-white" />}
+                    {story.type === 'text' && <FileText className="w-3.5 h-3.5 text-white" />}
+                  </div>
+                )}
                 
                 {story.type === 'video' && (
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none">

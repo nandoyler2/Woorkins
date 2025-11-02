@@ -6,7 +6,7 @@ import { SafeImage } from '@/components/ui/safe-image';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useProfileHoverData } from '@/hooks/useProfileHoverData';
 import { StoriesViewer } from '@/components/stories/StoriesViewer';
-import { Star, Calendar, User, Eye, Play, ExternalLink, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Star, Calendar, User, ExternalLink, ChevronLeft, ChevronRight } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { formatShortName } from '@/lib/utils';
@@ -143,16 +143,22 @@ export function ProfileHoverCard({ profileId, children, side = 'top' }: ProfileH
 
               {/* User Info */}
               <div className="text-center mt-3 space-y-1">
-                <h3 
-                  className="font-semibold text-lg leading-none cursor-pointer hover:underline"
-                  onClick={handleProfileClick}
-                >
-                  {formatShortName(
-                    data.profile.profile_type === 'business' 
-                      ? data.profile.company_name 
-                      : data.profile.full_name
-                  ) || data.profile.username}
-                </h3>
+                <div className="flex items-center justify-center gap-2">
+                  <h3 
+                    className="font-semibold text-lg leading-none cursor-pointer hover:underline"
+                    onClick={handleProfileClick}
+                  >
+                    {formatShortName(
+                      data.profile.profile_type === 'business' 
+                        ? data.profile.company_name 
+                        : data.profile.full_name
+                    ) || data.profile.username}
+                  </h3>
+                  <ExternalLink 
+                    className="w-4 h-4 text-muted-foreground hover:text-primary cursor-pointer transition-colors" 
+                    onClick={handleProfileClick}
+                  />
+                </div>
                 <p className="text-sm text-muted-foreground">
                   @{data.profile.username}
                 </p>
@@ -248,29 +254,6 @@ export function ProfileHoverCard({ profileId, children, side = 'top' }: ProfileH
                   )}
                 </div>
               )}
-
-              {/* Action Buttons */}
-              <div className="w-full flex gap-2 mt-4 mb-4">
-                <Button
-                  onClick={handleViewProfile}
-                  className="flex-1"
-                  size="sm"
-                >
-                  <ExternalLink className="w-4 h-4 mr-1" />
-                  Ver Perfil
-                </Button>
-                {data.stories.length > 0 && (
-                  <Button
-                    onClick={handleViewStories}
-                    variant="outline"
-                    className="flex-1"
-                    size="sm"
-                  >
-                    <Play className="w-4 h-4 mr-1" />
-                    Ver Stories
-                  </Button>
-                )}
-              </div>
             </div>
           </div>
         ) : null}

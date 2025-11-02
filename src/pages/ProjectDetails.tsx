@@ -495,7 +495,7 @@ export default function ProjectDetails() {
                       profileId={project.profile_id}
                       username={project.profiles.username}
                       avatarUrl={project.profiles.avatar_thumbnail_url || project.profiles.avatar_url}
-                      size="lg"
+                      size="sm"
                     />
                     <div>
                       <p className="font-semibold">{formatShortName(project.profiles.full_name)}</p>

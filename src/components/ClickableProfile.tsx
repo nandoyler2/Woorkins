@@ -1,7 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { SafeImage } from '@/components/ui/safe-image';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { User } from 'lucide-react';
+import { ProfileAvatarWithHover } from '@/components/ProfileAvatarWithHover';
 
 interface ClickableProfileProps {
   profileId: string;
@@ -34,36 +32,26 @@ export function ClickableProfile({
     }
   };
 
-  const sizeClasses = {
-    sm: 'w-6 h-6',
-    md: 'w-8 h-8',
-    lg: 'w-12 h-12',
-  };
-
   const displayName = fullName || username || 'Usuário';
 
   return (
     <div
-      onClick={handleClick}
-      className={`flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity ${className}`}
+      className={`flex items-center gap-2 ${className}`}
     >
       {showAvatar && (
-        <Avatar className={sizeClasses[avatarSize]}>
-          {avatarUrl ? (
-            <SafeImage
-              src={avatarUrl}
-              alt={displayName}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <AvatarFallback>
-              <User className="w-4 h-4" />
-            </AvatarFallback>
-          )}
-        </Avatar>
+        <ProfileAvatarWithHover
+          profileId={profileId}
+          username={username}
+          avatarUrl={avatarUrl}
+          size={avatarSize}
+          onClick={handleClick}
+        />
       )}
       {showName && (
-        <span className={`hover:underline ${nameClassName}`}>
+        <span 
+          onClick={handleClick}
+          className={`hover:underline cursor-pointer ${nameClassName}`}
+        >
           {displayName}
         </span>
       )}

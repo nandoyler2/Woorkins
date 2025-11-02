@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { StoryIndicator } from './StoryIndicator';
 import { StoriesViewer } from './StoriesViewer';
+import { ProfileAvatarWithHover } from '@/components/ProfileAvatarWithHover';
 import { Plus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
@@ -170,12 +171,13 @@ export function StoriesCarousel({ currentProfile, onCreateStory }: StoriesCarous
               key={profile.id}
               className="flex flex-col items-center gap-2 min-w-fit"
             >
-              <StoryIndicator
+              <ProfileAvatarWithHover
                 profileId={profile.id}
                 avatarUrl={profile.avatar_url}
                 username={profile.username}
                 size="lg"
                 onClick={() => setSelectedProfileId(profile.id)}
+                hoverCardSide="bottom"
               />
               <span className="text-xs font-medium max-w-[80px] truncate">
                 {profile.full_name || profile.username}

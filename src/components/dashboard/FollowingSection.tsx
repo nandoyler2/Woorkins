@@ -3,10 +3,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { ClickableProfile } from '@/components/ClickableProfile';
+import { ProfileAvatarWithHover } from '@/components/ProfileAvatarWithHover';
 import { Users, Bell, TrendingUp } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { User } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface FollowedProfile {
@@ -223,15 +221,18 @@ export function FollowingSection({ profileId }: FollowingSectionProps) {
               >
                 <div className="flex items-center justify-between py-2 hover:bg-slate-50 transition-colors rounded-lg px-2">
                   <div className="flex items-center gap-2 flex-1 min-w-0">
-                    <Avatar className="h-8 w-8 flex-shrink-0">
-                      {profile.avatar_url ? (
-                        <AvatarImage src={profile.avatar_url} alt={profile.username} />
-                      ) : (
-                        <AvatarFallback className="bg-slate-200 text-slate-600">
-                          <User className="w-4 h-4" />
-                        </AvatarFallback>
-                      )}
-                    </Avatar>
+                    <ProfileAvatarWithHover
+                      profileId={profile.id}
+                      username={profile.username}
+                      avatarUrl={profile.avatar_url}
+                      size="sm"
+                      onClick={() => {
+                        if (profile.hasUpdate) {
+                          markUpdatesAsRead(profile.id);
+                        }
+                      }}
+                      hoverCardSide="right"
+                    />
                     <span className="text-sm text-slate-700 truncate">
                       {profile.full_name || `@${profile.username}`}
                     </span>

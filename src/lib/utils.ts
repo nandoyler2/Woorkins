@@ -8,19 +8,24 @@ export function cn(...inputs: ClassValue[]) {
 /**
  * Formata um nome completo seguindo as regras:
  * - Primeira letra maiúscula de cada palavra
- * - "de", "da", "do", "dos", "das" ficam em minúsculo
+ * - Preposições e conjunções ficam em minúsculo
  */
 export function formatFullName(name: string | null | undefined): string {
   if (!name) return '';
   
-  const lowercaseWords = ['de', 'da', 'do', 'dos', 'das'];
+  const lowercaseWords = ['de', 'da', 'do', 'dos', 'das', 'e', 'para', 'com', 'em', 'a', 'o'];
   
   return name
     .trim()
     .toLowerCase()
     .split(' ')
     .filter(word => word.length > 0)
-    .map(word => {
+    .map((word, index) => {
+      // Primeira palavra sempre maiúscula, mesmo que seja preposição
+      if (index === 0) {
+        return word.charAt(0).toUpperCase() + word.slice(1);
+      }
+      // Preposições e conjunções em minúsculo
       if (lowercaseWords.includes(word)) {
         return word;
       }

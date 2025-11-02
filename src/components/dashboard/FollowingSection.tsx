@@ -6,6 +6,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { ProfileAvatarWithHover } from '@/components/ProfileAvatarWithHover';
 import { Users, Bell, TrendingUp } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { formatFullName } from '@/lib/utils';
 
 interface FollowedProfile {
   id: string;
@@ -234,7 +235,7 @@ export function FollowingSection({ profileId }: FollowingSectionProps) {
                       hoverCardSide="right"
                     />
                     <span className="text-sm text-slate-700 truncate">
-                      {profile.full_name || `@${profile.username}`}
+                      {formatFullName(profile.full_name) || `@${profile.username}`}
                     </span>
                   </div>
                   {profile.hasUpdate && (

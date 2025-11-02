@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { formatFullName } from '@/lib/utils';
 
 interface Profile {
   id: string;
@@ -14,8 +15,8 @@ interface Profile {
 
 /**
  * Retorna o nome de exibição correto baseado no tipo de perfil
- * - Para business: retorna company_name
- * - Para user: retorna full_name
+ * - Para business: retorna company_name formatado
+ * - Para user: retorna full_name formatado
  */
 export function getProfileDisplayName(profile: {
   profile_type?: 'user' | 'business' | null;
@@ -23,9 +24,9 @@ export function getProfileDisplayName(profile: {
   company_name?: string | null;
 }): string {
   if (profile.profile_type === 'business' && profile.company_name) {
-    return profile.company_name;
+    return formatFullName(profile.company_name);
   }
-  return profile.full_name || 'Usuário';
+  return formatFullName(profile.full_name) || 'Usuário';
 }
 
 /**

@@ -198,7 +198,7 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
 
   useEffect(() => {
     if (profile) {
-      const displayName = profileType === 'business' ? profile.company_name : formatFullName(profile.full_name);
+      const displayName = profileType === 'business' ? formatFullName(profile.company_name) : formatFullName(profile.full_name);
       const identifier = profile.username || profile.slug;
       document.title = `${displayName} (@${identifier}) - Woorkins`;
     } else {
@@ -590,7 +590,7 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
   // Select the correct photo field based on profile type
   const mainPhotoUrl = profileType === 'business' ? profile.logo_url : profile.avatar_url;
   const mainPhotoAlt = profileType === 'business' 
-    ? (profile.company_name || profile.username)
+    ? formatFullName(profile.company_name || profile.username)
     : formatFullName(profile.full_name);
 
   return (
@@ -603,7 +603,7 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
         <InlinePhotoUpload
             currentPhotoUrl={profile.cover_url || undefined}
             userId={user!.id}
-            userName={profile.full_name || profile.username}
+            userName={formatFullName(profile.full_name || profile.username)}
             onPhotoUpdated={loadUserProfile}
             type="cover"
             className="w-full h-full"
@@ -655,8 +655,8 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
                             currentPhotoUrl={mainPhotoUrl || undefined}
                             userId={user!.id}
                             userName={profileType === 'business' 
-                              ? (profile.company_name || profile.username)
-                              : (profile.full_name || profile.username)
+                              ? formatFullName(profile.company_name || profile.username)
+                              : formatFullName(profile.full_name || profile.username)
                             }
                             onPhotoUpdated={loadUserProfile}
                             type="avatar"
@@ -732,7 +732,7 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
                         <div className="flex items-center gap-2 mb-1">
                           <h1 className={`text-3xl font-bold ${isCoverDark ? 'text-white' : 'text-black'}`}>
                             {profileType === 'business' 
-                              ? (profile.company_name || formatFullName(profile.full_name))
+                              ? formatFullName(profile.company_name || profile.full_name)
                               : formatFullName(profile.full_name)
                             }
                           </h1>
@@ -1267,8 +1267,8 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
                         className="w-full"
                       >
                         Avaliar {profileType === 'business' 
-                          ? (profile.company_name || profile.slug) 
-                          : (profile.full_name ? profile.full_name.split(' ')[0] : profile.username)}
+                          ? formatFullName(profile.company_name || profile.slug) 
+                          : formatFullName(profile.full_name ? profile.full_name.split(' ')[0] : profile.username)}
                       </Button>
                     )}
                   </div>
@@ -1432,7 +1432,7 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
         <FollowSuccessDialog
           open={showFollowSuccess}
           onOpenChange={setShowFollowSuccess}
-          profileName={profileType === 'business' ? (profile.company_name || profile.username) : formatFullName(profile.full_name)}
+          profileName={profileType === 'business' ? formatFullName(profile.company_name || profile.username) : formatFullName(profile.full_name)}
           profileAvatar={mainPhotoUrl}
           profileType={profileType}
         />

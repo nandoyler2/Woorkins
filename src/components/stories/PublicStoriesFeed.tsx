@@ -152,7 +152,7 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
       const from = pageNum * STORIES_PER_PAGE;
       const to = from + STORIES_PER_PAGE - 1;
 
-      // Buscar stories com contagem de interações
+      // Buscar stories ordenados por updated_at (mais recente primeiro)
       const { data, error } = await supabase
         .from('profile_stories')
         .select(`
@@ -164,6 +164,7 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
           text_content,
           created_at,
           expires_at,
+          updated_at,
           original_story_id,
           original_profile_id,
           profiles!profile_stories_profile_id_fkey(
@@ -183,16 +184,15 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
           story_stickers(*)
         `)
         .gt('expires_at', new Date().toISOString())
+        .order('updated_at', { ascending: false })
         .range(from, to);
 
       if (error) throw error;
 
-      // Processar stories com score de popularidade
+      // Processar stories
       let processedStories = (data || []).map(story => {
-        // Corrigir a contagem - Supabase retorna [{ count: n }] não um array
         const likeCount = (story as any).story_likes?.[0]?.count || 0;
         const commentCount = (story as any).story_comments?.[0]?.count || 0;
-        const popularityScore = likeCount + (commentCount * 2); // Comentários valem mais
         
         return {
           id: story.id,
@@ -208,60 +208,11 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
           original_profile_id: story.original_profile_id,
           profiles: story.profiles,
           original_profile: story.original_profile,
-          story_stickers: (story as any).story_stickers || [],
-          popularityScore
+          story_stickers: (story as any).story_stickers || []
         };
-      }) as (PublicStory & { popularityScore: number; story_stickers: any[] })[];
+      }) as PublicStory[];
 
-      // Verificar stories recém-criados pelo usuário atual (apenas nesta sessão)
-      const recentlyCreatedIds = sessionStorage.getItem('recentlyCreatedStories');
-      const myRecentStories = recentlyCreatedIds ? JSON.parse(recentlyCreatedIds) : [];
-      const myRecentStoriesSet = new Set(myRecentStories);
-
-      // Separar stories do usuário que foram criados recentemente nesta sessão
-      const myRecentlyCreated = processedStories.filter(s => 
-        s.profile_id === currentProfileId && myRecentStoriesSet.has(s.id)
-      );
-      const otherStories = processedStories.filter(s => 
-        !(s.profile_id === currentProfileId && myRecentStoriesSet.has(s.id))
-      );
-
-      // Ordenar outros stories por popularidade
-      otherStories.sort((a, b) => {
-        // Primeiro por score de popularidade
-        if (b.popularityScore !== a.popularityScore) {
-          return b.popularityScore - a.popularityScore;
-        }
-        // Depois por data mais recente
-        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-      });
-
-      // Intercalar stories de usuários diferentes quando possível
-      const interleavedStories: typeof processedStories = [];
-      const remainingStories = [...otherStories];
-      let lastProfileId: string | null = null;
-
-      while (remainingStories.length > 0) {
-        // Tentar encontrar um story de um usuário diferente do último
-        let foundIndex = remainingStories.findIndex(s => s.profile_id !== lastProfileId);
-        
-        // Se não encontrar, pegar o próximo disponível
-        if (foundIndex === -1) foundIndex = 0;
-        
-        const [selectedStory] = remainingStories.splice(foundIndex, 1);
-        interleavedStories.push(selectedStory);
-        lastProfileId = selectedStory.profile_id;
-      }
-
-      // Stories recém-criados aparecem primeiro, depois os outros
-      const finalStories = [
-        ...myRecentlyCreated.sort((a, b) => 
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-        ),
-        ...interleavedStories
-      ];
-
-      const newStories = finalStories.map(({ popularityScore, ...story }) => story) as PublicStory[];
+      const newStories = processedStories;
       
       if (pageNum === 0) {
         // Remover duplicatas baseado no ID

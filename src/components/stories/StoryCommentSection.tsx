@@ -272,9 +272,9 @@ export function StoryCommentSection({ storyId, currentProfileId, isLiked, onTogg
           variant="ghost"
           size="icon"
           onClick={onToggleLike}
-          className="bg-transparent border-0 text-white hover:bg-transparent hover:scale-110 transition-transform rounded-full h-12 w-12 flex-shrink-0"
+          className="bg-transparent border-0 text-white hover:bg-transparent hover:scale-110 transition-transform rounded-full h-10 w-10 flex-shrink-0"
         >
-          <Heart className={`w-7 h-7 ${isLiked ? 'fill-red-500 text-red-500' : ''}`} />
+          <Heart className={`w-5 h-5 ${isLiked ? 'fill-red-500 text-red-500' : ''}`} />
         </Button>
 
         {/* Botão de repost - sempre visível, desabilitado se for dono */}
@@ -283,20 +283,9 @@ export function StoryCommentSection({ storyId, currentProfileId, isLiked, onTogg
           size="icon"
           onClick={onRepost}
           disabled={isOwner}
-          className="bg-transparent border-0 text-white hover:bg-transparent hover:scale-110 transition-transform rounded-full h-12 w-12 flex-shrink-0 disabled:opacity-30 disabled:hover:scale-100"
+          className="bg-transparent border-0 text-white hover:bg-transparent hover:scale-110 transition-transform rounded-full h-10 w-10 flex-shrink-0 disabled:opacity-30 disabled:hover:scale-100"
         >
-          <Repeat2 className="w-7 h-7" />
-        </Button>
-
-        {/* Botão de enviar comentário */}
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={handleSendComment}
-          disabled={!commentText.trim() || isSubmitting}
-          className="bg-transparent border-0 text-white hover:bg-transparent hover:scale-110 transition-transform rounded-full h-12 w-12 flex-shrink-0 disabled:opacity-30"
-        >
-          <Send className="w-7 h-7" />
+          <Repeat2 className="w-5 h-5" />
         </Button>
       </div>
     </>

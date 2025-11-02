@@ -832,20 +832,35 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
                               justifyContent: 'center'
                             }}
                           >
-                            <div
-                              className="absolute"
-                              style={{
-                                left: `${currentStory.media_position_x || 50}%`,
-                                top: `${currentStory.media_position_y || 50}%`,
-                                transform: `translate(-50%, -50%) scale(${currentStory.media_scale || 1})`,
-                                maxWidth: '100%',
-                                maxHeight: '100%',
-                              }}
-                            >
+                            {(currentStory.media_position_x != null && currentStory.media_position_y != null) ? (
+                              <div
+                                className="absolute"
+                                style={{
+                                  left: `${currentStory.media_position_x}%`,
+                                  top: `${currentStory.media_position_y}%`,
+                                  transform: `translate(-50%, -50%) scale(${currentStory.media_scale || 1})`,
+                                  width: '100%',
+                                  height: '100%',
+                                }}
+                              >
+                                <SafeImage
+                                  src={currentStory.media_url}
+                                  alt="Story"
+                                  className="w-full h-full object-cover transition-opacity duration-300"
+                                  style={{ 
+                                    opacity: mediaLoading ? 0 : 1,
+                                    display: 'block'
+                                  }}
+                                  onLoadStart={() => setMediaLoading(true)}
+                                  onLoad={() => setMediaLoading(false)}
+                                  onError={() => setMediaLoading(false)}
+                                />
+                              </div>
+                            ) : (
                               <SafeImage
                                 src={currentStory.media_url}
                                 alt="Story"
-                                className="max-w-full max-h-full object-contain transition-opacity duration-300"
+                                className="w-full h-full object-cover transition-opacity duration-300"
                                 style={{ 
                                   opacity: mediaLoading ? 0 : 1,
                                   display: 'block'
@@ -854,7 +869,7 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
                                 onLoad={() => setMediaLoading(false)}
                                 onError={() => setMediaLoading(false)}
                               />
-                            </div>
+                            )}
                           </div>
                         )}
 
@@ -867,16 +882,38 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
                               justifyContent: 'center'
                             }}
                           >
-                            <div
-                              className="absolute"
-                              style={{
-                                left: `${currentStory.media_position_x || 50}%`,
-                                top: `${currentStory.media_position_y || 50}%`,
-                                transform: `translate(-50%, -50%) scale(${currentStory.media_scale || 1})`,
-                                maxWidth: '100%',
-                                maxHeight: '100%',
-                              }}
-                            >
+                            {(currentStory.media_position_x != null && currentStory.media_position_y != null) ? (
+                              <div
+                                className="absolute"
+                                style={{
+                                  left: `${currentStory.media_position_x}%`,
+                                  top: `${currentStory.media_position_y}%`,
+                                  transform: `translate(-50%, -50%) scale(${currentStory.media_scale || 1})`,
+                                  width: '100%',
+                                  height: '100%',
+                                }}
+                              >
+                                <video
+                                  ref={videoRef}
+                                  src={`${currentStory.media_url}#t=5`}
+                                  autoPlay
+                                  muted={isMuted}
+                                  onLoadedMetadata={() => {
+                                    if (videoRef.current) {
+                                      videoRef.current.volume = volume;
+                                    }
+                                  }}
+                                  onLoadStart={() => setMediaLoading(true)}
+                                  onLoadedData={() => setMediaLoading(false)}
+                                  onError={() => setMediaLoading(false)}
+                                  className="w-full h-full object-cover transition-opacity duration-300"
+                                  style={{ 
+                                    opacity: mediaLoading ? 0 : 1,
+                                    display: 'block'
+                                  }}
+                                />
+                              </div>
+                            ) : (
                               <video
                                 ref={videoRef}
                                 src={`${currentStory.media_url}#t=5`}
@@ -890,13 +927,13 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
                                 onLoadStart={() => setMediaLoading(true)}
                                 onLoadedData={() => setMediaLoading(false)}
                                 onError={() => setMediaLoading(false)}
-                                className="max-w-full max-h-full object-contain transition-opacity duration-300"
+                                className="w-full h-full object-cover transition-opacity duration-300"
                                 style={{ 
                                   opacity: mediaLoading ? 0 : 1,
                                   display: 'block'
                                 }}
                               />
-                            </div>
+                            )}
                           </div>
                         )}
 

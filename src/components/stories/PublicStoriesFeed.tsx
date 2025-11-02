@@ -518,43 +518,61 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
                         </div>
                       ) : story.type === 'video' && videoSrc ? (
                         <div className="w-full h-full relative bg-black flex items-center justify-center">
-                          <div
-                            className="absolute"
-                            style={{
-                              left: `${story.media_position_x || 50}%`,
-                              top: `${story.media_position_y || 50}%`,
-                              transform: `translate(-50%, -50%) scale(${(story.media_scale || 1) * 0.5})`,
-                              maxWidth: '100%',
-                              maxHeight: '100%',
-                            }}
-                          >
+                          {(story.media_position_x != null && story.media_position_y != null) ? (
+                            <div
+                              className="absolute"
+                              style={{
+                                left: `${story.media_position_x}%`,
+                                top: `${story.media_position_y}%`,
+                                transform: `translate(-50%, -50%) scale(${(story.media_scale || 1) * 0.5})`,
+                                width: '100%',
+                                height: '100%',
+                              }}
+                            >
+                              <video
+                                src={videoSrc}
+                                className="w-full h-full object-cover"
+                                preload="metadata"
+                                muted
+                                playsInline
+                              />
+                            </div>
+                          ) : (
                             <video
                               src={videoSrc}
-                              className="max-w-full max-h-full object-contain"
+                              className="w-full h-full object-cover"
                               preload="metadata"
                               muted
                               playsInline
                             />
-                          </div>
+                          )}
                         </div>
                       ) : (
                         <div className="w-full h-full relative bg-black flex items-center justify-center">
-                          <div
-                            className="absolute"
-                            style={{
-                              left: `${story.media_position_x || 50}%`,
-                              top: `${story.media_position_y || 50}%`,
-                              transform: `translate(-50%, -50%) scale(${(story.media_scale || 1) * 0.5})`,
-                              maxWidth: '100%',
-                              maxHeight: '100%',
-                            }}
-                          >
+                          {(story.media_position_x != null && story.media_position_y != null) ? (
+                            <div
+                              className="absolute"
+                              style={{
+                                left: `${story.media_position_x}%`,
+                                top: `${story.media_position_y}%`,
+                                transform: `translate(-50%, -50%) scale(${(story.media_scale || 1) * 0.5})`,
+                                width: '100%',
+                                height: '100%',
+                              }}
+                            >
+                              <SafeImage
+                                src={displayImage}
+                                alt="Story original"
+                                className="w-full h-full object-cover block"
+                              />
+                            </div>
+                          ) : (
                             <SafeImage
                               src={displayImage}
                               alt="Story original"
-                              className="max-w-full max-h-full object-contain block"
+                              className="w-full h-full object-cover block"
                             />
-                          </div>
+                          )}
                         </div>
                       )}
 
@@ -619,43 +637,61 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
                         </div>
                       ) : story.type === 'video' && videoSrc ? (
                           <div className="w-full h-full relative bg-black flex items-center justify-center">
-                            <div
-                              className="absolute"
-                              style={{
-                                left: `${story.media_position_x || 50}%`,
-                                top: `${story.media_position_y || 50}%`,
-                                transform: `translate(-50%, -50%) scale(${(story.media_scale || 1) * 0.8})`,
-                                maxWidth: '100%',
-                                maxHeight: '100%',
-                              }}
-                            >
+                            {(story.media_position_x != null && story.media_position_y != null) ? (
+                              <div
+                                className="absolute"
+                                style={{
+                                  left: `${story.media_position_x}%`,
+                                  top: `${story.media_position_y}%`,
+                                  transform: `translate(-50%, -50%) scale(${(story.media_scale || 1) * 0.8})`,
+                                  width: '100%',
+                                  height: '100%',
+                                }}
+                              >
+                                <video
+                                  src={videoSrc}
+                                  className="w-full h-full object-cover"
+                                  preload="metadata"
+                                  muted
+                                  playsInline
+                                />
+                              </div>
+                            ) : (
                               <video
                                 src={videoSrc}
-                                className="max-w-full max-h-full object-contain"
+                                className="w-full h-full object-cover"
                                 preload="metadata"
                                 muted
                                 playsInline
                               />
-                            </div>
+                            )}
                           </div>
                         ) : (
                           <div className="w-full h-full relative bg-black flex items-center justify-center">
-                            <div
-                              className="absolute"
-                              style={{
-                                left: `${story.media_position_x || 50}%`,
-                                top: `${story.media_position_y || 50}%`,
-                                transform: `translate(-50%, -50%) scale(${(story.media_scale || 1) * 0.8})`,
-                                maxWidth: '100%',
-                                maxHeight: '100%',
-                              }}
-                            >
+                            {(story.media_position_x != null && story.media_position_y != null) ? (
+                              <div
+                                className="absolute"
+                                style={{
+                                  left: `${story.media_position_x}%`,
+                                  top: `${story.media_position_y}%`,
+                                  transform: `translate(-50%, -50%) scale(${(story.media_scale || 1) * 0.8})`,
+                                  width: '100%',
+                                  height: '100%',
+                                }}
+                              >
+                                <SafeImage
+                                  src={displayImage}
+                                  alt="Story"
+                                  className="w-full h-full object-cover block"
+                                />
+                              </div>
+                            ) : (
                               <SafeImage
                                 src={displayImage}
                                 alt="Story"
-                                className="max-w-full max-h-full object-contain block"
+                                className="w-full h-full object-cover block"
                               />
-                            </div>
+                            )}
                           </div>
                         )}
 

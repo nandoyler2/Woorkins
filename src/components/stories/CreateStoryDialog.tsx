@@ -60,6 +60,7 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
   const [textScale, setTextScale] = useState(1);
   const [mediaPosition, setMediaPosition] = useState({ x: 50, y: 50 });
   const [mediaScale, setMediaScale] = useState(1);
+  const [mediaInteracted, setMediaInteracted] = useState(false);
   const [draggedElement, setDraggedElement] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -258,6 +259,10 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
     onStoryCreated();
 
     // Upload continua em background
+    const hasCustomMediaPositioning = type !== 'text' && (
+      mediaInteracted || mediaScale !== 1 || mediaPosition.x !== 50 || mediaPosition.y !== 50
+    );
+
     uploadStory({
       profileId: selectedProfile,
       type: type,
@@ -266,8 +271,8 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
       backgroundColor: type === 'text' ? backgroundColor : undefined,
       textPosition: type === 'text' ? textPosition : undefined,
       textScale: type === 'text' ? textScale : undefined,
-      mediaPosition: type !== 'text' ? mediaPosition : undefined,
-      mediaScale: type !== 'text' ? mediaScale : undefined,
+      mediaPosition: hasCustomMediaPositioning ? mediaPosition : undefined,
+      mediaScale: hasCustomMediaPositioning ? mediaScale : undefined,
       metadata,
       stickers: stickers.map(s => ({
         type: s.type,
@@ -300,6 +305,7 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
     setTextScale(1);
     setMediaPosition({ x: 50, y: 50 });
     setMediaScale(1);
+    setMediaInteracted(false);
     setDraggedElement(null);
     onClose();
   };
@@ -321,6 +327,7 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
   };
 
   const handleDragStart = (element: string) => {
+    if (element === 'media') setMediaInteracted(true);
     setDraggedElement(element);
   };
 
@@ -843,6 +850,7 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
                             onMouseDown={() => handleDragStart('media')}
                             onWheel={(e) => {
                               e.preventDefault();
+                              setMediaInteracted(true);
                               setMediaScale(prev => Math.max(0.5, Math.min(2, prev + (e.deltaY > 0 ? -0.1 : 0.1))));
                             }}
                           >

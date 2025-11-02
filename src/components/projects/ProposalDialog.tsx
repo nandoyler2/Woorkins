@@ -620,7 +620,7 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-amber-500" />
-              Recurso Premium
+              Recurso Pro/Premium
             </AlertDialogTitle>
             <AlertDialogDescription className="space-y-2">
               <p>O envio de anexos em propostas é um recurso exclusivo para usuários Pro e Premium.</p>
@@ -629,7 +629,7 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
                 <li>Enviar até 3 anexos por proposta</li>
                 <li>Arquivos de até 5MB cada</li>
                 <li>Impressionar clientes com portfólio anexado</li>
-                <li>Taxas de transação reduzidas</li>
+                <li>Taxas de transação reduzidas e muito mais</li>
               </ul>
             </AlertDialogDescription>
           </AlertDialogHeader>

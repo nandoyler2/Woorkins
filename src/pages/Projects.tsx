@@ -60,8 +60,6 @@ export default function Projects() {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedBudget, setSelectedBudget] = useState<string>('all');
   const [selectedDeadline, setSelectedDeadline] = useState<string>('all');
-  const [workMode, setWorkMode] = useState<string>('all');
-  const [language, setLanguage] = useState<string>('all');
   const [proposalsFilter, setProposalsFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
@@ -172,10 +170,6 @@ export default function Projects() {
     onBudgetChange: setSelectedBudget,
     selectedDeadline,
     onDeadlineChange: setSelectedDeadline,
-    workMode,
-    onWorkModeChange: setWorkMode,
-    language,
-    onLanguageChange: setLanguage,
     proposalsFilter,
     onProposalsFilterChange: setProposalsFilter,
     onSaveSearch: handleSaveSearch,

@@ -14,10 +14,6 @@ interface ProjectFiltersProps {
   onBudgetChange: (value: string) => void;
   selectedDeadline: string;
   onDeadlineChange: (value: string) => void;
-  workMode: string;
-  onWorkModeChange: (value: string) => void;
-  language: string;
-  onLanguageChange: (value: string) => void;
   proposalsFilter: string;
   onProposalsFilterChange: (value: string) => void;
   onSaveSearch: () => void;
@@ -40,10 +36,6 @@ export function ProjectFilters({
   onBudgetChange,
   selectedDeadline,
   onDeadlineChange,
-  workMode,
-  onWorkModeChange,
-  language,
-  onLanguageChange,
   proposalsFilter,
   onProposalsFilterChange,
   onSaveSearch,
@@ -93,73 +85,6 @@ export function ProjectFilters({
             <SelectItem value="month">Último mês</SelectItem>
           </SelectContent>
         </Select>
-      </div>
-
-      <Separator />
-
-      {/* Modalidade de Trabalho */}
-      <div>
-        <h3 className="font-semibold mb-3">Modalidade de trabalho</h3>
-        <div className="flex flex-wrap gap-2">
-          <Button
-            variant={workMode === 'all' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => onWorkModeChange('all')}
-          >
-            Todos
-          </Button>
-          <Button
-            variant={workMode === 'fixed' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => onWorkModeChange('fixed')}
-          >
-            Preço fixo
-          </Button>
-          <Button
-            variant={workMode === 'hourly' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => onWorkModeChange('hourly')}
-          >
-            Por hora
-          </Button>
-        </div>
-      </div>
-
-      <Separator />
-
-      {/* Idioma */}
-      <div>
-        <h3 className="font-semibold mb-3">Idioma</h3>
-        <div className="flex flex-wrap gap-2">
-          <Button
-            variant={language === 'all' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => onLanguageChange('all')}
-          >
-            Todos
-          </Button>
-          <Button
-            variant={language === 'pt' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => onLanguageChange('pt')}
-          >
-            Português
-          </Button>
-          <Button
-            variant={language === 'en' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => onLanguageChange('en')}
-          >
-            English
-          </Button>
-          <Button
-            variant={language === 'es' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => onLanguageChange('es')}
-          >
-            Español
-          </Button>
-        </div>
       </div>
 
       <Separator />

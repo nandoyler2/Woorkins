@@ -425,33 +425,32 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
                 
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                 
-                {isNew && (
-                  <div className="absolute top-3 left-3 bg-gradient-to-r from-pink-500 to-purple-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
-                    NOVO
-                  </div>
-                )}
-                
-                {/* Indicador do autor original para reposts */}
-                {story.original_story_id && story.original_profile && (
-                  <div className="absolute top-3 left-3 right-3 flex items-center gap-1.5 bg-black/50 backdrop-blur-md rounded-lg px-2 py-1.5 shadow-lg">
-                    <Avatar className="w-5 h-5 border border-white/50 flex-shrink-0">
+                {/* Indicador do autor original para reposts - estilo Instagram */}
+                {story.original_story_id && story.original_profile ? (
+                  <div className="absolute top-2 left-2 flex items-center gap-1.5 bg-black/60 backdrop-blur-sm rounded-lg px-2 py-1 shadow-lg">
+                    <Avatar className="w-5 h-5 border border-white/30 flex-shrink-0">
                       <AvatarImage src={story.original_profile.avatar_url || undefined} />
-                      <AvatarFallback className="bg-primary text-primary-foreground text-[10px]">
-                        {getFirstName(story.original_profile.full_name, story.original_profile.username)?.[0]?.toUpperCase()}
+                      <AvatarFallback className="bg-primary text-primary-foreground text-[9px]">
+                        {story.original_profile.username?.[0]?.toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
-                    <span className="text-white text-[11px] font-semibold truncate drop-shadow-lg">
-                      {getFirstName(story.original_profile.full_name, story.original_profile.username)}
+                    <span className="text-white text-[11px] font-medium drop-shadow-md">
+                      {story.original_profile.username}
                     </span>
                   </div>
-                )}
-                
-                {!story.original_story_id && (
-                  <div className="absolute top-3 right-3 bg-black/30 backdrop-blur-sm rounded-full p-1.5 shadow-lg">
-                    {story.type === 'video' && <Video className="w-3.5 h-3.5 text-white" />}
-                    {story.type === 'image' && <Image className="w-3.5 h-3.5 text-white" />}
-                    {story.type === 'text' && <FileText className="w-3.5 h-3.5 text-white" />}
-                  </div>
+                ) : (
+                  <>
+                    {isNew && (
+                      <div className="absolute top-2 left-2 bg-gradient-to-r from-pink-500 to-purple-600 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-lg">
+                        NOVO
+                      </div>
+                    )}
+                    <div className="absolute top-2 right-2 bg-black/30 backdrop-blur-sm rounded-full p-1.5 shadow-lg">
+                      {story.type === 'video' && <Video className="w-3.5 h-3.5 text-white" />}
+                      {story.type === 'image' && <Image className="w-3.5 h-3.5 text-white" />}
+                      {story.type === 'text' && <FileText className="w-3.5 h-3.5 text-white" />}
+                    </div>
+                  </>
                 )}
                 
                 {story.type === 'video' && (

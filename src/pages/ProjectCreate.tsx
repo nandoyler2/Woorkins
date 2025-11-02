@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, ChevronRight, ChevronLeft, CheckCircle2, FileText, DollarSign, Calendar as CalendarIcon, Eye, X, Shield, Lock, Lightbulb, Target, MessageCircle, Clock, Bold, Italic } from 'lucide-react';
+import { ArrowLeft, ChevronRight, ChevronLeft, CheckCircle2, FileText, DollarSign, Calendar as CalendarIcon, Eye, X, Shield, Lock, Lightbulb, Target, MessageCircle, Clock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useDocumentVerification } from '@/hooks/useDocumentVerification';
@@ -19,6 +19,7 @@ import { RequireProfilePhotoDialog } from '@/components/RequireProfilePhotoDialo
 import { analyzeProject } from '@/lib/projectAnalyzer';
 import { validateProject } from '@/lib/projectValidation';
 import { MarkdownText } from '@/lib/markdownUtils';
+import { RichTextEditor } from '@/components/RichTextEditor';
 
 export default function ProjectCreate() {
   const { user } = useAuth();
@@ -546,84 +547,35 @@ export default function ProjectCreate() {
                       </span>
                     </Label>
                     
-                    {/* Botões de formatação */}
-                    <div className="flex gap-2">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          const textarea = document.getElementById('description') as HTMLTextAreaElement;
-                          const start = textarea.selectionStart;
-                          const end = textarea.selectionEnd;
-                          const selectedText = description.substring(start, end);
-                          if (selectedText) {
-                            const newText = description.substring(0, start) + `**${selectedText}**` + description.substring(end);
-                            setDescription(newText);
-                            setTimeout(() => {
-                              textarea.focus();
-                              textarea.setSelectionRange(start + 2, end + 2);
-                            }, 0);
-                          }
-                        }}
-                        className="h-8"
-                      >
-                        <Bold className="w-3 h-3 mr-1" />
-                        Negrito
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          const textarea = document.getElementById('description') as HTMLTextAreaElement;
-                          const start = textarea.selectionStart;
-                          const end = textarea.selectionEnd;
-                          const selectedText = description.substring(start, end);
-                          if (selectedText) {
-                            const newText = description.substring(0, start) + `*${selectedText}*` + description.substring(end);
-                            setDescription(newText);
-                            setTimeout(() => {
-                              textarea.focus();
-                              textarea.setSelectionRange(start + 1, end + 1);
-                            }, 0);
-                          }
-                        }}
-                        className="h-8"
-                      >
-                        <Italic className="w-3 h-3 mr-1" />
-                        Itálico
-                      </Button>
+                    <div className="mb-2 p-3 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                      <p className="text-xs text-blue-700 dark:text-blue-300">
+                        💡 <strong>Dica de formatação:</strong> Use <code className="px-1 py-0.5 bg-blue-100 dark:bg-blue-900 rounded text-xs">**texto**</code> para <strong>negrito</strong> e <code className="px-1 py-0.5 bg-blue-100 dark:bg-blue-900 rounded text-xs">*texto*</code> para <em>itálico</em>
+                      </p>
                     </div>
                     
-                    <Textarea
+                    <RichTextEditor
                       id="description"
                       value={description}
-                      onChange={(e) => {
-                        if (e.target.value.length <= 2000) {
-                          setDescription(e.target.value);
-                        }
+                      onChange={(value) => {
+                        setDescription(value);
                         if (descriptionError) setDescriptionError(false);
                       }}
-                      placeholder="Descreva em detalhes o que você precisa...&#10;&#10;Inclua:&#10;• O que precisa ser feito&#10;• Referências ou exemplos&#10;• Requisitos específicos&#10;• Entregas esperadas&#10;&#10;💡 Dica: Selecione o texto e use os botões acima para formatar em **negrito** ou *itálico*"
-                      rows={8}
+                      placeholder="Descreva em detalhes o que você precisa...
+
+Inclua:
+• O que precisa ser feito
+• Referências ou exemplos
+• Requisitos específicos
+• Entregas esperadas
+
+Use **texto** para negrito e *texto* para itálico"
                       maxLength={2000}
                       className={cn(
-                        "text-base resize-none border-blue-200 focus:border-blue-600 dark:border-blue-800 transition-all",
+                        "text-base border-blue-200 focus:border-blue-600 dark:border-blue-800 transition-all",
                         descriptionError && "border-red-500 dark:border-red-500 animate-shake bg-red-50 dark:bg-red-950/20",
                         description.length > 2000 && "border-red-500 dark:border-red-500"
                       )}
                     />
-                    
-                    {/* Preview da formatação */}
-                    {description && (
-                      <div className="mt-3 p-4 bg-muted/30 border border-muted rounded-lg">
-                        <p className="text-xs font-semibold text-muted-foreground mb-2">👁️ Preview:</p>
-                        <div className="text-sm text-foreground leading-relaxed">
-                          <MarkdownText text={description} />
-                        </div>
-                      </div>
-                    )}
                     
                     {descriptionError ? (
                       <p className="text-sm text-red-600 dark:text-red-400 font-medium animate-pulse">

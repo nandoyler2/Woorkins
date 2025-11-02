@@ -10,10 +10,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import { OptimizedAvatar } from "@/components/ui/optimized-avatar";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Clock, FileText, DollarSign, Calendar, Sparkles, CheckCircle2, Bold, Italic, List, ListOrdered, Eye } from "lucide-react";
+import { Clock, FileText, DollarSign, Calendar, Sparkles, CheckCircle2, Bold, Italic, List, ListOrdered } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import ReactMarkdown from "react-markdown";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface ProposalDialogProps {
   open: boolean;
@@ -33,7 +32,6 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
   const [message, setMessage] = useState("");
   const [userProfile, setUserProfile] = useState<any>(null);
   const [success, setSuccess] = useState(false);
-  const [previewMode, setPreviewMode] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const draftKey = `proposalDraft:${user?.id || 'anon'}:${projectId}`;
   const maxChars = 3000;
@@ -401,35 +399,25 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
                   >
                     <ListOrdered className="w-3.5 h-3.5" />
                   </Button>
-                  <div className="flex-1" />
-                  <Button
-                    type="button"
-                    variant={previewMode ? "default" : "ghost"}
-                    size="sm"
-                    onClick={() => setPreviewMode(!previewMode)}
-                    className="h-7 px-2 text-xs"
-                    title="Visualizar"
-                  >
-                    <Eye className="w-3.5 h-3.5 mr-1" />
-                    Preview
-                  </Button>
                 </div>
-                {previewMode ? (
-                  <div className="border-2 border-secondary/50 rounded-md p-3 min-h-[120px] bg-background prose prose-sm max-w-none">
-                    <ReactMarkdown>{message || '*Escreva sua mensagem...*'}</ReactMarkdown>
+                <Textarea
+                  ref={textareaRef}
+                  id="message"
+                  placeholder="Descreva como você pretende realizar o projeto, sua experiência relevante e por que você é a melhor escolha..."
+                  value={message}
+                  onChange={handleMessageChange}
+                  rows={4}
+                  required
+                  maxLength={maxChars}
+                  className="border-2 focus:border-secondary transition-colors resize-none text-sm"
+                />
+                {message && (
+                  <div className="mt-2 p-3 bg-muted/30 rounded-md border">
+                    <p className="text-xs text-muted-foreground mb-2 font-semibold">Preview:</p>
+                    <div className="prose prose-sm max-w-none text-sm">
+                      <ReactMarkdown>{message}</ReactMarkdown>
+                    </div>
                   </div>
-                ) : (
-                  <Textarea
-                    ref={textareaRef}
-                    id="message"
-                    placeholder="Descreva como você pretende realizar o projeto, sua experiência relevante e por que você é a melhor escolha..."
-                    value={message}
-                    onChange={handleMessageChange}
-                    rows={5}
-                    required
-                    maxLength={maxChars}
-                    className="border-2 focus:border-secondary transition-colors resize-none text-sm"
-                  />
                 )}
               </div>
 

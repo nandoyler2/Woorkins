@@ -53,18 +53,34 @@ export default function Plans() {
 
       if (error) throw error;
       
-      // Definir preços e taxas dos planos
+      // Definir preços dos planos
       const planPrices: Record<string, number> = {
         'basico': 0,
         'pro': 49.90,
         'premium': 149.90
       };
       
+      // Buscar comissões do banco de dados
+      const { data: commissionData } = await supabase
+        .from('platform_settings')
+        .select('setting_key, setting_value')
+        .in('setting_key', ['stripe_commission_free', 'stripe_commission_pro', 'stripe_commission_premium']);
+      
       const planCommissions: Record<string, number> = {
-        'basico': 12,
-        'pro': 9,
-        'premium': 7
+        'basico': 12, // fallback padrão
+        'pro': 9,     // fallback padrão
+        'premium': 7  // fallback padrão
       };
+      
+      // Atualizar com valores do banco
+      if (commissionData) {
+        commissionData.forEach((setting) => {
+          const plan = setting.setting_key.replace('stripe_commission_', '');
+          const planKey = plan === 'free' ? 'basico' : plan;
+          const value = setting.setting_value as { percentage: number };
+          planCommissions[planKey] = value.percentage || planCommissions[planKey];
+        });
+      }
 
       setPlans((data || []).map(p => ({
         ...p,

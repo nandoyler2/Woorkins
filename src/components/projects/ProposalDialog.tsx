@@ -45,7 +45,7 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
       
       const { data, error } = await supabase
         .from('profiles' as any)
-        .select('full_name, username, avatar_url, avatar_thumbnail_url, freelancer_level')
+        .select('full_name, username, avatar_url, avatar_thumbnail_url, freelancer_level, subscription_plan')
         .eq('user_id', user.id)
         .maybeSingle();
       
@@ -316,6 +316,19 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
                       className="border-2 focus:border-accent transition-colors pl-10"
                     />
                   </div>
+                  {amountFormatted && parseCurrencyToNumber(amountFormatted) > 0 && (
+                    <div className="mt-2 p-2 bg-accent/10 border border-accent/20 rounded-md space-y-1">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-muted-foreground">Você receberá:</span>
+                        <span className="font-bold text-accent">
+                          R$ {(parseCurrencyToNumber(amountFormatted) * (1 - (userProfile?.subscription_plan === 'free' ? 0.15 : userProfile?.subscription_plan === 'basic' ? 0.10 : userProfile?.subscription_plan === 'premium' ? 0.05 : 0.15))).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground leading-tight">
+                        Como usuário <span className="font-semibold capitalize">{userProfile?.subscription_plan === 'free' ? 'Gratuito' : userProfile?.subscription_plan === 'basic' ? 'Básico' : userProfile?.subscription_plan === 'premium' ? 'Premium' : 'Gratuito'}</span>, a taxa é de <span className="font-semibold">{userProfile?.subscription_plan === 'free' ? '15%' : userProfile?.subscription_plan === 'basic' ? '10%' : userProfile?.subscription_plan === 'premium' ? '5%' : '15%'}</span>
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-1.5">

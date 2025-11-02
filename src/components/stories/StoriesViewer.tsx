@@ -632,10 +632,12 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
               currentProfileId={currentProfileId}
               isLiked={storyLikes.isLiked}
               onToggleLike={storyLikes.toggleLike}
+              isOwner={isOwner}
+              onRepost={() => setShowRepostDialog(true)}
             />
           )}
 
-          {/* Footer - Link, Repost e Delete button */}
+          {/* Footer - Link e Delete button */}
           <div className="absolute bottom-20 left-4 right-4 z-20 flex items-end justify-between">
             <div className="flex gap-2">
               {/* Delete button for owner */}
@@ -647,18 +649,6 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
                   className="bg-black/50 backdrop-blur-md text-white hover:bg-red-500/50 rounded-full"
                 >
                   <Trash2 className="w-5 h-5" />
-                </Button>
-              )}
-
-              {/* Repost button */}
-              {!isOwner && currentProfileId && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setShowRepostDialog(true)}
-                  className="bg-black/50 backdrop-blur-md text-white hover:bg-purple-500/50 rounded-full"
-                >
-                  <Repeat2 className="w-5 h-5" />
                 </Button>
               )}
             </div>

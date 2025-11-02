@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Heart, Send, MessageCircle } from 'lucide-react';
+import { Heart, Send, MessageCircle, Repeat2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -25,9 +25,11 @@ interface StoryCommentSectionProps {
   currentProfileId: string;
   isLiked: boolean;
   onToggleLike: () => void;
+  isOwner: boolean;
+  onRepost?: () => void;
 }
 
-export function StoryCommentSection({ storyId, currentProfileId, isLiked, onToggleLike }: StoryCommentSectionProps) {
+export function StoryCommentSection({ storyId, currentProfileId, isLiked, onToggleLike, isOwner, onRepost }: StoryCommentSectionProps) {
   const [commentText, setCommentText] = useState('');
   const [comments, setComments] = useState<StoryComment[]>([]);
   const [recentComments, setRecentComments] = useState<StoryComment[]>([]);
@@ -270,16 +272,27 @@ export function StoryCommentSection({ storyId, currentProfileId, isLiked, onTogg
           <Heart className={`w-7 h-7 ${isLiked ? 'fill-red-500 text-red-500' : ''}`} />
         </Button>
 
-        {/* Botão de enviar */}
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={handleSendComment}
-          disabled={!commentText.trim() || isSubmitting}
-          className="bg-transparent border-0 text-white hover:bg-transparent hover:scale-110 transition-transform rounded-full h-12 w-12 flex-shrink-0 disabled:opacity-30"
-        >
-          <Send className="w-7 h-7" />
-        </Button>
+        {/* Botão de repost (se não for dono) ou enviar (se for dono) */}
+        {!isOwner && onRepost ? (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onRepost}
+            className="bg-transparent border-0 text-white hover:bg-transparent hover:scale-110 transition-transform rounded-full h-12 w-12 flex-shrink-0"
+          >
+            <Repeat2 className="w-7 h-7" />
+          </Button>
+        ) : (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleSendComment}
+            disabled={!commentText.trim() || isSubmitting}
+            className="bg-transparent border-0 text-white hover:bg-transparent hover:scale-110 transition-transform rounded-full h-12 w-12 flex-shrink-0 disabled:opacity-30"
+          >
+            <Send className="w-7 h-7" />
+          </Button>
+        )}
       </div>
     </>
   );

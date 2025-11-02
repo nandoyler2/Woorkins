@@ -10,7 +10,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { OptimizedAvatar } from "@/components/ui/optimized-avatar";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Clock, FileText } from "lucide-react";
+import { Clock, FileText, DollarSign, Calendar, Sparkles, CheckCircle2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 interface ProposalDialogProps {
   open: boolean;
@@ -33,13 +34,21 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
 
   useEffect(() => {
     const fetchUserProfile = async () => {
-      if (!user) return;
+      if (!user) {
+        console.log('ProposalDialog: No user found');
+        return;
+      }
       
-      const { data } = await supabase
+      console.log('ProposalDialog: Fetching profile for user:', user.id);
+      
+      const { data, error } = await supabase
         .from('profiles' as any)
         .select('full_name, avatar_url, avatar_thumbnail_url, freelancer_level')
         .eq('user_id', user.id)
         .single();
+      
+      console.log('ProposalDialog: Profile data:', data);
+      console.log('ProposalDialog: Profile error:', error);
       
       if (data) {
         setUserProfile(data);
@@ -134,112 +143,154 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[650px] p-0 overflow-hidden">
         {success ? (
-          <div className="flex flex-col items-center justify-center py-8 space-y-4 text-center">
-            <div className="text-6xl">✅</div>
-            <h3 className="text-xl font-bold">Proposta enviada com sucesso!</h3>
-            <p className="text-muted-foreground">
-              Agora é só aguardar a resposta do cliente.<br />
-              Enquanto isso, que tal conferir outros projetos incríveis..
-            </p>
+          <div className="flex flex-col items-center justify-center py-12 px-6 space-y-5 text-center bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 dark:from-green-950 dark:via-emerald-950 dark:to-teal-950 animate-fade-in">
+            <div className="relative">
+              <div className="absolute inset-0 bg-green-400 rounded-full blur-xl opacity-30 animate-pulse"></div>
+              <CheckCircle2 className="w-20 h-20 text-green-500 relative animate-scale-in" />
+            </div>
+            <div className="space-y-2">
+              <h3 className="text-2xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+                Proposta enviada com sucesso!
+              </h3>
+              <p className="text-muted-foreground max-w-md">
+                Agora é só aguardar a resposta do cliente.<br />
+                Enquanto isso, que tal conferir outros projetos incríveis..
+              </p>
+            </div>
             <Button 
               onClick={() => onOpenChange(false)} 
-              className="mt-4"
+              className="mt-4 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
+              size="lg"
             >
-              Fechar
+              <Sparkles className="w-4 h-4 mr-2" />
+              Explorar mais projetos
             </Button>
           </div>
         ) : (
           <>
-            <DialogHeader className="space-y-4">
-              {/* User Info */}
-              <div className="flex items-center gap-3">
-                <OptimizedAvatar
-                  fullUrl={userProfile?.avatar_url}
-                  thumbnailUrl={userProfile?.avatar_thumbnail_url}
-                  fallback={getInitials(userProfile?.full_name)}
-                  size="md"
+            {/* Header com gradiente */}
+            <div className="bg-gradient-to-br from-primary/10 via-purple-500/10 to-pink-500/10 p-6 border-b">
+              <DialogHeader className="space-y-4">
+                {/* User Info */}
+                <div className="flex items-center gap-3 bg-background/80 backdrop-blur-sm rounded-lg p-3 shadow-sm">
+                  <OptimizedAvatar
+                    fullUrl={userProfile?.avatar_url}
+                    thumbnailUrl={userProfile?.avatar_thumbnail_url}
+                    fallback={getInitials(userProfile?.full_name)}
+                    size="lg"
+                    className="ring-2 ring-primary/20"
+                  />
+                  <div className="flex-1">
+                    <p className="font-semibold flex items-center gap-2">
+                      Enviando como {userProfile?.full_name || "Usuário"}
+                    </p>
+                    <Badge variant="secondary" className="mt-1 bg-gradient-to-r from-purple-500/10 to-pink-500/10">
+                      <Sparkles className="w-3 h-3 mr-1" />
+                      Freelancer nível {userProfile?.freelancer_level || 1}
+                    </Badge>
+                  </div>
+                </div>
+
+                {/* Project Info */}
+                <div className="bg-gradient-to-br from-background to-muted/50 rounded-lg p-4 space-y-3 shadow-sm border">
+                  <h3 className="font-bold text-lg leading-tight">{projectTitle}</h3>
+                  <div className="flex flex-wrap items-center gap-3 text-sm">
+                    <div className="flex items-center gap-1.5 text-muted-foreground bg-background/50 px-3 py-1.5 rounded-full">
+                      <Clock className="w-3.5 h-3.5 text-blue-500" />
+                      <span>{formatTimeAgo(projectCreatedAt)}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-muted-foreground bg-background/50 px-3 py-1.5 rounded-full">
+                      <FileText className="w-3.5 h-3.5 text-purple-500" />
+                      <span>{proposalsCount || 0} {proposalsCount === 1 ? 'proposta' : 'propostas'}</span>
+                    </div>
+                  </div>
+                </div>
+              </DialogHeader>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-5 p-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="amount" className="flex items-center gap-2 text-sm font-semibold">
+                    <DollarSign className="w-4 h-4 text-green-500" />
+                    Valor da Proposta (R$) *
+                  </Label>
+                  <Input
+                    id="amount"
+                    type="number"
+                    step="0.01"
+                    placeholder="Ex: 1500.00"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    required
+                    className="border-2 focus:border-green-500 transition-colors"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="deliveryTime" className="flex items-center gap-2 text-sm font-semibold">
+                    <Calendar className="w-4 h-4 text-blue-500" />
+                    Prazo de Entrega (dias) *
+                  </Label>
+                  <Input
+                    id="deliveryTime"
+                    type="number"
+                    placeholder="Ex: 15"
+                    value={deliveryTime}
+                    onChange={(e) => setDeliveryTime(e.target.value)}
+                    required
+                    className="border-2 focus:border-blue-500 transition-colors"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="message" className="flex items-center gap-2 text-sm font-semibold">
+                  <FileText className="w-4 h-4 text-purple-500" />
+                  Mensagem / Descrição da Proposta *
+                </Label>
+                <Textarea
+                  id="message"
+                  placeholder="Descreva como você pretende realizar o projeto, sua experiência relevante e por que você é a melhor escolha..."
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  rows={6}
+                  required
+                  className="border-2 focus:border-purple-500 transition-colors resize-none"
                 />
-                <div>
-                  <p className="text-sm font-medium">
-                    Enviando como {userProfile?.full_name || "Usuário"}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Freelancer nível {userProfile?.freelancer_level || 1}
-                  </p>
-                </div>
               </div>
 
-              {/* Project Info */}
-              <div className="bg-muted/50 rounded-lg p-4 space-y-2">
-                <h3 className="font-semibold text-base">{projectTitle}</h3>
-                <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                  <div className="flex items-center gap-1.5">
-                    <Clock className="w-4 h-4" />
-                    <span>{formatTimeAgo(projectCreatedAt)}</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <FileText className="w-4 h-4" />
-                    <span>{proposalsCount || 0} {proposalsCount === 1 ? 'proposta' : 'propostas'}</span>
-                  </div>
-                </div>
+              <div className="flex gap-3 justify-end pt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => onOpenChange(false)}
+                  disabled={loading}
+                  size="lg"
+                >
+                  Cancelar
+                </Button>
+                <Button 
+                  type="submit" 
+                  disabled={loading}
+                  size="lg"
+                  className="bg-gradient-to-r from-primary to-purple-500 hover:from-primary/90 hover:to-purple-500/90 shadow-lg hover:shadow-xl transition-all"
+                >
+                  {loading ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
+                      Enviando...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      Enviar Proposta
+                    </>
+                  )}
+                </Button>
               </div>
-            </DialogHeader>
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="amount">Valor da Proposta (R$) *</Label>
-              <Input
-                id="amount"
-                type="number"
-                step="0.01"
-                placeholder="Ex: 1500.00"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="deliveryTime">Prazo de Entrega (dias) *</Label>
-              <Input
-                id="deliveryTime"
-                type="number"
-                placeholder="Ex: 15"
-                value={deliveryTime}
-                onChange={(e) => setDeliveryTime(e.target.value)}
-                required
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="message">Mensagem / Descrição da Proposta *</Label>
-            <Textarea
-              id="message"
-              placeholder="Descreva como você pretende realizar o projeto, sua experiência relevante e por que você é a melhor escolha..."
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              rows={6}
-              required
-            />
-          </div>
-
-          <div className="flex gap-2 justify-end">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={loading}
-            >
-              Cancelar
-            </Button>
-            <Button type="submit" disabled={loading}>
-              {loading ? "Enviando..." : "Enviar Proposta"}
-            </Button>
-          </div>
         </form>
           </>
         )}

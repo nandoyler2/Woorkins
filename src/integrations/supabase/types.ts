@@ -1597,6 +1597,7 @@ export type Database = {
           text_formatting: Json | null
           thumbnail_url: string | null
           type: string
+          updated_at: string | null
           view_count: number | null
         }
         Insert: {
@@ -1614,6 +1615,7 @@ export type Database = {
           text_formatting?: Json | null
           thumbnail_url?: string | null
           type: string
+          updated_at?: string | null
           view_count?: number | null
         }
         Update: {
@@ -1631,6 +1633,7 @@ export type Database = {
           text_formatting?: Json | null
           thumbnail_url?: string | null
           type?: string
+          updated_at?: string | null
           view_count?: number | null
         }
         Relationships: [

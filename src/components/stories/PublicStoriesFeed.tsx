@@ -162,6 +162,7 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
           thumbnail_url,
           type,
           text_content,
+          background_color,
           created_at,
           expires_at,
           updated_at,
@@ -201,6 +202,7 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
           thumbnail_url: story.thumbnail_url,
           type: story.type,
           text_content: story.text_content,
+          background_color: story.background_color,
           created_at: story.created_at,
           like_count: likeCount,
           comment_count: commentCount,
@@ -241,7 +243,7 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
     loadPublicStories(0);
     checkIfPostedToday();
 
-    // Realtime updates com logs para debug
+    // Realtime updates
     const channel = supabase
       .channel('public-stories-feed')
       .on(
@@ -271,6 +273,20 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
           await loadPublicStories(0);
           setPage(0);
           checkIfPostedToday();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'profile_stories',
+        },
+        async (payload) => {
+          console.log('[PublicStoriesFeed] Story atualizado (nova interação):', payload.new.id);
+          // Quando um story recebe curtida ou comentário, ele volta para o topo
+          await loadPublicStories(0);
+          setPage(0);
         }
       )
       .on(

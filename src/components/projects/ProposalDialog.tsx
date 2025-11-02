@@ -593,16 +593,6 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
                     
                     {/* Coluna direita: botões de ação */}
                     <div className="flex gap-2 justify-end">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => onOpenChange(false)}
-                        disabled={loading}
-                        size="sm"
-                        className="border-blue-300 dark:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-950"
-                      >
-                        Cancelar
-                      </Button>
                       <Button 
                         type="submit" 
                         disabled={loading}

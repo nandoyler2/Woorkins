@@ -17,6 +17,7 @@ import { useDocumentVerification } from '@/hooks/useDocumentVerification';
 import { RequireDocumentVerificationDialog } from '@/components/RequireDocumentVerificationDialog';
 import { RequireProfilePhotoDialog } from '@/components/RequireProfilePhotoDialog';
 import { analyzeProject } from '@/lib/projectAnalyzer';
+import { validateProject } from '@/lib/projectValidation';
 
 export default function ProjectCreate() {
   const { user } = useAuth();
@@ -45,6 +46,10 @@ export default function ProjectCreate() {
   const [titleError, setTitleError] = useState(false);
   const [descriptionError, setDescriptionError] = useState(false);
   const [budgetError, setBudgetError] = useState(false);
+  
+  // Estados para validação do projeto
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  const [validationWarnings, setValidationWarnings] = useState<string[]>([]);
   
   // Estado para dicas rotativas
   const [currentTipIndex, setCurrentTipIndex] = useState(0);
@@ -194,6 +199,32 @@ export default function ProjectCreate() {
 
   const handleSubmit = async () => {
     if (!user) return;
+
+    // Validar o projeto antes de prosseguir
+    const validation = validateProject(title, description);
+    
+    if (!validation.isValid) {
+      setValidationErrors(validation.errors);
+      setValidationWarnings(validation.warnings);
+      
+      toast({
+        title: '⚠️ Corrija os problemas para publicar',
+        description: 'Seu projeto precisa de alguns ajustes.',
+        variant: 'destructive',
+      });
+      
+      // Scroll suave para o topo para mostrar os erros
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+    
+    // Se tiver apenas avisos, mostrar mas permitir publicação
+    if (validation.warnings.length > 0) {
+      setValidationWarnings(validation.warnings);
+    }
+    
+    // Limpar erros anteriores
+    setValidationErrors([]);
 
     if (!avatarUrl) {
       setShowPhotoDialog(true);
@@ -574,6 +605,69 @@ export default function ProjectCreate() {
 
               {currentStep === 3 && (
                 <div className="space-y-6 animate-fade-in max-w-2xl mx-auto">
+                  {/* Feedback de validação */}
+                  {validationErrors.length > 0 && (
+                    <div className="bg-red-50 dark:bg-red-950/20 border-2 border-red-200 dark:border-red-800 rounded-lg p-4 animate-fade-in">
+                      <div className="flex items-start gap-3">
+                        <span className="text-2xl">❌</span>
+                        <div className="flex-1">
+                          <p className="font-bold text-red-900 dark:text-red-100 mb-2">
+                            Não é possível publicar ainda
+                          </p>
+                          <ul className="space-y-1">
+                            {validationErrors.map((error, index) => (
+                              <li key={index} className="text-sm text-red-800 dark:text-red-200">
+                                • {error}
+                              </li>
+                            ))}
+                          </ul>
+                          <p className="text-xs text-red-700 dark:text-red-300 mt-3 font-medium">
+                            💡 Volte às etapas anteriores para corrigir os problemas.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {validationWarnings.length > 0 && validationErrors.length === 0 && (
+                    <div className="bg-amber-50 dark:bg-amber-950/20 border-2 border-amber-200 dark:border-amber-800 rounded-lg p-4 animate-fade-in">
+                      <div className="flex items-start gap-3">
+                        <span className="text-2xl">⚠️</span>
+                        <div className="flex-1">
+                          <p className="font-bold text-amber-900 dark:text-amber-100 mb-2">
+                            Sugestões de melhoria
+                          </p>
+                          <ul className="space-y-1">
+                            {validationWarnings.map((warning, index) => (
+                              <li key={index} className="text-sm text-amber-800 dark:text-amber-200">
+                                • {warning}
+                              </li>
+                            ))}
+                          </ul>
+                          <p className="text-xs text-amber-700 dark:text-amber-300 mt-3">
+                            Você pode publicar mesmo assim, mas recomendamos seguir as sugestões para receber propostas melhores.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {validationErrors.length === 0 && validationWarnings.length === 0 && (
+                    <div className="bg-green-50 dark:bg-green-950/20 border-2 border-green-200 dark:border-green-800 rounded-lg p-4 animate-fade-in">
+                      <div className="flex items-start gap-3">
+                        <span className="text-2xl">✅</span>
+                        <div className="flex-1">
+                          <p className="font-bold text-green-900 dark:text-green-100 mb-1">
+                            Tudo certo!
+                          </p>
+                          <p className="text-sm text-green-800 dark:text-green-200">
+                            Seu projeto está pronto para ser publicado e começar a receber propostas.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="bg-gradient-to-br from-blue-50 to-teal-50 dark:from-blue-950 dark:to-teal-900 rounded-lg p-6 border-2 border-blue-200 dark:border-blue-800">
                     <h3 className="text-lg font-bold mb-4 flex items-center gap-2 text-blue-900 dark:text-blue-100">
                       <Eye className="w-5 h-5" />
@@ -710,13 +804,22 @@ export default function ProjectCreate() {
                 <Button
                   type="button"
                   onClick={handleSubmit}
-                  disabled={creating}
-                  className="h-12 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+                  disabled={creating || validationErrors.length > 0}
+                  className={cn(
+                    "h-12 transition-all",
+                    validationErrors.length > 0
+                      ? "bg-gray-400 hover:bg-gray-400 cursor-not-allowed"
+                      : "bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+                  )}
                 >
                   {creating ? (
                     <>
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                       Publicando...
+                    </>
+                  ) : validationErrors.length > 0 ? (
+                    <>
+                      ❌ Corrija os erros
                     </>
                   ) : (
                     <>

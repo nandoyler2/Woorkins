@@ -143,6 +143,94 @@ function calculateCapsPercentage(text: string): number {
 }
 
 /**
+ * Detecta sequências repetitivas como "dfgdfgdfg" ou "aaaaaaa"
+ */
+function hasExcessiveRepetition(text: string): boolean {
+  // Verifica se há 3+ caracteres consecutivos repetidos
+  if (/(.)\1{2,}/i.test(text)) return true;
+  
+  // Verifica se há padrões de 2-4 caracteres repetidos 3+ vezes
+  const patterns = text.match(/(.{2,4})\1{2,}/gi);
+  if (patterns && patterns.length > 0) return true;
+  
+  return false;
+}
+
+/**
+ * Verifica se o texto tem vogais suficientes (português precisa de vogais)
+ */
+function hasMinimumVowels(text: string): boolean {
+  const vowels = text.match(/[aeiouáéíóúâêîôûãõ]/gi);
+  const letters = text.match(/[a-záéíóúâêîôûãõç]/gi);
+  
+  if (!vowels || !letters) return false;
+  
+  // Pelo menos 30% do texto deve ser vogais (português tem ~45%)
+  const vowelPercentage = (vowels.length / letters.length) * 100;
+  return vowelPercentage >= 30;
+}
+
+/**
+ * Verifica se o texto contém palavras reais comuns do português
+ */
+function hasRealWords(text: string): boolean {
+  // Palavras comuns em português que DEVEM aparecer em projetos
+  const commonWords = [
+    // Artigos e preposições
+    'o', 'a', 'os', 'as', 'um', 'uma', 'de', 'do', 'da', 'dos', 'das',
+    'em', 'no', 'na', 'nos', 'nas', 'para', 'com', 'por', 'sem',
+    // Verbos comuns
+    'preciso', 'quero', 'busco', 'necessito', 'gostaria', 'fazer', 'criar',
+    'desenvolver', 'produzir', 'entregar', 'ter', 'ser', 'estar',
+    // Substantivos comuns em projetos
+    'projeto', 'trabalho', 'serviço', 'profissional', 'pessoa', 'empresa',
+    'cliente', 'produto', 'resultado', 'entrega', 'prazo',
+    // Adjetivos comuns
+    'bom', 'boa', 'novo', 'nova', 'melhor', 'qualidade', 'profissional',
+  ];
+  
+  const normalizedText = normalizeText(text);
+  const words = normalizedText.split(/\s+/);
+  
+  // Verificar se pelo menos 20% das palavras são palavras comuns do português
+  const realWordsCount = words.filter(word => 
+    commonWords.some(common => word.includes(common))
+  ).length;
+  
+  return realWordsCount >= Math.max(2, words.length * 0.2);
+}
+
+/**
+ * Verifica se o texto tem diversidade de caracteres suficiente
+ */
+function hasCharacterDiversity(text: string): boolean {
+  // Texto sem sentido geralmente usa poucos caracteres diferentes
+  const normalizedText = normalizeText(text).replace(/\s/g, '');
+  const uniqueChars = new Set(normalizedText.split(''));
+  
+  // Deve ter pelo menos 8 caracteres diferentes
+  return uniqueChars.size >= 8;
+}
+
+/**
+ * Detecta palavras longas sem vogais (indicam texto aleatório)
+ */
+function hasWordsWithoutVowels(text: string): boolean {
+  const words = text.split(/\s+/);
+  
+  for (const word of words) {
+    // Palavras com 5+ caracteres DEVEM ter vogais
+    if (word.length >= 5) {
+      if (!/[aeiouáéíóúâêîôûãõ]/i.test(word)) {
+        return true; // Encontrou palavra suspeita
+      }
+    }
+  }
+  
+  return false;
+}
+
+/**
  * Função principal de validação do projeto
  */
 export function validateProject(title: string, description: string): ValidationResult {
@@ -212,6 +300,34 @@ export function validateProject(title: string, description: string): ValidationR
   
   if (hasGenericPhrase && description.trim().length < 100) {
     warnings.push('Seja mais específico sobre o que você precisa. Inclua detalhes como: objetivos, requisitos, referências e entregas esperadas.');
+  }
+  
+  // 8. Verificar se o texto faz sentido (não é spam/aleatório)
+  const textQualityIssues: string[] = [];
+
+  if (hasExcessiveRepetition(normalizedText)) {
+    textQualityIssues.push('repetição');
+  }
+
+  if (!hasMinimumVowels(normalizedText)) {
+    textQualityIssues.push('falta de vogais');
+  }
+
+  if (!hasRealWords(normalizedText)) {
+    textQualityIssues.push('sem palavras reais');
+  }
+
+  if (!hasCharacterDiversity(normalizedText)) {
+    textQualityIssues.push('poucos caracteres diferentes');
+  }
+
+  if (hasWordsWithoutVowels(originalText)) {
+    textQualityIssues.push('palavras sem vogais');
+  }
+
+  // Se houver 2 ou mais problemas de qualidade, é claramente texto sem sentido
+  if (textQualityIssues.length >= 2) {
+    errors.push('O texto parece não ter sentido ou ser aleatório. Escreva uma descrição clara e profissional do serviço que você precisa. Use frases completas em português e explique o que você precisa de forma detalhada.');
   }
   
   return {

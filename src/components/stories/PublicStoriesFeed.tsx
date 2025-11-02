@@ -193,57 +193,72 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
 
   if (stories.length === 0) {
     return (
-      <div className="max-w-xl mx-auto px-4 py-12">
-        <div className="text-center space-y-6">
-          {/* Ícone */}
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-purple-500 via-pink-500 to-orange-500 animate-pulse">
-            <Sparkles className="w-10 h-10 text-white" />
-          </div>
+      <>
+        <div className="max-w-xl mx-auto px-4 py-12">
+          <div className="text-center space-y-6">
+            {/* Ícone */}
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-purple-500 via-pink-500 to-orange-500 animate-pulse">
+              <Sparkles className="w-10 h-10 text-white" />
+            </div>
 
-          {/* Título */}
-          <div className="space-y-2">
-            <h2 className="text-2xl font-bold text-foreground">
-              Nenhum story no momento
-            </h2>
-            <p className="text-muted-foreground text-base">
-              Seja o primeiro a compartilhar!
-            </p>
-          </div>
-
-          {/* Benefícios */}
-          <div className="bg-muted/50 rounded-lg p-6 space-y-3 text-left max-w-md mx-auto">
-            <div className="flex items-start gap-3">
-              <Eye className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
-              <p className="text-sm text-foreground">
-                <span className="font-semibold">Aumente sua visibilidade:</span> Stories aparecem no topo do feed para todos os usuários
+            {/* Título */}
+            <div className="space-y-2">
+              <h2 className="text-2xl font-bold text-foreground">
+                Nenhum story no momento
+              </h2>
+              <p className="text-muted-foreground text-base">
+                Seja o primeiro a compartilhar!
               </p>
             </div>
-            
-            <div className="flex items-start gap-3">
-              <Zap className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
-              <p className="text-sm text-foreground">
-                <span className="font-semibold">Destaque-se profissionalmente:</span> Contratantes e freelancers verão seu conteúdo primeiro
-              </p>
-            </div>
-            
-            <div className="flex items-start gap-3">
-              <Heart className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
-              <p className="text-sm text-foreground">
-                <span className="font-semibold">Engajamento instantâneo:</span> Receba curtidas e gere conexões em tempo real
-              </p>
-            </div>
-          </div>
 
-          {/* Botão de ação */}
-          <button
-            onClick={() => setIsCreateDialogOpen(true)}
-            className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 text-white font-semibold px-8 py-3 rounded-lg shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200"
-          >
-            <Plus className="w-5 h-5" />
-            Postar Story
-          </button>
+            {/* Benefícios */}
+            <div className="bg-muted/50 rounded-lg p-6 space-y-3 text-left max-w-md mx-auto">
+              <div className="flex items-start gap-3">
+                <Eye className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                <p className="text-sm text-foreground">
+                  <span className="font-semibold">Aumente sua visibilidade:</span> Stories aparecem no topo do feed para todos os usuários
+                </p>
+              </div>
+              
+              <div className="flex items-start gap-3">
+                <Zap className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                <p className="text-sm text-foreground">
+                  <span className="font-semibold">Destaque-se profissionalmente:</span> Contratantes e freelancers verão seu conteúdo primeiro
+                </p>
+              </div>
+              
+              <div className="flex items-start gap-3">
+                <Heart className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                <p className="text-sm text-foreground">
+                  <span className="font-semibold">Engajamento instantâneo:</span> Receba curtidas e gere conexões em tempo real
+                </p>
+              </div>
+            </div>
+
+            {/* Botão de ação */}
+            <button
+              onClick={() => setIsCreateDialogOpen(true)}
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 text-white font-semibold px-8 py-3 rounded-lg shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200"
+            >
+              <Plus className="w-5 h-5" />
+              Postar Story
+            </button>
+          </div>
         </div>
-      </div>
+
+        {/* Dialog de criação de story */}
+        {userProfiles && userProfiles.length > 0 && (
+          <CreateStoryDialog
+            isOpen={isCreateDialogOpen}
+            onClose={() => setIsCreateDialogOpen(false)}
+            profiles={userProfiles}
+            onStoryCreated={() => {
+              setIsCreateDialogOpen(false);
+              loadPublicStories(0);
+            }}
+          />
+        )}
+      </>
     );
   }
 

@@ -447,7 +447,7 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
                             <Button
                               type="button"
                               size="sm"
-                              className="w-full h-6 text-[9px] font-semibold bg-gradient-to-r from-blue-600 via-teal-600 to-blue-600 hover:from-blue-700 hover:via-teal-700 hover:to-blue-700"
+                              className="w-full h-6 text-[10px] font-semibold bg-gradient-to-r from-blue-600 via-teal-600 to-blue-600 hover:from-blue-700 hover:via-teal-700 hover:to-blue-700"
                               onClick={() => window.open('https://woorkins.com/planos', '_blank')}
                             >
                               Mudar de Plano
@@ -470,7 +470,7 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
                             <Button
                               type="button"
                               size="sm"
-                              className="w-full h-6 text-[9px] font-semibold bg-gradient-to-r from-blue-600 via-teal-600 to-blue-600 hover:from-blue-700 hover:via-teal-700 hover:to-blue-700"
+                              className="w-full h-6 text-[10px] font-semibold bg-gradient-to-r from-blue-600 via-teal-600 to-blue-600 hover:from-blue-700 hover:via-teal-700 hover:to-blue-700"
                               onClick={() => window.open('https://woorkins.com/planos', '_blank')}
                             >
                               Fazer Upgrade

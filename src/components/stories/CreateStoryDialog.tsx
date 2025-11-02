@@ -64,11 +64,27 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const maxSize = type === 'image' ? 10 * 1024 * 1024 : 50 * 1024 * 1024;
+    // Detectar se é imagem ou vídeo pelo tipo do arquivo
+    const isImage = file.type.startsWith('image/');
+    const isVideo = file.type.startsWith('video/');
+    
+    if (!isImage && !isVideo) {
+      toast({
+        title: 'Formato inválido',
+        description: 'Selecione uma imagem ou vídeo',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Definir o tipo baseado no arquivo
+    setType(isImage ? 'image' : 'video');
+
+    const maxSize = isImage ? 10 * 1024 * 1024 : 50 * 1024 * 1024;
     if (file.size > maxSize) {
       toast({
         title: 'Arquivo muito grande',
-        description: `O arquivo deve ter no máximo ${type === 'image' ? '10' : '50'}MB`,
+        description: `O arquivo deve ter no máximo ${isImage ? '10' : '50'}MB`,
         variant: 'destructive',
       });
       return;
@@ -77,7 +93,7 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
     const previewUrl = URL.createObjectURL(file);
     
     // Se for imagem, guardar original e abrir crop
-    if (type === 'image') {
+    if (isImage) {
       setOriginalImage(previewUrl);
       setMediaFile(file);
       setShowCropDialog(true);
@@ -153,15 +169,17 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
     });
   };
 
-  const handleTypeSelect = (selectedType: 'image' | 'video' | 'text') => {
-    setType(selectedType);
-    setStep('create');
-    
-    // Se for imagem ou vídeo, abrir o seletor de arquivo automaticamente
-    if (selectedType === 'image' || selectedType === 'video') {
+  const handleTypeSelect = (selectedType: 'media' | 'text') => {
+    if (selectedType === 'media') {
+      setType('image'); // Default para imagem, será ajustado no handleMediaChange
+      setStep('create');
+      // Abrir o seletor de arquivo automaticamente
       setTimeout(() => {
         fileInputRef.current?.click();
       }, 100);
+    } else {
+      setType('text');
+      setStep('create');
     }
   };
 
@@ -305,29 +323,22 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
                       <h3 className="text-2xl font-bold mb-2">O que gostaria de publicar no seu story?</h3>
                       <p className="text-muted-foreground mb-8">Escolha o tipo de conteúdo</p>
 
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        {/* Opção Imagem */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
+                        {/* Opção Mídia (Imagem ou Vídeo) */}
                         <button
-                          onClick={() => handleTypeSelect('image')}
-                          className="group relative p-8 rounded-2xl bg-gradient-to-br from-purple-500/10 to-purple-500/5 hover:from-purple-500/20 hover:to-purple-500/10 border-2 border-purple-500/30 hover:border-purple-500 transition-all hover:scale-105"
+                          onClick={() => handleTypeSelect('media')}
+                          className="group relative p-8 rounded-2xl bg-gradient-to-br from-purple-500/10 via-pink-500/10 to-pink-500/5 hover:from-purple-500/20 hover:via-pink-500/20 hover:to-pink-500/10 border-2 border-purple-500/30 hover:border-pink-500 transition-all hover:scale-105"
                         >
-                          <div className="w-16 h-16 mx-auto mb-4 bg-purple-500/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                            <ImageIcon className="w-8 h-8 text-purple-500" />
+                          <div className="flex gap-2 justify-center mb-4">
+                            <div className="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                              <ImageIcon className="w-6 h-6 text-purple-500" />
+                            </div>
+                            <div className="w-12 h-12 bg-pink-500/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                              <Video className="w-6 h-6 text-pink-500" />
+                            </div>
                           </div>
-                          <h4 className="font-bold text-lg mb-1">Imagem</h4>
-                          <p className="text-sm text-muted-foreground">Compartilhe uma foto</p>
-                        </button>
-
-                        {/* Opção Vídeo */}
-                        <button
-                          onClick={() => handleTypeSelect('video')}
-                          className="group relative p-8 rounded-2xl bg-gradient-to-br from-pink-500/10 to-pink-500/5 hover:from-pink-500/20 hover:to-pink-500/10 border-2 border-pink-500/30 hover:border-pink-500 transition-all hover:scale-105"
-                        >
-                          <div className="w-16 h-16 mx-auto mb-4 bg-pink-500/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                            <Video className="w-8 h-8 text-pink-500" />
-                          </div>
-                          <h4 className="font-bold text-lg mb-1">Vídeo</h4>
-                          <p className="text-sm text-muted-foreground">Grave um momento</p>
+                          <h4 className="font-bold text-lg mb-1">Imagem ou Vídeo</h4>
+                          <p className="text-sm text-muted-foreground">Compartilhe uma foto ou grave um momento</p>
                         </button>
 
                         {/* Opção Texto */}
@@ -484,6 +495,9 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
                                   setMediaPreview('');
                                   setOriginalImage('');
                                   setCropData(null);
+                                  setTimeout(() => {
+                                    fileInputRef.current?.click();
+                                  }, 100);
                                 }}
                               >
                                 <Upload className="w-4 h-4 mr-2" />
@@ -497,18 +511,17 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
                               <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
                                 <Upload className="w-8 h-8 text-purple-500" />
                               </div>
-                              <h3 className="text-lg font-semibold mb-2">Selecione uma {type === 'image' ? 'foto' : 'vídeo'}</h3>
+                              <h3 className="text-lg font-semibold mb-2">Selecione uma foto ou vídeo</h3>
                               <p className="text-sm text-muted-foreground mb-1">
-                                {type === 'image' 
-                                  ? 'Imagens: JPG, PNG, WEBP ou GIF (máx. 10MB)'
-                                  : 'Vídeos: MP4, WEBM ou MOV (máx. 50MB)'}
+                                Imagens: JPG, PNG, WEBP ou GIF (máx. 10MB)
+                              </p>
+                              <p className="text-sm text-muted-foreground">
+                                Vídeos: MP4, WEBM ou MOV (máx. 50MB)
                               </p>
                               <input
                                 ref={fileInputRef}
                                 type="file"
-                                accept={type === 'image' 
-                                  ? 'image/jpeg,image/png,image/webp,image/gif'
-                                  : 'video/mp4,video/webm,video/quicktime'}
+                                accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,video/quicktime"
                                 className="hidden"
                                 onChange={(e) => {
                                   const file = e.target.files?.[0];

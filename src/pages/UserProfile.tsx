@@ -1255,7 +1255,7 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
                           key={star}
                           className={`w-5 h-5 ${
                             star <= Math.round(averageRating)
-                              ? 'text-primary fill-primary'
+                              ? 'text-yellow-500 fill-yellow-500'
                               : 'text-muted-foreground'
                           }`}
                         />

@@ -12,9 +12,6 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, ChevronRight, ChevronLeft, CheckCircle2, FileText, DollarSign, Calendar as CalendarIcon, Eye, X, Tag, Shield, Lock, Lightbulb, Target, MessageCircle, Clock } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useDocumentVerification } from '@/hooks/useDocumentVerification';
 import { RequireDocumentVerificationDialog } from '@/components/RequireDocumentVerificationDialog';
@@ -33,7 +30,7 @@ export default function ProjectCreate() {
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState('');
   const [budgetRange, setBudgetRange] = useState('');
-  const [deadline, setDeadline] = useState<Date>();
+  const [deadline, setDeadline] = useState('');
   const [profileId, setProfileId] = useState<string>('');
   const [registeredName, setRegisteredName] = useState('');
   const [registeredCPF, setRegisteredCPF] = useState('');
@@ -243,7 +240,7 @@ export default function ProjectCreate() {
           category: category || null,
           budget_min: budgetMin,
           budget_max: budgetMax,
-          deadline: deadline ? format(deadline, 'yyyy-MM-dd') : null,
+          deadline: deadline ? parseInt(deadline) : null,
         })
         .select()
         .single();
@@ -608,33 +605,22 @@ export default function ProjectCreate() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-base font-semibold flex items-center gap-2">
+                    <Label htmlFor="deadline" className="text-base font-semibold flex items-center gap-2">
                       <CalendarIcon className="w-4 h-4 text-blue-600" />
-                      Prazo (Opcional)
+                      Você precisa do projeto pronto em quantos dias? (Opcional)
                     </Label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            'w-full h-12 justify-start text-left font-normal text-base border-blue-200 dark:border-blue-800',
-                            !deadline && 'text-muted-foreground'
-                          )}
-                        >
-                          <CalendarIcon className="mr-2 h-5 w-5" />
-                          {deadline ? format(deadline, 'dd/MM/yyyy') : 'Selecione uma data'}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={deadline}
-                          onSelect={setDeadline}
-                          initialFocus
-                          disabled={(date) => date < new Date()}
-                        />
-                      </PopoverContent>
-                    </Popover>
+                    <Input
+                      id="deadline"
+                      type="number"
+                      value={deadline}
+                      onChange={(e) => setDeadline(e.target.value)}
+                      placeholder="Ex: 15"
+                      min="1"
+                      className="h-12 text-base border-blue-200 focus:border-blue-600 dark:border-blue-800"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Informe o número de dias até a data de entrega desejada
+                    </p>
                   </div>
                 </div>
               )}
@@ -685,7 +671,7 @@ export default function ProjectCreate() {
                         {deadline && (
                           <div>
                             <p className="text-sm font-semibold text-blue-900 dark:text-blue-200 mb-1">Prazo</p>
-                            <p className="text-base">{format(deadline, 'dd/MM/yyyy')}</p>
+                            <p className="text-base">{deadline} dias</p>
                           </div>
                         )}
                       </div>

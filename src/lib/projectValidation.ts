@@ -152,13 +152,21 @@ export function validateProject(title: string, description: string): ValidationR
   const normalizedText = normalizeText(title + ' ' + description);
   const originalText = title + ' ' + description;
   
-  // 1. Verificar comprimentos mínimos
+  // 1. Verificar comprimentos mínimos e máximos
   if (title.trim().length < 10) {
     errors.push('O título deve ter pelo menos 10 caracteres.');
   }
   
-  if (description.trim().length < 30) {
-    errors.push('A descrição deve ter pelo menos 30 caracteres. Explique melhor o que você precisa.');
+  if (title.trim().length > 80) {
+    errors.push('O título deve ter no máximo 80 caracteres.');
+  }
+  
+  if (description.trim().length < 100) {
+    errors.push('A descrição deve ter pelo menos 100 caracteres. Explique melhor o que você precisa.');
+  }
+  
+  if (description.trim().length > 2000) {
+    errors.push('A descrição deve ter no máximo 2.000 caracteres.');
   }
   
   // 2. Verificar palavrões e termos ofensivos

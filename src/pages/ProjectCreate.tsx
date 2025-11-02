@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, ChevronRight, ChevronLeft, CheckCircle2, FileText, DollarSign, Calendar as CalendarIcon, Eye, X, Shield, Lock, Lightbulb, Target, MessageCircle, Clock } from 'lucide-react';
+import { ArrowLeft, ChevronRight, ChevronLeft, CheckCircle2, FileText, DollarSign, Calendar as CalendarIcon, Eye, X, Shield, Lock, Lightbulb, Target, MessageCircle, Clock, Bold, Italic } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useDocumentVerification } from '@/hooks/useDocumentVerification';
@@ -118,6 +118,20 @@ export default function ProjectCreate() {
 
   useEffect(() => {
     document.title = 'Criar Projeto - Woorkins';
+    
+    // Carregar rascunho do localStorage
+    const draft = localStorage.getItem('projectDraft');
+    if (draft) {
+      try {
+        const parsed = JSON.parse(draft);
+        setTitle(parsed.title || '');
+        setDescription(parsed.description || '');
+        setBudgetRange(parsed.budgetRange || '');
+        setDeadline(parsed.deadline || '');
+      } catch (e) {
+        console.error('Erro ao carregar rascunho:', e);
+      }
+    }
   }, []);
 
   useEffect(() => {
@@ -169,6 +183,17 @@ export default function ProjectCreate() {
       setDetectedTags([]);
     }
   }, [title, description]);
+
+  // Salvar rascunho no localStorage sempre que houver mudanças
+  useEffect(() => {
+    const draft = {
+      title,
+      description,
+      budgetRange,
+      deadline
+    };
+    localStorage.setItem('projectDraft', JSON.stringify(draft));
+  }, [title, description, budgetRange, deadline]);
 
   const nextStep = () => {
     if (currentStep === 1) {
@@ -294,6 +319,9 @@ export default function ProjectCreate() {
           .insert(tagInserts);
       }
 
+      // Limpar rascunho do localStorage após publicação bem-sucedida
+      localStorage.removeItem('projectDraft');
+      
       toast({
         title: 'Projeto criado!',
         description: 'Seu projeto foi publicado com sucesso.',
@@ -439,52 +467,139 @@ export default function ProjectCreate() {
               {currentStep === 1 && (
                 <div className="space-y-6 animate-fade-in max-w-2xl mx-auto">
                   <div className="space-y-2">
-                    <Label htmlFor="title" className="text-base font-semibold flex items-center gap-2">
-                      <FileText className="w-4 h-4 text-blue-600" />
-                      Título do Projeto *
+                    <Label htmlFor="title" className="text-base font-semibold flex items-center justify-between">
+                      <span className="flex items-center gap-2">
+                        <FileText className="w-4 h-4 text-blue-600" />
+                        Título do Projeto *
+                      </span>
+                      <span className={cn(
+                        "text-xs font-normal",
+                        title.length < 10 ? "text-red-600 dark:text-red-400" :
+                        title.length > 80 ? "text-red-600 dark:text-red-400" :
+                        "text-muted-foreground"
+                      )}>
+                        {title.length}/80
+                      </span>
                     </Label>
                     <Input
                       id="title"
                       value={title}
                       onChange={(e) => {
-                        setTitle(e.target.value);
+                        if (e.target.value.length <= 80) {
+                          setTitle(e.target.value);
+                        }
                         if (titleError) setTitleError(false);
                       }}
                       placeholder="Ex: Desenvolvimento de site institucional"
+                      maxLength={80}
                       className={cn(
                         "h-12 text-base border-blue-200 focus:border-blue-600 dark:border-blue-800 transition-all",
-                        titleError && "border-red-500 dark:border-red-500 animate-shake bg-red-50 dark:bg-red-950/20"
+                        titleError && "border-red-500 dark:border-red-500 animate-shake bg-red-50 dark:bg-red-950/20",
+                        title.length > 80 && "border-red-500 dark:border-red-500"
                       )}
                     />
-                    {titleError && (
+                    {titleError ? (
                       <p className="text-sm text-red-600 dark:text-red-400 font-medium animate-pulse">
                         ⚠️ Por favor, preencha o título do projeto
                       </p>
-                    )}
+                    ) : title.length < 10 ? (
+                      <p className="text-xs text-muted-foreground">
+                        Mínimo de 10 caracteres (faltam {10 - title.length})
+                      </p>
+                    ) : null}
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="description" className="text-base font-semibold flex items-center gap-2">
-                      <FileText className="w-4 h-4 text-blue-600" />
-                      Descrição do Projeto *
+                    <Label htmlFor="description" className="text-base font-semibold flex items-center justify-between">
+                      <span className="flex items-center gap-2">
+                        <FileText className="w-4 h-4 text-blue-600" />
+                        Descrição do Projeto *
+                      </span>
+                      <span className={cn(
+                        "text-xs font-normal",
+                        description.length < 100 ? "text-red-600 dark:text-red-400" :
+                        description.length > 2000 ? "text-red-600 dark:text-red-400" :
+                        "text-muted-foreground"
+                      )}>
+                        {description.length}/2.000
+                      </span>
                     </Label>
+                    
+                    {/* Botões de formatação */}
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          const textarea = document.getElementById('description') as HTMLTextAreaElement;
+                          const start = textarea.selectionStart;
+                          const end = textarea.selectionEnd;
+                          const selectedText = description.substring(start, end);
+                          if (selectedText) {
+                            const newText = description.substring(0, start) + `**${selectedText}**` + description.substring(end);
+                            setDescription(newText);
+                            setTimeout(() => {
+                              textarea.focus();
+                              textarea.setSelectionRange(start + 2, end + 2);
+                            }, 0);
+                          }
+                        }}
+                        className="h-8"
+                      >
+                        <Bold className="w-3 h-3 mr-1" />
+                        Negrito
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          const textarea = document.getElementById('description') as HTMLTextAreaElement;
+                          const start = textarea.selectionStart;
+                          const end = textarea.selectionEnd;
+                          const selectedText = description.substring(start, end);
+                          if (selectedText) {
+                            const newText = description.substring(0, start) + `*${selectedText}*` + description.substring(end);
+                            setDescription(newText);
+                            setTimeout(() => {
+                              textarea.focus();
+                              textarea.setSelectionRange(start + 1, end + 1);
+                            }, 0);
+                          }
+                        }}
+                        className="h-8"
+                      >
+                        <Italic className="w-3 h-3 mr-1" />
+                        Itálico
+                      </Button>
+                    </div>
+                    
                     <Textarea
                       id="description"
                       value={description}
                       onChange={(e) => {
-                        setDescription(e.target.value);
+                        if (e.target.value.length <= 2000) {
+                          setDescription(e.target.value);
+                        }
                         if (descriptionError) setDescriptionError(false);
                       }}
-                      placeholder="Descreva em detalhes o que você precisa...&#10;&#10;Inclua:&#10;• O que precisa ser feito&#10;• Referências ou exemplos&#10;• Requisitos específicos&#10;• Entregas esperadas"
-                      rows={10}
+                      placeholder="Descreva em detalhes o que você precisa...&#10;&#10;Inclua:&#10;• O que precisa ser feito&#10;• Referências ou exemplos&#10;• Requisitos específicos&#10;• Entregas esperadas&#10;&#10;💡 Dica: Selecione o texto e use os botões acima para formatar em **negrito** ou *itálico*"
+                      rows={12}
+                      maxLength={2000}
                       className={cn(
                         "text-base resize-none border-blue-200 focus:border-blue-600 dark:border-blue-800 transition-all",
-                        descriptionError && "border-red-500 dark:border-red-500 animate-shake bg-red-50 dark:bg-red-950/20"
+                        descriptionError && "border-red-500 dark:border-red-500 animate-shake bg-red-50 dark:bg-red-950/20",
+                        description.length > 2000 && "border-red-500 dark:border-red-500"
                       )}
                     />
                     {descriptionError ? (
                       <p className="text-sm text-red-600 dark:text-red-400 font-medium animate-pulse">
                         ⚠️ Por favor, preencha a descrição do projeto
+                      </p>
+                    ) : description.length < 100 ? (
+                      <p className="text-xs text-muted-foreground">
+                        Mínimo de 100 caracteres (faltam {100 - description.length})
                       </p>
                     ) : (
                       <p className="text-sm text-muted-foreground">
@@ -682,7 +797,16 @@ export default function ProjectCreate() {
 
                       <div>
                         <p className="text-sm font-semibold text-blue-900 dark:text-blue-200 mb-1">Descrição</p>
-                        <p className="text-base whitespace-pre-wrap">{description}</p>
+                        <div className="text-base whitespace-pre-wrap">
+                          {description.split(/(\*\*.*?\*\*|\*.*?\*)/).map((part, index) => {
+                            if (part.startsWith('**') && part.endsWith('**')) {
+                              return <strong key={index}>{part.slice(2, -2)}</strong>;
+                            } else if (part.startsWith('*') && part.endsWith('*') && !part.startsWith('**')) {
+                              return <em key={index}>{part.slice(1, -1)}</em>;
+                            }
+                            return <span key={index}>{part}</span>;
+                          })}
+                        </div>
                       </div>
 
                       <div>

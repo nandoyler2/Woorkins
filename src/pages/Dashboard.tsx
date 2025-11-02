@@ -1187,7 +1187,7 @@ export default function Dashboard() {
 
               <Card 
                 className="bg-gradient-to-br from-blue-500 to-blue-600 border-0 shadow-md hover:shadow-lg transition-all cursor-pointer group"
-                onClick={() => navigate('/projeto/criar')}
+                onClick={() => navigate('/projetos/novo')}
               >
                 <CardContent className="p-5">
                   <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">

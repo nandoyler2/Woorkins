@@ -423,7 +423,7 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
               <div className="relative bg-white/20 backdrop-blur-sm rounded-full p-6">
                 <Plus className="w-12 h-12 text-white" />
               </div>
-              <p className="relative text-white font-bold text-sm text-center px-4">
+              <p className="relative text-white font-bold text-base text-center px-4 leading-tight">
                 {hasPostedToday 
                   ? 'Adicione mais stories e movimente seu perfil' 
                   : 'Você ainda não publicou stories hoje'}

@@ -17,6 +17,7 @@ import { SystemBlockAlert } from "@/components/SystemBlockAlert";
 import { useSystemBlock } from "@/hooks/useSystemBlock";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import ScrollToTop from "@/components/ScrollToTop";
 
 // Importações síncronas para rotas críticas
 import Index from "./pages/Index";
@@ -97,6 +98,7 @@ function AppContent() {
 
   return (
     <>
+      <ScrollToTop />
       <Suspense fallback={<PageLoader />}>
         <Routes>
           <Route path="/" element={<Index />} />

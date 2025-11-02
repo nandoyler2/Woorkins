@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { StoryIndicator } from './StoryIndicator';
 import { StoriesViewer } from './StoriesViewer';
 import { ProfileAvatarWithHover } from '@/components/ProfileAvatarWithHover';
@@ -30,6 +30,8 @@ export function StoriesCarousel({ currentProfile, onCreateStory }: StoriesCarous
   const [displayCount, setDisplayCount] = useState(10);
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
   const [currentUserHasStories, setCurrentUserHasStories] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     loadStoriesData();
@@ -134,11 +136,24 @@ export function StoriesCarousel({ currentProfile, onCreateStory }: StoriesCarous
     setVisibleProfiles(profilesWithStories.slice(0, displayCount));
   }, [profilesWithStories, displayCount]);
 
-  const loadMore = () => {
-    if (displayCount < profilesWithStories.length) {
-      setDisplayCount(prev => Math.min(prev + 10, profilesWithStories.length));
-    }
-  };
+  // Intersection Observer para scroll infinito
+  useEffect(() => {
+    if (!loadMoreRef.current) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+        if (entry.isIntersecting && displayCount < profilesWithStories.length) {
+          setDisplayCount(prev => Math.min(prev + 5, profilesWithStories.length));
+        }
+      },
+      { threshold: 0.1, rootMargin: '100px' }
+    );
+
+    observer.observe(loadMoreRef.current);
+
+    return () => observer.disconnect();
+  }, [displayCount, profilesWithStories.length]);
 
   if (!currentUserHasStories && visibleProfiles.length === 0) {
     return null;
@@ -148,7 +163,7 @@ export function StoriesCarousel({ currentProfile, onCreateStory }: StoriesCarous
 
   return (
     <div className="w-full">
-      <ScrollArea className="w-full whitespace-nowrap">
+      <ScrollArea className="w-full whitespace-nowrap" ref={scrollRef}>
         <div className="flex gap-4 pb-4">
           {/* Story do usuário atual */}
           <div className="flex flex-col items-center gap-2 min-w-fit">
@@ -202,19 +217,9 @@ export function StoriesCarousel({ currentProfile, onCreateStory }: StoriesCarous
             </div>
           ))}
 
-          {/* Botão para carregar mais */}
+          {/* Trigger invisível para carregar mais */}
           {hasMore && (
-            <div className="flex items-center justify-center min-w-fit">
-              <button
-                onClick={loadMore}
-                className="flex flex-col items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <div className="w-20 h-20 rounded-full border-2 border-dashed border-muted-foreground/30 hover:border-muted-foreground/60 flex items-center justify-center transition-colors">
-                  <Plus className="w-6 h-6" />
-                </div>
-                <span className="text-xs font-medium">Ver mais</span>
-              </button>
-            </div>
+            <div ref={loadMoreRef} className="min-w-[1px] h-20" />
           )}
         </div>
         <ScrollBar orientation="horizontal" />

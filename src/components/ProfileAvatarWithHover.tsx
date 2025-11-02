@@ -6,13 +6,14 @@ interface ProfileAvatarWithHoverProps {
   profileId: string;
   username?: string;
   avatarUrl?: string | null;
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'xs' | 'sm' | 'md' | 'lg';
   className?: string;
   hoverCardSide?: 'top' | 'right' | 'bottom' | 'left';
   onClick?: () => void;
 }
 
 const sizeMap = {
+  xs: 'xs' as const,
   sm: 'sm' as const,
   md: 'md' as const,
   lg: 'lg' as const,

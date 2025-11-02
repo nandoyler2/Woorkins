@@ -8,7 +8,7 @@ interface StoryIndicatorProps {
   profileId: string;
   avatarUrl?: string | null;
   username?: string;
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'xs' | 'sm' | 'md' | 'lg';
   onClick?: () => void;
   className?: string;
 }
@@ -25,12 +25,14 @@ export function StoryIndicator({
   const [latestStoryPreview, setLatestStoryPreview] = useState<string | null>(null);
 
   const sizeClasses = {
+    xs: 'w-6 h-6',
     sm: 'w-12 h-12',
     md: 'w-16 h-16',
     lg: 'w-20 h-20',
   };
 
   const paddingClasses = {
+    xs: 'p-[1px]',
     sm: 'p-0.5',
     md: 'p-[3px]',
     lg: 'p-1',

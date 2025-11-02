@@ -147,7 +147,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
             username={project.profiles.username}
             fullName={project.profiles.full_name}
             avatarUrl={project.profiles.avatar_url}
-            avatarSize="sm"
+            avatarSize="xs"
             className="flex items-center gap-2"
             nameClassName="text-sm text-muted-foreground"
           />

@@ -9,7 +9,7 @@ interface ClickableProfileProps {
   avatarUrl?: string | null;
   showAvatar?: boolean;
   showName?: boolean;
-  avatarSize?: 'sm' | 'md' | 'lg';
+  avatarSize?: 'xs' | 'sm' | 'md' | 'lg';
   className?: string;
   nameClassName?: string;
 }

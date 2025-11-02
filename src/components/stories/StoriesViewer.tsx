@@ -22,6 +22,7 @@ interface Sticker {
   height: number;
   rotation: number;
   content: any;
+  scale?: number;
 }
 
 interface Story {
@@ -756,7 +757,7 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
                                 sticker={{
                                   ...sticker,
                                   story_id: currentStory.id,
-                                  scale: 1
+                                  scale: sticker.scale || 1
                                 } as any}
                                 isPreview={false}
                               />

@@ -272,7 +272,8 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
         width: s.width,
         height: s.height,
         rotation: s.rotation,
-        content: s.content
+        content: s.content,
+        scale: s.scale || 1
       }))
     }).catch(error => {
       // Erros já são tratados no uploadStory

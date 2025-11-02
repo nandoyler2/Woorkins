@@ -272,27 +272,27 @@ export function StoryCommentSection({ storyId, currentProfileId, isLiked, onTogg
           <Heart className={`w-7 h-7 ${isLiked ? 'fill-red-500 text-red-500' : ''}`} />
         </Button>
 
-        {/* Botão de repost (se não for dono) ou enviar (se for dono) */}
-        {!isOwner && onRepost ? (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onRepost}
-            className="bg-transparent border-0 text-white hover:bg-transparent hover:scale-110 transition-transform rounded-full h-12 w-12 flex-shrink-0"
-          >
-            <Repeat2 className="w-7 h-7" />
-          </Button>
-        ) : (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleSendComment}
-            disabled={!commentText.trim() || isSubmitting}
-            className="bg-transparent border-0 text-white hover:bg-transparent hover:scale-110 transition-transform rounded-full h-12 w-12 flex-shrink-0 disabled:opacity-30"
-          >
-            <Send className="w-7 h-7" />
-          </Button>
-        )}
+        {/* Botão de repost - sempre visível, desabilitado se for dono */}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onRepost}
+          disabled={isOwner}
+          className="bg-transparent border-0 text-white hover:bg-transparent hover:scale-110 transition-transform rounded-full h-12 w-12 flex-shrink-0 disabled:opacity-30 disabled:hover:scale-100"
+        >
+          <Repeat2 className="w-7 h-7" />
+        </Button>
+
+        {/* Botão de enviar comentário */}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={handleSendComment}
+          disabled={!commentText.trim() || isSubmitting}
+          className="bg-transparent border-0 text-white hover:bg-transparent hover:scale-110 transition-transform rounded-full h-12 w-12 flex-shrink-0 disabled:opacity-30"
+        >
+          <Send className="w-7 h-7" />
+        </Button>
       </div>
     </>
   );

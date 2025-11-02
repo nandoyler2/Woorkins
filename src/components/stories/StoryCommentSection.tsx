@@ -41,6 +41,7 @@ export function StoryCommentSection({ storyId, currentProfileId, isLiked, onTogg
   const [commentCount, setCommentCount] = useState(0);
   const [showAllComments, setShowAllComments] = useState(false);
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
+  const [replyText, setReplyText] = useState<{ [key: string]: string }>({});
   const inputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
@@ -249,13 +250,55 @@ export function StoryCommentSection({ storyId, currentProfileId, isLiked, onTogg
 
   const handleReply = (commentId: string, username: string) => {
     setReplyingTo(commentId);
-    setCommentText(`@${username} `);
-    inputRef.current?.focus();
+    setReplyText(prev => ({ ...prev, [commentId]: `@${username} ` }));
   };
 
-  const cancelReply = () => {
+  const cancelReply = (commentId: string) => {
     setReplyingTo(null);
-    setCommentText('');
+    setReplyText(prev => {
+      const newState = { ...prev };
+      delete newState[commentId];
+      return newState;
+    });
+  };
+
+  const handleSendReply = async (commentId: string) => {
+    const text = replyText[commentId]?.trim();
+    if (!text || isSubmitting || !currentProfileId) return;
+
+    setIsSubmitting(true);
+
+    try {
+      const { data, error } = await supabase
+        .from('story_comments')
+        .insert({
+          story_id: storyId,
+          profile_id: currentProfileId,
+          comment_text: text,
+          parent_comment_id: commentId,
+        })
+        .select('id, story_id, profile_id, comment_text, created_at, parent_comment_id, like_count')
+        .single();
+
+      if (error) throw error;
+
+      toast({
+        title: 'Resposta enviada!',
+        description: 'Sua resposta foi publicada.',
+      });
+
+      cancelReply(commentId);
+      loadComments();
+    } catch (error) {
+      console.error('Error sending reply:', error);
+      toast({
+        title: 'Erro ao enviar resposta',
+        description: 'Tente novamente',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -355,6 +398,43 @@ export function StoryCommentSection({ storyId, currentProfileId, isLiked, onTogg
                         <span className="text-xs font-medium">Responder</span>
                       </button>
                     </div>
+
+                    {/* Campo de resposta inline */}
+                    {replyingTo === comment.id && (
+                      <div className="mt-3 flex items-center gap-2 animate-in slide-in-from-top-2 duration-200">
+                        <Input
+                          value={replyText[comment.id] || ''}
+                          onChange={(e) => setReplyText(prev => ({ ...prev, [comment.id]: e.target.value }))}
+                          onKeyPress={(e) => {
+                            if (e.key === 'Enter' && !e.shiftKey) {
+                              e.preventDefault();
+                              handleSendReply(comment.id);
+                            }
+                          }}
+                          placeholder="Escrever resposta..."
+                          className="flex-1 bg-white/10 border-white/20 text-white placeholder:text-white/50 rounded-full text-sm h-9 focus:border-white/40 focus-visible:ring-0"
+                          maxLength={200}
+                          disabled={isSubmitting}
+                          autoFocus
+                        />
+                        <Button
+                          size="sm"
+                          onClick={() => handleSendReply(comment.id)}
+                          disabled={isSubmitting || !replyText[comment.id]?.trim()}
+                          className="rounded-full h-9 px-4 bg-white text-black hover:bg-white/90"
+                        >
+                          <Send className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => cancelReply(comment.id)}
+                          className="rounded-full h-9 w-9 p-0 text-white/70 hover:text-white hover:bg-white/10"
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
@@ -365,17 +445,6 @@ export function StoryCommentSection({ storyId, currentProfileId, isLiked, onTogg
 
       {/* Barra de comentários inferior */}
       <div className="absolute bottom-4 left-4 right-4 z-30">
-        {/* Indicador de resposta */}
-        {replyingTo && (
-          <div className="mb-2 flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-3 py-2">
-            <CornerUpLeft className="w-3 h-3 text-white/70" />
-            <span className="text-xs text-white/70 flex-1">Respondendo...</span>
-            <button onClick={cancelReply} className="text-white/70 hover:text-white">
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-        )}
-        
         <div className="flex items-center gap-3">
           <div className="flex-1 relative">
             <Input

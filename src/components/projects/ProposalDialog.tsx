@@ -368,7 +368,7 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
                       value={amountFormatted}
                       onChange={handleAmountChange}
                       required
-                      className="h-9 border-blue-200 focus:border-blue-600 focus:ring-blue-600 dark:border-blue-800 transition-colors pl-9 font-medium"
+                      className="h-9 border-blue-200 focus:border-blue-600 dark:border-blue-800 transition-colors pl-9 font-medium focus-visible:ring-0 focus-visible:ring-offset-0"
                     />
                   </div>
                 </div>
@@ -386,7 +386,7 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
                     onChange={(e) => setDeliveryTime(e.target.value)}
                     required
                     min="1"
-                    className="h-9 border-blue-200 focus:border-blue-600 focus:ring-blue-600 dark:border-blue-800 transition-colors font-medium"
+                    className="h-9 border-blue-200 focus:border-blue-600 dark:border-blue-800 transition-colors font-medium focus-visible:ring-0 focus-visible:ring-offset-0"
                   />
                 </div>
               </div>
@@ -538,7 +538,7 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
                   ref={editorRef}
                   contentEditable
                   onInput={handleMessageChange}
-                  className="border-x-2 border-blue-200 dark:border-blue-800 focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 transition-all p-3 min-h-[140px] max-h-[220px] overflow-y-auto text-sm focus:outline-none bg-white dark:bg-slate-950"
+                  className="border-x-2 border-blue-200 dark:border-blue-800 focus:border-blue-600 transition-all p-3 min-h-[140px] max-h-[220px] overflow-y-auto text-sm focus:outline-none bg-white dark:bg-slate-950"
                   style={{ whiteSpace: 'pre-wrap' }}
                   data-placeholder="Descreva sua experiência, metodologia e por que você é ideal para este projeto..."
                 />

@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, ChevronRight, ChevronLeft, CheckCircle2, FileText, DollarSign, Calendar as CalendarIcon, Eye, X, Shield, Lock, Lightbulb, Target, MessageCircle, Clock } from 'lucide-react';
+import { ArrowLeft, ChevronRight, ChevronLeft, CheckCircle2, FileText, DollarSign, Calendar as CalendarIcon, Eye, X, Shield, Lock, Lightbulb, Target, MessageCircle, Clock, Bold, Italic } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useDocumentVerification } from '@/hooks/useDocumentVerification';
@@ -547,10 +547,64 @@ export default function ProjectCreate() {
                       </span>
                     </Label>
                     
-                    <div className="mb-2 p-3 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                      <p className="text-xs text-blue-700 dark:text-blue-300">
-                        💡 <strong>Dica de formatação:</strong> Use <code className="px-1 py-0.5 bg-blue-100 dark:bg-blue-900 rounded text-xs">**texto**</code> para <strong>negrito</strong> e <code className="px-1 py-0.5 bg-blue-100 dark:bg-blue-900 rounded text-xs">*texto*</code> para <em>itálico</em>
-                      </p>
+                    {/* Botões de formatação */}
+                    <div className="flex gap-2 mb-3">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          const editor = document.getElementById('description');
+                          if (!editor) return;
+                          
+                          const selection = window.getSelection();
+                          if (!selection || selection.rangeCount === 0) return;
+                          
+                          const range = selection.getRangeAt(0);
+                          const selectedText = range.toString();
+                          
+                          if (selectedText) {
+                            const formattedText = `**${selectedText}**`;
+                            range.deleteContents();
+                            range.insertNode(document.createTextNode(formattedText));
+                            
+                            // Trigger input event to update state
+                            editor.dispatchEvent(new Event('input', { bubbles: true }));
+                          }
+                        }}
+                        className="h-8"
+                      >
+                        <Bold className="w-3 h-3 mr-1" />
+                        Negrito
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          const editor = document.getElementById('description');
+                          if (!editor) return;
+                          
+                          const selection = window.getSelection();
+                          if (!selection || selection.rangeCount === 0) return;
+                          
+                          const range = selection.getRangeAt(0);
+                          const selectedText = range.toString();
+                          
+                          if (selectedText) {
+                            const formattedText = `*${selectedText}*`;
+                            range.deleteContents();
+                            range.insertNode(document.createTextNode(formattedText));
+                            
+                            // Trigger input event to update state
+                            editor.dispatchEvent(new Event('input', { bubbles: true }));
+                          }
+                        }}
+                        className="h-8"
+                      >
+                        <Italic className="w-3 h-3 mr-1" />
+                        Itálico
+                      </Button>
                     </div>
                     
                     <RichTextEditor
@@ -568,7 +622,7 @@ Inclua:
 • Requisitos específicos
 • Entregas esperadas
 
-Use **texto** para negrito e *texto* para itálico"
+💡 Dica: Selecione o texto e use os botões acima para formatar em **negrito** ou *itálico*"
                       maxLength={2000}
                       className={cn(
                         "text-base border-blue-200 focus:border-blue-600 dark:border-blue-800 transition-all",

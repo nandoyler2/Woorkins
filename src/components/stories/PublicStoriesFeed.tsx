@@ -120,6 +120,7 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
       const from = pageNum * STORIES_PER_PAGE;
       const to = from + STORIES_PER_PAGE - 1;
 
+      // Buscar stories com contagem de interações
       const { data, error } = await supabase
         .from('profile_stories')
         .select(`
@@ -144,28 +145,66 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
             username,
             full_name,
             avatar_url
-          )
+          ),
+          story_likes(count),
+          story_comments(count)
         `)
         .gt('expires_at', new Date().toISOString())
-        .order('created_at', { ascending: false })
         .range(from, to);
 
       if (error) throw error;
 
-      const newStories = (data || []).map(story => ({
-        id: story.id,
-        profile_id: story.profile_id,
-        media_url: story.media_url,
-        thumbnail_url: story.thumbnail_url,
-        type: story.type,
-        text_content: story.text_content,
-        created_at: story.created_at,
-        like_count: (story as any).like_count ?? 0,
-        original_story_id: story.original_story_id,
-        original_profile_id: story.original_profile_id,
-        profiles: story.profiles,
-        original_profile: story.original_profile
-      })) as PublicStory[];
+      // Processar stories com score de popularidade
+      let processedStories = (data || []).map(story => {
+        const likeCount = Array.isArray((story as any).story_likes) ? (story as any).story_likes.length : 0;
+        const commentCount = Array.isArray((story as any).story_comments) ? (story as any).story_comments.length : 0;
+        const popularityScore = likeCount + (commentCount * 2); // Comentários valem mais
+        
+        return {
+          id: story.id,
+          profile_id: story.profile_id,
+          media_url: story.media_url,
+          thumbnail_url: story.thumbnail_url,
+          type: story.type,
+          text_content: story.text_content,
+          created_at: story.created_at,
+          like_count: likeCount,
+          original_story_id: story.original_story_id,
+          original_profile_id: story.original_profile_id,
+          profiles: story.profiles,
+          original_profile: story.original_profile,
+          popularityScore
+        };
+      }) as (PublicStory & { popularityScore: number })[];
+
+      // Ordenar por popularidade primeiro
+      processedStories.sort((a, b) => {
+        // Primeiro por score de popularidade
+        if (b.popularityScore !== a.popularityScore) {
+          return b.popularityScore - a.popularityScore;
+        }
+        // Depois por data mais recente
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      });
+
+      // Intercalar stories de usuários diferentes quando possível
+      const interleavedStories: typeof processedStories = [];
+      const remainingStories = [...processedStories];
+      let lastProfileId: string | null = null;
+
+      while (remainingStories.length > 0) {
+        // Tentar encontrar um story de um usuário diferente do último
+        let foundIndex = remainingStories.findIndex(s => s.profile_id !== lastProfileId);
+        
+        // Se não encontrar, pegar o próximo disponível
+        if (foundIndex === -1) foundIndex = 0;
+        
+        const [selectedStory] = remainingStories.splice(foundIndex, 1);
+        interleavedStories.push(selectedStory);
+        lastProfileId = selectedStory.profile_id;
+      }
+
+      const newStories = interleavedStories.map(({ popularityScore, ...story }) => story) as PublicStory[];
       
       if (pageNum === 0) {
         // Remover duplicatas baseado no ID

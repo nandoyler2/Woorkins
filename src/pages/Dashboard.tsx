@@ -128,6 +128,11 @@ export default function Dashboard() {
   const [woorkoinsBalance, setWoorkoinsBalance] = useState(0);
   const [availableBalance, setAvailableBalance] = useState(0);
   
+  // Garantir que a página sempre inicie no topo
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, []);
+  
   // Usar hook de mensagens não lidas
   const unreadMessages = useUnreadMessages(profile?.id || '');
   const [showProfileEdit, setShowProfileEdit] = useState(false);

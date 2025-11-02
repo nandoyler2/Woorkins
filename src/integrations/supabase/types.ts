@@ -2453,6 +2453,38 @@ export type Database = {
           },
         ]
       }
+      story_comments: {
+        Row: {
+          comment_text: string
+          created_at: string
+          id: string
+          profile_id: string
+          story_id: string
+        }
+        Insert: {
+          comment_text: string
+          created_at?: string
+          id?: string
+          profile_id: string
+          story_id: string
+        }
+        Update: {
+          comment_text?: string
+          created_at?: string
+          id?: string
+          profile_id?: string
+          story_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "story_comments_story_id_fkey"
+            columns: ["story_id"]
+            isOneToOne: false
+            referencedRelation: "profile_stories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       story_likes: {
         Row: {
           created_at: string

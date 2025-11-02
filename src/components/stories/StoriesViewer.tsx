@@ -6,6 +6,8 @@ import { ChevronLeft, ChevronRight, X, ExternalLink, Volume2, VolumeX, User, Pla
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { SafeImage } from '@/components/ui/safe-image';
+import { StoryCommentSection } from './StoryCommentSection';
+import { useStoryLikes } from '@/hooks/useStoryLikes';
 
 interface Story {
   id: string;
@@ -337,6 +339,7 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
 
   const currentStory = stories[currentIndex];
   const isOwner = currentProfileId === profileId;
+  const storyLikes = useStoryLikes(currentStory?.id || null);
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
@@ -441,6 +444,14 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
             </div>
 
             <div className="flex items-center gap-2">
+              {/* View count (se for o dono) */}
+              {isOwner && (
+                <div className="bg-black/50 backdrop-blur-md text-white px-3 py-1.5 rounded-full text-xs flex items-center gap-1">
+                  <span>👁️</span>
+                  <span>{currentStory.view_count}</span>
+                </div>
+              )}
+              
               <Button
                 variant="ghost"
                 size="icon"
@@ -601,8 +612,18 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
             </div>
           )}
 
+          {/* Seção de comentários */}
+          {currentProfileId && currentStory && (
+            <StoryCommentSection
+              storyId={currentStory.id}
+              currentProfileId={currentProfileId}
+              isLiked={storyLikes.isLiked}
+              onToggleLike={storyLikes.toggleLike}
+            />
+          )}
+
           {/* Footer - Link apenas para mídia e Delete button */}
-          <div className="absolute bottom-4 left-4 right-4 z-20 flex items-end justify-between">
+          <div className="absolute bottom-20 left-4 right-4 z-20 flex items-end justify-between">
             {/* Delete button for owner */}
             {isOwner && (
               <Button
@@ -627,13 +648,6 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
               </a>
             )}
           </div>
-
-          {/* View count (se for o dono) */}
-          {isOwner && (
-            <div className="absolute bottom-4 right-4 z-20 bg-black/50 backdrop-blur-md text-white px-3 py-2 rounded-full text-xs">
-              👁️ {currentStory.view_count} visualizações
-            </div>
-          )}
 
           {/* Botões de Navegação - Mobile */}
           {currentIndex > 0 && (

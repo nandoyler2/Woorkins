@@ -219,7 +219,7 @@ export function ProfileHoverCard({ profileId, children, side = 'top' }: ProfileH
                   
                   <div 
                     ref={storiesScrollRef}
-                    className="flex gap-1.5 overflow-x-auto pb-1 px-8 scrollbar-hide"
+                    className="flex gap-1.5 overflow-x-auto pb-1 px-8 justify-center scrollbar-hide"
                     onScroll={checkScrollButtons}
                     style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                   >

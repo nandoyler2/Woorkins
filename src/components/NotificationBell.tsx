@@ -15,6 +15,7 @@ import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { formatFullName } from '@/lib/utils';
 
 interface Notification {
   id: string;
@@ -68,7 +69,7 @@ export const NotificationBell = ({ profileId }: { profileId: string }) => {
           
           // Show toast for new notification with click action
           toast({
-            title: newNotification.title,
+            title: formatNotificationTitle(newNotification.title),
             description: newNotification.message,
             action: newNotification.link ? (
               <ToastAction 
@@ -201,6 +202,23 @@ export const NotificationBell = ({ profileId }: { profileId: string }) => {
     });
   };
 
+  // Função para formatar o título da notificação (nomes em maiúsculas)
+  const formatNotificationTitle = (title: string) => {
+    // Se o título contém "Mensagem de:", formatar o nome depois
+    if (title.startsWith('Mensagem de: ')) {
+      const name = title.replace('Mensagem de: ', '');
+      return `Mensagem de: ${formatFullName(name)}`;
+    }
+    // Para outros casos, tentar formatar nomes em maiúsculas
+    return title.split(' ').map(word => {
+      // Se a palavra está toda em maiúsculas e tem mais de 2 caracteres, formatar
+      if (word.length > 2 && word === word.toUpperCase() && /^[A-ZÁÀÂÃÉÈÊÍÏÓÔÕÖÚÇÑ]+$/.test(word)) {
+        return formatFullName(word);
+      }
+      return word;
+    }).join(' ');
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -249,7 +267,9 @@ export const NotificationBell = ({ profileId }: { profileId: string }) => {
                     </div>
                     <div className="flex flex-col gap-1 flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
-                        <span className="font-semibold text-sm leading-tight">{notification.title}</span>
+                        <span className="font-semibold text-sm leading-tight">
+                          {formatNotificationTitle(notification.title)}
+                        </span>
                         {!notification.read && (
                           <div className="h-2 w-2 rounded-full bg-primary flex-shrink-0 mt-1" />
                         )}

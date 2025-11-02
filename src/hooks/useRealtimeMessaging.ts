@@ -4,6 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import { RealtimeChannel } from '@supabase/supabase-js';
 import { compressImage } from '@/lib/imageCompression';
 import { useMessageCache } from './useMessageCache';
+import { formatFullName } from '@/lib/utils';
 
 interface Message {
   id: string;
@@ -631,7 +632,7 @@ export const useRealtimeMessaging = ({
     
     if ('Notification' in window && Notification.permission === 'granted') {
       new Notification('Nova mensagem', {
-        body: `${message.sender_name}: ${message.content}`,
+        body: `${formatFullName(message.sender_name)}: ${message.content}`,
         icon: message.sender_avatar || '/placeholder.svg',
       });
     }

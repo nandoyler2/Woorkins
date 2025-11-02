@@ -9,14 +9,16 @@ import { supabase } from '@/integrations/supabase/client';
 
 interface InteractiveStickerRendererProps {
   sticker: StorySticker;
-  containerWidth: number;
-  containerHeight: number;
+  containerWidth?: number;
+  containerHeight?: number;
+  isPreview?: boolean;
 }
 
 export const InteractiveStickerRenderer = ({ 
   sticker, 
   containerWidth, 
-  containerHeight 
+  containerHeight,
+  isPreview = false
 }: InteractiveStickerRendererProps) => {
   const { user } = useAuth();
   const { respondToSticker } = useStoryStickers(null);

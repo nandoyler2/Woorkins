@@ -10,6 +10,19 @@ import { StoryCommentSection } from './StoryCommentSection';
 import { useStoryLikes } from '@/hooks/useStoryLikes';
 import { RepostStoryDialog } from './RepostStoryDialog';
 import { StoryViewsDialog } from './StoryViewsDialog';
+import { InteractiveStickerRenderer } from './InteractiveStickerRenderer';
+
+interface Sticker {
+  id: string;
+  story_id?: string;
+  type: string;
+  position_x: number;
+  position_y: number;
+  width: number;
+  height: number;
+  rotation: number;
+  content: any;
+}
 
 interface Story {
   id: string;
@@ -23,6 +36,7 @@ interface Story {
   view_count: number;
   original_story_id?: string | null;
   original_profile_id?: string | null;
+  stickers?: Sticker[];
   metadata?: {
     text_bold?: boolean;
     text_italic?: boolean;
@@ -98,22 +112,31 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
   }, [stories.length, initialStoryIndex]);
 
   const loadStories = useCallback(async () => {
-    // Se temos allStories (feed público), usar esses stories
+    // Se temos allStories (feed público), buscar stickers para cada story
     if (allStories && allStories.length > 0) {
-      const mappedStories = allStories.map(story => ({
-        id: story.id,
-        profile_id: story.profile_id,
-        type: story.type,
-        media_url: story.media_url,
-        text_content: story.text_content,
-        background_color: null,
-        link_url: null,
-        created_at: story.created_at,
-        view_count: 0,
-        original_story_id: story.original_story_id,
-        original_profile_id: story.original_profile_id,
-        profile: story.profiles,
-        original_profile: story.original_profile
+      const mappedStories = await Promise.all(allStories.map(async (story) => {
+        // Buscar stickers do story
+        const { data: stickersData } = await supabase
+          .from('story_stickers')
+          .select('*')
+          .eq('story_id', story.id);
+
+        return {
+          id: story.id,
+          profile_id: story.profile_id,
+          type: story.type,
+          media_url: story.media_url,
+          text_content: story.text_content,
+          background_color: null,
+          link_url: null,
+          created_at: story.created_at,
+          view_count: 0,
+          original_story_id: story.original_story_id,
+          original_profile_id: story.original_profile_id,
+          profile: story.profiles,
+          original_profile: story.original_profile,
+          stickers: stickersData || []
+        };
       }));
       setStories(mappedStories);
       setIsLoading(false);
@@ -128,7 +151,8 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
         .select(`
           *,
           profile:profiles!profile_stories_profile_id_fkey(username, full_name, avatar_url),
-          original_profile:profiles!profile_stories_original_profile_id_fkey(username, full_name, avatar_url)
+          original_profile:profiles!profile_stories_original_profile_id_fkey(username, full_name, avatar_url),
+          story_stickers(*)
         `)
         .eq('profile_id', profileId)
         .gt('expires_at', new Date().toISOString())
@@ -136,7 +160,13 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
 
       if (error) throw error;
 
-      setStories(data || []);
+      // Mapear stories com stickers
+      const mappedStories = (data || []).map((story: any) => ({
+        ...story,
+        stickers: story.story_stickers || []
+      }));
+
+      setStories(mappedStories);
     } catch (error) {
       console.error('Error loading stories:', error);
       toast({
@@ -714,6 +744,23 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
                                 {currentStory.text_content}
                               </p>
                             )}
+                          </div>
+                        )}
+
+                        {/* Renderizar stickers sobre o conteúdo */}
+                        {currentStory.stickers && currentStory.stickers.length > 0 && (
+                          <div className="absolute inset-0 pointer-events-auto z-10">
+                            {currentStory.stickers.map((sticker) => (
+                              <InteractiveStickerRenderer
+                                key={sticker.id}
+                                sticker={{
+                                  ...sticker,
+                                  story_id: currentStory.id,
+                                  scale: 1
+                                } as any}
+                                isPreview={false}
+                              />
+                            ))}
                           </div>
                         )}
                       </>

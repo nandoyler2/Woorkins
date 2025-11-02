@@ -172,7 +172,8 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
             avatar_url
           ),
           story_likes(count),
-          story_comments(count)
+          story_comments(count),
+          story_stickers(*)
         `)
         .gt('expires_at', new Date().toISOString())
         .range(from, to);
@@ -200,9 +201,10 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
           original_profile_id: story.original_profile_id,
           profiles: story.profiles,
           original_profile: story.original_profile,
+          story_stickers: (story as any).story_stickers || [],
           popularityScore
         };
-      }) as (PublicStory & { popularityScore: number })[];
+      }) as (PublicStory & { popularityScore: number; story_stickers: any[] })[];
 
       // Verificar stories recém-criados pelo usuário atual (apenas nesta sessão)
       const recentlyCreatedIds = sessionStorage.getItem('recentlyCreatedStories');

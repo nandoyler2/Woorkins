@@ -1462,34 +1462,6 @@ export default function Dashboard() {
               </CardContent>
             </Card>
 
-            {/* Achievements Card */}
-            <Card className="bg-white shadow-sm border border-slate-200">
-              <CardHeader className="border-b border-slate-100 p-4">
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 bg-orange-100 rounded-lg flex items-center justify-center">
-                    <Trophy className="w-4 h-4 text-orange-600" />
-                  </div>
-                  <h3 className="text-base font-bold text-slate-900">Conquistas Recentes</h3>
-                </div>
-              </CardHeader>
-              <CardContent className="p-4 space-y-3">
-                {achievements.map((achievement) => (
-                  <div key={achievement.id} className="flex items-start gap-3">
-                    <div className={`w-8 h-8 ${achievement.iconColor} rounded-lg flex items-center justify-center flex-shrink-0`}>
-                      {achievement.icon === 'star' && <Star className="w-4 h-4 text-white" />}
-                      {achievement.icon === 'user' && <Users className="w-4 h-4 text-white" />}
-                      {achievement.icon === 'award' && <Award className="w-4 h-4 text-white" />}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="text-sm font-semibold text-slate-900">{achievement.title}</h4>
-                      <p className="text-xs text-slate-600">{achievement.description}</p>
-                      <p className="text-xs text-slate-500 mt-0.5">{achievement.time_ago}</p>
-                    </div>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-
             {/* Platform Activities Card */}
             <PlatformActivities />
           </div>

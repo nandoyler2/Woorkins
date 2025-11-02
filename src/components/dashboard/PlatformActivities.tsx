@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Activity, Briefcase, Camera, UserPlus, DollarSign } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 import { formatShortName } from '@/lib/utils';
 
 interface PlatformActivity {
@@ -71,15 +71,15 @@ export function PlatformActivities() {
   const getActivityIcon = (type: string) => {
     switch (type) {
       case 'project_published':
-        return <Briefcase className="w-4 h-4" />;
+        return Briefcase;
       case 'story_published':
-        return <Camera className="w-4 h-4" />;
+        return Camera;
       case 'profile_followed':
-        return <UserPlus className="w-4 h-4" />;
+        return UserPlus;
       case 'proposal_sent':
-        return <DollarSign className="w-4 h-4" />;
+        return DollarSign;
       default:
-        return <Activity className="w-4 h-4" />;
+        return Activity;
     }
   };
 
@@ -150,81 +150,60 @@ export function PlatformActivities() {
     return `${diffDays}d atrás`;
   };
 
-  if (loading) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Activity className="w-5 h-5 text-primary" />
-            Atividades
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+  return (
+    <Card className="bg-white shadow-sm border border-slate-200">
+      <CardHeader className="border-b border-slate-100 p-4">
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 bg-primary/10 rounded-lg flex items-center justify-center">
+            <Activity className="w-4 h-4 text-primary" />
+          </div>
+          <h3 className="text-base font-bold text-slate-900">Atividades</h3>
+        </div>
+      </CardHeader>
+      <CardContent className="p-4 space-y-3">
+        {loading ? (
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="flex items-start gap-3 animate-pulse">
-                <div className="w-10 h-10 bg-muted rounded-full" />
+              <div key={i} className="flex items-start gap-3">
+                <Skeleton className="w-8 h-8 rounded-lg flex-shrink-0" />
                 <div className="flex-1 space-y-2">
-                  <div className="h-4 bg-muted rounded w-3/4" />
-                  <div className="h-3 bg-muted rounded w-1/4" />
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-3 w-1/2" />
                 </div>
               </div>
             ))}
           </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-lg flex items-center gap-2">
-          <Activity className="w-5 h-5 text-primary" />
-          Atividades
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="p-0">
-        <ScrollArea className="h-[400px]">
-          {activities.length === 0 ? (
-            <div className="p-6 text-center text-muted-foreground text-sm">
-              Nenhuma atividade recente
-            </div>
-          ) : (
-            <div className="px-6 pb-4">
-              {activities.map((activity) => (
-                <div
-                  key={activity.id}
-                  className="flex items-start gap-3 py-3 border-b last:border-0 hover:bg-muted/50 transition-colors rounded px-2 -mx-2"
-                >
-                  <div className="relative">
-                    <Avatar className="w-10 h-10">
-                      <AvatarImage src={activity.profile_avatar || undefined} />
-                      <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                        {activity.profile_name[0]?.toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div
-                      className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full ${getActivityColor(
-                        activity.activity_type
-                      )} flex items-center justify-center text-white`}
-                    >
-                      {getActivityIcon(activity.activity_type)}
+        ) : activities.length === 0 ? (
+          <div className="text-center py-6">
+            <Activity className="w-12 h-12 text-slate-300 mx-auto mb-2" />
+            <p className="text-sm text-slate-600">Nenhuma atividade recente</p>
+          </div>
+        ) : (
+          <ScrollArea className="h-[350px]">
+            <div className="space-y-3 pr-4">
+              {activities.map((activity) => {
+                const Icon = getActivityIcon(activity.activity_type);
+                const colorClass = getActivityColor(activity.activity_type);
+                
+                return (
+                  <div key={activity.id} className="flex items-start gap-3">
+                    <div className={`w-8 h-8 ${colorClass} rounded-lg flex items-center justify-center flex-shrink-0`}>
+                      <Icon className="w-4 h-4 text-white" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-sm font-semibold text-slate-900">
+                        {getActivityText(activity)}
+                      </h4>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        {getTimeAgo(activity.created_at)}
+                      </p>
                     </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm text-foreground leading-snug">
-                      {getActivityText(activity)}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {getTimeAgo(activity.created_at)}
-                    </p>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
-          )}
-        </ScrollArea>
+          </ScrollArea>
+        )}
       </CardContent>
     </Card>
   );

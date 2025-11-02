@@ -387,7 +387,7 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
               <div className="bg-white/20 backdrop-blur-sm rounded-full p-6">
                 <Plus className="w-12 h-12 text-white" />
               </div>
-              <p className="text-white font-bold text-lg">Publicar Story</p>
+              <p className="text-white font-bold text-lg text-center">Publicar Story</p>
             </div>
           </div>
         )}

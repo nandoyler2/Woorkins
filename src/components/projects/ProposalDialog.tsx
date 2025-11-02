@@ -344,20 +344,56 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
                     const feePercentage = plan === 'premium' ? platformFees.premium : plan === 'pro' ? platformFees.pro : platformFees.free;
                     const amount = parseCurrencyToNumber(amountFormatted);
                     const netAmount = amount * (1 - feePercentage / 100);
+                    const netAmountPro = amount * (1 - platformFees.pro / 100);
+                    const netAmountPremium = amount * (1 - platformFees.premium / 100);
                     
                     return (
-                      <div className="mt-2 p-2 bg-accent/10 border border-accent/20 rounded-md space-y-1">
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="text-muted-foreground">Você receberá:</span>
-                          <span className="font-bold text-accent">
-                            R$ {netAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                          </span>
+                      <div className="mt-2 space-y-2">
+                        <div className="p-2 bg-accent/10 border border-accent/20 rounded-md space-y-1">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-muted-foreground">Você receberá:</span>
+                            <span className="font-bold text-accent">
+                              R$ {netAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </span>
+                          </div>
+                          <p className="text-[10px] text-muted-foreground leading-tight">
+                            Como usuário <span className="font-semibold capitalize">
+                              {plan === 'premium' ? 'Premium' : plan === 'pro' ? 'Pro' : 'Gratuito'}
+                            </span>, a taxa é de <span className="font-semibold">{feePercentage.toFixed(1)}%</span>
+                          </p>
                         </div>
-                        <p className="text-[10px] text-muted-foreground leading-tight">
-                          Como usuário <span className="font-semibold capitalize">
-                            {plan === 'premium' ? 'Premium' : plan === 'pro' ? 'Pro' : 'Gratuito'}
-                          </span>, a taxa é de <span className="font-semibold">{feePercentage.toFixed(1)}%</span>
-                        </p>
+                        
+                        {plan !== 'pro' && plan !== 'premium' && (
+                          <div className="p-2 bg-primary/5 border border-primary/20 rounded-md space-y-1">
+                            <p className="text-[10px] font-semibold text-primary">💎 Com planos melhores você ganharia mais:</p>
+                            <div className="space-y-0.5 text-[10px]">
+                              <div className="flex items-center justify-between">
+                                <span className="text-muted-foreground">Plano Pro ({platformFees.pro.toFixed(1)}%):</span>
+                                <span className="font-semibold text-primary">
+                                  R$ {netAmountPro.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                </span>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <span className="text-muted-foreground">Plano Premium ({platformFees.premium.toFixed(1)}%):</span>
+                                <span className="font-semibold text-primary">
+                                  R$ {netAmountPremium.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                        
+                        {plan === 'pro' && (
+                          <div className="p-2 bg-primary/5 border border-primary/20 rounded-md space-y-1">
+                            <p className="text-[10px] font-semibold text-primary">💎 Com Premium você ganharia:</p>
+                            <div className="flex items-center justify-between text-[10px]">
+                              <span className="text-muted-foreground">Plano Premium ({platformFees.premium.toFixed(1)}%):</span>
+                              <span className="font-semibold text-primary">
+                                R$ {netAmountPremium.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              </span>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     );
                   })()}

@@ -9,6 +9,7 @@ import { ImageIcon, Video, Type, Link as LinkIcon, Upload, Loader2, Camera, Bold
 import { useToast } from '@/hooks/use-toast';
 import { ImageCropDialog } from '@/components/ImageCropDialog';
 import { useUpload } from '@/contexts/UploadContext';
+import { formatShortName } from '@/lib/utils';
 
 interface Profile {
   id: string;
@@ -291,7 +292,7 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
                           <SelectContent>
                             {profiles.map((profile) => (
                               <SelectItem key={profile.id} value={profile.id}>
-                                {profile.full_name || profile.username}
+                                {formatShortName(profile.full_name) || profile.username}
                               </SelectItem>
                             ))}
                           </SelectContent>

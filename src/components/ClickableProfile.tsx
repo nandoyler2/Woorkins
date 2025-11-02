@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { ProfileAvatarWithHover } from '@/components/ProfileAvatarWithHover';
-import { formatFullName } from '@/lib/utils';
+import { formatShortName } from '@/lib/utils';
 
 interface ClickableProfileProps {
   profileId: string;
@@ -33,7 +33,7 @@ export function ClickableProfile({
     }
   };
 
-  const displayName = formatFullName(fullName) || username || 'Usuário';
+  const displayName = formatShortName(fullName) || username || 'Usuário';
 
   return (
     <div

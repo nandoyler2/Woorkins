@@ -5,6 +5,7 @@ import { ProfileAvatarWithHover } from '@/components/ProfileAvatarWithHover';
 import { Plus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { formatShortName } from '@/lib/utils';
 
 interface Profile {
   id: string;
@@ -180,7 +181,7 @@ export function StoriesCarousel({ currentProfile, onCreateStory }: StoriesCarous
                 hoverCardSide="bottom"
               />
               <span className="text-xs font-medium max-w-[80px] truncate">
-                {profile.full_name || profile.username}
+                {formatShortName(profile.full_name) || profile.username}
               </span>
             </div>
           ))}

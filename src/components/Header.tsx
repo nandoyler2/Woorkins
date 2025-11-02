@@ -18,7 +18,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { NotificationBell } from '@/components/NotificationBell';
 import { SearchSlideIn } from '@/components/SearchSlideIn';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
-import { formatFullName } from '@/lib/utils';
+import { formatShortName } from '@/lib/utils';
 import { useActiveSupportCount } from '@/hooks/useActiveSupportCount';
 
 export const Header = () => {
@@ -84,7 +84,7 @@ export const Header = () => {
         const userProfile = profiles.find((p: any) => p.profile_type === 'user') || profiles[0];
         setProfileId(userProfile.id);
         setProfileAvatar(userProfile.avatar_url);
-        setProfileName(formatFullName(userProfile.full_name || userProfile.company_name) || '');
+        setProfileName(formatShortName(userProfile.full_name || userProfile.company_name) || '');
       }
     };
 

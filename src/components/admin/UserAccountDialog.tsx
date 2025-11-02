@@ -10,7 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { SafeImage } from '@/components/ui/safe-image';
 import { User, Mail, Calendar, MapPin, FileText, Upload, Save, AlertTriangle, Trash2 } from 'lucide-react';
-import { formatFullName } from '@/lib/utils';
+import { formatShortName } from '@/lib/utils';
 
 interface UserAccountDialogProps {
   open: boolean;
@@ -372,7 +372,7 @@ export function UserAccountDialog({ open, onOpenChange, user, onUpdate }: UserAc
           <DialogHeader>
             <DialogTitle>Editar Perfil</DialogTitle>
             <DialogDescription>
-              Edite as informações do perfil de {formatFullName(user.full_name)}
+              Edite as informações do perfil de {formatShortName(user.full_name)}
             </DialogDescription>
           </DialogHeader>
 
@@ -384,7 +384,7 @@ export function UserAccountDialog({ open, onOpenChange, user, onUpdate }: UserAc
                 <SafeImage src={user.avatar_url} alt={user.full_name} className="object-cover" />
               ) : (
                 <AvatarFallback className="text-2xl">
-                  {formatFullName(user.full_name).charAt(0).toUpperCase()}
+                  {formatShortName(user.full_name).charAt(0).toUpperCase()}
                 </AvatarFallback>
               )}
             </Avatar>
@@ -639,7 +639,7 @@ export function UserAccountDialog({ open, onOpenChange, user, onUpdate }: UserAc
                   ⚠️ ATENÇÃO: Esta ação não pode ser desfeita!
                 </p>
                 <p>
-                  Você está prestes a excluir permanentemente o perfil de <strong>{formatFullName(user.full_name)}</strong>.
+                  Você está prestes a excluir permanentemente o perfil de <strong>{formatShortName(user.full_name)}</strong>.
                 </p>
                 <p>Isso irá remover:</p>
                 <ul className="list-disc list-inside space-y-1 text-sm">

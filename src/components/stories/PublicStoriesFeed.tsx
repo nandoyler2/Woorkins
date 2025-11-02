@@ -8,6 +8,7 @@ import { StoriesViewer } from "./StoriesViewer";
 import { CreateStoryDialog } from "./CreateStoryDialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { getOrCreateUserProfile } from "@/lib/profiles";
+import { formatShortName } from "@/lib/utils";
 interface PublicStory {
   id: string;
   profile_id: string;
@@ -365,12 +366,12 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
                     <Avatar className="w-8 h-8 border-2 border-white shadow-lg">
                       <AvatarImage src={story.profiles.avatar_url || undefined} />
                       <AvatarFallback className="bg-primary text-primary-foreground">
-                        {(story.profiles.full_name || story.profiles.username)?.[0]?.toUpperCase()}
+                        {formatShortName(story.profiles.full_name || story.profiles.username)?.[0]?.toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold truncate drop-shadow-lg">
-                        {story.profiles.full_name || story.profiles.username}
+                        {formatShortName(story.profiles.full_name) || story.profiles.username}
                       </p>
                       <p className="text-xs opacity-90 drop-shadow-lg">
                         {getRelativeTime(story.created_at)}

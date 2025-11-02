@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Clock, TrendingUp, TrendingDown } from 'lucide-react';
+import { formatShortName } from '@/lib/utils';
 
 interface ProposalHistoryDialogProps {
   open: boolean;
@@ -165,7 +166,7 @@ export function ProposalHistoryDialog({
 
                     <div className="text-sm">
                       <p className="text-muted-foreground">
-                        Por: <span className="font-medium text-foreground">{entry.profile.full_name}</span>
+                        Por: <span className="font-medium text-foreground">{formatShortName(entry.profile.full_name)}</span>
                       </p>
                       {getValueChange(entry)}
                     </div>

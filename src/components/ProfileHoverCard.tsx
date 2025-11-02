@@ -9,7 +9,7 @@ import { useProfileHoverData } from '@/hooks/useProfileHoverData';
 import { Star, Calendar, User, Eye, Play } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { formatFullName } from '@/lib/utils';
+import { formatShortName } from '@/lib/utils';
 
 interface ProfileHoverCardProps {
   profileId: string;
@@ -101,7 +101,7 @@ export function ProfileHoverCard({ profileId, children, side = 'top' }: ProfileH
               {/* User Info */}
               <div className="text-center mt-3 space-y-1">
                 <h3 className="font-semibold text-lg leading-none">
-                  {formatFullName(
+                  {formatShortName(
                     data.profile.profile_type === 'business' 
                       ? data.profile.company_name 
                       : data.profile.full_name

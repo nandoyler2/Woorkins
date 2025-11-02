@@ -165,7 +165,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
               )}
             </Avatar>
             <span className="text-sm font-medium">
-              {project.profiles.full_name || project.profiles.username}
+              {formatShortName(project.profiles.full_name) || project.profiles.username}
             </span>
           </div>
         )}

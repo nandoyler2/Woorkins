@@ -21,7 +21,7 @@ import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { formatFullName } from '@/lib/utils';
+import { formatShortName } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
 interface Conversation {
@@ -437,12 +437,12 @@ export default function Messages() {
         const otherUserData = isOwner 
           ? {
               id: prop.freelancer_id,
-              name: formatFullName((prop as any).freelancer?.full_name || 'Freelancer'),
+              name: formatShortName((prop as any).freelancer?.full_name || 'Freelancer'),
               avatar: (prop as any).freelancer?.avatar_url,
             }
           : {
               id: prop.project.profile_id,
-              name: formatFullName((prop as any).project?.profiles?.full_name || 'Cliente'),
+              name: formatShortName((prop as any).project?.profiles?.full_name || 'Cliente'),
               avatar: (prop as any).project?.profiles?.avatar_url,
             };
 

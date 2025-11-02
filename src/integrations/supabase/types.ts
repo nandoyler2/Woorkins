@@ -983,6 +983,57 @@ export type Database = {
           },
         ]
       }
+      platform_activities: {
+        Row: {
+          activity_type: string
+          created_at: string | null
+          id: string
+          metadata: Json | null
+          profile_avatar: string | null
+          profile_id: string | null
+          profile_name: string
+          target_profile_id: string | null
+          target_profile_name: string | null
+        }
+        Insert: {
+          activity_type: string
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          profile_avatar?: string | null
+          profile_id?: string | null
+          profile_name: string
+          target_profile_id?: string | null
+          target_profile_name?: string | null
+        }
+        Update: {
+          activity_type?: string
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          profile_avatar?: string | null
+          profile_id?: string | null
+          profile_name?: string
+          target_profile_id?: string | null
+          target_profile_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "platform_activities_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "platform_activities_target_profile_id_fkey"
+            columns: ["target_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       platform_settings: {
         Row: {
           created_at: string | null
@@ -4125,6 +4176,7 @@ export type Database = {
       cleanup_expired_email_verifications: { Args: never; Returns: undefined }
       cleanup_expired_spam_blocks: { Args: never; Returns: undefined }
       cleanup_expired_stories: { Args: never; Returns: undefined }
+      cleanup_old_activities: { Args: never; Returns: undefined }
       cleanup_typing_indicators: { Args: never; Returns: undefined }
       delete_own_account: { Args: never; Returns: undefined }
       format_full_name: { Args: { name: string }; Returns: string }

@@ -32,6 +32,7 @@ const ActiveWorkBanner = lazy(() => import('@/components/dashboard/ActiveWorkBan
 const ActiveWorksWidget = lazy(() => import('@/components/dashboard/ActiveWorksWidget').then(m => ({ default: m.ActiveWorksWidget })));
 import { RequireProfilePhotoDialog } from '@/components/RequireProfilePhotoDialog';
 import { useUpload } from '@/contexts/UploadContext';
+import { PlatformActivities } from '@/components/dashboard/PlatformActivities';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -1488,6 +1489,9 @@ export default function Dashboard() {
                 ))}
               </CardContent>
             </Card>
+
+            {/* Platform Activities Card */}
+            <PlatformActivities />
           </div>
         </div>
       </div>

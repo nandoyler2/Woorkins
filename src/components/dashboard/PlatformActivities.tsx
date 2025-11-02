@@ -116,13 +116,16 @@ export function PlatformActivities() {
     const diffMins = Math.floor(diffMs / 60000);
 
     if (diffMins < 1) return 'Agora';
-    if (diffMins < 60) return `${diffMins}m atrás`;
+    if (diffMins === 1) return '1 minuto atrás';
+    if (diffMins < 60) return `${diffMins} minutos atrás`;
 
     const diffHours = Math.floor(diffMins / 60);
-    if (diffHours < 24) return `${diffHours}h atrás`;
+    if (diffHours === 1) return '1 hora atrás';
+    if (diffHours < 24) return `${diffHours} horas atrás`;
 
     const diffDays = Math.floor(diffHours / 24);
-    return `${diffDays}d atrás`;
+    if (diffDays === 1) return '1 dia atrás';
+    return `${diffDays} dias atrás`;
   };
 
   return (

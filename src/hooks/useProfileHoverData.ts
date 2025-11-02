@@ -24,7 +24,7 @@ interface StoryData {
 
 interface CachedData {
   profile: ProfileHoverData;
-  story: StoryData | null;
+  stories: StoryData[];
   timestamp: number;
 }
 
@@ -32,9 +32,9 @@ const cache = new Map<string, CachedData>();
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 export function useProfileHoverData(profileId: string, enabled: boolean) {
-  const [data, setData] = useState<{ profile: ProfileHoverData | null; story: StoryData | null }>({
+  const [data, setData] = useState<{ profile: ProfileHoverData | null; stories: StoryData[] }>({
     profile: null,
-    story: null,
+    stories: [],
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -46,7 +46,7 @@ export function useProfileHoverData(profileId: string, enabled: boolean) {
       // Check cache first
       const cached = cache.get(profileId);
       if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-        setData({ profile: cached.profile, story: cached.story });
+        setData({ profile: cached.profile, stories: cached.stories });
         return;
       }
 
@@ -76,25 +76,25 @@ export function useProfileHoverData(profileId: string, enabled: boolean) {
 
         if (profileError) throw profileError;
 
-        // Fetch active story
+        // Fetch all active stories
         const { data: activeStories } = await supabase
           .from('profile_stories')
           .select('id, thumbnail_url, type')
           .eq('profile_id', profileId)
           .gt('expires_at', new Date().toISOString())
           .order('created_at', { ascending: false })
-          .limit(1);
+          .limit(5);
 
-        const storyData = activeStories && activeStories.length > 0 ? activeStories[0] : null;
+        const storiesData = activeStories || [];
 
         // Update cache
         cache.set(profileId, {
           profile: profileData,
-          story: storyData,
+          stories: storiesData,
           timestamp: Date.now(),
         });
 
-        setData({ profile: profileData, story: storyData });
+        setData({ profile: profileData, stories: storiesData });
       } catch (err) {
         console.error('Error loading profile hover data:', err);
         setError('Não foi possível carregar os dados do perfil');

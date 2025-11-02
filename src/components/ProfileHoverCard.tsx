@@ -81,8 +81,8 @@ export function ProfileHoverCard({ profileId, children, side = 'top' }: ProfileH
             </div>
 
             {/* Avatar with Story Border */}
-            <div className="flex flex-col items-center -mt-12 px-6">
-              <div className={data.story ? 'p-[3px] bg-gradient-to-tr from-orange via-purple-500 to-pink-500 rounded-full' : ''}>
+            <div className="flex flex-col items-center -mt-12 px-6 relative z-10">
+              <div className={data.stories.length > 0 ? 'p-[3px] bg-gradient-to-tr from-purple-500 via-pink-500 to-orange-500 rounded-full' : ''}>
                 <Avatar className="w-20 h-20 border-4 border-background">
                   {data.profile.avatar_thumbnail_url || data.profile.avatar_url ? (
                     <SafeImage
@@ -151,14 +151,28 @@ export function ProfileHoverCard({ profileId, children, side = 'top' }: ProfileH
                 </div>
               </div>
 
-              {/* Story Preview */}
-              {data.story && (
-                <div className="w-full mt-3 rounded-lg overflow-hidden">
-                  <SafeImage
-                    src={data.story.thumbnail_url || ''}
-                    alt="Preview do story"
-                    className="w-full h-20 object-cover"
-                  />
+              {/* Stories Miniatures */}
+              {data.stories.length > 0 && (
+                <div className="w-full mt-3">
+                  <div className="flex gap-1.5 overflow-x-auto pb-1">
+                    {data.stories.map((story) => (
+                      <div
+                        key={story.id}
+                        className="flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+                        onClick={handleViewStories}
+                      >
+                        <div className="p-[2px] bg-gradient-to-tr from-purple-500 via-pink-500 to-orange-500 rounded-lg">
+                          <div className="w-14 h-20 rounded-md overflow-hidden bg-background">
+                            <SafeImage
+                              src={story.thumbnail_url || ''}
+                              alt="Story"
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
 
@@ -172,7 +186,7 @@ export function ProfileHoverCard({ profileId, children, side = 'top' }: ProfileH
                   <Eye className="w-4 h-4 mr-1" />
                   Ver Perfil
                 </Button>
-                {data.story && (
+                {data.stories.length > 0 && (
                   <Button
                     onClick={handleViewStories}
                     variant="outline"

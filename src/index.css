@@ -409,4 +409,16 @@ All colors MUST be HSL.
   .animate-rotate-slow {
     animation: rotate-slow 8s linear infinite;
   }
+
+  /* ContentEditable placeholder */
+  [contenteditable][data-placeholder]:empty:before {
+    content: attr(data-placeholder);
+    color: hsl(var(--muted-foreground));
+    opacity: 0.6;
+    pointer-events: none;
+  }
+
+  [contenteditable]:focus {
+    outline: none;
+  }
 }

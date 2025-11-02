@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
@@ -12,7 +11,6 @@ import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Clock, FileText, DollarSign, Calendar, Sparkles, CheckCircle2, Bold, Italic, List, ListOrdered } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import ReactMarkdown from "react-markdown";
 
 interface ProposalDialogProps {
   open: boolean;
@@ -32,7 +30,7 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
   const [message, setMessage] = useState("");
   const [userProfile, setUserProfile] = useState<any>(null);
   const [success, setSuccess] = useState(false);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const editorRef = useRef<HTMLDivElement>(null);
   const draftKey = `proposalDraft:${user?.id || 'anon'}:${projectId}`;
   const maxChars = 3000;
 
@@ -87,7 +85,7 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
 
     const budgetNumber = parseCurrencyToNumber(amountFormatted);
 
-    if (!budgetNumber || !deliveryTime || !message) {
+    if (!budgetNumber || !deliveryTime || !message.trim()) {
       toast({
         title: "Erro",
         description: "Preencha todos os campos obrigatórios",
@@ -174,49 +172,33 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
     setAmountFormatted(formatted);
   };
 
-  const handleMessageChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const newValue = e.target.value;
-    if (newValue.length <= maxChars) {
-      setMessage(newValue);
+  const handleMessageChange = (e: React.FormEvent<HTMLDivElement>) => {
+    const el = e.currentTarget;
+    const text = el.innerText || '';
+    if (text.length <= maxChars) {
+      setMessage(text);
+    } else {
+      // Limita o texto se exceder
+      el.innerText = text.slice(0, maxChars);
+      setMessage(text.slice(0, maxChars));
+      // Move cursor para o final
+      const range = document.createRange();
+      const sel = window.getSelection();
+      range.selectNodeContents(el);
+      range.collapse(false);
+      sel?.removeAllRanges();
+      sel?.addRange(range);
     }
   };
 
-  const applyFormat = (type: 'bold' | 'italic' | 'ul' | 'ol') => {
-    const el = textareaRef.current;
-    if (!el) return;
-    const start = el.selectionStart || 0;
-    const end = el.selectionEnd || 0;
-    const selected = message.slice(start, end);
-    let newValue = message;
-    let cursorOffset = 0;
-    
-    if (type === 'bold') {
-      const formatted = `**${selected || 'texto'}**`;
-      newValue = message.slice(0, start) + formatted + message.slice(end);
-      cursorOffset = selected ? formatted.length : start + 2;
-    }
-    if (type === 'italic') {
-      const formatted = `*${selected || 'texto'}*`;
-      newValue = message.slice(0, start) + formatted + message.slice(end);
-      cursorOffset = selected ? formatted.length : start + 1;
-    }
-    if (type === 'ul') {
-      const lines = (selected || 'item da lista').split('\n');
-      const formatted = lines.map(l => `- ${l}`).join('\n');
-      newValue = message.slice(0, start) + formatted + message.slice(end);
-      cursorOffset = formatted.length;
-    }
-    if (type === 'ol') {
-      const lines = (selected || 'item da lista').split('\n');
-      const formatted = lines.map((l, i) => `${i + 1}. ${l}`).join('\n');
-      newValue = message.slice(0, start) + formatted + message.slice(end);
-      cursorOffset = formatted.length;
-    }
-    
-    setMessage(newValue);
+  const applyFormat = (command: string) => {
+    document.execCommand(command, false);
+    editorRef.current?.focus();
+    // Atualiza o state após formatação
     setTimeout(() => {
-      el.focus();
-      el.setSelectionRange(start + cursorOffset, start + cursorOffset);
+      if (editorRef.current) {
+        setMessage(editorRef.current.innerText || '');
+      }
     }, 0);
   };
 
@@ -229,7 +211,13 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
         const draft = JSON.parse(raw);
         if (draft.amountFormatted) setAmountFormatted(draft.amountFormatted);
         if (draft.deliveryTime) setDeliveryTime(draft.deliveryTime);
-        if (draft.message) setMessage(draft.message);
+        if (draft.message) {
+          setMessage(draft.message);
+          // Carrega o texto no editor também
+          if (editorRef.current) {
+            editorRef.current.innerText = draft.message;
+          }
+        }
       }
     } catch {}
   }, [open]);
@@ -383,7 +371,7 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
                     type="button"
                     variant="ghost"
                     size="sm"
-                    onClick={() => applyFormat('ul')}
+                    onClick={() => applyFormat('insertUnorderedList')}
                     className="h-7 w-7 p-0"
                     title="Lista"
                   >
@@ -393,32 +381,21 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
                     type="button"
                     variant="ghost"
                     size="sm"
-                    onClick={() => applyFormat('ol')}
+                    onClick={() => applyFormat('insertOrderedList')}
                     className="h-7 w-7 p-0"
                     title="Lista numerada"
                   >
                     <ListOrdered className="w-3.5 h-3.5" />
                   </Button>
                 </div>
-                <Textarea
-                  ref={textareaRef}
-                  id="message"
-                  placeholder="Descreva como você pretende realizar o projeto, sua experiência relevante e por que você é a melhor escolha..."
-                  value={message}
-                  onChange={handleMessageChange}
-                  rows={4}
-                  required
-                  maxLength={maxChars}
-                  className="border-2 focus:border-secondary transition-colors resize-none text-sm"
+                <div
+                  ref={editorRef}
+                  contentEditable
+                  onInput={handleMessageChange}
+                  className="border-2 focus:border-secondary transition-colors rounded-md p-3 min-h-[120px] max-h-[200px] overflow-y-auto text-sm focus:outline-none bg-background"
+                  style={{ whiteSpace: 'pre-wrap' }}
+                  data-placeholder="Descreva como você pretende realizar o projeto, sua experiência relevante e por que você é a melhor escolha..."
                 />
-                {message && (
-                  <div className="mt-2 p-3 bg-muted/30 rounded-md border">
-                    <p className="text-xs text-muted-foreground mb-2 font-semibold">Preview:</p>
-                    <div className="prose prose-sm max-w-none text-sm">
-                      <ReactMarkdown>{message}</ReactMarkdown>
-                    </div>
-                  </div>
-                )}
               </div>
 
               <div className="flex gap-2 justify-end pt-1">

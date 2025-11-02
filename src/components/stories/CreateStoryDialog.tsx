@@ -340,7 +340,7 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
                             </div>
                           </div>
                           <h4 className="font-bold text-lg mb-1">Imagem ou Vídeo</h4>
-                          <p className="text-sm text-muted-foreground">Compartilhe uma foto ou grave um momento</p>
+                          <p className="text-sm text-muted-foreground">Compartilhe algo profissional</p>
                         </button>
 
                         {/* Opção Texto */}

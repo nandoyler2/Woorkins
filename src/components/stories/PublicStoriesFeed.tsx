@@ -403,50 +403,99 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
               onClick={() => handleStoryClick(index)}
             >
               <div className="relative w-full aspect-[9/16]">
-                {story.type === 'text' ? (
-                  <div className="w-full h-full bg-gradient-to-br from-purple-500 via-pink-500 to-orange-500 flex items-center justify-center p-6">
-                    <p className="text-white text-center text-lg font-medium break-words">
-                      {story.text_content}
-                    </p>
+                {/* Story repostado - mostrar miniatura centralizada */}
+                {story.original_story_id && story.original_profile ? (
+                  <div className="w-full h-full bg-gradient-to-br from-purple-900/30 via-black to-pink-900/30 flex flex-col items-center justify-center gap-2 p-4">
+                    {/* Miniatura do story original */}
+                    <div className="relative w-[65%] rounded-xl overflow-hidden shadow-2xl border border-white/20" style={{ aspectRatio: "9/16" }}>
+                      {story.type === 'text' ? (
+                        <div className="w-full h-full bg-gradient-to-br from-purple-500 via-pink-500 to-orange-500 flex items-center justify-center p-3">
+                          <p className="text-white text-center text-[10px] font-medium break-words line-clamp-4">
+                            {story.text_content}
+                          </p>
+                        </div>
+                      ) : story.type === 'video' && videoSrc ? (
+                        <video
+                          src={videoSrc}
+                          className="w-full h-full object-cover"
+                          preload="metadata"
+                          muted
+                          playsInline
+                        />
+                      ) : (
+                        <SafeImage
+                          src={displayImage}
+                          alt="Story original"
+                          className="w-full h-full object-cover"
+                        />
+                      )}
+                    </div>
+                    
+                    {/* Créditos do autor original */}
+                    <div className="flex items-center gap-1.5 bg-black/50 backdrop-blur-md rounded-full px-2.5 py-1">
+                      <Avatar className="w-5 h-5 border border-white/30 flex-shrink-0">
+                        <AvatarImage src={story.original_profile.avatar_url || undefined} />
+                        <AvatarFallback className="bg-primary text-primary-foreground text-[9px]">
+                          {story.original_profile.username?.[0]?.toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="text-white text-[10px] font-medium drop-shadow-md">
+                        @{story.original_profile.username}
+                      </span>
+                    </div>
                   </div>
-                ) : story.type === 'video' && videoSrc ? (
-                  <video
-                    src={videoSrc}
-                    className="w-full h-full object-cover"
-                    preload="metadata"
-                    muted
-                    playsInline
-                  />
                 ) : (
-                  <SafeImage
-                    src={displayImage}
-                    alt="Story"
-                    className="w-full h-full object-cover"
-                  />
+                  <>
+                    {/* Story normal */}
+                    {story.type === 'text' ? (
+                      <div className="w-full h-full bg-gradient-to-br from-purple-500 via-pink-500 to-orange-500 flex items-center justify-center p-6">
+                        <p className="text-white text-center text-lg font-medium break-words">
+                          {story.text_content}
+                        </p>
+                      </div>
+                    ) : story.type === 'video' && videoSrc ? (
+                      <video
+                        src={videoSrc}
+                        className="w-full h-full object-cover"
+                        preload="metadata"
+                        muted
+                        playsInline
+                      />
+                    ) : (
+                      <SafeImage
+                        src={displayImage}
+                        alt="Story"
+                        className="w-full h-full object-cover"
+                      />
+                    )}
+                  </>
                 )}
                 
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                 
+                {/* Curtidas e comentários no topo */}
+                {(story.like_count > 0 || story.comment_count > 0) && (
+                  <div className="absolute top-3 left-3 flex items-center gap-2">
+                    {story.like_count > 0 && (
+                      <div className="flex items-center gap-1 bg-black/50 backdrop-blur-sm rounded-full px-2 py-1 shadow-lg">
+                        <Heart className="w-3.5 h-3.5 text-red-500 fill-red-500" />
+                        <span className="text-white text-xs font-bold drop-shadow-md">{story.like_count}</span>
+                      </div>
+                    )}
+                    {story.comment_count > 0 && (
+                      <div className="flex items-center gap-1 bg-black/50 backdrop-blur-sm rounded-full px-2 py-1 shadow-lg">
+                        <MessageCircle className="w-3.5 h-3.5 text-white fill-white" />
+                        <span className="text-white text-xs font-bold drop-shadow-md">{story.comment_count}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+                
+                {/* Ícone do tipo de mídia */}
                 <div className="absolute top-3 right-3 bg-black/30 backdrop-blur-sm rounded-full p-1.5 shadow-lg">
                   {story.type === 'video' && <Video className="w-3.5 h-3.5 text-white" />}
                   {story.type === 'image' && <Image className="w-3.5 h-3.5 text-white" />}
                   {story.type === 'text' && <FileText className="w-3.5 h-3.5 text-white" />}
-                </div>
-
-                {/* Curtidas e comentários */}
-                <div className="absolute bottom-3 left-3 right-3 flex items-center gap-3">
-                  {story.like_count > 0 && (
-                    <div className="flex items-center gap-1 bg-black/40 backdrop-blur-sm rounded-full px-2 py-1">
-                      <Heart className="w-3.5 h-3.5 text-red-500 fill-red-500" />
-                      <span className="text-white text-xs font-medium">{story.like_count}</span>
-                    </div>
-                  )}
-                  {story.comment_count > 0 && (
-                    <div className="flex items-center gap-1 bg-black/40 backdrop-blur-sm rounded-full px-2 py-1">
-                      <MessageCircle className="w-3.5 h-3.5 text-white" />
-                      <span className="text-white text-xs font-medium">{story.comment_count}</span>
-                    </div>
-                  )}
                 </div>
                 
                 {story.type === 'video' && (
@@ -473,12 +522,6 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
                         {getRelativeTime(story.created_at)}
                       </p>
                     </div>
-                    {story.like_count > 0 && (
-                      <div className="flex items-center gap-0.5 flex-shrink-0">
-                        <Heart className="w-3 h-3 text-red-500 fill-red-500" />
-                        <span className="text-[10px] font-bold">{story.like_count}</span>
-                      </div>
-                    )}
                   </div>
                 </div>
 

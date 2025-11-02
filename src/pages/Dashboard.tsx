@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, lazy, Suspense } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Header } from '@/components/Header';
@@ -20,16 +20,18 @@ import { ProfileEditDialog } from '@/components/ProfileEditDialog';
 import { ProfilePhotoUploadDialog } from '@/components/ProfilePhotoUploadDialog';
 import { IdentityVerificationDialog } from '@/components/IdentityVerificationDialog';
 import { CreateBusinessProfileDialog } from '@/components/CreateBusinessProfileDialog';
-import { FollowingSection } from '@/components/dashboard/FollowingSection';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
 import { DashboardSkeleton } from '@/components/dashboard/DashboardSkeleton';
-import { StoriesCarousel } from '@/components/stories/StoriesCarousel';
-import { PublicStoriesFeed } from '@/components/stories/PublicStoriesFeed';
 import { CreateStoryDialog } from '@/components/stories/CreateStoryDialog';
+
+// Lazy load heavy components
+const StoriesCarousel = lazy(() => import('@/components/stories/StoriesCarousel').then(m => ({ default: m.StoriesCarousel })));
+const PublicStoriesFeed = lazy(() => import('@/components/stories/PublicStoriesFeed').then(m => ({ default: m.PublicStoriesFeed })));
+const FollowingSection = lazy(() => import('@/components/dashboard/FollowingSection').then(m => ({ default: m.FollowingSection })));
+const ActiveWorkBanner = lazy(() => import('@/components/dashboard/ActiveWorkBanner').then(m => ({ default: m.ActiveWorkBanner })));
+const ActiveWorksWidget = lazy(() => import('@/components/dashboard/ActiveWorksWidget').then(m => ({ default: m.ActiveWorksWidget })));
 import { RequireProfilePhotoDialog } from '@/components/RequireProfilePhotoDialog';
 import { useUpload } from '@/contexts/UploadContext';
-import { ActiveWorkBanner } from '@/components/dashboard/ActiveWorkBanner';
-import { ActiveWorksWidget } from '@/components/dashboard/ActiveWorksWidget';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -422,6 +424,12 @@ export default function Dashboard() {
   };
 
   const fixUsernameSlugConflict = async (userProfile: Profile, allProfiles: any[]) => {
+    // Verificar se já foi executado nesta sessão
+    const sessionKey = `woorkins_fix_conflict_${userProfile.id}`;
+    if (sessionStorage.getItem(sessionKey)) {
+      return; // Já foi executado nesta sessão
+    }
+
     try {
       const businessProfiles = allProfiles.filter((p: any) => p.profile_type === 'business');
       
@@ -471,16 +479,19 @@ export default function Dashboard() {
           }
         }
       }
+      
+      // Marcar como executado nesta sessão
+      sessionStorage.setItem(sessionKey, 'true');
     } catch (error) {
       console.error('[Dashboard] Error fixing conflicts:', error);
     }
   };
 
-  // Calcular tarefas de conclusão do perfil
-  const getProfileTasks = () => {
-    if (!profile) return { tasks: [], completion: 0 };
+  // Calcular tarefas de conclusão do perfil com memoização
+  const profileTasks = useMemo(() => {
+    if (!profile) return [];
 
-    const tasks = [
+    return [
       {
         id: 'photo',
         title: 'Foto de perfil',
@@ -525,19 +536,19 @@ export default function Dashboard() {
         action: () => setShowVerificationDialog(true),
       },
     ];
+  }, [profile?.avatar_url, emailConfirmed, profile?.document_verified, user, toast]);
 
-    const completedCount = tasks.filter(t => t.completed).length;
-    const completion = Math.round((completedCount / tasks.length) * 100);
+  const profileCompletion = useMemo(() => {
+    if (!profileTasks.length) return 0;
+    const completedCount = profileTasks.filter(t => t.completed).length;
+    return Math.round((completedCount / profileTasks.length) * 100);
+  }, [profileTasks]);
 
-    return { tasks, completion };
-  };
-
-  const { tasks: profileTasks, completion: profileCompletion } = getProfileTasks();
-  const pendingTasks = profileTasks.filter(t => !t.completed);
-  const profileCompleted = profileTasks.every(t => t.completed);
+  const pendingTasks = useMemo(() => profileTasks.filter(t => !t.completed), [profileTasks]);
+  const profileCompleted = useMemo(() => profileTasks.every(t => t.completed), [profileTasks]);
   
   // Reordenar tarefas: pendentes primeiro, concluídas depois
-  const orderedTasks = [...pendingTasks, ...profileTasks.filter(t => t.completed)];
+  const orderedTasks = useMemo(() => [...pendingTasks, ...profileTasks.filter(t => t.completed)], [pendingTasks, profileTasks]);
 
   // Animação de confete quando completar tudo (apenas uma vez)
   useEffect(() => {
@@ -614,20 +625,20 @@ export default function Dashboard() {
     if (!profile) return;
     
     try {
-      // Buscar usuários (excluindo o próprio usuário)
+      // Buscar usuários (excluindo o próprio usuário) - reduzido para 20
       const { data: users, error: usersError } = await supabase
         .from('profiles')
         .select('id, username, full_name, avatar_url')
         .neq('id', profile.id)
-        .limit(50);
+        .limit(20);
 
-      // Buscar perfis de negócios (excluindo os do usuário)
+      // Buscar perfis de negócios (excluindo os do usuário) - reduzido para 20
       const { data: businesses, error: businessesError } = await supabase
       .from('profiles')
       .select('id, company_name, logo_url, slug')
       .eq('profile_type', 'business')
         .neq('id', profile.id)
-        .limit(50);
+        .limit(20);
 
       const userProfiles = (users || []).map((u: any) => ({
         id: u.id,
@@ -887,17 +898,25 @@ export default function Dashboard() {
       if (posts) {
         const profileIds = [...new Set(posts.map((p: any) => p.profile_id).filter(Boolean))];
         
-        const followerCounts: Record<string, number> = {};
-        for (const profileId of profileIds) {
-          const { count } = await supabase
+        // Otimização: uma única query ao invés de N queries
+        if (profileIds.length > 0) {
+          const { data: followCounts } = await supabase
             .from('follows')
-            .select('*', { count: 'exact', head: true })
-            .eq('following_id', profileId);
+            .select('following_id')
+            .in('following_id', profileIds);
           
-          followerCounts[profileId] = count || 0;
+          // Contar manualmente
+          const followerCounts: Record<string, number> = {};
+          profileIds.forEach(id => followerCounts[id] = 0);
+          
+          if (followCounts) {
+            followCounts.forEach((f: any) => {
+              followerCounts[f.following_id] = (followerCounts[f.following_id] || 0) + 1;
+            });
+          }
+          
+          setProfileFollowers(followerCounts);
         }
-        
-        setProfileFollowers(followerCounts);
       }
     } catch (error) {
       console.error('Error loading followers:', error);
@@ -1049,10 +1068,18 @@ export default function Dashboard() {
             </Card>
 
             {/* Active Work Banner */}
-            {profile?.id && <ActiveWorkBanner profileId={profile.id} />}
+            {profile?.id && (
+              <Suspense fallback={<Skeleton className="h-24 w-full" />}>
+                <ActiveWorkBanner profileId={profile.id} />
+              </Suspense>
+            )}
 
             {/* Active Works Widget */}
-            {profile?.id && <ActiveWorksWidget profileId={profile.id} />}
+            {profile?.id && (
+              <Suspense fallback={<Skeleton className="h-32 w-full" />}>
+                <ActiveWorksWidget profileId={profile.id} />
+              </Suspense>
+            )}
 
             {/* Pending Admin Invites Alert */}
             {pendingInvitesCount > 0 && (
@@ -1086,16 +1113,18 @@ export default function Dashboard() {
 
             {/* Stories Carousel */}
             {profile && (
-              <StoriesCarousel
-                key={storiesRefreshTrigger}
-                currentProfile={{
-                  id: profile.id,
-                  username: profile.username,
-                  full_name: profile.full_name || '',
-                  avatar_url: profile.avatar_url || undefined,
-                }}
-                onCreateStory={handleCreateStoryClick}
-              />
+              <Suspense fallback={<Skeleton className="h-24 w-full" />}>
+                <StoriesCarousel
+                  key={storiesRefreshTrigger}
+                  currentProfile={{
+                    id: profile.id,
+                    username: profile.username,
+                    full_name: profile.full_name || '',
+                    avatar_url: profile.avatar_url || undefined,
+                  }}
+                  onCreateStory={handleCreateStoryClick}
+                />
+              </Suspense>
             )}
 
             {/* Action Cards Grid */}
@@ -1174,7 +1203,9 @@ export default function Dashboard() {
                 </div>
               </CardHeader>
               <CardContent className="p-4">
-                <PublicStoriesFeed currentProfileId={profile.id} />
+                <Suspense fallback={<div className="space-y-4">{Array(3).fill(0).map((_, i) => <Skeleton key={i} className="h-48 w-full" />)}</div>}>
+                  <PublicStoriesFeed currentProfileId={profile.id} />
+                </Suspense>
               </CardContent>
             </Card>
           </div>
@@ -1299,7 +1330,9 @@ export default function Dashboard() {
 
             {/* Following Section */}
             {profile && (
-              <FollowingSection profileId={profile.id} />
+              <Suspense fallback={<Skeleton className="h-64 w-full" />}>
+                <FollowingSection profileId={profile.id} />
+              </Suspense>
             )}
 
             {/* Statistics Card */}

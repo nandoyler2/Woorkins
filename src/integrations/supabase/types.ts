@@ -4026,6 +4026,7 @@ export type Database = {
       cleanup_expired_stories: { Args: never; Returns: undefined }
       cleanup_typing_indicators: { Args: never; Returns: undefined }
       delete_own_account: { Args: never; Returns: undefined }
+      format_full_name: { Args: { name: string }; Returns: string }
       generate_available_username: {
         Args: { base_text: string }
         Returns: string

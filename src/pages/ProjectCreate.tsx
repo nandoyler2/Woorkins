@@ -10,12 +10,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, ChevronRight, ChevronLeft, CheckCircle2, FileText, DollarSign, Calendar as CalendarIcon, Eye, X, Tag, Shield, Lock, Lightbulb, Target, MessageCircle, Clock } from 'lucide-react';
+import { ArrowLeft, ChevronRight, ChevronLeft, CheckCircle2, FileText, DollarSign, Calendar as CalendarIcon, Eye, Shield, Lock, Lightbulb, Target, MessageCircle, Clock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useDocumentVerification } from '@/hooks/useDocumentVerification';
 import { RequireDocumentVerificationDialog } from '@/components/RequireDocumentVerificationDialog';
 import { RequireProfilePhotoDialog } from '@/components/RequireProfilePhotoDialog';
+import { analyzeProject } from '@/lib/projectAnalyzer';
 
 export default function ProjectCreate() {
   const { user } = useAuth();
@@ -26,11 +27,12 @@ export default function ProjectCreate() {
   const [currentStep, setCurrentStep] = useState(1);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [category, setCategory] = useState('');
-  const [tags, setTags] = useState<string[]>([]);
-  const [tagInput, setTagInput] = useState('');
   const [budgetRange, setBudgetRange] = useState('');
   const [deadline, setDeadline] = useState('');
+  
+  // Estados para categoria e tags detectadas automaticamente
+  const [detectedCategory, setDetectedCategory] = useState('');
+  const [detectedTags, setDetectedTags] = useState<string[]>([]);
   const [profileId, setProfileId] = useState<string>('');
   const [registeredName, setRegisteredName] = useState('');
   const [registeredCPF, setRegisteredCPF] = useState('');
@@ -151,16 +153,17 @@ export default function ProjectCreate() {
     checkRequirements();
   }, [user]);
 
-  const addTag = () => {
-    if (tagInput.trim() && tags.length < 5 && !tags.includes(tagInput.trim())) {
-      setTags([...tags, tagInput.trim()]);
-      setTagInput('');
+  // Analisa automaticamente quando título ou descrição mudam
+  useEffect(() => {
+    if (title.trim() && description.trim()) {
+      const analysis = analyzeProject(title, description);
+      setDetectedCategory(analysis.category);
+      setDetectedTags(analysis.tags);
+    } else {
+      setDetectedCategory('');
+      setDetectedTags([]);
     }
-  };
-
-  const removeTag = (tagToRemove: string) => {
-    setTags(tags.filter(tag => tag !== tagToRemove));
-  };
+  }, [title, description]);
 
   const nextStep = () => {
     if (currentStep === 1 && !title.trim()) {
@@ -237,7 +240,7 @@ export default function ProjectCreate() {
           profile_id: (profileData as any).id,
           title,
           description,
-          category: category || null,
+          category: detectedCategory || 'geral',
           budget_min: budgetMin,
           budget_max: budgetMax,
           deadline: deadline ? parseInt(deadline) : null,
@@ -246,6 +249,18 @@ export default function ProjectCreate() {
         .single();
 
       if (error) throw error;
+
+      // Insere as tags detectadas automaticamente
+      if (detectedTags.length > 0 && data) {
+        const tagInserts = detectedTags.map(tag => ({
+          project_id: (data as any).id,
+          tag: tag
+        }));
+
+        await supabase
+          .from('project_tags' as any)
+          .insert(tagInserts);
+      }
 
       toast({
         title: 'Projeto criado!',
@@ -415,70 +430,9 @@ export default function ProjectCreate() {
                         ⚠️ Por favor, preencha o título do projeto
                       </p>
                     )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="category" className="text-base font-semibold flex items-center gap-2">
-                      <Tag className="w-4 h-4 text-blue-600" />
-                      Categoria
-                    </Label>
-                    <Input
-                      id="category"
-                      value={category}
-                      onChange={(e) => setCategory(e.target.value)}
-                      placeholder="Ex: Design, Desenvolvimento, Marketing"
-                      className="h-12 text-base border-blue-200 focus:border-blue-600 dark:border-blue-800"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-base font-semibold flex items-center gap-2">
-                      <Tag className="w-4 h-4 text-blue-600" />
-                      Tags (até 5)
-                    </Label>
-                    <div className="flex gap-2">
-                      <Input
-                        value={tagInput}
-                        onChange={(e) => setTagInput(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            e.preventDefault();
-                            addTag();
-                          }
-                        }}
-                        placeholder="Ex: React, WordPress, Logo"
-                        className="h-12 text-base border-blue-200 focus:border-blue-600 dark:border-blue-800"
-                        disabled={tags.length >= 5}
-                      />
-                      <Button
-                        type="button"
-                        onClick={addTag}
-                        disabled={tags.length >= 5 || !tagInput.trim()}
-                        className="h-12 bg-gradient-to-r from-blue-600 to-teal-600"
-                      >
-                        Adicionar
-                      </Button>
-                    </div>
-                    {tags.length > 0 && (
-                      <div className="flex flex-wrap gap-2 mt-3">
-                        {tags.map((tag) => (
-                          <Badge
-                            key={tag}
-                            variant="secondary"
-                            className="pl-3 pr-2 py-1.5 text-sm"
-                          >
-                            {tag}
-                            <button
-                              type="button"
-                              onClick={() => removeTag(tag)}
-                              className="ml-2 hover:text-destructive"
-                            >
-                              <X className="w-3 h-3" />
-                            </button>
-                          </Badge>
-                        ))}
-                      </div>
-                    )}
+                    <p className="text-xs text-muted-foreground">
+                      💡 O sistema irá detectar automaticamente a categoria e tags baseado no seu título e descrição
+                    </p>
                   </div>
                 </div>
               )}
@@ -639,18 +593,28 @@ export default function ProjectCreate() {
                         <p className="text-base">{title}</p>
                       </div>
 
-                      {category && (
+                      {detectedCategory && (
                         <div>
-                          <p className="text-sm font-semibold text-blue-900 dark:text-blue-200 mb-1">Categoria</p>
-                          <p className="text-base">{category}</p>
+                          <p className="text-sm font-semibold text-blue-900 dark:text-blue-200 mb-1 flex items-center gap-2">
+                            Categoria Detectada
+                            <Badge variant="outline" className="bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 border-blue-300">
+                              ✨ Automático
+                            </Badge>
+                          </p>
+                          <p className="text-base capitalize">{detectedCategory}</p>
                         </div>
                       )}
 
-                      {tags.length > 0 && (
+                      {detectedTags.length > 0 && (
                         <div>
-                          <p className="text-sm font-semibold text-blue-900 dark:text-blue-200 mb-1">Tags</p>
+                          <p className="text-sm font-semibold text-blue-900 dark:text-blue-200 mb-1 flex items-center gap-2">
+                            Tags Sugeridas
+                            <Badge variant="outline" className="bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 border-blue-300">
+                              ✨ Automático
+                            </Badge>
+                          </p>
                           <div className="flex flex-wrap gap-2 mt-2">
-                            {tags.map((tag) => (
+                            {detectedTags.map((tag) => (
                               <Badge key={tag} variant="secondary">{tag}</Badge>
                             ))}
                           </div>

@@ -281,7 +281,7 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
         ) : (
           <>
             {/* Header simplificado */}
-            <div className="bg-gradient-to-r from-blue-900/90 via-blue-800/90 to-blue-900/90 p-4 border-b shrink-0">
+            <div className="bg-gradient-to-r from-blue-900 via-teal-700 to-blue-900 p-4 border-b shrink-0">
               <DialogHeader>
                 <div className="space-y-2">
                   <h3 className="font-bold text-base leading-tight text-white">{projectTitle}</h3>
@@ -349,39 +349,39 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
                     const netAmountPremium = amount * (1 - platformFees.premium / 100);
                     
                     return (
-                      <div className="space-y-3">
+                      <div className="space-y-2">
                         {/* Valor que receberá - Destaque principal */}
-                        <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 border-2 border-blue-300 dark:border-blue-700 rounded-lg p-4 shadow-sm">
-                          <div className="flex items-baseline justify-between mb-1">
-                            <span className="text-sm font-medium text-blue-900 dark:text-blue-100">Você receberá:</span>
-                            <span className="text-2xl font-bold text-blue-900 dark:text-blue-50">
+                        <div className="bg-gradient-to-br from-blue-50 to-teal-50 dark:from-blue-950 dark:to-teal-900 border border-blue-300 dark:border-blue-700 rounded-lg p-3 shadow-sm">
+                          <div className="flex items-baseline justify-between">
+                            <span className="text-xs font-medium text-blue-900 dark:text-blue-100">Você receberá:</span>
+                            <span className="text-xl font-bold text-blue-900 dark:text-blue-50">
                               R$ {netAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </span>
                           </div>
-                          <p className="text-xs text-blue-700 dark:text-blue-300">
+                          <p className="text-[10px] text-blue-700 dark:text-blue-300 mt-0.5">
                             Plano <span className="font-bold capitalize">
                               {plan === 'premium' ? 'Premium' : plan === 'pro' ? 'Pro' : 'Gratuito'}
                             </span> • Taxa de {feePercentage.toFixed(1)}%
                           </p>
                         </div>
                         
-                        {/* Comparação de planos */}
+                        {/* Comparação de planos - Grid horizontal */}
                         {plan !== 'pro' && plan !== 'premium' && (
-                          <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 border border-amber-300 dark:border-amber-700 rounded-lg p-3 space-y-2.5">
-                            <p className="text-xs font-bold text-amber-900 dark:text-amber-100 flex items-center gap-1">
-                              <Sparkles className="w-3.5 h-3.5" />
+                          <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 border border-amber-300 dark:border-amber-700 rounded-lg p-2.5 space-y-2">
+                            <p className="text-[10px] font-bold text-amber-900 dark:text-amber-100 flex items-center gap-1">
+                              <Sparkles className="w-3 h-3" />
                               Ganhe mais mudando de plano:
                             </p>
-                            <div className="space-y-2 text-xs">
-                              <div className="flex items-center justify-between p-2 bg-white/60 dark:bg-black/20 rounded-md">
-                                <span className="font-medium text-gray-700 dark:text-gray-300">Plano Pro ({platformFees.pro.toFixed(1)}%)</span>
-                                <span className="font-bold text-blue-700 dark:text-blue-400">
+                            <div className="grid grid-cols-2 gap-2">
+                              <div className="flex flex-col items-center p-2 bg-white/60 dark:bg-black/20 rounded-md">
+                                <span className="text-[10px] font-medium text-gray-600 dark:text-gray-400 mb-0.5">Pro ({platformFees.pro.toFixed(1)}%)</span>
+                                <span className="text-sm font-bold text-blue-700 dark:text-blue-400">
                                   R$ {netAmountPro.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                 </span>
                               </div>
-                              <div className="flex items-center justify-between p-2 bg-white/60 dark:bg-black/20 rounded-md">
-                                <span className="font-medium text-gray-700 dark:text-gray-300">Plano Premium ({platformFees.premium.toFixed(1)}%)</span>
-                                <span className="font-bold text-blue-700 dark:text-blue-400">
+                              <div className="flex flex-col items-center p-2 bg-white/60 dark:bg-black/20 rounded-md">
+                                <span className="text-[10px] font-medium text-gray-600 dark:text-gray-400 mb-0.5">Premium ({platformFees.premium.toFixed(1)}%)</span>
+                                <span className="text-sm font-bold text-blue-700 dark:text-blue-400">
                                   R$ {netAmountPremium.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                 </span>
                               </div>
@@ -389,7 +389,7 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
                             <Button
                               type="button"
                               size="sm"
-                              className="w-full h-8 text-xs font-semibold bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
+                              className="w-full h-7 text-[10px] font-semibold bg-gradient-to-r from-blue-600 via-teal-600 to-blue-600 hover:from-blue-700 hover:via-teal-700 hover:to-blue-700"
                               onClick={() => window.open(`${window.location.origin}/planos`, '_blank')}
                             >
                               Mudar de Plano Agora
@@ -398,21 +398,21 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
                         )}
                         
                         {plan === 'pro' && (
-                          <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 border border-amber-300 dark:border-amber-700 rounded-lg p-3 space-y-2.5">
-                            <p className="text-xs font-bold text-amber-900 dark:text-amber-100 flex items-center gap-1">
-                              <Sparkles className="w-3.5 h-3.5" />
+                          <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 border border-amber-300 dark:border-amber-700 rounded-lg p-2.5 space-y-2">
+                            <p className="text-[10px] font-bold text-amber-900 dark:text-amber-100 flex items-center gap-1">
+                              <Sparkles className="w-3 h-3" />
                               Upgrade para Premium:
                             </p>
-                            <div className="flex items-center justify-between p-2 bg-white/60 dark:bg-black/20 rounded-md text-xs">
-                              <span className="font-medium text-gray-700 dark:text-gray-300">Plano Premium ({platformFees.premium.toFixed(1)}%)</span>
-                              <span className="font-bold text-blue-700 dark:text-blue-400">
+                            <div className="flex flex-col items-center p-2 bg-white/60 dark:bg-black/20 rounded-md">
+                              <span className="text-[10px] font-medium text-gray-600 dark:text-gray-400 mb-0.5">Premium ({platformFees.premium.toFixed(1)}%)</span>
+                              <span className="text-sm font-bold text-blue-700 dark:text-blue-400">
                                 R$ {netAmountPremium.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                               </span>
                             </div>
                             <Button
                               type="button"
                               size="sm"
-                              className="w-full h-8 text-xs font-semibold bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
+                              className="w-full h-7 text-[10px] font-semibold bg-gradient-to-r from-blue-600 via-teal-600 to-blue-600 hover:from-blue-700 hover:via-teal-700 hover:to-blue-700"
                               onClick={() => window.open(`${window.location.origin}/planos`, '_blank')}
                             >
                               Fazer Upgrade

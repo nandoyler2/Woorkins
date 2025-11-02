@@ -75,6 +75,14 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
 
   const STORY_DURATION = 15000; // 15 segundos
 
+  // Atualizar currentIndex quando initialStoryIndex mudar
+  useEffect(() => {
+    if (initialStoryIndex !== undefined) {
+      setCurrentIndex(initialStoryIndex);
+      setProgress(0);
+    }
+  }, [initialStoryIndex]);
+
   const loadStories = useCallback(async () => {
     // Se temos allStories (feed público), usar esses stories
     if (allStories && allStories.length > 0) {

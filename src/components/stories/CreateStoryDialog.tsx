@@ -259,6 +259,15 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
         textContent: type === 'text' ? textContent : undefined,
         backgroundColor: type === 'text' ? backgroundColor : undefined,
         metadata,
+        stickers: stickers.map(s => ({
+          type: s.type,
+          position_x: s.position_x,
+          position_y: s.position_y,
+          width: s.width,
+          height: s.height,
+          rotation: s.rotation,
+          content: s.content
+        }))
       });
 
       // Se chegou aqui, foi aprovado e publicado com sucesso

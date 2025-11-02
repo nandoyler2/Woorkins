@@ -26,6 +26,15 @@ interface StoryUploadData {
   backgroundColor?: string;
   linkUrl?: string;
   metadata?: any;
+  stickers?: Array<{
+    type: string;
+    position_x: number;
+    position_y: number;
+    width: number;
+    height: number;
+    rotation: number;
+    content: any;
+  }>;
 }
 
 const UploadContext = createContext<UploadContextType | undefined>(undefined);
@@ -196,11 +205,36 @@ export function UploadProvider({ children }: { children: ReactNode }) {
         storyData.metadata = data.metadata;
       }
 
-      const { error: insertError } = await supabase
+      const { data: insertData, error: insertError } = await supabase
         .from('profile_stories')
-        .insert(storyData);
+        .insert(storyData)
+        .select('id')
+        .single();
 
       if (insertError) throw insertError;
+
+      // Salvar stickers se houver
+      if (data.stickers && data.stickers.length > 0 && insertData?.id) {
+        const stickersToInsert = data.stickers.map(sticker => ({
+          story_id: insertData.id,
+          type: sticker.type,
+          position_x: sticker.position_x,
+          position_y: sticker.position_y,
+          width: sticker.width,
+          height: sticker.height,
+          rotation: sticker.rotation,
+          content: sticker.content
+        }));
+
+        const { error: stickersError } = await supabase
+          .from('story_stickers')
+          .insert(stickersToInsert);
+
+        if (stickersError) {
+          console.error('Error inserting stickers:', stickersError);
+          // Não falha o upload se os stickers falharem
+        }
+      }
 
       setCurrentUpload({
         id: uploadId,

@@ -24,6 +24,7 @@ import { LoginPromptDialog } from '@/components/projects/LoginPromptDialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { ProfileAvatarWithHover } from '@/components/ProfileAvatarWithHover';
 
 interface Project {
   id: string;
@@ -486,9 +487,11 @@ export default function ProjectDetails() {
                 {/* Client Info */}
                 <div className="space-y-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-lg">
-                      {formatShortName(project.profiles.full_name).charAt(0).toUpperCase()}
-                    </div>
+                    <ProfileAvatarWithHover
+                      profileId={project.profile_id}
+                      username={project.profiles.username}
+                      size="lg"
+                    />
                     <div>
                       <p className="font-semibold">{formatShortName(project.profiles.full_name)}</p>
                       <div className="flex items-center gap-1 mt-1">

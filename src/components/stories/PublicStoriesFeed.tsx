@@ -157,8 +157,9 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
 
       // Processar stories com score de popularidade
       let processedStories = (data || []).map(story => {
-        const likeCount = Array.isArray((story as any).story_likes) ? (story as any).story_likes.length : 0;
-        const commentCount = Array.isArray((story as any).story_comments) ? (story as any).story_comments.length : 0;
+        // Corrigir a contagem - Supabase retorna [{ count: n }] não um array
+        const likeCount = (story as any).story_likes?.[0]?.count || 0;
+        const commentCount = (story as any).story_comments?.[0]?.count || 0;
         const popularityScore = likeCount + (commentCount * 2); // Comentários valem mais
         
         return {
@@ -473,20 +474,20 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
                 
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                 
-                {/* Curtidas e comentários no topo esquerdo - apenas se tiver */}
+                {/* Curtidas e comentários juntos no topo esquerdo - apenas se tiver */}
                 {(story.like_count > 0 || story.comment_count > 0) && (
-                  <div className="absolute top-3 left-3 flex items-center gap-2">
+                  <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-black/50 backdrop-blur-sm rounded-full px-2.5 py-1 shadow-lg">
                     {story.like_count > 0 && (
-                      <div className="flex items-center gap-1 bg-black/50 backdrop-blur-sm rounded-full px-2 py-1 shadow-lg">
+                      <>
                         <Heart className="w-3.5 h-3.5 text-red-500 fill-red-500" />
                         <span className="text-white text-xs font-bold drop-shadow-md">{story.like_count}</span>
-                      </div>
+                      </>
                     )}
                     {story.comment_count > 0 && (
-                      <div className="flex items-center gap-1 bg-black/50 backdrop-blur-sm rounded-full px-2 py-1 shadow-lg">
+                      <>
                         <MessageCircle className="w-3.5 h-3.5 text-white fill-white" />
                         <span className="text-white text-xs font-bold drop-shadow-md">{story.comment_count}</span>
-                      </div>
+                      </>
                     )}
                   </div>
                 )}

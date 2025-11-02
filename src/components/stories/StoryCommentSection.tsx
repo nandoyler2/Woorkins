@@ -223,22 +223,27 @@ export function StoryCommentSection({ storyId, currentProfileId, isLiked, onTogg
                   <span className="text-xs font-semibold">{commentCount}</span>
                 </button>
               </SheetTrigger>
-              <SheetContent side="bottom" className="h-[70vh]">
-                <SheetHeader>
-                  <SheetTitle>Comentários ({commentCount})</SheetTitle>
+              <SheetContent 
+                side="bottom" 
+                className="h-[75vh] rounded-t-3xl border-t-0 animate-slide-in-bottom"
+              >
+                <SheetHeader className="border-b pb-4">
+                  <SheetTitle className="text-center text-lg font-bold">
+                    Comentários ({commentCount})
+                  </SheetTitle>
                 </SheetHeader>
-                <div className="mt-4 space-y-4 overflow-y-auto h-[calc(100%-60px)]">
+                <div className="mt-6 space-y-6 overflow-y-auto h-[calc(100%-80px)] pr-2">
                   {comments.map((comment) => (
-                    <div key={comment.id} className="flex gap-3">
-                      <Avatar className="w-10 h-10 flex-shrink-0">
+                    <div key={comment.id} className="flex gap-3 animate-fade-in">
+                      <Avatar className="w-10 h-10 flex-shrink-0 ring-2 ring-border">
                         <AvatarImage src={comment.profiles.avatar_url || undefined} />
-                        <AvatarFallback>
+                        <AvatarFallback className="bg-primary/10 text-primary font-semibold">
                           {formatShortName(comment.profiles.full_name)?.[0]?.toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-baseline gap-2">
-                          <p className="text-sm font-semibold">
+                        <div className="flex items-baseline gap-2 mb-1">
+                          <p className="text-sm font-semibold text-foreground">
                             {formatShortName(comment.profiles.full_name) || comment.profiles.username}
                           </p>
                           <p className="text-xs text-muted-foreground">
@@ -250,7 +255,7 @@ export function StoryCommentSection({ storyId, currentProfileId, isLiked, onTogg
                             })}
                           </p>
                         </div>
-                        <p className="text-sm text-foreground break-words">
+                        <p className="text-sm text-foreground/90 break-words leading-relaxed">
                           {comment.comment_text}
                         </p>
                       </div>

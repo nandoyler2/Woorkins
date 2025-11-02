@@ -196,7 +196,7 @@ export function StoryCommentSection({ storyId, currentProfileId, isLiked, onTogg
       </div>
 
       {/* Barra de comentários inferior */}
-      <div className="absolute bottom-4 left-4 right-4 z-30 flex items-center gap-2">
+      <div className="absolute bottom-4 left-4 right-4 z-30 flex items-center gap-3">
         <div className="flex-1 relative">
           <Input
             ref={inputRef}
@@ -204,7 +204,7 @@ export function StoryCommentSection({ storyId, currentProfileId, isLiked, onTogg
             onChange={(e) => setCommentText(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder="Responder..."
-            className="bg-black/40 backdrop-blur-md border-white/30 text-white placeholder:text-white/60 rounded-full pr-12 h-11"
+            className="bg-transparent border-2 border-white/60 text-white placeholder:text-white/70 rounded-full pr-12 h-12 focus:border-white focus-visible:ring-0 focus-visible:ring-offset-0"
             maxLength={200}
             disabled={isSubmitting}
           />
@@ -262,9 +262,9 @@ export function StoryCommentSection({ storyId, currentProfileId, isLiked, onTogg
           variant="ghost"
           size="icon"
           onClick={onToggleLike}
-          className="bg-black/40 backdrop-blur-md border border-white/30 text-white hover:bg-black/60 rounded-full h-11 w-11 flex-shrink-0"
+          className="bg-transparent border-0 text-white hover:bg-transparent hover:scale-110 transition-transform rounded-full h-12 w-12 flex-shrink-0"
         >
-          <Heart className={`w-5 h-5 ${isLiked ? 'fill-red-500 text-red-500' : ''}`} />
+          <Heart className={`w-7 h-7 ${isLiked ? 'fill-red-500 text-red-500' : ''}`} />
         </Button>
 
         {/* Botão de enviar */}
@@ -273,9 +273,9 @@ export function StoryCommentSection({ storyId, currentProfileId, isLiked, onTogg
           size="icon"
           onClick={handleSendComment}
           disabled={!commentText.trim() || isSubmitting}
-          className="bg-black/40 backdrop-blur-md border border-white/30 text-white hover:bg-black/60 rounded-full h-11 w-11 flex-shrink-0 disabled:opacity-50"
+          className="bg-transparent border-0 text-white hover:bg-transparent hover:scale-110 transition-transform rounded-full h-12 w-12 flex-shrink-0 disabled:opacity-30"
         >
-          <Send className="w-5 h-5" />
+          <Send className="w-7 h-7" />
         </Button>
       </div>
     </>

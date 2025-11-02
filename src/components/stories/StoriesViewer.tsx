@@ -11,6 +11,7 @@ import { useStoryLikes } from '@/hooks/useStoryLikes';
 import { RepostStoryDialog } from './RepostStoryDialog';
 import { StoryViewsDialog } from './StoryViewsDialog';
 import { InteractiveStickerRenderer } from './InteractiveStickerRenderer';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface Sticker {
   id: string;
@@ -86,6 +87,11 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [likeAnimations, setLikeAnimations] = useState<Array<{ id: string; x: number; y: number }>>([]);
   const [showViewsDialog, setShowViewsDialog] = useState(false);
+  const [showViews, setShowViews] = useState(false);
+  const [views, setViews] = useState<any[]>([]);
+  const [likes, setLikes] = useState<any[]>([]);
+  const [statsTab, setStatsTab] = useState<'views' | 'likes'>('views');
+  const [loadingStats, setLoadingStats] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const lastTapRef = useRef<number>(0);
   const { toast } = useToast();
@@ -398,6 +404,59 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
     }
   };
 
+  const loadStoryStats = useCallback(async (storyId: string) => {
+    setLoadingStats(true);
+    try {
+      // Buscar visualizações
+      const { data: viewsData } = await supabase
+        .from('story_views')
+        .select(`
+          viewer_profile_id,
+          profiles:viewer_profile_id (
+            id,
+            username,
+            full_name,
+            avatar_url
+          )
+        `)
+        .eq('story_id', storyId)
+        .order('viewed_at', { ascending: false });
+
+      // Buscar curtidas
+      const { data: likesData } = await supabase
+        .from('story_likes')
+        .select(`
+          profile_id,
+          profiles:profile_id (
+            id,
+            username,
+            full_name,
+            avatar_url
+          )
+        `)
+        .eq('story_id', storyId)
+        .order('created_at', { ascending: false });
+
+      setViews(viewsData?.map(v => v.profiles).filter(Boolean) || []);
+      setLikes(likesData?.map(l => l.profiles).filter(Boolean) || []);
+    } catch (error) {
+      console.error('Error loading story stats:', error);
+    } finally {
+      setLoadingStats(false);
+    }
+  }, []);
+
+  const handleShowStats = (storyId: string) => {
+    setShowViews(true);
+    setCommentsOpen(true);
+    loadStoryStats(storyId);
+  };
+
+  const handleCloseStats = () => {
+    setShowViews(false);
+    setCommentsOpen(false);
+  };
+
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
@@ -562,7 +621,7 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
                       {/* View count (se for o dono) */}
                       {isOwner && (
                         <button
-                          onClick={() => setShowViewsDialog(true)}
+                          onClick={() => handleShowStats(currentStory.id)}
                           className="bg-black/50 backdrop-blur-md text-white px-3 py-1.5 rounded-full text-xs flex items-center gap-1 hover:bg-black/70 transition-colors cursor-pointer"
                         >
                           <span>👁️</span>
@@ -813,7 +872,7 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
                   )}
 
                   {/* Seção de comentários */}
-                  {currentProfileId && currentStory && (
+                  {currentProfileId && currentStory && !showViews && (
                     <StoryCommentSection
                       storyId={currentStory.id}
                       currentProfileId={currentProfileId}
@@ -823,6 +882,89 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
                       onRepost={() => setShowRepostDialog(true)}
                       onCommentsToggle={setCommentsOpen}
                     />
+                  )}
+
+                  {/* Tela de visualizações e curtidas */}
+                  {showViews && isOwner && (
+                    <div className="absolute inset-0 bg-black/95 z-40 flex flex-col animate-in slide-in-from-bottom duration-300">
+                      <div className="flex items-center justify-between p-4 border-b border-white/10">
+                        <h3 className="text-white font-semibold text-lg">Estatísticas do Story</h3>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={handleCloseStats}
+                          className="text-white hover:bg-white/10"
+                        >
+                          <X className="w-5 h-5" />
+                        </Button>
+                      </div>
+
+                      {/* Tabs */}
+                      <div className="flex border-b border-white/10">
+                        <button
+                          onClick={() => setStatsTab('views')}
+                          className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+                            statsTab === 'views'
+                              ? 'text-white border-b-2 border-white'
+                              : 'text-white/60 hover:text-white'
+                          }`}
+                        >
+                          👁️ Visualizações ({views.length})
+                        </button>
+                        <button
+                          onClick={() => setStatsTab('likes')}
+                          className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+                            statsTab === 'likes'
+                              ? 'text-white border-b-2 border-white'
+                              : 'text-white/60 hover:text-white'
+                          }`}
+                        >
+                          ❤️ Curtidas ({likes.length})
+                        </button>
+                      </div>
+
+                      {/* Lista */}
+                      <ScrollArea className="flex-1 px-4 py-4">
+                        {loadingStats ? (
+                          <div className="flex justify-center py-8">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+                          </div>
+                        ) : (
+                          <div className="space-y-2">
+                            {(statsTab === 'views' ? views : likes).length === 0 ? (
+                              <p className="text-center text-white/60 py-8">Nenhum registro ainda</p>
+                            ) : (
+                              (statsTab === 'views' ? views : likes).map((profile: any) => (
+                                <div
+                                  key={profile.id}
+                                  className="flex items-center gap-3 p-3 hover:bg-white/10 rounded-lg transition-colors"
+                                >
+                                  {profile.avatar_url ? (
+                                    <SafeImage
+                                      src={profile.avatar_url}
+                                      alt={profile.full_name || profile.username}
+                                      className="w-10 h-10 rounded-full object-cover"
+                                    />
+                                  ) : (
+                                    <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
+                                      <User className="w-5 h-5 text-white/60" />
+                                    </div>
+                                  )}
+                                  <div className="flex-1 min-w-0">
+                                    <p className="font-medium text-sm text-white truncate">
+                                      {profile.full_name}
+                                    </p>
+                                    <p className="text-xs text-white/60 truncate">
+                                      @{profile.username}
+                                    </p>
+                                  </div>
+                                </div>
+                              ))
+                            )}
+                          </div>
+                        )}
+                      </ScrollArea>
+                    </div>
                   )}
 
                   {/* Footer - Delete button */}

@@ -386,32 +386,23 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
                                 title={style.name}
                               />
                             ))}
+                            
+                            {/* Cor personalizada inline */}
+                            <div className="relative flex-shrink-0">
+                              <input
+                                type="color"
+                                value={customColor}
+                                onChange={(e) => {
+                                  setCustomColor(e.target.value);
+                                  setBackgroundColor(e.target.value);
+                                }}
+                                className="w-[50px] h-10 rounded-lg cursor-pointer border-2 border-border hover:border-primary transition-all"
+                                title="Cor personalizada"
+                              />
+                            </div>
                           </div>
                         </div>
                         
-                        {/* Cor personalizada - compacta */}
-                        <div className="flex items-center gap-2 bg-muted/30 p-2 rounded-lg">
-                          <Label className="text-xs font-semibold whitespace-nowrap">Personalizada:</Label>
-                          <input
-                            type="color"
-                            value={customColor}
-                            onChange={(e) => {
-                              setCustomColor(e.target.value);
-                              setBackgroundColor(e.target.value);
-                            }}
-                            className="w-10 h-8 rounded cursor-pointer border border-border"
-                          />
-                          <Input
-                            value={customColor}
-                            onChange={(e) => {
-                              setCustomColor(e.target.value);
-                              setBackgroundColor(e.target.value);
-                            }}
-                            placeholder="#8B5CF6"
-                            className="flex-1 h-8 text-sm bg-background"
-                          />
-                        </div>
-
                         <div>
                           <div className="flex items-center justify-between mb-2">
                             <Label className="text-sm font-semibold">Seu texto:</Label>

@@ -558,14 +558,13 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
                     <div className="flex items-center gap-2 col-span-2">
                       <Button
                         type="button"
-                        variant="ghost"
                         size="sm"
                         onClick={handleAttachmentClick}
-                        className="h-7 gap-1.5 text-xs hover:bg-blue-100 dark:hover:bg-blue-900 text-blue-900 dark:text-blue-100"
+                        className="h-8 gap-1.5 text-xs bg-amber-500 hover:bg-amber-600 text-white font-medium"
                         title="Adicionar anexos (Pro/Premium)"
                       >
                         <Paperclip className="w-3.5 h-3.5" />
-                        Enviar anexo ({attachments.length}/3)
+                        Envie seu portfólio ou anexo para destacar ({attachments.length}/3)
                       </Button>
                       
                       {attachments.length > 0 && (
@@ -592,7 +591,7 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
                         type="submit" 
                         disabled={loading}
                         size="sm"
-                        className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg hover:shadow-xl transition-all font-semibold"
+                        className="bg-green-700 hover:bg-green-800 text-white shadow-lg hover:shadow-xl transition-all font-semibold"
                       >
                         {loading ? (
                           <>

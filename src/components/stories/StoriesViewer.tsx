@@ -708,7 +708,7 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
             />
           )}
 
-          {/* Footer - Link e Delete button */}
+          {/* Footer - Delete button */}
           <div className="absolute bottom-20 left-4 right-4 z-20 flex items-end justify-between">
             <div className="flex gap-2">
               {/* Delete button for owner */}
@@ -723,18 +723,6 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
                 </Button>
               )}
             </div>
-
-            {currentStory.link_url && currentStory.type !== 'text' && (
-              <a
-                href={currentStory.link_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 bg-white/20 backdrop-blur-md text-white px-4 py-3 rounded-full hover:bg-white/30 transition-colors"
-              >
-                <ExternalLink className="w-4 h-4" />
-                <span className="text-sm font-medium">Ver link</span>
-              </a>
-            )}
           </div>
 
 

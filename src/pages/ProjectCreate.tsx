@@ -18,6 +18,7 @@ import { RequireDocumentVerificationDialog } from '@/components/RequireDocumentV
 import { RequireProfilePhotoDialog } from '@/components/RequireProfilePhotoDialog';
 import { analyzeProject } from '@/lib/projectAnalyzer';
 import { validateProject } from '@/lib/projectValidation';
+import { MarkdownText } from '@/lib/markdownUtils';
 
 export default function ProjectCreate() {
   const { user } = useAuth();
@@ -605,7 +606,7 @@ export default function ProjectCreate() {
                         if (descriptionError) setDescriptionError(false);
                       }}
                       placeholder="Descreva em detalhes o que você precisa...&#10;&#10;Inclua:&#10;• O que precisa ser feito&#10;• Referências ou exemplos&#10;• Requisitos específicos&#10;• Entregas esperadas&#10;&#10;💡 Dica: Selecione o texto e use os botões acima para formatar em **negrito** ou *itálico*"
-                      rows={12}
+                      rows={8}
                       maxLength={2000}
                       className={cn(
                         "text-base resize-none border-blue-200 focus:border-blue-600 dark:border-blue-800 transition-all",
@@ -613,6 +614,17 @@ export default function ProjectCreate() {
                         description.length > 2000 && "border-red-500 dark:border-red-500"
                       )}
                     />
+                    
+                    {/* Preview da formatação */}
+                    {description && (
+                      <div className="mt-3 p-4 bg-muted/30 border border-muted rounded-lg">
+                        <p className="text-xs font-semibold text-muted-foreground mb-2">👁️ Preview:</p>
+                        <div className="text-sm text-foreground leading-relaxed">
+                          <MarkdownText text={description} />
+                        </div>
+                      </div>
+                    )}
+                    
                     {descriptionError ? (
                       <p className="text-sm text-red-600 dark:text-red-400 font-medium animate-pulse">
                         ⚠️ Por favor, preencha a descrição do projeto

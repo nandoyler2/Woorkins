@@ -2,8 +2,9 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Activity, Briefcase, Camera, UserPlus, DollarSign } from 'lucide-react';
+import { Activity, User } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { formatShortName } from '@/lib/utils';
 
 interface PlatformActivity {
@@ -21,6 +22,7 @@ interface PlatformActivity {
 export function PlatformActivities() {
   const [activities, setActivities] = useState<PlatformActivity[]>([]);
   const [loading, setLoading] = useState(true);
+  const [newItemId, setNewItemId] = useState<string | null>(null);
 
   useEffect(() => {
     loadActivities();
@@ -37,11 +39,16 @@ export function PlatformActivities() {
         },
         (payload) => {
           const newActivity = payload.new as PlatformActivity;
+          setNewItemId(newActivity.id);
+          
           setActivities((prev) => {
             // Adicionar no topo e manter apenas 10
             const updated = [newActivity, ...prev];
             return updated.slice(0, 10);
           });
+
+          // Remover highlight após animação
+          setTimeout(() => setNewItemId(null), 1000);
         }
       )
       .subscribe();
@@ -65,36 +72,6 @@ export function PlatformActivities() {
       console.error('Error loading activities:', error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const getActivityIcon = (type: string) => {
-    switch (type) {
-      case 'project_published':
-        return Briefcase;
-      case 'story_published':
-        return Camera;
-      case 'profile_followed':
-        return UserPlus;
-      case 'proposal_sent':
-        return DollarSign;
-      default:
-        return Activity;
-    }
-  };
-
-  const getActivityColor = (type: string) => {
-    switch (type) {
-      case 'project_published':
-        return 'bg-blue-500';
-      case 'story_published':
-        return 'bg-purple-500';
-      case 'profile_followed':
-        return 'bg-green-500';
-      case 'proposal_sent':
-        return 'bg-orange-500';
-      default:
-        return 'bg-gray-500';
     }
   };
 
@@ -179,15 +156,25 @@ export function PlatformActivities() {
         ) : (
           <ScrollArea className="h-[350px]">
             <div className="space-y-3 pr-4">
-              {activities.map((activity) => {
-                const Icon = getActivityIcon(activity.activity_type);
-                const colorClass = getActivityColor(activity.activity_type);
+              {activities.map((activity, index) => {
+                const isNew = activity.id === newItemId;
                 
                 return (
-                  <div key={activity.id} className="flex items-start gap-3">
-                    <div className={`w-8 h-8 ${colorClass} rounded-lg flex items-center justify-center flex-shrink-0`}>
-                      <Icon className="w-4 h-4 text-white" />
-                    </div>
+                  <div 
+                    key={activity.id} 
+                    className={`flex items-start gap-3 transition-all duration-300 ${
+                      isNew ? 'animate-in slide-in-from-top-2 fade-in duration-500' : ''
+                    }`}
+                    style={{
+                      animationDelay: isNew ? '0ms' : `${index * 50}ms`
+                    }}
+                  >
+                    <Avatar className="w-10 h-10 flex-shrink-0 ring-2 ring-offset-2 ring-primary/20">
+                      <AvatarImage src={activity.profile_avatar || undefined} />
+                      <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-500 text-white text-xs font-semibold">
+                        {formatShortName(activity.profile_name)?.[0]?.toUpperCase() || <User className="w-4 h-4" />}
+                      </AvatarFallback>
+                    </Avatar>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm text-slate-700">
                         {getActivityText(activity)}

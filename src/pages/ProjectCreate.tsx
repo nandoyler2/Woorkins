@@ -34,6 +34,11 @@ export default function ProjectCreate() {
   const [tagInput, setTagInput] = useState('');
   const [budgetRange, setBudgetRange] = useState('');
   const [deadline, setDeadline] = useState<Date>();
+  
+  // Estados para validação visual
+  const [titleError, setTitleError] = useState(false);
+  const [descriptionError, setDescriptionError] = useState(false);
+  const [budgetError, setBudgetError] = useState(false);
   const [profileId, setProfileId] = useState<string>('');
   const [registeredName, setRegisteredName] = useState('');
   const [registeredCPF, setRegisteredCPF] = useState('');
@@ -100,30 +105,27 @@ export default function ProjectCreate() {
   };
 
   const nextStep = () => {
+    // Etapa 1: Validar título
     if (currentStep === 1 && !title.trim()) {
-      toast({
-        title: "Campo obrigatório",
-        description: "Por favor, preencha o título do projeto",
-        variant: "destructive",
-      });
+      setTitleError(true);
+      setTimeout(() => setTitleError(false), 2000);
       return;
     }
+    
+    // Etapa 2: Validar descrição
     if (currentStep === 2 && !description.trim()) {
-      toast({
-        title: "Campo obrigatório",
-        description: "Por favor, preencha a descrição do projeto",
-        variant: "destructive",
-      });
+      setDescriptionError(true);
+      setTimeout(() => setDescriptionError(false), 2000);
       return;
     }
+    
+    // Etapa 3: Validar orçamento
     if (currentStep === 3 && !budgetRange) {
-      toast({
-        title: "Campo obrigatório",
-        description: "Por favor, selecione uma faixa de orçamento",
-        variant: "destructive",
-      });
+      setBudgetError(true);
+      setTimeout(() => setBudgetError(false), 2000);
       return;
     }
+    
     setCurrentStep(prev => Math.min(prev + 1, 4));
   };
 
@@ -345,10 +347,21 @@ export default function ProjectCreate() {
                   <Input
                     id="title"
                     value={title}
-                    onChange={(e) => setTitle(e.target.value)}
+                    onChange={(e) => {
+                      setTitle(e.target.value);
+                      if (titleError) setTitleError(false);
+                    }}
                     placeholder="Ex: Desenvolvimento de site institucional"
-                    className="h-12 text-base border-blue-200 focus:border-blue-600 dark:border-blue-800"
+                    className={cn(
+                      "h-12 text-base border-blue-200 focus:border-blue-600 dark:border-blue-800 transition-all",
+                      titleError && "border-red-500 dark:border-red-500 animate-shake bg-red-50 dark:bg-red-950/20"
+                    )}
                   />
+                  {titleError && (
+                    <p className="text-sm text-red-600 dark:text-red-400 font-medium animate-pulse">
+                      ⚠️ Por favor, preencha o título do projeto
+                    </p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -428,14 +441,26 @@ export default function ProjectCreate() {
                   <Textarea
                     id="description"
                     value={description}
-                    onChange={(e) => setDescription(e.target.value)}
+                    onChange={(e) => {
+                      setDescription(e.target.value);
+                      if (descriptionError) setDescriptionError(false);
+                    }}
                     placeholder="Descreva em detalhes o que você precisa...&#10;&#10;Inclua:&#10;• O que precisa ser feito&#10;• Referências ou exemplos&#10;• Requisitos específicos&#10;• Entregas esperadas"
                     rows={12}
-                    className="text-base resize-none border-blue-200 focus:border-blue-600 dark:border-blue-800"
+                    className={cn(
+                      "text-base resize-none border-blue-200 focus:border-blue-600 dark:border-blue-800 transition-all",
+                      descriptionError && "border-red-500 dark:border-red-500 animate-shake bg-red-50 dark:bg-red-950/20"
+                    )}
                   />
-                  <p className="text-sm text-muted-foreground">
-                    💡 Quanto mais detalhes você fornecer, melhores serão as propostas recebidas
-                  </p>
+                  {descriptionError ? (
+                    <p className="text-sm text-red-600 dark:text-red-400 font-medium animate-pulse">
+                      ⚠️ Por favor, preencha a descrição do projeto
+                    </p>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      💡 Quanto mais detalhes você fornecer, melhores serão as propostas recebidas
+                    </p>
+                  )}
                 </div>
               </div>
             )}
@@ -444,12 +469,33 @@ export default function ProjectCreate() {
             {currentStep === 3 && (
               <div className="space-y-6 animate-fade-in max-w-2xl mx-auto">
                 <div className="space-y-4">
-                  <Label className="text-base font-semibold flex items-center gap-2">
+                  <Label className={cn(
+                    "text-base font-semibold flex items-center gap-2 transition-all",
+                    budgetError && "text-red-600 dark:text-red-400"
+                  )}>
                     <DollarSign className="w-4 h-4 text-blue-600" />
-                    Faixa de Valor do Projeto
+                    Faixa de Valor do Projeto *
                   </Label>
-                  <RadioGroup value={budgetRange} onValueChange={setBudgetRange} className="space-y-3">
-                    <div className="flex items-start space-x-3 p-4 rounded-lg border-2 hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-950/20 transition-all cursor-pointer">
+                  {budgetError && (
+                    <p className="text-sm text-red-600 dark:text-red-400 font-medium animate-pulse">
+                      ⚠️ Por favor, selecione uma faixa de orçamento
+                    </p>
+                  )}
+                  <RadioGroup 
+                    value={budgetRange} 
+                    onValueChange={(value) => {
+                      setBudgetRange(value);
+                      if (budgetError) setBudgetError(false);
+                    }} 
+                    className={cn(
+                      "space-y-3 transition-all",
+                      budgetError && "animate-shake"
+                    )}
+                  >
+                    <div className={cn(
+                      "flex items-start space-x-3 p-4 rounded-lg border-2 hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-950/20 transition-all cursor-pointer",
+                      budgetError && "border-red-500 dark:border-red-500 bg-red-50 dark:bg-red-950/20"
+                    )}>
                       <RadioGroupItem value="low" id="low" className="mt-1" />
                       <Label htmlFor="low" className="flex-1 cursor-pointer space-y-1">
                         <div className="font-semibold text-base">Até R$300</div>
@@ -459,7 +505,10 @@ export default function ProjectCreate() {
                       </Label>
                     </div>
                     
-                    <div className="flex items-start space-x-3 p-4 rounded-lg border-2 hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-950/20 transition-all cursor-pointer">
+                    <div className={cn(
+                      "flex items-start space-x-3 p-4 rounded-lg border-2 hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-950/20 transition-all cursor-pointer",
+                      budgetError && "border-red-500 dark:border-red-500 bg-red-50 dark:bg-red-950/20"
+                    )}>
                       <RadioGroupItem value="medium" id="medium" className="mt-1" />
                       <Label htmlFor="medium" className="flex-1 cursor-pointer space-y-1">
                         <div className="font-semibold text-base">R$300 a R$800</div>
@@ -469,7 +518,10 @@ export default function ProjectCreate() {
                       </Label>
                     </div>
                     
-                    <div className="flex items-start space-x-3 p-4 rounded-lg border-2 hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-950/20 transition-all cursor-pointer">
+                    <div className={cn(
+                      "flex items-start space-x-3 p-4 rounded-lg border-2 hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-950/20 transition-all cursor-pointer",
+                      budgetError && "border-red-500 dark:border-red-500 bg-red-50 dark:bg-red-950/20"
+                    )}>
                       <RadioGroupItem value="high" id="high" className="mt-1" />
                       <Label htmlFor="high" className="flex-1 cursor-pointer space-y-1">
                         <div className="font-semibold text-base">R$800 a R$2.000</div>
@@ -479,7 +531,10 @@ export default function ProjectCreate() {
                       </Label>
                     </div>
                     
-                    <div className="flex items-start space-x-3 p-4 rounded-lg border-2 hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-950/20 transition-all cursor-pointer">
+                    <div className={cn(
+                      "flex items-start space-x-3 p-4 rounded-lg border-2 hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-950/20 transition-all cursor-pointer",
+                      budgetError && "border-red-500 dark:border-red-500 bg-red-50 dark:bg-red-950/20"
+                    )}>
                       <RadioGroupItem value="premium" id="premium" className="mt-1" />
                       <Label htmlFor="premium" className="flex-1 cursor-pointer space-y-1">
                         <div className="font-semibold text-base">Acima de R$2.000</div>

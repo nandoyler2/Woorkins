@@ -635,7 +635,7 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
           </AlertDialogHeader>
           <AlertDialogFooter>
             <Button variant="outline" onClick={() => setShowPremiumDialog(false)}>
-              Cancelar
+              Ver depois
             </Button>
             <Button 
               className="bg-gradient-to-r from-blue-600 via-teal-600 to-blue-600 hover:from-blue-700 hover:via-teal-700 hover:to-blue-700"

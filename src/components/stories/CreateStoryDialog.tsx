@@ -283,7 +283,7 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
   return (
     <>
       <Dialog open={isOpen} onOpenChange={handleClose}>
-        <DialogContent className="max-w-6xl h-[90vh] p-0 gap-0 overflow-hidden border-l-8 border-l-gradient-to-b from-purple-500 via-pink-500 to-orange-500">
+        <DialogContent className={`${step === 'select' ? 'max-w-2xl' : 'max-w-6xl'} ${step === 'select' ? 'h-auto' : 'h-[90vh]'} p-0 gap-0 overflow-hidden border-l-8 border-l-gradient-to-b from-purple-500 via-pink-500 to-orange-500 transition-all duration-300`}>
           <div className="flex h-full">
             {/* Coluna esquerda - Header, Formulário e Botões */}
             <div className="flex-1 flex flex-col min-w-0">
@@ -296,7 +296,7 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
               </DialogHeader>
 
               {/* Formulário - Scrollable */}
-              <div className="flex-1 overflow-y-auto px-6 py-6 min-h-0">
+              <div className={`flex-1 overflow-y-auto px-6 py-6 min-h-0 ${step === 'select' ? '' : ''}`}>
                 {step === 'select' ? (
                   <div className="space-y-6">
                     {/* Seleção de perfil (se tiver múltiplos) */}
@@ -579,7 +579,7 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
                     disabled={currentUpload?.status === 'uploading'}
                     size="lg"
                   >
-                    Cancelar
+                    {step === 'select' ? 'Fechar' : 'Cancelar'}
                   </Button>
                   {step === 'create' && (
                     <Button 

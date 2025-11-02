@@ -1,14 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAuthAction } from '@/contexts/AuthActionContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Textarea } from '@/components/ui/textarea';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
@@ -17,10 +15,15 @@ import {
   Send, Star, ChevronRight, Target, FileText,
   Briefcase, Clock, Users, AlertCircle, CheckCircle
 } from 'lucide-react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { formatShortName } from '@/lib/utils';
+import { ProposalDialog } from '@/components/projects/ProposalDialog';
+import { ViewProposalDialog } from '@/components/projects/ViewProposalDialog';
+import { LoginPromptDialog } from '@/components/projects/LoginPromptDialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 
 interface Project {
   id: string;
@@ -60,32 +63,24 @@ interface Proposal {
   } | null;
 }
 
-interface BusinessProfile {
-  id: string;
-  company_name: string;
-  slug: string;
-}
-
 export default function ProjectDetails() {
   const { id } = useParams();
   const { user } = useAuth();
+  const { requireAuth } = useAuthAction();
   const { toast } = useToast();
   const navigate = useNavigate();
   
   const [project, setProject] = useState<Project | null>(null);
   const [proposals, setProposals] = useState<Proposal[]>([]);
-  const [myBusinesses, setMyBusinesses] = useState<BusinessProfile[]>([]);
   const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-  const [proposalDialogOpen, setProposalDialogOpen] = useState(false);
   const [reportDialogOpen, setReportDialogOpen] = useState(false);
   const [reportReason, setReportReason] = useState('');
   const [reportDescription, setReportDescription] = useState('');
-  
-  const [message, setMessage] = useState('');
-  const [budget, setBudget] = useState('');
-  const [deliveryDays, setDeliveryDays] = useState('');
-  const [selectedBusiness, setSelectedBusiness] = useState('individual');
+  const [hasProposal, setHasProposal] = useState(false);
+  const [userProposal, setUserProposal] = useState<any>(null);
+  const [proposalDialogOpen, setProposalDialogOpen] = useState(false);
+  const [viewProposalDialogOpen, setViewProposalDialogOpen] = useState(false);
+  const [loginDialogOpen, setLoginDialogOpen] = useState(false);
 
   useEffect(() => {
     if (project) {
@@ -97,10 +92,92 @@ export default function ProjectDetails() {
 
   useEffect(() => {
     loadProjectData();
-    if (user) {
-      loadMyBusinesses();
-    }
   }, [id, user]);
+
+  useEffect(() => {
+    const checkUserProposal = async () => {
+      if (!user || !id) {
+        setHasProposal(false);
+        return;
+      }
+
+      try {
+        const { data: profile } = await supabase
+          .from('profiles' as any)
+          .select('id')
+          .eq('user_id', user.id)
+          .single();
+
+        if (!profile) return;
+
+        const profileData = profile as any;
+
+        const { data: proposal } = await supabase
+          .from('proposals' as any)
+          .select('budget, delivery_days, message, created_at')
+          .eq('project_id', id)
+          .eq('freelancer_id', profileData.id)
+          .single();
+
+        if (proposal) {
+          setUserProposal(proposal);
+          setHasProposal(true);
+        } else {
+          setHasProposal(false);
+        }
+      } catch (error) {
+        setHasProposal(false);
+      }
+    };
+
+    checkUserProposal();
+  }, [user, id]);
+
+  const handleMakeProposal = () => {
+    if (hasProposal) {
+      setViewProposalDialogOpen(true);
+      return;
+    }
+    
+    if (requireAuth(() => setProposalDialogOpen(true))) {
+      setProposalDialogOpen(true);
+    }
+  };
+
+  const handleProposalSuccess = () => {
+    setProposalDialogOpen(false);
+    // Recarregar a proposta
+    const checkUserProposal = async () => {
+      if (!user || !id) return;
+
+      try {
+        const { data: profile } = await supabase
+          .from('profiles' as any)
+          .select('id')
+          .eq('user_id', user.id)
+          .single();
+
+        if (!profile) return;
+
+        const profileData = profile as any;
+
+        const { data: proposal } = await supabase
+          .from('proposals' as any)
+          .select('budget, delivery_days, message, created_at')
+          .eq('project_id', id)
+          .eq('freelancer_id', profileData.id)
+          .single();
+
+        if (proposal) {
+          setUserProposal(proposal);
+          setHasProposal(true);
+        }
+      } catch (error) {
+        console.error('Error fetching proposal:', error);
+      }
+    };
+    checkUserProposal();
+  };
 
   const loadProjectData = async () => {
     if (!id) return;
@@ -151,77 +228,6 @@ export default function ProjectDetails() {
       });
     } finally {
       setLoading(false);
-    }
-  };
-
-  const loadMyBusinesses = async () => {
-    if (!user) return;
-
-    const { data: profileData } = await supabase
-      .from('profiles' as any)
-      .select('id')
-      .eq('user_id', user.id)
-      .single();
-
-    if (!profileData) return;
-
-    const { data } = await supabase
-      .from('business_profiles' as any)
-      .select('id, company_name, slug')
-      .eq('profile_id', (profileData as any).id);
-
-    if (data) {
-      setMyBusinesses(data as any);
-    }
-  };
-
-  const handleSubmitProposal = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user || !project) return;
-
-    setSubmitting(true);
-
-    try {
-      const { data: profileData } = await supabase
-        .from('profiles' as any)
-        .select('id')
-        .eq('user_id', user.id)
-        .single();
-
-      if (!profileData) throw new Error('Perfil não encontrado');
-
-      const { error } = await supabase
-        .from('proposals' as any)
-        .insert({
-          project_id: project.id,
-          freelancer_id: (profileData as any).id,
-          business_id: selectedBusiness && selectedBusiness !== 'individual' ? selectedBusiness : null,
-          message,
-          budget: parseFloat(budget),
-          delivery_days: parseInt(deliveryDays),
-        });
-
-      if (error) throw error;
-
-      toast({
-        title: 'Proposta enviada!',
-        description: 'Sua proposta foi enviada com sucesso.',
-      });
-
-      setMessage('');
-      setBudget('');
-      setDeliveryDays('');
-      setSelectedBusiness('individual');
-      setProposalDialogOpen(false);
-      loadProjectData();
-    } catch (error: any) {
-      toast({
-        title: 'Erro ao enviar proposta',
-        description: error.message,
-        variant: 'destructive',
-      });
-    } finally {
-      setSubmitting(false);
     }
   };
 
@@ -460,84 +466,13 @@ export default function ProjectDetails() {
 
                 {/* Action Button */}
                 {!isOwner && project.status === 'open' && (
-                  <Dialog open={proposalDialogOpen} onOpenChange={setProposalDialogOpen}>
-                    <DialogTrigger asChild>
-                      <Button className="w-full bg-gradient-primary hover:opacity-90 shadow-glow">
-                        Fazer uma proposta
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-md">
-                      <DialogHeader>
-                        <DialogTitle>Enviar Proposta</DialogTitle>
-                        <DialogDescription>
-                          Preencha os detalhes da sua proposta para este projeto
-                        </DialogDescription>
-                      </DialogHeader>
-                      <form onSubmit={handleSubmitProposal} className="space-y-4">
-                        {myBusinesses.length > 0 && (
-                          <div className="space-y-2">
-                            <Label>Enviar como</Label>
-                            <Select value={selectedBusiness} onValueChange={setSelectedBusiness}>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Pessoa física" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="individual">Pessoa física</SelectItem>
-                                {myBusinesses.map((business) => (
-                                  <SelectItem key={business.id} value={business.id}>
-                                    {business.company_name}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        )}
-                        <div className="space-y-2">
-                          <Label htmlFor="message">Mensagem *</Label>
-                          <Textarea
-                            id="message"
-                            value={message}
-                            onChange={(e) => setMessage(e.target.value)}
-                            placeholder="Descreva sua proposta..."
-                            rows={4}
-                            required
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="budget">Valor (R$) *</Label>
-                          <Input
-                            id="budget"
-                            type="number"
-                            value={budget}
-                            onChange={(e) => setBudget(e.target.value)}
-                            placeholder="1000"
-                            min="0"
-                            step="0.01"
-                            required
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="delivery">Prazo (dias) *</Label>
-                          <Input
-                            id="delivery"
-                            type="number"
-                            value={deliveryDays}
-                            onChange={(e) => setDeliveryDays(e.target.value)}
-                            placeholder="7"
-                            min="1"
-                            required
-                          />
-                        </div>
-                        <Button 
-                          type="submit" 
-                          className="w-full bg-gradient-primary" 
-                          disabled={submitting}
-                        >
-                          {submitting ? 'Enviando...' : 'Enviar Proposta'}
-                        </Button>
-                      </form>
-                    </DialogContent>
-                  </Dialog>
+                  <Button 
+                    className="w-full bg-gradient-primary hover:opacity-90 shadow-glow"
+                    onClick={handleMakeProposal}
+                    style={hasProposal ? { backgroundColor: '#11AA9B' } : undefined}
+                  >
+                    {hasProposal ? 'Você já enviou a proposta' : 'Fazer uma proposta'}
+                  </Button>
                 )}
 
                 {!user && project.status === 'open' && (
@@ -677,6 +612,41 @@ export default function ProjectDetails() {
         </div>
       </div>
       
+      {/* Dialogs */}
+      {project && (
+        <>
+          <ProposalDialog
+            open={proposalDialogOpen}
+            onOpenChange={(open) => {
+              setProposalDialogOpen(open);
+              if (!open) {
+                handleProposalSuccess();
+              }
+            }}
+            projectId={project.id}
+            projectTitle={project.title}
+            projectCreatedAt={project.created_at}
+            proposalsCount={project.proposals_count}
+          />
+
+          <ViewProposalDialog
+            open={viewProposalDialogOpen}
+            onOpenChange={setViewProposalDialogOpen}
+            proposal={userProposal}
+            projectTitle={project.title}
+          />
+
+          <LoginPromptDialog
+            open={loginDialogOpen}
+            onOpenChange={setLoginDialogOpen}
+            onLoginSuccess={() => {
+              setLoginDialogOpen(false);
+              setProposalDialogOpen(true);
+            }}
+          />
+        </>
+      )}
+
       <Footer />
     </div>
   );

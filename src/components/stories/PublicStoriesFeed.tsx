@@ -361,24 +361,24 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
                   </div>
                 )}
                 
-                <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
+                <div className="absolute bottom-0 left-0 right-0 p-3 text-white">
                   <div className="flex items-center gap-2">
-                    <Avatar className="w-8 h-8 border-2 border-white shadow-lg">
+                    <Avatar className="w-7 h-7 border-2 border-white shadow-lg flex-shrink-0">
                       <AvatarImage src={story.profiles.avatar_url || undefined} />
-                      <AvatarFallback className="bg-primary text-primary-foreground">
+                      <AvatarFallback className="bg-primary text-primary-foreground text-xs">
                         {formatShortName(story.profiles.full_name || story.profiles.username)?.[0]?.toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold truncate drop-shadow-lg">
+                      <p className="text-xs font-semibold truncate drop-shadow-lg">
                         {formatShortName(story.profiles.full_name) || story.profiles.username}
                       </p>
-                      <p className="text-xs opacity-90 drop-shadow-lg">
+                      <p className="text-[10px] drop-shadow-lg">
                         {getRelativeTime(story.created_at)}
                       </p>
                     </div>
                     {story.like_count > 0 && (
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-1 flex-shrink-0">
                         <Heart className="w-4 h-4 text-red-500 fill-red-500" />
                         <span className="text-xs font-bold">{story.like_count}</span>
                       </div>

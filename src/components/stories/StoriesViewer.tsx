@@ -487,7 +487,7 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
           >
             {/* Navigation areas - clique para navegar */}
             <div
-              className="absolute left-0 top-0 bottom-0 w-1/2 cursor-pointer z-10"
+              className="absolute left-0 top-0 bottom-0 w-1/3 z-10 cursor-pointer"
               onClick={handlePrevious}
               onMouseDown={(e) => e.stopPropagation()}
               onMouseUp={(e) => e.stopPropagation()}
@@ -495,7 +495,7 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
               onTouchEnd={(e) => e.stopPropagation()}
             />
             <div
-              className="absolute right-0 top-0 bottom-0 w-1/2 cursor-pointer z-10"
+              className="absolute right-0 top-0 bottom-0 w-1/3 z-10 cursor-pointer"
               onClick={handleNext}
               onMouseDown={(e) => e.stopPropagation()}
               onMouseUp={(e) => e.stopPropagation()}
@@ -516,68 +516,139 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
               </div>
             )}
 
-            {/* Story content */}
-            {currentStory.type === 'image' && currentStory.media_url && (
-              <SafeImage
-                src={currentStory.media_url}
-                alt="Story"
-                className="w-full h-full object-contain transition-opacity duration-300"
-                style={{ opacity: mediaLoading ? 0 : 1 }}
-                onLoadStart={() => setMediaLoading(true)}
-                onLoad={() => setMediaLoading(false)}
-                onError={() => setMediaLoading(false)}
-              />
-            )}
-
-            {currentStory.type === 'video' && currentStory.media_url && (
-              <video
-                ref={videoRef}
-                src={`${currentStory.media_url}#t=5`}
-                autoPlay
-                muted={isMuted}
-                onLoadedMetadata={() => {
-                  if (videoRef.current) {
-                    videoRef.current.volume = volume;
-                  }
-                }}
-                onLoadStart={() => setMediaLoading(true)}
-                onLoadedData={() => setMediaLoading(false)}
-                onError={() => setMediaLoading(false)}
-                className="w-full h-full object-contain transition-opacity duration-300"
-                style={{ opacity: mediaLoading ? 0 : 1 }}
-              />
-            )}
-
-            {currentStory.type === 'text' && (
-              <div
-                className="w-full h-full flex items-center justify-center p-8"
-                style={{ background: currentStory.background_color || '#8B5CF6' }}
-              >
-                {currentStory.link_url ? (
-                  <a
-                    href={currentStory.link_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={`text-white text-2xl text-center break-words max-w-full leading-relaxed drop-shadow-lg hover:scale-105 transition-transform cursor-pointer ${
-                      currentStory.metadata?.text_bold ? 'font-bold' : 'font-semibold'
-                    } ${
-                      currentStory.metadata?.text_italic ? 'italic' : ''
-                    }`}
-                  >
-                    {currentStory.text_content}
-                  </a>
-                ) : (
-                  <p
-                    className={`text-white text-2xl text-center break-words max-w-full leading-relaxed drop-shadow-lg ${
-                      currentStory.metadata?.text_bold ? 'font-bold' : 'font-semibold'
-                    } ${
-                      currentStory.metadata?.text_italic ? 'italic' : ''
-                    }`}
-                  >
+            {/* Story content - Repost style Instagram */}
+            {currentStory.original_story_id && currentStory.original_profile ? (
+              <div className="w-full h-full flex flex-col items-center justify-center gap-4 p-6 bg-gradient-to-br from-purple-900/20 via-black to-pink-900/20">
+                {/* Mensagem de quem repostou (se houver) */}
+                {currentStory.text_content && (
+                  <p className="text-white text-center text-lg font-medium px-6 drop-shadow-lg max-w-md">
                     {currentStory.text_content}
                   </p>
                 )}
+
+                {/* Miniatura do story original */}
+                <div className="relative w-[70%] max-w-[320px] rounded-2xl overflow-hidden shadow-2xl border-2 border-white/20" style={{ aspectRatio: "9/16" }}>
+                  {currentStory.type === 'image' && currentStory.media_url && (
+                    <SafeImage
+                      src={currentStory.media_url}
+                      alt="Story original"
+                      className="w-full h-full object-cover"
+                      onLoadStart={() => setMediaLoading(true)}
+                      onLoad={() => setMediaLoading(false)}
+                      onError={() => setMediaLoading(false)}
+                    />
+                  )}
+                  
+                  {currentStory.type === 'video' && currentStory.media_url && (
+                    <video
+                      src={currentStory.media_url}
+                      className="w-full h-full object-cover"
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                      onLoadStart={() => setMediaLoading(true)}
+                      onLoadedData={() => setMediaLoading(false)}
+                      onError={() => setMediaLoading(false)}
+                    />
+                  )}
+
+                  {currentStory.type === 'text' && (
+                    <div
+                      className="w-full h-full flex items-center justify-center p-6"
+                      style={{ background: currentStory.background_color || '#8B5CF6' }}
+                    >
+                      <p className="text-white text-base text-center break-words leading-relaxed">
+                        {currentStory.text_content}
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Créditos do autor original */}
+                <div className="flex items-center gap-2 bg-black/40 backdrop-blur-md px-4 py-2 rounded-full">
+                  {currentStory.original_profile.avatar_url ? (
+                    <SafeImage
+                      src={currentStory.original_profile.avatar_url}
+                      alt={currentStory.original_profile.username}
+                      className="w-7 h-7 rounded-full object-cover border border-white/50"
+                    />
+                  ) : (
+                    <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center border border-white/50">
+                      <User className="w-4 h-4" />
+                    </div>
+                  )}
+                  <span className="text-white text-sm font-medium drop-shadow-lg">
+                    @{currentStory.original_profile.username}
+                  </span>
+                </div>
               </div>
+            ) : (
+              <>
+                {/* Story content normal (não é repost) */}
+                {currentStory.type === 'image' && currentStory.media_url && (
+                  <SafeImage
+                    src={currentStory.media_url}
+                    alt="Story"
+                    className="w-full h-full object-contain transition-opacity duration-300"
+                    style={{ opacity: mediaLoading ? 0 : 1 }}
+                    onLoadStart={() => setMediaLoading(true)}
+                    onLoad={() => setMediaLoading(false)}
+                    onError={() => setMediaLoading(false)}
+                  />
+                )}
+
+                {currentStory.type === 'video' && currentStory.media_url && (
+                  <video
+                    ref={videoRef}
+                    src={`${currentStory.media_url}#t=5`}
+                    autoPlay
+                    muted={isMuted}
+                    onLoadedMetadata={() => {
+                      if (videoRef.current) {
+                        videoRef.current.volume = volume;
+                      }
+                    }}
+                    onLoadStart={() => setMediaLoading(true)}
+                    onLoadedData={() => setMediaLoading(false)}
+                    onError={() => setMediaLoading(false)}
+                    className="w-full h-full object-contain transition-opacity duration-300"
+                    style={{ opacity: mediaLoading ? 0 : 1 }}
+                  />
+                )}
+
+                {currentStory.type === 'text' && (
+                  <div
+                    className="w-full h-full flex items-center justify-center p-8"
+                    style={{ background: currentStory.background_color || '#8B5CF6' }}
+                  >
+                    {currentStory.link_url ? (
+                      <a
+                        href={currentStory.link_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`text-white text-2xl text-center break-words max-w-full leading-relaxed drop-shadow-lg hover:scale-105 transition-transform cursor-pointer ${
+                          currentStory.metadata?.text_bold ? 'font-bold' : 'font-semibold'
+                        } ${
+                          currentStory.metadata?.text_italic ? 'italic' : ''
+                        }`}
+                      >
+                        {currentStory.text_content}
+                      </a>
+                    ) : (
+                      <p
+                        className={`text-white text-2xl text-center break-words max-w-full leading-relaxed drop-shadow-lg ${
+                          currentStory.metadata?.text_bold ? 'font-bold' : 'font-semibold'
+                        } ${
+                          currentStory.metadata?.text_italic ? 'italic' : ''
+                        }`}
+                      >
+                        {currentStory.text_content}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </>
             )}
           </div>
 
@@ -666,30 +737,6 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
             )}
           </div>
 
-          {/* Indicador de repost (se for repost) */}
-          {currentStory.original_profile_id && currentStory.original_profile && (
-            <div className="absolute top-16 left-4 right-4 z-20">
-              <div className="bg-black/60 backdrop-blur-md rounded-lg p-2 flex items-center gap-2">
-                <Repeat2 className="w-4 h-4 text-white" />
-                <div className="flex items-center gap-2 flex-1 min-w-0">
-                  {currentStory.original_profile.avatar_url ? (
-                    <SafeImage
-                      src={currentStory.original_profile.avatar_url}
-                      alt={currentStory.original_profile.username}
-                      className="w-6 h-6 rounded-full object-cover flex-shrink-0"
-                    />
-                  ) : (
-                    <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
-                      <User className="w-4 h-4" />
-                    </div>
-                  )}
-                  <p className="text-white text-xs font-medium truncate">
-                    Story original de @{currentStory.original_profile.username}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
 
           {/* Botões de Navegação - Mobile */}
           {currentIndex > 0 && (

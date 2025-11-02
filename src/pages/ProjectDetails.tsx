@@ -84,6 +84,7 @@ export default function ProjectDetails() {
   const [proposalDialogOpen, setProposalDialogOpen] = useState(false);
   const [viewProposalDialogOpen, setViewProposalDialogOpen] = useState(false);
   const [loginDialogOpen, setLoginDialogOpen] = useState(false);
+  const [ownerSubscriptionPlan, setOwnerSubscriptionPlan] = useState<string>('free');
 
   useEffect(() => {
     if (project) {
@@ -202,7 +203,21 @@ export default function ProjectDetails() {
         .single();
 
       if (projectError) throw projectError;
-      setProject(projectData as any);
+      const typedProject = projectData as any;
+      setProject(typedProject);
+
+      // Load owner's subscription plan
+      if (typedProject?.profile_id) {
+        const { data: ownerProfile } = await supabase
+          .from('profiles' as any)
+          .select('subscription_plan')
+          .eq('id', typedProject.profile_id)
+          .single();
+        
+        if (ownerProfile) {
+          setOwnerSubscriptionPlan((ownerProfile as any).subscription_plan || 'free');
+        }
+      }
 
       const { data: proposalsData } = await supabase
         .from('proposals' as any)
@@ -444,10 +459,46 @@ export default function ProjectDetails() {
               <TabsContent value="competitors">
                 <Card>
                   <CardContent className="pt-6">
-                    <div className="text-center py-8 text-muted-foreground">
-                      <MessageSquare className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                      <p>{proposals.length} proposta{proposals.length !== 1 ? 's' : ''} recebida{proposals.length !== 1 ? 's' : ''}</p>
-                    </div>
+                    {proposals.length === 0 ? (
+                      <div className="text-center py-12">
+                        <MessageSquare className="w-16 h-16 mx-auto mb-4 text-primary/30" />
+                        <h3 className="text-xl font-semibold mb-2">Nenhuma proposta enviada no momento</h3>
+                        <p className="text-muted-foreground mb-6">Seja o primeiro a enviar uma proposta para este projeto!</p>
+                        {!isOwner && (
+                          <Button 
+                            onClick={handleMakeProposal}
+                            className="bg-gradient-primary hover:opacity-90"
+                          >
+                            Enviar primeira proposta
+                          </Button>
+                        )}
+                      </div>
+                    ) : ownerSubscriptionPlan === 'free' && isOwner ? (
+                      <div className="text-center py-12">
+                        <AlertCircle className="w-16 h-16 mx-auto mb-4 text-yellow-500" />
+                        <h3 className="text-xl font-semibold mb-2">Upgrade para Premium</h3>
+                        <p className="text-muted-foreground mb-2">Apenas usuários Premium podem ver propostas recebidas</p>
+                        <p className="text-sm text-muted-foreground mb-6">
+                          Você tem {proposals.length} proposta{proposals.length !== 1 ? 's' : ''} aguardando visualização
+                        </p>
+                        <Button 
+                          asChild
+                          className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700"
+                        >
+                          <Link to="/planos">Ver planos Premium</Link>
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-semibold mb-4">
+                          {proposals.length} proposta{proposals.length !== 1 ? 's' : ''} recebida{proposals.length !== 1 ? 's' : ''}
+                        </h3>
+                        {/* Aqui você pode adicionar a lista de propostas quando implementar */}
+                        <p className="text-sm text-muted-foreground">
+                          Visualização detalhada de propostas em desenvolvimento
+                        </p>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               </TabsContent>

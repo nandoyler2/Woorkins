@@ -9,7 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { OptimizedAvatar } from "@/components/ui/optimized-avatar";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Clock, FileText, DollarSign, Calendar, Sparkles, CheckCircle2, Bold, Italic, List, ListOrdered, Paperclip, X } from "lucide-react";
+import { Clock, FileText, DollarSign, Calendar, Sparkles, CheckCircle2, Bold, Italic, Paperclip, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
@@ -232,21 +232,6 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
     editor.focus();
     
     try {
-      // Para listas, precisamos verificar se há texto selecionado
-      if (command === 'insertUnorderedList' || command === 'insertOrderedList') {
-        const selection = window.getSelection();
-        if (!selection || selection.rangeCount === 0) {
-          // Se não há seleção, cria uma seleção de toda a linha atual
-          const range = document.createRange();
-          const textNode = selection?.focusNode;
-          if (textNode) {
-            range.selectNodeContents(textNode);
-            selection.removeAllRanges();
-            selection.addRange(range);
-          }
-        }
-      }
-      
       document.execCommand(command, false, undefined);
     } catch (error) {
       console.warn('Format command failed:', command, error);
@@ -331,7 +316,7 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] p-0 overflow-hidden max-h-[90vh] flex flex-col">
+      <DialogContent className="sm:max-w-[600px] p-0 overflow-hidden max-h-[90vh] flex flex-col" hideClose>
         {success ? (
           <div className="flex flex-col items-center justify-center py-8 px-6 space-y-4 text-center bg-gradient-to-br from-accent/10 via-secondary/10 to-primary/10 animate-fade-in">
             <div className="relative">
@@ -543,26 +528,6 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
                       title="Itálico"
                     >
                       <Italic className="w-3.5 h-3.5" />
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => applyFormat('insertUnorderedList')}
-                      className="h-7 w-7 p-0 hover:bg-blue-100 dark:hover:bg-blue-900"
-                      title="Lista"
-                    >
-                      <List className="w-3.5 h-3.5" />
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => applyFormat('insertOrderedList')}
-                      className="h-7 w-7 p-0 hover:bg-blue-100 dark:hover:bg-blue-900"
-                      title="Lista numerada"
-                    >
-                      <ListOrdered className="w-3.5 h-3.5" />
                     </Button>
                   </div>
                   <span className={`text-xs font-medium shrink-0 ${message.length > maxChars * 0.9 ? 'text-red-600 dark:text-red-400' : 'text-gray-500 dark:text-gray-400'}`}>

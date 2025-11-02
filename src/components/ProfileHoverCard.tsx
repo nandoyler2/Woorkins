@@ -111,15 +111,32 @@ export function ProfileHoverCard({ profileId, children, side = 'top' }: ProfileH
 
               {/* Stats */}
               <div className="w-full mt-4 space-y-2">
-                {data.profile.total_reviews && data.profile.total_reviews > 0 && (
-                  <div className="flex items-center justify-center gap-2 text-sm">
-                    <Star className="w-4 h-4 fill-orange text-orange" />
-                    <span className="font-semibold">
-                      {data.profile.average_rating?.toFixed(1) || '0.0'}
-                    </span>
-                    <span className="text-muted-foreground">
-                      ({data.profile.total_reviews} {data.profile.total_reviews === 1 ? 'avaliação' : 'avaliações'})
-                    </span>
+                {data.profile.total_reviews !== null && data.profile.total_reviews !== undefined && (
+                  <div className="flex flex-col items-center gap-1">
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((starIndex) => {
+                        const rating = data.profile.average_rating || 0;
+                        const isFilled = starIndex <= Math.round(rating);
+                        return (
+                          <Star
+                            key={starIndex}
+                            className={`w-4 h-4 ${
+                              isFilled
+                                ? 'fill-orange text-orange'
+                                : 'fill-muted text-muted stroke-muted-foreground'
+                            }`}
+                          />
+                        );
+                      })}
+                      <span className="font-semibold text-sm ml-1">
+                        {data.profile.average_rating?.toFixed(1) || '0.0'}
+                      </span>
+                    </div>
+                    {data.profile.total_reviews > 0 && (
+                      <span className="text-xs text-muted-foreground">
+                        {data.profile.total_reviews} {data.profile.total_reviews === 1 ? 'avaliação' : 'avaliações'}
+                      </span>
+                    )}
                   </div>
                 )}
 

@@ -620,9 +620,7 @@ Inclua:
 • O que precisa ser feito
 • Referências ou exemplos
 • Requisitos específicos
-• Entregas esperadas
-
-💡 Dica: Selecione o texto e use os botões acima para formatar em **negrito** ou *itálico*"
+• Entregas esperadas"
                       maxLength={2000}
                       className={cn(
                         "text-base border-blue-200 focus:border-blue-600 dark:border-blue-800 transition-all",

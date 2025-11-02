@@ -587,7 +587,7 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
               </div>
 
               {/* Botões de ação */}
-              <div className="flex gap-2 justify-end pt-2">
+              <div className="flex gap-2 justify-end">
                 <Button
                   type="button"
                   variant="outline"

@@ -26,6 +26,8 @@ interface ProfileWithStories extends Profile {
 
 export function StoriesCarousel({ currentProfile, onCreateStory }: StoriesCarouselProps) {
   const [profilesWithStories, setProfilesWithStories] = useState<ProfileWithStories[]>([]);
+  const [visibleProfiles, setVisibleProfiles] = useState<ProfileWithStories[]>([]);
+  const [displayCount, setDisplayCount] = useState(10);
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
   const [currentUserHasStories, setCurrentUserHasStories] = useState(false);
 
@@ -121,14 +123,28 @@ export function StoriesCarousel({ currentProfile, onCreateStory }: StoriesCarous
       });
 
       setProfilesWithStories(profiles);
+      setVisibleProfiles(profiles.slice(0, 10)); // Mostrar apenas 10 inicialmente
     } catch (error) {
       console.error('Error loading stories data:', error);
     }
   };
 
-  if (!currentUserHasStories && profilesWithStories.length === 0) {
+  // Carregar mais profiles quando rolar
+  useEffect(() => {
+    setVisibleProfiles(profilesWithStories.slice(0, displayCount));
+  }, [profilesWithStories, displayCount]);
+
+  const loadMore = () => {
+    if (displayCount < profilesWithStories.length) {
+      setDisplayCount(prev => Math.min(prev + 10, profilesWithStories.length));
+    }
+  };
+
+  if (!currentUserHasStories && visibleProfiles.length === 0) {
     return null;
   }
+
+  const hasMore = displayCount < profilesWithStories.length;
 
   return (
     <div className="w-full">
@@ -167,7 +183,7 @@ export function StoriesCarousel({ currentProfile, onCreateStory }: StoriesCarous
           </div>
 
           {/* Stories de quem o usuário segue */}
-          {profilesWithStories.map((profile) => (
+          {visibleProfiles.map((profile) => (
             <div
               key={profile.id}
               className="flex flex-col items-center gap-2 min-w-fit"
@@ -185,6 +201,21 @@ export function StoriesCarousel({ currentProfile, onCreateStory }: StoriesCarous
               </span>
             </div>
           ))}
+
+          {/* Botão para carregar mais */}
+          {hasMore && (
+            <div className="flex items-center justify-center min-w-fit">
+              <button
+                onClick={loadMore}
+                className="flex flex-col items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <div className="w-20 h-20 rounded-full border-2 border-dashed border-muted-foreground/30 hover:border-muted-foreground/60 flex items-center justify-center transition-colors">
+                  <Plus className="w-6 h-6" />
+                </div>
+                <span className="text-xs font-medium">Ver mais</span>
+              </button>
+            </div>
+          )}
         </div>
         <ScrollBar orientation="horizontal" />
       </ScrollArea>

@@ -143,7 +143,7 @@ export const Header = () => {
               <span>Painel</span>
             </Link>
             
-            <DropdownMenu open={projectsOpen} onOpenChange={setProjectsOpen}>
+            <DropdownMenu open={projectsOpen} onOpenChange={setProjectsOpen} modal={false}>
               <DropdownMenuTrigger asChild>
                 <Link 
                   to="/projetos"

@@ -296,8 +296,8 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
   return (
     <>
       <Dialog open={isOpen} onOpenChange={handleClose}>
-        <DialogContent className={`${step === 'select' ? 'max-w-2xl' : 'max-w-6xl'} ${step === 'select' ? 'h-auto' : 'h-[90vh]'} p-0 gap-0 overflow-hidden border-l-8 border-l-gradient-to-b from-purple-500 via-pink-500 to-orange-500 transition-all duration-300`}>
-          <div className="flex h-full">
+        <DialogContent className={`${step === 'select' ? 'max-w-2xl' : 'max-w-6xl'} ${step === 'select' ? 'h-auto' : 'h-[90vh]'} p-0 gap-0 border-l-8 border-l-gradient-to-b from-purple-500 via-pink-500 to-orange-500 transition-all duration-300`}>
+          <div className="flex h-full overflow-hidden">
             {/* Coluna esquerda - Header, Formulário e Botões */}
             <div className="flex-1 flex flex-col min-w-0">
               {/* Header - apenas no step create */}
@@ -311,7 +311,7 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
               )}
 
               {/* Formulário - Scrollable */}
-              <div className={`flex-1 overflow-y-auto px-6 ${step === 'select' ? 'py-8' : 'py-6'} min-h-0`}>
+              <div className={`flex-1 overflow-y-auto overflow-x-hidden px-6 ${step === 'select' ? 'py-8' : 'py-6'} min-h-0`}>
                 {step === 'select' ? (
                   <div className="space-y-6">
                     {/* Seleção de perfil (se tiver múltiplos) */}
@@ -377,14 +377,14 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
                       <div className="space-y-4">
                         <div>
                           <Label className="text-sm font-semibold mb-2 block">Escolha um fundo:</Label>
-                          <div className="flex gap-1.5 overflow-x-auto pb-2">
+                          <div className="flex gap-1.5 overflow-x-auto pb-2 px-1">
                             {backgroundStyles.map((style) => (
                               <button
                                 key={style.value}
                                 onClick={() => setBackgroundColor(style.value)}
                                 className={`min-w-[50px] h-10 rounded-lg transition-all hover:scale-105 flex-shrink-0 ${
                                   backgroundColor === style.value
-                                    ? 'ring-2 ring-primary ring-offset-1 scale-105'
+                                    ? 'ring-2 ring-primary ring-offset-2 scale-105'
                                     : 'ring-1 ring-border'
                                 }`}
                                 style={{ background: style.value }}
@@ -570,7 +570,7 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
               </div>
 
               {/* Footer - Botões fixos */}
-              <div className="px-6 py-4 border-t bg-background/95 backdrop-blur-sm flex-shrink-0">
+              <div className="px-6 py-4 border-t bg-background flex-shrink-0 sticky bottom-0 z-10">
                 <div className="flex gap-3">
                   {step === 'create' && (
                     <Button 

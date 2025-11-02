@@ -228,15 +228,36 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
     const editor = editorRef.current;
     if (!editor) return;
     
+    // Força o foco no editor
     editor.focus();
-    document.execCommand(command, false, undefined);
+    
+    try {
+      // Para listas, precisamos verificar se há texto selecionado
+      if (command === 'insertUnorderedList' || command === 'insertOrderedList') {
+        const selection = window.getSelection();
+        if (!selection || selection.rangeCount === 0) {
+          // Se não há seleção, cria uma seleção de toda a linha atual
+          const range = document.createRange();
+          const textNode = selection?.focusNode;
+          if (textNode) {
+            range.selectNodeContents(textNode);
+            selection.removeAllRanges();
+            selection.addRange(range);
+          }
+        }
+      }
+      
+      document.execCommand(command, false, undefined);
+    } catch (error) {
+      console.warn('Format command failed:', command, error);
+    }
     
     // Atualiza o state após formatação
     setTimeout(() => {
       if (editorRef.current) {
         setMessage(editorRef.current.innerText || '');
       }
-    }, 10);
+    }, 50);
   };
 
   const handleAttachmentClick = () => {
@@ -337,7 +358,7 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
         ) : (
           <>
             {/* Header simplificado */}
-            <div className="bg-gradient-to-r from-blue-900 via-teal-700 to-blue-900 p-4 border-b shrink-0">
+            <div className="bg-gradient-to-r from-blue-900 via-teal-700 to-blue-900 p-4 border-b shrink-0 relative">
               <DialogHeader>
                 <div className="space-y-2">
                   <h3 className="font-bold text-base leading-tight text-white">{projectTitle}</h3>
@@ -353,6 +374,14 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
                   </div>
                 </div>
               </DialogHeader>
+              <button
+                type="button"
+                onClick={() => onOpenChange(false)}
+                className="absolute right-3 top-3 text-white/90 hover:text-white bg-white/10 hover:bg-white/20 border border-white/30 rounded-full p-1.5"
+                aria-label="Fechar"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-1 p-5 overflow-y-auto flex-1 bg-gradient-to-b from-slate-50 to-white dark:from-slate-950 dark:to-background">

@@ -155,6 +155,7 @@ export default function Dashboard() {
   const [storiesRefreshTrigger, setStoriesRefreshTrigger] = useState(0);
   const [showStoryPhotoRequired, setShowStoryPhotoRequired] = useState(false);
   const [newProjectsCount, setNewProjectsCount] = useState(0);
+  const [hasPostedStoryToday, setHasPostedStoryToday] = useState(false);
   
   // Statistics states
   const [evaluationsGiven, setEvaluationsGiven] = useState(0);
@@ -288,6 +289,7 @@ export default function Dashboard() {
   useEffect(() => {
     setOnStoryUploaded(() => () => {
       setStoriesRefreshTrigger(prev => prev + 1);
+      checkIfPostedStoryToday(); // Atualizar status quando story for criado
     });
 
     return () => {
@@ -316,6 +318,29 @@ export default function Dashboard() {
       setNewProjectsCount(count || 0);
     } catch (error) {
       console.error('Error loading new projects count:', error);
+    }
+  };
+
+  const checkIfPostedStoryToday = async (profileData?: Profile) => {
+    const currentProfile = profileData || profile;
+    if (!currentProfile) return;
+    
+    try {
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+      
+      const { data, error } = await supabase
+        .from('profile_stories')
+        .select('id')
+        .eq('profile_id', currentProfile.id)
+        .gte('created_at', todayStart.toISOString())
+        .limit(1)
+        .maybeSingle();
+      
+      if (error) throw error;
+      setHasPostedStoryToday(!!data);
+    } catch (error) {
+      console.error('Error checking if posted story today:', error);
     }
   };
 
@@ -426,6 +451,7 @@ export default function Dashboard() {
         loadPendingInvites(profileData),
         loadLastUnreadMessage(profileData),
         loadNewProjectsCount(),
+        checkIfPostedStoryToday(profileData),
       ]);
       
       // 3. Carregar dados menos críticos depois (não bloqueantes)
@@ -1160,7 +1186,11 @@ export default function Dashboard() {
                     <Camera className="w-5 h-5 text-white" />
                   </div>
                   <h3 className="text-base font-bold text-white mb-0.5">Postar Stories</h3>
-                  <p className="text-white/90 text-xs">Compartilhe seu dia</p>
+                  <p className="text-white/90 text-xs">
+                    {hasPostedStoryToday 
+                      ? 'Adicione mais stories e movimente seu perfil' 
+                      : 'Você ainda não publicou stories hoje'}
+                  </p>
                 </CardContent>
               </Card>
 

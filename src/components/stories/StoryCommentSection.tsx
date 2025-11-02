@@ -21,6 +21,7 @@ interface StoryComment {
     avatar_url: string | null;
   };
   isLikedByUser?: boolean;
+  replies?: StoryComment[];
 }
 
 interface StoryCommentSectionProps {
@@ -87,7 +88,6 @@ export function StoryCommentSection({ storyId, currentProfileId, isLiked, onTogg
         .from('story_comments')
         .select('id, story_id, profile_id, comment_text, created_at, parent_comment_id, like_count')
         .eq('story_id', storyId)
-        .is('parent_comment_id', null) // Apenas comentários principais
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -123,8 +123,18 @@ export function StoryCommentSection({ storyId, currentProfileId, isLiked, onTogg
           isLikedByUser: likedCommentIds.has(comment.id),
         }));
 
-        setComments(formattedComments);
-        setCommentCount(formattedComments.length);
+        // Separar comentários principais e respostas
+        const mainComments = formattedComments.filter(c => !c.parent_comment_id);
+        const replies = formattedComments.filter(c => c.parent_comment_id);
+        
+        // Organizar respostas por comentário pai
+        const commentsWithReplies = mainComments.map(comment => ({
+          ...comment,
+          replies: replies.filter(r => r.parent_comment_id === comment.id)
+        }));
+
+        setComments(commentsWithReplies);
+        setCommentCount(mainComments.length);
       } else {
         setComments([]);
         setCommentCount(0);
@@ -282,11 +292,6 @@ export function StoryCommentSection({ storyId, currentProfileId, isLiked, onTogg
 
       if (error) throw error;
 
-      toast({
-        title: 'Resposta enviada!',
-        description: 'Sua resposta foi publicada.',
-      });
-
       cancelReply(commentId);
       loadComments();
     } catch (error) {
@@ -353,88 +358,138 @@ export function StoryCommentSection({ storyId, currentProfileId, isLiked, onTogg
           <ScrollArea className="flex-1 px-4 py-6">
             <div className="space-y-6">
               {comments.map((comment) => (
-                <div key={comment.id} className="flex gap-3 animate-fade-in">
-                  <Avatar className="w-10 h-10 flex-shrink-0 ring-2 ring-white/20">
-                    <AvatarImage src={comment.profiles.avatar_url || undefined} />
-                    <AvatarFallback className="bg-white/10 text-white font-semibold">
-                      {formatShortName(comment.profiles.full_name)?.[0]?.toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-baseline gap-2 mb-1">
-                      <p className="text-sm font-semibold text-white">
-                        {formatShortName(comment.profiles.full_name) || comment.profiles.username}
-                      </p>
-                      <p className="text-xs text-white/60">
-                        {new Date(comment.created_at).toLocaleDateString('pt-BR', {
-                          day: '2-digit',
-                          month: '2-digit',
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
-                      </p>
-                    </div>
-                    <p className="text-sm text-white/90 break-words leading-relaxed mb-2">
-                      {comment.comment_text}
-                    </p>
-                    
-                    {/* Ações do comentário */}
-                    <div className="flex items-center gap-4 text-white/70">
-                      <button
-                        onClick={() => handleToggleCommentLike(comment.id, comment.isLikedByUser || false)}
-                        className="flex items-center gap-1 hover:text-white transition-colors"
-                      >
-                        <Heart className={`w-4 h-4 ${comment.isLikedByUser ? 'fill-red-500 text-red-500' : ''}`} />
-                        {comment.like_count > 0 && (
-                          <span className="text-xs font-medium">{comment.like_count}</span>
-                        )}
-                      </button>
-                      
-                      <button
-                        onClick={() => handleReply(comment.id, comment.profiles.username)}
-                        className="flex items-center gap-1 hover:text-white transition-colors"
-                      >
-                        <CornerUpLeft className="w-4 h-4" />
-                        <span className="text-xs font-medium">Responder</span>
-                      </button>
-                    </div>
-
-                    {/* Campo de resposta inline */}
-                    {replyingTo === comment.id && (
-                      <div className="mt-3 flex items-center gap-2 animate-in slide-in-from-top-2 duration-200">
-                        <Input
-                          value={replyText[comment.id] || ''}
-                          onChange={(e) => setReplyText(prev => ({ ...prev, [comment.id]: e.target.value }))}
-                          onKeyPress={(e) => {
-                            if (e.key === 'Enter' && !e.shiftKey) {
-                              e.preventDefault();
-                              handleSendReply(comment.id);
-                            }
-                          }}
-                          placeholder="Escrever resposta..."
-                          className="flex-1 bg-white/10 border-white/20 text-white placeholder:text-white/50 rounded-full text-sm h-9 focus:border-white/40 focus-visible:ring-0"
-                          maxLength={200}
-                          disabled={isSubmitting}
-                          autoFocus
-                        />
-                        <Button
-                          size="sm"
-                          onClick={() => handleSendReply(comment.id)}
-                          disabled={isSubmitting || !replyText[comment.id]?.trim()}
-                          className="rounded-full h-9 px-4 bg-white text-black hover:bg-white/90"
-                        >
-                          <Send className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => cancelReply(comment.id)}
-                          className="rounded-full h-9 w-9 p-0 text-white/70 hover:text-white hover:bg-white/10"
-                        >
-                          <X className="w-4 h-4" />
-                        </Button>
+                <div key={comment.id} className="animate-fade-in">
+                  {/* Comentário principal */}
+                  <div className="flex gap-3">
+                    <Avatar className="w-10 h-10 flex-shrink-0 ring-2 ring-white/20">
+                      <AvatarImage src={comment.profiles.avatar_url || undefined} />
+                      <AvatarFallback className="bg-white/10 text-white font-semibold">
+                        {formatShortName(comment.profiles.full_name)?.[0]?.toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-baseline gap-2 mb-1">
+                        <p className="text-sm font-semibold text-white">
+                          {formatShortName(comment.profiles.full_name) || comment.profiles.username}
+                        </p>
+                        <p className="text-xs text-white/60">
+                          {new Date(comment.created_at).toLocaleDateString('pt-BR', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </p>
                       </div>
-                    )}
+                      <p className="text-sm text-white/90 break-words leading-relaxed mb-2">
+                        {comment.comment_text}
+                      </p>
+                      
+                      {/* Ações do comentário */}
+                      <div className="flex items-center gap-4 text-white/70">
+                        <button
+                          onClick={() => handleToggleCommentLike(comment.id, comment.isLikedByUser || false)}
+                          className="flex items-center gap-1 hover:text-white transition-colors"
+                        >
+                          <Heart className={`w-4 h-4 ${comment.isLikedByUser ? 'fill-red-500 text-red-500' : ''}`} />
+                          {comment.like_count > 0 && (
+                            <span className="text-xs font-medium">{comment.like_count}</span>
+                          )}
+                        </button>
+                        
+                        <button
+                          onClick={() => handleReply(comment.id, comment.profiles.username)}
+                          className="flex items-center gap-1 hover:text-white transition-colors"
+                        >
+                          <CornerUpLeft className="w-4 h-4" />
+                          <span className="text-xs font-medium">Responder</span>
+                        </button>
+                      </div>
+
+                      {/* Campo de resposta inline */}
+                      {replyingTo === comment.id && (
+                        <div className="mt-3 flex items-center gap-2 animate-in slide-in-from-top-2 duration-200">
+                          <Input
+                            value={replyText[comment.id] || ''}
+                            onChange={(e) => setReplyText(prev => ({ ...prev, [comment.id]: e.target.value }))}
+                            onKeyPress={(e) => {
+                              if (e.key === 'Enter' && !e.shiftKey) {
+                                e.preventDefault();
+                                handleSendReply(comment.id);
+                              }
+                            }}
+                            placeholder="Escrever resposta..."
+                            className="flex-1 bg-white/10 border-white/20 text-white placeholder:text-white/50 rounded-full text-sm h-9 focus:border-white/40 focus-visible:ring-0"
+                            maxLength={200}
+                            disabled={isSubmitting}
+                            autoFocus
+                          />
+                          <Button
+                            size="sm"
+                            onClick={() => handleSendReply(comment.id)}
+                            disabled={isSubmitting || !replyText[comment.id]?.trim()}
+                            className="rounded-full h-9 px-4 bg-white text-black hover:bg-white/90"
+                          >
+                            <Send className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => cancelReply(comment.id)}
+                            className="rounded-full h-9 w-9 p-0 text-white/70 hover:text-white hover:bg-white/10"
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      )}
+
+                      {/* Respostas aninhadas */}
+                      {comment.replies && comment.replies.length > 0 && (
+                        <div className="mt-4 ml-6 space-y-4 border-l-2 border-white/10 pl-4">
+                          {comment.replies.map((reply) => (
+                            <div key={reply.id} className="flex gap-2">
+                              <Avatar className="w-8 h-8 flex-shrink-0 ring-1 ring-white/20">
+                                <AvatarImage src={reply.profiles.avatar_url || undefined} />
+                                <AvatarFallback className="bg-white/10 text-white text-xs font-semibold">
+                                  {formatShortName(reply.profiles.full_name)?.[0]?.toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-baseline gap-2 mb-1">
+                                  <p className="text-xs font-semibold text-white">
+                                    {formatShortName(reply.profiles.full_name) || reply.profiles.username}
+                                  </p>
+                                  <p className="text-[10px] text-white/60">
+                                    {new Date(reply.created_at).toLocaleDateString('pt-BR', {
+                                      day: '2-digit',
+                                      month: '2-digit',
+                                      hour: '2-digit',
+                                      minute: '2-digit',
+                                    })}
+                                  </p>
+                                </div>
+                                <p className="text-xs text-white/90 break-words leading-relaxed mb-1">
+                                  {reply.comment_text}
+                                </p>
+                                
+                                {/* Ações da resposta */}
+                                <div className="flex items-center gap-3 text-white/70">
+                                  <button
+                                    onClick={() => handleToggleCommentLike(reply.id, reply.isLikedByUser || false)}
+                                    className="flex items-center gap-1 hover:text-white transition-colors"
+                                  >
+                                    <Heart className={`w-3 h-3 ${reply.isLikedByUser ? 'fill-red-500 text-red-500' : ''}`} />
+                                    {reply.like_count > 0 && (
+                                      <span className="text-[10px] font-medium">{reply.like_count}</span>
+                                    )}
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}

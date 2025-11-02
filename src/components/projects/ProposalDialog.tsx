@@ -282,11 +282,10 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
                   </Label>
                   <Input
                     id="amount"
-                    type="number"
-                    step="0.01"
-                    placeholder="Ex: 1500.00"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
+                    type="text"
+                    placeholder="R$ 0,00"
+                    value={amountFormatted}
+                    onChange={(e) => setAmountFormatted(formatCurrencyInput(e.target.value))}
                     required
                     className="border-2 focus:border-accent transition-colors"
                   />
@@ -314,7 +313,60 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
                   <FileText className="w-4 h-4 text-secondary" />
                   Mensagem / Descrição da Proposta *
                 </Label>
+                <div className="flex gap-1 mb-2 p-2 bg-muted/50 rounded-lg border">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => applyFormat('bold')}
+                    className="h-8 w-8 p-0"
+                    title="Negrito"
+                  >
+                    <Bold className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => applyFormat('italic')}
+                    className="h-8 w-8 p-0"
+                    title="Itálico"
+                  >
+                    <Italic className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => applyFormat('ul')}
+                    className="h-8 w-8 p-0"
+                    title="Lista"
+                  >
+                    <List className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => applyFormat('ol')}
+                    className="h-8 w-8 p-0"
+                    title="Lista numerada"
+                  >
+                    <ListOrdered className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => applyFormat('link')}
+                    className="h-8 w-8 p-0"
+                    title="Link"
+                  >
+                    <Link2 className="w-4 h-4" />
+                  </Button>
+                </div>
                 <Textarea
+                  ref={textareaRef}
                   id="message"
                   placeholder="Descreva como você pretende realizar o projeto, sua experiência relevante e por que você é a melhor escolha..."
                   value={message}

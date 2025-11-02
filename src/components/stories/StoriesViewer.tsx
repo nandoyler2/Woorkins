@@ -219,10 +219,8 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
       const newProgress = (elapsed / STORY_DURATION) * 100;
 
       if (newProgress >= 100) {
-        // Resetar progresso ao invés de avançar automaticamente
-        setProgress(0);
-        startTime = Date.now();
-        pausedTime = 0;
+        // Avançar para o próximo story automaticamente
+        handleNext();
       } else {
         setProgress(newProgress);
       }

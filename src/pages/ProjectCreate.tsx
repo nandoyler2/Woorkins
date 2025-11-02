@@ -8,8 +8,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Save } from 'lucide-react';
+import { ArrowLeft, Save, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -29,8 +30,7 @@ export default function ProjectCreate() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('');
-  const [budgetMin, setBudgetMin] = useState('');
-  const [budgetMax, setBudgetMax] = useState('');
+  const [budgetRange, setBudgetRange] = useState('');
   const [deadline, setDeadline] = useState<Date>();
   const [profileId, setProfileId] = useState<string>('');
   const [registeredName, setRegisteredName] = useState('');
@@ -114,6 +114,24 @@ export default function ProjectCreate() {
         throw new Error('Perfil não encontrado');
       }
 
+      // Definir budget_min e budget_max baseado na faixa selecionada
+      let budgetMin = null;
+      let budgetMax = null;
+      
+      if (budgetRange === 'low') {
+        budgetMin = 0;
+        budgetMax = 300;
+      } else if (budgetRange === 'medium') {
+        budgetMin = 300;
+        budgetMax = 800;
+      } else if (budgetRange === 'high') {
+        budgetMin = 800;
+        budgetMax = 2000;
+      } else if (budgetRange === 'premium') {
+        budgetMin = 2000;
+        budgetMax = null;
+      }
+
       const { data, error } = await supabase
         .from('projects' as any)
         .insert({
@@ -121,8 +139,8 @@ export default function ProjectCreate() {
           title,
           description,
           category: category || null,
-          budget_min: budgetMin ? parseFloat(budgetMin) : null,
-          budget_max: budgetMax ? parseFloat(budgetMax) : null,
+          budget_min: budgetMin,
+          budget_max: budgetMax,
           deadline: deadline ? format(deadline, 'yyyy-MM-dd') : null,
         })
         .select()
@@ -196,38 +214,47 @@ export default function ProjectCreate() {
               </CardContent>
             </Card>
           ) : (
-            <Card className="bg-card/50 backdrop-blur-sm border-2">
-            <CardHeader>
-              <CardTitle>Detalhes do Projeto</CardTitle>
-              <CardDescription>
-                Preencha as informações sobre o serviço que você precisa
-              </CardDescription>
+            <Card className="bg-card/50 backdrop-blur-sm border-2 shadow-lg">
+            <CardHeader className="space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-gradient-primary">
+                  <Sparkles className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <CardTitle className="text-2xl">Detalhes do Projeto</CardTitle>
+                  <CardDescription className="text-base">
+                    Preencha as informações sobre o serviço que você precisa
+                  </CardDescription>
+                </div>
+              </div>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-6">
+              <form onSubmit={handleSubmit} className="space-y-8">
                 <div className="space-y-2">
-                  <Label htmlFor="title">Título do Projeto *</Label>
+                  <Label htmlFor="title" className="text-base font-semibold">Título do Projeto *</Label>
                   <Input
                     id="title"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     placeholder="Ex: Desenvolvimento de site institucional"
                     required
+                    className="h-12 text-base"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="category">Categoria</Label>
+                  <Label htmlFor="category" className="text-base font-semibold">Categoria</Label>
                   <Input
                     id="category"
                     value={category}
                     onChange={(e) => setCategory(e.target.value)}
                     placeholder="Ex: Design, Desenvolvimento, Marketing"
+                    className="h-12 text-base"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="description">Descrição *</Label>
+                  <Label htmlFor="description" className="text-base font-semibold">Descrição *</Label>
                   <Textarea
                     id="description"
                     value={description}
@@ -235,51 +262,77 @@ export default function ProjectCreate() {
                     placeholder="Descreva em detalhes o que você precisa..."
                     rows={6}
                     required
+                    className="text-base resize-none"
                   />
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-sm text-muted-foreground">
                     Seja claro sobre suas necessidades, objetivos e expectativas
                   </p>
                 </div>
 
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="budget-min">Orçamento Mínimo (R$)</Label>
-                    <Input
-                      id="budget-min"
-                      type="number"
-                      value={budgetMin}
-                      onChange={(e) => setBudgetMin(e.target.value)}
-                      placeholder="500"
-                      min="0"
-                      step="0.01"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="budget-max">Orçamento Máximo (R$)</Label>
-                    <Input
-                      id="budget-max"
-                      type="number"
-                      value={budgetMax}
-                      onChange={(e) => setBudgetMax(e.target.value)}
-                      placeholder="2000"
-                      min="0"
-                      step="0.01"
-                    />
+                <div className="space-y-4">
+                  <Label className="text-base font-semibold">Faixa de Valor do Projeto</Label>
+                  <RadioGroup value={budgetRange} onValueChange={setBudgetRange} className="space-y-3">
+                    <div className="flex items-start space-x-3 p-4 rounded-lg border-2 hover:border-primary/50 hover:bg-accent/50 transition-all cursor-pointer">
+                      <RadioGroupItem value="low" id="low" className="mt-1" />
+                      <Label htmlFor="low" className="flex-1 cursor-pointer space-y-1">
+                        <div className="font-semibold text-base">Até R$300</div>
+                        <div className="text-sm text-muted-foreground">
+                          Projetos simples e rápidos (ex: posts, logos, textos curtos)
+                        </div>
+                      </Label>
+                    </div>
+                    
+                    <div className="flex items-start space-x-3 p-4 rounded-lg border-2 hover:border-primary/50 hover:bg-accent/50 transition-all cursor-pointer">
+                      <RadioGroupItem value="medium" id="medium" className="mt-1" />
+                      <Label htmlFor="medium" className="flex-1 cursor-pointer space-y-1">
+                        <div className="font-semibold text-base">R$300 a R$800</div>
+                        <div className="text-sm text-muted-foreground">
+                          Projetos intermediários (ex: site básico, vídeo curto, campanha pequena)
+                        </div>
+                      </Label>
+                    </div>
+                    
+                    <div className="flex items-start space-x-3 p-4 rounded-lg border-2 hover:border-primary/50 hover:bg-accent/50 transition-all cursor-pointer">
+                      <RadioGroupItem value="high" id="high" className="mt-1" />
+                      <Label htmlFor="high" className="flex-1 cursor-pointer space-y-1">
+                        <div className="font-semibold text-base">R$800 a R$2.000</div>
+                        <div className="text-sm text-muted-foreground">
+                          Projetos completos (ex: site profissional, identidade visual, app simples)
+                        </div>
+                      </Label>
+                    </div>
+                    
+                    <div className="flex items-start space-x-3 p-4 rounded-lg border-2 hover:border-primary/50 hover:bg-accent/50 transition-all cursor-pointer">
+                      <RadioGroupItem value="premium" id="premium" className="mt-1" />
+                      <Label htmlFor="premium" className="flex-1 cursor-pointer space-y-1">
+                        <div className="font-semibold text-base">Acima de R$2.000</div>
+                        <div className="text-sm text-muted-foreground">
+                          Projetos grandes e personalizados
+                        </div>
+                      </Label>
+                    </div>
+                  </RadioGroup>
+                  
+                  <div className="flex items-start gap-2 p-4 bg-accent/50 rounded-lg border">
+                    <span className="text-xl">💡</span>
+                    <p className="text-sm text-muted-foreground">
+                      Os freelancers poderão sugerir valores diferentes na proposta.
+                    </p>
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Prazo</Label>
+                  <Label className="text-base font-semibold">Prazo</Label>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
                         className={cn(
-                          'w-full justify-start text-left font-normal',
+                          'w-full h-12 justify-start text-left font-normal text-base',
                           !deadline && 'text-muted-foreground'
                         )}
                       >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        <CalendarIcon className="mr-2 h-5 w-5" />
                         {deadline ? format(deadline, 'dd/MM/yyyy') : 'Selecione uma data'}
                       </Button>
                     </PopoverTrigger>
@@ -298,11 +351,11 @@ export default function ProjectCreate() {
 
                 <Button 
                   type="submit" 
-                  className="w-full bg-gradient-primary hover:shadow-glow transition-all" 
+                  className="w-full h-14 bg-gradient-primary hover:shadow-glow transition-all text-base font-semibold" 
                   disabled={creating}
                   size="lg"
                 >
-                  <Save className="w-4 h-4 mr-2" />
+                  <Save className="w-5 h-5 mr-2" />
                   {creating ? 'Criando...' : 'Publicar Projeto'}
                 </Button>
               </form>

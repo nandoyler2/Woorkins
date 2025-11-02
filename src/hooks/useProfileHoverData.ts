@@ -19,8 +19,17 @@ interface ProfileHoverData {
 interface StoryData {
   id: string;
   thumbnail_url: string | null;
+  media_url: string | null;
+  text_content: string | null;
   type: string;
   created_at: string;
+  original_story_id: string | null;
+  original_profile_id: string | null;
+  original_profile?: {
+    id: string;
+    username: string;
+    avatar_url: string | null;
+  } | null;
 }
 
 interface CachedData {
@@ -78,24 +87,38 @@ export function useProfileHoverData(profileId: string, enabled: boolean) {
         if (profileError) throw profileError;
 
         // Fetch all active stories (ordered by most recent first)
-        const { data: activeStories } = await supabase
+        const { data: storiesData } = await supabase
           .from('profile_stories')
-          .select('id, thumbnail_url, type, created_at')
+          .select(`
+            id,
+            thumbnail_url,
+            media_url,
+            text_content,
+            type,
+            created_at,
+            original_story_id,
+            original_profile_id,
+            original_profile:profiles!profile_stories_original_profile_id_fkey(
+              id,
+              username,
+              avatar_url
+            )
+          `)
           .eq('profile_id', profileId)
           .gt('expires_at', new Date().toISOString())
           .order('created_at', { ascending: false })
           .limit(10);
 
-        const storiesData = activeStories || [];
+        const stories = storiesData || [];
 
         // Update cache
         cache.set(profileId, {
           profile: profileData,
-          stories: storiesData,
+          stories,
           timestamp: Date.now(),
         });
 
-        setData({ profile: profileData, stories: storiesData });
+        setData({ profile: profileData, stories });
       } catch (err) {
         console.error('Error loading profile hover data:', err);
         setError('Não foi possível carregar os dados do perfil');

@@ -3,7 +3,7 @@ import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/h
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SafeImage } from '@/components/ui/safe-image';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useProfileHoverData } from '@/hooks/useProfileHoverData';
 import { StoriesViewer } from '@/components/stories/StoriesViewer';
 import { Star, Calendar, User, ExternalLink, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -267,23 +267,85 @@ export const ProfileHoverCard = forwardRef<ProfileHoverCardRef, ProfileHoverCard
                     onScroll={checkScrollButtons}
                     style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                   >
-                    {data.stories.map((story) => (
-                      <div
-                        key={story.id}
-                        className="flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
-                        onClick={handleViewStories}
-                      >
-                        <div className="p-[2px] bg-gradient-to-tr from-purple-500 via-pink-500 to-orange-500 rounded-lg">
-                          <div className="w-14 h-20 rounded-md overflow-hidden bg-background">
-                            <SafeImage
-                              src={story.thumbnail_url || ''}
-                              alt="Story"
-                              className="w-full h-full object-cover"
-                            />
+                    {data.stories.map((story) => {
+                      const displayImage = story.thumbnail_url || story.media_url || '/placeholder.svg';
+                      const videoSrc = story.type === 'video' && story.media_url ? `${story.media_url}#t=5` : story.media_url;
+                      
+                      return (
+                        <div
+                          key={story.id}
+                          className="flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+                          onClick={handleViewStories}
+                        >
+                          <div className="p-[2px] bg-gradient-to-tr from-purple-500 via-pink-500 to-orange-500 rounded-lg">
+                            <div className="w-14 h-20 rounded-md overflow-hidden bg-background">
+                              {story.original_story_id && story.original_profile ? (
+                                <div className="w-full h-full bg-gradient-to-br from-purple-900/30 via-black to-pink-900/30 flex flex-col items-center justify-center gap-0.5 p-0.5">
+                                  <div className="relative w-[70%] rounded-sm overflow-hidden shadow-lg border border-white/20" style={{ aspectRatio: "9/16" }}>
+                                    {story.type === 'text' ? (
+                                      <div className="w-full h-full bg-gradient-to-br from-purple-500 via-pink-500 to-orange-500 flex items-center justify-center p-0.5">
+                                        <p className="text-white text-center text-[6px] font-medium break-words line-clamp-3">
+                                          {story.text_content}
+                                        </p>
+                                      </div>
+                                    ) : story.type === 'video' && videoSrc ? (
+                                      <video
+                                        src={videoSrc}
+                                        className="w-full h-full object-cover"
+                                        preload="metadata"
+                                        muted
+                                        playsInline
+                                      />
+                                    ) : (
+                                      <SafeImage
+                                        src={displayImage}
+                                        alt="Story original"
+                                        className="w-full h-full object-cover"
+                                      />
+                                    )}
+                                  </div>
+                                  <div className="flex items-center gap-0.5 bg-black/50 backdrop-blur-sm rounded-full px-0.5 py-0.5">
+                                    <Avatar className="w-2 h-2 border border-white/30 flex-shrink-0">
+                                      <AvatarImage src={story.original_profile.avatar_url || undefined} />
+                                      <AvatarFallback className="bg-primary text-primary-foreground text-[4px]">
+                                        {story.original_profile.username?.[0]?.toUpperCase()}
+                                      </AvatarFallback>
+                                    </Avatar>
+                                    <span className="text-white text-[5px] font-medium drop-shadow-md truncate max-w-[30px]">
+                                      @{story.original_profile.username}
+                                    </span>
+                                  </div>
+                                </div>
+                              ) : (
+                                <>
+                                  {story.type === 'text' ? (
+                                    <div className="w-full h-full bg-gradient-to-br from-purple-500 via-pink-500 to-orange-500 flex items-center justify-center p-1.5">
+                                      <p className="text-white text-center text-[7px] font-medium break-words line-clamp-4">
+                                        {story.text_content}
+                                      </p>
+                                    </div>
+                                  ) : story.type === 'video' && videoSrc ? (
+                                    <video
+                                      src={videoSrc}
+                                      className="w-full h-full object-cover"
+                                      preload="metadata"
+                                      muted
+                                      playsInline
+                                    />
+                                  ) : (
+                                    <SafeImage
+                                      src={displayImage}
+                                      alt="Story"
+                                      className="w-full h-full object-cover"
+                                    />
+                                  )}
+                                </>
+                              )}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
 
                   {data.stories.length > 3 && canScrollRight && (

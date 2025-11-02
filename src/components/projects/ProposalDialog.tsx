@@ -555,35 +555,40 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
                   />
                   <div className="grid grid-cols-2 gap-2 items-center">
                     {/* Coluna esquerda: botão de anexo e arquivos */}
-                    <div className="flex items-center gap-2">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={handleAttachmentClick}
-                        className="h-7 gap-1.5 text-xs hover:bg-blue-100 dark:hover:bg-blue-900 text-blue-900 dark:text-blue-100"
-                        title="Adicionar anexos (Pro/Premium)"
-                      >
-                        <Paperclip className="w-3.5 h-3.5" />
-                        Enviar anexo ({attachments.length}/3)
-                      </Button>
-                      
-                      {attachments.length > 0 && (
-                        <div className="flex gap-1 flex-1 overflow-x-auto">
-                          {attachments.map((file, index) => (
-                            <div key={index} className="flex items-center gap-1 bg-white dark:bg-slate-900 border border-blue-200 dark:border-blue-700 rounded px-2 py-1 text-xs shrink-0">
-                              <span className="max-w-[100px] truncate">{file.name}</span>
-                              <button
-                                type="button"
-                                onClick={() => removeAttachment(index)}
-                                className="text-red-500 hover:text-red-700"
-                              >
-                                <X className="w-3 h-3" />
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      )}
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center gap-2">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={handleAttachmentClick}
+                          className="h-7 gap-1.5 text-xs hover:bg-blue-100 dark:hover:bg-blue-900 text-blue-900 dark:text-blue-100"
+                          title="Adicionar anexos (Pro/Premium)"
+                        >
+                          <Paperclip className="w-3.5 h-3.5" />
+                          Enviar anexo ({attachments.length}/3)
+                        </Button>
+                        
+                        {attachments.length > 0 && (
+                          <div className="flex gap-1 flex-1 overflow-x-auto">
+                            {attachments.map((file, index) => (
+                              <div key={index} className="flex items-center gap-1 bg-white dark:bg-slate-900 border border-blue-200 dark:border-blue-700 rounded px-2 py-1 text-xs shrink-0">
+                                <span className="max-w-[100px] truncate">{file.name}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => removeAttachment(index)}
+                                  className="text-red-500 hover:text-red-700"
+                                >
+                                  <X className="w-3 h-3" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      <p className="text-[10px] text-amber-600 dark:text-amber-400 font-medium italic">
+                        Envie portfólio ou apresentação e destaque sua proposta
+                      </p>
                     </div>
                     
                     {/* Coluna direita: botões de ação */}

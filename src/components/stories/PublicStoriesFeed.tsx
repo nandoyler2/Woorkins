@@ -290,41 +290,53 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
     loadPublicStories(0);
     checkIfPostedToday();
 
-    // Realtime updates
+    // Realtime updates com logs para debug
     const channel = supabase
       .channel('public-stories-feed')
       .on(
         'postgres_changes',
         {
-          event: '*',
+          event: 'INSERT',
+          schema: 'public',
+          table: 'profile_stories',
+        },
+        async (payload) => {
+          console.log('[PublicStoriesFeed] Novo story detectado:', payload.new);
+          const newStoryId = payload.new.id as string;
+          
+          // Marcar como novo
+          setNewStoryIds(prev => new Set(prev).add(newStoryId));
+          
+          // Remover a marcação de novo após 5 segundos
+          setTimeout(() => {
+            setNewStoryIds(prev => {
+              const updated = new Set(prev);
+              updated.delete(newStoryId);
+              return updated;
+            });
+          }, 5000);
+          
+          // Recarregar stories
+          await loadPublicStories(0);
+          setPage(0);
+          checkIfPostedToday();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
           schema: 'public',
           table: 'profile_stories',
         },
         (payload) => {
-          if (payload.eventType === 'INSERT') {
-            const newStoryId = payload.new.id as string;
-            
-            // Marcar como novo
-            setNewStoryIds(prev => new Set(prev).add(newStoryId));
-            
-            // Remover a marcação de novo após 5 segundos
-            setTimeout(() => {
-              setNewStoryIds(prev => {
-                const updated = new Set(prev);
-                updated.delete(newStoryId);
-                return updated;
-              });
-            }, 5000);
-            
-            loadPublicStories(0);
-            setPage(0);
-            checkIfPostedToday(); // Atualizar status quando novo story for adicionado
-          } else if (payload.eventType === 'DELETE') {
-            setStories(prev => prev.filter(s => s.id !== payload.old.id));
-          }
+          console.log('[PublicStoriesFeed] Story deletado:', payload.old.id);
+          setStories(prev => prev.filter(s => s.id !== payload.old.id));
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('[PublicStoriesFeed] Canal de realtime status:', status);
+      });
 
     return () => {
       supabase.removeChannel(channel);

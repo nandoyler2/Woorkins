@@ -9,6 +9,7 @@ import { CreateStoryDialog } from "./CreateStoryDialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { getOrCreateUserProfile } from "@/lib/profiles";
 import { formatShortName } from "@/lib/utils";
+import { InteractiveStickerRenderer } from "./InteractiveStickerRenderer";
 interface PublicStory {
   id: string;
   profile_id: string;
@@ -493,6 +494,23 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
                           className="w-full h-full object-cover"
                         />
                       )}
+
+                      {/* Renderizar stickers na miniatura do repost */}
+                      {(story as any).story_stickers && (story as any).story_stickers.length > 0 && (
+                        <div className="absolute inset-0 pointer-events-none z-10">
+                          {(story as any).story_stickers.map((sticker: any) => (
+                            <InteractiveStickerRenderer
+                              key={sticker.id}
+                              sticker={{
+                                ...sticker,
+                                story_id: story.id,
+                                scale: (sticker.scale || 1) * 0.65
+                              } as any}
+                              isPreview={false}
+                            />
+                          ))}
+                        </div>
+                      )}
                     </div>
                     
                     {/* Créditos do autor original */}
@@ -511,27 +529,46 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
                 ) : (
                   <>
                     {/* Story normal */}
-                    {story.type === 'text' ? (
-                      <div className="w-full h-full bg-gradient-to-br from-purple-500 via-pink-500 to-orange-500 flex items-center justify-center p-6">
-                        <p className="text-white text-center text-lg font-medium break-words">
-                          {story.text_content}
-                        </p>
-                      </div>
-                    ) : story.type === 'video' && videoSrc ? (
-                      <video
-                        src={videoSrc}
-                        className="w-full h-full object-cover"
-                        preload="metadata"
-                        muted
-                        playsInline
-                      />
-                    ) : (
-                      <SafeImage
-                        src={displayImage}
-                        alt="Story"
-                        className="w-full h-full object-cover"
-                      />
-                    )}
+                    <div className="relative w-full h-full">
+                      {story.type === 'text' ? (
+                        <div className="w-full h-full bg-gradient-to-br from-purple-500 via-pink-500 to-orange-500 flex items-center justify-center p-6">
+                          <p className="text-white text-center text-lg font-medium break-words">
+                            {story.text_content}
+                          </p>
+                        </div>
+                      ) : story.type === 'video' && videoSrc ? (
+                        <video
+                          src={videoSrc}
+                          className="w-full h-full object-cover"
+                          preload="metadata"
+                          muted
+                          playsInline
+                        />
+                      ) : (
+                        <SafeImage
+                          src={displayImage}
+                          alt="Story"
+                          className="w-full h-full object-cover"
+                        />
+                      )}
+
+                      {/* Renderizar stickers na miniatura */}
+                      {(story as any).story_stickers && (story as any).story_stickers.length > 0 && (
+                        <div className="absolute inset-0 pointer-events-none z-10">
+                          {(story as any).story_stickers.map((sticker: any) => (
+                            <InteractiveStickerRenderer
+                              key={sticker.id}
+                              sticker={{
+                                ...sticker,
+                                story_id: story.id,
+                                scale: sticker.scale || 1
+                              } as any}
+                              isPreview={false}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </>
                 )}
                 

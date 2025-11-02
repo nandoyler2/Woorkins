@@ -56,69 +56,72 @@ export const InteractiveStickerRenderer = ({
     position: 'absolute' as const,
     left: `${sticker.position_x}%`,
     top: `${sticker.position_y}%`,
-    width: `${sticker.width}%`,
-    height: `${sticker.height}%`,
-    transform: `translate(-50%, -50%) rotate(${sticker.rotation}deg) scale(${sticker.scale || 1})`,
+    transform: `translate(-50%, -50%) scale(${sticker.scale || 1})`,
+    width: sticker.type === 'image' ? `${sticker.width}%` : 'auto',
   };
 
   const renderSticker = () => {
     switch (sticker.type) {
       case 'poll':
         return (
-          <div style={style} className="bg-black/50 backdrop-blur-sm rounded-2xl p-4">
-            <p className="text-white font-bold text-sm mb-2">{sticker.content.question}</p>
-            <div className="space-y-2">
-              {sticker.content.options?.map((option: any) => (
-                <Button
-                  key={option.id}
-                  size="sm"
-                  variant="secondary"
-                  className="w-full"
-                  onClick={() => handleResponse({ option_id: option.id })}
-                  disabled={hasResponded}
-                >
-                  {option.text}
-                </Button>
-              ))}
+          <div style={style} className="cursor-move select-none">
+            <div className="bg-black/60 backdrop-blur-md border border-white/20 rounded-2xl p-4 min-w-[200px]">
+              <p className="text-white font-bold text-sm mb-3">{sticker.content.question}</p>
+              <div className="space-y-2">
+                {sticker.content.options?.map((option: any) => (
+                  <div
+                    key={option.id}
+                    className="bg-white/20 hover:bg-white/30 transition rounded-full px-4 py-2 cursor-pointer"
+                    onClick={() => !hasResponded && handleResponse({ option_id: option.id })}
+                  >
+                    <p className="text-white text-xs font-medium text-center">{option.text}</p>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         );
 
       case 'question':
         return (
-          <div style={style} className="bg-black/50 backdrop-blur-sm rounded-2xl p-4">
-            <p className="text-white font-bold text-sm mb-2">{sticker.content.text}</p>
-            <input
-              type="text"
-              placeholder={sticker.content.placeholder}
-              className="w-full px-3 py-2 rounded-lg bg-white/20 text-white placeholder:text-white/60 text-sm"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && e.currentTarget.value) {
-                  handleResponse({ answer: e.currentTarget.value });
-                }
-              }}
-              disabled={hasResponded}
-            />
+          <div style={style} className="cursor-move select-none">
+            <div className="bg-black/60 backdrop-blur-md border border-white/20 rounded-2xl p-4 min-w-[200px]">
+              <p className="text-white font-bold text-sm mb-2">{sticker.content.text}</p>
+              <input
+                type="text"
+                placeholder={sticker.content.placeholder}
+                className="w-full px-3 py-2 rounded-full bg-white/20 text-white placeholder:text-white/60 text-xs"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && e.currentTarget.value && !hasResponded) {
+                    handleResponse({ answer: e.currentTarget.value });
+                  }
+                }}
+                disabled={hasResponded}
+              />
+            </div>
           </div>
         );
 
       case 'emoji':
         return (
-          <button
-            style={style}
-            className="bg-black/50 backdrop-blur-sm rounded-full p-4 hover:scale-110 transition"
-            onClick={() => handleResponse({ emoji_tap: true })}
-            disabled={hasResponded}
+          <div 
+            style={style} 
+            className="cursor-move select-none"
+            onClick={() => !hasResponded && handleResponse({ emoji_tap: true })}
           >
-            <span className="text-4xl">{sticker.content.emoji}</span>
-          </button>
+            <div className="bg-black/60 backdrop-blur-md border border-white/20 rounded-full p-4 hover:scale-110 transition">
+              <span className="text-4xl">{sticker.content.emoji}</span>
+            </div>
+          </div>
         );
 
       case 'location':
         return (
-          <div style={style} className="bg-black/50 backdrop-blur-sm rounded-2xl px-4 py-2 flex items-center gap-2">
-            <MapPin className="w-4 h-4 text-white" />
-            <span className="text-white text-sm font-medium">{sticker.content.name}</span>
+          <div style={style} className="cursor-move select-none">
+            <div className="bg-black/60 backdrop-blur-md border border-white/20 rounded-2xl px-4 py-3 flex items-center gap-2">
+              <MapPin className="w-4 h-4 text-white flex-shrink-0" />
+              <span className="text-white text-sm font-medium">{sticker.content.name}</span>
+            </div>
           </div>
         );
 
@@ -129,21 +132,24 @@ export const InteractiveStickerRenderer = ({
             target="_blank"
             rel="noopener noreferrer"
             style={style}
-            className="bg-black/50 backdrop-blur-sm rounded-2xl px-4 py-2 flex items-center gap-2 hover:bg-black/70 transition"
+            className="cursor-move select-none block"
           >
-            <ExternalLink className="w-4 h-4 text-white" />
-            <span className="text-white text-sm font-medium">{sticker.content.title}</span>
+            <div className="bg-black/60 backdrop-blur-md border border-white/20 rounded-2xl px-4 py-3 flex items-center gap-2 hover:bg-black/70 transition">
+              <ExternalLink className="w-4 h-4 text-white flex-shrink-0" />
+              <span className="text-white text-sm font-medium">{sticker.content.title}</span>
+            </div>
           </a>
         );
 
       case 'image':
         return (
-          <img
-            src={sticker.content.imageUrl}
-            alt="Sticker"
-            style={style}
-            className="rounded-lg shadow-lg object-contain"
-          />
+          <div style={style} className="cursor-move select-none">
+            <img
+              src={sticker.content.imageUrl}
+              alt="Sticker"
+              className="w-full h-auto rounded-lg shadow-lg"
+            />
+          </div>
         );
 
       default:

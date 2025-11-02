@@ -231,7 +231,8 @@ export function UploadProvider({ children }: { children: ReactNode }) {
           width: sticker.width,
           height: sticker.height,
           rotation: sticker.rotation,
-          content: sticker.content
+          content: sticker.content,
+          scale: sticker.scale || 1
         }));
 
         const { error: stickersError } = await supabase

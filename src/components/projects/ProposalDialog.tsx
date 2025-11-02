@@ -225,14 +225,18 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
   };
 
   const applyFormat = (command: string) => {
-    document.execCommand(command, false);
-    editorRef.current?.focus();
+    const editor = editorRef.current;
+    if (!editor) return;
+    
+    editor.focus();
+    document.execCommand(command, false, undefined);
+    
     // Atualiza o state após formatação
     setTimeout(() => {
       if (editorRef.current) {
         setMessage(editorRef.current.innerText || '');
       }
-    }, 0);
+    }, 10);
   };
 
   const handleAttachmentClick = () => {

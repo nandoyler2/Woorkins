@@ -55,6 +55,7 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
   const [linkUrl, setLinkUrl] = useState('');
   const [showCropDialog, setShowCropDialog] = useState(false);
   const [cropData, setCropData] = useState<any>(null); // Dados do último crop
+  const [isPublishing, setIsPublishing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { toast } = useToast();
@@ -247,22 +248,34 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
       text_italic: textItalic,
     } : undefined;
 
-    // Fechar dialog imediatamente para mostrar o indicador de progresso
-    handleClose();
-    
-    // Iniciar upload em background (não usa await para não bloquear)
-    uploadStory({
-      profileId: selectedProfile,
-      type: type,
-      mediaFile: finalMediaFile || undefined,
-      textContent: type === 'text' ? textContent : undefined,
-      backgroundColor: type === 'text' ? backgroundColor : undefined,
-      linkUrl: type === 'text' && textLink ? textLink : (linkUrl || undefined),
-      metadata,
-    });
+    setIsPublishing(true);
 
-    // Notificar que story foi criado (o refresh acontecerá quando o upload completar)
-    onStoryCreated();
+    try {
+      // Aguardar o upload e moderação
+      await uploadStory({
+        profileId: selectedProfile,
+        type: type,
+        mediaFile: finalMediaFile || undefined,
+        textContent: type === 'text' ? textContent : undefined,
+        backgroundColor: type === 'text' ? backgroundColor : undefined,
+        linkUrl: type === 'text' && textLink ? textLink : (linkUrl || undefined),
+        metadata,
+      });
+
+      // Se chegou aqui, foi aprovado e publicado com sucesso
+      handleClose();
+      onStoryCreated();
+    } catch (error) {
+      // Se for erro de moderação, mostrar no dialog
+      const errorMessage = error instanceof Error ? error.message : 'Erro ao publicar story';
+      toast({
+        title: 'Story não publicado',
+        description: errorMessage,
+        variant: 'destructive',
+      });
+    } finally {
+      setIsPublishing(false);
+    }
   };
 
   const handleClose = () => {
@@ -568,7 +581,7 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
                         setMediaPreview('');
                         setTextContent('');
                       }} 
-                      disabled={currentUpload?.status === 'uploading'}
+                      disabled={isPublishing}
                       size="lg"
                     >
                       Voltar
@@ -578,7 +591,7 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
                     variant="outline" 
                     onClick={handleClose} 
                     className="flex-1" 
-                    disabled={currentUpload?.status === 'uploading'}
+                    disabled={isPublishing}
                     size="lg"
                   >
                     {step === 'select' ? 'Fechar' : 'Cancelar'}
@@ -587,11 +600,20 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
                     <Button 
                       onClick={handlePublish} 
                       className="flex-1 bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 hover:from-purple-600 hover:via-pink-600 hover:to-orange-600 text-white" 
-                      disabled={currentUpload?.status === 'uploading'}
+                      disabled={isPublishing}
                       size="lg"
                     >
-                      <Camera className="w-5 h-5 mr-2" />
-                      Publicar Story
+                      {isPublishing ? (
+                        <>
+                          <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                          Verificando conteúdo...
+                        </>
+                      ) : (
+                        <>
+                          <Camera className="w-5 h-5 mr-2" />
+                          Publicar Story
+                        </>
+                      )}
                     </Button>
                   )}
                 </div>

@@ -219,6 +219,20 @@ export function UploadProvider({ children }: { children: ReactNode }) {
       console.error('Error uploading story:', error);
       const errorMessage = error instanceof Error ? error.message : 'Erro ao publicar story. Tente novamente.';
       
+      // Verificar se é erro de moderação
+      const isModerationError = errorMessage.includes('não foi possível verificar') || 
+                                 errorMessage.includes('não permitido') ||
+                                 errorMessage.includes('rejeitado') ||
+                                 errorMessage.includes('Conteúdo');
+      
+      // Se for erro de moderação, apenas lançar para o dialog capturar
+      if (isModerationError) {
+        // Limpar o estado de upload para não mostrar UploadIndicator
+        setCurrentUpload(null);
+        throw error;
+      }
+      
+      // Para outros erros, mostrar no UploadIndicator
       setCurrentUpload({
         id: uploadId,
         type: 'story',
@@ -227,18 +241,13 @@ export function UploadProvider({ children }: { children: ReactNode }) {
         message: errorMessage,
       });
 
-      // Não mostra toast se for erro de moderação (já tem o UploadIndicator)
-      const isModerationError = errorMessage.includes('não foi possível verificar') || 
-                                 errorMessage.includes('não permitido') ||
-                                 errorMessage.includes('rejeitado');
+      toast({
+        title: 'Erro ao publicar',
+        description: errorMessage,
+        variant: 'destructive',
+      });
       
-      if (!isModerationError) {
-        toast({
-          title: 'Erro ao publicar',
-          description: errorMessage,
-          variant: 'destructive',
-        });
-      }
+      throw error;
     }
   }, [toast, onStoryUploaded]);
 

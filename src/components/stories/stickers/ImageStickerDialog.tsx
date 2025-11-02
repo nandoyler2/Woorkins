@@ -1,8 +1,7 @@
 import { useState, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { ImageIcon, X } from 'lucide-react';
+import { Upload } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface ImageStickerDialogProps {
@@ -12,8 +11,7 @@ interface ImageStickerDialogProps {
 }
 
 export function ImageStickerDialog({ open, onClose, onSave }: ImageStickerDialogProps) {
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [preview, setPreview] = useState<string>('');
+  const [selectedImage, setSelectedImage] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
@@ -23,7 +21,7 @@ export function ImageStickerDialog({ open, onClose, onSave }: ImageStickerDialog
 
     if (!file.type.startsWith('image/')) {
       toast({
-        title: 'Formato inválido',
+        title: 'Arquivo inválido',
         description: 'Selecione uma imagem',
         variant: 'destructive',
       });
@@ -39,45 +37,39 @@ export function ImageStickerDialog({ open, onClose, onSave }: ImageStickerDialog
       return;
     }
 
-    setImageFile(file);
     const reader = new FileReader();
-    reader.onloadend = () => {
-      setPreview(reader.result as string);
+    reader.onload = (e) => {
+      setSelectedImage(e.target?.result as string);
     };
     reader.readAsDataURL(file);
   };
 
   const handleSave = () => {
-    if (!preview) {
+    if (!selectedImage) {
       toast({
-        title: 'Imagem necessária',
-        description: 'Selecione uma imagem',
+        title: 'Selecione uma imagem',
         variant: 'destructive',
       });
       return;
     }
 
-    onSave({ imageUrl: preview, file: imageFile });
-    handleClose();
-  };
-
-  const handleClose = () => {
-    setImageFile(null);
-    setPreview('');
+    onSave({ imageUrl: selectedImage });
+    setSelectedImage('');
     onClose();
   };
 
-  const handleRemoveImage = () => {
-    setImageFile(null);
-    setPreview('');
+  const handleClose = () => {
+    setSelectedImage('');
+    onClose();
   };
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Adicionar Imagem</DialogTitle>
         </DialogHeader>
+
         <div className="space-y-4">
           <input
             ref={fileInputRef}
@@ -86,41 +78,43 @@ export function ImageStickerDialog({ open, onClose, onSave }: ImageStickerDialog
             onChange={handleImageSelect}
             className="hidden"
           />
-          
-          {!preview ? (
+
+          {!selectedImage ? (
             <Button
-              onClick={() => fileInputRef.current?.click()}
-              className="w-full h-40 border-2 border-dashed"
+              type="button"
               variant="outline"
+              className="w-full h-40 border-2 border-dashed"
+              onClick={() => fileInputRef.current?.click()}
             >
               <div className="flex flex-col items-center gap-2">
-                <ImageIcon className="w-8 h-8" />
-                <span>Selecionar Imagem</span>
+                <Upload className="w-8 h-8" />
+                <span>Selecionar imagem</span>
               </div>
             </Button>
           ) : (
             <div className="relative">
               <img
-                src={preview}
+                src={selectedImage}
                 alt="Preview"
                 className="w-full h-40 object-contain rounded-lg bg-muted"
               />
               <Button
-                size="icon"
-                variant="destructive"
+                type="button"
+                variant="outline"
+                size="sm"
                 className="absolute top-2 right-2"
-                onClick={handleRemoveImage}
+                onClick={() => fileInputRef.current?.click()}
               >
-                <X className="w-4 h-4" />
+                Trocar
               </Button>
             </div>
           )}
 
-          <div className="flex gap-2 justify-end">
-            <Button variant="outline" onClick={handleClose}>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={handleClose} className="flex-1">
               Cancelar
             </Button>
-            <Button onClick={handleSave}>
+            <Button onClick={handleSave} className="flex-1">
               Adicionar
             </Button>
           </div>

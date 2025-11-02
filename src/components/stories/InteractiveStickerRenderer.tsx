@@ -56,7 +56,7 @@ export const InteractiveStickerRenderer = ({
     top: `${sticker.position_y}%`,
     width: `${sticker.width}%`,
     height: `${sticker.height}%`,
-    transform: `translate(-50%, -50%) rotate(${sticker.rotation}deg)`,
+    transform: `translate(-50%, -50%) rotate(${sticker.rotation}deg) scale(${sticker.scale || 1})`,
   };
 
   const renderSticker = () => {
@@ -136,13 +136,12 @@ export const InteractiveStickerRenderer = ({
 
       case 'image':
         return (
-          <div style={style} className="pointer-events-auto">
-            <img
-              src={sticker.content.imageUrl}
-              alt="Sticker"
-              className="w-full h-full object-contain rounded-lg shadow-xl"
-            />
-          </div>
+          <img
+            src={sticker.content.imageUrl}
+            alt="Sticker"
+            style={style}
+            className="rounded-lg shadow-lg object-contain"
+          />
         );
 
       default:

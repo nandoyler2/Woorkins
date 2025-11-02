@@ -11,6 +11,7 @@ export interface StorySticker {
   height: number;
   rotation: number;
   content: any;
+  scale?: number;
 }
 
 export const useStoryStickers = (storyId: string | null) => {
@@ -31,13 +32,14 @@ export const useStoryStickers = (storyId: string | null) => {
         if (error) throw error;
         
         // Garantir tipagem correta
-        const typedStickers = (data || []).map(s => ({
+        const typedStickers = (data || []).map((s: any) => ({
           ...s,
           position_x: Number(s.position_x),
           position_y: Number(s.position_y),
           width: Number(s.width),
           height: Number(s.height),
           rotation: Number(s.rotation),
+          scale: s.scale ? Number(s.scale) : 1,
         })) as StorySticker[];
         
         setStickers(typedStickers);
@@ -61,7 +63,8 @@ export const useStoryStickers = (storyId: string | null) => {
         width: s.width,
         height: s.height,
         rotation: s.rotation,
-        content: s.content
+        content: s.content,
+        scale: s.scale || 1
       }));
 
       const { error } = await supabase

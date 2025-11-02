@@ -65,7 +65,7 @@ export function StoryCommentSection({ storyId, currentProfileId, isLiked, onTogg
     try {
       const { data: commentsData, error } = await supabase
         .from('story_comments')
-        .select('*')
+        .select('id, story_id, profile_id, comment_text, created_at')
         .eq('story_id', storyId)
         .order('created_at', { ascending: false });
 

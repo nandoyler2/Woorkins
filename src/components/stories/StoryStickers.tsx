@@ -16,8 +16,8 @@ export interface Sticker {
   width: number;
   height: number;
   rotation: number;
-  scale?: number;
   content: any;
+  scale?: number;
 }
 
 interface StoryStickersProps {
@@ -37,8 +37,8 @@ export const StoryStickers = ({ stickers, onAddSticker, onRemoveSticker }: Story
       width: type === 'image' ? 30 : 40,
       height: type === 'image' ? 30 : 20,
       rotation: 0,
-      scale: 1,
-      content
+      content,
+      scale: 1
     };
     onAddSticker(newSticker);
   };

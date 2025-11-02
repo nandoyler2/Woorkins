@@ -287,15 +287,13 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
     setAttachments(prev => prev.filter((_, i) => i !== index));
   };
 
-  // Carrega rascunho ao abrir
+  // Carrega rascunho da mensagem ao abrir
   useEffect(() => {
     if (!open) return;
     try {
       const raw = localStorage.getItem(draftKey);
       if (raw) {
         const draft = JSON.parse(raw);
-        if (draft.amountFormatted) setAmountFormatted(draft.amountFormatted);
-        if (draft.deliveryTime) setDeliveryTime(draft.deliveryTime);
         if (draft.message) {
           setMessage(draft.message);
           // Carrega o texto no editor também
@@ -305,14 +303,16 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
         }
       }
     } catch {}
-  }, [open]);
+  }, [open, draftKey]);
 
-  // Salva rascunho automaticamente
+  // Salva apenas a mensagem em cache automaticamente
   useEffect(() => {
     if (!open || success) return;
-    const draft = { amountFormatted, deliveryTime, message };
-    try { localStorage.setItem(draftKey, JSON.stringify(draft)); } catch {}
-  }, [amountFormatted, deliveryTime, message, open, success]);
+    if (message.trim()) {
+      const draft = { message };
+      try { localStorage.setItem(draftKey, JSON.stringify(draft)); } catch {}
+    }
+  }, [message, open, success, draftKey]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

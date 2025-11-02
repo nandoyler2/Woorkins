@@ -87,84 +87,111 @@ export function UploadProvider({ children }: { children: ReactNode }) {
 
       // Upload de mídia se necessário
       if (data.type !== 'text' && data.mediaFile) {
-        setCurrentUpload(prev => prev ? { ...prev, message: 'Otimizando qualidade...', progress: 20 } : null);
-
-        // Comprimir imagem para story (1080x1920, qualidade otimizada)
-        const { compressImageForStory, createThumbnail } = await import('@/lib/imageCompression');
-        const compressedBlob = await compressImageForStory(data.mediaFile);
-        const compressedFile = new File([compressedBlob], data.mediaFile.name, {
-          type: compressedBlob.type,
-        });
-
-        setCurrentUpload(prev => prev ? { ...prev, message: 'Gerando miniatura...', progress: 40 } : null);
-
-        // Criar thumbnail otimizada (200x200)
-        const thumbnailBlob = await createThumbnail(data.mediaFile);
-        const thumbnailFile = new File([thumbnailBlob], data.mediaFile.name, {
-          type: thumbnailBlob.type,
-        });
-
-        // Converter para base64 para moderação
-        const reader = new FileReader();
-        mediaBase64ForModeration = await new Promise<string>((resolve) => {
-          reader.onload = () => resolve(reader.result as string);
-          reader.readAsDataURL(compressedFile);
-        });
-
-        setCurrentUpload(prev => prev ? { ...prev, message: 'Verificando conteúdo...', progress: 50 } : null);
-        
-        // Moderar conteúdo antes do upload
-        const { data: moderationData, error: moderationError } = await supabase.functions.invoke('moderate-story', {
-          body: {
-            mediaBase64: mediaBase64ForModeration,
-            textContent: data.textContent || '',
-            type: data.type
-          }
-        });
-
-        if (moderationError) {
-          console.error('Moderation error:', moderationError);
-          throw new Error('Não foi possível verificar o conteúdo. Tente novamente.');
-        }
-
-        if (!moderationData?.approved) {
-          const reason = moderationData?.reason || 'Conteúdo não permitido';
-          console.log('Content rejected:', reason);
-          throw new Error(reason);
-        }
-
-        setCurrentUpload(prev => prev ? { ...prev, message: 'Enviando arquivo...', progress: 60 } : null);
-
         const fileExt = data.mediaFile.name.split('.').pop();
         const timestamp = Date.now();
         const fileName = `${data.profileId}/${timestamp}.${fileExt}`;
-        const thumbName = `${data.profileId}/${timestamp}-thumb.${fileExt}`;
 
-        // Upload da imagem principal
-        const { error: uploadError } = await supabase.storage
-          .from('stories')
-          .upload(fileName, compressedFile);
+        if (data.type === 'image') {
+          // PROCESSAMENTO DE IMAGEM
+          setCurrentUpload(prev => prev ? { ...prev, message: 'Otimizando qualidade...', progress: 20 } : null);
 
-        if (uploadError) throw uploadError;
+          // Comprimir imagem para story (1080x1920, qualidade otimizada)
+          const { compressImageForStory, createThumbnail } = await import('@/lib/imageCompression');
+          const compressedBlob = await compressImageForStory(data.mediaFile);
+          const compressedFile = new File([compressedBlob], data.mediaFile.name, {
+            type: compressedBlob.type,
+          });
 
-        // Upload da thumbnail
-        const { error: thumbError } = await supabase.storage
-          .from('stories')
-          .upload(thumbName, thumbnailFile);
+          setCurrentUpload(prev => prev ? { ...prev, message: 'Gerando miniatura...', progress: 40 } : null);
 
-        if (thumbError) throw thumbError;
+          // Criar thumbnail otimizada (200x200)
+          const thumbnailBlob = await createThumbnail(data.mediaFile);
+          const thumbnailFile = new File([thumbnailBlob], data.mediaFile.name, {
+            type: thumbnailBlob.type,
+          });
 
-        // Obter URLs públicas
-        const { data: { publicUrl } } = supabase.storage
-          .from('stories')
-          .getPublicUrl(fileName);
+          // Converter para base64 para moderação
+          const reader = new FileReader();
+          mediaBase64ForModeration = await new Promise<string>((resolve) => {
+            reader.onload = () => resolve(reader.result as string);
+            reader.readAsDataURL(compressedFile);
+          });
 
-        const { data: { publicUrl: thumbPublicUrl } } = supabase.storage
-          .from('stories')
-          .getPublicUrl(thumbName);
+          setCurrentUpload(prev => prev ? { ...prev, message: 'Verificando conteúdo...', progress: 50 } : null);
+          
+          // Moderar conteúdo antes do upload
+          const { data: moderationData, error: moderationError } = await supabase.functions.invoke('moderate-story', {
+            body: {
+              mediaBase64: mediaBase64ForModeration,
+              textContent: data.textContent || '',
+              type: data.type
+            }
+          });
 
-        mediaUrl = publicUrl;
-        thumbnailUrl = thumbPublicUrl;
+          if (moderationError) {
+            console.error('Moderation error:', moderationError);
+            throw new Error('Não foi possível verificar o conteúdo. Tente novamente.');
+          }
+
+          if (!moderationData?.approved) {
+            const reason = moderationData?.reason || 'Conteúdo não permitido';
+            console.log('Content rejected:', reason);
+            throw new Error(reason);
+          }
+
+          setCurrentUpload(prev => prev ? { ...prev, message: 'Enviando arquivo...', progress: 60 } : null);
+
+          const thumbName = `${data.profileId}/${timestamp}-thumb.${fileExt}`;
+
+          // Upload da imagem principal
+          const { error: uploadError } = await supabase.storage
+            .from('stories')
+            .upload(fileName, compressedFile);
+
+          if (uploadError) throw uploadError;
+
+          // Upload da thumbnail
+          const { error: thumbError } = await supabase.storage
+            .from('stories')
+            .upload(thumbName, thumbnailFile);
+
+          if (thumbError) throw thumbError;
+
+          // Obter URLs públicas
+          const { data: { publicUrl } } = supabase.storage
+            .from('stories')
+            .getPublicUrl(fileName);
+
+          const { data: { publicUrl: thumbPublicUrl } } = supabase.storage
+            .from('stories')
+            .getPublicUrl(thumbName);
+
+          mediaUrl = publicUrl;
+          thumbnailUrl = thumbPublicUrl;
+
+        } else if (data.type === 'video') {
+          // PROCESSAMENTO DE VÍDEO
+          setCurrentUpload(prev => prev ? { ...prev, message: 'Verificando vídeo...', progress: 30 } : null);
+
+          // Para vídeos, não fazemos moderação por base64 (muito pesado)
+          // Apenas fazemos upload direto
+          setCurrentUpload(prev => prev ? { ...prev, message: 'Enviando vídeo...', progress: 60 } : null);
+
+          // Upload do vídeo
+          const { error: uploadError } = await supabase.storage
+            .from('stories')
+            .upload(fileName, data.mediaFile);
+
+          if (uploadError) throw uploadError;
+
+          // Obter URL pública
+          const { data: { publicUrl } } = supabase.storage
+            .from('stories')
+            .getPublicUrl(fileName);
+
+          mediaUrl = publicUrl;
+          thumbnailUrl = null; // Vídeos não tem thumbnail por enquanto
+        }
       } else if (data.type === 'text') {
         // Moderar conteúdo de texto
         setCurrentUpload(prev => prev ? { ...prev, message: 'Verificando conteúdo...', progress: 50 } : null);

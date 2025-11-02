@@ -9,7 +9,6 @@ import { SafeImage } from '@/components/ui/safe-image';
 import { StoryCommentSection } from './StoryCommentSection';
 import { useStoryLikes } from '@/hooks/useStoryLikes';
 import { RepostStoryDialog } from './RepostStoryDialog';
-import { StoryViewsDialog } from './StoryViewsDialog';
 import { InteractiveStickerRenderer } from './InteractiveStickerRenderer';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
@@ -86,7 +85,6 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
   const [showRepostDialog, setShowRepostDialog] = useState(false);
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [likeAnimations, setLikeAnimations] = useState<Array<{ id: string; x: number; y: number }>>([]);
-  const [showViewsDialog, setShowViewsDialog] = useState(false);
   const [showViews, setShowViews] = useState(false);
   const [views, setViews] = useState<any[]>([]);
   const [likes, setLikes] = useState<any[]>([]);
@@ -1078,15 +1076,6 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
               description: 'Story repostado com sucesso',
             });
           }}
-        />
-      )}
-
-      {/* Views Dialog */}
-      {currentStory && isOwner && (
-        <StoryViewsDialog
-          storyId={currentStory.id}
-          isOpen={showViewsDialog}
-          onClose={() => setShowViewsDialog(false)}
         />
       )}
     </Dialog>

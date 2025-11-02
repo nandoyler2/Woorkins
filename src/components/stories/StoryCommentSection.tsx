@@ -114,7 +114,7 @@ export function StoryCommentSection({ storyId, currentProfileId, isLiked, onTogg
           profile_id: currentProfileId,
           comment_text: commentText.trim(),
         })
-        .select('id, profile_id, comment_text, created_at')
+        .select('id, story_id, profile_id, comment_text, created_at')
         .single();
 
       if (error) {

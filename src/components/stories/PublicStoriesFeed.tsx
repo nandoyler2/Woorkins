@@ -18,7 +18,15 @@ interface PublicStory {
   text_content: string | null;
   created_at: string;
   like_count: number;
+  original_story_id?: string | null;
+  original_profile_id?: string | null;
   profiles: {
+    id: string;
+    username: string;
+    full_name: string | null;
+    avatar_url: string | null;
+  };
+  original_profile?: {
     id: string;
     username: string;
     full_name: string | null;
@@ -97,7 +105,15 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
           text_content,
           created_at,
           expires_at,
-          profiles!inner(
+          original_story_id,
+          original_profile_id,
+          profiles!profile_stories_profile_id_fkey(
+            id,
+            username,
+            full_name,
+            avatar_url
+          ),
+          original_profile:profiles!profile_stories_original_profile_id_fkey(
             id,
             username,
             full_name,
@@ -119,7 +135,10 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
         text_content: story.text_content,
         created_at: story.created_at,
         like_count: (story as any).like_count ?? 0,
-        profiles: story.profiles
+        original_story_id: story.original_story_id,
+        original_profile_id: story.original_profile_id,
+        profiles: story.profiles,
+        original_profile: story.original_profile
       })) as PublicStory[];
       
       if (pageNum === 0) {

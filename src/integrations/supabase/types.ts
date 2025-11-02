@@ -1539,6 +1539,8 @@ export type Database = {
           like_count: number | null
           link_url: string | null
           media_url: string | null
+          original_profile_id: string | null
+          original_story_id: string | null
           profile_id: string
           text_content: string | null
           text_formatting: Json | null
@@ -1554,6 +1556,8 @@ export type Database = {
           like_count?: number | null
           link_url?: string | null
           media_url?: string | null
+          original_profile_id?: string | null
+          original_story_id?: string | null
           profile_id: string
           text_content?: string | null
           text_formatting?: Json | null
@@ -1569,6 +1573,8 @@ export type Database = {
           like_count?: number | null
           link_url?: string | null
           media_url?: string | null
+          original_profile_id?: string | null
+          original_story_id?: string | null
           profile_id?: string
           text_content?: string | null
           text_formatting?: Json | null
@@ -1577,6 +1583,20 @@ export type Database = {
           view_count?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "profile_stories_original_profile_id_fkey"
+            columns: ["original_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profile_stories_original_story_id_fkey"
+            columns: ["original_story_id"]
+            isOneToOne: false
+            referencedRelation: "profile_stories"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "profile_stories_profile_id_fkey"
             columns: ["profile_id"]

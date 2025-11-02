@@ -2,12 +2,13 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, X, ExternalLink, Volume2, VolumeX, User, Play, Pause, Trash2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X, ExternalLink, Volume2, VolumeX, User, Play, Pause, Trash2, Repeat2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { SafeImage } from '@/components/ui/safe-image';
 import { StoryCommentSection } from './StoryCommentSection';
 import { useStoryLikes } from '@/hooks/useStoryLikes';
+import { RepostStoryDialog } from './RepostStoryDialog';
 
 interface Story {
   id: string;
@@ -19,11 +20,18 @@ interface Story {
   link_url: string | null;
   created_at: string;
   view_count: number;
+  original_story_id?: string | null;
+  original_profile_id?: string | null;
   metadata?: {
     text_bold?: boolean;
     text_italic?: boolean;
   };
   profile?: {
+    username: string;
+    full_name: string;
+    avatar_url: string;
+  };
+  original_profile?: {
     username: string;
     full_name: string;
     avatar_url: string;
@@ -58,6 +66,7 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [mediaLoading, setMediaLoading] = useState(true);
+  const [showRepostDialog, setShowRepostDialog] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const { toast } = useToast();
 
@@ -78,7 +87,10 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
         link_url: null,
         created_at: story.created_at,
         view_count: 0,
-        profile: story.profiles
+        original_story_id: story.original_story_id,
+        original_profile_id: story.original_profile_id,
+        profile: story.profiles,
+        original_profile: story.original_profile
       }));
       setStories(mappedStories);
       setIsLoading(false);
@@ -92,7 +104,8 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
         .from('profile_stories')
         .select(`
           *,
-          profile:profiles(username, full_name, avatar_url)
+          profile:profiles!profile_stories_profile_id_fkey(username, full_name, avatar_url),
+          original_profile:profiles!profile_stories_original_profile_id_fkey(username, full_name, avatar_url)
         `)
         .eq('profile_id', profileId)
         .gt('expires_at', new Date().toISOString())
@@ -622,19 +635,33 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
             />
           )}
 
-          {/* Footer - Link apenas para mídia e Delete button */}
+          {/* Footer - Link, Repost e Delete button */}
           <div className="absolute bottom-20 left-4 right-4 z-20 flex items-end justify-between">
-            {/* Delete button for owner */}
-            {isOwner && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setShowDeleteDialog(true)}
-                className="bg-black/50 backdrop-blur-md text-white hover:bg-red-500/50 rounded-full"
-              >
-                <Trash2 className="w-5 h-5" />
-              </Button>
-            )}
+            <div className="flex gap-2">
+              {/* Delete button for owner */}
+              {isOwner && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setShowDeleteDialog(true)}
+                  className="bg-black/50 backdrop-blur-md text-white hover:bg-red-500/50 rounded-full"
+                >
+                  <Trash2 className="w-5 h-5" />
+                </Button>
+              )}
+
+              {/* Repost button */}
+              {!isOwner && currentProfileId && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setShowRepostDialog(true)}
+                  className="bg-black/50 backdrop-blur-md text-white hover:bg-purple-500/50 rounded-full"
+                >
+                  <Repeat2 className="w-5 h-5" />
+                </Button>
+              )}
+            </div>
 
             {currentStory.link_url && currentStory.type !== 'text' && (
               <a
@@ -648,6 +675,31 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
               </a>
             )}
           </div>
+
+          {/* Indicador de repost (se for repost) */}
+          {currentStory.original_profile_id && currentStory.original_profile && (
+            <div className="absolute top-16 left-4 right-4 z-20">
+              <div className="bg-black/60 backdrop-blur-md rounded-lg p-2 flex items-center gap-2">
+                <Repeat2 className="w-4 h-4 text-white" />
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  {currentStory.original_profile.avatar_url ? (
+                    <SafeImage
+                      src={currentStory.original_profile.avatar_url}
+                      alt={currentStory.original_profile.username}
+                      className="w-6 h-6 rounded-full object-cover flex-shrink-0"
+                    />
+                  ) : (
+                    <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                      <User className="w-4 h-4" />
+                    </div>
+                  )}
+                  <p className="text-white text-xs font-medium truncate">
+                    Story original de @{currentStory.original_profile.username}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Botões de Navegação - Mobile */}
           {currentIndex > 0 && (
@@ -739,6 +791,22 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Repost Dialog */}
+      {currentStory && currentProfileId && (
+        <RepostStoryDialog
+          story={currentStory}
+          isOpen={showRepostDialog}
+          onClose={() => setShowRepostDialog(false)}
+          currentProfileId={currentProfileId}
+          onRepostSuccess={() => {
+            toast({
+              title: 'Compartilhado!',
+              description: 'Story repostado com sucesso',
+            });
+          }}
+        />
+      )}
     </Dialog>
   );
 }

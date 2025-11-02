@@ -57,8 +57,24 @@ const getRelativeTime = (timestamp: string): string => {
 
 const getFirstName = (fullName: string | null, username: string): string => {
   if (!fullName) return username;
-  const firstName = fullName.trim().split(' ')[0];
-  return firstName || username;
+  
+  const words = fullName.trim().split(' ').filter(w => w.length > 0);
+  if (words.length === 0) return username;
+  if (words.length === 1) return words[0];
+  
+  const prepositions = ['de', 'da', 'do', 'dos', 'das', 'e'];
+  const firstName = words[0];
+  
+  // Encontrar o primeiro sobrenome que não seja preposição
+  for (let i = 1; i < words.length; i++) {
+    const word = words[i].toLowerCase();
+    if (!prepositions.includes(word)) {
+      return `${firstName} ${word[0].toUpperCase()}.`;
+    }
+  }
+  
+  // Se todos os sobrenomes são preposições, retornar só o primeiro nome
+  return firstName;
 };
 
 export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentProfileId, userProfiles = [] }) => {

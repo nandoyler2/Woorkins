@@ -167,7 +167,6 @@ export function ViewProposalDialog({ open, onOpenChange, proposal, projectTitle 
                 <ul className="list-disc list-inside space-y-1 text-sm">
                   <li>Editar propostas já enviadas</li>
                   <li>Enviar até 3 anexos por proposta</li>
-                  <li>Arquivos de até 5MB cada</li>
                   <li>Impressionar clientes com portfólio anexado</li>
                   <li>Taxas de transação reduzidas e muito mais</li>
                 </ul>

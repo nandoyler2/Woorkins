@@ -431,56 +431,56 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
 
               {/* Mensagem */}
               <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="message" className="flex items-center gap-1.5 text-xs font-semibold text-blue-900 dark:text-blue-100">
+                <div className="flex items-center justify-between gap-2 p-2 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
+                  <Label htmlFor="message" className="flex items-center gap-1.5 text-xs font-semibold text-blue-900 dark:text-blue-100 shrink-0">
                     <FileText className="w-3.5 h-3.5" />
                     Mensagem / Descrição da Proposta *
                   </Label>
-                  <span className={`text-xs font-medium ${message.length > maxChars * 0.9 ? 'text-red-600 dark:text-red-400' : 'text-gray-500 dark:text-gray-400'}`}>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => applyFormat('bold')}
+                      className="h-7 w-7 p-0 hover:bg-blue-100 dark:hover:bg-blue-900"
+                      title="Negrito"
+                    >
+                      <Bold className="w-3.5 h-3.5" />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => applyFormat('italic')}
+                      className="h-7 w-7 p-0 hover:bg-blue-100 dark:hover:bg-blue-900"
+                      title="Itálico"
+                    >
+                      <Italic className="w-3.5 h-3.5" />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => applyFormat('insertUnorderedList')}
+                      className="h-7 w-7 p-0 hover:bg-blue-100 dark:hover:bg-blue-900"
+                      title="Lista"
+                    >
+                      <List className="w-3.5 h-3.5" />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => applyFormat('insertOrderedList')}
+                      className="h-7 w-7 p-0 hover:bg-blue-100 dark:hover:bg-blue-900"
+                      title="Lista numerada"
+                    >
+                      <ListOrdered className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
+                  <span className={`text-xs font-medium shrink-0 ${message.length > maxChars * 0.9 ? 'text-red-600 dark:text-red-400' : 'text-gray-500 dark:text-gray-400'}`}>
                     {message.length}/{maxChars}
                   </span>
-                </div>
-                <div className="flex gap-1 p-1.5 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => applyFormat('bold')}
-                    className="h-7 w-7 p-0 hover:bg-blue-100 dark:hover:bg-blue-900"
-                    title="Negrito"
-                  >
-                    <Bold className="w-3.5 h-3.5" />
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => applyFormat('italic')}
-                    className="h-7 w-7 p-0 hover:bg-blue-100 dark:hover:bg-blue-900"
-                    title="Itálico"
-                  >
-                    <Italic className="w-3.5 h-3.5" />
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => applyFormat('insertUnorderedList')}
-                    className="h-7 w-7 p-0 hover:bg-blue-100 dark:hover:bg-blue-900"
-                    title="Lista"
-                  >
-                    <List className="w-3.5 h-3.5" />
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => applyFormat('insertOrderedList')}
-                    className="h-7 w-7 p-0 hover:bg-blue-100 dark:hover:bg-blue-900"
-                    title="Lista numerada"
-                  >
-                    <ListOrdered className="w-3.5 h-3.5" />
-                  </Button>
                 </div>
                 <div
                   ref={editorRef}

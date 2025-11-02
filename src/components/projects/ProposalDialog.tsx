@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -10,7 +10,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { OptimizedAvatar } from "@/components/ui/optimized-avatar";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Clock, FileText, DollarSign, Calendar, Sparkles, CheckCircle2 } from "lucide-react";
+import { Clock, FileText, DollarSign, Calendar, Sparkles, CheckCircle2, Bold, Italic, List, ListOrdered, Link2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 interface ProposalDialogProps {
@@ -26,11 +26,13 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
   const { user } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [amount, setAmount] = useState("");
+  const [amountFormatted, setAmountFormatted] = useState("");
   const [deliveryTime, setDeliveryTime] = useState("");
   const [message, setMessage] = useState("");
   const [userProfile, setUserProfile] = useState<any>(null);
   const [success, setSuccess] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const draftKey = `proposalDraft:${user?.id || 'anon'}:${projectId}`;
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -43,7 +45,7 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
       
       const { data, error } = await supabase
         .from('profiles' as any)
-        .select('full_name, avatar_url, avatar_thumbnail_url, freelancer_level')
+        .select('full_name, username, avatar_url, avatar_thumbnail_url, freelancer_level')
         .eq('user_id', user.id)
         .single();
       
@@ -73,7 +75,9 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
       return;
     }
 
-    if (!amount || !deliveryTime || !message) {
+    const budgetNumber = parseCurrencyToNumber(amountFormatted);
+
+    if (!budgetNumber || !deliveryTime || !message) {
       toast({
         title: "Erro",
         description: "Preencha todos os campos obrigatórios",
@@ -103,7 +107,7 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
         .insert({
           project_id: projectId,
           freelancer_id: profileData.id,
-          budget: parseFloat(amount),
+          budget: budgetNumber,
           delivery_days: parseInt(deliveryTime),
           message: message,
           status: 'pending',
@@ -112,7 +116,8 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
       if (error) throw error;
 
       setSuccess(true);
-      setAmount("");
+      localStorage.removeItem(draftKey);
+      setAmountFormatted("");
       setDeliveryTime("");
       setMessage("");
     } catch (error: any) {
@@ -140,6 +145,64 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
       return "há alguns momentos";
     }
   };
+
+  const formatCurrencyInput = (value: string) => {
+    const digits = value.replace(/\D/g, '');
+    const number = parseInt(digits || '0', 10) / 100;
+    return number.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  };
+
+  const parseCurrencyToNumber = (formatted: string) => {
+    const digits = formatted.replace(/\D/g, '');
+    return parseInt(digits || '0', 10) / 100;
+  };
+
+  const applyFormat = (type: 'bold' | 'italic' | 'ul' | 'ol' | 'link') => {
+    const el = textareaRef.current;
+    if (!el) return;
+    const start = el.selectionStart || 0;
+    const end = el.selectionEnd || 0;
+    const selected = message.slice(start, end);
+    let newValue = message;
+    if (type === 'bold') newValue = message.slice(0, start) + '**' + (selected || 'texto') + '**' + message.slice(end);
+    if (type === 'italic') newValue = message.slice(0, start) + '*' + (selected || 'texto') + '*' + message.slice(end);
+    if (type === 'ul') {
+      const block = (selected || 'item da lista').split('\n').map(l => l ? `- ${l}` : '- ').join('\n');
+      newValue = message.slice(0, start) + block + message.slice(end);
+    }
+    if (type === 'ol') {
+      const lines = (selected || 'item da lista').split('\n');
+      const block = lines.map((l, i) => `${i + 1}. ${l || ''}`).join('\n');
+      newValue = message.slice(0, start) + block + message.slice(end);
+    }
+    if (type === 'link') {
+      const block = `[${selected || 'link'}](https://)`;
+      newValue = message.slice(0, start) + block + message.slice(end);
+    }
+    setMessage(newValue);
+    setTimeout(() => { el.focus(); }, 0);
+  };
+
+  // Carrega rascunho ao abrir
+  useEffect(() => {
+    if (!open) return;
+    try {
+      const raw = localStorage.getItem(draftKey);
+      if (raw) {
+        const draft = JSON.parse(raw);
+        if (draft.amountFormatted) setAmountFormatted(draft.amountFormatted);
+        if (draft.deliveryTime) setDeliveryTime(draft.deliveryTime);
+        if (draft.message) setMessage(draft.message);
+      }
+    } catch {}
+  }, [open]);
+
+  // Salva rascunho automaticamente
+  useEffect(() => {
+    if (!open || success) return;
+    const draft = { amountFormatted, deliveryTime, message };
+    try { localStorage.setItem(draftKey, JSON.stringify(draft)); } catch {}
+  }, [amountFormatted, deliveryTime, message, open, success]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

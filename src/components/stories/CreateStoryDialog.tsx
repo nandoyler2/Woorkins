@@ -763,7 +763,7 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
                           {stickers.map((sticker) => (
                             <div
                               key={sticker.id}
-                              className="absolute cursor-move select-none hover:opacity-80 transition-opacity"
+                              className="absolute cursor-move select-none"
                               style={{
                                 left: `${sticker.position_x}%`,
                                 top: `${sticker.position_y}%`,
@@ -786,16 +786,45 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
                                   className="w-full h-auto rounded-lg shadow-lg"
                                   style={{ pointerEvents: 'none' }}
                                 />
-                              ) : (
-                                <div className="bg-white/10 backdrop-blur-sm border border-white/30 rounded-lg p-2">
-                                  <p className="text-white text-[8px] font-medium text-center whitespace-nowrap">
-                                    {sticker.type === 'poll' ? '📊 Enquete' : 
-                                     sticker.type === 'question' ? '❓ Pergunta' :
-                                     sticker.type === 'emoji' ? '😊 Emoji' :
-                                     sticker.type === 'location' ? '📍 Local' : '🔗 Link'}
-                                  </p>
+                              ) : sticker.type === 'poll' ? (
+                                <div className="bg-black/60 backdrop-blur-md border border-white/20 rounded-2xl p-4 min-w-[200px]">
+                                  <p className="text-white font-bold text-sm mb-3">{sticker.content.question}</p>
+                                  <div className="space-y-2">
+                                    {sticker.content.options?.map((option: any) => (
+                                      <div
+                                        key={option.id}
+                                        className="bg-white/20 hover:bg-white/30 transition rounded-full px-4 py-2"
+                                      >
+                                        <p className="text-white text-xs font-medium text-center">{option.text}</p>
+                                      </div>
+                                    ))}
+                                  </div>
                                 </div>
-                              )}
+                              ) : sticker.type === 'question' ? (
+                                <div className="bg-black/60 backdrop-blur-md border border-white/20 rounded-2xl p-4 min-w-[200px]">
+                                  <p className="text-white font-bold text-sm mb-2">{sticker.content.text}</p>
+                                  <input
+                                    type="text"
+                                    placeholder={sticker.content.placeholder}
+                                    className="w-full px-3 py-2 rounded-full bg-white/20 text-white placeholder:text-white/60 text-xs"
+                                    disabled
+                                  />
+                                </div>
+                              ) : sticker.type === 'emoji' ? (
+                                <div className="bg-black/60 backdrop-blur-md border border-white/20 rounded-full p-4 hover:scale-110 transition">
+                                  <span className="text-4xl">{sticker.content.emoji}</span>
+                                </div>
+                              ) : sticker.type === 'location' ? (
+                                <div className="bg-black/60 backdrop-blur-md border border-white/20 rounded-2xl px-4 py-2 flex items-center gap-2">
+                                  <span className="text-xl">📍</span>
+                                  <span className="text-white text-sm font-medium">{sticker.content.name}</span>
+                                </div>
+                              ) : sticker.type === 'link' ? (
+                                <div className="bg-black/60 backdrop-blur-md border border-white/20 rounded-2xl px-4 py-2 flex items-center gap-2">
+                                  <span className="text-xl">🔗</span>
+                                  <span className="text-white text-sm font-medium">{sticker.content.title}</span>
+                                </div>
+                              ) : null}
                             </div>
                           ))}
                           
@@ -845,7 +874,7 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
                           {stickers.map((sticker) => (
                             <div
                               key={sticker.id}
-                              className="absolute cursor-move select-none hover:opacity-80 transition-opacity"
+                              className="absolute cursor-move select-none"
                               style={{
                                 left: `${sticker.position_x}%`,
                                 top: `${sticker.position_y}%`,
@@ -868,16 +897,45 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
                                   className="w-full h-auto rounded-lg shadow-lg"
                                   style={{ pointerEvents: 'none' }}
                                 />
-                              ) : (
-                                <div className="bg-white/10 backdrop-blur-sm border border-white/30 rounded-lg p-2">
-                                  <p className="text-white text-[8px] font-medium text-center whitespace-nowrap">
-                                    {sticker.type === 'poll' ? '📊 Enquete' : 
-                                     sticker.type === 'question' ? '❓ Pergunta' :
-                                     sticker.type === 'emoji' ? '😊 Emoji' :
-                                     sticker.type === 'location' ? '📍 Local' : '🔗 Link'}
-                                  </p>
+                              ) : sticker.type === 'poll' ? (
+                                <div className="bg-black/60 backdrop-blur-md border border-white/20 rounded-2xl p-4 min-w-[200px]">
+                                  <p className="text-white font-bold text-sm mb-3">{sticker.content.question}</p>
+                                  <div className="space-y-2">
+                                    {sticker.content.options?.map((option: any) => (
+                                      <div
+                                        key={option.id}
+                                        className="bg-white/20 hover:bg-white/30 transition rounded-full px-4 py-2"
+                                      >
+                                        <p className="text-white text-xs font-medium text-center">{option.text}</p>
+                                      </div>
+                                    ))}
+                                  </div>
                                 </div>
-                              )}
+                              ) : sticker.type === 'question' ? (
+                                <div className="bg-black/60 backdrop-blur-md border border-white/20 rounded-2xl p-4 min-w-[200px]">
+                                  <p className="text-white font-bold text-sm mb-2">{sticker.content.text}</p>
+                                  <input
+                                    type="text"
+                                    placeholder={sticker.content.placeholder}
+                                    className="w-full px-3 py-2 rounded-full bg-white/20 text-white placeholder:text-white/60 text-xs"
+                                    disabled
+                                  />
+                                </div>
+                              ) : sticker.type === 'emoji' ? (
+                                <div className="bg-black/60 backdrop-blur-md border border-white/20 rounded-full p-4 hover:scale-110 transition">
+                                  <span className="text-4xl">{sticker.content.emoji}</span>
+                                </div>
+                              ) : sticker.type === 'location' ? (
+                                <div className="bg-black/60 backdrop-blur-md border border-white/20 rounded-2xl px-4 py-2 flex items-center gap-2">
+                                  <span className="text-xl">📍</span>
+                                  <span className="text-white text-sm font-medium">{sticker.content.name}</span>
+                                </div>
+                              ) : sticker.type === 'link' ? (
+                                <div className="bg-black/60 backdrop-blur-md border border-white/20 rounded-2xl px-4 py-2 flex items-center gap-2">
+                                  <span className="text-xl">🔗</span>
+                                  <span className="text-white text-sm font-medium">{sticker.content.title}</span>
+                                </div>
+                              ) : null}
                             </div>
                           ))}
                           

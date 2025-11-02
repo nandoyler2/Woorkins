@@ -4,17 +4,16 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Save, Sparkles } from 'lucide-react';
+import { ArrowLeft, ChevronRight, ChevronLeft, CheckCircle2, FileText, DollarSign, Calendar as CalendarIcon, Eye, X, Tag } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useDocumentVerification } from '@/hooks/useDocumentVerification';
@@ -27,9 +26,12 @@ export default function ProjectCreate() {
   const navigate = useNavigate();
   
   const [creating, setCreating] = useState(false);
+  const [currentStep, setCurrentStep] = useState(1);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('');
+  const [tags, setTags] = useState<string[]>([]);
+  const [tagInput, setTagInput] = useState('');
   const [budgetRange, setBudgetRange] = useState('');
   const [deadline, setDeadline] = useState<Date>();
   const [profileId, setProfileId] = useState<string>('');
@@ -86,8 +88,50 @@ export default function ProjectCreate() {
     checkRequirements();
   }, [user]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const addTag = () => {
+    if (tagInput.trim() && tags.length < 5 && !tags.includes(tagInput.trim())) {
+      setTags([...tags, tagInput.trim()]);
+      setTagInput('');
+    }
+  };
+
+  const removeTag = (tagToRemove: string) => {
+    setTags(tags.filter(tag => tag !== tagToRemove));
+  };
+
+  const nextStep = () => {
+    if (currentStep === 1 && !title.trim()) {
+      toast({
+        title: "Campo obrigatório",
+        description: "Por favor, preencha o título do projeto",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (currentStep === 2 && !description.trim()) {
+      toast({
+        title: "Campo obrigatório",
+        description: "Por favor, preencha a descrição do projeto",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (currentStep === 3 && !budgetRange) {
+      toast({
+        title: "Campo obrigatório",
+        description: "Por favor, selecione uma faixa de orçamento",
+        variant: "destructive",
+      });
+      return;
+    }
+    setCurrentStep(prev => Math.min(prev + 1, 4));
+  };
+
+  const prevStep = () => {
+    setCurrentStep(prev => Math.max(prev - 1, 1));
+  };
+
+  const handleSubmit = async () => {
     if (!user) return;
 
     // Verificar requisitos novamente antes de enviar
@@ -165,6 +209,23 @@ export default function ProjectCreate() {
     }
   };
 
+  const steps = [
+    { number: 1, title: 'Básico', icon: FileText },
+    { number: 2, title: 'Descrição', icon: FileText },
+    { number: 3, title: 'Orçamento', icon: DollarSign },
+    { number: 4, title: 'Revisão', icon: Eye },
+  ];
+
+  const getBudgetRangeText = () => {
+    switch (budgetRange) {
+      case 'low': return 'Até R$300';
+      case 'medium': return 'R$300 a R$800';
+      case 'high': return 'R$800 a R$2.000';
+      case 'premium': return 'Acima de R$2.000';
+      default: return 'Não definido';
+    }
+  };
+
   if (!user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background">
@@ -182,97 +243,213 @@ export default function ProjectCreate() {
     );
   }
 
+  if (isCheckingRequirements) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background">
+        <Header />
+        <div className="container mx-auto px-4 py-8 max-w-2xl">
+          <div className="bg-card/50 backdrop-blur-sm border-2 rounded-lg p-12">
+            <div className="flex flex-col items-center justify-center gap-4">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+              <p className="text-muted-foreground">Verificando requisitos...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background">
       <Header />
       
-      <div className="container mx-auto px-4 py-8 max-w-woorkins">
-        <div className="space-y-6">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" asChild>
-              <Link to="/projetos">
-                <ArrowLeft className="w-5 h-5" />
-              </Link>
-            </Button>
-            <div>
-              <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-                Criar Novo Projeto
-              </h1>
-              <p className="text-muted-foreground mt-2">
-                Descreva seu projeto e receba propostas de freelancers
-              </p>
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
+        <div className="mb-6">
+          <Button variant="ghost" size="icon" asChild>
+            <Link to="/projetos">
+              <ArrowLeft className="w-5 h-5" />
+            </Link>
+          </Button>
+        </div>
+
+        {/* Card principal com design similar ao ProposalDialog */}
+        <div className="bg-card/50 backdrop-blur-sm border-2 rounded-lg shadow-xl overflow-hidden">
+          {/* Header com gradiente azul/teal */}
+          <div className="bg-gradient-to-r from-blue-900 via-teal-700 to-blue-900 p-6 border-b">
+            <h1 className="text-2xl font-bold text-white mb-2">Criar Novo Projeto</h1>
+            <p className="text-blue-100 text-sm">
+              Preencha as informações e receba propostas de freelancers qualificados
+            </p>
+          </div>
+
+          {/* Indicador de etapas */}
+          <div className="bg-gradient-to-b from-slate-50 to-white dark:from-slate-950 dark:to-background p-6 border-b">
+            <div className="flex items-center justify-between max-w-2xl mx-auto">
+              {steps.map((step, index) => {
+                const StepIcon = step.icon;
+                const isActive = currentStep === step.number;
+                const isCompleted = currentStep > step.number;
+                
+                return (
+                  <div key={step.number} className="flex items-center flex-1">
+                    <div className="flex flex-col items-center flex-1">
+                      <div
+                        className={cn(
+                          "w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all",
+                          isActive && "bg-gradient-to-r from-blue-600 to-teal-600 border-blue-600 text-white scale-110",
+                          isCompleted && "bg-gradient-to-r from-green-600 to-emerald-600 border-green-600 text-white",
+                          !isActive && !isCompleted && "bg-muted border-muted-foreground/30 text-muted-foreground"
+                        )}
+                      >
+                        {isCompleted ? (
+                          <CheckCircle2 className="w-5 h-5" />
+                        ) : (
+                          <StepIcon className="w-5 h-5" />
+                        )}
+                      </div>
+                      <span
+                        className={cn(
+                          "text-xs font-medium mt-2 text-center",
+                          isActive && "text-blue-600 dark:text-blue-400 font-bold",
+                          isCompleted && "text-green-600 dark:text-green-400",
+                          !isActive && !isCompleted && "text-muted-foreground"
+                        )}
+                      >
+                        {step.title}
+                      </span>
+                    </div>
+                    {index < steps.length - 1 && (
+                      <div
+                        className={cn(
+                          "h-[2px] flex-1 mx-2 transition-all",
+                          isCompleted ? "bg-gradient-to-r from-green-600 to-emerald-600" : "bg-muted"
+                        )}
+                      />
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
 
-          {isCheckingRequirements ? (
-            <Card className="bg-card/50 backdrop-blur-sm border-2">
-              <CardContent className="py-12">
-                <div className="flex flex-col items-center justify-center gap-4">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-                  <p className="text-muted-foreground">Verificando requisitos...</p>
-                </div>
-              </CardContent>
-            </Card>
-          ) : (
-            <Card className="bg-card/50 backdrop-blur-sm border-2 shadow-lg">
-            <CardHeader className="space-y-3">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-gradient-primary">
-                  <Sparkles className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <CardTitle className="text-2xl">Detalhes do Projeto</CardTitle>
-                  <CardDescription className="text-base">
-                    Preencha as informações sobre o serviço que você precisa
-                  </CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-8">
+          {/* Conteúdo das etapas */}
+          <div className="p-6 bg-gradient-to-b from-slate-50 to-white dark:from-slate-950 dark:to-background min-h-[400px]">
+            {/* Etapa 1: Informações Básicas */}
+            {currentStep === 1 && (
+              <div className="space-y-6 animate-fade-in max-w-2xl mx-auto">
                 <div className="space-y-2">
-                  <Label htmlFor="title" className="text-base font-semibold">Título do Projeto *</Label>
+                  <Label htmlFor="title" className="text-base font-semibold flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-blue-600" />
+                    Título do Projeto *
+                  </Label>
                   <Input
                     id="title"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     placeholder="Ex: Desenvolvimento de site institucional"
-                    required
-                    className="h-12 text-base"
+                    className="h-12 text-base border-blue-200 focus:border-blue-600 dark:border-blue-800"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="category" className="text-base font-semibold">Categoria</Label>
+                  <Label htmlFor="category" className="text-base font-semibold flex items-center gap-2">
+                    <Tag className="w-4 h-4 text-blue-600" />
+                    Categoria
+                  </Label>
                   <Input
                     id="category"
                     value={category}
                     onChange={(e) => setCategory(e.target.value)}
                     placeholder="Ex: Design, Desenvolvimento, Marketing"
-                    className="h-12 text-base"
+                    className="h-12 text-base border-blue-200 focus:border-blue-600 dark:border-blue-800"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="description" className="text-base font-semibold">Descrição *</Label>
+                  <Label className="text-base font-semibold flex items-center gap-2">
+                    <Tag className="w-4 h-4 text-blue-600" />
+                    Tags (até 5)
+                  </Label>
+                  <div className="flex gap-2">
+                    <Input
+                      value={tagInput}
+                      onChange={(e) => setTagInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          addTag();
+                        }
+                      }}
+                      placeholder="Ex: React, WordPress, Logo"
+                      className="h-12 text-base border-blue-200 focus:border-blue-600 dark:border-blue-800"
+                      disabled={tags.length >= 5}
+                    />
+                    <Button
+                      type="button"
+                      onClick={addTag}
+                      disabled={tags.length >= 5 || !tagInput.trim()}
+                      className="h-12 bg-gradient-to-r from-blue-600 to-teal-600"
+                    >
+                      Adicionar
+                    </Button>
+                  </div>
+                  {tags.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-3">
+                      {tags.map((tag) => (
+                        <Badge
+                          key={tag}
+                          variant="secondary"
+                          className="pl-3 pr-2 py-1.5 text-sm"
+                        >
+                          {tag}
+                          <button
+                            type="button"
+                            onClick={() => removeTag(tag)}
+                            className="ml-2 hover:text-destructive"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Etapa 2: Descrição */}
+            {currentStep === 2 && (
+              <div className="space-y-6 animate-fade-in max-w-2xl mx-auto">
+                <div className="space-y-2">
+                  <Label htmlFor="description" className="text-base font-semibold flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-blue-600" />
+                    Descrição do Projeto *
+                  </Label>
                   <Textarea
                     id="description"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Descreva em detalhes o que você precisa..."
-                    rows={6}
-                    required
-                    className="text-base resize-none"
+                    placeholder="Descreva em detalhes o que você precisa...&#10;&#10;Inclua:&#10;• O que precisa ser feito&#10;• Referências ou exemplos&#10;• Requisitos específicos&#10;• Entregas esperadas"
+                    rows={12}
+                    className="text-base resize-none border-blue-200 focus:border-blue-600 dark:border-blue-800"
                   />
                   <p className="text-sm text-muted-foreground">
-                    Seja claro sobre suas necessidades, objetivos e expectativas
+                    💡 Quanto mais detalhes você fornecer, melhores serão as propostas recebidas
                   </p>
                 </div>
+              </div>
+            )}
 
+            {/* Etapa 3: Prazo e Orçamento */}
+            {currentStep === 3 && (
+              <div className="space-y-6 animate-fade-in max-w-2xl mx-auto">
                 <div className="space-y-4">
-                  <Label className="text-base font-semibold">Faixa de Valor do Projeto</Label>
+                  <Label className="text-base font-semibold flex items-center gap-2">
+                    <DollarSign className="w-4 h-4 text-blue-600" />
+                    Faixa de Valor do Projeto
+                  </Label>
                   <RadioGroup value={budgetRange} onValueChange={setBudgetRange} className="space-y-3">
-                    <div className="flex items-start space-x-3 p-4 rounded-lg border-2 hover:border-primary/50 hover:bg-accent/50 transition-all cursor-pointer">
+                    <div className="flex items-start space-x-3 p-4 rounded-lg border-2 hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-950/20 transition-all cursor-pointer">
                       <RadioGroupItem value="low" id="low" className="mt-1" />
                       <Label htmlFor="low" className="flex-1 cursor-pointer space-y-1">
                         <div className="font-semibold text-base">Até R$300</div>
@@ -282,7 +459,7 @@ export default function ProjectCreate() {
                       </Label>
                     </div>
                     
-                    <div className="flex items-start space-x-3 p-4 rounded-lg border-2 hover:border-primary/50 hover:bg-accent/50 transition-all cursor-pointer">
+                    <div className="flex items-start space-x-3 p-4 rounded-lg border-2 hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-950/20 transition-all cursor-pointer">
                       <RadioGroupItem value="medium" id="medium" className="mt-1" />
                       <Label htmlFor="medium" className="flex-1 cursor-pointer space-y-1">
                         <div className="font-semibold text-base">R$300 a R$800</div>
@@ -292,7 +469,7 @@ export default function ProjectCreate() {
                       </Label>
                     </div>
                     
-                    <div className="flex items-start space-x-3 p-4 rounded-lg border-2 hover:border-primary/50 hover:bg-accent/50 transition-all cursor-pointer">
+                    <div className="flex items-start space-x-3 p-4 rounded-lg border-2 hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-950/20 transition-all cursor-pointer">
                       <RadioGroupItem value="high" id="high" className="mt-1" />
                       <Label htmlFor="high" className="flex-1 cursor-pointer space-y-1">
                         <div className="font-semibold text-base">R$800 a R$2.000</div>
@@ -302,7 +479,7 @@ export default function ProjectCreate() {
                       </Label>
                     </div>
                     
-                    <div className="flex items-start space-x-3 p-4 rounded-lg border-2 hover:border-primary/50 hover:bg-accent/50 transition-all cursor-pointer">
+                    <div className="flex items-start space-x-3 p-4 rounded-lg border-2 hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-950/20 transition-all cursor-pointer">
                       <RadioGroupItem value="premium" id="premium" className="mt-1" />
                       <Label htmlFor="premium" className="flex-1 cursor-pointer space-y-1">
                         <div className="font-semibold text-base">Acima de R$2.000</div>
@@ -313,7 +490,7 @@ export default function ProjectCreate() {
                     </div>
                   </RadioGroup>
                   
-                  <div className="flex items-start gap-2 p-4 bg-accent/50 rounded-lg border">
+                  <div className="flex items-start gap-2 p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
                     <span className="text-xl">💡</span>
                     <p className="text-sm text-muted-foreground">
                       Os freelancers poderão sugerir valores diferentes na proposta.
@@ -322,13 +499,16 @@ export default function ProjectCreate() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-base font-semibold">Prazo</Label>
+                  <Label className="text-base font-semibold flex items-center gap-2">
+                    <CalendarIcon className="w-4 h-4 text-blue-600" />
+                    Prazo (Opcional)
+                  </Label>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
                         className={cn(
-                          'w-full h-12 justify-start text-left font-normal text-base',
+                          'w-full h-12 justify-start text-left font-normal text-base border-blue-200 dark:border-blue-800',
                           !deadline && 'text-muted-foreground'
                         )}
                       >
@@ -343,25 +523,119 @@ export default function ProjectCreate() {
                         onSelect={setDeadline}
                         initialFocus
                         disabled={(date) => date < new Date()}
-                        className="pointer-events-auto"
                       />
                     </PopoverContent>
                   </Popover>
                 </div>
+              </div>
+            )}
 
-                <Button 
-                  type="submit" 
-                  className="w-full h-14 bg-gradient-primary hover:shadow-glow transition-all text-base font-semibold" 
-                  disabled={creating}
-                  size="lg"
-                >
-                  <Save className="w-5 h-5 mr-2" />
-                  {creating ? 'Criando...' : 'Publicar Projeto'}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
-          )}
+            {/* Etapa 4: Revisão */}
+            {currentStep === 4 && (
+              <div className="space-y-6 animate-fade-in max-w-2xl mx-auto">
+                <div className="bg-gradient-to-br from-blue-50 to-teal-50 dark:from-blue-950 dark:to-teal-900 rounded-lg p-6 border-2 border-blue-200 dark:border-blue-800">
+                  <h3 className="text-lg font-bold mb-4 flex items-center gap-2 text-blue-900 dark:text-blue-100">
+                    <Eye className="w-5 h-5" />
+                    Revise seu projeto
+                  </h3>
+
+                  <div className="space-y-4">
+                    <div>
+                      <p className="text-sm font-semibold text-blue-900 dark:text-blue-200 mb-1">Título</p>
+                      <p className="text-base">{title}</p>
+                    </div>
+
+                    {category && (
+                      <div>
+                        <p className="text-sm font-semibold text-blue-900 dark:text-blue-200 mb-1">Categoria</p>
+                        <p className="text-base">{category}</p>
+                      </div>
+                    )}
+
+                    {tags.length > 0 && (
+                      <div>
+                        <p className="text-sm font-semibold text-blue-900 dark:text-blue-200 mb-1">Tags</p>
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          {tags.map((tag) => (
+                            <Badge key={tag} variant="secondary">{tag}</Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    <div>
+                      <p className="text-sm font-semibold text-blue-900 dark:text-blue-200 mb-1">Descrição</p>
+                      <p className="text-base whitespace-pre-wrap">{description}</p>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-sm font-semibold text-blue-900 dark:text-blue-200 mb-1">Faixa de Valor</p>
+                        <p className="text-base">{getBudgetRangeText()}</p>
+                      </div>
+
+                      {deadline && (
+                        <div>
+                          <p className="text-sm font-semibold text-blue-900 dark:text-blue-200 mb-1">Prazo</p>
+                          <p className="text-base">{format(deadline, 'dd/MM/yyyy')}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
+                  <p className="text-sm text-amber-900 dark:text-amber-100">
+                    ⚠️ <strong>Importante:</strong> Após publicar, seu projeto estará visível para todos os freelancers da plataforma.
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Footer com botões de navegação */}
+          <div className="bg-slate-100 dark:bg-slate-900 p-6 border-t flex justify-between items-center">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={prevStep}
+              disabled={currentStep === 1}
+              className="h-12"
+            >
+              <ChevronLeft className="w-4 h-4 mr-2" />
+              Voltar
+            </Button>
+
+            {currentStep < 4 ? (
+              <Button
+                type="button"
+                onClick={nextStep}
+                className="h-12 bg-gradient-to-r from-blue-600 to-teal-600 hover:from-blue-700 hover:to-teal-700"
+              >
+                Próximo
+                <ChevronRight className="w-4 h-4 ml-2" />
+              </Button>
+            ) : (
+              <Button
+                type="button"
+                onClick={handleSubmit}
+                disabled={creating}
+                className="h-12 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+              >
+                {creating ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Publicando...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="w-4 h-4 mr-2" />
+                    Publicar Projeto
+                  </>
+                )}
+              </Button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -375,7 +649,6 @@ export default function ProjectCreate() {
           navigate(-1);
         }}
         onPhotoUploaded={() => {
-          // Recarregar dados do perfil
           const reloadProfile = async () => {
             const { data } = await supabase
               .from('profiles')
@@ -386,7 +659,6 @@ export default function ProjectCreate() {
             if (data?.avatar_url) {
               setAvatarUrl(data.avatar_url);
               setShowPhotoDialog(false);
-              // Verificar documento após adicionar foto
               if (!isVerified) {
                 setShowVerificationDialog(true);
               }
@@ -401,7 +673,6 @@ export default function ProjectCreate() {
         onOpenChange={(open) => {
           setShowVerificationDialog(open);
           if (!open && !isVerified) {
-            // Se fechar sem verificar, redirecionar
             navigate('/projetos');
           }
         }}

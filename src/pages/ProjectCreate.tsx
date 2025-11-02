@@ -500,7 +500,7 @@ export default function ProjectCreate() {
                       <Label htmlFor="low" className="flex-1 cursor-pointer space-y-1">
                         <div className="font-semibold text-base">Até R$300</div>
                         <div className="text-sm text-muted-foreground">
-                          Projetos simples e rápidos (ex: posts, logos, textos curtos)
+                          Projetos rápidos e simples
                         </div>
                       </Label>
                     </div>
@@ -513,7 +513,7 @@ export default function ProjectCreate() {
                       <Label htmlFor="medium" className="flex-1 cursor-pointer space-y-1">
                         <div className="font-semibold text-base">R$300 a R$800</div>
                         <div className="text-sm text-muted-foreground">
-                          Projetos intermediários (ex: site básico, vídeo curto, campanha pequena)
+                          Projetos de média complexidade
                         </div>
                       </Label>
                     </div>
@@ -526,7 +526,7 @@ export default function ProjectCreate() {
                       <Label htmlFor="high" className="flex-1 cursor-pointer space-y-1">
                         <div className="font-semibold text-base">R$800 a R$2.000</div>
                         <div className="text-sm text-muted-foreground">
-                          Projetos completos (ex: site profissional, identidade visual, app simples)
+                          Projetos completos e detalhados
                         </div>
                       </Label>
                     </div>
@@ -539,7 +539,7 @@ export default function ProjectCreate() {
                       <Label htmlFor="premium" className="flex-1 cursor-pointer space-y-1">
                         <div className="font-semibold text-base">Acima de R$2.000</div>
                         <div className="text-sm text-muted-foreground">
-                          Projetos grandes e personalizados
+                          Projetos grandes ou personalizados
                         </div>
                       </Label>
                     </div>
@@ -548,7 +548,7 @@ export default function ProjectCreate() {
                   <div className="flex items-start gap-2 p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
                     <span className="text-xl">💡</span>
                     <p className="text-sm text-muted-foreground">
-                      Os freelancers poderão sugerir valores diferentes na proposta.
+                      Você pode negociar valores diretamente com os freelancers depois.
                     </p>
                   </div>
                 </div>

@@ -9,6 +9,7 @@ import { SafeImage } from '@/components/ui/safe-image';
 import { StoryCommentSection } from './StoryCommentSection';
 import { useStoryLikes } from '@/hooks/useStoryLikes';
 import { RepostStoryDialog } from './RepostStoryDialog';
+import { StoryViewsDialog } from './StoryViewsDialog';
 
 interface Story {
   id: string;
@@ -69,6 +70,7 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
   const [showRepostDialog, setShowRepostDialog] = useState(false);
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [likeAnimations, setLikeAnimations] = useState<Array<{ id: string; x: number; y: number }>>([]);
+  const [showViewsDialog, setShowViewsDialog] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const lastTapRef = useRef<number>(0);
   const { toast } = useToast();
@@ -528,10 +530,13 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
                     <div className="flex items-center gap-2">
                       {/* View count (se for o dono) */}
                       {isOwner && (
-                        <div className="bg-black/50 backdrop-blur-md text-white px-3 py-1.5 rounded-full text-xs flex items-center gap-1">
+                        <button
+                          onClick={() => setShowViewsDialog(true)}
+                          className="bg-black/50 backdrop-blur-md text-white px-3 py-1.5 rounded-full text-xs flex items-center gap-1 hover:bg-black/70 transition-colors cursor-pointer"
+                        >
                           <span>👁️</span>
                           <span>{currentStory.view_count}</span>
-                        </div>
+                        </button>
                       )}
                       
                       <Button
@@ -883,6 +888,15 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
               description: 'Story repostado com sucesso',
             });
           }}
+        />
+      )}
+
+      {/* Views Dialog */}
+      {currentStory && isOwner && (
+        <StoryViewsDialog
+          storyId={currentStory.id}
+          isOpen={showViewsDialog}
+          onClose={() => setShowViewsDialog(false)}
         />
       )}
     </Dialog>

@@ -254,6 +254,9 @@ export function ProfileHoverCard({ profileId, children, side = 'top' }: ProfileH
                   )}
                 </div>
               )}
+              
+              {/* Bottom Spacing */}
+              <div className="mb-4" />
             </div>
           </div>
         ) : null}

@@ -361,7 +361,16 @@ export function StoryCommentSection({ storyId, currentProfileId, isLiked, onTogg
                 <div key={comment.id} className="animate-fade-in">
                   {/* Comentário principal */}
                   <div className="flex gap-3">
-                    <Avatar className="w-10 h-10 flex-shrink-0 ring-2 ring-white/20">
+                    <Avatar 
+                      className="w-10 h-10 flex-shrink-0 ring-2 ring-white/20 cursor-pointer hover:opacity-80 transition-opacity"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const username = comment.profiles.username;
+                        if (username) {
+                          window.open(`/perfil/${username}`, '_blank');
+                        }
+                      }}
+                    >
                       <AvatarImage src={comment.profiles.avatar_url || undefined} />
                       <AvatarFallback className="bg-white/10 text-white font-semibold">
                         {formatShortName(comment.profiles.full_name)?.[0]?.toUpperCase()}
@@ -369,7 +378,16 @@ export function StoryCommentSection({ storyId, currentProfileId, isLiked, onTogg
                     </Avatar>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-baseline gap-2 mb-1">
-                        <p className="text-sm font-semibold text-white">
+                        <p 
+                          className="text-sm font-semibold text-white cursor-pointer hover:underline"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const username = comment.profiles.username;
+                            if (username) {
+                              window.open(`/perfil/${username}`, '_blank');
+                            }
+                          }}
+                        >
                           {formatShortName(comment.profiles.full_name) || comment.profiles.username}
                         </p>
                         <p className="text-xs text-white/60">
@@ -448,7 +466,16 @@ export function StoryCommentSection({ storyId, currentProfileId, isLiked, onTogg
                         <div className="mt-4 ml-6 space-y-4 border-l-2 border-white/10 pl-4">
                           {comment.replies.map((reply) => (
                             <div key={reply.id} className="flex gap-2">
-                              <Avatar className="w-8 h-8 flex-shrink-0 ring-1 ring-white/20">
+                              <Avatar 
+                                className="w-8 h-8 flex-shrink-0 ring-1 ring-white/20 cursor-pointer hover:opacity-80 transition-opacity"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  const username = reply.profiles.username;
+                                  if (username) {
+                                    window.open(`/perfil/${username}`, '_blank');
+                                  }
+                                }}
+                              >
                                 <AvatarImage src={reply.profiles.avatar_url || undefined} />
                                 <AvatarFallback className="bg-white/10 text-white text-xs font-semibold">
                                   {formatShortName(reply.profiles.full_name)?.[0]?.toUpperCase()}
@@ -456,7 +483,16 @@ export function StoryCommentSection({ storyId, currentProfileId, isLiked, onTogg
                               </Avatar>
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-baseline gap-2 mb-1">
-                                  <p className="text-xs font-semibold text-white">
+                                  <p 
+                                    className="text-xs font-semibold text-white cursor-pointer hover:underline"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      const username = reply.profiles.username;
+                                      if (username) {
+                                        window.open(`/perfil/${username}`, '_blank');
+                                      }
+                                    }}
+                                  >
                                     {formatShortName(reply.profiles.full_name) || reply.profiles.username}
                                   </p>
                                   <p className="text-[10px] text-white/60">

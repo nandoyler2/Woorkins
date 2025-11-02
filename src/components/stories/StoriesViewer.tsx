@@ -587,7 +587,16 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
                   {/* Header */}
                   <div className="absolute top-4 left-0 right-0 z-20 flex items-center justify-between px-4 mt-2">
                     <div className="flex items-center gap-2 bg-black/30 backdrop-blur-md rounded-full pr-3 py-1 pl-1">
-                      <div className="relative">
+                      <div 
+                        className="relative cursor-pointer hover:opacity-80 transition-opacity"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const username = currentStory.profile?.username;
+                          if (username) {
+                            window.open(`/perfil/${username}`, '_blank');
+                          }
+                        }}
+                      >
                         <div className="absolute inset-0 bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 rounded-full blur-sm opacity-75" />
                         {currentStory.profile?.avatar_url ? (
                           <SafeImage
@@ -602,7 +611,16 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
                         )}
                       </div>
                       <div className="flex items-center gap-1.5">
-                        <p className="text-white font-medium text-[11px] drop-shadow-lg">
+                        <p 
+                          className="text-white font-medium text-[11px] drop-shadow-lg cursor-pointer hover:underline"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const username = currentStory.profile?.username;
+                            if (username) {
+                              window.open(`/perfil/${username}`, '_blank');
+                            }
+                          }}
+                        >
                           @{currentStory.profile?.username || 'usuario'}
                         </p>
                         <span className="text-white/60 text-[11px]">•</span>

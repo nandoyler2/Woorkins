@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { SafeImage } from "@/components/ui/safe-image";
-import { Sparkles, Video, Image, FileText, Play, Heart, Plus, Eye, Zap, Repeat2 } from "lucide-react";
+import { Sparkles, Video, Image, FileText, Play, Heart, Plus, Eye, Zap, Repeat2, MessageCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StoriesViewer } from "./StoriesViewer";
 import { CreateStoryDialog } from "./CreateStoryDialog";
@@ -18,6 +18,7 @@ interface PublicStory {
   text_content: string | null;
   created_at: string;
   like_count: number;
+  comment_count: number;
   original_story_id?: string | null;
   original_profile_id?: string | null;
   profiles: {
@@ -169,6 +170,7 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
           text_content: story.text_content,
           created_at: story.created_at,
           like_count: likeCount,
+          comment_count: commentCount,
           original_story_id: story.original_story_id,
           original_profile_id: story.original_profile_id,
           profiles: story.profiles,
@@ -425,16 +427,26 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
                 
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                 
-                {isNew && (
-                  <div className="absolute top-3 left-3 bg-gradient-to-r from-pink-500 to-purple-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
-                    NOVO
-                  </div>
-                )}
-                
                 <div className="absolute top-3 right-3 bg-black/30 backdrop-blur-sm rounded-full p-1.5 shadow-lg">
                   {story.type === 'video' && <Video className="w-3.5 h-3.5 text-white" />}
                   {story.type === 'image' && <Image className="w-3.5 h-3.5 text-white" />}
                   {story.type === 'text' && <FileText className="w-3.5 h-3.5 text-white" />}
+                </div>
+
+                {/* Curtidas e comentários */}
+                <div className="absolute bottom-3 left-3 right-3 flex items-center gap-3">
+                  {story.like_count > 0 && (
+                    <div className="flex items-center gap-1 bg-black/40 backdrop-blur-sm rounded-full px-2 py-1">
+                      <Heart className="w-3.5 h-3.5 text-red-500 fill-red-500" />
+                      <span className="text-white text-xs font-medium">{story.like_count}</span>
+                    </div>
+                  )}
+                  {story.comment_count > 0 && (
+                    <div className="flex items-center gap-1 bg-black/40 backdrop-blur-sm rounded-full px-2 py-1">
+                      <MessageCircle className="w-3.5 h-3.5 text-white" />
+                      <span className="text-white text-xs font-medium">{story.comment_count}</span>
+                    </div>
+                  )}
                 </div>
                 
                 {story.type === 'video' && (

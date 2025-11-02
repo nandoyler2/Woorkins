@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -53,6 +53,9 @@ export default function ProjectCreate() {
   
   // Estado para dicas rotativas
   const [currentTipIndex, setCurrentTipIndex] = useState(0);
+  
+  // Ref para scroll até a seção de erros
+  const errorSectionRef = useRef<HTMLDivElement>(null);
 
   const tips = [
     {
@@ -195,6 +198,16 @@ export default function ProjectCreate() {
     localStorage.setItem('projectDraft', JSON.stringify(draft));
   }, [title, description, budgetRange, deadline]);
 
+  // Scroll automático para a seção de erros quando houver validação
+  useEffect(() => {
+    if (validationErrors.length > 0 && errorSectionRef.current) {
+      errorSectionRef.current.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'center' 
+      });
+    }
+  }, [validationErrors]);
+
   const nextStep = () => {
     if (currentStep === 1) {
       if (!title.trim()) {
@@ -238,8 +251,6 @@ export default function ProjectCreate() {
         variant: 'destructive',
       });
       
-      // Scroll suave para o topo para mostrar os erros
-      window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
     
@@ -731,7 +742,10 @@ export default function ProjectCreate() {
                 <div className="space-y-6 animate-fade-in max-w-2xl mx-auto">
                   {/* Feedback de validação */}
                   {validationErrors.length > 0 && (
-                    <div className="bg-red-50 dark:bg-red-950/20 border-2 border-red-200 dark:border-red-800 rounded-lg p-4 animate-fade-in">
+                    <div 
+                      ref={errorSectionRef}
+                      className="bg-red-50 dark:bg-red-950/20 border-2 border-red-200 dark:border-red-800 rounded-lg p-4 animate-fade-in"
+                    >
                       <div className="flex items-start gap-3">
                         <span className="text-2xl">❌</span>
                         <div className="flex-1">

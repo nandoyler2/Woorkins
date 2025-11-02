@@ -228,7 +228,7 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
                 Você ainda não postou hoje
               </h2>
               <p className="text-muted-foreground text-base">
-                Compartilhe seus momentos com a comunidade
+                Melhore a visibilidade do seu perfil profissional
               </p>
             </div>
 

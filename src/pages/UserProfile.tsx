@@ -124,7 +124,7 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
   const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
   const [positiveEvaluations, setPositiveEvaluations] = useState<Evaluation[]>([]);
   const [complaintEvaluations, setComplaintEvaluations] = useState<Evaluation[]>([]);
-  const [averageRating, setAverageRating] = useState(0);
+  const [averageRating, setAverageRating] = useState(5.0);
   const [loadingProfile, setLoadingProfile] = useState(true);
   const activeTab = tab || 'inicio';
   const isProfileOwner = user?.id === (profile?.user_id || (profile as any)?.profile_id);
@@ -496,7 +496,7 @@ export default function UserProfile({ profileType: propProfileType, profileId: p
         // Calcular média
         const avg = evals.length > 0 
           ? evals.reduce((acc, curr) => acc + curr.rating, 0) / evals.length 
-          : 0;
+          : 5.0;
         setAverageRating(avg);
       }
     } catch (error) {

@@ -299,7 +299,7 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
               </DialogHeader>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-5 p-5 overflow-y-auto flex-1 bg-gradient-to-b from-slate-50 to-white dark:from-slate-950 dark:to-background">
+            <form onSubmit={handleSubmit} className="space-y-3 p-5 overflow-y-auto flex-1 bg-gradient-to-b from-slate-50 to-white dark:from-slate-950 dark:to-background">
               {/* Valores e Prazo - Grid compacto */}
               <div className="grid grid-cols-5 gap-3">
                 <div className="col-span-3 space-y-1.5">

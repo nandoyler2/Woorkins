@@ -118,12 +118,13 @@ export const Header = () => {
   }, [lastScrollY]);
 
   return (
-    <header 
-      className={`fixed top-0 left-0 right-0 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-[100] transition-transform duration-300 ${
-        isVisible ? 'translate-y-0' : '-translate-y-full'
-      }`}
-    >
-      <div className="container mx-auto px-4 h-16 flex items-center justify-between max-w-woorkins">
+    <>
+      <header 
+        className={`fixed top-0 left-0 right-0 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-[100] transition-transform duration-300 ${
+          isVisible ? 'translate-y-0' : '-translate-y-full'
+        }`}
+      >
+        <div className="container mx-auto px-4 h-16 flex items-center justify-between max-w-woorkins">
           <Link to="/" className="flex items-center gap-3 hover-scale">
             <SafeImage src={logoWoorkins} alt="Logo Woorkins" className="h-10 w-auto" />
           </Link>
@@ -321,5 +322,8 @@ export const Header = () => {
       
       <SearchSlideIn isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
     </header>
+    {/* Spacer para compensar o header fixo */}
+    <div className="h-16" />
+  </>
   );
 };

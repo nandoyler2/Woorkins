@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, X, ExternalLink, Volume2, VolumeX, User, Play, Pause, Trash2, Repeat2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X, ExternalLink, Volume2, VolumeX, User, Play, Pause, Trash2, Repeat2, Heart } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { SafeImage } from '@/components/ui/safe-image';
@@ -68,7 +68,9 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
   const [mediaLoading, setMediaLoading] = useState(true);
   const [showRepostDialog, setShowRepostDialog] = useState(false);
   const [commentsOpen, setCommentsOpen] = useState(false);
+  const [likeAnimations, setLikeAnimations] = useState<Array<{ id: string; x: number; y: number }>>([]);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const lastTapRef = useRef<number>(0);
   const { toast } = useToast();
 
   
@@ -78,7 +80,6 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
   // Atualizar currentIndex quando initialStoryIndex mudar
   useEffect(() => {
     if (initialStoryIndex !== undefined && initialStoryIndex !== currentIndex) {
-      console.log('[StoriesViewer] Setting initial index:', initialStoryIndex);
       setCurrentIndex(initialStoryIndex);
       setProgress(0);
       setMediaLoading(true);
@@ -88,7 +89,6 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
   // Reset index quando stories mudarem e initialStoryIndex for definido
   useEffect(() => {
     if (stories.length > 0 && initialStoryIndex !== undefined) {
-      console.log('[StoriesViewer] Stories loaded, setting index:', initialStoryIndex, 'Total stories:', stories.length);
       setCurrentIndex(initialStoryIndex);
       setProgress(0);
       setMediaLoading(true);
@@ -98,15 +98,6 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
   const loadStories = useCallback(async () => {
     // Se temos allStories (feed público), usar esses stories
     if (allStories && allStories.length > 0) {
-      console.log('[StoriesViewer] Using allStories:', allStories.length, 'stories');
-      allStories.forEach((story, idx) => {
-        console.log(`[StoriesViewer] Story ${idx}:`, {
-          id: story.id,
-          type: story.type,
-          isRepost: !!story.original_story_id,
-          hasOriginalProfile: !!story.original_profile,
-        });
-      });
       const mappedStories = allStories.map(story => ({
         id: story.id,
         profile_id: story.profile_id,
@@ -384,6 +375,38 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
   const isOwner = currentProfileId === profileId;
   const storyLikes = useStoryLikes(currentStory?.id || null);
 
+  const handleDoubleTap = async (e: React.MouseEvent | React.TouchEvent) => {
+    const now = Date.now();
+    const DOUBLE_TAP_DELAY = 300;
+
+    if (now - lastTapRef.current < DOUBLE_TAP_DELAY) {
+      // Duplo clique detectado
+      e.preventDefault();
+      e.stopPropagation();
+
+      // Pegar coordenadas do clique
+      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+      const x = 'touches' in e ? e.touches[0].clientX - rect.left : e.clientX - rect.left;
+      const y = 'touches' in e ? e.touches[0].clientY - rect.top : e.clientY - rect.top;
+
+      // Adicionar animação
+      const animId = `like-${Date.now()}`;
+      setLikeAnimations(prev => [...prev, { id: animId, x, y }]);
+
+      // Remover animação após 1 segundo
+      setTimeout(() => {
+        setLikeAnimations(prev => prev.filter(anim => anim.id !== animId));
+      }, 1000);
+
+      // Curtir o story
+      await storyLikes.toggleLike();
+      
+      lastTapRef.current = 0; // Reset
+    } else {
+      lastTapRef.current = now;
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
       <DialogContent className="z-[9999] p-0 bg-transparent border-0 shadow-none overflow-visible [&>button]:hidden sm:rounded-none outline-none focus:outline-none ring-0 focus:ring-0 focus-visible:outline-none focus-visible:ring-0 max-w-none lg:w-auto">
@@ -515,7 +538,18 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
             onMouseLeave={() => handleHoldPause(false)}
             onTouchStart={() => handleHoldPause(true)}
             onTouchEnd={() => handleHoldPause(false)}
+            onClick={handleDoubleTap}
           >
+            {/* Animações de curtida */}
+            {likeAnimations.map((anim) => (
+              <div
+                key={anim.id}
+                className="absolute pointer-events-none z-30 animate-[scale-in_0.3s_ease-out,fade-out_0.5s_0.5s_ease-out]"
+                style={{ left: anim.x, top: anim.y, transform: 'translate(-50%, -50%)' }}
+              >
+                <Heart className="w-24 h-24 fill-white text-white drop-shadow-2xl" />
+              </div>
+            ))}
             {/* Navigation areas - clique para navegar */}
             <div
               className="absolute left-0 top-0 bottom-0 w-1/3 z-10 cursor-pointer"

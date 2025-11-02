@@ -553,9 +553,9 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
                     onChange={handleFileChange}
                     className="hidden"
                   />
-                  <div className="grid grid-cols-2 gap-2 items-center">
+                  <div className="grid grid-cols-3 gap-2 items-center">
                     {/* Coluna esquerda: botão de anexo e arquivos */}
-                    <div className="flex flex-col gap-1">
+                    <div className="flex flex-col gap-1 col-span-2">
                       <div className="flex items-center gap-2">
                         <Button
                           type="button"

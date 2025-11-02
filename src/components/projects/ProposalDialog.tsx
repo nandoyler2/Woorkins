@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useState, useEffect } from "react";
+import { Dialog, DialogContent, DialogHeader } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -7,21 +7,48 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { OptimizedAvatar } from "@/components/ui/optimized-avatar";
+import { formatDistanceToNow } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { Clock, FileText } from "lucide-react";
 
 interface ProposalDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   projectId: string;
   projectTitle: string;
+  projectCreatedAt?: string;
+  proposalsCount?: number;
 }
 
-export function ProposalDialog({ open, onOpenChange, projectId, projectTitle }: ProposalDialogProps) {
+export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, projectCreatedAt, proposalsCount }: ProposalDialogProps) {
   const { user } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [amount, setAmount] = useState("");
   const [deliveryTime, setDeliveryTime] = useState("");
   const [message, setMessage] = useState("");
+  const [userProfile, setUserProfile] = useState<any>(null);
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (!user) return;
+      
+      const { data } = await supabase
+        .from('profiles' as any)
+        .select('full_name, avatar_url, avatar_thumbnail_url, freelancer_level')
+        .eq('user_id', user.id)
+        .single();
+      
+      if (data) {
+        setUserProfile(data);
+      }
+    };
+
+    if (open) {
+      fetchUserProfile();
+    }
+  }, [user, open]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -94,17 +121,59 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle }: 
     }
   };
 
+  const getInitials = (name?: string) => {
+    if (!name) return "U";
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  };
+
+  const formatTimeAgo = (dateString?: string) => {
+    if (!dateString) return "há alguns momentos";
+    try {
+      return formatDistanceToNow(new Date(dateString), { addSuffix: true, locale: ptBR });
+    } catch {
+      return "há alguns momentos";
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px]">
-        <DialogHeader>
-          <DialogTitle>Fazer Proposta</DialogTitle>
-          <p className="text-sm text-muted-foreground mt-2">
-            Projeto: {projectTitle}
-          </p>
+        <DialogHeader className="space-y-4">
+          {/* User Info */}
+          <div className="flex items-center gap-3">
+            <OptimizedAvatar
+              fullUrl={userProfile?.avatar_url}
+              thumbnailUrl={userProfile?.avatar_thumbnail_url}
+              fallback={getInitials(userProfile?.full_name)}
+              size="md"
+            />
+            <div>
+              <p className="text-sm font-medium">
+                Enviando como {userProfile?.full_name || "Usuário"}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Freelancer nível {userProfile?.freelancer_level || 1}
+              </p>
+            </div>
+          </div>
+
+          {/* Project Info */}
+          <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+            <h3 className="font-semibold text-base">{projectTitle}</h3>
+            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+              <div className="flex items-center gap-1.5">
+                <Clock className="w-4 h-4" />
+                <span>{formatTimeAgo(projectCreatedAt)}</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <FileText className="w-4 h-4" />
+                <span>{proposalsCount || 0} {proposalsCount === 1 ? 'proposta' : 'propostas'}</span>
+              </div>
+            </div>
+          </div>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="amount">Valor da Proposta (R$) *</Label>

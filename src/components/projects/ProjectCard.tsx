@@ -179,6 +179,8 @@ export function ProjectCard({ project }: ProjectCardProps) {
         onOpenChange={setProposalDialogOpen}
         projectId={project.id}
         projectTitle={project.title}
+        projectCreatedAt={project.created_at}
+        proposalsCount={project.proposals_count}
       />
 
       <LoginPromptDialog

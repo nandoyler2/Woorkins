@@ -364,7 +364,7 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
                         </div>
                         
                         {plan !== 'pro' && plan !== 'premium' && (
-                          <div className="p-2 bg-primary/5 border border-primary/20 rounded-md space-y-1">
+                          <div className="p-2 bg-primary/5 border border-primary/20 rounded-md space-y-2">
                             <p className="text-[10px] font-semibold text-primary">💎 Com planos melhores você ganharia mais:</p>
                             <div className="space-y-0.5 text-[10px]">
                               <div className="flex items-center justify-between">
@@ -380,11 +380,19 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
                                 </span>
                               </div>
                             </div>
+                            <Button
+                              type="button"
+                              size="sm"
+                              className="w-full h-7 text-[10px]"
+                              onClick={() => window.open(`${window.location.origin}/planos`, '_blank')}
+                            >
+                              Mudar de Plano
+                            </Button>
                           </div>
                         )}
                         
                         {plan === 'pro' && (
-                          <div className="p-2 bg-primary/5 border border-primary/20 rounded-md space-y-1">
+                          <div className="p-2 bg-primary/5 border border-primary/20 rounded-md space-y-2">
                             <p className="text-[10px] font-semibold text-primary">💎 Com Premium você ganharia:</p>
                             <div className="flex items-center justify-between text-[10px]">
                               <span className="text-muted-foreground">Plano Premium ({platformFees.premium.toFixed(1)}%):</span>
@@ -392,6 +400,14 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
                                 R$ {netAmountPremium.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                               </span>
                             </div>
+                            <Button
+                              type="button"
+                              size="sm"
+                              className="w-full h-7 text-[10px]"
+                              onClick={() => window.open(`${window.location.origin}/planos`, '_blank')}
+                            >
+                              Mudar de Plano
+                            </Button>
                           </div>
                         )}
                       </div>

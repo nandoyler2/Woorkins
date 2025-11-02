@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ImageIcon, Video, Type, Upload, Loader2, Camera, Bold, Italic, Crop, CheckCircle } from 'lucide-react';
+import { ImageIcon, Video, Type, Upload, Loader2, Camera, Bold, Italic, Crop, CheckCircle, Pencil, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ImageCropDialog } from '@/components/ImageCropDialog';
 import { useUpload } from '@/contexts/UploadContext';
@@ -56,6 +56,11 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
   const [cropData, setCropData] = useState<any>(null);
   const [isPublishing, setIsPublishing] = useState(false);
   const [stickers, setStickers] = useState<Sticker[]>([]);
+  const [textPosition, setTextPosition] = useState({ x: 50, y: 50 });
+  const [textScale, setTextScale] = useState(1);
+  const [mediaPosition, setMediaPosition] = useState({ x: 50, y: 50 });
+  const [mediaScale, setMediaScale] = useState(1);
+  const [draggedElement, setDraggedElement] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { toast } = useToast();
@@ -297,6 +302,11 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
     setTextBold(false);
     setTextItalic(false);
     setStickers([]);
+    setTextPosition({ x: 50, y: 50 });
+    setTextScale(1);
+    setMediaPosition({ x: 50, y: 50 });
+    setMediaScale(1);
+    setDraggedElement(null);
     onClose();
   };
 
@@ -310,6 +320,34 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
 
   const handleRemoveSticker = (id: string) => {
     setStickers(prev => prev.filter(s => s.id !== id));
+  };
+
+  const handleUpdateSticker = (id: string, updates: Partial<Sticker>) => {
+    setStickers(prev => prev.map(s => s.id === id ? { ...s, ...updates } : s));
+  };
+
+  const handleDragStart = (element: string) => {
+    setDraggedElement(element);
+  };
+
+  const handleDrag = (e: React.MouseEvent, element: string, containerRef: HTMLDivElement) => {
+    if (!draggedElement) return;
+    
+    const rect = containerRef.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+
+    if (element === 'text') {
+      setTextPosition({ x: Math.max(0, Math.min(100, x)), y: Math.max(0, Math.min(100, y)) });
+    } else if (element === 'media') {
+      setMediaPosition({ x: Math.max(0, Math.min(100, x)), y: Math.max(0, Math.min(100, y)) });
+    } else if (element.startsWith('sticker-')) {
+      const stickerId = element.replace('sticker-', '');
+      handleUpdateSticker(stickerId, { 
+        position_x: Math.max(0, Math.min(100, x)), 
+        position_y: Math.max(0, Math.min(100, y)) 
+      });
+    }
   };
 
   return (
@@ -411,8 +449,8 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
                               />
                             ))}
                             
-                            {/* Cor personalizada inline */}
-                            <div className="relative flex-shrink-0">
+                            {/* Cor personalizada inline com label */}
+                            <div className="relative flex-shrink-0 flex flex-col items-center gap-1">
                               <input
                                 type="color"
                                 value={customColor}
@@ -423,6 +461,10 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
                                 className="w-[50px] h-10 rounded-lg cursor-pointer border-2 border-border hover:border-primary transition-all"
                                 title="Cor personalizada"
                               />
+                              <div className="flex items-center gap-1 text-[10px] text-muted-foreground whitespace-nowrap">
+                                <Pencil className="w-3 h-3" />
+                                <span>Personalize...</span>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -474,9 +516,27 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
                             onRemoveSticker={handleRemoveSticker}
                           />
                           {stickers.length > 0 && (
-                            <p className="text-xs text-muted-foreground mt-2">
-                              {stickers.length} {stickers.length === 1 ? 'figurinha adicionada' : 'figurinhas adicionadas'}
-                            </p>
+                            <div className="space-y-1 mt-2">
+                              <p className="text-xs text-muted-foreground">
+                                Figurinhas adicionadas:
+                              </p>
+                              <div className="flex flex-wrap gap-2">
+                                {stickers.map((sticker) => (
+                                  <div
+                                    key={sticker.id}
+                                    className="flex items-center gap-1 bg-background px-2 py-1 rounded text-xs"
+                                  >
+                                    <span className="capitalize">{sticker.type === 'poll' ? 'Enquete' : sticker.type === 'question' ? 'Pergunta' : sticker.type === 'emoji' ? 'Emoji' : sticker.type === 'location' ? 'Local' : 'Link'}</span>
+                                    <button
+                                      onClick={() => handleRemoveSticker(sticker.id)}
+                                      className="text-destructive hover:text-destructive/80"
+                                    >
+                                      <X className="w-3 h-3" />
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
                           )}
                         </div>
                       </div>
@@ -567,9 +627,27 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
                               onRemoveSticker={handleRemoveSticker}
                             />
                             {stickers.length > 0 && (
-                              <p className="text-xs text-muted-foreground mt-2">
-                                {stickers.length} {stickers.length === 1 ? 'figurinha adicionada' : 'figurinhas adicionadas'}
-                              </p>
+                              <div className="space-y-1 mt-2">
+                                <p className="text-xs text-muted-foreground">
+                                  Figurinhas adicionadas:
+                                </p>
+                                <div className="flex flex-wrap gap-2">
+                                  {stickers.map((sticker) => (
+                                    <div
+                                      key={sticker.id}
+                                      className="flex items-center gap-1 bg-background px-2 py-1 rounded text-xs"
+                                    >
+                                      <span className="capitalize">{sticker.type === 'poll' ? 'Enquete' : sticker.type === 'question' ? 'Pergunta' : sticker.type === 'emoji' ? 'Emoji' : sticker.type === 'location' ? 'Local' : 'Link'}</span>
+                                      <button
+                                        onClick={() => handleRemoveSticker(sticker.id)}
+                                        className="text-destructive hover:text-destructive/80"
+                                      >
+                                        <X className="w-3 h-3" />
+                                      </button>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
                             )}
                           </div>
                         )}
@@ -640,39 +718,136 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
                     <div className="absolute top-3 left-1/2 -translate-x-1/2 w-32 h-6 bg-black rounded-b-2xl z-10" />
                     
                     {/* Tela do celular */}
-                    <div className="w-full h-full bg-white rounded-[2.5rem] overflow-hidden relative">
+                    <div 
+                      className="w-full h-full bg-white rounded-[2.5rem] overflow-hidden relative cursor-move"
+                      onMouseMove={(e) => draggedElement && handleDrag(e, draggedElement, e.currentTarget as HTMLDivElement)}
+                      onMouseUp={() => setDraggedElement(null)}
+                      onMouseLeave={() => setDraggedElement(null)}
+                    >
                       {type === 'text' ? (
                         <div
-                          className="w-full h-full flex items-center justify-center p-6"
+                          className="w-full h-full flex items-center justify-center p-6 relative"
                           style={{ background: backgroundColor }}
                         >
-                          <p
-                            className={`text-white text-lg text-center break-words leading-relaxed drop-shadow-lg ${
-                              textBold ? 'font-bold' : 'font-semibold'
-                            } ${
-                              textItalic ? 'italic' : ''
-                            }`}
+                          <div
+                            className="absolute cursor-move select-none"
+                            style={{
+                              left: `${textPosition.x}%`,
+                              top: `${textPosition.y}%`,
+                              transform: `translate(-50%, -50%) scale(${textScale})`,
+                            }}
+                            onMouseDown={() => handleDragStart('text')}
+                            onWheel={(e) => {
+                              e.preventDefault();
+                              setTextScale(prev => Math.max(0.5, Math.min(2, prev + (e.deltaY > 0 ? -0.1 : 0.1))));
+                            }}
                           >
-                            {textContent || 'Seu texto aparecerá aqui'}
-                          </p>
+                            <p
+                              className={`text-white text-lg text-center break-words leading-relaxed drop-shadow-lg ${
+                                textBold ? 'font-bold' : 'font-semibold'
+                              } ${
+                                textItalic ? 'italic' : ''
+                              }`}
+                            >
+                              {textContent || 'Seu texto aparecerá aqui'}
+                            </p>
+                          </div>
+                          
+                          {/* Stickers no preview de texto */}
+                          {stickers.map((sticker) => (
+                            <div
+                              key={sticker.id}
+                              className="absolute cursor-move bg-white/10 backdrop-blur-sm border border-white/30 rounded-lg p-2 select-none hover:bg-white/20 transition-colors"
+                              style={{
+                                left: `${sticker.position_x}%`,
+                                top: `${sticker.position_y}%`,
+                                transform: 'translate(-50%, -50%)',
+                                width: `${sticker.width}%`,
+                                minWidth: '60px',
+                              }}
+                              onMouseDown={() => handleDragStart(`sticker-${sticker.id}`)}
+                            >
+                              <p className="text-white text-[8px] font-medium text-center">
+                                {sticker.type === 'poll' ? '📊 Enquete' : 
+                                 sticker.type === 'question' ? '❓ Pergunta' :
+                                 sticker.type === 'emoji' ? '😊 Emoji' :
+                                 sticker.type === 'location' ? '📍 Local' : '🔗 Link'}
+                              </p>
+                            </div>
+                          ))}
+                          
+                          {/* Instrução */}
+                          <div className="absolute bottom-2 left-0 right-0 text-center">
+                            <p className="text-white/70 text-[8px] drop-shadow">
+                              Arraste para mover • Scroll para redimensionar
+                            </p>
+                          </div>
                         </div>
                       ) : mediaPreview ? (
-                        type === 'image' ? (
-                          <img
-                            src={mediaPreview}
-                            alt="Preview"
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <video
-                            src={mediaPreview}
-                            controls
-                            muted
-                            autoPlay
-                            loop
-                            className="w-full h-full object-cover"
-                          />
-                        )
+                        <div className="w-full h-full relative bg-black">
+                          <div
+                            className="absolute cursor-move"
+                            style={{
+                              left: `${mediaPosition.x}%`,
+                              top: `${mediaPosition.y}%`,
+                              transform: `translate(-50%, -50%) scale(${mediaScale})`,
+                              width: '100%',
+                              height: '100%',
+                            }}
+                            onMouseDown={() => handleDragStart('media')}
+                            onWheel={(e) => {
+                              e.preventDefault();
+                              setMediaScale(prev => Math.max(0.5, Math.min(2, prev + (e.deltaY > 0 ? -0.1 : 0.1))));
+                            }}
+                          >
+                            {type === 'image' ? (
+                              <img
+                                src={mediaPreview}
+                                alt="Preview"
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <video
+                                src={mediaPreview}
+                                controls
+                                muted
+                                autoPlay
+                                loop
+                                className="w-full h-full object-cover"
+                              />
+                            )}
+                          </div>
+                          
+                          {/* Stickers no preview */}
+                          {stickers.map((sticker) => (
+                            <div
+                              key={sticker.id}
+                              className="absolute cursor-move bg-white/10 backdrop-blur-sm border border-white/30 rounded-lg p-2 select-none hover:bg-white/20 transition-colors"
+                              style={{
+                                left: `${sticker.position_x}%`,
+                                top: `${sticker.position_y}%`,
+                                transform: 'translate(-50%, -50%)',
+                                width: `${sticker.width}%`,
+                                minWidth: '60px',
+                              }}
+                              onMouseDown={() => handleDragStart(`sticker-${sticker.id}`)}
+                            >
+                              <p className="text-white text-[8px] font-medium text-center">
+                                {sticker.type === 'poll' ? '📊 Enquete' : 
+                                 sticker.type === 'question' ? '❓ Pergunta' :
+                                 sticker.type === 'emoji' ? '😊 Emoji' :
+                                 sticker.type === 'location' ? '📍 Local' : '🔗 Link'}
+                              </p>
+                            </div>
+                          ))}
+                          
+                          {/* Instrução */}
+                          <div className="absolute bottom-2 left-0 right-0 text-center">
+                            <p className="text-white/70 text-[8px] drop-shadow">
+                              Arraste para mover • Scroll para redimensionar
+                            </p>
+                          </div>
+                        </div>
                       ) : (
                         <div className="w-full h-full bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center">
                           <p className="text-muted-foreground text-sm text-center px-4">

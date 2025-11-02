@@ -543,7 +543,7 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
                   data-placeholder="Descreva sua experiência, metodologia e por que você é ideal para este projeto..."
                 />
                 
-                {/* Seção de anexos grudada na caixa */}
+                {/* Seção de anexos e botões de ação na mesma linha */}
                 <div className="border-2 border-t-0 border-blue-200 dark:border-blue-800 rounded-b-lg p-2 bg-blue-50/30 dark:bg-blue-950/20">
                   <input
                     ref={fileInputRef}
@@ -553,69 +553,72 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
                     onChange={handleFileChange}
                     className="hidden"
                   />
-                  <div className="flex items-center gap-2">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleAttachmentClick}
-                      className="h-7 gap-1.5 text-xs hover:bg-blue-100 dark:hover:bg-blue-900 text-blue-900 dark:text-blue-100"
-                      title="Adicionar anexos (Pro/Premium)"
-                    >
-                      <Paperclip className="w-3.5 h-3.5" />
-                      Enviar anexo ({attachments.length}/3)
-                    </Button>
+                  <div className="grid grid-cols-2 gap-2 items-center">
+                    {/* Coluna esquerda: botão de anexo e arquivos */}
+                    <div className="flex items-center gap-2">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleAttachmentClick}
+                        className="h-7 gap-1.5 text-xs hover:bg-blue-100 dark:hover:bg-blue-900 text-blue-900 dark:text-blue-100"
+                        title="Adicionar anexos (Pro/Premium)"
+                      >
+                        <Paperclip className="w-3.5 h-3.5" />
+                        Enviar anexo ({attachments.length}/3)
+                      </Button>
+                      
+                      {attachments.length > 0 && (
+                        <div className="flex gap-1 flex-1 overflow-x-auto">
+                          {attachments.map((file, index) => (
+                            <div key={index} className="flex items-center gap-1 bg-white dark:bg-slate-900 border border-blue-200 dark:border-blue-700 rounded px-2 py-1 text-xs shrink-0">
+                              <span className="max-w-[100px] truncate">{file.name}</span>
+                              <button
+                                type="button"
+                                onClick={() => removeAttachment(index)}
+                                className="text-red-500 hover:text-red-700"
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                     
-                    {attachments.length > 0 && (
-                      <div className="flex gap-1 flex-1 overflow-x-auto">
-                        {attachments.map((file, index) => (
-                          <div key={index} className="flex items-center gap-1 bg-white dark:bg-slate-900 border border-blue-200 dark:border-blue-700 rounded px-2 py-1 text-xs shrink-0">
-                            <span className="max-w-[100px] truncate">{file.name}</span>
-                            <button
-                              type="button"
-                              onClick={() => removeAttachment(index)}
-                              className="text-red-500 hover:text-red-700"
-                            >
-                              <X className="w-3 h-3" />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                    {/* Coluna direita: botões de ação */}
+                    <div className="flex gap-2 justify-end">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => onOpenChange(false)}
+                        disabled={loading}
+                        size="sm"
+                        className="border-blue-300 dark:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-950"
+                      >
+                        Cancelar
+                      </Button>
+                      <Button 
+                        type="submit" 
+                        disabled={loading}
+                        size="sm"
+                        className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg hover:shadow-xl transition-all font-semibold"
+                      >
+                        {loading ? (
+                          <>
+                            <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
+                            Enviando...
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="w-3.5 h-3.5 mr-2" />
+                            Enviar Proposta
+                          </>
+                        )}
+                      </Button>
+                    </div>
                   </div>
                 </div>
-              </div>
-
-              {/* Botões de ação */}
-              <div className="flex gap-2 justify-end mt-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => onOpenChange(false)}
-                  disabled={loading}
-                  size="sm"
-                  className="border-blue-300 dark:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-950"
-                >
-                  Cancelar
-                </Button>
-                <Button 
-                  type="submit" 
-                  disabled={loading}
-                  size="sm"
-                  className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg hover:shadow-xl transition-all font-semibold"
-                >
-                  {loading ? (
-                    <>
-                      <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
-                      Enviando...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="w-3.5 h-3.5 mr-2" />
-                      Enviar Proposta
-                    </>
-                  )}
-                </Button>
               </div>
             </form>
           </>

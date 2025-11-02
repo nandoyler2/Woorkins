@@ -632,7 +632,7 @@ export const useRealtimeMessaging = ({
     
     if ('Notification' in window && Notification.permission === 'granted') {
       new Notification('Nova mensagem', {
-        body: `${formatFullName(message.sender_name)}: ${message.content}`,
+        body: `${formatShortName(message.sender_name)}: ${message.content}`,
         icon: message.sender_avatar || '/placeholder.svg',
       });
     }

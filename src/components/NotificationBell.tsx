@@ -202,18 +202,18 @@ export const NotificationBell = ({ profileId }: { profileId: string }) => {
     });
   };
 
-  // Função para formatar o título da notificação (nomes em maiúsculas)
+  // Função para formatar o título da notificação (nomes em formato curto)
   const formatNotificationTitle = (title: string) => {
     // Se o título contém "Mensagem de:", formatar o nome depois
     if (title.startsWith('Mensagem de: ')) {
       const name = title.replace('Mensagem de: ', '');
-      return `Mensagem de: ${formatFullName(name)}`;
+      return `Mensagem de: ${formatShortName(name)}`;
     }
-    // Para outros casos, tentar formatar nomes em maiúsculas
+    // Para outros casos, tentar formatar nomes em formato curto
     return title.split(' ').map(word => {
       // Se a palavra está toda em maiúsculas e tem mais de 2 caracteres, formatar
       if (word.length > 2 && word === word.toUpperCase() && /^[A-ZÁÀÂÃÉÈÊÍÏÓÔÕÖÚÇÑ]+$/.test(word)) {
-        return formatFullName(word);
+        return formatShortName(word);
       }
       return word;
     }).join(' ');

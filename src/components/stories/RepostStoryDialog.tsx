@@ -78,7 +78,7 @@ export function RepostStoryDialog({ story, isOpen, onClose, currentProfileId, on
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md z-[10000]">
         <DialogHeader>
           <DialogTitle>Repostar Story</DialogTitle>
           <DialogDescription>

@@ -372,14 +372,14 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
                               <Sparkles className="w-3 h-3" />
                               Ganhe mais mudando de plano:
                             </p>
-                            <div className="grid grid-cols-2 gap-2">
-                              <div className="flex flex-col items-center p-2 bg-white/60 dark:bg-black/20 rounded-md">
+                            <div className="flex gap-2">
+                              <div className="flex-1 flex flex-col items-center justify-center p-2 bg-white/60 dark:bg-black/20 rounded-md min-h-[60px]">
                                 <span className="text-[10px] font-medium text-gray-600 dark:text-gray-400 mb-0.5">Pro ({platformFees.pro.toFixed(1)}%)</span>
                                 <span className="text-sm font-bold text-blue-700 dark:text-blue-400">
                                   R$ {netAmountPro.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                 </span>
                               </div>
-                              <div className="flex flex-col items-center p-2 bg-white/60 dark:bg-black/20 rounded-md">
+                              <div className="flex-1 flex flex-col items-center justify-center p-2 bg-white/60 dark:bg-black/20 rounded-md min-h-[60px]">
                                 <span className="text-[10px] font-medium text-gray-600 dark:text-gray-400 mb-0.5">Premium ({platformFees.premium.toFixed(1)}%)</span>
                                 <span className="text-sm font-bold text-blue-700 dark:text-blue-400">
                                   R$ {netAmountPremium.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}

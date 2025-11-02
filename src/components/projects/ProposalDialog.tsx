@@ -351,18 +351,21 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
                     return (
                       <div className="grid grid-cols-5 gap-3 mt-2">
                         {/* Valor que receberá - Lado esquerdo (3 colunas) */}
-                        <div className="col-span-3 bg-gradient-to-br from-blue-50 to-teal-50 dark:from-blue-950 dark:to-teal-900 border border-blue-300 dark:border-blue-700 rounded-lg p-3 shadow-sm">
-                          <div className="flex items-baseline justify-between">
+                        <div className="col-span-3 bg-gradient-to-br from-blue-50 to-teal-50 dark:from-blue-950 dark:to-teal-900 border border-blue-300 dark:border-blue-700 rounded-lg p-3 shadow-sm space-y-1.5">
+                          <div className="flex items-center justify-between">
                             <span className="text-xs font-medium text-blue-900 dark:text-blue-100">Você receberá:</span>
-                            <span className="text-xl font-bold text-blue-900 dark:text-blue-50">
+                            <span className="text-2xl font-bold text-blue-900 dark:text-blue-50">
                               R$ {netAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </span>
                           </div>
-                          <p className="text-[10px] text-blue-700 dark:text-blue-300 mt-0.5">
-                            Plano <span className="font-bold capitalize">
-                              {plan === 'premium' ? 'Premium' : plan === 'pro' ? 'Pro' : 'Gratuito'}
-                            </span> • Taxa de {feePercentage.toFixed(1)}%
-                          </p>
+                          <div className="space-y-0.5">
+                            <p className="text-[10px] text-blue-700 dark:text-blue-300 leading-tight">
+                              <span className="font-bold">Plano {plan === 'premium' ? 'Premium' : plan === 'pro' ? 'Pro' : 'Gratuito'}</span> • Taxa total: {feePercentage.toFixed(1)}%
+                            </p>
+                            <p className="text-[9px] text-blue-600/80 dark:text-blue-400/80 leading-tight">
+                              Inclui taxa de transação (gateway de pagamento) + comissão Woorkins
+                            </p>
+                          </div>
                         </div>
                         
                         {/* Comparação de planos - Lado direito (2 colunas) */}

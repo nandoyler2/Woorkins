@@ -28,6 +28,7 @@ export const ProfileHoverCard = forwardRef<ProfileHoverCardRef, ProfileHoverCard
   const [open, setOpen] = useState(false);
   const [shouldLoad, setShouldLoad] = useState(false);
   const [showStoriesViewer, setShowStoriesViewer] = useState(false);
+  const [selectedStoryIndex, setSelectedStoryIndex] = useState(0);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
   const storiesScrollRef = useRef<HTMLDivElement>(null);
@@ -84,7 +85,8 @@ export const ProfileHoverCard = forwardRef<ProfileHoverCardRef, ProfileHoverCard
     }
   };
 
-  const handleViewStories = () => {
+  const handleViewStories = (index: number = 0) => {
+    setSelectedStoryIndex(index);
     setShowStoriesViewer(true);
   };
 
@@ -165,7 +167,7 @@ export const ProfileHoverCard = forwardRef<ProfileHoverCardRef, ProfileHoverCard
             <div className="flex flex-col items-center -mt-12 px-6 relative z-10">
               <div 
                 className={`${data.stories.length > 0 ? 'p-[3px] bg-gradient-to-tr from-purple-500 via-pink-500 to-orange-500 rounded-full cursor-pointer' : ''}`}
-                onClick={data.stories.length > 0 ? handleViewStories : undefined}
+                onClick={data.stories.length > 0 ? () => handleViewStories(0) : undefined}
               >
                 <Avatar 
                   className="w-20 h-20 border-4 border-background cursor-pointer"
@@ -267,7 +269,7 @@ export const ProfileHoverCard = forwardRef<ProfileHoverCardRef, ProfileHoverCard
                     onScroll={checkScrollButtons}
                     style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                   >
-                    {data.stories.map((story) => {
+                    {data.stories.map((story, index) => {
                       const displayImage = story.thumbnail_url || story.media_url || '/placeholder.svg';
                       const videoSrc = story.type === 'video' && story.media_url ? `${story.media_url}#t=5` : story.media_url;
                       
@@ -275,7 +277,7 @@ export const ProfileHoverCard = forwardRef<ProfileHoverCardRef, ProfileHoverCard
                         <div
                           key={story.id}
                           className="flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
-                          onClick={handleViewStories}
+                          onClick={() => handleViewStories(index)}
                         >
                           <div className="p-[2px] bg-gradient-to-tr from-purple-500 via-pink-500 to-orange-500 rounded-lg">
                             <div className="w-14 h-20 rounded-md overflow-hidden bg-background">
@@ -376,6 +378,7 @@ export const ProfileHoverCard = forwardRef<ProfileHoverCardRef, ProfileHoverCard
           onClose={() => setShowStoriesViewer(false)}
           currentProfileId={user?.id || ''}
           onStoryDeleted={() => {}}
+          initialStoryIndex={selectedStoryIndex}
         />
       )}
     </HoverCard>

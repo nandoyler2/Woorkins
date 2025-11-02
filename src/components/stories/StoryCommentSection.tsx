@@ -167,6 +167,9 @@ export function StoryCommentSection({ storyId, currentProfileId, isLiked, onTogg
 
   return (
     <>
+      {/* Sombra degradê inferior para melhor visibilidade */}
+      <div className="absolute bottom-0 left-0 right-0 h-32 z-20 bg-gradient-to-t from-black/70 via-black/30 to-transparent pointer-events-none" />
+
       {/* Comentários recentes flutuantes */}
       <div className="absolute bottom-24 left-4 right-4 z-30 space-y-2 pointer-events-none">
         {recentComments.map((comment, index) => (
@@ -203,7 +206,7 @@ export function StoryCommentSection({ storyId, currentProfileId, isLiked, onTogg
             value={commentText}
             onChange={(e) => setCommentText(e.target.value)}
             onKeyPress={handleKeyPress}
-            placeholder="Responder..."
+            placeholder="Comentar..."
             className="bg-transparent border-2 border-white/60 text-white placeholder:text-white/70 rounded-full pr-12 h-12 focus:border-white focus-visible:ring-0 focus-visible:ring-offset-0"
             maxLength={200}
             disabled={isSubmitting}

@@ -1,104 +1,167 @@
 // Sistema de análise automática de projetos baseado em palavras-chave
+// Mapeia para as categorias exatas dos filtros da página de projetos
 
-// Dicionário de palavras-chave por categoria
+// Dicionário de palavras-chave por categoria (categorias exatas dos filtros)
 const categoryKeywords: Record<string, string[]> = {
-  design: [
-    "design", "logo", "logotipo", "logomarca", "banner", "flyer", "folder", "panfleto",
-    "arte", "grafico", "visual", "identidade", "marca", "branding", "cartao",
-    "photoshop", "illustrator", "canva", "figma", "adobe", "corel",
-    "criacao", "layout", "interface", "ui", "ux", "mockup", "prototipo"
+  "Desenvolvimento Web": [
+    "site", "website", "web", "ecommerce", "loja", "virtual", "wordpress", "woocommerce",
+    "portal", "sistema", "web", "online", "internet", "dominio", "hospedagem", "landing",
+    "page", "pagina", "hotsite", "institucional", "responsivo", "html", "css", "javascript",
+    "frontend", "backend", "fullstack", "api", "rest", "react", "vue", "angular", "node",
+    "php", "laravel", "django", "flask", "typescript", "nextjs", "nuxt"
   ],
-  desenvolvimento: [
-    "site", "website", "app", "aplicativo", "aplicacao", "sistema", "plataforma",
-    "codigo", "programacao", "desenvolvimento", "software", "web", "mobile",
-    "api", "backend", "frontend", "fullstack", "android", "ios",
-    "react", "vue", "angular", "node", "python", "php", "java", "javascript",
-    "typescript", "html", "css", "banco", "database", "sql"
+  "Design Gráfico": [
+    "design", "logo", "logotipo", "logomarca", "identidade", "visual", "branding", "marca",
+    "banner", "flyer", "panfleto", "folder", "cartao", "visita", "arte", "grafico", "layout",
+    "photoshop", "illustrator", "corel", "canva", "indesign", "figma", "mockup", "prototipo",
+    "criacao", "criativo", "vetorial", "ilustracao", "tipografia", "paleta", "cores"
   ],
-  marketing: [
-    "marketing", "anuncio", "campanha", "promocao", "publicidade",
-    "social", "instagram", "facebook", "tiktok", "youtube", "linkedin",
-    "ads", "google", "seo", "trafego", "lead", "conversao", "analytics",
-    "email", "newsletter", "midia", "digital", "growth", "estrategia"
+  "Marketing Digital": [
+    "marketing", "digital", "ads", "anuncio", "campanha", "google", "facebook", "instagram",
+    "tiktok", "linkedin", "seo", "otimizacao", "trafego", "lead", "conversao", "funil",
+    "vendas", "email", "marketing", "newsletter", "automacao", "analytics", "metricas",
+    "roi", "cpa", "cpc", "ctr", "growth", "hacking", "midia", "social", "redes", "sociais",
+    "conteudo", "estrategia", "planejamento", "gestao"
   ],
-  redacao: [
-    "texto", "redacao", "artigo", "conteudo", "blog", "post", "copy",
-    "copywriting", "ebook", "roteiro", "descricao", "escrita", "revisar",
-    "traduzir", "correcao", "editorial", "livro", "apostila"
+  "Redação e Tradução": [
+    "redacao", "texto", "copy", "copywriting", "artigo", "blog", "post", "conteudo",
+    "escrita", "revisar", "revisao", "correcao", "editorial", "ebook", "livro", "apostila",
+    "roteiro", "descricao", "produto", "traducao", "tradutor", "traduzir", "ingles", "espanhol",
+    "frances", "alemao", "italiano", "portugues", "idioma", "lingua", "versao", "localizar",
+    "interprete", "legendas", "transcricao"
   ],
-  traducao: [
-    "traducao", "tradutor", "ingles", "espanhol", "frances", "alemao",
-    "idioma", "lingua", "interpretar", "versao", "localizar"
+  "Desenvolvimento Mobile": [
+    "app", "aplicativo", "mobile", "android", "ios", "smartphone", "celular", "tablet",
+    "aplicacao", "movel", "nativo", "hibrido", "react", "native", "flutter", "ionic",
+    "kotlin", "swift", "java", "xamarin", "phonegap", "cordova", "firebase", "push",
+    "notification", "notificacao", "mobile", "first", "responsivo"
   ],
-  video: [
-    "video", "edicao", "motion", "animacao", "after", "premiere", "filmagem",
-    "youtube", "reels", "tiktok", "vlog", "tutorial", "producao",
-    "audiovisual", "montagem", "efeitos", "corte"
+  "Consultoria": [
+    "consultoria", "consultor", "assessoria", "assessor", "mentoria", "mentor", "coaching",
+    "coach", "treinamento", "capacitacao", "orientacao", "suporte", "ajuda", "apoio",
+    "especialista", "especializado", "analise", "diagnostico", "parecer", "estrategia",
+    "planejamento", "gestao", "processos", "melhorias", "otimizacao", "auditoria"
   ],
-  audio: [
-    "audio", "podcast", "locutor", "narracao", "voz", "locucao",
-    "mixagem", "masterizacao", "musica", "som", "trilha", "jingle"
+  "Vídeo e Animação": [
+    "video", "edicao", "editor", "motion", "graphics", "animacao", "after", "effects",
+    "premiere", "pro", "final", "cut", "davinci", "resolve", "filmagem", "gravacao",
+    "youtube", "reels", "tiktok", "shorts", "vlog", "tutorial", "producao", "audiovisual",
+    "montagem", "corte", "efeitos", "visuais", "vfx", "chroma", "key", "render",
+    "exportacao", "legenda", "closed", "caption"
   ],
-  dados: [
-    "dados", "data", "excel", "planilha", "analise", "dashboard",
-    "power", "bi", "sql", "database", "relatorio", "estatistica",
-    "grafico", "visualizacao", "bigdata", "machine", "learning"
+  "Fotografia": [
+    "foto", "fotografia", "fotografo", "fotografico", "ensaio", "book", "fotográfico",
+    "produto", "eventos", "casamento", "aniversario", "formatura", "retrato", "portrait",
+    "studio", "estudio", "camera", "lente", "iluminacao", "flash", "tripé", "backdrop",
+    "lightroom", "photoshop", "edicao", "tratamento", "revelacao", "album", "impressao"
   ],
-  consultoria: [
-    "consultoria", "consultoria", "assessoria", "mentoria", "coaching",
-    "treinamento", "capacitacao", "orientacao", "suporte", "ajuda"
+  "Arquitetura": [
+    "arquitetura", "arquitetonico", "arquiteto", "projeto", "planta", "baixa", "humanizado",
+    "3d", "render", "renderizacao", "modelagem", "maquete", "eletronica", "autocad", "revit",
+    "sketchup", "lumion", "vray", "construcao", "reforma", "interiores", "design", "interior",
+    "decoracao", "ambientacao", "mobiliario", "layout", "espacial", "edificacao"
   ]
 };
 
 // Mapeamento de palavras para tags específicas
 const tagKeywords: Record<string, string[]> = {
-  // Tecnologias de desenvolvimento
-  "react": ["react", "reactjs", "react.js"],
-  "vue": ["vue", "vuejs", "vue.js"],
-  "angular": ["angular"],
-  "node": ["node", "nodejs", "node.js"],
-  "wordpress": ["wordpress", "wp"],
-  "php": ["php"],
-  "python": ["python"],
-  "java": ["java"],
-  "javascript": ["javascript", "js"],
-  "typescript": ["typescript", "ts"],
+  // Desenvolvimento Web
+  "React": ["react", "reactjs", "react.js"],
+  "Vue": ["vue", "vuejs", "vue.js"],
+  "Angular": ["angular"],
+  "Node.js": ["node", "nodejs", "node.js"],
+  "WordPress": ["wordpress", "wp"],
+  "PHP": ["php"],
+  "Laravel": ["laravel"],
+  "Python": ["python"],
+  "Django": ["django"],
+  "JavaScript": ["javascript", "js"],
+  "TypeScript": ["typescript", "ts"],
+  "HTML": ["html", "html5"],
+  "CSS": ["css", "css3", "sass", "scss"],
+  "Next.js": ["next", "nextjs", "next.js"],
+  "E-commerce": ["ecommerce", "loja", "virtual", "woocommerce"],
+  "API": ["api", "rest", "restful"],
+  "Backend": ["backend", "back-end"],
+  "Frontend": ["frontend", "front-end"],
   
   // Design
-  "logo": ["logo", "logotipo", "logomarca"],
-  "banner": ["banner"],
-  "flyer": ["flyer", "panfleto", "folder"],
-  "identidade-visual": ["identidade", "branding"],
-  "ui-ux": ["ui", "ux", "interface", "experiencia"],
-  "photoshop": ["photoshop"],
-  "illustrator": ["illustrator"],
-  "figma": ["figma"],
+  "Logo": ["logo", "logotipo", "logomarca"],
+  "Banner": ["banner"],
+  "Flyer": ["flyer", "panfleto", "folder"],
+  "Identidade Visual": ["identidade", "branding", "marca"],
+  "UI/UX": ["ui", "ux", "interface", "experiencia", "usabilidade"],
+  "Photoshop": ["photoshop"],
+  "Illustrator": ["illustrator"],
+  "Figma": ["figma"],
+  "Canva": ["canva"],
+  "CorelDRAW": ["corel", "coreldraw"],
+  "InDesign": ["indesign"],
+  "Cartão de Visita": ["cartao", "visita"],
   
-  // Marketing
-  "instagram": ["instagram", "insta", "ig"],
-  "facebook": ["facebook", "fb"],
-  "google-ads": ["google", "ads", "adwords"],
-  "seo": ["seo"],
-  "trafego": ["trafego", "traffic"],
-  "email-marketing": ["email", "newsletter"],
+  // Marketing Digital
+  "Instagram": ["instagram", "insta", "ig"],
+  "Facebook": ["facebook", "fb"],
+  "Google Ads": ["google", "ads", "adwords"],
+  "Facebook Ads": ["facebook", "ads"],
+  "SEO": ["seo", "otimizacao"],
+  "Tráfego": ["trafego", "traffic"],
+  "Email Marketing": ["email", "marketing", "newsletter"],
+  "Social Media": ["social", "media", "redes", "sociais"],
+  "Analytics": ["analytics", "metricas", "dados"],
+  "Growth": ["growth", "hacking"],
+  "Campanhas": ["campanha", "campanhas"],
   
-  // Vídeo
-  "edicao-video": ["edicao", "video", "montagem"],
-  "animacao": ["animacao", "motion"],
-  "youtube": ["youtube"],
-  "reels": ["reels", "tiktok"],
+  // Mobile
+  "Android": ["android"],
+  "iOS": ["ios", "iphone", "ipad"],
+  "Flutter": ["flutter"],
+  "React Native": ["react", "native"],
+  "Kotlin": ["kotlin"],
+  "Swift": ["swift"],
   
-  // Redação
-  "copywriting": ["copy", "copywriting"],
-  "blog": ["blog", "artigo"],
-  "ebook": ["ebook", "livro"],
-  "roteiro": ["roteiro"],
+  // Vídeo e Animação
+  "Edição de Vídeo": ["edicao", "video", "montagem"],
+  "Animação": ["animacao", "motion", "graphics"],
+  "After Effects": ["after", "effects"],
+  "Premiere": ["premiere", "pro"],
+  "Final Cut": ["final", "cut"],
+  "YouTube": ["youtube"],
+  "Reels": ["reels", "shorts"],
+  "TikTok": ["tiktok"],
   
-  // Dados
-  "excel": ["excel", "planilha"],
-  "power-bi": ["power", "bi", "powerbi"],
-  "dashboard": ["dashboard"],
-  "analise-dados": ["analise", "dados", "data"]
+  // Redação e Tradução
+  "Copywriting": ["copy", "copywriting"],
+  "Blog": ["blog", "artigo"],
+  "E-book": ["ebook", "livro"],
+  "Roteiro": ["roteiro"],
+  "Tradução": ["traducao", "traduzir", "tradutor"],
+  "Inglês": ["ingles", "english"],
+  "Espanhol": ["espanhol", "spanish"],
+  "Revisão": ["revisao", "revisar", "correcao"],
+  
+  // Fotografia
+  "Fotografia": ["fotografia", "foto", "fotografico"],
+  "Ensaio Fotográfico": ["ensaio", "book"],
+  "Produto": ["produto", "catalogo"],
+  "Eventos": ["eventos", "casamento", "festa"],
+  "Lightroom": ["lightroom"],
+  
+  // Arquitetura
+  "AutoCAD": ["autocad", "cad"],
+  "Revit": ["revit"],
+  "SketchUp": ["sketchup"],
+  "Render 3D": ["render", "3d", "renderizacao"],
+  "Planta Baixa": ["planta", "baixa"],
+  "Projeto Arquitetônico": ["projeto", "arquitetonico"],
+  
+  // Consultoria e Dados
+  "Excel": ["excel", "planilha"],
+  "Power BI": ["power", "bi", "powerbi"],
+  "Dashboard": ["dashboard"],
+  "Análise de Dados": ["analise", "dados", "data"],
+  "Consultoria": ["consultoria", "consultor"],
+  "Mentoria": ["mentoria", "mentor", "coaching"]
 };
 
 /**
@@ -123,10 +186,10 @@ function tokenize(text: string): string[] {
 }
 
 /**
- * Analisa o projeto e retorna categoria e tags automaticamente
+ * Analisa o projeto e retorna categorias e tags automaticamente
  */
 export function analyzeProject(title: string, description: string): {
-  category: string;
+  categories: string[];
   tags: string[];
 } {
   const titleTokens = tokenize(title);
@@ -158,25 +221,20 @@ export function analyzeProject(title: string, description: string): {
     categoryScores[category] = score;
   }
   
-  // Seleciona categoria com maior pontuação
-  let selectedCategory = 'geral';
-  let maxScore = 0;
+  // Seleciona até 3 categorias com maior pontuação (mínimo 2 pontos)
+  const selectedCategories = Object.entries(categoryScores)
+    .filter(([, score]) => score >= 2)
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 3)
+    .map(([category]) => category);
   
-  for (const [category, score] of Object.entries(categoryScores)) {
-    if (score > maxScore) {
-      maxScore = score;
-      selectedCategory = category;
-    }
-  }
-  
-  // Se não houver match suficiente, usa 'geral'
-  if (maxScore < 2) {
-    selectedCategory = 'geral';
+  // Se não houver match suficiente, usa 'Outro'
+  if (selectedCategories.length === 0) {
+    selectedCategories.push('Outro');
   }
   
   // Analisa tags
   const tagScores: Record<string, number> = {};
-  const allTokens = [...titleTokens, ...descriptionTokens];
   
   for (const [tag, keywords] of Object.entries(tagKeywords)) {
     let score = 0;
@@ -202,14 +260,14 @@ export function analyzeProject(title: string, description: string): {
     }
   }
   
-  // Seleciona top 5 tags com maior pontuação
+  // Seleciona top 10 tags com maior pontuação
   const selectedTags = Object.entries(tagScores)
     .sort(([, a], [, b]) => b - a)
-    .slice(0, 5)
+    .slice(0, 10)
     .map(([tag]) => tag);
   
   return {
-    category: selectedCategory,
+    categories: selectedCategories,
     tags: selectedTags
   };
 }

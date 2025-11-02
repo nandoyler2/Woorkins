@@ -2116,6 +2116,7 @@ export type Database = {
         Row: {
           budget_max: number | null
           budget_min: number | null
+          categories: string[] | null
           category: string | null
           created_at: string
           deadline: string | null
@@ -2123,6 +2124,7 @@ export type Database = {
           id: string
           profile_id: string
           proposals_count: number | null
+          skills: string[] | null
           status: string
           title: string
           updated_at: string
@@ -2130,6 +2132,7 @@ export type Database = {
         Insert: {
           budget_max?: number | null
           budget_min?: number | null
+          categories?: string[] | null
           category?: string | null
           created_at?: string
           deadline?: string | null
@@ -2137,6 +2140,7 @@ export type Database = {
           id?: string
           profile_id: string
           proposals_count?: number | null
+          skills?: string[] | null
           status?: string
           title: string
           updated_at?: string
@@ -2144,6 +2148,7 @@ export type Database = {
         Update: {
           budget_max?: number | null
           budget_min?: number | null
+          categories?: string[] | null
           category?: string | null
           created_at?: string
           deadline?: string | null
@@ -2151,6 +2156,7 @@ export type Database = {
           id?: string
           profile_id?: string
           proposals_count?: number | null
+          skills?: string[] | null
           status?: string
           title?: string
           updated_at?: string

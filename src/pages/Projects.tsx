@@ -24,6 +24,7 @@ interface Project {
   title: string;
   description: string;
   category: string | null;
+  categories?: string[];
   budget_min: number | null;
   budget_max: number | null;
   deadline: string | null;
@@ -88,9 +89,15 @@ export default function Projects() {
         .eq('status', 'open')
         .order('created_at', { ascending: false });
 
-      // Filtro de categoria
+      // Filtro de categoria (busca em ambas as colunas: category e categories)
       if (selectedCategories.length > 0) {
-        query = query.in('category', selectedCategories);
+        // Busca projetos que tenham qualquer uma das categorias selecionadas
+        // tanto na coluna antiga (category) quanto na nova (categories array)
+        query = query.or(
+          selectedCategories.map(cat => 
+            `category.eq.${cat},categories.cs.{${cat}}`
+          ).join(',')
+        );
       }
 
       // Filtro de orçamento

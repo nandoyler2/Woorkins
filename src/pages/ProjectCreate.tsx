@@ -181,7 +181,8 @@ export default function ProjectCreate() {
   useEffect(() => {
     if (title.trim() && description.trim()) {
       const analysis = analyzeProject(title, description);
-      setDetectedCategory(analysis.category);
+      // Agora retorna arrays
+      setDetectedCategory(analysis.categories.join(', ')); // Converte para string para exibição
       setDetectedTags(analysis.tags);
     } else {
       setDetectedCategory('');
@@ -313,13 +314,20 @@ export default function ProjectCreate() {
         deadlineDate = futureDate.toISOString().split('T')[0]; // Formato YYYY-MM-DD
       }
 
+      // Converter a string de categorias em array
+      const categoriesArray = detectedCategory 
+        ? detectedCategory.split(',').map(c => c.trim())
+        : ['Outro'];
+
       const { data, error } = await supabase
         .from('projects' as any)
         .insert({
           profile_id: (profileData as any).id,
           title,
           description,
-          category: detectedCategory || 'geral',
+          category: categoriesArray[0] || 'Outro', // Mantém compatibilidade com coluna antiga
+          categories: categoriesArray, // Nova coluna de array
+          skills: detectedTags, // Nova coluna de skills/tags
           budget_min: budgetMin,
           budget_max: budgetMax,
           deadline: deadlineDate,
@@ -328,18 +336,6 @@ export default function ProjectCreate() {
         .single();
 
       if (error) throw error;
-
-      // Insere as tags detectadas automaticamente
-      if (detectedTags.length > 0 && data) {
-        const tagInserts = detectedTags.map(tag => ({
-          project_id: (data as any).id,
-          tag: tag
-        }));
-
-        await supabase
-          .from('project_tags' as any)
-          .insert(tagInserts);
-      }
 
       // Limpar rascunho do localStorage após publicação bem-sucedida
       localStorage.removeItem('projectDraft');
@@ -850,7 +846,7 @@ Inclua:
 
                       <div>
                         <Label htmlFor="edit-category" className="text-sm font-semibold text-blue-900 dark:text-blue-200 flex items-center gap-2 mb-2">
-                          Categoria Detectada
+                          Categorias Detectadas
                           <Badge variant="outline" className="bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 border-blue-300">
                             ✨ Automático
                           </Badge>
@@ -859,11 +855,11 @@ Inclua:
                           id="edit-category"
                           value={detectedCategory}
                           onChange={(e) => setDetectedCategory(e.target.value)}
-                          placeholder="Ex: Design, Desenvolvimento, Marketing"
+                          placeholder="Ex: Desenvolvimento Web, Design Gráfico, Marketing Digital"
                           className="h-10 text-base bg-white dark:bg-slate-900"
                         />
                         <p className="text-xs text-muted-foreground mt-1">
-                          Você pode editar a categoria se necessário
+                          Você pode editar as categorias se necessário (separe por vírgula)
                         </p>
                       </div>
 

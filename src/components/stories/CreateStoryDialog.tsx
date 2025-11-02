@@ -637,7 +637,7 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
                                       key={sticker.id}
                                       className="flex items-center gap-1 bg-background px-2 py-1 rounded text-xs"
                                     >
-                                      <span className="capitalize">{sticker.type === 'poll' ? 'Enquete' : sticker.type === 'question' ? 'Pergunta' : sticker.type === 'emoji' ? 'Emoji' : sticker.type === 'location' ? 'Local' : 'Link'}</span>
+                                      <span className="capitalize">{sticker.type === 'poll' ? 'Enquete' : sticker.type === 'question' ? 'Pergunta' : sticker.type === 'emoji' ? 'Emoji' : sticker.type === 'location' ? 'Local' : sticker.type === 'image' ? 'Imagem' : 'Link'}</span>
                                       <button
                                         onClick={() => handleRemoveSticker(sticker.id)}
                                         className="text-destructive hover:text-destructive/80"
@@ -757,22 +757,39 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
                           {stickers.map((sticker) => (
                             <div
                               key={sticker.id}
-                              className="absolute cursor-move bg-white/10 backdrop-blur-sm border border-white/30 rounded-lg p-2 select-none hover:bg-white/20 transition-colors"
+                              className="absolute cursor-move select-none hover:opacity-80 transition-opacity"
                               style={{
                                 left: `${sticker.position_x}%`,
                                 top: `${sticker.position_y}%`,
-                                transform: 'translate(-50%, -50%)',
-                                width: `${sticker.width}%`,
-                                minWidth: '60px',
+                                transform: `translate(-50%, -50%) scale(${sticker.scale || 1})`,
+                                width: sticker.type === 'image' ? `${sticker.width}%` : 'auto',
                               }}
                               onMouseDown={() => handleDragStart(`sticker-${sticker.id}`)}
+                              onWheel={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                handleUpdateSticker(sticker.id, {
+                                  scale: Math.max(0.5, Math.min(2, (sticker.scale || 1) + (e.deltaY > 0 ? -0.1 : 0.1)))
+                                });
+                              }}
                             >
-                              <p className="text-white text-[8px] font-medium text-center">
-                                {sticker.type === 'poll' ? '📊 Enquete' : 
-                                 sticker.type === 'question' ? '❓ Pergunta' :
-                                 sticker.type === 'emoji' ? '😊 Emoji' :
-                                 sticker.type === 'location' ? '📍 Local' : '🔗 Link'}
-                              </p>
+                              {sticker.type === 'image' ? (
+                                <img
+                                  src={sticker.content.imageUrl}
+                                  alt="Sticker"
+                                  className="w-full h-auto rounded-lg shadow-lg"
+                                  style={{ pointerEvents: 'none' }}
+                                />
+                              ) : (
+                                <div className="bg-white/10 backdrop-blur-sm border border-white/30 rounded-lg p-2">
+                                  <p className="text-white text-[8px] font-medium text-center whitespace-nowrap">
+                                    {sticker.type === 'poll' ? '📊 Enquete' : 
+                                     sticker.type === 'question' ? '❓ Pergunta' :
+                                     sticker.type === 'emoji' ? '😊 Emoji' :
+                                     sticker.type === 'location' ? '📍 Local' : '🔗 Link'}
+                                  </p>
+                                </div>
+                              )}
                             </div>
                           ))}
                           
@@ -822,22 +839,39 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
                           {stickers.map((sticker) => (
                             <div
                               key={sticker.id}
-                              className="absolute cursor-move bg-white/10 backdrop-blur-sm border border-white/30 rounded-lg p-2 select-none hover:bg-white/20 transition-colors"
+                              className="absolute cursor-move select-none hover:opacity-80 transition-opacity"
                               style={{
                                 left: `${sticker.position_x}%`,
                                 top: `${sticker.position_y}%`,
-                                transform: 'translate(-50%, -50%)',
-                                width: `${sticker.width}%`,
-                                minWidth: '60px',
+                                transform: `translate(-50%, -50%) scale(${sticker.scale || 1})`,
+                                width: sticker.type === 'image' ? `${sticker.width}%` : 'auto',
                               }}
                               onMouseDown={() => handleDragStart(`sticker-${sticker.id}`)}
+                              onWheel={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                handleUpdateSticker(sticker.id, {
+                                  scale: Math.max(0.5, Math.min(2, (sticker.scale || 1) + (e.deltaY > 0 ? -0.1 : 0.1)))
+                                });
+                              }}
                             >
-                              <p className="text-white text-[8px] font-medium text-center">
-                                {sticker.type === 'poll' ? '📊 Enquete' : 
-                                 sticker.type === 'question' ? '❓ Pergunta' :
-                                 sticker.type === 'emoji' ? '😊 Emoji' :
-                                 sticker.type === 'location' ? '📍 Local' : '🔗 Link'}
-                              </p>
+                              {sticker.type === 'image' ? (
+                                <img
+                                  src={sticker.content.imageUrl}
+                                  alt="Sticker"
+                                  className="w-full h-auto rounded-lg shadow-lg"
+                                  style={{ pointerEvents: 'none' }}
+                                />
+                              ) : (
+                                <div className="bg-white/10 backdrop-blur-sm border border-white/30 rounded-lg p-2">
+                                  <p className="text-white text-[8px] font-medium text-center whitespace-nowrap">
+                                    {sticker.type === 'poll' ? '📊 Enquete' : 
+                                     sticker.type === 'question' ? '❓ Pergunta' :
+                                     sticker.type === 'emoji' ? '😊 Emoji' :
+                                     sticker.type === 'location' ? '📍 Local' : '🔗 Link'}
+                                  </p>
+                                </div>
+                              )}
                             </div>
                           ))}
                           

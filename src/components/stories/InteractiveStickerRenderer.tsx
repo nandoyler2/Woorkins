@@ -134,6 +134,17 @@ export const InteractiveStickerRenderer = ({
           </a>
         );
 
+      case 'image':
+        return (
+          <div style={style} className="pointer-events-auto">
+            <img
+              src={sticker.content.imageUrl}
+              alt="Sticker"
+              className="w-full h-full object-contain rounded-lg shadow-xl"
+            />
+          </div>
+        );
+
       default:
         return null;
     }

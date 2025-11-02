@@ -1,20 +1,22 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { BarChart3, MessageCircleQuestion, Smile, MapPin, Link as LinkIcon } from 'lucide-react';
+import { BarChart3, MessageCircleQuestion, Smile, MapPin, Link as LinkIcon, ImageIcon } from 'lucide-react';
 import { PollStickerDialog } from './stickers/PollStickerDialog';
 import { QuestionStickerDialog } from './stickers/QuestionStickerDialog';
 import { EmojiStickerDialog } from './stickers/EmojiStickerDialog';
 import { LocationStickerDialog } from './stickers/LocationStickerDialog';
 import { LinkStickerDialog } from './stickers/LinkStickerDialog';
+import { ImageStickerDialog } from './stickers/ImageStickerDialog';
 
 export interface Sticker {
   id: string;
-  type: 'poll' | 'question' | 'emoji' | 'location' | 'link';
+  type: 'poll' | 'question' | 'emoji' | 'location' | 'link' | 'image';
   position_x: number;
   position_y: number;
   width: number;
   height: number;
   rotation: number;
+  scale?: number;
   content: any;
 }
 
@@ -32,9 +34,10 @@ export const StoryStickers = ({ stickers, onAddSticker, onRemoveSticker }: Story
       type: type as any,
       position_x: 50,
       position_y: 50,
-      width: 40,
-      height: 20,
+      width: type === 'image' ? 30 : 40,
+      height: type === 'image' ? 30 : 20,
       rotation: 0,
+      scale: 1,
       content
     };
     onAddSticker(newSticker);
@@ -83,6 +86,14 @@ export const StoryStickers = ({ stickers, onAddSticker, onRemoveSticker }: Story
           <LinkIcon className="w-4 h-4 mr-2" />
           Link
         </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => setActiveStickerDialog('image')}
+        >
+          <ImageIcon className="w-4 h-4 mr-2" />
+          Imagem
+        </Button>
       </div>
 
       <PollStickerDialog
@@ -109,6 +120,11 @@ export const StoryStickers = ({ stickers, onAddSticker, onRemoveSticker }: Story
         open={activeStickerDialog === 'link'}
         onClose={() => setActiveStickerDialog(null)}
         onSave={(content) => handleAddSticker('link', content)}
+      />
+      <ImageStickerDialog
+        open={activeStickerDialog === 'image'}
+        onClose={() => setActiveStickerDialog(null)}
+        onSave={(content) => handleAddSticker('image', content)}
       />
     </>
   );

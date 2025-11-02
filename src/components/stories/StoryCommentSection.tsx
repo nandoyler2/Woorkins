@@ -102,7 +102,7 @@ export function StoryCommentSection({ storyId, currentProfileId, isLiked, onTogg
   };
 
   const handleSendComment = async () => {
-    if (!commentText.trim() || isSubmitting) return;
+    if (!commentText.trim() || isSubmitting || !currentProfileId) return;
 
     setIsSubmitting(true);
 
@@ -117,7 +117,10 @@ export function StoryCommentSection({ storyId, currentProfileId, isLiked, onTogg
         .select('id, profile_id, comment_text, created_at')
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error inserting comment:', error);
+        throw error;
+      }
 
       // Buscar dados do profile
       const { data: profileData } = await supabase

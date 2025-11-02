@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 export interface StorySticker {
   id: string;
   story_id: string;
-  type: 'poll' | 'question' | 'emoji' | 'location' | 'link' | 'countdown' | 'quiz';
+  type: 'poll' | 'question' | 'emoji' | 'location' | 'link' | 'countdown' | 'quiz' | 'image';
   position_x: number;
   position_y: number;
   width: number;

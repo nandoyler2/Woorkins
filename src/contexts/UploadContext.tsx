@@ -73,6 +73,7 @@ export function UploadProvider({ children }: { children: ReactNode }) {
 
       let mediaUrl = null;
       let thumbnailUrl = null;
+      let mediaBase64ForModeration = null;
 
       // Upload de mídia se necessário
       if (data.type !== 'text' && data.mediaFile) {
@@ -92,6 +93,35 @@ export function UploadProvider({ children }: { children: ReactNode }) {
         const thumbnailFile = new File([thumbnailBlob], data.mediaFile.name, {
           type: thumbnailBlob.type,
         });
+
+        // Converter para base64 para moderação
+        const reader = new FileReader();
+        mediaBase64ForModeration = await new Promise<string>((resolve) => {
+          reader.onload = () => resolve(reader.result as string);
+          reader.readAsDataURL(compressedFile);
+        });
+
+        setCurrentUpload(prev => prev ? { ...prev, message: 'Verificando conteúdo...', progress: 50 } : null);
+        
+        // Moderar conteúdo antes do upload
+        const { data: moderationData, error: moderationError } = await supabase.functions.invoke('moderate-story', {
+          body: {
+            mediaBase64: mediaBase64ForModeration,
+            textContent: data.textContent || '',
+            type: data.type
+          }
+        });
+
+        if (moderationError) {
+          console.error('Moderation error:', moderationError);
+          throw new Error('Não foi possível verificar o conteúdo. Tente novamente.');
+        }
+
+        if (!moderationData?.approved) {
+          const reason = moderationData?.reason || 'Conteúdo não permitido';
+          console.log('Content rejected:', reason);
+          throw new Error(`Conteúdo rejeitado: ${reason}`);
+        }
 
         setCurrentUpload(prev => prev ? { ...prev, message: 'Enviando arquivo...', progress: 60 } : null);
 
@@ -125,6 +155,28 @@ export function UploadProvider({ children }: { children: ReactNode }) {
 
         mediaUrl = publicUrl;
         thumbnailUrl = thumbPublicUrl;
+      } else if (data.type === 'text') {
+        // Moderar conteúdo de texto
+        setCurrentUpload(prev => prev ? { ...prev, message: 'Verificando conteúdo...', progress: 50 } : null);
+        
+        const { data: moderationData, error: moderationError } = await supabase.functions.invoke('moderate-story', {
+          body: {
+            mediaBase64: null,
+            textContent: data.textContent || '',
+            type: 'text'
+          }
+        });
+
+        if (moderationError) {
+          console.error('Moderation error:', moderationError);
+          throw new Error('Não foi possível verificar o conteúdo. Tente novamente.');
+        }
+
+        if (!moderationData?.approved) {
+          const reason = moderationData?.reason || 'Conteúdo não permitido';
+          console.log('Content rejected:', reason);
+          throw new Error(`Conteúdo rejeitado: ${reason}`);
+        }
       }
 
       setCurrentUpload(prev => prev ? { ...prev, message: 'Publicando story...', progress: 80 } : null);

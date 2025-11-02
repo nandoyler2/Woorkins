@@ -3,6 +3,9 @@ project_id = "bvjulkcmzfzyfwobwlnx"
 [functions.ai-assistant]
 verify_jwt = false
 
+[functions.moderate-story]
+verify_jwt = true
+
 [functions.efi-register-webhooks]
 verify_jwt = true
 

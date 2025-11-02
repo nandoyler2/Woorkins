@@ -50,8 +50,8 @@ export function formatShortName(name: string | null | undefined): string {
   const firstName = parts[0];
   const firstLastName = parts[1];
   
-  // Se o primeiro sobrenome for "de" ou "da", inclui o próximo também
-  if ((firstLastName === 'de' || firstLastName === 'da') && parts.length > 2) {
+  // Se o primeiro sobrenome for preposição, inclui o próximo também
+  if (['de', 'da', 'do', 'dos', 'das'].includes(firstLastName) && parts.length > 2) {
     return `${firstName} ${firstLastName} ${parts[2]}`;
   }
   

@@ -24,7 +24,7 @@ interface Plan {
 export default function Plans() {
   const { user } = useAuth();
   const [plans, setPlans] = useState<Plan[]>([]);
-  const [currentPlan, setCurrentPlan] = useState<string>('basico');
+  const [currentPlan, setCurrentPlan] = useState<string>('free');
   const [loading, setLoading] = useState(true);
   const [loadingPayment, setLoadingPayment] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
@@ -55,7 +55,7 @@ export default function Plans() {
       
       // Definir preços dos planos
       const planPrices: Record<string, number> = {
-        'basico': 0,
+        'free': 0,
         'pro': 49.90,
         'premium': 149.90
       };
@@ -67,25 +67,24 @@ export default function Plans() {
         .in('setting_key', ['stripe_commission_free', 'stripe_commission_pro', 'stripe_commission_premium']);
       
       const planCommissions: Record<string, number> = {
-        'basico': 12, // fallback padrão
-        'pro': 9,     // fallback padrão
-        'premium': 7  // fallback padrão
+        'free': 10,    // fallback padrão
+        'pro': 8,      // fallback padrão
+        'premium': 6   // fallback padrão
       };
       
       // Atualizar com valores do banco
       if (commissionData) {
         commissionData.forEach((setting) => {
           const plan = setting.setting_key.replace('stripe_commission_', '');
-          const planKey = plan === 'free' ? 'basico' : plan;
           const value = setting.setting_value as { percentage: number };
-          planCommissions[planKey] = value.percentage || planCommissions[planKey];
+          planCommissions[plan] = value.percentage || planCommissions[plan];
         });
       }
 
       setPlans((data || []).map(p => ({
         ...p,
         price: planPrices[p.slug] || 0,
-        commission_percentage: planCommissions[p.slug] ?? 12,
+        commission_percentage: planCommissions[p.slug] ?? 10,
         features: typeof p.features === 'string' 
           ? JSON.parse(p.features) 
           : (p.features as any)
@@ -117,13 +116,13 @@ export default function Plans() {
       if (subscription?.plan_type) {
         setCurrentPlan(subscription.plan_type);
       } else {
-        // Se não tem plano pago, está no plano grátis/básico
-        setCurrentPlan('basico');
+        // Se não tem plano pago, está no plano grátis
+        setCurrentPlan('free');
       }
     } catch (error: any) {
       console.error('Error loading current plan:', error);
-      // Em caso de erro, assume plano básico
-      setCurrentPlan('basico');
+      // Em caso de erro, assume plano grátis
+      setCurrentPlan('free');
     }
   };
 
@@ -137,10 +136,8 @@ export default function Plans() {
       return;
     }
 
-    // Verificar se já está no plano (incluindo plano grátis)
-    const isCurrentlyOnPlan = currentPlan === plan.slug || 
-                              (currentPlan === 'basico' && plan.price === 0) ||
-                              (currentPlan === 'free' && plan.price === 0);
+    // Verificar se já está no plano
+    const isCurrentlyOnPlan = currentPlan === plan.slug;
     
     if (isCurrentlyOnPlan) {
       toast({
@@ -252,7 +249,7 @@ export default function Plans() {
             <div className="flex items-center justify-center gap-2">
               <Badge variant="secondary" className="text-sm py-1 px-3">
                 Seu plano atual: <span className="font-bold ml-1 capitalize">
-                  {currentPlan === 'basico' ? 'Grátis' : currentPlan}
+                  {currentPlan === 'free' ? 'Grátis' : currentPlan}
                 </span>
               </Badge>
             </div>
@@ -262,10 +259,8 @@ export default function Plans() {
         <div className="flex justify-center">
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl w-full mb-12">
           {plans.map((plan) => {
-            // Comparar tanto pelo slug quanto verificar se é o plano grátis
-            const isCurrentPlan = currentPlan === plan.slug || 
-                                  (currentPlan === 'basico' && plan.price === 0) ||
-                                  (currentPlan === 'free' && plan.price === 0);
+            // Verificar se é o plano atual
+            const isCurrentPlan = currentPlan === plan.slug;
             const isFree = plan.price === 0;
             const isPremium = plan.slug === 'premium';
             

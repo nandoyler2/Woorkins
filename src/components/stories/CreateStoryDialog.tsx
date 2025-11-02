@@ -377,7 +377,7 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
                       <div className="space-y-4">
                         <div>
                           <Label className="text-sm font-semibold mb-2 block">Escolha um fundo:</Label>
-                          <div className="flex gap-1.5 overflow-x-auto pb-2 px-1">
+                          <div className="flex gap-1.5 overflow-x-auto pb-2 px-2 py-2">
                             {backgroundStyles.map((style) => (
                               <button
                                 key={style.value}

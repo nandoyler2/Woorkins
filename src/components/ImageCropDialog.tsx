@@ -20,7 +20,7 @@ export function ImageCropDialog({
   aspect
 }: ImageCropDialogProps) {
   const [crop, setCrop] = useState({ x: 0, y: 0 });
-  const [zoom, setZoom] = useState(1);
+  const [zoom, setZoom] = useState(1.5);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
 
   const onCropChange = (location: any) => {
@@ -66,7 +66,7 @@ export function ImageCropDialog({
           <Slider
             value={[zoom]}
             onValueChange={(value) => setZoom(value[0])}
-            min={1}
+            min={0.5}
             max={3}
             step={0.1}
             className="w-full"

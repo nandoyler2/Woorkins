@@ -10,8 +10,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import { OptimizedAvatar } from "@/components/ui/optimized-avatar";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Clock, FileText, DollarSign, Calendar, Sparkles, CheckCircle2 } from "lucide-react";
+import { Clock, FileText, DollarSign, Calendar, Sparkles, CheckCircle2, Bold, Italic, List, ListOrdered, Eye } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import ReactMarkdown from "react-markdown";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface ProposalDialogProps {
   open: boolean;
@@ -31,6 +33,8 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
   const [message, setMessage] = useState("");
   const [userProfile, setUserProfile] = useState<any>(null);
   const [success, setSuccess] = useState(false);
+  const [previewMode, setPreviewMode] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const draftKey = `proposalDraft:${user?.id || 'anon'}:${projectId}`;
   const maxChars = 3000;
 
@@ -179,6 +183,45 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
     }
   };
 
+  const applyFormat = (type: 'bold' | 'italic' | 'ul' | 'ol') => {
+    const el = textareaRef.current;
+    if (!el) return;
+    const start = el.selectionStart || 0;
+    const end = el.selectionEnd || 0;
+    const selected = message.slice(start, end);
+    let newValue = message;
+    let cursorOffset = 0;
+    
+    if (type === 'bold') {
+      const formatted = `**${selected || 'texto'}**`;
+      newValue = message.slice(0, start) + formatted + message.slice(end);
+      cursorOffset = selected ? formatted.length : start + 2;
+    }
+    if (type === 'italic') {
+      const formatted = `*${selected || 'texto'}*`;
+      newValue = message.slice(0, start) + formatted + message.slice(end);
+      cursorOffset = selected ? formatted.length : start + 1;
+    }
+    if (type === 'ul') {
+      const lines = (selected || 'item da lista').split('\n');
+      const formatted = lines.map(l => `- ${l}`).join('\n');
+      newValue = message.slice(0, start) + formatted + message.slice(end);
+      cursorOffset = formatted.length;
+    }
+    if (type === 'ol') {
+      const lines = (selected || 'item da lista').split('\n');
+      const formatted = lines.map((l, i) => `${i + 1}. ${l}`).join('\n');
+      newValue = message.slice(0, start) + formatted + message.slice(end);
+      cursorOffset = formatted.length;
+    }
+    
+    setMessage(newValue);
+    setTimeout(() => {
+      el.focus();
+      el.setSelectionRange(start + cursorOffset, start + cursorOffset);
+    }, 0);
+  };
+
   // Carrega rascunho ao abrir
   useEffect(() => {
     if (!open) return;
@@ -317,16 +360,77 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
                     {message.length}/{maxChars}
                   </span>
                 </div>
-                <Textarea
-                  id="message"
-                  placeholder="Descreva como você pretende realizar o projeto, sua experiência relevante e por que você é a melhor escolha..."
-                  value={message}
-                  onChange={handleMessageChange}
-                  rows={5}
-                  required
-                  maxLength={maxChars}
-                  className="border-2 focus:border-secondary transition-colors resize-none text-sm"
-                />
+                <div className="flex gap-1 mb-2 p-2 bg-muted/50 rounded-lg border">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => applyFormat('bold')}
+                    className="h-7 w-7 p-0"
+                    title="Negrito"
+                  >
+                    <Bold className="w-3.5 h-3.5" />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => applyFormat('italic')}
+                    className="h-7 w-7 p-0"
+                    title="Itálico"
+                  >
+                    <Italic className="w-3.5 h-3.5" />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => applyFormat('ul')}
+                    className="h-7 w-7 p-0"
+                    title="Lista"
+                  >
+                    <List className="w-3.5 h-3.5" />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => applyFormat('ol')}
+                    className="h-7 w-7 p-0"
+                    title="Lista numerada"
+                  >
+                    <ListOrdered className="w-3.5 h-3.5" />
+                  </Button>
+                  <div className="flex-1" />
+                  <Button
+                    type="button"
+                    variant={previewMode ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => setPreviewMode(!previewMode)}
+                    className="h-7 px-2 text-xs"
+                    title="Visualizar"
+                  >
+                    <Eye className="w-3.5 h-3.5 mr-1" />
+                    Preview
+                  </Button>
+                </div>
+                {previewMode ? (
+                  <div className="border-2 border-secondary/50 rounded-md p-3 min-h-[120px] bg-background prose prose-sm max-w-none">
+                    <ReactMarkdown>{message || '*Escreva sua mensagem...*'}</ReactMarkdown>
+                  </div>
+                ) : (
+                  <Textarea
+                    ref={textareaRef}
+                    id="message"
+                    placeholder="Descreva como você pretende realizar o projeto, sua experiência relevante e por que você é a melhor escolha..."
+                    value={message}
+                    onChange={handleMessageChange}
+                    rows={5}
+                    required
+                    maxLength={maxChars}
+                    className="border-2 focus:border-secondary transition-colors resize-none text-sm"
+                  />
+                )}
               </div>
 
               <div className="flex gap-2 justify-end pt-1">

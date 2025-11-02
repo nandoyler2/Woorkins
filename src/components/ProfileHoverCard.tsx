@@ -1,15 +1,16 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SafeImage } from '@/components/ui/safe-image';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useProfileHoverData } from '@/hooks/useProfileHoverData';
-import { Star, Calendar, User, Eye, Play } from 'lucide-react';
+import { StoriesViewer } from '@/components/stories/StoriesViewer';
+import { Star, Calendar, User, Eye, Play, ExternalLink } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { formatShortName } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ProfileHoverCardProps {
   profileId: string;
@@ -19,21 +20,23 @@ interface ProfileHoverCardProps {
 
 export function ProfileHoverCard({ profileId, children, side = 'top' }: ProfileHoverCardProps) {
   const [open, setOpen] = useState(false);
-  const navigate = useNavigate();
+  const [showStoriesViewer, setShowStoriesViewer] = useState(false);
+  const { user } = useAuth();
   const { data, loading, error } = useProfileHoverData(profileId, open);
 
   const handleViewProfile = () => {
     if (data.profile?.username) {
-      navigate(`/${data.profile.username}`);
-      setOpen(false);
+      window.open(`/${data.profile.username}`, '_blank');
     }
   };
 
   const handleViewStories = () => {
-    if (data.profile?.username) {
-      navigate(`/${data.profile.username}?viewStories=true`);
-      setOpen(false);
-    }
+    setShowStoriesViewer(true);
+  };
+
+  const handleProfileClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    handleViewProfile();
   };
 
   return (
@@ -82,8 +85,14 @@ export function ProfileHoverCard({ profileId, children, side = 'top' }: ProfileH
 
             {/* Avatar with Story Border */}
             <div className="flex flex-col items-center -mt-12 px-6 relative z-10">
-              <div className={data.stories.length > 0 ? 'p-[3px] bg-gradient-to-tr from-purple-500 via-pink-500 to-orange-500 rounded-full' : ''}>
-                <Avatar className="w-20 h-20 border-4 border-background">
+              <div 
+                className={`${data.stories.length > 0 ? 'p-[3px] bg-gradient-to-tr from-purple-500 via-pink-500 to-orange-500 rounded-full cursor-pointer' : ''}`}
+                onClick={data.stories.length > 0 ? handleViewStories : undefined}
+              >
+                <Avatar 
+                  className="w-20 h-20 border-4 border-background cursor-pointer"
+                  onClick={handleProfileClick}
+                >
                   {data.profile.avatar_thumbnail_url || data.profile.avatar_url ? (
                     <SafeImage
                       src={data.profile.avatar_thumbnail_url || data.profile.avatar_url || ''}
@@ -100,7 +109,10 @@ export function ProfileHoverCard({ profileId, children, side = 'top' }: ProfileH
 
               {/* User Info */}
               <div className="text-center mt-3 space-y-1">
-                <h3 className="font-semibold text-lg leading-none">
+                <h3 
+                  className="font-semibold text-lg leading-none cursor-pointer hover:underline"
+                  onClick={handleProfileClick}
+                >
                   {formatShortName(
                     data.profile.profile_type === 'business' 
                       ? data.profile.company_name 
@@ -153,7 +165,7 @@ export function ProfileHoverCard({ profileId, children, side = 'top' }: ProfileH
 
               {/* Stories Miniatures */}
               {data.stories.length > 0 && (
-                <div className="w-full mt-3">
+                <div className="w-full mt-3 flex justify-center">
                   <div className="flex gap-1.5 overflow-x-auto pb-1">
                     {data.stories.map((story) => (
                       <div
@@ -183,7 +195,7 @@ export function ProfileHoverCard({ profileId, children, side = 'top' }: ProfileH
                   className="flex-1"
                   size="sm"
                 >
-                  <Eye className="w-4 h-4 mr-1" />
+                  <ExternalLink className="w-4 h-4 mr-1" />
                   Ver Perfil
                 </Button>
                 {data.stories.length > 0 && (
@@ -202,6 +214,17 @@ export function ProfileHoverCard({ profileId, children, side = 'top' }: ProfileH
           </div>
         ) : null}
       </HoverCardContent>
+      
+      {/* Stories Viewer */}
+      {showStoriesViewer && data.profile && (
+        <StoriesViewer
+          profileId={profileId}
+          isOpen={showStoriesViewer}
+          onClose={() => setShowStoriesViewer(false)}
+          currentProfileId={user?.id || ''}
+          onStoryDeleted={() => {}}
+        />
+      )}
     </HoverCard>
   );
 }

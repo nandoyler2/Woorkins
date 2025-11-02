@@ -169,7 +169,7 @@ export function PlatformActivities() {
                       animationDelay: isNew ? '0ms' : `${index * 50}ms`
                     }}
                   >
-                    <Avatar className="w-10 h-10 flex-shrink-0 ring-2 ring-offset-2 ring-primary/20">
+                    <Avatar className="w-10 h-10 flex-shrink-0">
                       <AvatarImage src={activity.profile_avatar || undefined} />
                       <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-500 text-white text-xs font-semibold">
                         {formatShortName(activity.profile_name)?.[0]?.toUpperCase() || <User className="w-4 h-4" />}

@@ -203,14 +203,14 @@ export function ProfileHoverCard({ profileId, children, side = 'top' }: ProfileH
                 </div>
               </div>
 
-              {/* Stories Miniatures */}
+              {/* Stories Miniatures - Sempre mostra os mais recentes primeiro */}
               {data.stories.length > 0 && (
                 <div className="w-full mt-3 relative">
-                  {canScrollLeft && (
+                  {data.stories.length > 3 && canScrollLeft && (
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="absolute left-0 top-1/2 -translate-y-1/2 z-10 h-8 w-8 bg-background/80 backdrop-blur-sm hover:bg-background/90"
+                      className="absolute left-0 top-1/2 -translate-y-1/2 z-10 h-8 w-8 bg-background/90 backdrop-blur-sm hover:bg-background shadow-md"
                       onClick={() => scrollStories('left')}
                     >
                       <ChevronLeft className="w-4 h-4" />
@@ -219,7 +219,7 @@ export function ProfileHoverCard({ profileId, children, side = 'top' }: ProfileH
                   
                   <div 
                     ref={storiesScrollRef}
-                    className="flex gap-1.5 overflow-x-auto pb-1 px-8 justify-center scrollbar-hide"
+                    className={`flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide ${data.stories.length > 3 ? 'px-8' : 'px-2 justify-center'}`}
                     onScroll={checkScrollButtons}
                     style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                   >
@@ -242,11 +242,11 @@ export function ProfileHoverCard({ profileId, children, side = 'top' }: ProfileH
                     ))}
                   </div>
 
-                  {canScrollRight && (
+                  {data.stories.length > 3 && canScrollRight && (
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="absolute right-0 top-1/2 -translate-y-1/2 z-10 h-8 w-8 bg-background/80 backdrop-blur-sm hover:bg-background/90"
+                      className="absolute right-0 top-1/2 -translate-y-1/2 z-10 h-8 w-8 bg-background/90 backdrop-blur-sm hover:bg-background shadow-md"
                       onClick={() => scrollStories('right')}
                     >
                       <ChevronRight className="w-4 h-4" />

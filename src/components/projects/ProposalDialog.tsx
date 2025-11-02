@@ -280,39 +280,18 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
           </div>
         ) : (
           <>
-            {/* Header compacto */}
-            <div className="bg-gradient-to-br from-primary/10 via-secondary/10 to-accent/10 p-4 border-b shrink-0">
-              <DialogHeader className="space-y-3">
-                {/* User Info */}
-                <div className="flex items-center gap-2.5 bg-background/80 backdrop-blur-sm rounded-lg p-2.5 shadow-sm">
-                  <OptimizedAvatar
-                    fullUrl={userProfile?.avatar_url}
-                    thumbnailUrl={userProfile?.avatar_thumbnail_url}
-                    fallback={getInitials(userProfile?.full_name || userProfile?.username)}
-                    size="md"
-                    className="ring-2 ring-primary/20"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-sm truncate">
-                      Enviando como {userProfile?.full_name || userProfile?.username || "Usuário"}
-                    </p>
-                    <Badge variant="secondary" className="mt-0.5 bg-gradient-to-r from-secondary/20 to-accent/20 text-xs">
-                      <Sparkles className="w-3 h-3 mr-1" />
-                      Freelancer nível {userProfile?.freelancer_level || 1}
-                    </Badge>
-                  </div>
-                </div>
-
-                {/* Project Info */}
-                <div className="bg-gradient-to-br from-background to-muted/50 rounded-lg p-3 space-y-2 shadow-sm border">
-                  <h3 className="font-bold text-sm leading-tight line-clamp-2">{projectTitle}</h3>
+            {/* Header simplificado */}
+            <div className="bg-gradient-to-r from-blue-900/90 via-blue-800/90 to-blue-900/90 p-4 border-b shrink-0">
+              <DialogHeader>
+                <div className="space-y-2">
+                  <h3 className="font-bold text-base leading-tight text-white">{projectTitle}</h3>
                   <div className="flex flex-wrap items-center gap-2 text-xs">
-                    <div className="flex items-center gap-1 text-muted-foreground bg-background/50 px-2 py-1 rounded-full">
-                      <Clock className="w-3 h-3 text-primary" />
+                    <div className="flex items-center gap-1 text-blue-100 bg-blue-950/50 px-2 py-1 rounded-full">
+                      <Clock className="w-3 h-3" />
                       <span>{formatTimeAgo(projectCreatedAt)}</span>
                     </div>
-                    <div className="flex items-center gap-1 text-muted-foreground bg-background/50 px-2 py-1 rounded-full">
-                      <FileText className="w-3 h-3 text-secondary" />
+                    <div className="flex items-center gap-1 text-blue-100 bg-blue-950/50 px-2 py-1 rounded-full">
+                      <FileText className="w-3 h-3" />
                       <span>{proposalsCount || 0} {proposalsCount === 1 ? 'proposta' : 'propostas'}</span>
                     </div>
                   </div>
@@ -320,15 +299,16 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
               </DialogHeader>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4 p-4 overflow-y-auto flex-1">
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <Label htmlFor="amount" className="flex items-center gap-1.5 text-xs font-semibold">
-                    <DollarSign className="w-3.5 h-3.5 text-accent" />
-                    Valor da Proposta (R$) *
+            <form onSubmit={handleSubmit} className="space-y-5 p-5 overflow-y-auto flex-1 bg-gradient-to-b from-slate-50 to-white dark:from-slate-950 dark:to-background">
+              {/* Valores e Prazo - Grid compacto */}
+              <div className="grid grid-cols-5 gap-3">
+                <div className="col-span-3 space-y-1.5">
+                  <Label htmlFor="amount" className="flex items-center gap-1.5 text-xs font-semibold text-blue-900 dark:text-blue-100">
+                    <DollarSign className="w-3.5 h-3.5" />
+                    Valor da Proposta *
                   </Label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">R$</span>
+                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground text-sm font-medium">R$</span>
                     <Input
                       id="amount"
                       type="text"
@@ -336,89 +316,15 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
                       value={amountFormatted}
                       onChange={handleAmountChange}
                       required
-                      className="border-2 focus:border-accent transition-colors pl-10"
+                      className="h-9 border-blue-200 focus:border-blue-600 focus:ring-blue-600 dark:border-blue-800 transition-colors pl-9 font-medium"
                     />
                   </div>
-                  {amountFormatted && parseCurrencyToNumber(amountFormatted) > 0 && (() => {
-                    const plan = userProfile?.subscription_plan || 'free';
-                    const feePercentage = plan === 'premium' ? platformFees.premium : plan === 'pro' ? platformFees.pro : platformFees.free;
-                    const amount = parseCurrencyToNumber(amountFormatted);
-                    const netAmount = amount * (1 - feePercentage / 100);
-                    const netAmountPro = amount * (1 - platformFees.pro / 100);
-                    const netAmountPremium = amount * (1 - platformFees.premium / 100);
-                    
-                    return (
-                      <div className="mt-2 space-y-2">
-                        <div className="p-2 bg-accent/10 border border-accent/20 rounded-md space-y-1">
-                          <div className="flex items-center justify-between text-xs">
-                            <span className="text-muted-foreground">Você receberá:</span>
-                            <span className="font-bold text-accent">
-                              R$ {netAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                            </span>
-                          </div>
-                          <p className="text-[10px] text-muted-foreground leading-tight">
-                            Como usuário <span className="font-semibold capitalize">
-                              {plan === 'premium' ? 'Premium' : plan === 'pro' ? 'Pro' : 'Gratuito'}
-                            </span>, a taxa é de <span className="font-semibold">{feePercentage.toFixed(1)}%</span>
-                          </p>
-                        </div>
-                        
-                        {plan !== 'pro' && plan !== 'premium' && (
-                          <div className="p-2 bg-primary/5 border border-primary/20 rounded-md space-y-2">
-                            <p className="text-[10px] font-semibold text-primary">💎 Com planos melhores você ganharia mais:</p>
-                            <div className="space-y-0.5 text-[10px]">
-                              <div className="flex items-center justify-between">
-                                <span className="text-muted-foreground">Plano Pro ({platformFees.pro.toFixed(1)}%):</span>
-                                <span className="font-semibold text-primary">
-                                  R$ {netAmountPro.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                </span>
-                              </div>
-                              <div className="flex items-center justify-between">
-                                <span className="text-muted-foreground">Plano Premium ({platformFees.premium.toFixed(1)}%):</span>
-                                <span className="font-semibold text-primary">
-                                  R$ {netAmountPremium.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                </span>
-                              </div>
-                            </div>
-                            <Button
-                              type="button"
-                              size="sm"
-                              className="w-full h-7 text-[10px]"
-                              onClick={() => window.open(`${window.location.origin}/planos`, '_blank')}
-                            >
-                              Mudar de Plano
-                            </Button>
-                          </div>
-                        )}
-                        
-                        {plan === 'pro' && (
-                          <div className="p-2 bg-primary/5 border border-primary/20 rounded-md space-y-2">
-                            <p className="text-[10px] font-semibold text-primary">💎 Com Premium você ganharia:</p>
-                            <div className="flex items-center justify-between text-[10px]">
-                              <span className="text-muted-foreground">Plano Premium ({platformFees.premium.toFixed(1)}%):</span>
-                              <span className="font-semibold text-primary">
-                                R$ {netAmountPremium.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                              </span>
-                            </div>
-                            <Button
-                              type="button"
-                              size="sm"
-                              className="w-full h-7 text-[10px]"
-                              onClick={() => window.open(`${window.location.origin}/planos`, '_blank')}
-                            >
-                              Mudar de Plano
-                            </Button>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })()}
                 </div>
 
-                <div className="space-y-1.5">
-                  <Label htmlFor="deliveryTime" className="flex items-center gap-1.5 text-xs font-semibold">
-                    <Calendar className="w-3.5 h-3.5 text-primary" />
-                    Prazo de Entrega (dias) *
+                <div className="col-span-2 space-y-1.5">
+                  <Label htmlFor="deliveryTime" className="flex items-center gap-1.5 text-xs font-semibold text-blue-900 dark:text-blue-100">
+                    <Calendar className="w-3.5 h-3.5" />
+                    Prazo (dias) *
                   </Label>
                   <Input
                     id="deliveryTime"
@@ -428,28 +334,113 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
                     onChange={(e) => setDeliveryTime(e.target.value)}
                     required
                     min="1"
-                    className="border-2 focus:border-primary transition-colors"
+                    className="h-9 border-blue-200 focus:border-blue-600 focus:ring-blue-600 dark:border-blue-800 transition-colors font-medium"
                   />
                 </div>
               </div>
 
-              <div className="space-y-1.5">
+              {/* Cálculo de taxas */}
+              {amountFormatted && parseCurrencyToNumber(amountFormatted) > 0 && (() => {
+                    const plan = userProfile?.subscription_plan || 'free';
+                    const feePercentage = plan === 'premium' ? platformFees.premium : plan === 'pro' ? platformFees.pro : platformFees.free;
+                    const amount = parseCurrencyToNumber(amountFormatted);
+                    const netAmount = amount * (1 - feePercentage / 100);
+                    const netAmountPro = amount * (1 - platformFees.pro / 100);
+                    const netAmountPremium = amount * (1 - platformFees.premium / 100);
+                    
+                    return (
+                      <div className="space-y-3">
+                        {/* Valor que receberá - Destaque principal */}
+                        <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 border-2 border-blue-300 dark:border-blue-700 rounded-lg p-4 shadow-sm">
+                          <div className="flex items-baseline justify-between mb-1">
+                            <span className="text-sm font-medium text-blue-900 dark:text-blue-100">Você receberá:</span>
+                            <span className="text-2xl font-bold text-blue-900 dark:text-blue-50">
+                              R$ {netAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </span>
+                          </div>
+                          <p className="text-xs text-blue-700 dark:text-blue-300">
+                            Plano <span className="font-bold capitalize">
+                              {plan === 'premium' ? 'Premium' : plan === 'pro' ? 'Pro' : 'Gratuito'}
+                            </span> • Taxa de {feePercentage.toFixed(1)}%
+                          </p>
+                        </div>
+                        
+                        {/* Comparação de planos */}
+                        {plan !== 'pro' && plan !== 'premium' && (
+                          <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 border border-amber-300 dark:border-amber-700 rounded-lg p-3 space-y-2.5">
+                            <p className="text-xs font-bold text-amber-900 dark:text-amber-100 flex items-center gap-1">
+                              <Sparkles className="w-3.5 h-3.5" />
+                              Ganhe mais mudando de plano:
+                            </p>
+                            <div className="space-y-2 text-xs">
+                              <div className="flex items-center justify-between p-2 bg-white/60 dark:bg-black/20 rounded-md">
+                                <span className="font-medium text-gray-700 dark:text-gray-300">Plano Pro ({platformFees.pro.toFixed(1)}%)</span>
+                                <span className="font-bold text-blue-700 dark:text-blue-400">
+                                  R$ {netAmountPro.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                </span>
+                              </div>
+                              <div className="flex items-center justify-between p-2 bg-white/60 dark:bg-black/20 rounded-md">
+                                <span className="font-medium text-gray-700 dark:text-gray-300">Plano Premium ({platformFees.premium.toFixed(1)}%)</span>
+                                <span className="font-bold text-blue-700 dark:text-blue-400">
+                                  R$ {netAmountPremium.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                </span>
+                              </div>
+                            </div>
+                            <Button
+                              type="button"
+                              size="sm"
+                              className="w-full h-8 text-xs font-semibold bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
+                              onClick={() => window.open(`${window.location.origin}/planos`, '_blank')}
+                            >
+                              Mudar de Plano Agora
+                            </Button>
+                          </div>
+                        )}
+                        
+                        {plan === 'pro' && (
+                          <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 border border-amber-300 dark:border-amber-700 rounded-lg p-3 space-y-2.5">
+                            <p className="text-xs font-bold text-amber-900 dark:text-amber-100 flex items-center gap-1">
+                              <Sparkles className="w-3.5 h-3.5" />
+                              Upgrade para Premium:
+                            </p>
+                            <div className="flex items-center justify-between p-2 bg-white/60 dark:bg-black/20 rounded-md text-xs">
+                              <span className="font-medium text-gray-700 dark:text-gray-300">Plano Premium ({platformFees.premium.toFixed(1)}%)</span>
+                              <span className="font-bold text-blue-700 dark:text-blue-400">
+                                R$ {netAmountPremium.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              </span>
+                            </div>
+                            <Button
+                              type="button"
+                              size="sm"
+                              className="w-full h-8 text-xs font-semibold bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
+                              onClick={() => window.open(`${window.location.origin}/planos`, '_blank')}
+                            >
+                              Fazer Upgrade
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+
+              {/* Mensagem */}
+              <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="message" className="flex items-center gap-1.5 text-xs font-semibold">
-                    <FileText className="w-3.5 h-3.5 text-secondary" />
+                  <Label htmlFor="message" className="flex items-center gap-1.5 text-xs font-semibold text-blue-900 dark:text-blue-100">
+                    <FileText className="w-3.5 h-3.5" />
                     Mensagem / Descrição da Proposta *
                   </Label>
-                  <span className={`text-xs ${message.length > maxChars * 0.9 ? 'text-destructive font-semibold' : 'text-muted-foreground'}`}>
+                  <span className={`text-xs font-medium ${message.length > maxChars * 0.9 ? 'text-red-600 dark:text-red-400' : 'text-gray-500 dark:text-gray-400'}`}>
                     {message.length}/{maxChars}
                   </span>
                 </div>
-                <div className="flex gap-1 mb-2 p-2 bg-muted/50 rounded-lg border">
+                <div className="flex gap-1 p-1.5 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
                     onClick={() => applyFormat('bold')}
-                    className="h-7 w-7 p-0"
+                    className="h-7 w-7 p-0 hover:bg-blue-100 dark:hover:bg-blue-900"
                     title="Negrito"
                   >
                     <Bold className="w-3.5 h-3.5" />
@@ -459,7 +450,7 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
                     variant="ghost"
                     size="sm"
                     onClick={() => applyFormat('italic')}
-                    className="h-7 w-7 p-0"
+                    className="h-7 w-7 p-0 hover:bg-blue-100 dark:hover:bg-blue-900"
                     title="Itálico"
                   >
                     <Italic className="w-3.5 h-3.5" />
@@ -469,7 +460,7 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
                     variant="ghost"
                     size="sm"
                     onClick={() => applyFormat('insertUnorderedList')}
-                    className="h-7 w-7 p-0"
+                    className="h-7 w-7 p-0 hover:bg-blue-100 dark:hover:bg-blue-900"
                     title="Lista"
                   >
                     <List className="w-3.5 h-3.5" />
@@ -479,7 +470,7 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
                     variant="ghost"
                     size="sm"
                     onClick={() => applyFormat('insertOrderedList')}
-                    className="h-7 w-7 p-0"
+                    className="h-7 w-7 p-0 hover:bg-blue-100 dark:hover:bg-blue-900"
                     title="Lista numerada"
                   >
                     <ListOrdered className="w-3.5 h-3.5" />
@@ -489,19 +480,21 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
                   ref={editorRef}
                   contentEditable
                   onInput={handleMessageChange}
-                  className="border-2 focus:border-secondary transition-colors rounded-md p-3 min-h-[120px] max-h-[200px] overflow-y-auto text-sm focus:outline-none bg-background"
+                  className="border-2 border-blue-200 dark:border-blue-800 focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 transition-all rounded-lg p-3 min-h-[140px] max-h-[220px] overflow-y-auto text-sm focus:outline-none bg-white dark:bg-slate-950"
                   style={{ whiteSpace: 'pre-wrap' }}
-                  data-placeholder="Descreva como você pretende realizar o projeto, sua experiência relevante e por que você é a melhor escolha..."
+                  data-placeholder="Descreva sua experiência, metodologia e por que você é ideal para este projeto..."
                 />
               </div>
 
-              <div className="flex gap-2 justify-end pt-1">
+              {/* Botões de ação */}
+              <div className="flex gap-2 justify-end pt-2 border-t border-blue-200 dark:border-blue-800">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => onOpenChange(false)}
                   disabled={loading}
                   size="sm"
+                  className="border-blue-300 dark:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-950"
                 >
                   Cancelar
                 </Button>
@@ -509,7 +502,7 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
                   type="submit" 
                   disabled={loading}
                   size="sm"
-                  className="bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 shadow-lg hover:shadow-xl transition-all"
+                  className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg hover:shadow-xl transition-all font-semibold"
                 >
                   {loading ? (
                     <>

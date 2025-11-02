@@ -370,17 +370,17 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
                           <div className="col-span-2 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 border border-amber-300 dark:border-amber-700 rounded-lg p-2 space-y-1.5">
                             <p className="text-[10px] font-bold text-amber-900 dark:text-amber-100 flex items-center gap-1">
                               <Sparkles className="w-3 h-3" />
-                              Ganhe mais:
+                              Ganhe mais com menos taxa:
                             </p>
                             <div className="space-y-0.5">
                               <div className="flex items-center justify-between p-1.5 bg-white/60 dark:bg-black/20 rounded text-[10px]">
-                                <span className="font-medium text-gray-600 dark:text-gray-400">Pro</span>
+                                <span className="font-medium text-gray-600 dark:text-gray-400">Pro ({platformFees.pro.toFixed(1)}%)</span>
                                 <span className="font-bold text-blue-700 dark:text-blue-400">
                                   R$ {netAmountPro.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                 </span>
                               </div>
                               <div className="flex items-center justify-between p-1.5 bg-white/60 dark:bg-black/20 rounded text-[10px]">
-                                <span className="font-medium text-gray-600 dark:text-gray-400">Premium</span>
+                                <span className="font-medium text-gray-600 dark:text-gray-400">Premium ({platformFees.premium.toFixed(1)}%)</span>
                                 <span className="font-bold text-blue-700 dark:text-blue-400">
                                   R$ {netAmountPremium.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                 </span>
@@ -401,10 +401,10 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
                           <div className="col-span-2 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 border border-amber-300 dark:border-amber-700 rounded-lg p-2 space-y-1.5">
                             <p className="text-[10px] font-bold text-amber-900 dark:text-amber-100 flex items-center gap-1">
                               <Sparkles className="w-3 h-3" />
-                              Upgrade:
+                              Upgrade com menos taxa:
                             </p>
                             <div className="flex items-center justify-between p-1.5 bg-white/60 dark:bg-black/20 rounded text-[10px]">
-                              <span className="font-medium text-gray-600 dark:text-gray-400">Premium</span>
+                              <span className="font-medium text-gray-600 dark:text-gray-400">Premium ({platformFees.premium.toFixed(1)}%)</span>
                               <span className="font-bold text-blue-700 dark:text-blue-400">
                                 R$ {netAmountPremium.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                               </span>

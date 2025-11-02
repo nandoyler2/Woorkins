@@ -365,7 +365,7 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
                             <p className="text-[9px] text-blue-600 dark:text-blue-400 leading-relaxed">
                               A taxa de <span className="font-semibold">{feePercentage.toFixed(1)}%</span> é referente a taxa de transação do Woorkins.
                             </p>
-                            <p className="text-[9px] text-blue-600/90 dark:text-blue-400/90 leading-relaxed pt-0.5 border-t border-blue-200/50 dark:border-blue-700/50">
+                            <p className="text-[9px] leading-relaxed pt-1 px-2 py-1.5 bg-green-100 dark:bg-green-950/40 rounded border border-green-300 dark:border-green-800 text-green-800 dark:text-green-200 font-medium">
                               💰 Após a confirmação do cliente, o pagamento é feito em até 24h após a solicitação de saque.
                             </p>
                           </div>

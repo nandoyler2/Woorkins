@@ -287,16 +287,18 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
           <div className="flex h-full">
             {/* Coluna esquerda - Header, Formulário e Botões */}
             <div className="flex-1 flex flex-col min-w-0">
-              {/* Header */}
-              <DialogHeader className="px-6 pt-6 pb-4 border-b bg-gradient-to-br from-background via-background to-muted/20 flex-shrink-0">
-                <DialogTitle className="text-3xl font-bold bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 bg-clip-text text-transparent">
-                  Criar Story
-                </DialogTitle>
-                <DialogDescription className="text-sm text-muted-foreground">Compartilhe um momento especial</DialogDescription>
-              </DialogHeader>
+              {/* Header - apenas no step create */}
+              {step === 'create' && (
+                <DialogHeader className="px-6 pt-6 pb-4 border-b bg-gradient-to-br from-background via-background to-muted/20 flex-shrink-0">
+                  <DialogTitle className="text-3xl font-bold bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 bg-clip-text text-transparent">
+                    Criar Story
+                  </DialogTitle>
+                  <DialogDescription className="text-sm text-muted-foreground">Compartilhe um momento especial</DialogDescription>
+                </DialogHeader>
+              )}
 
               {/* Formulário - Scrollable */}
-              <div className={`flex-1 overflow-y-auto px-6 py-6 min-h-0 ${step === 'select' ? '' : ''}`}>
+              <div className={`flex-1 overflow-y-auto px-6 ${step === 'select' ? 'py-8' : 'py-6'} min-h-0`}>
                 {step === 'select' ? (
                   <div className="space-y-6">
                     {/* Seleção de perfil (se tiver múltiplos) */}

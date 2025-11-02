@@ -430,7 +430,7 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
                   })()}
 
               {/* Mensagem */}
-              <div className="space-y-2 mt-3">
+              <div className="space-y-2 pt-4">
                 <div className="flex items-center justify-between gap-2 p-2 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
                   <Label htmlFor="message" className="flex items-center gap-1.5 text-xs font-semibold text-blue-900 dark:text-blue-100 shrink-0">
                     <FileText className="w-3.5 h-3.5" />

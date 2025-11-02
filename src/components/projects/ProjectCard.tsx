@@ -147,11 +147,13 @@ export function ProjectCard({ project }: ProjectCardProps) {
             username={project.profiles.username}
             fullName={project.profiles.full_name}
             avatarUrl={project.profiles.avatar_url}
-            avatarSize="md"
+            avatarSize="sm"
+            className="flex items-center gap-2"
+            nameClassName="text-sm text-muted-foreground"
           />
         ) : (
-          <div className="flex items-center gap-3">
-            <Avatar className="h-8 w-8">
+          <div className="flex items-center gap-2">
+            <Avatar className="h-6 w-6">
               {project.profiles.avatar_url ? (
                 <img 
                   src={project.profiles.avatar_url} 
@@ -160,21 +162,15 @@ export function ProjectCard({ project }: ProjectCardProps) {
                 />
               ) : (
                 <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-                  {formatShortName(project.profiles.full_name || project.profiles.username)}
+                  {formatShortName(project.profiles.full_name || project.profiles.username)?.[0]?.toUpperCase()}
                 </AvatarFallback>
               )}
             </Avatar>
-            <span className="text-sm font-medium">
+            <span className="text-sm text-muted-foreground">
               {formatShortName(project.profiles.full_name) || project.profiles.username}
             </span>
           </div>
         )}
-        
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon">
-            <MessageSquare className="h-4 w-4" />
-          </Button>
-        </div>
       </div>
 
       {/* Dialogs */}

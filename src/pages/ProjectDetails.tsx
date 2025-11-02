@@ -13,10 +13,11 @@ import { useToast } from '@/hooks/use-toast';
 import { 
   DollarSign, Calendar, User, MessageSquare, 
   Send, Star, ChevronRight, Target, FileText,
-  Briefcase, Clock, Users, AlertCircle, CheckCircle
+  Briefcase, Clock, Users, AlertCircle, CheckCircle, Trash2
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { formatShortName } from '@/lib/utils';
 import { ProposalDialog } from '@/components/projects/ProposalDialog';
 import { ViewProposalDialog } from '@/components/projects/ViewProposalDialog';
@@ -85,6 +86,8 @@ export default function ProjectDetails() {
   const [viewProposalDialogOpen, setViewProposalDialogOpen] = useState(false);
   const [loginDialogOpen, setLoginDialogOpen] = useState(false);
   const [ownerSubscriptionPlan, setOwnerSubscriptionPlan] = useState<string>('free');
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     if (project) {
@@ -320,6 +323,43 @@ export default function ProjectDetails() {
         description: 'Não foi possível enviar a denúncia',
         variant: 'destructive',
       });
+    }
+  };
+
+  const handleDeleteProject = async () => {
+    if (!user || !project || !isOwner) {
+      toast({
+        title: 'Erro',
+        description: 'Você não tem permissão para excluir este projeto',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsDeleting(true);
+
+    try {
+      const { error } = await supabase
+        .from('projects')
+        .delete()
+        .eq('id', project.id);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Projeto excluído',
+        description: 'O projeto foi excluído com sucesso.',
+      });
+
+      navigate('/projetos');
+    } catch (error) {
+      console.error('Error deleting project:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível excluir o projeto',
+        variant: 'destructive',
+      });
+      setIsDeleting(false);
     }
   };
 
@@ -598,14 +638,48 @@ export default function ProjectDetails() {
 
                 <Separator />
 
+                {/* Owner Actions */}
+                {isOwner && (
+                  <>
+                    <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="ghost" size="sm" className="w-full text-muted-foreground hover:text-destructive">
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Excluir projeto
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Tem certeza que deseja excluir?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Esta ação não pode ser desfeita. O projeto e todas as propostas associadas serão excluídos permanentemente.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={handleDeleteProject}
+                            disabled={isDeleting}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          >
+                            {isDeleting ? 'Excluindo...' : 'Excluir'}
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                    <Separator />
+                  </>
+                )}
+
                 {/* Report */}
-                <Dialog open={reportDialogOpen} onOpenChange={setReportDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button variant="ghost" size="sm" className="w-full text-muted-foreground hover:text-destructive">
-                      <AlertCircle className="w-4 h-4 mr-2" />
-                      Denunciar como inadequado
-                    </Button>
-                  </DialogTrigger>
+                {!isOwner && (
+                  <Dialog open={reportDialogOpen} onOpenChange={setReportDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button variant="ghost" size="sm" className="w-full text-muted-foreground hover:text-destructive">
+                        <AlertCircle className="w-4 h-4 mr-2" />
+                        Denunciar como inadequado
+                      </Button>
+                    </DialogTrigger>
                   <DialogContent>
                     <DialogHeader>
                       <DialogTitle>Denunciar Conteúdo Inadequado</DialogTitle>
@@ -665,6 +739,7 @@ export default function ProjectDetails() {
                     </div>
                   </DialogContent>
                 </Dialog>
+                )}
               </CardContent>
             </Card>
           </div>

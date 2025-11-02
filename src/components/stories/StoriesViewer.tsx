@@ -64,6 +64,18 @@ interface StoriesViewerProps {
   initialStoryIndex?: number;
 }
 
+// Função para formatar nome: apenas primeira letra maiúscula, resto minúscula, e apenas 2 primeiros nomes
+const formatDisplayName = (fullName: string | null | undefined): string => {
+  if (!fullName) return '';
+  
+  const names = fullName.trim().split(/\s+/);
+  const firstTwoNames = names.slice(0, 2);
+  
+  return firstTwoNames
+    .map(name => name.charAt(0).toUpperCase() + name.slice(1).toLowerCase())
+    .join(' ');
+};
+
 export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, onStoryDeleted, allStories, initialStoryIndex }: StoriesViewerProps) {
   const [stories, setStories] = useState<Story[]>([]);
   const [currentIndex, setCurrentIndex] = useState(initialStoryIndex || 0);
@@ -224,6 +236,49 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
       }
     }
   }, [isOpen, loadStories, initialStoryIndex]);
+
+  // Realtime para atualizar view_count
+  useEffect(() => {
+    if (!isOpen || stories.length === 0) return;
+
+    const currentStory = stories[currentIndex];
+    if (!currentStory) return;
+
+    // Listener para atualizações em tempo real do view_count
+    const channel = supabase
+      .channel(`story-views-${currentStory.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'story_views',
+          filter: `story_id=eq.${currentStory.id}`,
+        },
+        async () => {
+          // Buscar o novo view_count
+          const { data: storyData } = await supabase
+            .from('profile_stories')
+            .select('view_count')
+            .eq('id', currentStory.id)
+            .single();
+
+          if (storyData) {
+            // Atualizar o story na lista local
+            setStories(prev => prev.map(s => 
+              s.id === currentStory.id 
+                ? { ...s, view_count: storyData.view_count }
+                : s
+            ));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [isOpen, stories, currentIndex]);
 
   useEffect(() => {
     if (!isOpen || stories.length === 0) return;
@@ -405,7 +460,7 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
   const loadStoryStats = useCallback(async (storyId: string) => {
     setLoadingStats(true);
     try {
-      // Buscar visualizações
+      // Buscar visualizações (excluindo o dono do story)
       const { data: viewsData } = await supabase
         .from('story_views')
         .select(`
@@ -418,9 +473,10 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
           )
         `)
         .eq('story_id', storyId)
+        .neq('viewer_profile_id', profileId) // Excluir o dono
         .order('viewed_at', { ascending: false });
 
-      // Buscar curtidas
+      // Buscar curtidas (excluindo o dono do story)
       const { data: likesData } = await supabase
         .from('story_likes')
         .select(`
@@ -433,6 +489,7 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
           )
         `)
         .eq('story_id', storyId)
+        .neq('profile_id', profileId) // Excluir o dono
         .order('created_at', { ascending: false });
 
       setViews(viewsData?.map(v => v.profiles).filter(Boolean) || []);
@@ -442,7 +499,7 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
     } finally {
       setLoadingStats(false);
     }
-  }, []);
+  }, [profileId]);
 
   const handleShowStats = (storyId: string) => {
     setShowViews(true);
@@ -966,14 +1023,14 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
                                       <User className="w-5 h-5 text-white/60" />
                                     </div>
                                   )}
-                                  <div className="flex-1 min-w-0">
-                                    <p className="font-medium text-sm text-white truncate">
-                                      {profile.full_name}
-                                    </p>
-                                    <p className="text-xs text-white/60 truncate">
-                                      @{profile.username}
-                                    </p>
-                                  </div>
+                                   <div className="flex-1 min-w-0">
+                                     <p className="font-medium text-sm text-white truncate">
+                                       {formatDisplayName(profile.full_name)}
+                                     </p>
+                                     <p className="text-xs text-white/60 truncate">
+                                       @{profile.username}
+                                     </p>
+                                   </div>
                                 </div>
                               ))
                             )}

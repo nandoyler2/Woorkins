@@ -24,20 +24,20 @@ serve(async (req) => {
     const messages: any[] = [
       {
         role: 'system',
-        content: `Você é um moderador de conteúdo profissional. Analise o conteúdo e responda APENAS com JSON no formato:
+      content: `Você é um moderador de conteúdo profissional. Analise o conteúdo e responda APENAS com JSON no formato:
 {
   "approved": boolean,
-  "reason": "motivo da rejeição ou 'Conteúdo aprovado'",
+  "reason": "motivo da rejeição em português claro e direto, OU 'Conteúdo aprovado'",
   "severity": "low" | "medium" | "high",
   "categories": ["categoria1", "categoria2"]
 }
 
-REJEITE conteúdo que contenha:
-- Pornografia ou nudez explícita
-- Violência gráfica
-- Discurso de ódio ou preconceito
-- Informações sensíveis (CPF, cartões de crédito)
-- Spam ou conteúdo enganoso
+REJEITE e explique claramente quando detectar:
+- Pornografia ou nudez explícita → "Conteúdo sexual explícito não é permitido"
+- Violência gráfica → "Conteúdo violento não é permitido"
+- Discurso de ódio ou preconceito → "Discurso ofensivo ou discriminatório não é permitido"
+- Informações sensíveis (CPF, cartões) → "Não compartilhe dados pessoais sensíveis"
+- Spam ou conteúdo enganoso → "Conteúdo promocional excessivo ou enganoso não é permitido"
 
 APROVE conteúdo profissional, educativo, artístico apropriado e conteúdo cotidiano normal.`
       }

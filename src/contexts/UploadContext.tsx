@@ -49,12 +49,12 @@ export function UploadProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [currentUpload]);
 
-  // Auto-ocultar após sucesso
+  // Auto-ocultar após sucesso ou erro
   useEffect(() => {
-    if (currentUpload?.status === 'success') {
+    if (currentUpload?.status === 'success' || currentUpload?.status === 'error') {
       const timer = setTimeout(() => {
         setCurrentUpload(null);
-      }, 5000);
+      }, currentUpload.status === 'success' ? 5000 : 8000);
       return () => clearTimeout(timer);
     }
   }, [currentUpload?.status]);
@@ -120,7 +120,7 @@ export function UploadProvider({ children }: { children: ReactNode }) {
         if (!moderationData?.approved) {
           const reason = moderationData?.reason || 'Conteúdo não permitido';
           console.log('Content rejected:', reason);
-          throw new Error(`Conteúdo rejeitado: ${reason}`);
+          throw new Error(reason);
         }
 
         setCurrentUpload(prev => prev ? { ...prev, message: 'Enviando arquivo...', progress: 60 } : null);
@@ -175,7 +175,7 @@ export function UploadProvider({ children }: { children: ReactNode }) {
         if (!moderationData?.approved) {
           const reason = moderationData?.reason || 'Conteúdo não permitido';
           console.log('Content rejected:', reason);
-          throw new Error(`Conteúdo rejeitado: ${reason}`);
+          throw new Error(reason);
         }
       }
 
@@ -217,19 +217,28 @@ export function UploadProvider({ children }: { children: ReactNode }) {
 
     } catch (error) {
       console.error('Error uploading story:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro ao publicar story. Tente novamente.';
+      
       setCurrentUpload({
         id: uploadId,
         type: 'story',
         status: 'error',
         progress: 0,
-        message: 'Erro ao publicar story. Tente novamente.',
+        message: errorMessage,
       });
 
-      toast({
-        title: 'Erro ao publicar',
-        description: 'Não foi possível publicar o story. Tente novamente.',
-        variant: 'destructive',
-      });
+      // Não mostra toast se for erro de moderação (já tem o UploadIndicator)
+      const isModerationError = errorMessage.includes('não foi possível verificar') || 
+                                 errorMessage.includes('não permitido') ||
+                                 errorMessage.includes('rejeitado');
+      
+      if (!isModerationError) {
+        toast({
+          title: 'Erro ao publicar',
+          description: errorMessage,
+          variant: 'destructive',
+        });
+      }
     }
   }, [toast, onStoryUploaded]);
 

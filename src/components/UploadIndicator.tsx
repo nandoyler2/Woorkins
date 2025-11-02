@@ -74,8 +74,12 @@ export function UploadIndicator() {
 
           {/* Content */}
           <div className="flex-1 min-w-0 pt-1">
-            <p className="text-base font-bold mb-2 bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 bg-clip-text text-transparent">
-              {currentUpload.message}
+            <p className={`text-base font-bold mb-2 ${
+              currentUpload.status === 'error' 
+                ? 'text-destructive' 
+                : 'bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 bg-clip-text text-transparent'
+            }`}>
+              {currentUpload.status === 'error' ? 'Story não publicado' : currentUpload.message}
             </p>
             
             {currentUpload.status === 'uploading' && (
@@ -103,8 +107,8 @@ export function UploadIndicator() {
             )}
 
             {currentUpload.status === 'error' && (
-              <p className="text-sm text-destructive">
-                Tente novamente
+              <p className="text-sm text-destructive/90 font-medium leading-relaxed">
+                {currentUpload.message}
               </p>
             )}
           </div>

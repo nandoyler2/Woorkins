@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
-import { ProfileAvatarWithHover } from '@/components/ProfileAvatarWithHover';
+import { StoryIndicator } from '@/components/stories/StoryIndicator';
+import { ProfileHoverCard } from '@/components/ProfileHoverCard';
 import { formatShortName } from '@/lib/utils';
 
 interface ClickableProfileProps {
@@ -36,26 +37,28 @@ export function ClickableProfile({
   const displayName = formatShortName(fullName) || username || 'Usuário';
 
   return (
-    <div
-      className={`flex items-center gap-2 ${className}`}
-    >
-      {showAvatar && (
-        <ProfileAvatarWithHover
-          profileId={profileId}
-          username={username}
-          avatarUrl={avatarUrl}
-          size={avatarSize}
-          onClick={handleClick}
-        />
-      )}
-      {showName && (
-        <span 
-          onClick={handleClick}
-          className={`hover:underline cursor-pointer ${nameClassName}`}
-        >
-          {displayName}
-        </span>
-      )}
-    </div>
+    <ProfileHoverCard profileId={profileId}>
+      <div
+        className={`flex items-center gap-2 cursor-pointer ${className}`}
+        onClick={handleClick}
+      >
+        {showAvatar && (
+          <StoryIndicator
+            profileId={profileId}
+            username={username}
+            avatarUrl={avatarUrl}
+            size={avatarSize}
+            onClick={handleClick}
+          />
+        )}
+        {showName && (
+          <span 
+            className={`hover:underline ${nameClassName}`}
+          >
+            {displayName}
+          </span>
+        )}
+      </div>
+    </ProfileHoverCard>
   );
 }

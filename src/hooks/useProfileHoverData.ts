@@ -20,6 +20,7 @@ interface StoryData {
   id: string;
   thumbnail_url: string | null;
   type: string;
+  created_at: string;
 }
 
 interface CachedData {
@@ -76,14 +77,14 @@ export function useProfileHoverData(profileId: string, enabled: boolean) {
 
         if (profileError) throw profileError;
 
-        // Fetch all active stories
+        // Fetch all active stories (ordered by most recent first)
         const { data: activeStories } = await supabase
           .from('profile_stories')
-          .select('id, thumbnail_url, type')
+          .select('id, thumbnail_url, type, created_at')
           .eq('profile_id', profileId)
           .gt('expires_at', new Date().toISOString())
           .order('created_at', { ascending: false })
-          .limit(5);
+          .limit(10);
 
         const storiesData = activeStories || [];
 

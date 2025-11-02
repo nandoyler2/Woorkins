@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -6,7 +6,7 @@ import { SafeImage } from '@/components/ui/safe-image';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useProfileHoverData } from '@/hooks/useProfileHoverData';
 import { StoriesViewer } from '@/components/stories/StoriesViewer';
-import { Star, Calendar, User, Eye, Play, ExternalLink } from 'lucide-react';
+import { Star, Calendar, User, Eye, Play, ExternalLink, ChevronLeft, ChevronRight } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { formatShortName } from '@/lib/utils';
@@ -21,8 +21,18 @@ interface ProfileHoverCardProps {
 export function ProfileHoverCard({ profileId, children, side = 'top' }: ProfileHoverCardProps) {
   const [open, setOpen] = useState(false);
   const [showStoriesViewer, setShowStoriesViewer] = useState(false);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+  const storiesScrollRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
   const { data, loading, error } = useProfileHoverData(profileId, open);
+
+  // Check scroll buttons when stories load
+  useEffect(() => {
+    if (data.stories.length > 0) {
+      setTimeout(checkScrollButtons, 100);
+    }
+  }, [data.stories]);
 
   const handleViewProfile = () => {
     if (data.profile?.username) {
@@ -37,6 +47,30 @@ export function ProfileHoverCard({ profileId, children, side = 'top' }: ProfileH
   const handleProfileClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     handleViewProfile();
+  };
+
+  const checkScrollButtons = () => {
+    if (storiesScrollRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = storiesScrollRef.current;
+      setCanScrollLeft(scrollLeft > 0);
+      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 1);
+    }
+  };
+
+  const scrollStories = (direction: 'left' | 'right') => {
+    if (storiesScrollRef.current) {
+      const scrollAmount = 150;
+      const newScrollLeft = direction === 'left' 
+        ? storiesScrollRef.current.scrollLeft - scrollAmount
+        : storiesScrollRef.current.scrollLeft + scrollAmount;
+      
+      storiesScrollRef.current.scrollTo({
+        left: newScrollLeft,
+        behavior: 'smooth'
+      });
+      
+      setTimeout(checkScrollButtons, 300);
+    }
   };
 
   return (
@@ -165,8 +199,24 @@ export function ProfileHoverCard({ profileId, children, side = 'top' }: ProfileH
 
               {/* Stories Miniatures */}
               {data.stories.length > 0 && (
-                <div className="w-full mt-3 flex justify-center">
-                  <div className="flex gap-1.5 overflow-x-auto pb-1">
+                <div className="w-full mt-3 relative">
+                  {canScrollLeft && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="absolute left-0 top-1/2 -translate-y-1/2 z-10 h-8 w-8 bg-background/80 backdrop-blur-sm hover:bg-background/90"
+                      onClick={() => scrollStories('left')}
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </Button>
+                  )}
+                  
+                  <div 
+                    ref={storiesScrollRef}
+                    className="flex gap-1.5 overflow-x-auto pb-1 px-8 scrollbar-hide"
+                    onScroll={checkScrollButtons}
+                    style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                  >
                     {data.stories.map((story) => (
                       <div
                         key={story.id}
@@ -185,6 +235,17 @@ export function ProfileHoverCard({ profileId, children, side = 'top' }: ProfileH
                       </div>
                     ))}
                   </div>
+
+                  {canScrollRight && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-0 top-1/2 -translate-y-1/2 z-10 h-8 w-8 bg-background/80 backdrop-blur-sm hover:bg-background/90"
+                      onClick={() => scrollStories('right')}
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </Button>
+                  )}
                 </div>
               )}
 

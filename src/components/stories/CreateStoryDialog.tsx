@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ImageIcon, Video, Type, Link as LinkIcon, Upload, Loader2, Camera, Bold, Italic, Link2, Crop, CheckCircle } from 'lucide-react';
+import { ImageIcon, Video, Type, Upload, Loader2, Camera, Bold, Italic, Crop, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ImageCropDialog } from '@/components/ImageCropDialog';
 import { useUpload } from '@/contexts/UploadContext';
@@ -51,8 +51,6 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
   const [customColor, setCustomColor] = useState('#8B5CF6');
   const [textBold, setTextBold] = useState(false);
   const [textItalic, setTextItalic] = useState(false);
-  const [textLink, setTextLink] = useState('');
-  const [linkUrl, setLinkUrl] = useState('');
   const [showCropDialog, setShowCropDialog] = useState(false);
   const [cropData, setCropData] = useState<any>(null); // Dados do último crop
   const [isPublishing, setIsPublishing] = useState(false);
@@ -258,7 +256,6 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
         mediaFile: finalMediaFile || undefined,
         textContent: type === 'text' ? textContent : undefined,
         backgroundColor: type === 'text' ? backgroundColor : undefined,
-        linkUrl: type === 'text' && textLink ? textLink : (linkUrl || undefined),
         metadata,
       });
 
@@ -285,8 +282,6 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
     setOriginalImage('');
     setCropData(null);
     setTextContent('');
-    setTextLink('');
-    setLinkUrl('');
     setType('image');
     setTextBold(false);
     setTextItalic(false);
@@ -454,22 +449,6 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
                             {textContent.length}/300 caracteres
                           </p>
                         </div>
-
-                        {/* Link no texto */}
-                        <div className="space-y-2 bg-muted/30 p-3 rounded-lg">
-                          <Label className="flex items-center gap-2 text-xs font-semibold">
-                            <Link2 className="w-3 h-3" />
-                            Link no texto (opcional)
-                          </Label>
-                          <Input
-                            value={textLink}
-                            onChange={(e) => setTextLink(e.target.value)}
-                            placeholder="https://seusite.com"
-                            type="url"
-                            className="bg-background h-8 text-sm"
-                          />
-                          <p className="text-xs text-muted-foreground">Abrirá ao clicar no texto</p>
-                        </div>
                       </div>
                     ) : (
                       <div className="space-y-4">
@@ -547,22 +526,6 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
                             </label>
                           </div>
                         )}
-
-                        {/* Link opcional para mídia */}
-                        <div className="space-y-2 bg-muted/30 p-3 rounded-lg">
-                          <Label className="flex items-center gap-2 text-xs font-semibold">
-                            <LinkIcon className="w-3 h-3" />
-                            Link (opcional)
-                          </Label>
-                          <Input
-                            value={linkUrl}
-                            onChange={(e) => setLinkUrl(e.target.value)}
-                            placeholder="https://seusite.com"
-                            type="url"
-                            className="bg-background h-8 text-sm"
-                          />
-                          <p className="text-xs text-muted-foreground">Link para seus seguidores acessarem</p>
-                        </div>
                       </div>
                     )}
                   </div>

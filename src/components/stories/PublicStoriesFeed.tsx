@@ -225,10 +225,10 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
             {/* Título */}
             <div className="space-y-2">
               <h2 className="text-2xl font-bold text-foreground">
-                Nenhum story no momento
+                Você ainda não postou hoje
               </h2>
               <p className="text-muted-foreground text-base">
-                Seja o primeiro a compartilhar!
+                Compartilhe seus momentos com a comunidade
               </p>
             </div>
 

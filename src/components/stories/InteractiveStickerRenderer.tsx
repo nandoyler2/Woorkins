@@ -183,9 +183,7 @@ export const InteractiveStickerRenderer = ({
             className={containerClass}
             onClick={() => !isPreview && !hasResponded && handleResponse({ emoji_tap: true })}
           >
-            <div className={`transition ${!isPreview ? 'hover:scale-110' : ''}`}>
-              <span className="text-4xl">{sticker.content.emoji}</span>
-            </div>
+            <span className={`text-4xl transition ${!isPreview ? 'hover:scale-110' : ''}`}>{sticker.content.emoji}</span>
           </div>
         );
 

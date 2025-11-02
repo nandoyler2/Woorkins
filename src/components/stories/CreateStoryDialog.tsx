@@ -812,9 +812,7 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
                                   />
                                 </div>
                               ) : sticker.type === 'emoji' ? (
-                                <div className="bg-black/60 backdrop-blur-md border border-white/20 rounded-full p-4 hover:scale-110 transition">
-                                  <span className="text-4xl">{sticker.content.emoji}</span>
-                                </div>
+                                <span className="text-4xl hover:scale-110 transition">{sticker.content.emoji}</span>
                               ) : sticker.type === 'location' ? (
                                 <div className="bg-black/60 backdrop-blur-md border border-white/20 rounded-2xl px-4 py-2 flex items-center gap-2">
                                   <span className="text-xl">📍</span>
@@ -924,9 +922,7 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
                                   />
                                 </div>
                               ) : sticker.type === 'emoji' ? (
-                                <div className="bg-black/60 backdrop-blur-md border border-white/20 rounded-full p-4 hover:scale-110 transition">
-                                  <span className="text-4xl">{sticker.content.emoji}</span>
-                                </div>
+                                <span className="text-4xl hover:scale-110 transition">{sticker.content.emoji}</span>
                               ) : sticker.type === 'location' ? (
                                 <div className="bg-black/60 backdrop-blur-md border border-white/20 rounded-2xl px-4 py-2 flex items-center gap-2">
                                   <span className="text-xl">📍</span>

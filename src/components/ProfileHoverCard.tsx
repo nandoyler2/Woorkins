@@ -20,12 +20,41 @@ interface ProfileHoverCardProps {
 
 export function ProfileHoverCard({ profileId, children, side = 'top' }: ProfileHoverCardProps) {
   const [open, setOpen] = useState(false);
+  const [shouldLoad, setShouldLoad] = useState(false);
   const [showStoriesViewer, setShowStoriesViewer] = useState(false);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
   const storiesScrollRef = useRef<HTMLDivElement>(null);
+  const loadTimeoutRef = useRef<NodeJS.Timeout>();
   const { user } = useAuth();
-  const { data, loading, error } = useProfileHoverData(profileId, open);
+  const { data, loading, error } = useProfileHoverData(profileId, shouldLoad);
+
+  // Gerenciar carregamento com delay
+  useEffect(() => {
+    if (open) {
+      // Só começa a carregar após 200ms de hover
+      loadTimeoutRef.current = setTimeout(() => {
+        setShouldLoad(true);
+      }, 200);
+    } else {
+      // Cancelar carregamento se fechar antes de 200ms
+      if (loadTimeoutRef.current) {
+        clearTimeout(loadTimeoutRef.current);
+      }
+      // Limpar dados após fechar para liberar memória
+      setTimeout(() => {
+        if (!open) {
+          setShouldLoad(false);
+        }
+      }, 1000);
+    }
+
+    return () => {
+      if (loadTimeoutRef.current) {
+        clearTimeout(loadTimeoutRef.current);
+      }
+    };
+  }, [open]);
 
   // Check scroll buttons when stories load
   useEffect(() => {

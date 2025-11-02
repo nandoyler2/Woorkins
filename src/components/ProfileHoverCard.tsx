@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -18,7 +18,13 @@ interface ProfileHoverCardProps {
   side?: 'top' | 'right' | 'bottom' | 'left';
 }
 
-export function ProfileHoverCard({ profileId, children, side = 'top' }: ProfileHoverCardProps) {
+export interface ProfileHoverCardRef {
+  openCard: () => void;
+  closeCard: () => void;
+}
+
+export const ProfileHoverCard = forwardRef<ProfileHoverCardRef, ProfileHoverCardProps>(
+  ({ profileId, children, side = 'top' }, ref) => {
   const [open, setOpen] = useState(false);
   const [shouldLoad, setShouldLoad] = useState(false);
   const [showStoriesViewer, setShowStoriesViewer] = useState(false);
@@ -28,6 +34,15 @@ export function ProfileHoverCard({ profileId, children, side = 'top' }: ProfileH
   const loadTimeoutRef = useRef<NodeJS.Timeout>();
   const { user } = useAuth();
   const { data, loading, error } = useProfileHoverData(profileId, shouldLoad);
+
+  // Expor métodos para controle externo
+  useImperativeHandle(ref, () => ({
+    openCard: () => {
+      setOpen(true);
+      setShouldLoad(true);
+    },
+    closeCard: () => setOpen(false),
+  }));
 
   // Gerenciar carregamento com delay
   useEffect(() => {
@@ -303,4 +318,6 @@ export function ProfileHoverCard({ profileId, children, side = 'top' }: ProfileH
       )}
     </HoverCard>
   );
-}
+});
+
+ProfileHoverCard.displayName = 'ProfileHoverCard';

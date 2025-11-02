@@ -1,5 +1,5 @@
-import { useNavigate } from 'react-router-dom';
-import { ProfileHoverCard } from '@/components/ProfileHoverCard';
+import { useRef } from 'react';
+import { ProfileHoverCard, ProfileHoverCardRef } from '@/components/ProfileHoverCard';
 import { StoryIndicator } from '@/components/stories/StoryIndicator';
 
 interface ProfileAvatarWithHoverProps {
@@ -28,25 +28,27 @@ export function ProfileAvatarWithHover({
   hoverCardSide = 'top',
   onClick,
 }: ProfileAvatarWithHoverProps) {
-  const navigate = useNavigate();
+  const hoverCardRef = useRef<ProfileHoverCardRef>(null);
 
-  const handleClick = () => {
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     if (onClick) {
       onClick();
-    } else if (username) {
-      navigate(`/${username}`);
+    } else {
+      hoverCardRef.current?.openCard();
     }
   };
 
   return (
-    <ProfileHoverCard profileId={profileId} side={hoverCardSide}>
+    <ProfileHoverCard ref={hoverCardRef} profileId={profileId} side={hoverCardSide}>
       <div className={`inline-block ${className}`}>
         <StoryIndicator
           profileId={profileId}
           avatarUrl={avatarUrl}
           username={username}
           size={sizeMap[size]}
-          onClick={handleClick}
+          onClick={() => handleClick({} as React.MouseEvent)}
         />
       </div>
     </ProfileHoverCard>

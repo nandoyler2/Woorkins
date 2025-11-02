@@ -1,6 +1,6 @@
-import { useNavigate } from 'react-router-dom';
+import { useRef } from 'react';
 import { StoryIndicator } from '@/components/stories/StoryIndicator';
-import { ProfileHoverCard } from '@/components/ProfileHoverCard';
+import { ProfileHoverCard, ProfileHoverCardRef } from '@/components/ProfileHoverCard';
 import { formatShortName } from '@/lib/utils';
 
 interface ClickableProfileProps {
@@ -26,18 +26,18 @@ export function ClickableProfile({
   className = '',
   nameClassName = '',
 }: ClickableProfileProps) {
-  const navigate = useNavigate();
+  const hoverCardRef = useRef<ProfileHoverCardRef>(null);
 
-  const handleClick = () => {
-    if (username) {
-      navigate(`/${username}`);
-    }
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    hoverCardRef.current?.openCard();
   };
 
   const displayName = formatShortName(fullName) || username || 'Usuário';
 
   return (
-    <ProfileHoverCard profileId={profileId}>
+    <ProfileHoverCard ref={hoverCardRef} profileId={profileId}>
       <div
         className={`flex items-center gap-2 cursor-pointer ${className}`}
         onClick={handleClick}
@@ -48,7 +48,7 @@ export function ClickableProfile({
             username={username}
             avatarUrl={avatarUrl}
             size={avatarSize}
-            onClick={handleClick}
+            onClick={() => handleClick({} as React.MouseEvent)}
           />
         )}
         {showName && (

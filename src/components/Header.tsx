@@ -97,12 +97,16 @@ export const Header = () => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
       
-      // Mostrar header quando rolar para cima ou estiver no topo
-      if (currentScrollY < lastScrollY || currentScrollY < 10) {
+      // Sempre mostrar quando estiver no topo da página
+      if (currentScrollY < 100) {
+        setIsVisible(true);
+      }
+      // Mostrar header quando rolar para cima
+      else if (currentScrollY < lastScrollY) {
         setIsVisible(true);
       } 
-      // Esconder header quando rolar para baixo (após 10px)
-      else if (currentScrollY > lastScrollY && currentScrollY > 80) {
+      // Esconder header quando rolar para baixo
+      else if (currentScrollY > lastScrollY && currentScrollY > 100) {
         setIsVisible(false);
       }
       

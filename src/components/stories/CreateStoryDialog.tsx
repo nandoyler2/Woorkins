@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { ImageCropDialog } from '@/components/ImageCropDialog';
 import { useUpload } from '@/contexts/UploadContext';
 import { formatShortName } from '@/lib/utils';
+import { StoryStickers, Sticker } from '@/components/stories/StoryStickers';
 
 interface Profile {
   id: string;
@@ -52,8 +53,9 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
   const [textBold, setTextBold] = useState(false);
   const [textItalic, setTextItalic] = useState(false);
   const [showCropDialog, setShowCropDialog] = useState(false);
-  const [cropData, setCropData] = useState<any>(null); // Dados do último crop
+  const [cropData, setCropData] = useState<any>(null);
   const [isPublishing, setIsPublishing] = useState(false);
+  const [stickers, setStickers] = useState<Sticker[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { toast } = useToast();
@@ -285,7 +287,20 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
     setType('image');
     setTextBold(false);
     setTextItalic(false);
+    setStickers([]);
     onClose();
+  };
+
+  const handleAddSticker = (sticker: Omit<Sticker, 'id'>) => {
+    const newSticker = {
+      ...sticker,
+      id: `sticker-${Date.now()}-${Math.random()}`
+    };
+    setStickers(prev => [...prev, newSticker]);
+  };
+
+  const handleRemoveSticker = (id: string) => {
+    setStickers(prev => prev.filter(s => s.id !== id));
   };
 
   return (
@@ -440,6 +455,21 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
                             {textContent.length}/300 caracteres
                           </p>
                         </div>
+
+                        {/* Stickers interativos */}
+                        <div className="space-y-2 bg-muted/30 p-3 rounded-lg">
+                          <Label className="text-sm font-semibold">Adicionar figurinhas interativas:</Label>
+                          <StoryStickers
+                            stickers={stickers}
+                            onAddSticker={handleAddSticker}
+                            onRemoveSticker={handleRemoveSticker}
+                          />
+                          {stickers.length > 0 && (
+                            <p className="text-xs text-muted-foreground mt-2">
+                              {stickers.length} {stickers.length === 1 ? 'figurinha adicionada' : 'figurinhas adicionadas'}
+                            </p>
+                          )}
+                        </div>
                       </div>
                     ) : (
                       <div className="space-y-4">
@@ -515,6 +545,23 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
                                 }}
                               />
                             </label>
+                          </div>
+                        )}
+
+                        {/* Stickers interativos para mídia */}
+                        {mediaPreview && (
+                          <div className="space-y-2 bg-muted/30 p-3 rounded-lg">
+                            <Label className="text-sm font-semibold">Adicionar figurinhas interativas:</Label>
+                            <StoryStickers
+                              stickers={stickers}
+                              onAddSticker={handleAddSticker}
+                              onRemoveSticker={handleRemoveSticker}
+                            />
+                            {stickers.length > 0 && (
+                              <p className="text-xs text-muted-foreground mt-2">
+                                {stickers.length} {stickers.length === 1 ? 'figurinha adicionada' : 'figurinhas adicionadas'}
+                              </p>
+                            )}
                           </div>
                         )}
                       </div>

@@ -261,17 +261,63 @@ export function UploadProvider({ children }: { children: ReactNode }) {
 
       // Salvar stickers se houver
       if (data.stickers && data.stickers.length > 0 && insertData?.id) {
-        const stickersToInsert = data.stickers.map(sticker => ({
-          story_id: insertData.id,
-          type: sticker.type,
-          position_x: sticker.position_x,
-          position_y: sticker.position_y,
-          width: sticker.width,
-          height: sticker.height,
-          rotation: sticker.rotation,
-          content: sticker.content,
-          scale: sticker.scale || 1
-        }));
+        const stickersToInsert = await Promise.all(
+          data.stickers.map(async (sticker) => {
+            let content = sticker.content;
+            
+            // Se for sticker de imagem, fazer upload da imagem
+            if (sticker.type === 'image' && sticker.content.imageUrl) {
+              try {
+                const imageUrl = sticker.content.imageUrl;
+                
+                // Converter blob URL para arquivo
+                const response = await fetch(imageUrl);
+                const blob = await response.blob();
+                
+                // Upload para storage
+                const fileExt = blob.type.split('/')[1] || 'png';
+                const stickerFileName = `${data.profileId}/sticker-${insertData.id}-${Date.now()}.${fileExt}`;
+                
+                const { error: uploadError } = await supabase.storage
+                  .from('stories')
+                  .upload(stickerFileName, blob, {
+                    contentType: blob.type,
+                    cacheControl: '31536000'
+                  });
+                
+                if (uploadError) {
+                  console.error('Error uploading sticker image:', uploadError);
+                } else {
+                  // Obter URL pública
+                  const { data: { publicUrl } } = supabase.storage
+                    .from('stories')
+                    .getPublicUrl(stickerFileName);
+                  
+                  // Substituir imageUrl temporária pela permanente
+                  content = {
+                    ...sticker.content,
+                    imageUrl: publicUrl
+                  };
+                }
+              } catch (error) {
+                console.error('Error processing sticker image:', error);
+                // Continua com a URL original se falhar
+              }
+            }
+            
+            return {
+              story_id: insertData.id,
+              type: sticker.type,
+              position_x: sticker.position_x,
+              position_y: sticker.position_y,
+              width: sticker.width,
+              height: sticker.height,
+              rotation: sticker.rotation,
+              content: content,
+              scale: sticker.scale || 1
+            };
+          })
+        );
 
         const { error: stickersError } = await supabase
           .from('story_stickers')

@@ -22,7 +22,6 @@ export function StoryIndicator({
   className = '',
 }: StoryIndicatorProps) {
   const [hasActiveStories, setHasActiveStories] = useState(false);
-  const [latestStoryPreview, setLatestStoryPreview] = useState<string | null>(null);
 
   const sizeClasses = {
     xs: 'w-6 h-6',
@@ -32,10 +31,10 @@ export function StoryIndicator({
   };
 
   const paddingClasses = {
-    xs: 'p-[1px]',
-    sm: 'p-0.5',
+    xs: 'p-[2px]',
+    sm: 'p-[2px]',
     md: 'p-[3px]',
-    lg: 'p-1',
+    lg: 'p-[4px]',
   };
 
   useEffect(() => {
@@ -65,22 +64,13 @@ export function StoryIndicator({
 
   const checkActiveStories = async () => {
     try {
-      const { data, count } = await supabase
+      const { count } = await supabase
         .from('profile_stories')
-        .select('media_url, thumbnail_url, type', { count: 'exact' })
+        .select('id', { count: 'exact', head: true })
         .eq('profile_id', profileId)
-        .gt('expires_at', new Date().toISOString())
-        .order('created_at', { ascending: false })
-        .limit(1);
+        .gt('expires_at', new Date().toISOString());
 
       setHasActiveStories((count || 0) > 0);
-      
-      // Usar thumbnail otimizada como preview, ou fallback para media_url
-      if (data && data.length > 0 && (data[0].type === 'image' || data[0].type === 'video')) {
-        setLatestStoryPreview(data[0].thumbnail_url || data[0].media_url);
-      } else {
-        setLatestStoryPreview(null);
-      }
     } catch (error) {
       console.error('Error checking stories:', error);
     }
@@ -98,13 +88,7 @@ export function StoryIndicator({
     >
       <div className="w-full h-full bg-background rounded-full p-[2px]">
         <Avatar className="w-full h-full">
-          {latestStoryPreview && hasActiveStories ? (
-            <SafeImage
-              src={latestStoryPreview}
-              alt={username || 'Story preview'}
-              className="w-full h-full object-cover"
-            />
-          ) : avatarUrl ? (
+          {avatarUrl ? (
             <SafeImage
               src={avatarUrl}
               alt={username || 'Avatar'}

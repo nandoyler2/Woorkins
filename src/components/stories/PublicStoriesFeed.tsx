@@ -23,6 +23,12 @@ interface PublicStory {
   comment_count: number;
   original_story_id?: string | null;
   original_profile_id?: string | null;
+  text_position_x?: number | null;
+  text_position_y?: number | null;
+  text_scale?: number | null;
+  media_position_x?: number | null;
+  media_position_y?: number | null;
+  media_scale?: number | null;
   metadata?: {
     text_bold?: boolean;
     text_italic?: boolean;
@@ -168,6 +174,12 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
           updated_at,
           original_story_id,
           original_profile_id,
+          text_position_x,
+          text_position_y,
+          text_scale,
+          media_position_x,
+          media_position_y,
+          media_scale,
           profiles!profile_stories_profile_id_fkey(
             id,
             username,
@@ -208,6 +220,12 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
           comment_count: commentCount,
           original_story_id: story.original_story_id,
           original_profile_id: story.original_profile_id,
+          text_position_x: story.text_position_x,
+          text_position_y: story.text_position_y,
+          text_scale: story.text_scale,
+          media_position_x: story.media_position_x,
+          media_position_y: story.media_position_y,
+          media_scale: story.media_scale,
           profiles: story.profiles,
           original_profile: story.original_profile,
           story_stickers: (story as any).story_stickers || []
@@ -476,33 +494,68 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
                     <div className="relative w-[65%] rounded-xl overflow-hidden shadow-2xl border border-white/20" style={{ aspectRatio: "9/16" }}>
                       {story.type === 'text' ? (
                         <div 
-                          className="w-full h-full flex items-center justify-center p-3"
+                          className="w-full h-full relative"
                           style={{ background: story.background_color || 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}
                         >
-                          <p 
-                            className={`text-white text-center text-[10px] break-words line-clamp-4 ${
-                              (story as any).metadata?.text_bold ? 'font-bold' : 'font-medium'
-                            } ${
-                              (story as any).metadata?.text_italic ? 'italic' : ''
-                            }`}
+                          <div
+                            className="absolute"
+                            style={{
+                              left: `${story.text_position_x || 50}%`,
+                              top: `${story.text_position_y || 50}%`,
+                              transform: `translate(-50%, -50%) scale(${(story.text_scale || 1) * 0.4})`,
+                            }}
                           >
-                            {story.text_content}
-                          </p>
+                            <p 
+                              className={`text-white text-center text-[10px] break-words ${
+                                (story as any).metadata?.text_bold ? 'font-bold' : 'font-medium'
+                              } ${
+                                (story as any).metadata?.text_italic ? 'italic' : ''
+                              }`}
+                            >
+                              {story.text_content}
+                            </p>
+                          </div>
                         </div>
                       ) : story.type === 'video' && videoSrc ? (
-                        <video
-                          src={videoSrc}
-                          className="w-full h-full object-cover"
-                          preload="metadata"
-                          muted
-                          playsInline
-                        />
+                        <div className="w-full h-full relative bg-black flex items-center justify-center">
+                          <div
+                            className="absolute"
+                            style={{
+                              left: `${story.media_position_x || 50}%`,
+                              top: `${story.media_position_y || 50}%`,
+                              transform: `translate(-50%, -50%) scale(${(story.media_scale || 1) * 0.5})`,
+                              maxWidth: '100%',
+                              maxHeight: '100%',
+                            }}
+                          >
+                            <video
+                              src={videoSrc}
+                              className="max-w-full max-h-full object-contain"
+                              preload="metadata"
+                              muted
+                              playsInline
+                            />
+                          </div>
+                        </div>
                       ) : (
-                        <SafeImage
-                          src={displayImage}
-                          alt="Story original"
-                          className="w-full h-full object-cover"
-                        />
+                        <div className="w-full h-full relative bg-black flex items-center justify-center">
+                          <div
+                            className="absolute"
+                            style={{
+                              left: `${story.media_position_x || 50}%`,
+                              top: `${story.media_position_y || 50}%`,
+                              transform: `translate(-50%, -50%) scale(${(story.media_scale || 1) * 0.5})`,
+                              maxWidth: '100%',
+                              maxHeight: '100%',
+                            }}
+                          >
+                            <SafeImage
+                              src={displayImage}
+                              alt="Story original"
+                              className="max-w-full max-h-full object-contain block"
+                            />
+                          </div>
+                        </div>
                       )}
 
                       {/* Renderizar stickers na miniatura do repost com escala proporcional */}
@@ -538,12 +591,20 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
                   </div>
                 ) : (
                     <>
-                      {/* Story normal */}
-                      <div className="relative w-full h-full">
-                        {story.type === 'text' ? (
-                          <div 
-                            className="w-full h-full flex items-center justify-center p-6"
-                            style={{ background: story.background_color || 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}
+                    {/* Story normal */}
+                    <div className="relative w-full h-full">
+                      {story.type === 'text' ? (
+                        <div 
+                          className="w-full h-full relative"
+                          style={{ background: story.background_color || 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}
+                        >
+                          <div
+                            className="absolute"
+                            style={{
+                              left: `${story.text_position_x || 50}%`,
+                              top: `${story.text_position_y || 50}%`,
+                              transform: `translate(-50%, -50%) scale(${(story.text_scale || 1) * 0.6})`,
+                            }}
                           >
                             <p 
                               className={`text-white text-center text-lg break-words ${
@@ -555,20 +616,47 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
                               {story.text_content}
                             </p>
                           </div>
-                        ) : story.type === 'video' && videoSrc ? (
-                          <video
-                            src={videoSrc}
-                            className="w-full h-full object-cover"
-                            preload="metadata"
-                            muted
-                            playsInline
-                          />
+                        </div>
+                      ) : story.type === 'video' && videoSrc ? (
+                          <div className="w-full h-full relative bg-black flex items-center justify-center">
+                            <div
+                              className="absolute"
+                              style={{
+                                left: `${story.media_position_x || 50}%`,
+                                top: `${story.media_position_y || 50}%`,
+                                transform: `translate(-50%, -50%) scale(${(story.media_scale || 1) * 0.8})`,
+                                maxWidth: '100%',
+                                maxHeight: '100%',
+                              }}
+                            >
+                              <video
+                                src={videoSrc}
+                                className="max-w-full max-h-full object-contain"
+                                preload="metadata"
+                                muted
+                                playsInline
+                              />
+                            </div>
+                          </div>
                         ) : (
-                          <SafeImage
-                            src={displayImage}
-                            alt="Story"
-                            className="w-full h-full object-cover"
-                          />
+                          <div className="w-full h-full relative bg-black flex items-center justify-center">
+                            <div
+                              className="absolute"
+                              style={{
+                                left: `${story.media_position_x || 50}%`,
+                                top: `${story.media_position_y || 50}%`,
+                                transform: `translate(-50%, -50%) scale(${(story.media_scale || 1) * 0.8})`,
+                                maxWidth: '100%',
+                                maxHeight: '100%',
+                              }}
+                            >
+                              <SafeImage
+                                src={displayImage}
+                                alt="Story"
+                                className="max-w-full max-h-full object-contain block"
+                              />
+                            </div>
+                          </div>
                         )}
 
                         {/* Renderizar stickers na miniatura com escala proporcional */}

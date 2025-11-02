@@ -264,6 +264,10 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
       mediaFile: finalMediaFile || undefined,
       textContent: type === 'text' ? textContent : undefined,
       backgroundColor: type === 'text' ? backgroundColor : undefined,
+      textPosition: type === 'text' ? textPosition : undefined,
+      textScale: type === 'text' ? textScale : undefined,
+      mediaPosition: type !== 'text' ? mediaPosition : undefined,
+      mediaScale: type !== 'text' ? mediaScale : undefined,
       metadata,
       stickers: stickers.map(s => ({
         type: s.type,

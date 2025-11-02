@@ -1589,12 +1589,18 @@ export type Database = {
           id: string
           like_count: number | null
           link_url: string | null
+          media_position_x: number | null
+          media_position_y: number | null
+          media_scale: number | null
           media_url: string | null
           original_profile_id: string | null
           original_story_id: string | null
           profile_id: string
           text_content: string | null
           text_formatting: Json | null
+          text_position_x: number | null
+          text_position_y: number | null
+          text_scale: number | null
           thumbnail_url: string | null
           type: string
           updated_at: string | null
@@ -1607,12 +1613,18 @@ export type Database = {
           id?: string
           like_count?: number | null
           link_url?: string | null
+          media_position_x?: number | null
+          media_position_y?: number | null
+          media_scale?: number | null
           media_url?: string | null
           original_profile_id?: string | null
           original_story_id?: string | null
           profile_id: string
           text_content?: string | null
           text_formatting?: Json | null
+          text_position_x?: number | null
+          text_position_y?: number | null
+          text_scale?: number | null
           thumbnail_url?: string | null
           type: string
           updated_at?: string | null
@@ -1625,12 +1637,18 @@ export type Database = {
           id?: string
           like_count?: number | null
           link_url?: string | null
+          media_position_x?: number | null
+          media_position_y?: number | null
+          media_scale?: number | null
           media_url?: string | null
           original_profile_id?: string | null
           original_story_id?: string | null
           profile_id?: string
           text_content?: string | null
           text_formatting?: Json | null
+          text_position_x?: number | null
+          text_position_y?: number | null
+          text_scale?: number | null
           thumbnail_url?: string | null
           type?: string
           updated_at?: string | null

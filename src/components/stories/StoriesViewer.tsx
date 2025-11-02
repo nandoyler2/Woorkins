@@ -37,6 +37,12 @@ interface Story {
   view_count: number;
   original_story_id?: string | null;
   original_profile_id?: string | null;
+  text_position_x?: number | null;
+  text_position_y?: number | null;
+  text_scale?: number | null;
+  media_position_x?: number | null;
+  media_position_y?: number | null;
+  media_scale?: number | null;
   stickers?: Sticker[];
   metadata?: {
     text_bold?: boolean;
@@ -818,34 +824,80 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
                       <>
                         {/* Story content normal (não é repost) */}
                         {currentStory.type === 'image' && currentStory.media_url && (
-                          <SafeImage
-                            src={currentStory.media_url}
-                            alt="Story"
-                            className="w-full h-full object-contain transition-opacity duration-300"
-                            style={{ opacity: mediaLoading ? 0 : 1 }}
-                            onLoadStart={() => setMediaLoading(true)}
-                            onLoad={() => setMediaLoading(false)}
-                            onError={() => setMediaLoading(false)}
-                          />
+                          <div 
+                            className="w-full h-full relative bg-black"
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center'
+                            }}
+                          >
+                            <div
+                              className="absolute"
+                              style={{
+                                left: `${currentStory.media_position_x || 50}%`,
+                                top: `${currentStory.media_position_y || 50}%`,
+                                transform: `translate(-50%, -50%) scale(${currentStory.media_scale || 1})`,
+                                maxWidth: '100%',
+                                maxHeight: '100%',
+                              }}
+                            >
+                              <SafeImage
+                                src={currentStory.media_url}
+                                alt="Story"
+                                className="max-w-full max-h-full object-contain transition-opacity duration-300"
+                                style={{ 
+                                  opacity: mediaLoading ? 0 : 1,
+                                  display: 'block'
+                                }}
+                                onLoadStart={() => setMediaLoading(true)}
+                                onLoad={() => setMediaLoading(false)}
+                                onError={() => setMediaLoading(false)}
+                              />
+                            </div>
+                          </div>
                         )}
 
                         {currentStory.type === 'video' && currentStory.media_url && (
-                          <video
-                            ref={videoRef}
-                            src={`${currentStory.media_url}#t=5`}
-                            autoPlay
-                            muted={isMuted}
-                            onLoadedMetadata={() => {
-                              if (videoRef.current) {
-                                videoRef.current.volume = volume;
-                              }
+                          <div 
+                            className="w-full h-full relative bg-black"
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center'
                             }}
-                            onLoadStart={() => setMediaLoading(true)}
-                            onLoadedData={() => setMediaLoading(false)}
-                            onError={() => setMediaLoading(false)}
-                            className="w-full h-full object-contain transition-opacity duration-300"
-                            style={{ opacity: mediaLoading ? 0 : 1 }}
-                          />
+                          >
+                            <div
+                              className="absolute"
+                              style={{
+                                left: `${currentStory.media_position_x || 50}%`,
+                                top: `${currentStory.media_position_y || 50}%`,
+                                transform: `translate(-50%, -50%) scale(${currentStory.media_scale || 1})`,
+                                maxWidth: '100%',
+                                maxHeight: '100%',
+                              }}
+                            >
+                              <video
+                                ref={videoRef}
+                                src={`${currentStory.media_url}#t=5`}
+                                autoPlay
+                                muted={isMuted}
+                                onLoadedMetadata={() => {
+                                  if (videoRef.current) {
+                                    videoRef.current.volume = volume;
+                                  }
+                                }}
+                                onLoadStart={() => setMediaLoading(true)}
+                                onLoadedData={() => setMediaLoading(false)}
+                                onError={() => setMediaLoading(false)}
+                                className="max-w-full max-h-full object-contain transition-opacity duration-300"
+                                style={{ 
+                                  opacity: mediaLoading ? 0 : 1,
+                                  display: 'block'
+                                }}
+                              />
+                            </div>
+                          </div>
                         )}
 
                         {currentStory.type === 'text' && (

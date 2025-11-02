@@ -26,6 +26,10 @@ interface StoryUploadData {
   backgroundColor?: string;
   linkUrl?: string;
   metadata?: any;
+  textPosition?: { x: number; y: number };
+  textScale?: number;
+  mediaPosition?: { x: number; y: number };
+  mediaScale?: number;
   stickers?: Array<{
     type: string;
     position_x: number;
@@ -227,6 +231,12 @@ export function UploadProvider({ children }: { children: ReactNode }) {
         text_content: data.type === 'text' ? data.textContent : null,
         background_color: data.type === 'text' ? data.backgroundColor : null,
         link_url: data.linkUrl || null,
+        text_position_x: data.textPosition?.x,
+        text_position_y: data.textPosition?.y,
+        text_scale: data.textScale,
+        media_position_x: data.mediaPosition?.x,
+        media_position_y: data.mediaPosition?.y,
+        media_scale: data.mediaScale,
       };
 
       if (data.metadata) {

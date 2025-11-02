@@ -372,7 +372,7 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
                               <Sparkles className="w-3 h-3" />
                               Ganhe mais:
                             </p>
-                            <div className="space-y-1">
+                            <div className="space-y-0.5">
                               <div className="flex items-center justify-between p-1.5 bg-white/60 dark:bg-black/20 rounded text-[10px]">
                                 <span className="font-medium text-gray-600 dark:text-gray-400">Pro</span>
                                 <span className="font-bold text-blue-700 dark:text-blue-400">

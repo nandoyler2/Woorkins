@@ -2695,6 +2695,7 @@ export type Database = {
           position_x: number
           position_y: number
           rotation: number | null
+          scale: number | null
           story_id: string
           type: string
           width: number | null
@@ -2707,6 +2708,7 @@ export type Database = {
           position_x: number
           position_y: number
           rotation?: number | null
+          scale?: number | null
           story_id: string
           type: string
           width?: number | null
@@ -2719,6 +2721,7 @@ export type Database = {
           position_x?: number
           position_y?: number
           rotation?: number | null
+          scale?: number | null
           story_id?: string
           type?: string
           width?: number | null

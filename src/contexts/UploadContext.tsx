@@ -34,6 +34,7 @@ interface StoryUploadData {
     height: number;
     rotation: number;
     content: any;
+    scale?: number;
   }>;
 }
 

@@ -145,13 +145,13 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[650px] p-0 overflow-hidden">
         {success ? (
-          <div className="flex flex-col items-center justify-center py-12 px-6 space-y-5 text-center bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 dark:from-green-950 dark:via-emerald-950 dark:to-teal-950 animate-fade-in">
+          <div className="flex flex-col items-center justify-center py-12 px-6 space-y-5 text-center bg-gradient-to-br from-accent/10 via-secondary/10 to-primary/10 animate-fade-in">
             <div className="relative">
-              <div className="absolute inset-0 bg-green-400 rounded-full blur-xl opacity-30 animate-pulse"></div>
-              <CheckCircle2 className="w-20 h-20 text-green-500 relative animate-scale-in" />
+              <div className="absolute inset-0 bg-accent rounded-full blur-xl opacity-30 animate-pulse"></div>
+              <CheckCircle2 className="w-20 h-20 text-accent relative animate-scale-in" />
             </div>
             <div className="space-y-2">
-              <h3 className="text-2xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+              <h3 className="text-2xl font-bold bg-gradient-to-r from-accent to-secondary bg-clip-text text-transparent">
                 Proposta enviada com sucesso!
               </h3>
               <p className="text-muted-foreground max-w-md">
@@ -161,7 +161,7 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
             </div>
             <Button 
               onClick={() => onOpenChange(false)} 
-              className="mt-4 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
+              className="mt-4 bg-gradient-to-r from-accent to-secondary hover:from-accent/90 hover:to-secondary/90"
               size="lg"
             >
               <Sparkles className="w-4 h-4 mr-2" />
@@ -171,7 +171,7 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
         ) : (
           <>
             {/* Header com gradiente */}
-            <div className="bg-gradient-to-br from-primary/10 via-purple-500/10 to-pink-500/10 p-6 border-b">
+            <div className="bg-gradient-to-br from-primary/10 via-secondary/10 to-accent/10 p-6 border-b">
               <DialogHeader className="space-y-4">
                 {/* User Info */}
                 <div className="flex items-center gap-3 bg-background/80 backdrop-blur-sm rounded-lg p-3 shadow-sm">
@@ -186,7 +186,7 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
                     <p className="font-semibold flex items-center gap-2">
                       Enviando como {userProfile?.full_name || "Usuário"}
                     </p>
-                    <Badge variant="secondary" className="mt-1 bg-gradient-to-r from-purple-500/10 to-pink-500/10">
+                    <Badge variant="secondary" className="mt-1 bg-gradient-to-r from-secondary/20 to-accent/20">
                       <Sparkles className="w-3 h-3 mr-1" />
                       Freelancer nível {userProfile?.freelancer_level || 1}
                     </Badge>
@@ -198,11 +198,11 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
                   <h3 className="font-bold text-lg leading-tight">{projectTitle}</h3>
                   <div className="flex flex-wrap items-center gap-3 text-sm">
                     <div className="flex items-center gap-1.5 text-muted-foreground bg-background/50 px-3 py-1.5 rounded-full">
-                      <Clock className="w-3.5 h-3.5 text-blue-500" />
+                      <Clock className="w-3.5 h-3.5 text-primary" />
                       <span>{formatTimeAgo(projectCreatedAt)}</span>
                     </div>
                     <div className="flex items-center gap-1.5 text-muted-foreground bg-background/50 px-3 py-1.5 rounded-full">
-                      <FileText className="w-3.5 h-3.5 text-purple-500" />
+                      <FileText className="w-3.5 h-3.5 text-secondary" />
                       <span>{proposalsCount || 0} {proposalsCount === 1 ? 'proposta' : 'propostas'}</span>
                     </div>
                   </div>
@@ -214,7 +214,7 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="amount" className="flex items-center gap-2 text-sm font-semibold">
-                    <DollarSign className="w-4 h-4 text-green-500" />
+                    <DollarSign className="w-4 h-4 text-accent" />
                     Valor da Proposta (R$) *
                   </Label>
                   <Input
@@ -225,13 +225,13 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
                     required
-                    className="border-2 focus:border-green-500 transition-colors"
+                    className="border-2 focus:border-accent transition-colors"
                   />
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="deliveryTime" className="flex items-center gap-2 text-sm font-semibold">
-                    <Calendar className="w-4 h-4 text-blue-500" />
+                    <Calendar className="w-4 h-4 text-primary" />
                     Prazo de Entrega (dias) *
                   </Label>
                   <Input
@@ -241,14 +241,14 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
                     value={deliveryTime}
                     onChange={(e) => setDeliveryTime(e.target.value)}
                     required
-                    className="border-2 focus:border-blue-500 transition-colors"
+                    className="border-2 focus:border-primary transition-colors"
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="message" className="flex items-center gap-2 text-sm font-semibold">
-                  <FileText className="w-4 h-4 text-purple-500" />
+                  <FileText className="w-4 h-4 text-secondary" />
                   Mensagem / Descrição da Proposta *
                 </Label>
                 <Textarea
@@ -258,7 +258,7 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
                   onChange={(e) => setMessage(e.target.value)}
                   rows={6}
                   required
-                  className="border-2 focus:border-purple-500 transition-colors resize-none"
+                  className="border-2 focus:border-secondary transition-colors resize-none"
                 />
               </div>
 
@@ -276,7 +276,7 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
                   type="submit" 
                   disabled={loading}
                   size="lg"
-                  className="bg-gradient-to-r from-primary to-purple-500 hover:from-primary/90 hover:to-purple-500/90 shadow-lg hover:shadow-xl transition-all"
+                  className="bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 shadow-lg hover:shadow-xl transition-all"
                 >
                   {loading ? (
                     <>

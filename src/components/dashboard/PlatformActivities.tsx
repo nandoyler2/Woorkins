@@ -105,32 +105,30 @@ export function PlatformActivities() {
       case 'project_published':
         return (
           <>
-            <span className="font-semibold">{shortName}</span> publicou o projeto{' '}
-            <span className="font-medium">{activity.metadata.project_title}</span>
+            {shortName} publicou o projeto {activity.metadata.project_title}
           </>
         );
       case 'story_published':
         return (
           <>
-            <span className="font-semibold">{shortName}</span> publicou um storie
+            {shortName} publicou um storie
           </>
         );
       case 'profile_followed':
         return (
           <>
-            <span className="font-semibold">{shortName}</span> seguiu{' '}
-            <span className="font-semibold">{formatShortName(activity.target_profile_name || '')}</span>
+            {shortName} seguiu {formatShortName(activity.target_profile_name || '')}
           </>
         );
       case 'proposal_sent':
         return (
           <>
-            <span className="font-semibold">{shortName}</span> enviou uma proposta de R${' '}
+            {shortName} enviou uma proposta de R${' '}
             {Number(activity.metadata.amount || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
           </>
         );
       default:
-        return <span className="font-semibold">{shortName}</span>;
+        return <>{shortName}</>;
     }
   };
 
@@ -191,9 +189,9 @@ export function PlatformActivities() {
                       <Icon className="w-4 h-4 text-white" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h4 className="text-sm font-semibold text-slate-900">
+                      <p className="text-sm text-slate-700">
                         {getActivityText(activity)}
-                      </h4>
+                      </p>
                       <p className="text-xs text-slate-500 mt-0.5">
                         {getTimeAgo(activity.created_at)}
                       </p>

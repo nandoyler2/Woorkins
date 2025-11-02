@@ -213,6 +213,14 @@ export function UploadProvider({ children }: { children: ReactNode }) {
 
       if (insertError) throw insertError;
 
+      // Adicionar story ao sessionStorage para aparecer primeiro para o criador
+      if (insertData?.id) {
+        const recentStories = sessionStorage.getItem('recentlyCreatedStories');
+        const currentStories = recentStories ? JSON.parse(recentStories) : [];
+        currentStories.push(insertData.id);
+        sessionStorage.setItem('recentlyCreatedStories', JSON.stringify(currentStories));
+      }
+
       // Salvar stickers se houver
       if (data.stickers && data.stickers.length > 0 && insertData?.id) {
         const stickersToInsert = data.stickers.map(sticker => ({

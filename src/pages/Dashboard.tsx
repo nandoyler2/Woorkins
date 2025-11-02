@@ -284,6 +284,10 @@ export default function Dashboard() {
   ];
   useEffect(() => {
     document.title = 'Painel - Woorkins';
+    
+    // Limpar stories recém-criados do sessionStorage ao entrar no dashboard
+    // Isso faz com que na próxima vez que entrar, os stories apareçam na ordem normal
+    sessionStorage.removeItem('recentlyCreatedStories');
   }, []);
 
   // Configurar callback para atualizar stories quando upload completar

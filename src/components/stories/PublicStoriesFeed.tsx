@@ -204,8 +204,21 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
         };
       }) as (PublicStory & { popularityScore: number })[];
 
-      // Ordenar por popularidade primeiro
-      processedStories.sort((a, b) => {
+      // Verificar stories recém-criados pelo usuário atual (apenas nesta sessão)
+      const recentlyCreatedIds = sessionStorage.getItem('recentlyCreatedStories');
+      const myRecentStories = recentlyCreatedIds ? JSON.parse(recentlyCreatedIds) : [];
+      const myRecentStoriesSet = new Set(myRecentStories);
+
+      // Separar stories do usuário que foram criados recentemente nesta sessão
+      const myRecentlyCreated = processedStories.filter(s => 
+        s.profile_id === currentProfileId && myRecentStoriesSet.has(s.id)
+      );
+      const otherStories = processedStories.filter(s => 
+        !(s.profile_id === currentProfileId && myRecentStoriesSet.has(s.id))
+      );
+
+      // Ordenar outros stories por popularidade
+      otherStories.sort((a, b) => {
         // Primeiro por score de popularidade
         if (b.popularityScore !== a.popularityScore) {
           return b.popularityScore - a.popularityScore;
@@ -216,7 +229,7 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
 
       // Intercalar stories de usuários diferentes quando possível
       const interleavedStories: typeof processedStories = [];
-      const remainingStories = [...processedStories];
+      const remainingStories = [...otherStories];
       let lastProfileId: string | null = null;
 
       while (remainingStories.length > 0) {
@@ -231,7 +244,15 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
         lastProfileId = selectedStory.profile_id;
       }
 
-      const newStories = interleavedStories.map(({ popularityScore, ...story }) => story) as PublicStory[];
+      // Stories recém-criados aparecem primeiro, depois os outros
+      const finalStories = [
+        ...myRecentlyCreated.sort((a, b) => 
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        ),
+        ...interleavedStories
+      ];
+
+      const newStories = finalStories.map(({ popularityScore, ...story }) => story) as PublicStory[];
       
       if (pageNum === 0) {
         // Remover duplicatas baseado no ID
@@ -254,7 +275,7 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
     } finally {
       setLoading(false);
     }
-  }, [STORIES_PER_PAGE]);
+  }, [STORIES_PER_PAGE, currentProfileId]);
 
   useEffect(() => {
     loadPublicStories(0);

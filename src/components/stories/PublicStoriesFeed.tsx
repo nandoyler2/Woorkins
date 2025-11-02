@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { SafeImage } from "@/components/ui/safe-image";
-import { Sparkles, Video, Image, FileText, Play, Heart, Plus } from "lucide-react";
+import { Sparkles, Video, Image, FileText, Play, Heart, Plus, Eye, Zap } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StoriesViewer } from "./StoriesViewer";
 import { CreateStoryDialog } from "./CreateStoryDialog";
@@ -193,10 +193,83 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
 
   if (stories.length === 0) {
     return (
-      <div className="text-center py-12">
-        <Sparkles className="w-12 h-12 mx-auto mb-3 text-muted-foreground/50" />
-        <p className="text-lg font-medium text-foreground">Nenhum story ativo no momento</p>
-        <p className="text-sm text-muted-foreground">Seja o primeiro a compartilhar um momento!</p>
+      <div className="max-w-2xl mx-auto px-4">
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-500 via-pink-500 to-orange-500 p-8 shadow-2xl">
+          {/* Padrão de fundo decorativo */}
+          <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.8),transparent_50%)]" />
+          
+          <div className="relative text-center text-white">
+            {/* Ícone animado */}
+            <div className="mb-6 flex justify-center">
+              <div className="bg-white/20 backdrop-blur-sm rounded-full p-6 animate-pulse">
+                <Sparkles className="w-16 h-16 text-white" />
+              </div>
+            </div>
+
+            {/* Título principal */}
+            <h2 className="text-3xl font-bold mb-3">
+              Compartilhe Seus Momentos!
+            </h2>
+            
+            {/* Subtítulo */}
+            <p className="text-white/90 text-lg mb-8">
+              Seja o primeiro a postar um story e inspirar a comunidade
+            </p>
+
+            {/* Lista de vantagens */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8 text-left">
+              <div className="flex items-start gap-3 bg-white/10 backdrop-blur-sm rounded-lg p-4">
+                <Sparkles className="w-5 h-5 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="font-semibold">Destaque na Comunidade</p>
+                  <p className="text-sm text-white/80">Apareça em primeiro lugar</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-3 bg-white/10 backdrop-blur-sm rounded-lg p-4">
+                <Eye className="w-5 h-5 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="font-semibold">Alcance Milhares</p>
+                  <p className="text-sm text-white/80">Conecte-se com todos</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-3 bg-white/10 backdrop-blur-sm rounded-lg p-4">
+                <Zap className="w-5 h-5 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="font-semibold">Conteúdo Efêmero</p>
+                  <p className="text-sm text-white/80">Desaparece em 24h</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-3 bg-white/10 backdrop-blur-sm rounded-lg p-4">
+                <Heart className="w-5 h-5 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="font-semibold">Interação Real</p>
+                  <p className="text-sm text-white/80">Curtidas em tempo real</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Botão de ação - só aparece se usuário logado */}
+            {userProfiles && userProfiles.length > 0 && (
+              <button
+                onClick={() => setIsCreateDialogOpen(true)}
+                className="bg-white text-purple-600 font-bold px-8 py-4 rounded-full text-lg shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200 inline-flex items-center gap-2"
+              >
+                <Plus className="w-6 h-6" />
+                Postar Meu Primeiro Story
+              </button>
+            )}
+            
+            {/* Mensagem se não estiver logado */}
+            {(!userProfiles || userProfiles.length === 0) && (
+              <p className="text-white/80 text-sm">
+                Faça login para começar a compartilhar seus momentos!
+              </p>
+            )}
+          </div>
+        </div>
       </div>
     );
   }

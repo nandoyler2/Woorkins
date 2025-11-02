@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { SafeImage } from "@/components/ui/safe-image";
-import { Sparkles, Video, Image, FileText, Play, Heart, Plus, Eye, Zap } from "lucide-react";
+import { Sparkles, Video, Image, FileText, Play, Heart, Plus, Eye, Zap, Repeat2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StoriesViewer } from "./StoriesViewer";
 import { CreateStoryDialog } from "./CreateStoryDialog";
@@ -366,10 +366,16 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
                   </div>
                 )}
                 
-                <div className="absolute top-3 right-3 bg-black/30 backdrop-blur-sm rounded-full p-2 shadow-lg">
-                  {story.type === 'video' && <Video className="w-4 h-4 text-white" />}
-                  {story.type === 'image' && <Image className="w-4 h-4 text-white" />}
-                  {story.type === 'text' && <FileText className="w-4 h-4 text-white" />}
+                <div className="absolute top-3 right-3 bg-black/30 backdrop-blur-sm rounded-full p-1.5 shadow-lg">
+                  {story.original_story_id ? (
+                    <Repeat2 className="w-3.5 h-3.5 text-white" />
+                  ) : (
+                    <>
+                      {story.type === 'video' && <Video className="w-3.5 h-3.5 text-white" />}
+                      {story.type === 'image' && <Image className="w-3.5 h-3.5 text-white" />}
+                      {story.type === 'text' && <FileText className="w-3.5 h-3.5 text-white" />}
+                    </>
+                  )}
                 </div>
                 
                 {story.type === 'video' && (

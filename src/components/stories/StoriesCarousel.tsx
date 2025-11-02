@@ -186,14 +186,14 @@ export function StoriesCarousel({ currentProfile, onCreateStory }: StoriesCarous
                       onCreateStory();
                     }
                   }}
-                  title={!currentProfile.avatar_url ? 'Adicione uma foto de perfil para criar stories' : 'Criar story'}
+                  title={!currentProfile.avatar_url ? 'Adicione uma foto de perfil para criar stories' : 'Criar storie'}
                 >
                   <Plus className="w-4 h-4" />
                 </div>
               )}
             </div>
             <span className="text-xs font-medium max-w-[80px] truncate">
-              {currentUserHasStories ? 'Seu story' : 'Adicionar'}
+              {currentUserHasStories ? 'Seu storie' : 'Adicionar'}
             </span>
           </div>
 

@@ -377,17 +377,27 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
         ref={scrollContainerRef}
         className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 pb-4"
       >
-        {/* Botão de Criar Story */}
+        {/* Botão de Criar Storie */}
         {dialogProfiles && dialogProfiles.length > 0 && (
           <div
             className="relative group cursor-pointer overflow-hidden rounded-xl transition-transform hover:scale-[1.02]"
             onClick={() => setIsCreateDialogOpen(true)}
           >
             <div className="relative w-full aspect-[9/16] bg-gradient-to-br from-purple-500 via-pink-500 to-orange-500 flex flex-col items-center justify-center gap-4">
-              <div className="bg-white/20 backdrop-blur-sm rounded-full p-6">
+              {/* Avatar do usuário como background */}
+              {dialogProfiles[0]?.avatar_url && (
+                <div className="absolute inset-0">
+                  <SafeImage
+                    src={dialogProfiles[0].avatar_url}
+                    alt="Avatar"
+                    className="w-full h-full object-cover opacity-20"
+                  />
+                </div>
+              )}
+              <div className="relative bg-white/20 backdrop-blur-sm rounded-full p-6">
                 <Plus className="w-12 h-12 text-white" />
               </div>
-              <p className="text-white font-bold text-lg text-center">Publicar Story</p>
+              <p className="relative text-white font-bold text-lg text-center">Publicar Storie</p>
             </div>
           </div>
         )}

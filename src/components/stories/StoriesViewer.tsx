@@ -329,8 +329,8 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
       if (dbError) throw dbError;
 
       toast({
-        title: 'Story excluído',
-        description: 'Seu story foi excluído com sucesso',
+        title: 'Storie excluído',
+        description: 'Seu storie foi excluído com sucesso',
       });
 
       // Remover da lista local
@@ -852,9 +852,9 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent className="z-[10000] max-w-sm">
           <AlertDialogHeader>
-            <AlertDialogTitle>Excluir story?</AlertDialogTitle>
+            <AlertDialogTitle>Excluir storie?</AlertDialogTitle>
             <AlertDialogDescription>
-              Esta ação não pode ser desfeita. Seu story será excluído permanentemente.
+              Esta ação não pode ser desfeita. Seu storie será excluído permanentemente.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

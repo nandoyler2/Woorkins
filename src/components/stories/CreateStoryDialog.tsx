@@ -280,9 +280,9 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
       onStoryCreated();
     } catch (error) {
       // Se for erro de moderação, mostrar no dialog
-      const errorMessage = error instanceof Error ? error.message : 'Erro ao publicar story';
+      const errorMessage = error instanceof Error ? error.message : 'Erro ao publicar storie';
       toast({
-        title: 'Story não publicado',
+        title: 'Storie não publicado',
         description: errorMessage,
         variant: 'destructive',
       });
@@ -361,7 +361,7 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
               {step === 'create' && (
                 <DialogHeader className="px-6 pt-6 pb-4 border-b bg-gradient-to-br from-background via-background to-muted/20 flex-shrink-0">
                   <DialogTitle className="text-3xl font-bold bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 bg-clip-text text-transparent">
-                    Criar Story
+                    Criar Storie
                   </DialogTitle>
                   <DialogDescription className="text-sm text-muted-foreground">Compartilhe um momento especial</DialogDescription>
                 </DialogHeader>
@@ -392,7 +392,7 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
 
                     {/* Pergunta inicial */}
                     <div className="text-center py-8">
-                      <h3 className="text-2xl font-bold mb-2 bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 bg-clip-text text-transparent">O que gostaria de publicar no seu story?</h3>
+                      <h3 className="text-2xl font-bold mb-2 bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 bg-clip-text text-transparent">O que gostaria de publicar no seu storie?</h3>
                       <p className="text-muted-foreground mb-8">Use o storie para postar conteúdos profissionais sobre você</p>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
@@ -699,7 +699,7 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
                       ) : (
                         <>
                           <Camera className="w-5 h-5 mr-2" />
-                          Publicar Story
+                          Publicar Storie
                         </>
                       )}
                     </Button>
@@ -885,7 +885,7 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
                       ) : (
                         <div className="w-full h-full bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center">
                           <p className="text-muted-foreground text-sm text-center px-4">
-                            Preview do seu story<br/>aparecerá aqui
+                            Preview do seu storie<br/>aparecerá aqui
                           </p>
                         </div>
                       )}

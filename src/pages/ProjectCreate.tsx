@@ -517,7 +517,7 @@ export default function ProjectCreate() {
                       </span>
                       <span className={cn(
                         "text-xs font-normal",
-                        description.length < 100 ? "text-red-600 dark:text-red-400" :
+                        description.length < 30 ? "text-red-600 dark:text-red-400" :
                         description.length > 2000 ? "text-red-600 dark:text-red-400" :
                         "text-muted-foreground"
                       )}>
@@ -597,9 +597,9 @@ export default function ProjectCreate() {
                       <p className="text-sm text-red-600 dark:text-red-400 font-medium animate-pulse">
                         ⚠️ Por favor, preencha a descrição do projeto
                       </p>
-                    ) : description.length < 100 ? (
+                    ) : description.length < 30 ? (
                       <p className="text-xs text-muted-foreground">
-                        Mínimo de 100 caracteres (faltam {100 - description.length})
+                        Mínimo de 30 caracteres (faltam {30 - description.length})
                       </p>
                     ) : (
                       <p className="text-sm text-muted-foreground">

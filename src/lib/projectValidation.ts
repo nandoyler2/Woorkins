@@ -161,8 +161,8 @@ export function validateProject(title: string, description: string): ValidationR
     errors.push('O título deve ter no máximo 80 caracteres.');
   }
   
-  if (description.trim().length < 100) {
-    errors.push('A descrição deve ter pelo menos 100 caracteres. Explique melhor o que você precisa.');
+  if (description.trim().length < 30) {
+    errors.push('A descrição deve ter pelo menos 30 caracteres. Explique melhor o que você precisa.');
   }
   
   if (description.trim().length > 2000) {

@@ -116,6 +116,7 @@ interface Notification {
 export default function Dashboard() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const { setOnStoryUploaded } = useUpload();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [businessProfiles, setBusinessProfiles] = useState<BusinessProfile[]>([]);
@@ -153,6 +154,7 @@ export default function Dashboard() {
   const [showCreateStoryDialog, setShowCreateStoryDialog] = useState(false);
   const [storiesRefreshTrigger, setStoriesRefreshTrigger] = useState(0);
   const [showStoryPhotoRequired, setShowStoryPhotoRequired] = useState(false);
+  const [newProjectsCount, setNewProjectsCount] = useState(0);
   
   // Statistics states
   const [evaluationsGiven, setEvaluationsGiven] = useState(0);
@@ -305,8 +307,26 @@ export default function Dashboard() {
     if (profile) {
       loadPendingInvites();
       loadLastUnreadMessage();
+      loadNewProjectsCount();
     }
   }, [profile?.id]); // Apenas quando o ID muda
+
+  const loadNewProjectsCount = async () => {
+    try {
+      const twentyFourHoursAgo = new Date();
+      twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
+
+      const { count, error } = await supabase
+        .from('projects')
+        .select('*', { count: 'exact', head: true })
+        .gte('created_at', twentyFourHoursAgo.toISOString());
+
+      if (error) throw error;
+      setNewProjectsCount(count || 0);
+    } catch (error) {
+      console.error('Error loading new projects count:', error);
+    }
+  };
 
   const loadPendingInvites = async () => {
     if (!profile) return;
@@ -1166,30 +1186,36 @@ export default function Dashboard() {
 
               <Card 
                 className="bg-gradient-to-br from-blue-500 to-blue-600 border-0 shadow-md hover:shadow-lg transition-all cursor-pointer group"
-                onClick={() => {
-                  loadAvailableProfiles();
-                  setShowEvaluateDialog(true);
-                }}
+                onClick={() => navigate('/projeto/criar')}
               >
                 <CardContent className="p-5">
                   <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                    <Star className="w-5 h-5 text-white" />
+                    <Briefcase className="w-5 h-5 text-white" />
                   </div>
-                  <h3 className="text-base font-bold text-white mb-0.5">Escrever Avaliação</h3>
-                  <p className="text-blue-100 text-xs">Compartilhe sua experiência</p>
+                  <h3 className="text-base font-bold text-white mb-0.5">Criar Projeto</h3>
+                  <p className="text-blue-100 text-xs">Publique um novo projeto</p>
                 </CardContent>
               </Card>
 
               <Card 
-                className="bg-gradient-to-br from-teal-500 to-teal-600 border-0 shadow-md hover:shadow-lg transition-all cursor-pointer group"
-                onClick={() => setShowSearchSlideIn(true)}
+                className="bg-gradient-to-br from-teal-500 to-teal-600 border-0 shadow-md hover:shadow-lg transition-all cursor-pointer group relative"
+                onClick={() => navigate('/projetos')}
               >
                 <CardContent className="p-5">
                   <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                     <Search className="w-5 h-5 text-white" />
                   </div>
-                  <h3 className="text-base font-bold text-white mb-0.5">Encontrar Serviços</h3>
-                  <p className="text-teal-100 text-xs">Descubra negócios</p>
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <h3 className="text-base font-bold text-white">Ver Projetos</h3>
+                    {newProjectsCount > 0 && (
+                      <Badge className="bg-orange-500 hover:bg-orange-600 text-white border-0 px-2 py-0 text-xs font-bold">
+                        {newProjectsCount}
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="text-teal-100 text-xs">
+                    {newProjectsCount > 0 ? `${newProjectsCount} novo${newProjectsCount > 1 ? 's' : ''} nas últimas 24h` : 'Descubra oportunidades'}
+                  </p>
                 </CardContent>
               </Card>
             </div>

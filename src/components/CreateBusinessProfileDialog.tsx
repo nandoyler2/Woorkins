@@ -98,12 +98,13 @@ export function CreateBusinessProfileDialog({ open, onOpenChange, onSuccess }: C
 
     setCheckingSlug(true);
     try {
-      // Verificar se existe como slug de outro business
+      // Verificar se existe como slug de outro business (excluindo perfis deletados)
       const { data: existingSlug, error: slugError } = await supabase
         .from('profiles')
         .select('slug')
         .eq('slug', slugToCheck)
         .eq('profile_type', 'business')
+        .neq('deleted', true) // Ignorar perfis excluídos
         .maybeSingle();
 
       if (slugError) throw slugError;
@@ -114,11 +115,12 @@ export function CreateBusinessProfileDialog({ open, onOpenChange, onSuccess }: C
         return;
       }
 
-      // Verificar se conflita com username de algum perfil user
+      // Verificar se conflita com username de algum perfil user (excluindo perfis deletados)
       const { data: existingUsername, error: usernameError } = await supabase
         .from('profiles')
         .select('username')
         .eq('username', slugToCheck)
+        .neq('deleted', true) // Ignorar perfis excluídos
         .maybeSingle();
 
       if (usernameError) throw usernameError;

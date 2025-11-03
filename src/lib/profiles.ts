@@ -45,23 +45,25 @@ export async function generateAvailableUsername(base: string): Promise<string> {
   // Se o base estiver vazio, usar fallback
   const finalBase = cleanBase || 'user';
 
-  // Verificar se não existe como username OU como slug de business
+  // Verificar se não existe como username OU como slug de business (ignorando perfis excluídos)
   const checkAvailability = async (candidate: string): Promise<boolean> => {
-    // Checar como username em qualquer perfil
+    // Checar como username em qualquer perfil (exceto excluídos)
     const { data: existingUsername } = await supabase
       .from('profiles')
       .select('username')
       .eq('username', candidate)
+      .neq('deleted', true) // Ignorar perfis excluídos
       .maybeSingle();
 
     if (existingUsername) return false;
 
-    // Checar se conflita com slug de algum business
+    // Checar se conflita com slug de algum business (exceto excluídos)
     const { data: existingSlug } = await supabase
       .from('profiles')
       .select('slug')
       .eq('slug', candidate)
       .eq('profile_type', 'business')
+      .neq('deleted', true) // Ignorar perfis excluídos
       .maybeSingle();
 
     return !existingSlug;

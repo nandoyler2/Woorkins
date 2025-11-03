@@ -581,91 +581,96 @@ export function CreateBusinessProfileDialog({ open, onOpenChange, onSuccess }: C
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Building2 className="w-5 h-5 text-primary" />
-            Criar Perfil Profissional
-          </DialogTitle>
-          <DialogDescription>
-            {currentStep === 'photo' && 'Comece com a foto e informações básicas'}
-            {currentStep === 'tools' && 'Escolha as ferramentas para o seu perfil'}
-            {currentStep === 'cover' && 'Adicione uma capa e informações adicionais'}
-            {currentStep === 'final' && 'Revise e finalize seu perfil'}
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className="sm:max-w-2xl p-0 gap-0">
+        <div className="sticky top-0 z-10 bg-background border-b px-6 pt-6 pb-4">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-xl">
+              <Building2 className="w-6 h-6 text-primary" />
+              Criar Perfil Profissional
+            </DialogTitle>
+            <DialogDescription className="text-sm mt-2">
+              {currentStep === 'photo' && 'Comece com a foto e informações básicas'}
+              {currentStep === 'tools' && 'Escolha as ferramentas para o seu perfil'}
+              {currentStep === 'cover' && 'Adicione uma capa e informações adicionais'}
+              {currentStep === 'final' && 'Revise e finalize seu perfil'}
+            </DialogDescription>
+          </DialogHeader>
+          <Progress value={getStepProgress()} className="h-2 mt-4" />
+        </div>
 
-        <div className="space-y-6 py-4">
-          <Progress value={getStepProgress()} className="h-2" />
-          
+        <div className="overflow-y-auto max-h-[60vh] px-6 py-4">
           {renderStepContent()}
         </div>
 
-        <div className="flex gap-3">
-          {currentStep !== 'photo' && (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleBack}
-              disabled={creating}
-            >
-              <ChevronLeft className="w-4 h-4 mr-2" />
-              Voltar
-            </Button>
-          )}
-          
-          {currentStep !== 'final' && currentStep !== 'photo' && (
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={handleSkip}
-              disabled={creating}
-            >
-              Pular
-            </Button>
-          )}
-          
-          {currentStep === 'photo' && (
-            <Button
-              type="button"
-              onClick={onOpenChange.bind(null, false)}
-              variant="outline"
-              className="ml-auto"
-            >
-              Cancelar
-            </Button>
-          )}
-          
-          {currentStep !== 'final' ? (
-            <Button
-              type="button"
-              onClick={handleNext}
-              disabled={!canProceedFromStep() || creating}
-              className="ml-auto"
-            >
-              Próximo
-              <ChevronRight className="w-4 h-4 ml-2" />
-            </Button>
-          ) : (
-            <Button
-              type="button"
-              onClick={handleFinish}
-              disabled={creating}
-              className="ml-auto"
-            >
-              {creating ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Criando...
-                </>
-              ) : (
-                <>
-                  <Check className="w-4 h-4 mr-2" />
-                  Finalizar
-                </>
-              )}
-            </Button>
-          )}
+        <div className="sticky bottom-0 z-10 bg-background border-t px-6 py-4">
+          <div className="flex gap-3 items-center">
+            {currentStep !== 'photo' && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleBack}
+                disabled={creating}
+                className="h-10"
+              >
+                <ChevronLeft className="w-4 h-4 mr-2" />
+                Voltar
+              </Button>
+            )}
+            
+            {currentStep !== 'final' && currentStep !== 'photo' && (
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={handleSkip}
+                disabled={creating}
+                className="h-10"
+              >
+                Pular
+              </Button>
+            )}
+            
+            {currentStep === 'photo' && (
+              <Button
+                type="button"
+                onClick={onOpenChange.bind(null, false)}
+                variant="outline"
+                className="ml-auto h-10"
+              >
+                Cancelar
+              </Button>
+            )}
+            
+            {currentStep !== 'final' ? (
+              <Button
+                type="button"
+                onClick={handleNext}
+                disabled={!canProceedFromStep() || creating}
+                className="ml-auto h-10 bg-primary hover:bg-primary/90 font-semibold shadow-lg hover:shadow-xl transition-all"
+              >
+                Próximo
+                <ChevronRight className="w-4 h-4 ml-2" />
+              </Button>
+            ) : (
+              <Button
+                type="button"
+                onClick={handleFinish}
+                disabled={creating}
+                className="ml-auto h-10 bg-green-700 hover:bg-green-800 font-semibold shadow-lg hover:shadow-xl transition-all"
+              >
+                {creating ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Criando...
+                  </>
+                ) : (
+                  <>
+                    <Check className="w-4 h-4 mr-2" />
+                    Finalizar
+                  </>
+                )}
+              </Button>
+            )}
+          </div>
         </div>
       </DialogContent>
     </Dialog>

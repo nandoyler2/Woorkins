@@ -300,7 +300,7 @@ export default function Messages() {
       );
 
       // Load negotiations where user is the client
-      const { data: userNegotiations } = await supabase
+      let userNegotiationsQuery = supabase
         .from('negotiations')
         .select(`
           id,
@@ -311,17 +311,22 @@ export default function Messages() {
           updated_at,
           archived,
           profiles!negotiations_target_profile_id_fkey(
-          company_name,
-          logo_url,
-          id
+            company_name,
+            logo_url,
+            id
           )
         `)
         .eq('client_user_id', user?.id)
-        .eq('archived', activeFilter === 'archived' ? true : false)
         .order('updated_at', { ascending: false });
+      if (activeFilter === 'archived') {
+        userNegotiationsQuery = userNegotiationsQuery.eq('archived', true);
+      } else {
+        userNegotiationsQuery = userNegotiationsQuery.or('archived.is.null,archived.eq.false');
+      }
+      const { data: userNegotiations } = await userNegotiationsQuery;
 
       // Load negotiations where user is the business
-      const { data: businessNegotiations } = await supabase
+      let businessNegotiationsQuery = supabase
         .from('negotiations')
         .select(`
           id,
@@ -333,17 +338,22 @@ export default function Messages() {
           archived,
           profiles!negotiations_target_profile_id_fkey(
             name,
-          company_name,
-          logo_url,
-          id
+            company_name,
+            logo_url,
+            id
           )
         `)
-        .eq('profiles.id', profileId)
-        .eq('archived', activeFilter === 'archived' ? true : false)
+        .eq('target_profile_id', profileId)
         .order('updated_at', { ascending: false });
+      if (activeFilter === 'archived') {
+        businessNegotiationsQuery = businessNegotiationsQuery.eq('archived', true);
+      } else {
+        businessNegotiationsQuery = businessNegotiationsQuery.or('archived.is.null,archived.eq.false');
+      }
+      const { data: businessNegotiations } = await businessNegotiationsQuery;
 
       // Load proposals where user is the freelancer
-      const { data: freelancerProposals } = await supabase
+      let freelancerProposalsQuery = supabase
         .from('proposals')
         .select(`
           id,
@@ -365,11 +375,16 @@ export default function Messages() {
           )
         `)
         .eq('freelancer_id', profileId)
-        .eq('archived', activeFilter === 'archived' ? true : false)
         .order('updated_at', { ascending: false });
+      if (activeFilter === 'archived') {
+        freelancerProposalsQuery = freelancerProposalsQuery.eq('archived', true);
+      } else {
+        freelancerProposalsQuery = freelancerProposalsQuery.or('archived.is.null,archived.eq.false');
+      }
+      const { data: freelancerProposals } = await freelancerProposalsQuery;
 
       // Load proposals where user is the project owner
-      const { data: ownerProposals } = await supabase
+      let ownerProposalsQuery = supabase
         .from('proposals')
         .select(`
           id,
@@ -391,8 +406,13 @@ export default function Messages() {
           )
         `)
         .eq('project.profile_id', profileId)
-        .eq('archived', activeFilter === 'archived' ? true : false)
         .order('updated_at', { ascending: false });
+      if (activeFilter === 'archived') {
+        ownerProposalsQuery = ownerProposalsQuery.eq('archived', true);
+      } else {
+        ownerProposalsQuery = ownerProposalsQuery.or('archived.is.null,archived.eq.false');
+      }
+      const { data: ownerProposals } = await ownerProposalsQuery;
 
       const negotiations = [...(userNegotiations || []), ...(businessNegotiations || [])];
       const proposals = [...(freelancerProposals || []), ...(ownerProposals || [])];

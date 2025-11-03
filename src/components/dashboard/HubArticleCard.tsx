@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Clock, Sparkles } from 'lucide-react';
+import { Clock, Newspaper } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface Article {
@@ -96,7 +96,7 @@ export function HubArticleCard() {
       <div className="border-b border-blue-200 p-4 bg-white/50">
         <div className="flex items-center gap-2">
           <div className="w-7 h-7 bg-gradient-to-r from-blue-500 to-teal-500 rounded-lg flex items-center justify-center">
-            <Sparkles className="w-4 h-4 text-white" />
+            <Newspaper className="w-4 h-4 text-white" />
           </div>
           <h3 className="text-base font-bold text-slate-900">Woorkins Hub</h3>
         </div>

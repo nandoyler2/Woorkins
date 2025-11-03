@@ -843,6 +843,9 @@ export default function Messages() {
 
       toast({ title: 'Conversa exibida na caixa de entrada' });
 
+      // Mudar para a aba "Caixa de Entrada" automaticamente
+      setActiveFilter('all');
+      
       // Forçar recarregamento completo
       await loadConversations(true);
       setTimeout(() => loadConversations(true), 300);

@@ -13,9 +13,9 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { ProposalChat } from '@/components/ProposalChat';
-import { StripeCheckout } from '@/components/StripeCheckout';
+import { ProposalPaymentDialog } from '@/components/projects/ProposalPaymentDialog';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, MessageSquare, CheckCircle, XCircle, CreditCard } from 'lucide-react';
+import { MessageSquare, CheckCircle, XCircle, CreditCard } from 'lucide-react';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 
@@ -57,21 +57,12 @@ const MyProjects = () => {
   const { toast } = useToast();
   const [loadingProjects, setLoadingProjects] = useState(true);
   const [loadingProposals, setLoadingProposals] = useState(true);
-  const [loadingPayment, setLoadingPayment] = useState(false);
   const [projects, setProjects] = useState<Project[]>([]);
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(null);
   const [chatOpen, setChatOpen] = useState(false);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [currentProfileId, setCurrentProfileId] = useState<string>('');
-  const [paymentData, setPaymentData] = useState<{
-    clientSecret: string;
-    amount: number;
-    platformFee: number;
-    stripeFee: number;
-    netAmount: number;
-    proposalId: string;
-  } | null>(null);
 
   useEffect(() => {
     document.title = 'Meus Projetos - Woorkins';
@@ -131,51 +122,14 @@ const MyProjects = () => {
     }
   };
 
-  const initiatePayment = async (proposalId: string) => {
-    setLoadingPayment(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('create-project-payment', {
-        body: { proposal_id: proposalId },
-      });
-
-      if (error) throw error;
-
-      setPaymentData({
-        clientSecret: data.client_secret,
-        amount: data.amount,
-        platformFee: data.platform_fee,
-        stripeFee: data.stripe_fee,
-        netAmount: data.net_amount,
-        proposalId,
-      });
-
-      setPaymentDialogOpen(true);
-    } catch (error: any) {
-      console.error('Error initiating payment:', error);
-      toast({
-        title: 'Erro ao iniciar pagamento',
-        description: error.message || 'Não foi possível iniciar o processo de pagamento.',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoadingPayment(false);
-    }
+  const initiatePayment = (proposal: Proposal) => {
+    setSelectedProposal(proposal);
+    setPaymentDialogOpen(true);
   };
 
-  const handlePaymentSuccess = async () => {
-    if (!paymentData) return;
-
-    const { error } = await supabase
-      .from('proposals')
-      .update({ status: 'accepted' })
-      .eq('id', paymentData.proposalId);
-
-    if (error) {
-      console.error('Error updating proposal:', error);
-    }
-
+  const handlePaymentSuccess = () => {
     setPaymentDialogOpen(false);
-    setPaymentData(null);
+    setSelectedProposal(null);
     
     toast({
       title: 'Pagamento realizado!',
@@ -187,7 +141,11 @@ const MyProjects = () => {
 
   const updateProposalStatus = async (proposalId: string, status: 'accepted' | 'rejected') => {
     if (status === 'accepted') {
-      await initiatePayment(proposalId);
+      // Find the proposal to pass to payment dialog
+      const proposal = proposals.find(p => p.id === proposalId);
+      if (proposal) {
+        initiatePayment(proposal);
+      }
     } else {
       try {
         const { error } = await supabase
@@ -361,26 +319,15 @@ const MyProjects = () => {
                               variant="default"
                               size="sm"
                               onClick={() => updateProposalStatus(proposal.id, 'accepted')}
-                              disabled={loadingPayment}
                               className="bg-gradient-primary hover:opacity-90"
                             >
-                              {loadingPayment ? (
-                                <>
-                                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                  Processando...
-                                </>
-                              ) : (
-                                <>
-                                  <CreditCard className="h-4 w-4 mr-2" />
-                                  Aceitar e Pagar
-                                </>
-                              )}
+                              <CreditCard className="h-4 w-4 mr-2" />
+                              Aceitar e Pagar
                             </Button>
                             <Button
                               variant="destructive"
                               size="sm"
                               onClick={() => updateProposalStatus(proposal.id, 'rejected')}
-                              disabled={loadingPayment}
                             >
                               <XCircle className="h-4 w-4 mr-2" />
                               Recusar
@@ -451,30 +398,15 @@ const MyProjects = () => {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={paymentDialogOpen} onOpenChange={setPaymentDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Finalizar Contratação</DialogTitle>
-            <DialogDescription>
-              Complete o pagamento para aceitar a proposta
-            </DialogDescription>
-          </DialogHeader>
-          {paymentData && (
-            <StripeCheckout
-              clientSecret={paymentData.clientSecret}
-              amount={paymentData.amount}
-              platformFee={paymentData.platformFee}
-              stripeFee={paymentData.stripeFee}
-              netAmount={paymentData.netAmount}
-              onSuccess={handlePaymentSuccess}
-              onCancel={() => {
-                setPaymentDialogOpen(false);
-                setPaymentData(null);
-              }}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
+      {selectedProposal && (
+        <ProposalPaymentDialog
+          open={paymentDialogOpen}
+          onOpenChange={setPaymentDialogOpen}
+          proposalId={selectedProposal.id}
+          amount={selectedProposal.budget}
+          projectTitle={selectedProposal.project.title}
+        />
+      )}
     </div>
   );
 };

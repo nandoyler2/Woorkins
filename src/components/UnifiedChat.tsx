@@ -468,36 +468,9 @@ export function UnifiedChat({
     }
   };
 
-  // Payment handler - Opens Stripe checkout
+  // Payment handler - Opens Mercado Pago checkout dialog
   const handlePay = async () => {
-    try {
-      setIsLoading(true);
-      const { data, error } = await supabase.functions.invoke('create-project-payment', {
-        body: { proposal_id: conversationId }
-      });
-      
-      if (error) throw error;
-      
-      if (data?.url) {
-        window.open(data.url, '_blank');
-        if (!suppressToasts) {
-          toast({
-            title: 'Redirecionando para pagamento',
-            description: 'Você será redirecionado para o Stripe para completar o pagamento',
-          });
-        }
-      }
-    } catch (error: any) {
-      if (!suppressToasts) {
-        toast({
-          title: 'Erro ao processar pagamento',
-          description: error.message,
-          variant: 'destructive',
-        });
-      }
-    } finally {
-      setIsLoading(false);
-    }
+    setShowPaymentDialog(true);
   };
 
   // Owner confirms work completion and releases payment

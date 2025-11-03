@@ -972,7 +972,7 @@ export default function Messages() {
                       }`}
                     >
                       <div className="flex items-start gap-3">
-                        <div className="relative group-hover:scale-110 transition-transform duration-200">
+                        <div className="relative flex flex-col items-center">
                           <Avatar className="h-12 w-12 ring-2 ring-background group-hover:ring-primary/50 transition-all">
                             <AvatarImage src={conv.otherUser.avatar} />
                             <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10 text-primary font-semibold">
@@ -984,97 +984,93 @@ export default function Messages() {
                               {conv.unreadCount > 99 ? '99+' : conv.unreadCount}
                             </Badge>
                           )}
+                          {conv.lastMessageAt && (
+                            <span className="text-[10px] text-muted-foreground mt-1 font-medium">
+                              {(() => {
+                                const messageDate = new Date(conv.lastMessageAt);
+                                const now = new Date();
+                                const diffInHours = (now.getTime() - messageDate.getTime()) / (1000 * 60 * 60);
+                                
+                                if (diffInHours < 24) {
+                                  return messageDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) + 'h';
+                                } else {
+                                  return messageDate.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+                                }
+                              })()}
+                            </span>
+                          )}
                         </div>
                         
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between gap-2 mb-1">
-                            <div className="flex-1">
+                          <div className="flex items-center justify-between gap-2 mb-1">
+                            <div className="flex items-center gap-2 flex-1 min-w-0">
                               <p className={`text-sm truncate ${conv.unreadCount > 0 ? 'font-bold' : 'font-semibold'}`}>
                                 {conv.title}
                               </p>
-                              <p className="text-xs text-slate-600 truncate">
-                                {conv.otherUser.name}
-                              </p>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              {conv.lastMessageAt && (
-                                <span className="text-xs text-slate-500 flex-shrink-0">
-                                  {formatDistanceToNow(new Date(conv.lastMessageAt), {
-                                    addSuffix: false,
-                                    locale: ptBR,
-                                  })}
+                              {(conv.type === 'proposal' || conv.type === 'negotiation') && (() => {
+                                const badgeInfo = getProposalBadgeInfo(conv);
+                                return (
+                                  <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium flex-shrink-0 ${badgeInfo.color}`}>
+                                    {badgeInfo.text}
+                                  </span>
+                                );
+                              })()}
+                              {conv.hasDispute && (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 flex-shrink-0">
+                                  <AlertCircle className="h-3 w-3 mr-1" />
+                                  {conv.disputeStatus === 'resolved' ? 'Resolvida' : 'Em Disputa'}
                                 </span>
                               )}
-                              
-                              {/* Menu dropdown - sempre visível */}
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                                  <Button 
-                                    variant="ghost" 
-                                    size="sm" 
-                                    className="h-6 w-6 p-0 hover:bg-muted"
-                                  >
-                                    <MoreVertical className="h-4 w-4" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="w-56">
-                                  {(conv.type === 'proposal' || conv.type === 'negotiation') && (() => {
-                                    const badgeInfo = getProposalBadgeInfo(conv);
-                                    return (
-                                      <DropdownMenuItem className="flex justify-between">
-                                        <span className="text-muted-foreground">Status:</span>
-                                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${badgeInfo.color}`}>
-                                          {badgeInfo.text}
-                                        </span>
-                                      </DropdownMenuItem>
-                                    );
-                                  })()}
-                                  {conv.hasDispute && (
+                            </div>
+                            
+                            {/* Menu dropdown */}
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  className="h-6 w-6 p-0 hover:bg-muted flex-shrink-0"
+                                >
+                                  <MoreVertical className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="w-56">
+                                {(conv.type === 'proposal' || conv.type === 'negotiation') && (() => {
+                                  const badgeInfo = getProposalBadgeInfo(conv);
+                                  return (
                                     <DropdownMenuItem className="flex justify-between">
-                                      <span className="text-muted-foreground">Disputa:</span>
-                                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300">
-                                        {conv.disputeStatus === 'resolved' ? 'Resolvida' : 'Em Disputa'}
+                                      <span className="text-muted-foreground">Status:</span>
+                                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${badgeInfo.color}`}>
+                                        {badgeInfo.text}
                                       </span>
                                     </DropdownMenuItem>
-                                  )}
-                                  <DropdownMenuSeparator />
-                                  <DropdownMenuItem 
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleArchiveConversation(conv, activeFilter !== 'archived');
-                                    }}
-                                  >
-                                    <Archive className="h-4 w-4 mr-2" />
-                                    {activeFilter === 'archived' ? 'Desarquivar' : 'Arquivar'}
+                                  );
+                                })()}
+                                {conv.hasDispute && (
+                                  <DropdownMenuItem className="flex justify-between">
+                                    <span className="text-muted-foreground">Disputa:</span>
+                                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300">
+                                      {conv.disputeStatus === 'resolved' ? 'Resolvida' : 'Em Disputa'}
+                                    </span>
                                   </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </div>
+                                )}
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem 
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleArchiveConversation(conv, activeFilter !== 'archived');
+                                  }}
+                                >
+                                  <Archive className="h-4 w-4 mr-2" />
+                                  {activeFilter === 'archived' ? 'Desarquivar' : 'Arquivar'}
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                           </div>
                           
-                          {/* Status - visível apenas em telas maiores (lg+) */}
-                          <div className="hidden lg:flex items-center gap-2 mb-1">
-                            {(conv.type === 'proposal' || conv.type === 'negotiation') && (() => {
-                              const badgeInfo = getProposalBadgeInfo(conv);
-                              return (
-                                <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium transition-colors ${badgeInfo.color}`}>
-                                  {badgeInfo.text}
-                                </span>
-                              );
-                            })()}
-                            {conv.hasDispute && (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300">
-                                <AlertCircle className="h-3 w-3 mr-1" />
-                                {conv.disputeStatus === 'resolved' ? 'Disputa Resolvida' : 'Em Disputa'}
-                              </span>
-                            )}
-                          </div>
-
-                          {conv.lastMessage && (
-                            <p className="text-xs text-slate-600 truncate">
-                              {conv.lastMessage}
-                            </p>
-                          )}
+                          <p className="text-xs text-slate-600 truncate">
+                            {conv.otherUser.name}
+                          </p>
                         </div>
                       </div>
                     </button>

@@ -206,14 +206,6 @@ export default function Projects() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background">
       <Header />
-      
-      {/* Hero Header com gradiente */}
-      <div className="bg-gradient-to-r from-blue-900 via-teal-700 to-blue-900 text-white py-12">
-        <div className="container mx-auto px-4 max-w-woorkins">
-          <h1 className="text-4xl font-bold mb-3">Projetos Disponíveis</h1>
-          <p className="text-lg text-blue-100">Encontre oportunidades incríveis para desenvolver suas habilidades</p>
-        </div>
-      </div>
 
       <main className="flex-1">
         <div className="container mx-auto px-4 py-6 max-w-7xl">

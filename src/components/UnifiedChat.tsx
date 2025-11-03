@@ -1539,7 +1539,7 @@ export function UnifiedChat({
                   
                   return (
                     <div
-                      key={message.id}
+                      key={(message as any).client_key || message.id}
                       className={`flex gap-2 group animate-in slide-in-from-bottom-2 ${
                         isMine ? 'flex-row-reverse' : 'flex-row'
                       }`}

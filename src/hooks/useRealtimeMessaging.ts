@@ -8,6 +8,7 @@ import { formatShortName } from '@/lib/utils';
 
 interface Message {
   id: string;
+  client_key?: string; // stable key to avoid flicker when replacing temp -> real
   sender_id: string;
   sender_name: string;
   sender_avatar?: string;
@@ -324,6 +325,7 @@ export const useRealtimeMessaging = ({
     // ⚡ INSTANTANEOUS UI UPDATE - Show message IMMEDIATELY (WhatsApp-style)
     const optimisticMessage: Message = {
       id: tempId,
+      client_key: tempId,
       sender_id: currentUserId,
       sender_name: 'Você',
       content: content.trim(),
@@ -447,6 +449,7 @@ export const useRealtimeMessaging = ({
       setMessages(prev => prev.map(msg => 
         msg.id === tempId
           ? {
+              ...msg, // keep client_key and local fields
               id: data.id,
               sender_id: data.sender_id,
               sender_name: 'Você',
@@ -454,9 +457,9 @@ export const useRealtimeMessaging = ({
               created_at: data.created_at,
               status: 'moderating',
               moderation_status: 'pending',
-              media_url: data.media_url,
-              media_type: data.media_type,
-              media_name: data.media_name,
+              media_url: data.media_url ?? msg.media_url,
+              media_type: data.media_type ?? msg.media_type,
+              media_name: data.media_name ?? msg.media_name,
             }
           : msg
       ));
@@ -604,18 +607,17 @@ export const useRealtimeMessaging = ({
               // If the final message is already present, do nothing
               if (prev.some(m => m.id === message.id)) return prev;
 
-              // Otherwise, replace the optimistic temp message
+              // Otherwise, replace the optimistic temp message and preserve client_key
               const hasTemp = prev.some(m => m.id.toString().startsWith('temp-'));
               if (hasTemp) {
                 return prev.map(m => 
                   m.id.toString().startsWith('temp-') && m.content === message.content
-                    ? message
+                    ? { ...message, client_key: m.client_key || m.id }
                     : m
                 );
               }
               return [...prev, message];
             });
-            // Remove pending optimistic from session
             removePendingByContent(message.content);
           } else {
             // Message from other user

@@ -1383,18 +1383,18 @@ export function UnifiedChat({
       
       {/* Header for Negotiations */}
       {conversationType === 'negotiation' && (
-        <div className="border-b p-3 flex items-center gap-3 bg-white flex-shrink-0">
+        <div className="border-b p-4 flex items-center gap-3 bg-gradient-to-r from-card to-card/50 backdrop-blur-sm flex-shrink-0 shadow-md">
           <div className="relative">
-            <Avatar className="h-10 w-10 ring-2 ring-background">
+            <Avatar className="h-12 w-12 ring-2 ring-primary/20 hover:ring-primary/40 transition-all">
               <AvatarImage src={otherUser.avatar} />
-              <AvatarFallback className="bg-primary/10 text-primary">
+              <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10 text-primary font-semibold">
                 {otherUser.name.charAt(0).toUpperCase()}
               </AvatarFallback>
             </Avatar>
-            <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 bg-green-500 rounded-full border-2 border-background" />
+            <div className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 bg-green-500 rounded-full border-2 border-background animate-pulse" />
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="font-semibold truncate">{otherUser.name}</h3>
+            <h3 className="font-bold text-lg truncate">{otherUser.name}</h3>
             <div className="flex items-center gap-2">
               {otherUserTyping ? (
                 <span className="text-xs text-primary animate-pulse font-medium">Digitando...</span>
@@ -1402,7 +1402,7 @@ export function UnifiedChat({
                 <>
                   <span className="text-xs text-green-600 dark:text-green-400 font-medium">Online</span>
                   <span className="text-xs text-muted-foreground">•</span>
-                  <Badge variant="secondary" className="text-xs">
+                  <Badge variant="secondary" className="text-xs bg-primary/10 text-primary border-primary/20">
                     Negociação
                   </Badge>
                 </>
@@ -1575,14 +1575,14 @@ export function UnifiedChat({
                   return (
                     <div
                       key={(message as any).client_key || message.id}
-                      className={`flex gap-2 mb-1 group ${(((message as any).client_key || '').toString().startsWith('temp-')) ? 'animate-in slide-in-from-bottom-2' : ''} ${
+                      className={`flex gap-3 mb-2 group ${(((message as any).client_key || '').toString().startsWith('temp-')) ? 'animate-in slide-in-from-bottom-2' : ''} ${
                         isMine ? 'flex-row-reverse' : 'flex-row'
                       }`}
                     >
                       {!isMine && (
-                        <Avatar className="h-8 w-8 flex-shrink-0">
+                        <Avatar className="h-8 w-8 flex-shrink-0 ring-2 ring-background group-hover:ring-primary/50 transition-all">
                           <AvatarImage src={message.sender_avatar} />
-                          <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                          <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10 text-primary text-xs font-semibold">
                             {message.sender_name.charAt(0).toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
@@ -1617,12 +1617,12 @@ export function UnifiedChat({
                           ) : (
                             /* Normal message */
                             <div
-                              className={`group rounded-2xl px-4 py-2.5 shadow-sm relative ${
+                              className={`group rounded-2xl px-4 py-3 shadow-md hover:shadow-lg transition-shadow relative ${
                                 isDeleted
                                   ? 'bg-destructive/10 border-destructive/20 border'
                                   : isMine
-                                  ? 'bg-primary text-primary-foreground rounded-tr-sm'
-                                  : 'bg-card border rounded-tl-sm'
+                                  ? 'bg-gradient-to-br from-primary to-primary/90 text-primary-foreground rounded-tr-sm'
+                                  : 'bg-gradient-to-br from-card to-card/80 border border-border/50 rounded-tl-sm backdrop-blur-sm'
                               }`}
                             >
                               {message.media_url && message.media_type?.startsWith('image/') && (

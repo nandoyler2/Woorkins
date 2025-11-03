@@ -774,13 +774,13 @@ export default function Messages() {
             </div>
           </div>
           
-          <nav className="space-y-1 flex-1">
+          <nav className="space-y-2 flex-1">
             <button
               onClick={() => setActiveFilter('all')}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${
                 activeFilter === 'all' 
-                  ? 'bg-gradient-primary text-primary-foreground shadow-md' 
-                  : 'hover:bg-muted text-muted-foreground'
+                  ? 'bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/30 scale-105' 
+                  : 'hover:bg-gradient-to-r hover:from-muted hover:to-muted/50 text-muted-foreground hover:scale-102'
               }`}
             >
               <Inbox className="h-5 w-5" />
@@ -789,10 +789,10 @@ export default function Messages() {
             
             <button
               onClick={() => setActiveFilter('unread')}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${
                 activeFilter === 'unread' 
-                  ? 'bg-gradient-primary text-primary-foreground shadow-md' 
-                  : 'hover:bg-muted text-muted-foreground'
+                  ? 'bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/30 scale-105' 
+                  : 'hover:bg-gradient-to-r hover:from-muted hover:to-muted/50 text-muted-foreground hover:scale-102'
               }`}
             >
               <Mail className="h-5 w-5" />
@@ -801,10 +801,10 @@ export default function Messages() {
             
             <button
               onClick={() => setActiveFilter('starred')}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${
                 activeFilter === 'starred' 
-                  ? 'bg-gradient-primary text-primary-foreground shadow-md' 
-                  : 'hover:bg-muted text-muted-foreground'
+                  ? 'bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/30 scale-105' 
+                  : 'hover:bg-gradient-to-r hover:from-muted hover:to-muted/50 text-muted-foreground hover:scale-102'
               }`}
             >
               <Star className="h-5 w-5" />
@@ -813,10 +813,10 @@ export default function Messages() {
             
             <button
               onClick={() => setActiveFilter('archived')}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${
                 activeFilter === 'archived' 
-                  ? 'bg-gradient-primary text-primary-foreground shadow-md' 
-                  : 'hover:bg-muted text-muted-foreground'
+                  ? 'bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/30 scale-105' 
+                  : 'hover:bg-gradient-to-r hover:from-muted hover:to-muted/50 text-muted-foreground hover:scale-102'
               }`}
             >
               <Archive className="h-5 w-5" />
@@ -825,10 +825,10 @@ export default function Messages() {
             
             <button
               onClick={() => setActiveFilter('disputes')}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${
                 activeFilter === 'disputes' 
-                  ? 'bg-gradient-primary text-primary-foreground shadow-md' 
-                  : 'hover:bg-muted text-muted-foreground'
+                  ? 'bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/30 scale-105' 
+                  : 'hover:bg-gradient-to-r hover:from-muted hover:to-muted/50 text-muted-foreground hover:scale-102'
               }`}
             >
               <AlertCircle className="h-5 w-5" />
@@ -839,15 +839,15 @@ export default function Messages() {
 
         <div className="flex-1 flex overflow-hidden">
           {/* Lista de Conversas */}
-          <div className="w-96 border-r bg-card shadow-md overflow-hidden flex flex-col">
-            <div className="p-3 border-b">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <div className="w-96 border-r bg-gradient-to-b from-card to-card/50 shadow-xl overflow-hidden flex flex-col">
+            <div className="p-4 border-b bg-gradient-to-r from-background to-background/80 backdrop-blur-sm">
+              <div className="relative group">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                 <Input
                   placeholder="Buscar por projeto ou cliente"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 border-2 focus:border-primary/50 rounded-xl bg-background/50 backdrop-blur-sm"
                 />
               </div>
               {isBackgroundLoading && (
@@ -916,22 +916,22 @@ export default function Messages() {
                         
                         markAsRead();
                       }}
-                      className={`w-full p-3 border-b transition-all text-left ${
+                      className={`w-full p-4 border-b transition-all duration-200 text-left group hover:scale-[1.02] ${
                         selectedConversation?.id === conv.id
-                          ? 'bg-primary/10 border-l-4 border-l-primary shadow-sm'
-                          : 'hover:bg-muted'
+                          ? 'bg-gradient-to-r from-primary/15 to-primary/5 border-l-4 border-l-primary shadow-lg'
+                          : 'hover:bg-gradient-to-r hover:from-muted hover:to-transparent'
                       }`}
                     >
                       <div className="flex items-start gap-3">
-                        <div className="relative">
-                          <Avatar className="h-12 w-12">
+                        <div className="relative group-hover:scale-110 transition-transform duration-200">
+                          <Avatar className="h-12 w-12 ring-2 ring-background group-hover:ring-primary/50 transition-all">
                             <AvatarImage src={conv.otherUser.avatar} />
-                            <AvatarFallback className="bg-slate-200 text-slate-700">
+                            <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10 text-primary font-semibold">
                               {conv.otherUser.name.charAt(0).toUpperCase()}
                             </AvatarFallback>
                           </Avatar>
                           {conv.unreadCount > 0 && (
-                            <Badge className="absolute -top-1 -right-1 h-5 min-w-5 flex items-center justify-center p-0 px-1.5 bg-red-500 hover:bg-red-500 text-white text-xs">
+                            <Badge className="absolute -top-1 -right-1 h-5 min-w-5 flex items-center justify-center p-0 px-1.5 bg-red-500 hover:bg-red-500 text-white text-xs animate-pulse shadow-lg">
                               {conv.unreadCount > 99 ? '99+' : conv.unreadCount}
                             </Badge>
                           )}

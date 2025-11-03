@@ -169,9 +169,10 @@ export const Header = () => {
                   {newProjectsCount.count > 0 && (
                     <div className="animate-in fade-in zoom-in duration-300">
                       <div className="relative">
-                        <div className={`absolute inset-0 bg-gradient-to-r from-blue-500 to-teal-500 rounded-full blur-sm ${newProjectsCount.hasRecent ? 'animate-pulse' : ''}`}></div>
-                        <div className={`relative bg-gradient-to-r from-blue-500 to-teal-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg whitespace-nowrap ${newProjectsCount.hasRecent ? 'animate-[pulse_1s_ease-in-out_infinite]' : ''}`}>
-                          {newProjectsCount.count} {newProjectsCount.count === 1 ? 'novo' : 'novos'}
+                        <div className={`absolute inset-0 bg-gradient-to-r from-blue-500 to-teal-500 rounded-lg blur-sm ${newProjectsCount.hasRecent ? 'animate-pulse' : ''}`}></div>
+                        <div className={`relative bg-gradient-to-r from-blue-500 to-teal-500 text-white text-[10px] font-bold px-2 py-1 rounded-lg shadow-lg whitespace-nowrap flex flex-col items-center gap-0.5 ${newProjectsCount.hasRecent ? 'animate-[pulse_1s_ease-in-out_infinite]' : ''}`}>
+                          <span>{newProjectsCount.count} {newProjectsCount.count === 1 ? 'novo' : 'novos'}</span>
+                          <span className="text-[8px] font-normal opacity-90">Na última hora</span>
                         </div>
                         {/* Seta apontando para a esquerda */}
                         <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1">

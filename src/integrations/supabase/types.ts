@@ -982,6 +982,7 @@ export type Database = {
           paid_at: string | null
           payment_captured_at: string | null
           payment_status: string | null
+          pinned_at: string | null
           platform_fee_amount: number | null
           service_description: string | null
           status: string
@@ -1008,6 +1009,7 @@ export type Database = {
           paid_at?: string | null
           payment_captured_at?: string | null
           payment_status?: string | null
+          pinned_at?: string | null
           platform_fee_amount?: number | null
           service_description?: string | null
           status?: string
@@ -1034,6 +1036,7 @@ export type Database = {
           paid_at?: string | null
           payment_captured_at?: string | null
           payment_status?: string | null
+          pinned_at?: string | null
           platform_fee_amount?: number | null
           service_description?: string | null
           status?: string
@@ -2727,6 +2730,7 @@ export type Database = {
           owner_has_messaged: boolean | null
           payment_captured_at: string | null
           payment_status: string | null
+          pinned_at: string | null
           platform_commission: number | null
           project_id: string
           status: string
@@ -2765,6 +2769,7 @@ export type Database = {
           owner_has_messaged?: boolean | null
           payment_captured_at?: string | null
           payment_status?: string | null
+          pinned_at?: string | null
           platform_commission?: number | null
           project_id: string
           status?: string
@@ -2803,6 +2808,7 @@ export type Database = {
           owner_has_messaged?: boolean | null
           payment_captured_at?: string | null
           payment_status?: string | null
+          pinned_at?: string | null
           platform_commission?: number | null
           project_id?: string
           status?: string

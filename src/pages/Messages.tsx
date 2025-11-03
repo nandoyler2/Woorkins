@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { MessageCircle, Loader2, Search, Inbox, Mail, Star, Archive, AlertCircle, Tag, MoreVertical, FileInput, Send, CheckCircle, EyeOff } from 'lucide-react';
+import { MessageCircle, Loader2, Search, Inbox, Mail, Star, Archive, AlertCircle, Tag, MoreVertical, FileInput, Send, CheckCircle, EyeOff, Pin } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -63,6 +63,7 @@ interface Conversation {
   ownerHasMessaged?: boolean;
   isFavorited?: boolean;
   hideFromInbox?: boolean;
+  pinnedAt?: string | null;
 }
 
 export default function Messages() {
@@ -202,7 +203,14 @@ export default function Messages() {
               }
               return c;
             });
-            const sorted = [...updated].sort((a, b) => new Date(b.lastMessageAt || 0).getTime() - new Date(a.lastMessageAt || 0).getTime());
+            const sorted = [...updated].sort((a, b) => {
+              if (a.pinnedAt && b.pinnedAt) {
+                return new Date(b.pinnedAt).getTime() - new Date(a.pinnedAt).getTime();
+              }
+              if (a.pinnedAt && !b.pinnedAt) return -1;
+              if (!a.pinnedAt && b.pinnedAt) return 1;
+              return new Date(b.lastMessageAt || 0).getTime() - new Date(a.lastMessageAt || 0).getTime();
+            });
             cachedData.setConversations(sorted);
             return sorted;
           });
@@ -249,7 +257,14 @@ export default function Messages() {
               }
               return c;
             });
-            const sorted = [...updated].sort((a, b) => new Date(b.lastMessageAt || 0).getTime() - new Date(a.lastMessageAt || 0).getTime());
+            const sorted = [...updated].sort((a, b) => {
+              if (a.pinnedAt && b.pinnedAt) {
+                return new Date(b.pinnedAt).getTime() - new Date(a.pinnedAt).getTime();
+              }
+              if (a.pinnedAt && !b.pinnedAt) return -1;
+              if (!a.pinnedAt && b.pinnedAt) return 1;
+              return new Date(b.lastMessageAt || 0).getTime() - new Date(a.lastMessageAt || 0).getTime();
+            });
             cachedData.setConversations(sorted);
             return sorted;
           });
@@ -393,6 +408,7 @@ export default function Messages() {
           archived_at,
           is_favorited,
           hide_from_inbox,
+          pinned_at,
           profiles!negotiations_target_profile_id_fkey(
             company_name,
             logo_url,
@@ -422,6 +438,7 @@ export default function Messages() {
           archived_at,
           is_favorited,
           hide_from_inbox,
+          pinned_at,
           profiles!negotiations_target_profile_id_fkey(
             company_name,
             logo_url,
@@ -454,6 +471,7 @@ export default function Messages() {
           owner_has_messaged,
           is_favorited,
           hide_from_inbox,
+          pinned_at,
           project:projects!inner(
             id,
             title,
@@ -490,6 +508,7 @@ export default function Messages() {
           owner_has_messaged,
           is_favorited,
           hide_from_inbox,
+          pinned_at,
           freelancer:profiles!proposals_freelancer_id_fkey(
             full_name,
             avatar_url
@@ -543,6 +562,7 @@ export default function Messages() {
           businessId: neg.target_profile_id,
           isFavorited: (neg as any).is_favorited || false,
           hideFromInbox: (neg as any).hide_from_inbox || false,
+          pinnedAt: (neg as any).pinned_at || null,
         };
       }));
 
@@ -604,12 +624,23 @@ export default function Messages() {
           ownerHasMessaged: (prop as any).owner_has_messaged,
           isFavorited: (prop as any).is_favorited || false,
           hideFromInbox: (prop as any).hide_from_inbox || false,
+          pinnedAt: (prop as any).pinned_at || null,
         };
       }));
 
-      const allConvos = [...negotiationConvos, ...proposalConvos].sort(
-        (a, b) => new Date(b.lastMessageAt || 0).getTime() - new Date(a.lastMessageAt || 0).getTime()
-      );
+      // Ordenar: pinned primeiro (por pinnedAt DESC), depois por lastMessageAt DESC
+      const allConvos = [...negotiationConvos, ...proposalConvos].sort((a, b) => {
+        // Se ambos estão pinned, ordenar por pinnedAt
+        if (a.pinnedAt && b.pinnedAt) {
+          return new Date(b.pinnedAt).getTime() - new Date(a.pinnedAt).getTime();
+        }
+        // Se apenas A está pinned, A vem primeiro
+        if (a.pinnedAt && !b.pinnedAt) return -1;
+        // Se apenas B está pinned, B vem primeiro
+        if (!a.pinnedAt && b.pinnedAt) return 1;
+        // Se nenhum está pinned, ordenar por lastMessageAt
+        return new Date(b.lastMessageAt || 0).getTime() - new Date(a.lastMessageAt || 0).getTime();
+      });
 
       // Atualizar cache
       cachedData.setConversations(allConvos);
@@ -810,20 +841,93 @@ export default function Messages() {
 
       if (error) throw error;
 
-      // Atualizar localmente
-      setConversations(prev => prev.map(c => 
-        c.id === conv.id ? { ...c, hideFromInbox: false } : c
-      ));
-
       toast({ title: 'Conversa exibida na caixa de entrada' });
 
-      // Se estiver em outro filtro, apenas recarregar em background
+      // Forçar recarregamento completo
+      await loadConversations(true);
       setTimeout(() => loadConversations(true), 300);
     } catch (error) {
       console.error('Error showing in inbox:', error);
       toast({ title: 'Erro ao exibir na caixa de entrada', description: String(error) });
     }
   };
+
+  const handlePinConversation = async (conv: Conversation) => {
+    try {
+      // Verificar quantas conversas já estão fixadas
+      const pinnedCount = conversations.filter(c => c.pinnedAt).length;
+      
+      if (pinnedCount >= 3) {
+        toast({ 
+          title: 'Limite atingido', 
+          description: 'Você já tem 3 conversas fixadas. Desfixe uma para fixar outra.',
+          variant: 'destructive'
+        });
+        return;
+      }
+
+      const table = conv.type === 'negotiation' ? 'negotiations' : 'proposals';
+      const { error } = await supabase
+        .from(table)
+        .update({ pinned_at: new Date().toISOString() })
+        .eq('id', conv.id);
+
+      if (error) throw error;
+
+      // Atualizar localmente
+      setConversations(prev => prev.map(c => 
+        c.id === conv.id ? { ...c, pinnedAt: new Date().toISOString() } : c
+      ).sort((a, b) => {
+        if (a.pinnedAt && b.pinnedAt) {
+          return new Date(b.pinnedAt).getTime() - new Date(a.pinnedAt).getTime();
+        }
+        if (a.pinnedAt && !b.pinnedAt) return -1;
+        if (!a.pinnedAt && b.pinnedAt) return 1;
+        return new Date(b.lastMessageAt || 0).getTime() - new Date(a.lastMessageAt || 0).getTime();
+      }));
+
+      toast({ title: 'Conversa fixada no topo' });
+      
+      // Recarregar em background
+      setTimeout(() => loadConversations(true), 500);
+    } catch (error) {
+      console.error('Error pinning conversation:', error);
+      toast({ title: 'Erro ao fixar conversa', description: String(error), variant: 'destructive' });
+    }
+  };
+
+  const handleUnpinConversation = async (conv: Conversation) => {
+    try {
+      const table = conv.type === 'negotiation' ? 'negotiations' : 'proposals';
+      const { error } = await supabase
+        .from(table)
+        .update({ pinned_at: null })
+        .eq('id', conv.id);
+
+      if (error) throw error;
+
+      // Atualizar localmente
+      setConversations(prev => prev.map(c => 
+        c.id === conv.id ? { ...c, pinnedAt: null } : c
+      ).sort((a, b) => {
+        if (a.pinnedAt && b.pinnedAt) {
+          return new Date(b.pinnedAt).getTime() - new Date(a.pinnedAt).getTime();
+        }
+        if (a.pinnedAt && !b.pinnedAt) return -1;
+        if (!a.pinnedAt && b.pinnedAt) return 1;
+        return new Date(b.lastMessageAt || 0).getTime() - new Date(a.lastMessageAt || 0).getTime();
+      }));
+
+      toast({ title: 'Conversa desfixada' });
+      
+      // Recarregar em background
+      setTimeout(() => loadConversations(true), 500);
+    } catch (error) {
+      console.error('Error unpinning conversation:', error);
+      toast({ title: 'Erro ao desfixar conversa', description: String(error), variant: 'destructive' });
+    }
+  };
+  
   const getProposalBadgeInfo = (conv: Conversation) => {
     const isFreelancer = conv.freelancerId === profileId;
     const isOwner = !isFreelancer;
@@ -1244,6 +1348,9 @@ export default function Messages() {
                               <p className={`text-sm truncate ${conv.unreadCount > 0 ? 'font-bold' : 'font-semibold'}`}>
                                 {conv.title}
                               </p>
+                              {conv.pinnedAt && (
+                                <Pin className="h-3 w-3 text-primary fill-primary flex-shrink-0" />
+                              )}
                               {conv.hasDispute && (
                                 <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 flex-shrink-0">
                                   <AlertCircle className="h-3 w-3 mr-1" />
@@ -1310,6 +1417,29 @@ export default function Messages() {
                                   <Star className={`h-4 w-4 mr-2 ${conv.isFavorited ? 'fill-yellow-500 text-yellow-500' : ''}`} />
                                   {conv.isFavorited ? 'Remover dos favoritos' : 'Favoritar'}
                                 </DropdownMenuItem>
+                                
+                                {conv.pinnedAt ? (
+                                  <DropdownMenuItem 
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleUnpinConversation(conv);
+                                    }}
+                                  >
+                                    <Pin className="h-4 w-4 mr-2 fill-primary text-primary" />
+                                    Desfixar do topo
+                                  </DropdownMenuItem>
+                                ) : (
+                                  <DropdownMenuItem 
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handlePinConversation(conv);
+                                    }}
+                                  >
+                                    <Pin className="h-4 w-4 mr-2" />
+                                    Fixar no topo
+                                  </DropdownMenuItem>
+                                )}
+                                
                                 {!isConversationInInbox(conv) ? (
                                   <DropdownMenuItem 
                                     onClick={(e) => {

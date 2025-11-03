@@ -35,6 +35,7 @@ import { ptBR } from 'date-fns/locale';
 import { formatShortName } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
 import notificationSound from '@/assets/notification-sound.mp3';
+import emptyMessagesBg from '@/assets/empty-messages-bg.jpg';
 
 interface Conversation {
   id: string;
@@ -1545,21 +1546,32 @@ export default function Messages() {
                 }}
               />
             ) : (
-              <div className="h-full flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/20">
-                <div className="text-center p-8 max-w-md">
-                  <div className="relative inline-block mb-6">
-                    <div className="absolute inset-0 bg-primary/10 blur-2xl rounded-full animate-pulse"></div>
-                    <div className="relative bg-gradient-to-br from-primary/20 to-primary/5 p-6 rounded-full">
-                      <MessageCircle className="h-16 w-16 text-primary" strokeWidth={1.5} />
-                    </div>
+              <div 
+                className="h-full flex items-center justify-center relative overflow-hidden"
+                style={{
+                  backgroundImage: `url(${emptyMessagesBg})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                }}
+              >
+                {/* Gradiente overlay das cores do logo */}
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/90 via-primary/70 to-secondary/80 backdrop-blur-[2px]"></div>
+                
+                {/* Conteúdo */}
+                <div className="relative z-10 text-center p-8 max-w-2xl">
+                  <div className="mb-6 animate-fade-in">
+                    <h1 className="text-5xl font-bold mb-4 text-white drop-shadow-lg">
+                      Grandes negócios acontecem aqui
+                    </h1>
+                    <p className="text-xl text-white/90 drop-shadow-md">
+                      Selecione uma conversa na lista
+                    </p>
                   </div>
-                  <h3 className="text-2xl font-bold mb-3 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
-                    Selecione uma conversa
-                  </h3>
-                  <p className="text-muted-foreground text-base leading-relaxed">
-                    Escolha uma conversa da lista para começar a trocar mensagens
-                  </p>
                 </div>
+                
+                {/* Efeito de brilho sutil */}
+                <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl"></div>
+                <div className="absolute bottom-0 left-0 w-96 h-96 bg-white/10 rounded-full blur-3xl"></div>
               </div>
             )}
           </div>

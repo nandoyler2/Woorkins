@@ -1281,7 +1281,9 @@ export default function Dashboard() {
                     <div className="w-7 h-7 bg-blue-500 rounded-lg flex items-center justify-center">
                       <Users className="w-4 h-4 text-white" />
                     </div>
-                    <h3 className="text-base font-bold text-slate-900">Perfil Principal</h3>
+                    <h3 className="text-base font-bold text-slate-900">
+                      {businessProfiles.length > 0 ? 'Seus Perfis' : 'Seu Perfil'}
+                    </h3>
                   </div>
                   <Button variant="outline" size="sm" className="text-xs h-7" onClick={() => setShowCreateBusinessDialog(true)}>
                     + Criar Perfil
@@ -1290,8 +1292,8 @@ export default function Dashboard() {
               </CardHeader>
               <CardContent className="p-4 space-y-3">
                 {/* Personal Profile */}
-                <div className="flex items-center gap-3 p-3 rounded-lg border-2 border-blue-300 bg-white hover:shadow-md transition-all">
-                  <Avatar className="h-10 w-10 border-2 border-blue-400">
+                <div className="flex items-center gap-3 p-3 rounded-lg border-2 bg-white hover:shadow-md transition-all" style={{ borderColor: '#28A1A5' }}>
+                  <Avatar className="h-10 w-10 border-2" style={{ borderColor: '#28A1A5' }}>
                     {profile?.avatar_url ? (
                       <AvatarImage src={profile.avatar_url} alt={profile.username} />
                     ) : (
@@ -1308,7 +1310,7 @@ export default function Dashboard() {
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
                     <Link to={`/${profile?.username}`}>
-                      <Button variant="outline" size="sm" className="h-7 w-7 p-0 border-blue-400 text-blue-600 hover:bg-blue-50">
+                      <Button variant="outline" size="sm" className="h-7 w-7 p-0 hover:bg-blue-50" style={{ borderColor: '#28A1A5', color: '#28A1A5' }}>
                         <Eye className="w-3.5 h-3.5" />
                       </Button>
                     </Link>
@@ -1316,7 +1318,10 @@ export default function Dashboard() {
                       <Button 
                         variant="default" 
                         size="sm" 
-                        className="text-xs h-7 px-2 bg-blue-500 hover:bg-blue-600"
+                        className="text-xs h-7 px-2 hover:brightness-90" 
+                        style={{ backgroundColor: '#28A1A5', color: 'white' }}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#228c90'}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#28A1A5'}
                       >
                         Editar
                       </Button>

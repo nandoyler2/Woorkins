@@ -44,6 +44,32 @@ export function ProjectCard({ project }: ProjectCardProps) {
   const [viewProposalDialogOpen, setViewProposalDialogOpen] = useState(false);
   const [userProposal, setUserProposal] = useState<any>(null);
   const [hasProposal, setHasProposal] = useState(false);
+  const [currentUserProfileId, setCurrentUserProfileId] = useState<string>('');
+
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      if (!user) {
+        setCurrentUserProfileId('');
+        return;
+      }
+
+      try {
+        const { data: profile } = await supabase
+          .from('profiles' as any)
+          .select('id')
+          .eq('user_id', user.id)
+          .single();
+
+        if (profile) {
+          setCurrentUserProfileId((profile as any).id);
+        }
+      } catch (error) {
+        console.error('Error loading user profile:', error);
+      }
+    };
+
+    loadUserProfile();
+  }, [user]);
 
   useEffect(() => {
     const checkUserProposal = async () => {
@@ -179,15 +205,26 @@ export function ProjectCard({ project }: ProjectCardProps) {
           <span className="text-lg font-bold text-primary whitespace-nowrap">
             {formatBudget(project.budget_min, project.budget_max)}
           </span>
-          <Button 
-            variant="default" 
-            size="sm" 
-            className="whitespace-nowrap"
-            onClick={handleMakeProposal}
-            style={hasProposal ? { backgroundColor: '#11AA9B' } : undefined}
-          >
-            {hasProposal ? 'Você já enviou a proposta' : 'Fazer uma proposta'}
-          </Button>
+          {currentUserProfileId && project.profile_id === currentUserProfileId ? (
+            <Button 
+              variant="default" 
+              size="sm" 
+              className="whitespace-nowrap bg-muted hover:bg-muted cursor-default"
+              disabled
+            >
+              Seu Projeto
+            </Button>
+          ) : (
+            <Button 
+              variant="default" 
+              size="sm" 
+              className="whitespace-nowrap"
+              onClick={handleMakeProposal}
+              style={hasProposal ? { backgroundColor: '#11AA9B' } : undefined}
+            >
+              {hasProposal ? 'Você já enviou a proposta' : 'Fazer uma proposta'}
+            </Button>
+          )}
         </div>
       </div>
 

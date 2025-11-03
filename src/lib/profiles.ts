@@ -99,11 +99,12 @@ export async function generateAvailableUsername(base: string): Promise<string> {
 export async function getOrCreateUserProfile(user: { id: string; email?: string }): Promise<Profile[]> {
   console.log('[getOrCreateUserProfile] Starting for user:', user.id);
 
-  // Buscar todos os perfis do usuário
+  // Buscar todos os perfis do usuário (exceto os excluídos)
   const { data: existingProfiles, error: fetchError } = await supabase
     .from('profiles')
     .select('*')
     .eq('user_id', user.id)
+    .neq('deleted', true) // Excluir perfis marcados como deleted
     .order('created_at', { ascending: true });
 
   if (fetchError) {

@@ -735,7 +735,8 @@ export default function Dashboard() {
     .from('profiles' as any)
     .select('id, company_name, category, logo_url, slug, username')
     .eq('user_id', user?.id)
-      .eq('profile_type', 'business');
+    .eq('profile_type', 'business')
+    .eq('deleted', false); // Não mostrar perfis excluídos
     
     if (!error && data) {
       console.log('✅ Perfis profissionais carregados:', data);

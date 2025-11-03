@@ -182,6 +182,7 @@ export default function ProfileEdit() {
   const [usernameError, setUsernameError] = useState('');
   const [checkingUsername, setCheckingUsername] = useState(false);
   const [showUsernameConfirm, setShowUsernameConfirm] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState('');
   const imageInputRef = useRef<HTMLInputElement>(null);
   
   // Refs para inputs de upload
@@ -330,12 +331,13 @@ export default function ProfileEdit() {
     if (!user) return;
 
     try {
-      // Buscar explicitamente o perfil do tipo 'user'
+      // Buscar explicitamente o perfil do tipo 'user' (exceto os excluídos)
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('user_id', user.id)
         .eq('profile_type', 'user')
+        .neq('deleted', true) // Não carregar perfis excluídos
         .maybeSingle();
 
       if (error) {
@@ -368,12 +370,13 @@ export default function ProfileEdit() {
       setProfileType('user');
       setLoading(false);
       
-      // Carregar lista de perfis de negócio do usuário
+      // Carregar lista de perfis de negócio do usuário (exceto os excluídos)
       const { data: businesses } = await supabase
         .from('profiles')
         .select('id, company_name, slug')
         .eq('user_id', user?.id)
-        .eq('profile_type', 'business');
+        .eq('profile_type', 'business')
+        .neq('deleted', true); // Não carregar perfis excluídos
       
       if (businesses) {
         setBusinessProfiles(businesses);
@@ -398,6 +401,7 @@ export default function ProfileEdit() {
       .eq('id', id)
       .eq('profile_type', 'business')
       .eq('user_id', user?.id)
+      .neq('deleted', true) // Não carregar perfis excluídos
       .maybeSingle();
 
     if (error || !data) {
@@ -414,12 +418,13 @@ export default function ProfileEdit() {
     setProfileType('business');
     setLoading(false);
     
-    // Carregar lista de perfis de negócio do usuário
+    // Carregar lista de perfis de negócio do usuário (exceto os excluídos)
     const { data: businesses } = await supabase
       .from('profiles')
       .select('id, company_name, slug')
       .eq('user_id', user?.id)
-      .eq('profile_type', 'business');
+      .eq('profile_type', 'business')
+      .neq('deleted', true); // Não carregar perfis excluídos
     
     if (businesses) {
       setBusinessProfiles(businesses);
@@ -2267,43 +2272,102 @@ export default function ProfileEdit() {
                                 </AlertDialogTrigger>
                                 <AlertDialogContent>
                                   <AlertDialogHeader>
-                                    <AlertDialogTitle>Tem certeza?</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                      Esta ação não pode ser desfeita. Isso irá permanentemente excluir este perfil
-                                      {profileType === 'business' && profile.company_name && (
-                                        <> (<strong>{profile.company_name}</strong>)</>
-                                      )}
-                                      {' '}e remover todos os dados associados a ele.
+                                    <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+                                      <Trash2 className="h-5 w-5" />
+                                      Excluir Perfil Permanentemente
+                                    </AlertDialogTitle>
+                                    <AlertDialogDescription className="space-y-4">
+                                      <div className="space-y-2">
+                                        <p className="font-semibold text-foreground">
+                                          ⚠️ Esta ação NÃO pode ser desfeita!
+                                        </p>
+                                        <p>
+                                          Você está prestes a excluir permanentemente {profileType === 'business' ? 'o perfil profissional' : 'seu perfil'}
+                                          {profileType === 'business' && profile.company_name && (
+                                            <> <strong>{profile.company_name}</strong></>
+                                          )}
+                                          .
+                                        </p>
+                                        <p>Isso irá remover:</p>
+                                        <ul className="list-disc list-inside space-y-1 text-sm">
+                                          <li>Todos os posts e conteúdos</li>
+                                          <li>Avaliações recebidas</li>
+                                          <li>Configurações e ferramentas</li>
+                                          <li>Todos os dados associados</li>
+                                        </ul>
+                                      </div>
+                                      
+                                      <div className="space-y-2">
+                                        <Label htmlFor="delete-confirm">
+                                          Digite <code className="px-1.5 py-0.5 bg-muted rounded text-sm font-mono">
+                                            @{profileType === 'business' ? (profile.slug || profile.username) : profile.username}
+                                          </code> para confirmar:
+                                        </Label>
+                                        <Input
+                                          id="delete-confirm"
+                                          placeholder={`@${profileType === 'business' ? (profile.slug || profile.username) : profile.username}`}
+                                          value={deleteConfirmation}
+                                          onChange={(e) => setDeleteConfirmation(e.target.value)}
+                                          className="font-mono"
+                                        />
+                                      </div>
                                     </AlertDialogDescription>
                                   </AlertDialogHeader>
                                   <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                    <AlertDialogCancel onClick={() => setDeleteConfirmation('')}>
+                                      Cancelar
+                                    </AlertDialogCancel>
                                     <AlertDialogAction
                                       onClick={async () => {
+                                        const identifier = profileType === 'business' ? (profile.slug || profile.username) : profile.username;
+                                        
+                                        if (deleteConfirmation !== `@${identifier}`) {
+                                          toast({
+                                            title: 'Confirmação incorreta',
+                                            description: `Digite exatamente @${identifier} para confirmar`,
+                                            variant: 'destructive',
+                                          });
+                                          return;
+                                        }
+
                                         try {
+                                          console.log('🗑️ Iniciando exclusão do perfil:', profile.id);
+                                          
+                                          // Usar soft delete ao invés de hard delete
                                           const { error } = await supabase
                                             .from('profiles')
-                                            .delete()
+                                            .update({
+                                              deleted: true,
+                                              deleted_at: new Date().toISOString(),
+                                              deleted_by: user?.id,
+                                            })
                                             .eq('id', profile.id);
 
-                                          if (error) throw error;
+                                          if (error) {
+                                            console.error('❌ Erro ao excluir perfil:', error);
+                                            throw error;
+                                          }
 
+                                          console.log('✅ Perfil excluído com sucesso');
+                                          
                                           toast({
                                             title: 'Perfil excluído',
                                             description: 'O perfil foi excluído com sucesso.',
                                           });
 
+                                          setDeleteConfirmation('');
                                           navigate('/painel');
                                         } catch (error: any) {
                                           console.error('Erro ao excluir perfil:', error);
                                           toast({
                                             title: 'Erro',
-                                            description: 'Não foi possível excluir o perfil.',
+                                            description: error.message || 'Não foi possível excluir o perfil.',
                                             variant: 'destructive',
                                           });
                                         }
                                       }}
-                                      className="bg-red-600 hover:bg-red-700"
+                                      disabled={deleteConfirmation !== `@${profileType === 'business' ? (profile.slug || profile.username) : profile.username}` || loading}
+                                      className="bg-destructive hover:bg-destructive/90"
                                     >
                                       Sim, excluir perfil
                                     </AlertDialogAction>

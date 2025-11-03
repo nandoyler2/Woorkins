@@ -217,12 +217,15 @@ export const InteractiveStickerRenderer = ({
         );
 
       case 'image':
+        console.log('🎨 Renderizando sticker de imagem:', sticker.content.imageUrl?.substring(0, 50) + '...');
         return (
           <div style={style} className={containerClass}>
             <img
               src={sticker.content.imageUrl}
               alt="Sticker"
               className="w-full h-auto rounded-lg shadow-lg"
+              onLoad={() => console.log('✅ Imagem do sticker carregada com sucesso')}
+              onError={(e) => console.error('❌ Erro ao carregar imagem do sticker:', e)}
             />
           </div>
         );

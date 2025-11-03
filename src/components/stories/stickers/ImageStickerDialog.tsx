@@ -133,7 +133,9 @@ export function ImageStickerDialog({ open, onClose, onSave }: ImageStickerDialog
     }
 
     try {
+      console.log('🖼️ Gerando imagem cropada...');
       const croppedImage = await getCroppedImg(selectedImage, croppedAreaPixels);
+      console.log('🖼️ Imagem gerada com sucesso:', croppedImage.substring(0, 50) + '...');
       onSave({ imageUrl: croppedImage });
       handleClose();
     } catch (error) {

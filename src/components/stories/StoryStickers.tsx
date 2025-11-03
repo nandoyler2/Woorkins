@@ -30,6 +30,7 @@ export const StoryStickers = ({ stickers, onAddSticker, onRemoveSticker }: Story
   const [activeStickerDialog, setActiveStickerDialog] = useState<string | null>(null);
 
   const handleAddSticker = (type: string, content: any) => {
+    console.log(`🎯 Adicionando sticker tipo: ${type}`, content);
     const newSticker: Omit<Sticker, 'id'> = {
       type: type as any,
       position_x: 50,
@@ -40,6 +41,7 @@ export const StoryStickers = ({ stickers, onAddSticker, onRemoveSticker }: Story
       content,
       scale: 1
     };
+    console.log('🎯 Sticker criado:', newSticker);
     onAddSticker(newSticker);
   };
 

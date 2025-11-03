@@ -563,12 +563,23 @@ export default function ProjectDetails() {
 
                 {/* Action Button */}
                 {isOwner && project.status === 'open' && (
-                  <Button 
-                    className="w-full bg-muted hover:bg-muted cursor-default text-foreground"
-                    disabled
-                  >
-                    Seu Projeto
-                  </Button>
+                  <div className="space-y-2">
+                    <Button 
+                      className="w-full bg-muted hover:bg-muted cursor-default text-foreground"
+                      disabled
+                    >
+                      Seu Projeto
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      className="w-full"
+                      asChild
+                    >
+                      <Link to={`/projeto/${project.id}/editar`}>
+                        Editar Projeto
+                      </Link>
+                    </Button>
+                  </div>
                 )}
                 
                 {!isOwner && project.status === 'open' && (

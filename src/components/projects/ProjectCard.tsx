@@ -61,7 +61,11 @@ export function ProjectCard({ project }: ProjectCardProps) {
           .single();
 
         if (profile) {
-          setCurrentUserProfileId((profile as any).id);
+          const profileId = (profile as any).id;
+          setCurrentUserProfileId(profileId);
+          console.log('🔍 ProjectCard - Current User Profile ID:', profileId);
+          console.log('🔍 ProjectCard - Project Profile ID:', project.profile_id);
+          console.log('🔍 ProjectCard - Is Owner:', profileId === project.profile_id);
         }
       } catch (error) {
         console.error('Error loading user profile:', error);
@@ -69,7 +73,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
     };
 
     loadUserProfile();
-  }, [user]);
+  }, [user, project.profile_id]);
 
   useEffect(() => {
     const checkUserProposal = async () => {
@@ -205,15 +209,27 @@ export function ProjectCard({ project }: ProjectCardProps) {
           <span className="text-lg font-bold text-primary whitespace-nowrap">
             {formatBudget(project.budget_min, project.budget_max)}
           </span>
-          {currentUserProfileId && project.profile_id === currentUserProfileId ? (
-            <Button 
-              variant="default" 
-              size="sm" 
-              className="whitespace-nowrap bg-muted hover:bg-muted cursor-default text-foreground"
-              disabled
-            >
-              Seu Projeto
-            </Button>
+          {currentUserProfileId && project.profile_id && currentUserProfileId === project.profile_id ? (
+            <div className="flex flex-col gap-2">
+              <Button 
+                variant="default" 
+                size="sm" 
+                className="whitespace-nowrap bg-muted hover:bg-muted cursor-default text-foreground"
+                disabled
+              >
+                Seu Projeto
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="whitespace-nowrap"
+                asChild
+              >
+                <Link to={`/projeto/${project.id}/editar`}>
+                  Editar
+                </Link>
+              </Button>
+            </div>
           ) : (
             <Button 
               variant="default" 

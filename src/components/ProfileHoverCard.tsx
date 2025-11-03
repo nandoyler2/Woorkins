@@ -86,12 +86,18 @@ export const ProfileHoverCard = forwardRef<ProfileHoverCardRef, ProfileHoverCard
     }
   };
 
-  const handleViewStories = (index: number = 0) => {
+  const handleViewStories = (index: number = 0, e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     setSelectedStoryIndex(index);
     setShowStoriesViewer(true);
+    setOpen(false); // Fecha o hover card ao abrir stories
   };
 
   const handleProfileClick = (e: React.MouseEvent) => {
+    e.preventDefault();
     e.stopPropagation();
     handleViewProfile();
   };
@@ -168,11 +174,11 @@ export const ProfileHoverCard = forwardRef<ProfileHoverCardRef, ProfileHoverCard
             <div className="flex flex-col items-center -mt-12 px-6 relative z-10">
               <div 
                 className={`${data.stories.length > 0 ? 'p-[3px] bg-gradient-to-tr from-purple-500 via-pink-500 to-orange-500 rounded-full cursor-pointer' : ''}`}
-                onClick={data.stories.length > 0 ? () => handleViewStories(0) : undefined}
+                onClick={data.stories.length > 0 ? (e) => handleViewStories(0, e) : undefined}
               >
                 <Avatar 
                   className="w-20 h-20 border-4 border-background cursor-pointer"
-                  onClick={handleProfileClick}
+                  onClick={data.stories.length > 0 ? (e) => { e.stopPropagation(); } : handleProfileClick}
                 >
                   {data.profile.avatar_thumbnail_url || data.profile.avatar_url ? (
                     <SafeImage
@@ -258,7 +264,7 @@ export const ProfileHoverCard = forwardRef<ProfileHoverCardRef, ProfileHoverCard
                       variant="ghost"
                       size="icon"
                       className="absolute left-0 top-1/2 -translate-y-1/2 z-10 h-8 w-8 bg-background/90 backdrop-blur-sm hover:bg-background shadow-md"
-                      onClick={() => scrollStories('left')}
+                      onClick={(e) => { e.stopPropagation(); scrollStories('left'); }}
                     >
                       <ChevronLeft className="w-4 h-4" />
                     </Button>
@@ -278,7 +284,7 @@ export const ProfileHoverCard = forwardRef<ProfileHoverCardRef, ProfileHoverCard
                         <div
                           key={story.id}
                           className="flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
-                          onClick={() => handleViewStories(index)}
+                          onClick={(e) => handleViewStories(index, e)}
                         >
                           <div className="p-[2px] bg-gradient-to-tr from-purple-500 via-pink-500 to-orange-500 rounded-lg">
                             <div className="relative w-14 h-20 rounded-md overflow-hidden bg-background">
@@ -356,7 +362,7 @@ export const ProfileHoverCard = forwardRef<ProfileHoverCardRef, ProfileHoverCard
                       variant="ghost"
                       size="icon"
                       className="absolute right-0 top-1/2 -translate-y-1/2 z-10 h-8 w-8 bg-background/90 backdrop-blur-sm hover:bg-background shadow-md"
-                      onClick={() => scrollStories('right')}
+                      onClick={(e) => { e.stopPropagation(); scrollStories('right'); }}
                     >
                       <ChevronRight className="w-4 h-4" />
                     </Button>

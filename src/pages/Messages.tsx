@@ -85,7 +85,8 @@ export default function Messages() {
   useEffect(() => {
     if (profileId) {
       // Se tem cache válido, mostrar imediatamente e atualizar em background
-      if (cachedData.conversations.length > 0 && !cachedData.isStale()) {
+      if (cachedData.conversations.length > 0 && cachedData.lastFetched && !cachedData.isStale()) {
+        console.log('📦 Usando cache de conversas');
         setConversations(cachedData.conversations);
         setIsInitialLoading(false);
         // Atualizar em background após um delay
@@ -100,7 +101,9 @@ export default function Messages() {
         };
       }
       
-      // Sem cache ou cache expirado: carregar normalmente
+      // Sem cache válido: carregar normalmente
+      console.log('🔄 Carregando conversas do servidor');
+      setIsInitialLoading(true);
       loadConversations(false);
       
       const channel = setupRealtimeSubscriptions();
@@ -501,7 +504,8 @@ export default function Messages() {
 
       // Atualizar tanto o estado local quanto o cache global
       setConversations(allConvos);
-      setCachedConversations(allConvos);
+      setIsInitialLoading(false);
+      setIsBackgroundLoading(false);
     } catch (error) {
       console.error('Error loading conversations:', error);
     } finally {

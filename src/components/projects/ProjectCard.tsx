@@ -255,7 +255,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
 
       {/* Meta info com badges */}
       <div className="flex items-center flex-wrap gap-2 text-xs mb-3">
-        <Badge variant="secondary" className="bg-muted/50">
+        <Badge variant="secondary" className="bg-muted/50 text-foreground">
           <Clock className="h-3 w-3 mr-1" />
           {formatDate(project.created_at)}
         </Badge>

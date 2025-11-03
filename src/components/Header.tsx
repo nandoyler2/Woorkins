@@ -173,9 +173,9 @@ export const Header = () => {
                         <div className="relative bg-gradient-to-r from-blue-500 to-teal-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg whitespace-nowrap">
                           {newProjectsCount} {newProjectsCount === 1 ? 'novo' : 'novos'}
                         </div>
-                        {/* Seta apontando para baixo */}
-                        <div className="absolute left-1/2 -translate-x-1/2 -bottom-1">
-                          <div className="w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-teal-500"></div>
+                        {/* Seta apontando para a esquerda */}
+                        <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1">
+                          <div className="w-0 h-0 border-t-4 border-b-4 border-r-4 border-transparent border-r-teal-500"></div>
                         </div>
                       </div>
                     </div>

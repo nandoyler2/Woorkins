@@ -262,11 +262,11 @@ export function CreateBusinessProfileDialog({ open, onOpenChange, onSuccess }: C
       let logoUrl = null;
       let coverUrl = null;
 
-      // Upload logo usando o ID do novo perfil
+      // Upload logo usando o user_id (necessário para as políticas de storage)
       if (logoFile) {
         console.log('📤 Iniciando upload do logo...');
         const compressed = await compressImage(logoFile, { maxSizeMB: 1, maxWidth: 800, maxHeight: 800 });
-        const logoPath = `${newProfile.id}/logo-${Date.now()}.jpg`;
+        const logoPath = `${user.id}/logo-${Date.now()}.jpg`;
         const { error: uploadError } = await supabase.storage
           .from('profile-photos')
           .upload(logoPath, compressed);
@@ -282,10 +282,10 @@ export function CreateBusinessProfileDialog({ open, onOpenChange, onSuccess }: C
         }
       }
 
-      // Upload cover usando o ID do novo perfil
+      // Upload cover usando o user_id (necessário para as políticas de storage)
       if (coverFile) {
         const compressed = await compressImage(coverFile, { maxSizeMB: 2, maxWidth: 1920, maxHeight: 1080 });
-        const coverPath = `${newProfile.id}/cover-${Date.now()}.jpg`;
+        const coverPath = `${user.id}/cover-${Date.now()}.jpg`;
         const { error: uploadError } = await supabase.storage
           .from('profile-photos')
           .upload(coverPath, compressed);

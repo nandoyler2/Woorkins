@@ -581,7 +581,7 @@ export function CreateBusinessProfileDialog({ open, onOpenChange, onSuccess }: C
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl p-0 gap-0">
+      <DialogContent className="sm:max-w-2xl h-[80vh] p-0 flex flex-col">
         <div className="sticky top-0 z-10 bg-background border-b px-6 pt-6 pb-4">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-xl">
@@ -598,7 +598,7 @@ export function CreateBusinessProfileDialog({ open, onOpenChange, onSuccess }: C
           <Progress value={getStepProgress()} className="h-2 mt-4" />
         </div>
 
-        <div className="overflow-y-auto max-h-[60vh] px-6 py-4">
+        <div className="flex-1 overflow-y-auto px-6 py-4">
           {renderStepContent()}
         </div>
 

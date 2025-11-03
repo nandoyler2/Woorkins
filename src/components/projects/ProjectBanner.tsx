@@ -13,7 +13,7 @@ export function ProjectBanner() {
   const { user } = useAuth();
   // Inicia com um banner baseado no último mostrado, mas sempre mostra algum
   const [currentBanner, setCurrentBanner] = useState<BannerType | null>(() => {
-    const lastShown = sessionStorage.getItem('projectBannerLastShown');
+    const lastShown = localStorage.getItem('projectBannerLastShown');
     
     // Sequência circular de banners
     const sequence: BannerType[] = ['woorkoins', 'payment', 'stories'];
@@ -22,7 +22,9 @@ export function ProjectBanner() {
     return sequence[startIndex];
   });
 
-  const [isMinimized, setIsMinimized] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(() => {
+    return localStorage.getItem('projectBannersMinimized') === 'true';
+  });
 
   const [isStoryDialogOpen, setIsStoryDialogOpen] = useState(false);
   const [profiles, setProfiles] = useState<any[]>([]);
@@ -31,7 +33,7 @@ export function ProjectBanner() {
 
   useEffect(() => {
     if (currentBanner) {
-      sessionStorage.setItem('projectBannerLastShown', currentBanner);
+      localStorage.setItem('projectBannerLastShown', currentBanner);
     }
   }, [currentBanner]);
 
@@ -56,15 +58,21 @@ export function ProjectBanner() {
 
   const handleMinimize = () => {
     setIsMinimized(true);
-    // Muda para o próximo banner após 3 segundos
-    setTimeout(() => {
-      const sequence: BannerType[] = ['woorkoins', 'payment', 'stories'];
-      const currentIndex = sequence.indexOf(currentBanner!);
-      const nextIndex = (currentIndex + 1) % sequence.length;
-      setCurrentBanner(sequence[nextIndex]);
-      setIsMinimized(false);
-    }, 3000);
+    localStorage.setItem('projectBannersMinimized', 'true');
   };
+
+  const handleExpand = () => {
+    setIsMinimized(false);
+    localStorage.setItem('projectBannersMinimized', 'false');
+  };
+
+  // Expor a função para ser chamada externamente
+  useEffect(() => {
+    (window as any).expandProjectBanner = handleExpand;
+    return () => {
+      delete (window as any).expandProjectBanner;
+    };
+  }, []);
 
   if (!currentBanner || isMinimized) return null;
 

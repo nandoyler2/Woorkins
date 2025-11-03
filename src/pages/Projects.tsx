@@ -5,7 +5,7 @@ import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Search, SlidersHorizontal } from 'lucide-react';
+import { Plus, Search, SlidersHorizontal, Lightbulb } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { ProjectCard } from '@/components/projects/ProjectCard';
@@ -64,6 +64,25 @@ export default function Projects() {
   const [proposalsFilter, setProposalsFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [bannersMinimized, setBannersMinimized] = useState(() => {
+    return localStorage.getItem('projectBannersMinimized') === 'true';
+  });
+
+  // Ouvir mudanças no localStorage
+  useEffect(() => {
+    const handleStorageChange = () => {
+      setBannersMinimized(localStorage.getItem('projectBannersMinimized') === 'true');
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    // Também verificar mudanças locais
+    const interval = setInterval(handleStorageChange, 500);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
+    };
+  }, []);
 
   useEffect(() => {
     document.title = 'Projetos - Woorkins';
@@ -228,6 +247,22 @@ export default function Projects() {
                     </div>
                   </SheetContent>
                 </Sheet>
+
+                {bannersMinimized && (
+                  <Button
+                    variant="outline"
+                    className="whitespace-nowrap"
+                    onClick={() => {
+                      if ((window as any).expandProjectBanner) {
+                        (window as any).expandProjectBanner();
+                        setBannersMinimized(false);
+                      }
+                    }}
+                  >
+                    <Lightbulb className="h-4 w-4 mr-2" />
+                    Dicas
+                  </Button>
+                )}
 
                 {user && (
                   <Link to="/projetos/novo">

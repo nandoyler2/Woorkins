@@ -100,6 +100,7 @@ export default function Projects() {
         .select(`
           *,
           profiles:profile_id (
+            id,
             username,
             full_name,
             avatar_url

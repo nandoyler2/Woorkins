@@ -50,6 +50,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
     const loadUserProfile = async () => {
       if (!user) {
         setCurrentUserProfileId('');
+        console.log('🔍 ProjectCard - No user logged in');
         return;
       }
 
@@ -65,7 +66,9 @@ export function ProjectCard({ project }: ProjectCardProps) {
           setCurrentUserProfileId(profileId);
           console.log('🔍 ProjectCard - Current User Profile ID:', profileId);
           console.log('🔍 ProjectCard - Project Profile ID:', project.profile_id);
+          console.log('🔍 ProjectCard - Project Title:', project.title);
           console.log('🔍 ProjectCard - Is Owner:', profileId === project.profile_id);
+          console.log('🔍 ProjectCard - Profiles object:', project.profiles);
         }
       } catch (error) {
         console.error('Error loading user profile:', error);
@@ -73,7 +76,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
     };
 
     loadUserProfile();
-  }, [user, project.profile_id]);
+  }, [user, project.profile_id, project.title]);
 
   useEffect(() => {
     const checkUserProposal = async () => {

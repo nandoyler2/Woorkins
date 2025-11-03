@@ -428,13 +428,13 @@ export default function Dashboard() {
     setEmailConfirmed(!!authUser?.email_confirmed_at);
   };
   
-  // Consolidar todo o carregamento de dados em uma única função otimizada
+  // Consolidar todo o carregamento de dados em uma única função otimizada com carregamento progressivo
   const loadAllDashboardData = async () => {
     if (!user) return;
     
     setLoadingProfile(true);
     try {
-      // 1. Carregar perfil primeiro
+      // FASE 1: Carregar apenas dados essenciais para mostrar o dashboard imediatamente
       const { getOrCreateUserProfile } = await import('@/lib/profiles');
       const profiles = await getOrCreateUserProfile(user);
       
@@ -451,24 +451,30 @@ export default function Dashboard() {
       const profileData = userProfile as unknown as Profile;
       setProfile(profileData);
       
+      // Carregar perfis de negócio imediatamente
+      await loadBusinessProfiles(profileData.id);
+      
+      // REMOVER SKELETON LOADER IMEDIATAMENTE - Dashboard já pode ser exibido!
+      setLoadingProfile(false);
+      
+      // FASE 2: Carregar o resto dos dados em background (não bloqueia a UI)
       const allProfileIds = profiles.map((p: any) => p.id);
       
-      // 2. Carregar TODOS os dados críticos em paralelo de uma vez
-      await Promise.all([
-        loadBusinessProfiles(profileData.id),
+      // Carregar dados secundários em paralelo (cada um tem seu próprio loading state)
+      Promise.all([
         loadWoorkoinsBalanceForIds(allProfileIds),
         loadStatistics(allProfileIds),
         loadPendingInvites(profileData),
         loadLastUnreadMessage(profileData),
         loadNewProjectsCount(),
         checkIfPostedStoryToday(profileData),
-      ]);
+      ]).catch(console.error);
       
-      // 3. Carregar dados menos críticos depois (não bloqueantes)
+      // Carregar dados menos críticos depois (não bloqueantes)
       loadFeedPosts(profileData).catch(console.error);
       loadFollowers(profileData).catch(console.error);
       
-      // 4. Executar fix de conflitos em background (não bloqueia)
+      // Executar fix de conflitos em background (não bloqueia)
       fixUsernameSlugConflict(profileData, profiles).catch(console.error);
       
     } catch (error) {
@@ -478,7 +484,6 @@ export default function Dashboard() {
         description: 'Não foi possível carregar seus dados. Tente novamente.',
         variant: 'destructive',
       });
-    } finally {
       setLoadingProfile(false);
     }
   };

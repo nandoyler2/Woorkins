@@ -66,8 +66,6 @@ export default function Messages() {
   const [profileId, setProfileId] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<'all' | 'unread' | 'starred' | 'archived' | 'disputes' | 'proposals_received' | 'proposals_sent'>('all');
-  const [proposalsReceivedCount, setProposalsReceivedCount] = useState(0);
-  const [proposalsSentCount, setProposalsSentCount] = useState(0);
   const [isInitialLoading, setIsInitialLoading] = useState(cachedData.conversations.length === 0 || !cachedData.lastFetched);
   const [isFilterChanging, setIsFilterChanging] = useState(false);
   const [isBackgroundLoading, setIsBackgroundLoading] = useState(false);
@@ -533,12 +531,6 @@ export default function Messages() {
         };
       }));
 
-      // Contar propostas para os badges
-      const receivedCount = proposalConvos.filter(c => (c as any).isProposalReceived).length;
-      const sentCount = proposalConvos.filter(c => (c as any).isProposalSent).length;
-      setProposalsReceivedCount(receivedCount);
-      setProposalsSentCount(sentCount);
-
       const allConvos = [...negotiationConvos, ...proposalConvos].sort(
         (a, b) => new Date(b.lastMessageAt || 0).getTime() - new Date(a.lastMessageAt || 0).getTime()
       );
@@ -823,43 +815,29 @@ export default function Messages() {
               <span>Caixa de Entrada</span>
             </button>
             
-            {proposalsReceivedCount > 0 && (
-              <button
-                onClick={() => setActiveFilter('proposals_received')}
-                className={`w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl transition-all font-medium ${
-                  activeFilter === 'proposals_received' 
-                    ? 'bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/30 scale-105' 
-                    : 'hover:bg-gradient-to-r hover:from-muted hover:to-muted/50 text-muted-foreground hover:scale-102'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <Tag className="h-5 w-5" />
-                  <span>Propostas Recebidas</span>
-                </div>
-                <Badge variant="secondary" className="ml-auto">
-                  {proposalsReceivedCount}
-                </Badge>
-              </button>
-            )}
+            <button
+              onClick={() => setActiveFilter('proposals_received')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${
+                activeFilter === 'proposals_received' 
+                  ? 'bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/30 scale-105' 
+                  : 'hover:bg-gradient-to-r hover:from-muted hover:to-muted/50 text-muted-foreground hover:scale-102'
+              }`}
+            >
+              <Tag className="h-5 w-5" />
+              <span>Propostas Recebidas</span>
+            </button>
             
-            {proposalsSentCount > 0 && (
-              <button
-                onClick={() => setActiveFilter('proposals_sent')}
-                className={`w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl transition-all font-medium ${
-                  activeFilter === 'proposals_sent' 
-                    ? 'bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/30 scale-105' 
-                    : 'hover:bg-gradient-to-r hover:from-muted hover:to-muted/50 text-muted-foreground hover:scale-102'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <Tag className="h-5 w-5" />
-                  <span>Propostas Enviadas</span>
-                </div>
-                <Badge variant="secondary" className="ml-auto">
-                  {proposalsSentCount}
-                </Badge>
-              </button>
-            )}
+            <button
+              onClick={() => setActiveFilter('proposals_sent')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${
+                activeFilter === 'proposals_sent' 
+                  ? 'bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/30 scale-105' 
+                  : 'hover:bg-gradient-to-r hover:from-muted hover:to-muted/50 text-muted-foreground hover:scale-102'
+              }`}
+            >
+              <Tag className="h-5 w-5" />
+              <span>Propostas Enviadas</span>
+            </button>
             
             <button
               onClick={() => setActiveFilter('unread')}

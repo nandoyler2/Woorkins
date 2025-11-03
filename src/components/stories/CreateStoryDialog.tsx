@@ -533,7 +533,7 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
                                     key={sticker.id}
                                     className="flex items-center gap-1 bg-background px-2 py-1 rounded text-xs"
                                   >
-                                    <span className="capitalize">{sticker.type === 'poll' ? 'Enquete' : sticker.type === 'emoji' ? 'Emoji' : sticker.type === 'location' ? 'Local' : 'Link'}</span>
+                                    <span className="capitalize">{sticker.type === 'poll' ? 'Enquete' : sticker.type === 'emoji' ? 'Emoji' : 'Link'}</span>
                                     <button
                                       onClick={() => handleRemoveSticker(sticker.id)}
                                       className="text-destructive hover:text-destructive/80"
@@ -644,7 +644,7 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
                                       key={sticker.id}
                                       className="flex items-center gap-1 bg-background px-2 py-1 rounded text-xs"
                                     >
-                                      <span className="capitalize">{sticker.type === 'poll' ? 'Enquete' : sticker.type === 'emoji' ? 'Emoji' : sticker.type === 'location' ? 'Local' : 'Link'}</span>
+                                      <span className="capitalize">{sticker.type === 'poll' ? 'Enquete' : sticker.type === 'emoji' ? 'Emoji' : 'Link'}</span>
                                       <button
                                         onClick={() => handleRemoveSticker(sticker.id)}
                                         className="text-destructive hover:text-destructive/80"
@@ -795,11 +795,6 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
                                 </div>
                               ) : sticker.type === 'emoji' ? (
                                 <span className="text-4xl hover:scale-110 transition">{sticker.content.emoji}</span>
-                              ) : sticker.type === 'location' ? (
-                                <div className="bg-black/60 backdrop-blur-md border border-white/20 rounded-2xl px-4 py-2 flex items-center gap-2">
-                                  <span className="text-xl">📍</span>
-                                  <span className="text-white text-sm font-medium">{sticker.content.name}</span>
-                                </div>
                               ) : sticker.type === 'link' ? (
                                 <div className="bg-black/60 backdrop-blur-md border border-white/20 rounded-2xl px-4 py-2 flex items-center gap-2">
                                   <span className="text-xl">🔗</span>
@@ -887,11 +882,6 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
                                 </div>
                               ) : sticker.type === 'emoji' ? (
                                 <span className="text-4xl hover:scale-110 transition">{sticker.content.emoji}</span>
-                              ) : sticker.type === 'location' ? (
-                                <div className="bg-black/60 backdrop-blur-md border border-white/20 rounded-2xl px-4 py-2 flex items-center gap-2">
-                                  <span className="text-xl">📍</span>
-                                  <span className="text-white text-sm font-medium">{sticker.content.name}</span>
-                                </div>
                               ) : sticker.type === 'link' ? (
                                 <div className="bg-black/60 backdrop-blur-md border border-white/20 rounded-2xl px-4 py-2 flex items-center gap-2">
                                   <span className="text-xl">🔗</span>

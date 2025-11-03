@@ -1,14 +1,13 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { BarChart3, Smile, MapPin, Link as LinkIcon } from 'lucide-react';
+import { BarChart3, Smile, Link as LinkIcon } from 'lucide-react';
 import { PollStickerDialog } from './stickers/PollStickerDialog';
 import { EmojiStickerDialog } from './stickers/EmojiStickerDialog';
-import { LocationStickerDialog } from './stickers/LocationStickerDialog';
 import { LinkStickerDialog } from './stickers/LinkStickerDialog';
 
 export interface Sticker {
   id: string;
-  type: 'poll' | 'emoji' | 'location' | 'link';
+  type: 'poll' | 'emoji' | 'link';
   position_x: number;
   position_y: number;
   width: number;
@@ -65,14 +64,6 @@ export const StoryStickers = ({ stickers, onAddSticker, onRemoveSticker }: Story
         <Button
           size="sm"
           variant="outline"
-          onClick={() => setActiveStickerDialog('location')}
-        >
-          <MapPin className="w-4 h-4 mr-2" />
-          Local
-        </Button>
-        <Button
-          size="sm"
-          variant="outline"
           onClick={() => setActiveStickerDialog('link')}
         >
           <LinkIcon className="w-4 h-4 mr-2" />
@@ -89,11 +80,6 @@ export const StoryStickers = ({ stickers, onAddSticker, onRemoveSticker }: Story
         open={activeStickerDialog === 'emoji'}
         onClose={() => setActiveStickerDialog(null)}
         onSave={(content) => handleAddSticker('emoji', content)}
-      />
-      <LocationStickerDialog
-        open={activeStickerDialog === 'location'}
-        onClose={() => setActiveStickerDialog(null)}
-        onSave={(content) => handleAddSticker('location', content)}
       />
       <LinkStickerDialog
         open={activeStickerDialog === 'link'}

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import type { CSSProperties } from 'react';
 import { Button } from '@/components/ui/button';
-import { MapPin, ExternalLink } from 'lucide-react';
+import { ExternalLink } from 'lucide-react';
 import { StorySticker } from '@/hooks/useStoryStickers';
 import { useAuth } from '@/contexts/AuthContext';
 import { useStoryStickers } from '@/hooks/useStoryStickers';
@@ -164,16 +164,6 @@ export const InteractiveStickerRenderer = ({
             onClick={() => !isPreview && !hasResponded && handleResponse({ emoji_tap: true })}
           >
             <span className={`text-4xl transition ${!isPreview ? 'hover:scale-110' : ''}`}>{sticker.content.emoji}</span>
-          </div>
-        );
-
-      case 'location':
-        return (
-          <div style={style} className={containerClass}>
-            <div className="bg-black/60 backdrop-blur-md border border-white/20 rounded-2xl px-4 py-3 flex items-center gap-2">
-              <MapPin className="w-4 h-4 text-white flex-shrink-0" />
-              <span className="text-white text-sm font-medium">{sticker.content.name}</span>
-            </div>
           </div>
         );
 

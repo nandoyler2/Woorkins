@@ -74,6 +74,9 @@ export const useStoryLikes = (storyId: string | null) => {
           .eq('story_id', storyId)
           .eq('profile_id', profileId);
 
+        // Decrementar contador na tabela profile_stories
+        await supabase.rpc('decrement_story_like_count', { story_id: storyId });
+
         setIsLiked(false);
         setLikeCount(prev => Math.max(0, prev - 1));
       } else {
@@ -84,6 +87,9 @@ export const useStoryLikes = (storyId: string | null) => {
             story_id: storyId,
             profile_id: profileId
           });
+
+        // Incrementar contador na tabela profile_stories
+        await supabase.rpc('increment_story_like_count', { story_id: storyId });
 
         setIsLiked(true);
         setLikeCount(prev => prev + 1);

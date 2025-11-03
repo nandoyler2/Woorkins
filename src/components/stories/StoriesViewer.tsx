@@ -110,11 +110,17 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
   const [loadingStats, setLoadingStats] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const lastTapRef = useRef<number>(0);
+  
+  // Refs para controle preciso de pausa
+  const STORY_DURATION = 10000;
+  const startTimeRef = useRef<number>(Date.now());
+  const pausedTimeRef = useRef<number>(0);
+  const lastPauseStartRef = useRef<number>(0);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  
   const { toast } = useToast();
 
   
-
-  const STORY_DURATION = 15000; // 15 segundos
 
   // Atualizar currentIndex quando initialStoryIndex mudar
   useEffect(() => {
@@ -286,6 +292,18 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
     };
   }, [isOpen, stories, currentIndex]);
 
+  // Função para avançar para o próximo story
+  const handleNext = useCallback(() => {
+    if (currentIndex < stories.length - 1) {
+      setCurrentIndex(currentIndex + 1);
+      setProgress(0);
+      setMediaLoading(true);
+    } else {
+      onClose();
+    }
+  }, [currentIndex, stories.length, onClose]);
+
+  // Efeito para inicializar e trocar de story
   useEffect(() => {
     if (!isOpen || stories.length === 0) return;
 
@@ -294,51 +312,68 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
       registerView(currentStory.id);
     }
 
+    // Reset completo ao trocar de story
+    setProgress(0);
     setIsPaused(false);
-    let progressInterval: NodeJS.Timeout;
-    let startTime = Date.now();
-    let pausedTime = 0;
-    let lastPauseStart = 0;
+    startTimeRef.current = Date.now();
+    pausedTimeRef.current = 0;
+    lastPauseStartRef.current = 0;
+
+    // Limpar interval anterior se existir
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+  }, [isOpen, stories, currentIndex, registerView]);
+
+  // Efeito separado para gerenciar progresso e pausa
+  useEffect(() => {
+    if (!isOpen || stories.length === 0) return;
 
     const updateProgress = () => {
-      // Parar imediatamente se estiver pausado
-      if (isPaused || commentsOpen) {
-        if (lastPauseStart === 0) {
-          lastPauseStart = Date.now();
-        }
-        return; // Para a execução aqui quando pausado
-      }
-
-      if (lastPauseStart > 0) {
-        pausedTime += Date.now() - lastPauseStart;
-        lastPauseStart = 0;
-      }
-
-      const elapsed = Date.now() - startTime - pausedTime;
+      const elapsed = Date.now() - startTimeRef.current - pausedTimeRef.current;
       const newProgress = (elapsed / STORY_DURATION) * 100;
 
       if (newProgress >= 100) {
-        // Avançar para o próximo story automaticamente
         handleNext();
       } else {
         setProgress(newProgress);
       }
     };
 
-    progressInterval = setInterval(updateProgress, 100);
-
-    return () => clearInterval(progressInterval);
-  }, [isOpen, stories, currentIndex, registerView, isPaused, commentsOpen]);
-
-  const handleNext = () => {
-    if (currentIndex < stories.length - 1) {
-      setCurrentIndex(currentIndex + 1);
-      setProgress(0);
-      setMediaLoading(true);
+    // Se está pausado ou comentários abertos, parar tudo
+    if (isPaused || commentsOpen) {
+      // Parar interval
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+      
+      // Marcar tempo de pausa
+      if (lastPauseStartRef.current === 0) {
+        lastPauseStartRef.current = Date.now();
+      }
     } else {
-      onClose();
+      // Despausar: calcular tempo pausado acumulado
+      if (lastPauseStartRef.current > 0) {
+        pausedTimeRef.current += Date.now() - lastPauseStartRef.current;
+        lastPauseStartRef.current = 0;
+      }
+      
+      // Iniciar interval se não existir
+      if (!intervalRef.current) {
+        intervalRef.current = setInterval(updateProgress, 100);
+      }
     }
-  };
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
+  }, [isOpen, stories, currentIndex, isPaused, commentsOpen, handleNext]);
+
 
   const handlePrevious = () => {
     if (currentIndex > 0) {
@@ -997,8 +1032,8 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
                   </div>
 
                   {/* Play/Pause e Volume control para vídeos */}
-                  {currentStory.type === 'video' && (
-                    <div className="absolute top-20 right-4 z-20 flex items-center gap-2">
+                        {currentStory.type === 'video' && (
+                          <div className="absolute top-20 right-4 z-40 flex items-center gap-2">
                       {/* Play/Pause button */}
                       <Button
                         variant="ghost"

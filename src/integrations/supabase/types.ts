@@ -4860,6 +4860,10 @@ export type Database = {
       cleanup_expired_stories: { Args: never; Returns: undefined }
       cleanup_old_activities: { Args: never; Returns: undefined }
       cleanup_typing_indicators: { Args: never; Returns: undefined }
+      decrement_story_like_count: {
+        Args: { story_id: string }
+        Returns: undefined
+      }
       delete_own_account: { Args: never; Returns: undefined }
       format_full_name: { Args: { name: string }; Returns: string }
       format_short_name: { Args: { name: string }; Returns: string }
@@ -4891,6 +4895,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      increment_story_like_count: {
+        Args: { story_id: string }
+        Returns: undefined
       }
       is_profile_owner: { Args: { _profile_id: string }; Returns: boolean }
       refresh_admin_users_view: { Args: never; Returns: undefined }

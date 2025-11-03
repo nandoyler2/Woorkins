@@ -112,9 +112,38 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
       setMediaFile(file);
       setShowCropDialog(true);
     } else {
-      // Para vídeo, usar direto
-      setMediaFile(file);
-      setMediaPreview(previewUrl);
+      // Para vídeo, validar duração (máximo 3 minutos)
+      const videoElement = document.createElement('video');
+      videoElement.preload = 'metadata';
+      
+      videoElement.onloadedmetadata = () => {
+        const duration = videoElement.duration;
+        URL.revokeObjectURL(videoElement.src);
+        
+        if (duration > 180) { // 3 minutos = 180 segundos
+          toast({
+            title: 'Vídeo muito longo',
+            description: 'O vídeo deve ter no máximo 3 minutos de duração',
+            variant: 'destructive',
+          });
+          return;
+        }
+        
+        // Se passou na validação, usar o vídeo
+        setMediaFile(file);
+        setMediaPreview(previewUrl);
+      };
+      
+      videoElement.onerror = () => {
+        URL.revokeObjectURL(videoElement.src);
+        toast({
+          title: 'Erro ao validar vídeo',
+          description: 'Não foi possível processar o vídeo',
+          variant: 'destructive',
+        });
+      };
+      
+      videoElement.src = previewUrl;
     }
   };
 

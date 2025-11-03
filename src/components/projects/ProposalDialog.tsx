@@ -162,7 +162,7 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
       const profileData = profile as any;
 
       // Create proposal
-      const { error } = await supabase
+      const { data: proposalData, error } = await supabase
         .from('proposals' as any)
         .insert({
           project_id: projectId,
@@ -171,9 +171,26 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
           delivery_days: parseInt(deliveryTime),
           message: message,
           status: 'pending',
-        });
+        })
+        .select()
+        .single();
 
       if (error) throw error;
+
+      // Create first message in proposal_messages with proposal details
+      if (proposalData) {
+        const proposal = proposalData as any;
+        const firstMessage = `${message}\n\nValor: R$ ${budgetNumber.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}\nPrazo: ${deliveryTime} dias`;
+        
+        await supabase
+          .from('proposal_messages' as any)
+          .insert({
+            proposal_id: proposal.id,
+            sender_id: profileData.id,
+            content: firstMessage,
+            status: 'sent'
+          });
+      }
 
       setSuccess(true);
       localStorage.removeItem(draftKey);

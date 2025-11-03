@@ -161,6 +161,39 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
 
       const profileData = profile as any;
 
+      // Check if there's an existing proposal from this freelancer for this project
+      const { data: existingProposal } = await supabase
+        .from('proposals' as any)
+        .select('id')
+        .eq('project_id', projectId)
+        .eq('freelancer_id', profileData.id)
+        .maybeSingle();
+
+      // If there's an existing proposal, delete all its messages first
+      if (existingProposal) {
+        const existingId = (existingProposal as any).id;
+        
+        await supabase
+          .from('proposal_messages' as any)
+          .delete()
+          .eq('proposal_id', existingId);
+
+        await supabase
+          .from('counter_proposals' as any)
+          .delete()
+          .eq('proposal_id', existingId);
+
+        await supabase
+          .from('proposal_status_history' as any)
+          .delete()
+          .eq('proposal_id', existingId);
+
+        await supabase
+          .from('proposals' as any)
+          .delete()
+          .eq('id', existingId);
+      }
+
       // Create proposal
       const { data: proposalData, error } = await supabase
         .from('proposals' as any)

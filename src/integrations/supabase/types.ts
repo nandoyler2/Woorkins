@@ -4361,6 +4361,10 @@ export type Database = {
       delete_own_account: { Args: never; Returns: undefined }
       format_full_name: { Args: { name: string }; Returns: string }
       format_short_name: { Args: { name: string }; Returns: string }
+      free_identifier_if_owner_deleted: {
+        Args: { p_identifier: string }
+        Returns: undefined
+      }
       generate_available_username: {
         Args: { base_text: string }
         Returns: string

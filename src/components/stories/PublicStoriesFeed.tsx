@@ -575,6 +575,23 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
                           )}
                         </div>
                       )}
+
+                      {/* Renderizar stickers na miniatura do repost - atrás dos ícones */}
+                      {(story as any).story_stickers && (story as any).story_stickers.length > 0 && (
+                        <div className="absolute inset-0 pointer-events-none z-0">
+                          {(story as any).story_stickers.map((sticker: any) => (
+                            <InteractiveStickerRenderer
+                              key={sticker.id}
+                              sticker={{
+                                ...sticker,
+                                story_id: story.id,
+                                scale: (sticker.scale || 1) * 0.4
+                              } as any}
+                              isPreview={true}
+                            />
+                          ))}
+                        </div>
+                      )}
                     </div>
                     
                     {/* Créditos do autor original */}
@@ -675,6 +692,23 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
                                 className="w-full h-full object-cover block"
                               />
                             )}
+                          </div>
+                        )}
+
+                        {/* Renderizar stickers na miniatura - atrás dos ícones */}
+                        {(story as any).story_stickers && (story as any).story_stickers.length > 0 && (
+                          <div className="absolute inset-0 pointer-events-none z-0">
+                            {(story as any).story_stickers.map((sticker: any) => (
+                              <InteractiveStickerRenderer
+                                key={sticker.id}
+                                sticker={{
+                                  ...sticker,
+                                  story_id: story.id,
+                                  scale: (sticker.scale || 1) * 0.65
+                                } as any}
+                                isPreview={true}
+                              />
+                            ))}
                           </div>
                         )}
                       </div>

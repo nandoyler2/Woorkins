@@ -53,24 +53,24 @@ const ProfileEvaluate = lazy(() => import("./pages/ProfileEvaluate"));
 const BusinessAppointments = lazy(() => import("./pages/BusinessAppointments"));
 const UserAppointmentBooking = lazy(() => import("./pages/UserAppointmentBooking"));
 
-// Lazy loading para páginas admin
-const AdminLayout = lazy(() => import("./pages/admin/AdminLayout"));
-const Admin = lazy(() => import("./pages/Admin"));
-const UsersManagement = lazy(() => import("./pages/admin/UsersManagement"));
-const ModerationManagement = lazy(() => import("./pages/admin/ModerationManagement"));
-const ContentManagement = lazy(() => import("./pages/admin/ContentManagement"));
-const FinancialManagement = lazy(() => import("./pages/admin/FinancialManagement"));
-const WithdrawalRequests = lazy(() => import("./pages/admin/WithdrawalRequests"));
-const AdminSupport = lazy(() => import("./pages/admin/Support"));
-const SettingsManagement = lazy(() => import("./pages/admin/SettingsManagement"));
-const UserMessages = lazy(() => import("./pages/admin/UserMessages"));
-const AdminBusinesses = lazy(() => import("./pages/admin/Businesses"));
-const PlansSettings = lazy(() => import("./pages/admin/PlansSettings"));
-const AdminAnalytics = lazy(() => import("./pages/admin/Analytics"));
-const AdminReports = lazy(() => import("./pages/admin/Reports"));
-const HubArticles = lazy(() => import("./pages/admin/HubArticles"));
-const LegalPages = lazy(() => import("./pages/admin/LegalPages"));
-const AISettings = lazy(() => import("./pages/admin/AISettings"));
+// Importações síncronas para páginas admin (navegação instantânea)
+import AdminLayout from "./pages/admin/AdminLayout";
+import Admin from "./pages/Admin";
+import UsersManagement from "./pages/admin/UsersManagement";
+import ModerationManagement from "./pages/admin/ModerationManagement";
+import ContentManagement from "./pages/admin/ContentManagement";
+import FinancialManagement from "./pages/admin/FinancialManagement";
+import WithdrawalRequests from "./pages/admin/WithdrawalRequests";
+import AdminSupport from "./pages/admin/Support";
+import SettingsManagement from "./pages/admin/SettingsManagement";
+import UserMessages from "./pages/admin/UserMessages";
+import AdminBusinesses from "./pages/admin/Businesses";
+import PlansSettings from "./pages/admin/PlansSettings";
+import AdminAnalytics from "./pages/admin/Analytics";
+import AdminReports from "./pages/admin/Reports";
+import HubArticles from "./pages/admin/HubArticles";
+import LegalPages from "./pages/admin/LegalPages";
+import AISettings from "./pages/admin/AISettings";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -145,28 +145,32 @@ function AppContent() {
           <Route path="/:slug/agendamento" element={<ProtectedRoute><UserAppointmentBooking /></ProtectedRoute>} />
           <Route path="/:slug/*" element={<ProfileRouter />} />
 
-          <Route path="/admin" element={<ProtectedRoute requireAdmin><AdminLayout /></ProtectedRoute>}>
-            <Route index element={<Admin />} />
-            <Route path="usuarios" element={<UsersManagement />} />
-            <Route path="moderacao" element={<ModerationManagement />} />
-            <Route path="perfis-profissionais" element={<AdminBusinesses />} />
-            <Route path="conteudo" element={<ContentManagement />} />
-            <Route path="financeiro" element={<FinancialManagement />} />
-            <Route path="saques" element={<WithdrawalRequests />} />
-            <Route path="suporte" element={<AdminSupport />} />
-            <Route path="planos" element={<PlansSettings />} />
-            <Route path="analises" element={<AdminAnalytics />} />
-            <Route path="relatorios" element={<AdminReports />} />
-            <Route path="artigos-hub" element={<HubArticles />} />
-            <Route path="paginas-legais" element={<LegalPages />} />
-            <Route path="configuracoes" element={<SettingsManagement />} />
-            <Route path="ia" element={<AISettings />} />
-            <Route path="mensagens-usuarios" element={<UserMessages />} />
-          </Route>
-
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>
+      
+      {/* Rotas Admin - Navegação instantânea sem Suspense */}
+      <Routes>
+        <Route path="/admin" element={<ProtectedRoute requireAdmin><AdminLayout /></ProtectedRoute>}>
+          <Route index element={<Admin />} />
+          <Route path="usuarios" element={<UsersManagement />} />
+          <Route path="moderacao" element={<ModerationManagement />} />
+          <Route path="perfis-profissionais" element={<AdminBusinesses />} />
+          <Route path="conteudo" element={<ContentManagement />} />
+          <Route path="financeiro" element={<FinancialManagement />} />
+          <Route path="saques" element={<WithdrawalRequests />} />
+          <Route path="suporte" element={<AdminSupport />} />
+          <Route path="planos" element={<PlansSettings />} />
+          <Route path="analises" element={<AdminAnalytics />} />
+          <Route path="relatorios" element={<AdminReports />} />
+          <Route path="artigos-hub" element={<HubArticles />} />
+          <Route path="paginas-legais" element={<LegalPages />} />
+          <Route path="configuracoes" element={<SettingsManagement />} />
+          <Route path="ia" element={<AISettings />} />
+          <Route path="mensagens-usuarios" element={<UserMessages />} />
+        </Route>
+      </Routes>
+      
       <AuthDialog />
       <AIAssistant />
       <UploadIndicator />

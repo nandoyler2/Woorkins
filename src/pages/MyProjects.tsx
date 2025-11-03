@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   Dialog,
   DialogContent,
@@ -15,9 +16,11 @@ import {
 import { ProposalChat } from '@/components/ProposalChat';
 import { ProposalPaymentDialog } from '@/components/projects/ProposalPaymentDialog';
 import { useToast } from '@/hooks/use-toast';
-import { MessageSquare, CheckCircle, XCircle, CreditCard } from 'lucide-react';
+import { MessageSquare, CheckCircle, XCircle, CreditCard, Calendar, Clock } from 'lucide-react';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
+import { formatShortName } from '@/lib/utils';
+import { Link } from 'react-router-dom';
 
 interface Project {
   id: string;
@@ -176,6 +179,20 @@ const MyProjects = () => {
     setChatOpen(true);
   };
 
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
+  };
+
+  const truncateMessage = (message: string, maxLength: number = 80) => {
+    if (message.length <= maxLength) return message;
+    return message.substring(0, maxLength).trim() + '...';
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-primary/5 to-secondary/10">
       <Header />
@@ -216,9 +233,15 @@ const MyProjects = () => {
                 <Card key={project.id} className="bg-card/50 backdrop-blur-sm shadow-lg border-2 hover:shadow-xl transition-all">
                   <CardHeader>
                     <div className="flex items-start justify-between">
-                      <div>
-                        <CardTitle>{project.title}</CardTitle>
-                        <CardDescription className="mt-2">{project.description}</CardDescription>
+                      <div className="flex-1">
+                        <Link to={`/projetos/${project.id}`}>
+                          <CardTitle className="hover:text-primary transition-colors cursor-pointer">
+                            {project.title}
+                          </CardTitle>
+                        </Link>
+                        <CardDescription className="mt-2 line-clamp-2">
+                          {project.description}
+                        </CardDescription>
                       </div>
                       <Badge variant={project.status === 'open' ? 'default' : 'secondary'}>
                         {project.status === 'open' ? 'Aberto' : 'Fechado'}
@@ -228,9 +251,9 @@ const MyProjects = () => {
                   <CardContent>
                     <div className="flex items-center justify-between text-sm text-muted-foreground">
                       <span>
-                        Orçamento: R$ {project.budget_min} - R$ {project.budget_max}
+                        Orçamento: R$ {project.budget_min?.toLocaleString()} - R$ {project.budget_max?.toLocaleString()}
                       </span>
-                      <span>{project.proposals_count} propostas</span>
+                      <span>{project.proposals_count} proposta{project.proposals_count !== 1 ? 's' : ''}</span>
                     </div>
                   </CardContent>
                 </Card>
@@ -238,21 +261,19 @@ const MyProjects = () => {
             )}
           </TabsContent>
 
-          <TabsContent value="proposals" className="space-y-4">
+          <TabsContent value="proposals" className="space-y-3">
             {loadingProposals ? (
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {[1, 2, 3].map(i => (
                   <Card key={i} className="bg-card/50 backdrop-blur-sm shadow-lg border-2">
-                    <CardHeader>
-                      <div className="animate-pulse space-y-2">
-                        <div className="h-6 bg-muted rounded w-1/2" />
-                        <div className="h-4 bg-muted rounded w-3/4" />
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="animate-pulse space-y-2">
-                        <div className="h-4 bg-muted rounded w-full" />
-                        <div className="h-4 bg-muted rounded w-2/3" />
+                    <CardContent className="p-4">
+                      <div className="animate-pulse flex gap-4">
+                        <div className="h-12 w-12 bg-muted rounded-full" />
+                        <div className="flex-1 space-y-2">
+                          <div className="h-4 bg-muted rounded w-1/3" />
+                          <div className="h-3 bg-muted rounded w-full" />
+                          <div className="h-3 bg-muted rounded w-2/3" />
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
@@ -267,78 +288,105 @@ const MyProjects = () => {
             ) : (
               proposals.map((proposal) => (
                 <Card key={proposal.id} className="bg-card/50 backdrop-blur-sm shadow-lg border-2 hover:shadow-xl transition-all">
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <CardTitle className="text-lg">
-                          {proposal.freelancer.full_name}
-                          {proposal.business && ` - ${proposal.business.company_name}`}
-                        </CardTitle>
-                        <CardDescription className="mt-1">
-                          Projeto: {proposal.project.title}
-                        </CardDescription>
-                      </div>
-                      <Badge
-                        variant={
-                          proposal.status === 'accepted'
-                            ? 'default'
-                            : proposal.status === 'rejected'
-                            ? 'destructive'
-                            : 'secondary'
-                        }
-                      >
-                        {proposal.status === 'accepted' && proposal.payment_status === 'paid_escrow'
-                          ? '💰 Retido em Escrow'
-                          : proposal.status === 'accepted'
-                          ? 'Aceita'
-                          : proposal.status === 'rejected'
-                          ? 'Recusada'
-                          : 'Pendente'}
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <p className="text-sm">{proposal.message}</p>
-                    <div className="flex items-center justify-between text-sm">
-                      <div className="space-x-4">
-                        <span>Orçamento: R$ {proposal.budget}</span>
-                        <span>Prazo: {proposal.delivery_days} dias</span>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => openChat(proposal)}
-                        >
-                          <MessageSquare className="h-4 w-4 mr-2" />
-                          Mensagem
-                        </Button>
-                        {proposal.status === 'pending' && (
-                          <>
-                            <Button
-                              variant="default"
-                              size="sm"
-                              onClick={() => updateProposalStatus(proposal.id, 'accepted')}
-                              className="bg-gradient-primary hover:opacity-90"
-                            >
-                              <CreditCard className="h-4 w-4 mr-2" />
-                              Aceitar e Pagar
-                            </Button>
-                            <Button
-                              variant="destructive"
-                              size="sm"
-                              onClick={() => updateProposalStatus(proposal.id, 'rejected')}
-                            >
-                              <XCircle className="h-4 w-4 mr-2" />
-                              Recusar
-                            </Button>
-                          </>
+                  <CardContent className="p-4">
+                    <div className="flex gap-4">
+                      {/* Avatar e Nome */}
+                      <Avatar className="h-12 w-12">
+                        {proposal.freelancer.avatar_url ? (
+                          <AvatarImage src={proposal.freelancer.avatar_url} alt={proposal.freelancer.full_name} />
+                        ) : (
+                          <AvatarFallback className="bg-primary text-primary-foreground">
+                            {formatShortName(proposal.freelancer.full_name)?.[0]?.toUpperCase()}
+                          </AvatarFallback>
                         )}
-                        {proposal.status === 'accepted' && proposal.payment_status === 'paid_escrow' && (
-                          <>
-                            <Badge className="bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-100">
-                              💰 Pagamento Retido
-                            </Badge>
+                      </Avatar>
+
+                      <div className="flex-1 space-y-2">
+                        {/* Nome e Badge de Status */}
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <h3 className="font-semibold text-base">
+                              {proposal.freelancer.full_name}
+                              {proposal.business && (
+                                <span className="text-sm text-muted-foreground ml-2">
+                                  - {proposal.business.company_name}
+                                </span>
+                              )}
+                            </h3>
+                            <p className="text-xs text-muted-foreground">
+                              Projeto: {proposal.project.title}
+                            </p>
+                          </div>
+                          <Badge
+                            variant={
+                              proposal.status === 'accepted'
+                                ? 'default'
+                                : proposal.status === 'rejected'
+                                ? 'destructive'
+                                : 'secondary'
+                            }
+                          >
+                            {proposal.status === 'accepted' && proposal.payment_status === 'paid_escrow'
+                              ? '💰 Escrow'
+                              : proposal.status === 'accepted'
+                              ? 'Aceita'
+                              : proposal.status === 'rejected'
+                              ? 'Recusada'
+                              : 'Pendente'}
+                          </Badge>
+                        </div>
+
+                        {/* Mensagem truncada */}
+                        <p className="text-sm text-foreground/80 line-clamp-2">
+                          {truncateMessage(proposal.message)}
+                        </p>
+
+                        {/* Informações */}
+                        <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                          <div className="flex items-center gap-1">
+                            <span className="font-semibold text-primary">R$ {proposal.budget.toLocaleString()}</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
+                            <span>{proposal.delivery_days} dias</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Calendar className="h-3 w-3" />
+                            <span>{formatDate(proposal.created_at)}</span>
+                          </div>
+                        </div>
+
+                        {/* Botões de ação */}
+                        <div className="flex gap-2 pt-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => openChat(proposal)}
+                          >
+                            <MessageSquare className="h-4 w-4 mr-2" />
+                            Ver proposta
+                          </Button>
+                          {proposal.status === 'pending' && (
+                            <>
+                              <Button
+                                variant="default"
+                                size="sm"
+                                onClick={() => updateProposalStatus(proposal.id, 'accepted')}
+                                className="bg-gradient-primary hover:opacity-90"
+                              >
+                                <CreditCard className="h-4 w-4 mr-2" />
+                                Aceitar e Pagar
+                              </Button>
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => updateProposalStatus(proposal.id, 'rejected')}
+                              >
+                                <XCircle className="h-4 w-4" />
+                              </Button>
+                            </>
+                          )}
+                          {proposal.status === 'accepted' && proposal.payment_status === 'paid_escrow' && (
                             <Button
                               variant="default"
                               size="sm"
@@ -364,10 +412,10 @@ const MyProjects = () => {
                               }}
                             >
                               <CheckCircle className="h-4 w-4 mr-2" />
-                              Confirmar Serviço Concluído
+                              Confirmar Conclusão
                             </Button>
-                          </>
-                        )}
+                          )}
+                        </div>
                       </div>
                     </div>
                   </CardContent>

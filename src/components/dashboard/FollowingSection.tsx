@@ -30,8 +30,13 @@ export function FollowingSection({ profileId }: FollowingSectionProps) {
   const [showAll, setShowAll] = useState(false);
   const navigate = useNavigate();
 
+  console.log('🚀 FollowingSection renderizou com profileId:', profileId);
+
   useEffect(() => {
-    loadFollowing();
+    console.log('▶️ useEffect disparou para profileId:', profileId);
+    if (profileId) {
+      loadFollowing();
+    }
   }, [profileId]);
 
   useEffect(() => {

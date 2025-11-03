@@ -75,22 +75,13 @@ export function FollowingSection({ profileId }: FollowingSectionProps) {
     try {
       console.log('🔍 Carregando seguidos para profileId:', profileId);
       
-      // Buscar perfis de usuários seguidos
+      // Buscar IDs dos usuários seguidos (consulta simples, sem join)
       const { data: followsData, error: followsError } = await supabase
-        .from('follows')
-        .select(`
-          following_id,
-          profiles:following_id (
-            id,
-            username,
-            full_name,
-            avatar_url,
-            last_seen
-          )
-        `)
+        .from('follows' as any)
+        .select('following_id')
         .eq('follower_id', profileId);
 
-      console.log('📋 Follows data:', followsData);
+      console.log('📋 Follows data (ids):', followsData);
       console.log('❌ Follows error:', followsError);
 
       if (followsError) throw followsError;

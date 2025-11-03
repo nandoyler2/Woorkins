@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { StoryIndicator } from '@/components/stories/StoryIndicator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -997,12 +998,13 @@ export function UnifiedChat({
         {!isMine && (
           <ProfileHoverCard profileId={changed_by}>
             <div className="cursor-pointer">
-              <Avatar className="h-8 w-8 flex-shrink-0 ring-2 ring-background group-hover:ring-primary/50 transition-all">
-                <AvatarImage src={changed_by_profile?.avatar_url || changed_by_profile?.logo_url} />
-                <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                  {(changed_by_profile?.company_name || changed_by_profile?.full_name || 'U').charAt(0).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
+              <StoryIndicator
+                profileId={changed_by}
+                avatarUrl={changed_by_profile?.avatar_url || changed_by_profile?.logo_url}
+                username={changed_by_profile?.company_name || changed_by_profile?.full_name}
+                size="sm"
+                onClick={() => {}}
+              />
             </div>
           </ProfileHoverCard>
         )}
@@ -1591,12 +1593,13 @@ export function UnifiedChat({
                       {!isMine && (
                         <ProfileHoverCard profileId={message.sender_id}>
                           <div className="cursor-pointer">
-                            <Avatar className="h-8 w-8 flex-shrink-0 ring-2 ring-background group-hover:ring-primary/50 transition-all">
-                              <AvatarImage src={message.sender_avatar} />
-                              <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10 text-primary text-xs font-semibold">
-                                {message.sender_name.charAt(0).toUpperCase()}
-                              </AvatarFallback>
-                            </Avatar>
+                            <StoryIndicator
+                              profileId={message.sender_id}
+                              avatarUrl={message.sender_avatar}
+                              username={message.sender_name}
+                              size="sm"
+                              onClick={() => {}}
+                            />
                           </div>
                         </ProfileHoverCard>
                       )}

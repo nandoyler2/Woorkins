@@ -197,14 +197,36 @@ export function UnifiedChat({
     : blockedUntil;
   const finalBlockReason = systemMessagingBlock?.reason || blockReason;
 
-  // Scroll instantâneo apenas na troca de conversa (não em toda mudança de mensagem)
+  // Ref para rastrear número anterior de mensagens
+  const prevMessageCountRef = useRef(0);
+  
+  // Scroll instantâneo ao trocar de conversa
   useLayoutEffect(() => {
     const container = messagesContainerRef.current;
     if (!container) return;
     
-    // Scroll instantâneo para o final apenas quando a conversa muda
+    // Scroll instantâneo para o final quando a conversa muda
     container.scrollTop = container.scrollHeight;
+    prevMessageCountRef.current = messages.length;
   }, [conversationId]);
+  
+  // Scroll automático quando nova mensagem chega
+  useEffect(() => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+    
+    // Se o número de mensagens aumentou, fazer scroll suave para o final
+    if (messages.length > prevMessageCountRef.current) {
+      requestAnimationFrame(() => {
+        container.scrollTo({
+          top: container.scrollHeight,
+          behavior: 'smooth'
+        });
+      });
+    }
+    
+    prevMessageCountRef.current = messages.length;
+  }, [messages.length]);
 
   // Detectar scroll para cima e carregar mais mensagens (infinite scroll reverso)
   useEffect(() => {

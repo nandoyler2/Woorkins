@@ -1209,35 +1209,41 @@ export default function Messages() {
               </button>
             )}
             
-            <button
-              onClick={() => setActiveFilter('proposals_received')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm ${
-                activeFilter === 'proposals_received' 
-                  ? 'bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/30 scale-105' 
-                  : 'hover:bg-gradient-to-r hover:from-muted hover:to-muted/50 text-muted-foreground hover:scale-102'
-              }`}
-            >
-              <FileInput className={`h-4 w-4 ${activeFilter === 'proposals_received' ? '' : 'text-green-500'}`} />
-              <span>Propostas Recebidas</span>
-              {unreadCounts.proposals_received > 0 && (
-                <Badge variant="destructive" className="ml-auto">{unreadCounts.proposals_received}</Badge>
-              )}
-            </button>
+            {/* Filtro Propostas Recebidas - só exibe se houver propostas recebidas */}
+            {conversations.some(c => c.type === 'proposal' && (c as any).isProposalReceived) && (
+              <button
+                onClick={() => setActiveFilter('proposals_received')}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm ${
+                  activeFilter === 'proposals_received' 
+                    ? 'bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/30 scale-105' 
+                    : 'hover:bg-gradient-to-r hover:from-muted hover:to-muted/50 text-muted-foreground hover:scale-102'
+                }`}
+              >
+                <FileInput className={`h-4 w-4 ${activeFilter === 'proposals_received' ? '' : 'text-green-500'}`} />
+                <span>Propostas Recebidas</span>
+                {unreadCounts.proposals_received > 0 && (
+                  <Badge variant="destructive" className="ml-auto">{unreadCounts.proposals_received}</Badge>
+                )}
+              </button>
+            )}
             
-            <button
-              onClick={() => setActiveFilter('proposals_sent')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm ${
-                activeFilter === 'proposals_sent' 
-                  ? 'bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/30 scale-105' 
-                  : 'hover:bg-gradient-to-r hover:from-muted hover:to-muted/50 text-muted-foreground hover:scale-102'
-              }`}
-            >
-              <Send className={`h-4 w-4 ${activeFilter === 'proposals_sent' ? '' : 'text-purple-500'}`} />
-              <span>Propostas Enviadas</span>
-              {unreadCounts.proposals_sent > 0 && (
-                <Badge variant="destructive" className="ml-auto">{unreadCounts.proposals_sent}</Badge>
-              )}
-            </button>
+            {/* Filtro Propostas Enviadas - só exibe se houver propostas enviadas */}
+            {conversations.some(c => c.type === 'proposal' && (c as any).isProposalSent) && (
+              <button
+                onClick={() => setActiveFilter('proposals_sent')}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm ${
+                  activeFilter === 'proposals_sent' 
+                    ? 'bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/30 scale-105' 
+                    : 'hover:bg-gradient-to-r hover:from-muted hover:to-muted/50 text-muted-foreground hover:scale-102'
+                }`}
+              >
+                <Send className={`h-4 w-4 ${activeFilter === 'proposals_sent' ? '' : 'text-purple-500'}`} />
+                <span>Propostas Enviadas</span>
+                {unreadCounts.proposals_sent > 0 && (
+                  <Badge variant="destructive" className="ml-auto">{unreadCounts.proposals_sent}</Badge>
+                )}
+              </button>
+            )}
             
             <button
               onClick={() => setActiveFilter('unread')}
@@ -1266,17 +1272,20 @@ export default function Messages() {
               <span>Favoritas</span>
             </button>
             
-            <button
-              onClick={() => setActiveFilter('completed')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm ${
-                activeFilter === 'completed' 
-                  ? 'bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/30 scale-105' 
-                  : 'hover:bg-gradient-to-r hover:from-muted hover:to-muted/50 text-muted-foreground hover:scale-102'
-              }`}
-            >
-              <CheckCircle className={`h-4 w-4 ${activeFilter === 'completed' ? '' : 'text-green-500'}`} />
-              <span>Finalizados</span>
-            </button>
+            {/* Filtro Finalizados - só exibe se houver projetos finalizados */}
+            {conversations.some(c => c.type === 'proposal' && (c.workStatus === 'completed' || c.workStatus === 'payment_complete')) && (
+              <button
+                onClick={() => setActiveFilter('completed')}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm ${
+                  activeFilter === 'completed' 
+                    ? 'bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/30 scale-105' 
+                    : 'hover:bg-gradient-to-r hover:from-muted hover:to-muted/50 text-muted-foreground hover:scale-102'
+                }`}
+              >
+                <CheckCircle className={`h-4 w-4 ${activeFilter === 'completed' ? '' : 'text-green-500'}`} />
+                <span>Finalizados</span>
+              </button>
+            )}
             
             <button
               onClick={() => setActiveFilter('archived')}

@@ -70,6 +70,7 @@ export default function Messages() {
   const isLoadingRef = useRef(false);
   const loadingTimeoutRef = useRef<NodeJS.Timeout>();
   const hasLoadedData = useRef(false);
+  const hasLoadedOnce = useRef(false); // Flag para controlar primeiro carregamento
   const location = useLocation();
 
   useEffect(() => {
@@ -94,11 +95,12 @@ export default function Messages() {
     if (profileId) {
       console.log('🔄 Carregando conversas (filtro:', activeFilter, ')');
       
-      // Apenas mostrar skeleton completo no PRIMEIRO load (sem conversas em cache)
-      if (cachedData.conversations.length === 0 && conversations.length === 0) {
+      // Apenas mostrar skeleton completo no PRIMEIRO carregamento ABSOLUTO
+      if (!hasLoadedOnce.current) {
         setIsInitialLoading(true);
+        hasLoadedOnce.current = true;
       } else {
-        // Qualquer troca de filtro - transição suave
+        // Qualquer troca de filtro depois - apenas transição suave
         setIsFilterChanging(true);
       }
       

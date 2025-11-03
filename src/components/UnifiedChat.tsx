@@ -222,11 +222,11 @@ export function UnifiedChat({
     // Duplo requestAnimationFrame para garantir que DOM está pronto
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        container.scrollTop = container.scrollHeight;
+        container.scrollTop = container.scrollHeight + 1000;
         
         // Pequeno delay para imagens carregarem
         setTimeout(() => {
-          container.scrollTop = container.scrollHeight;
+          container.scrollTop = container.scrollHeight + 1000;
           isHydratingRef.current = false;
           setHideOnInit(false);
           prevMessageCountRef.current = messages.length;
@@ -244,7 +244,7 @@ export function UnifiedChat({
     
     if (messages.length > prevMessageCountRef.current) {
       container.style.scrollBehavior = 'auto';
-      container.scrollTop = container.scrollHeight;
+      container.scrollTop = container.scrollHeight + 1000;
     }
     
     prevMessageCountRef.current = messages.length;

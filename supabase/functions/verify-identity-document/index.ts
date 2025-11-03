@@ -391,7 +391,7 @@ RESPONDA EM JSON:
     const result = {
       status: verificationStatus,
       extractedData: {
-        name: extractedName,
+        name: formatName(extractedName),
         cpf: cpfToCompare, // Usar apenas os 11 primeiros dígitos
         birthDate: extractedBirthDate,
         documentType: frontData.documentType,
@@ -418,7 +418,7 @@ RESPONDA EM JSON:
       };
 
       if (extractedName) {
-        updates.full_name = extractedName;
+        updates.full_name = formatName(extractedName);
       }
 
       if (extractedBirthDate) {
@@ -449,7 +449,7 @@ RESPONDA EM JSON:
         verification_status: verificationStatus,
         verification_result: result,
         ai_analysis: result.aiAnalysis,
-        extracted_name: extractedName,
+        extracted_name: formatName(extractedName),
         extracted_cpf: cpfToCompare,
         extracted_birth_date: extractedBirthDate ? (() => {
           const [day, month, year] = extractedBirthDate.split('/');
@@ -489,6 +489,25 @@ RESPONDA EM JSON:
     );
   }
 });
+
+// Helper function to format names properly
+function formatName(name: string): string {
+  if (!name) return '';
+  
+  const lowercaseWords = ['de', 'da', 'do', 'das', 'dos', 'e'];
+  
+  return name
+    .toLowerCase()
+    .split(' ')
+    .map((word, index) => {
+      // Always capitalize first word, otherwise check if it's a lowercase word
+      if (index === 0 || !lowercaseWords.includes(word)) {
+        return word.charAt(0).toUpperCase() + word.slice(1);
+      }
+      return word;
+    })
+    .join(' ');
+}
 
 // Helper function to convert Blob to base64
 async function blobToBase64(blob: Blob): Promise<string> {

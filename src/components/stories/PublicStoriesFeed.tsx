@@ -575,23 +575,6 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
                           )}
                         </div>
                       )}
-
-                      {/* Renderizar stickers na miniatura do repost com escala proporcional */}
-                      {(story as any).story_stickers && (story as any).story_stickers.length > 0 && (
-                        <div className="absolute inset-0 pointer-events-none z-10">
-                          {(story as any).story_stickers.map((sticker: any) => (
-                            <InteractiveStickerRenderer
-                              key={sticker.id}
-                              sticker={{
-                                ...sticker,
-                                story_id: story.id,
-                                scale: (sticker.scale || 1) * 0.4
-                              } as any}
-                              isPreview={true}
-                            />
-                          ))}
-                        </div>
-                      )}
                     </div>
                     
                     {/* Créditos do autor original */}
@@ -694,26 +677,9 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
                             )}
                           </div>
                         )}
-
-                        {/* Renderizar stickers na miniatura com escala proporcional */}
-                        {(story as any).story_stickers && (story as any).story_stickers.length > 0 && (
-                          <div className="absolute inset-0 pointer-events-none z-10">
-                            {(story as any).story_stickers.map((sticker: any) => (
-                              <InteractiveStickerRenderer
-                                key={sticker.id}
-                                sticker={{
-                                  ...sticker,
-                                  story_id: story.id,
-                                  scale: (sticker.scale || 1) * 0.65
-                                } as any}
-                                isPreview={true}
-                              />
-                            ))}
-                          </div>
-                        )}
                       </div>
                     </>
-                )}
+                  )}
                 
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                 

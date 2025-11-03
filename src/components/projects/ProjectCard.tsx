@@ -2,7 +2,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { MapPin, Star, CheckCircle, Clock, MessageSquare } from "lucide-react";
+import { MapPin, Star, CheckCircle, Clock, MessageSquare, Flag, Trash2 } from "lucide-react";
 import { formatShortName } from "@/lib/utils";
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
@@ -14,6 +14,28 @@ import { ClickableProfile } from "@/components/ClickableProfile";
 import { ViewProposalDialog } from "./ViewProposalDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Shield } from "lucide-react";
 
 interface ProjectCardProps {
   project: {
@@ -48,6 +70,11 @@ export function ProjectCard({ project }: ProjectCardProps) {
   const [userProposal, setUserProposal] = useState<any>(null);
   const [hasProposal, setHasProposal] = useState(false);
   const [currentUserProfileIds, setCurrentUserProfileIds] = useState<string[]>([]);
+  const [reportDialogOpen, setReportDialogOpen] = useState(false);
+  const [reportReason, setReportReason] = useState('');
+  const [reportDescription, setReportDescription] = useState('');
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     const loadUserProfiles = async () => {
@@ -163,6 +190,75 @@ export function ProjectCard({ project }: ProjectCardProps) {
       }
     };
     checkUserProposal();
+  };
+
+  const handleReport = async () => {
+    if (!user) {
+      toast.error('Faça login para denunciar');
+      return;
+    }
+
+    if (!reportReason) {
+      toast.error('Selecione um motivo para a denúncia');
+      return;
+    }
+
+    try {
+      // Sanitizar descrição
+      const sanitizedDescription = reportDescription.replace(/[<>]/g, '').trim();
+
+      const { error } = await supabase
+        .from('reports' as any)
+        .insert({
+          reported_by: user.id,
+          content_type: 'project',
+          content_id: project.id,
+          reason: reportReason,
+          description: sanitizedDescription || null,
+        });
+
+      if (error) throw error;
+
+      toast.success('Denúncia enviada com sucesso', {
+        description: 'Nossa equipe analisará o conteúdo em breve'
+      });
+      
+      setReportDialogOpen(false);
+      setReportReason('');
+      setReportDescription('');
+    } catch (error) {
+      console.error('Error reporting project:', error);
+      toast.error('Erro ao enviar denúncia', {
+        description: 'Tente novamente mais tarde'
+      });
+    }
+  };
+
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    try {
+      const { error } = await supabase
+        .from('projects' as any)
+        .delete()
+        .eq('id', project.id);
+
+      if (error) throw error;
+
+      toast.success('Projeto excluído com sucesso');
+      setDeleteDialogOpen(false);
+      
+      // Recarregar a página após 1 segundo
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+    } catch (error) {
+      console.error('Error deleting project:', error);
+      toast.error('Erro ao excluir projeto', {
+        description: 'Tente novamente mais tarde'
+      });
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const formatBudget = (min: number | null, max: number | null) => {
@@ -331,6 +427,45 @@ export function ProjectCard({ project }: ProjectCardProps) {
             </span>
           </div>
         )}
+        
+        {/* Botão de Denunciar ou Excluir */}
+        {(() => {
+          const ownsByProfile = (project.profile_id && currentUserProfileIds.includes(project.profile_id));
+          const ownsByUserId = user && (project as any)?.profiles?.user_id === user.id;
+          const isOwner = !!(ownsByProfile || ownsByUserId);
+          
+          if (isOwner) {
+            return (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setDeleteDialogOpen(true)}
+                className="text-destructive hover:text-destructive hover:bg-destructive/10"
+              >
+                <Trash2 className="w-4 h-4 mr-1" />
+                Excluir
+              </Button>
+            );
+          }
+          
+          return (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                if (!user) {
+                  toast.error('Faça login para denunciar');
+                  return;
+                }
+                setReportDialogOpen(true);
+              }}
+              className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+            >
+              <Flag className="w-4 h-4 mr-1" />
+              Denunciar
+            </Button>
+          );
+        })()}
       </div>
 
       {/* Dialogs */}
@@ -360,6 +495,126 @@ export function ProjectCard({ project }: ProjectCardProps) {
         onOpenChange={setLoginDialogOpen}
         onLoginSuccess={handleLoginSuccess}
       />
+
+      {/* Dialog de Denúncia */}
+      <Dialog open={reportDialogOpen} onOpenChange={setReportDialogOpen}>
+        <DialogContent className="sm:max-w-[500px] border-2 shadow-2xl">
+          <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-red-600 via-orange-600 to-red-600"></div>
+          
+          <DialogHeader className="space-y-3 pt-2">
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-950 dark:to-orange-950 rounded-full border-2 border-red-500/20">
+                <Shield className="w-6 h-6 text-red-600" />
+              </div>
+              <div className="flex-1">
+                <DialogTitle className="text-xl bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent">
+                  Denunciar Conteúdo Inadequado
+                </DialogTitle>
+              </div>
+            </div>
+            <DialogDescription className="text-base">
+              Ajude-nos a manter a comunidade segura. Sua denúncia será analisada pela nossa equipe de moderação com confidencialidade.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-5 pt-4">
+            <div className="space-y-2">
+              <Label className="text-base font-semibold">Motivo da denúncia *</Label>
+              <Select value={reportReason} onValueChange={setReportReason}>
+                <SelectTrigger className="h-11 border-2">
+                  <SelectValue placeholder="Selecione o motivo" />
+                </SelectTrigger>
+                <SelectContent className="z-[9999] bg-background">
+                  <SelectItem value="offensive">
+                    Conteúdo ofensivo ou discurso de ódio
+                  </SelectItem>
+                  <SelectItem value="spam">
+                    Spam ou publicidade enganosa
+                  </SelectItem>
+                  <SelectItem value="harassment">
+                    Assédio ou bullying
+                  </SelectItem>
+                  <SelectItem value="copyright">
+                    Violação de direitos autorais
+                  </SelectItem>
+                  <SelectItem value="fraud">
+                    Fraude ou golpe
+                  </SelectItem>
+                  <SelectItem value="fake">
+                    Informações falsas ou enganosas
+                  </SelectItem>
+                  <SelectItem value="inappropriate">
+                    Conteúdo inadequado ou impróprio
+                  </SelectItem>
+                  <SelectItem value="other">
+                    Outro motivo
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-base font-semibold">Descrição adicional (opcional)</Label>
+              <Textarea
+                placeholder="Forneça mais detalhes sobre o problema para ajudar nossa equipe..."
+                value={reportDescription}
+                onChange={(e) => setReportDescription(e.target.value)}
+                rows={4}
+                className="resize-none border-2"
+                maxLength={500}
+              />
+              <p className="text-xs text-muted-foreground text-right">
+                {reportDescription.length}/500 caracteres
+              </p>
+            </div>
+
+            <div className="bg-muted/30 p-3 rounded-lg border border-border/50">
+              <div className="flex items-start gap-2 text-xs text-muted-foreground">
+                <Shield className="w-4 h-4 mt-0.5 text-primary" />
+                <p>
+                  Sua denúncia é <strong>confidencial</strong> e será analisada por nossa equipe em até 24 horas. Você receberá uma notificação sobre o resultado.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setReportDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleReport}
+              disabled={!reportReason}
+              className="bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700"
+            >
+              <Flag className="w-4 h-4 mr-2" />
+              Enviar Denúncia
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog de Exclusão */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Tem certeza que deseja excluir?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação não pode ser desfeita. O projeto e todas as propostas associadas serão excluídos permanentemente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? 'Excluindo...' : 'Excluir'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }

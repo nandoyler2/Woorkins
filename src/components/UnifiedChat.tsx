@@ -109,7 +109,6 @@ export function UnifiedChat({
   const [activities, setActivities] = useState<any[]>([]);
   const [visibleTimestamps, setVisibleTimestamps] = useState<Record<string, boolean>>({});
   const [hideOnInit, setHideOnInit] = useState(false);
-  const [lockScroll, setLockScroll] = useState(false);
   const isHydratingRef = useRef(false);
 
   const { isVerified } = useDocumentVerification(profileId);
@@ -203,47 +202,42 @@ export function UnifiedChat({
   // Ref para rastrear número anterior de mensagens
   const prevMessageCountRef = useRef(0);
   
-  // Ao trocar de conversa - pré-posicionar ANTES de carregar
+  // Ao trocar de conversa, preparar para hidratar
   useEffect(() => {
-    const container = messagesContainerRef.current;
-    if (container) {
-      // Pré-posicionar no fundo IMEDIATAMENTE
-      container.style.scrollBehavior = 'auto';
-      container.scrollTop = container.scrollHeight;
-    }
-    
     isHydratingRef.current = true;
     setHideOnInit(true);
     prevMessageCountRef.current = 0;
   }, [conversationId]);
   
-  // Revelar container após posicionamento instantâneo
+  // Hidratação instantânea - SÓ REVELAR QUANDO MENSAGENS CARREGARAM
   useLayoutEffect(() => {
-    if (!isHydratingRef.current) return;
+    if (!isHydratingRef.current || _isLoading) return;
     
     const container = messagesContainerRef.current;
     if (!container) return;
     
-    // Forçar scroll instantâneo no fundo
+    // Forçar scroll instantâneo (sem animação)
     container.style.scrollBehavior = 'auto';
-    container.scrollTop = container.scrollHeight;
     
-    // Usar requestAnimationFrame para garantir DOM pintado
+    // Duplo requestAnimationFrame para garantir que DOM está pronto
     requestAnimationFrame(() => {
-      // Reforçar posição (caso scrollHeight tenha mudado)
-      container.scrollTop = container.scrollHeight;
-      
-      // Revelar container (já está no lugar certo)
-      isHydratingRef.current = false;
-      setHideOnInit(false);
-      setLockScroll(true);
-      prevMessageCountRef.current = messages.length;
+      requestAnimationFrame(() => {
+        container.scrollTop = container.scrollHeight;
+        
+        // Pequeno delay para imagens carregarem
+        setTimeout(() => {
+          container.scrollTop = container.scrollHeight;
+          isHydratingRef.current = false;
+          setHideOnInit(false);
+          prevMessageCountRef.current = messages.length;
+        }, 100);
+      });
     });
-  }, [conversationId]);
+  }, [conversationId, _isLoading, messages.length]);
   
   // Scroll suave APENAS para novas mensagens (após a abertura inicial)
   useEffect(() => {
-    if (isHydratingRef.current || lockScroll) return;
+    if (isHydratingRef.current) return;
     
     const container = messagesContainerRef.current;
     if (!container) return;
@@ -254,79 +248,31 @@ export function UnifiedChat({
     }
     
     prevMessageCountRef.current = messages.length;
-  }, [messages.length, lockScroll]);
-  
-  // Pré-carregar mensagens antigas enquanto bloqueado e manter fixo no fundo
-  useEffect(() => {
-    if (!lockScroll) return;
-    const container = messagesContainerRef.current;
-    if (!container) return;
-
-    let cancelled = false;
-    const run = async () => {
-      const start = performance.now();
-      let pages = 0;
-      let lastHeight = -1;
-
-      while (!cancelled) {
-        // manter ancorado no fundo
-        container.style.scrollBehavior = 'auto';
-        container.scrollTop = container.scrollHeight;
-
-        const elapsed = performance.now() - start;
-        const needMore = hasMoreMessages && (container.scrollHeight < container.clientHeight * 1.2) && pages < 3 && elapsed < 800;
-        if (needMore) {
-          try { await loadMoreMessages(); } catch {}
-          pages++;
-          continue;
-        }
-
-        const h = container.scrollHeight;
-        if (h !== lastHeight) {
-          lastHeight = h;
-          await new Promise<void>(r => requestAnimationFrame(() => r()));
-          continue;
-        }
-        break;
-      }
-
-      if (!cancelled) {
-        // liberar scroll após estabilizar
-        setLockScroll(false);
-      }
-    };
-
-    run();
-    return () => { cancelled = true; };
-  }, [lockScroll, hasMoreMessages, loadMoreMessages]);
+  }, [messages.length]);
 
   // Detectar scroll para cima e carregar mais mensagens (infinite scroll reverso)
   useEffect(() => {
     const container = messagesContainerRef.current;
-    if (!container || lockScroll) return;
+    if (!container) return;
     
     let isLoadingMoreRef = false;
     let scrollPositionRef = 0;
     
     const handleScroll = () => {
-      if (lockScroll) return;
       const { scrollTop, scrollHeight } = container;
       
       // Se usuário rolou até próximo ao topo (margem de 150px)
       if (scrollTop < 150 && hasMoreMessages && !isLoadingMoreRef) {
         isLoadingMoreRef = true;
+        scrollPositionRef = scrollHeight;
         
-        // Salvar posição atual relativa
-        scrollPositionRef = scrollHeight - scrollTop;
-        
-        // Carregar mais mensagens antigas
         loadMoreMessages().then(() => {
-          // Restaurar posição do scroll após carregar
           requestAnimationFrame(() => {
-            if (container) {
-              const newScrollHeight = container.scrollHeight;
-              container.scrollTop = newScrollHeight - scrollPositionRef;
-            }
+            // Manter a posição visual após carregar novas mensagens
+            const newScrollHeight = container.scrollHeight;
+            const scrollDiff = newScrollHeight - scrollPositionRef;
+            container.style.scrollBehavior = 'auto';
+            container.scrollTop = scrollTop + scrollDiff;
             isLoadingMoreRef = false;
           });
         });
@@ -335,7 +281,7 @@ export function UnifiedChat({
     
     container.addEventListener('scroll', handleScroll, { passive: true });
     return () => container.removeEventListener('scroll', handleScroll);
-  }, [loadMoreMessages, hasMoreMessages, lockScroll]);
+  }, [loadMoreMessages, hasMoreMessages]);
 
   // Marcar mensagens como lidas quando a conversa muda
   useEffect(() => {
@@ -1508,7 +1454,7 @@ export function UnifiedChat({
       )}
 
       {/* Messages - Scrollable Area */}
-      <div ref={messagesContainerRef} className={`flex-1 min-h-0 ${hideOnInit ? 'overflow-hidden opacity-0' : lockScroll ? 'overflow-hidden' : 'overflow-y-auto'}`}>
+      <div ref={messagesContainerRef} className={`flex-1 min-h-0 ${hideOnInit ? 'overflow-hidden opacity-0' : 'overflow-y-auto'}`}>
         <div className="p-3 space-y-1 pb-3">
           {isChatLocked ? (
             <div className="text-center py-12">

@@ -217,11 +217,13 @@ export const InteractiveStickerRenderer = ({
         );
 
       case 'image':
-        console.log('🎨 Renderizando sticker de imagem:', sticker.content.imageUrl?.substring(0, 50) + '...');
+        const imageSrc =
+          (sticker as any)?.content?.imageUrl || (sticker as any)?.content?.url || (sticker as any)?.content?.image_url || '';
+        console.log('🎨 Renderizando sticker de imagem:', imageSrc?.substring(0, 50) + '...');
         return (
           <div style={style} className={containerClass}>
             <img
-              src={sticker.content.imageUrl}
+              src={imageSrc}
               alt="Sticker"
               className="w-full h-auto rounded-lg shadow-lg"
               onLoad={() => console.log('✅ Imagem do sticker carregada com sucesso')}

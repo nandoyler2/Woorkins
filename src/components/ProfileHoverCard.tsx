@@ -6,6 +6,7 @@ import { SafeImage } from '@/components/ui/safe-image';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useProfileHoverData } from '@/hooks/useProfileHoverData';
 import { StoriesViewer } from '@/components/stories/StoriesViewer';
+import { InteractiveStickerRenderer } from '@/components/stories/InteractiveStickerRenderer';
 import { Star, Calendar, User, ExternalLink, ChevronLeft, ChevronRight } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -280,7 +281,7 @@ export const ProfileHoverCard = forwardRef<ProfileHoverCardRef, ProfileHoverCard
                           onClick={() => handleViewStories(index)}
                         >
                           <div className="p-[2px] bg-gradient-to-tr from-purple-500 via-pink-500 to-orange-500 rounded-lg">
-                            <div className="w-14 h-20 rounded-md overflow-hidden bg-background">
+                            <div className="relative w-14 h-20 rounded-md overflow-hidden bg-background">
                               {story.original_story_id && story.original_profile ? (
                                 <div className="w-full h-full bg-gradient-to-br from-purple-900/30 via-black to-pink-900/30 flex flex-col items-center justify-center gap-0.5 p-0.5">
                                   <div className="relative w-[70%] rounded-sm overflow-hidden shadow-lg border border-white/20" style={{ aspectRatio: "9/16" }}>

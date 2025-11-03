@@ -30,6 +30,7 @@ interface StoryData {
     username: string;
     avatar_url: string | null;
   } | null;
+  story_stickers?: any[];
 }
 
 interface CachedData {
@@ -102,7 +103,8 @@ export function useProfileHoverData(profileId: string, enabled: boolean) {
               id,
               username,
               avatar_url
-            )
+            ),
+            story_stickers(*)
           `)
           .eq('profile_id', profileId)
           .gt('expires_at', new Date().toISOString())

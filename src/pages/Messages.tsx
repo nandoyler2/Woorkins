@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -733,6 +733,33 @@ export default function Messages() {
     return { text: 'Status', color: 'bg-slate-100 text-slate-800 dark:bg-slate-900/30 dark:text-slate-300' };
   };
 
+  // Calcular contadores de mensagens não lidas por categoria
+  const unreadCounts = useMemo(() => {
+    return {
+      all: conversations.filter(c => 
+        c.unreadCount > 0 && 
+        (c.type === 'negotiation' || (c.type === 'proposal' && (c as any).isProposalReceived))
+      ).length,
+      proposals_received: conversations.filter(c => 
+        c.unreadCount > 0 && 
+        c.type === 'proposal' && 
+        (c as any).isProposalReceived === true
+      ).length,
+      proposals_sent: conversations.filter(c => 
+        c.unreadCount > 0 && 
+        c.type === 'proposal' && 
+        (c as any).isProposalSent === true
+      ).length,
+      unread: conversations.filter(c => c.unreadCount > 0).length,
+      disputes: conversations.filter(c => 
+        c.unreadCount > 0 && 
+        c.type === 'proposal' && 
+        c.hasDispute === true
+      ).length,
+      archived: conversations.filter(c => c.unreadCount > 0).length,
+    };
+  }, [conversations]);
+
   const filteredConversations = conversations
     .filter(conv => {
       // Search filter
@@ -813,6 +840,9 @@ export default function Messages() {
             >
               <Inbox className={`h-4 w-4 ${activeFilter === 'all' ? '' : 'text-blue-500'}`} />
               <span>Caixa de Entrada</span>
+              {unreadCounts.all > 0 && (
+                <Badge variant="destructive" className="ml-auto">{unreadCounts.all}</Badge>
+              )}
             </button>
             
             <button
@@ -825,6 +855,9 @@ export default function Messages() {
             >
               <FileInput className={`h-4 w-4 ${activeFilter === 'proposals_received' ? '' : 'text-green-500'}`} />
               <span>Propostas Recebidas</span>
+              {unreadCounts.proposals_received > 0 && (
+                <Badge variant="destructive" className="ml-auto">{unreadCounts.proposals_received}</Badge>
+              )}
             </button>
             
             <button
@@ -837,6 +870,9 @@ export default function Messages() {
             >
               <Send className={`h-4 w-4 ${activeFilter === 'proposals_sent' ? '' : 'text-purple-500'}`} />
               <span>Propostas Enviadas</span>
+              {unreadCounts.proposals_sent > 0 && (
+                <Badge variant="destructive" className="ml-auto">{unreadCounts.proposals_sent}</Badge>
+              )}
             </button>
             
             <button
@@ -849,6 +885,9 @@ export default function Messages() {
             >
               <Mail className={`h-4 w-4 ${activeFilter === 'unread' ? '' : 'text-orange-500'}`} />
               <span>Não Lidas</span>
+              {unreadCounts.unread > 0 && (
+                <Badge variant="destructive" className="ml-auto">{unreadCounts.unread}</Badge>
+              )}
             </button>
             
             <button
@@ -873,6 +912,9 @@ export default function Messages() {
             >
               <Archive className={`h-4 w-4 ${activeFilter === 'archived' ? '' : 'text-gray-500'}`} />
               <span>Arquivadas</span>
+              {unreadCounts.archived > 0 && (
+                <Badge variant="destructive" className="ml-auto">{unreadCounts.archived}</Badge>
+              )}
             </button>
             
             <button
@@ -885,6 +927,9 @@ export default function Messages() {
             >
               <AlertCircle className={`h-4 w-4 ${activeFilter === 'disputes' ? '' : 'text-red-500'}`} />
               <span>Disputa</span>
+              {unreadCounts.disputes > 0 && (
+                <Badge variant="destructive" className="ml-auto">{unreadCounts.disputes}</Badge>
+              )}
             </button>
           </nav>
         </div>

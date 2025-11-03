@@ -48,6 +48,8 @@ interface Conversation {
   workStatus?: string;
   isProposalReceived?: boolean;
   isProposalSent?: boolean;
+  isUnlocked?: boolean;
+  ownerHasMessaged?: boolean;
 }
 
 export default function Messages() {
@@ -416,6 +418,8 @@ export default function Messages() {
           freelancer_id,
           payment_status,
           work_status,
+          is_unlocked,
+          owner_has_messaged,
           project:projects!inner(
             id,
             title,
@@ -448,6 +452,8 @@ export default function Messages() {
           freelancer_id,
           payment_status,
           work_status,
+          is_unlocked,
+          owner_has_messaged,
           freelancer:profiles!proposals_freelancer_id_fkey(
             full_name,
             avatar_url
@@ -556,6 +562,8 @@ export default function Messages() {
           workStatus: (prop as any).work_status,
           isProposalReceived: isOwner,
           isProposalSent: isFreelancer,
+          isUnlocked: (prop as any).is_unlocked,
+          ownerHasMessaged: (prop as any).owner_has_messaged,
         };
       }));
 
@@ -804,9 +812,11 @@ export default function Messages() {
           // Apenas propostas enviadas (usuário é freelancer)
           return conv.type === 'proposal' && (conv as any).isProposalSent === true;
         case 'all':
-          // Caixa de entrada: negociações + propostas recebidas (NÃO incluir propostas enviadas)
+          // Caixa de entrada: negociações + propostas recebidas + propostas enviadas que foram respondidas pelo owner
           if (conv.type === 'negotiation') return true;
           if (conv.type === 'proposal' && (conv as any).isProposalReceived) return true;
+          // Propostas enviadas aparecem na caixa de entrada apenas se o owner respondeu/interagiu
+          if (conv.type === 'proposal' && (conv as any).isProposalSent && ((conv as any).isUnlocked || (conv as any).ownerHasMessaged)) return true;
           return false;
         default:
           return true;

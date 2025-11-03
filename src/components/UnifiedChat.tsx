@@ -1108,12 +1108,12 @@ export function UnifiedChat({
   // Removido completamente - renderiza instantaneamente
 
   // Check if chat should be locked (proposal not unlocked, user is freelancer, and no messages yet)
-  // Só bloqueia se realmente não há mensagens E já terminou de carregar
+  // Freelancer não pode enviar mensagens até que o owner responda/interaja
+  const ownerHasMessaged = messages.some(msg => msg.sender_id !== profileId);
   const isChatLocked = conversationType === 'proposal' && 
     !isOwner && 
     !proposalData?.is_unlocked &&
-    proposalData?.status === 'pending' &&
-    messages.length === 0 &&
+    !ownerHasMessaged &&
     !_isLoading; // Só mostra bloqueio se já terminou de carregar
 
   const checkCanDelete = async () => {
@@ -1445,12 +1445,12 @@ export function UnifiedChat({
               <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-yellow-500/10 mb-4">
                 <Lock className="h-10 w-10 text-yellow-600" />
               </div>
-              <h3 className="text-lg font-semibold mb-2">Proposta Aguardando Análise</h3>
+              <h3 className="text-lg font-semibold mb-2">Proposta Aguardando Interação</h3>
               <p className="text-muted-foreground max-w-md mx-auto">
-                Você conseguirá visualizar e participar desta conversa apenas se o criador do projeto aceitar sua proposta ou responder sua mensagem.
+                Você poderá enviar mensagens assim que o dono do projeto responder ou interagir com sua proposta.
               </p>
               <p className="text-sm text-muted-foreground mt-2">
-                Aguarde a resposta do criador do projeto.
+                Aguarde a análise do seu perfil e proposta.
               </p>
             </div>
           ) : messages.length === 0 ? (
@@ -1723,7 +1723,14 @@ export function UnifiedChat({
 
       {/* Input - Bottom area (not absolute) */}
       <div className="border-t bg-background">
-        {isSpamBlocked ? (
+        {isChatLocked ? (
+          <div className="p-4 bg-muted/30">
+            <div className="flex items-center justify-center gap-2 text-muted-foreground">
+              <Lock className="h-4 w-4" />
+              <span className="text-sm">Proposta aguardando interação ou aceite</span>
+            </div>
+          </div>
+        ) : isSpamBlocked ? (
           <div className="p-3">
             <SpamBlockCountdown remainingSeconds={remainingSeconds} reason={spamBlock?.reason} />
           </div>

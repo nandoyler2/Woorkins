@@ -79,11 +79,15 @@ const MyProjects = () => {
 
   const loadData = async () => {
     try {
-      const { data: profile } = await supabase
+      console.log('🔍 MyProjects - Loading data for user:', user?.id);
+      
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('id')
         .eq('user_id', user?.id)
         .single();
+
+      console.log('🔍 MyProjects - Profile:', profile, 'Error:', profileError);
 
       if (profile) {
         setCurrentProfileId(profile.id);
@@ -108,13 +112,20 @@ const MyProjects = () => {
             .order('created_at', { ascending: false })
         ]);
 
+        console.log('🔍 MyProjects - Projects:', projectsResult.data, 'Error:', projectsResult.error);
+        console.log('🔍 MyProjects - Proposals:', proposalsResult.data, 'Error:', proposalsResult.error);
+
         setProjects(projectsResult.data || []);
         setLoadingProjects(false);
         
         setProposals(proposalsResult.data as any || []);
         setLoadingProposals(false);
+      } else {
+        setLoadingProjects(false);
+        setLoadingProposals(false);
       }
     } catch (error: any) {
+      console.error('🔍 MyProjects - Error:', error);
       toast({
         title: 'Erro',
         description: 'Erro ao carregar dados: ' + error.message,

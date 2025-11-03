@@ -235,7 +235,7 @@ export function UnifiedChat({
     });
   }, [conversationId, messages.length]);
   
-  // Scroll suave APENAS para novas mensagens (após a abertura inicial)
+  // Scroll apenas para novas mensagens (sem animação) após a abertura inicial
   useEffect(() => {
     if (isHydratingRef.current) return;
     
@@ -243,7 +243,7 @@ export function UnifiedChat({
     if (!container) return;
     
     if (messages.length > prevMessageCountRef.current) {
-      container.style.scrollBehavior = 'smooth';
+      container.style.scrollBehavior = 'auto';
       container.scrollTop = container.scrollHeight;
     }
     

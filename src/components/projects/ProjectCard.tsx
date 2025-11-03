@@ -13,6 +13,7 @@ import { LoginPromptDialog } from "./LoginPromptDialog";
 import { ClickableProfile } from "@/components/ClickableProfile";
 import { ViewProposalDialog } from "./ViewProposalDialog";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface ProjectCardProps {
   project: {
@@ -218,8 +219,8 @@ export function ProjectCard({ project }: ProjectCardProps) {
                   <Button 
                     variant="default" 
                     size="sm" 
-                    className="whitespace-nowrap bg-blue-600 hover:bg-blue-700 text-white cursor-default"
-                    disabled
+                    className="whitespace-nowrap bg-blue-600 hover:bg-blue-700 text-white"
+                    onClick={() => toast.info("Esse é um projeto feito por você")}
                   >
                     Seu Projeto
                   </Button>

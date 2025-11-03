@@ -64,8 +64,9 @@ export default function Messages() {
   const [profileId, setProfileId] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<'all' | 'unread' | 'starred' | 'archived' | 'disputes'>('all');
-  const [isBackgroundLoading, setIsBackgroundLoading] = useState(false);
   const [isInitialLoading, setIsInitialLoading] = useState(cachedData.conversations.length === 0 || !cachedData.lastFetched);
+  const [isFilterChanging, setIsFilterChanging] = useState(false);
+  const [isBackgroundLoading, setIsBackgroundLoading] = useState(false);
   const isLoadingRef = useRef(false);
   const loadingTimeoutRef = useRef<NodeJS.Timeout>();
   const hasLoadedData = useRef(false);
@@ -91,10 +92,19 @@ export default function Messages() {
 
   useEffect(() => {
     if (profileId) {
-      // Sempre recarregar quando mudar o filtro
-      console.log('🔄 Carregando conversas do servidor (filtro:', activeFilter, ')');
-      setIsInitialLoading(true);
-      loadConversations(true);
+      console.log('🔄 Carregando conversas (filtro:', activeFilter, ')');
+      
+      // Apenas mostrar skeleton completo no primeiro load
+      if (conversations.length === 0) {
+        setIsInitialLoading(true);
+      } else {
+        // Troca de filtro - transição suave
+        setIsFilterChanging(true);
+      }
+      
+      loadConversations(true).finally(() => {
+        setIsFilterChanging(false);
+      });
       
       const channel = setupRealtimeSubscriptions();
       return () => {
@@ -836,7 +846,10 @@ export default function Messages() {
               )}
             </div>
             
-            <div className="flex-1 overflow-y-auto">
+            <div 
+              className="flex-1 overflow-y-auto transition-opacity duration-200" 
+              style={{ opacity: isFilterChanging ? 0.6 : 1 }}
+            >
               {filteredConversations.length === 0 ? (
                 <div className="text-center py-12 text-muted-foreground px-4">
                   <MessageCircle className="h-12 w-12 mx-auto mb-3 opacity-30" />

@@ -32,6 +32,8 @@ interface UseRealtimeMessagingProps {
   suppressToasts?: boolean;
 }
 
+const MESSAGES_PER_PAGE = 20; // Carregar 20 mensagens por vez
+
 export const useRealtimeMessaging = ({
   conversationId,
   conversationType,
@@ -50,6 +52,9 @@ export const useRealtimeMessaging = ({
   const [blockedUntil, setBlockedUntil] = useState<Date | null>(null);
   const [blockReason, setBlockReason] = useState<string>('');
   const [isConversationActive, setIsConversationActive] = useState(true);
+  const [hasMoreMessages, setHasMoreMessages] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [oldestMessageId, setOldestMessageId] = useState<string | null>(null);
   
   const { toast } = useToast();
   const channelRef = useRef<RealtimeChannel | null>(null);
@@ -156,90 +161,6 @@ export const useRealtimeMessaging = ({
     }
   }, []);
 
-  // Load messages - retorna cache instantaneamente, busca em background
-  const loadMessages = useCallback(async () => {
-    try {
-      // 1. Retornar cache imediatamente
-      const cachedMessages = await getMessages(conversationId, conversationType);
-      if (cachedMessages.length > 0) {
-        // Mapear mensagens do cache com perfis
-        const profilesResult = await supabase
-          .from('profiles')
-          .select('id, full_name, avatar_url');
-        
-        const profilesMap = new Map(
-          (profilesResult.data || []).map(p => [p.id, p])
-        );
-
-        const messagesWithSenders = cachedMessages.map((msg: any) => {
-          const sender = profilesMap.get(msg.sender_id);
-          return {
-            ...msg,
-            sender_name: sender?.full_name || msg.sender_name || 'Usuário',
-            sender_avatar: sender?.avatar_url || msg.sender_avatar,
-          };
-        });
-
-        setMessages(messagesWithSenders);
-      }
-
-      // 2. Buscar atualização em background (sem bloquear UI)
-      const table = conversationType === 'negotiation' ? 'negotiation_messages' : 'proposal_messages';
-      
-      const [messagesResult, profilesResult] = await Promise.all([
-        (supabase.from(table) as any)
-          .select('*')
-          .eq(conversationType === 'negotiation' ? 'negotiation_id' : 'proposal_id', conversationId)
-          // Destinatário só vê mensagens aprovadas ou suas próprias mensagens
-          .or(`sender_id.eq.${currentUserId},moderation_status.eq.approved`)
-          .order('created_at', { ascending: true }),
-        supabase
-          .from('profiles')
-          .select('id, full_name, avatar_url')
-      ]);
-
-      if (messagesResult.error) throw messagesResult.error;
-
-      const profilesMap = new Map(
-        (profilesResult.data || []).map(p => [p.id, p])
-      );
-
-      const messagesWithSenders = (messagesResult.data || []).map((msg: any) => {
-        const sender = profilesMap.get(msg.sender_id);
-        return {
-          id: msg.id,
-          sender_id: msg.sender_id,
-          sender_name: sender?.full_name || 'Usuário',
-          sender_avatar: sender?.avatar_url,
-          content: msg.content,
-          created_at: msg.created_at,
-          status: msg.status || 'sent',
-          read_at: msg.read_at,
-          media_url: msg.media_url,
-          media_type: msg.media_type,
-          media_name: msg.media_name,
-          is_deleted: msg.is_deleted || false,
-          moderation_status: msg.moderation_status,
-          rejection_reason: msg.rejection_reason,
-        };
-      });
-
-      setMessages(messagesWithSenders);
-      
-      // Mark messages as read
-      await markMessagesAsRead();
-    } catch (error: any) {
-      console.error('Error loading messages:', error);
-      if (!suppressToasts) {
-        toast({
-          variant: 'destructive',
-          title: 'Erro',
-          description: 'Não foi possível carregar as mensagens',
-        });
-      }
-    }
-  }, [conversationId, conversationType, currentUserId, getMessages]);
-
   // Mark messages as read
   const markMessagesAsRead = useCallback(async () => {
     try {
@@ -271,6 +192,108 @@ export const useRealtimeMessaging = ({
       console.error('Error marking messages as read:', error);
     }
   }, [conversationId, conversationType, currentUserId]);
+
+  // Load messages com paginação - 20 mensagens por vez
+  const loadMessages = useCallback(async (initialLoad = true) => {
+    try {
+      const table = conversationType === 'negotiation' ? 'negotiation_messages' : 'proposal_messages';
+      
+      // Query base
+      let query = (supabase.from(table) as any)
+        .select('*')
+        .eq(conversationType === 'negotiation' ? 'negotiation_id' : 'proposal_id', conversationId)
+        .or(`sender_id.eq.${currentUserId},moderation_status.eq.approved`);
+      
+      if (initialLoad) {
+        // Carga inicial: buscar últimas 20 mensagens
+        query = query
+          .order('created_at', { ascending: false })
+          .limit(MESSAGES_PER_PAGE);
+      } else {
+        // Carregamento de mensagens antigas
+        const oldestMsg = messages.find(m => m.id === oldestMessageId);
+        if (oldestMsg) {
+          query = query
+            .lt('created_at', oldestMsg.created_at)
+            .order('created_at', { ascending: false })
+            .limit(MESSAGES_PER_PAGE);
+        } else {
+          return;
+        }
+      }
+      
+      const [messagesResult, profilesResult] = await Promise.all([
+        query,
+        supabase.from('profiles').select('id, full_name, avatar_url')
+      ]);
+      
+      if (messagesResult.error) throw messagesResult.error;
+      
+      const fetchedMessages = messagesResult.data || [];
+      
+      // Se retornou menos que o limite, não há mais mensagens
+      setHasMoreMessages(fetchedMessages.length === MESSAGES_PER_PAGE);
+      
+      const profilesMap = new Map(
+        (profilesResult.data || []).map(p => [p.id, p])
+      );
+      
+      const messagesWithSenders = fetchedMessages.map((msg: any) => {
+        const sender = profilesMap.get(msg.sender_id);
+        return {
+          id: msg.id,
+          sender_id: msg.sender_id,
+          sender_name: sender?.full_name || 'Usuário',
+          sender_avatar: sender?.avatar_url,
+          content: msg.content,
+          created_at: msg.created_at,
+          status: msg.status || 'sent',
+          read_at: msg.read_at,
+          media_url: msg.media_url,
+          media_type: msg.media_type,
+          media_name: msg.media_name,
+          is_deleted: msg.is_deleted || false,
+          moderation_status: msg.moderation_status,
+          rejection_reason: msg.rejection_reason,
+        };
+      });
+      
+      // Reverter ordem para cronológica (antiga -> recente)
+      const sortedMessages = messagesWithSenders.reverse();
+      
+      if (initialLoad) {
+        setMessages(sortedMessages);
+        if (sortedMessages.length > 0) {
+          setOldestMessageId(sortedMessages[0].id);
+        }
+        await markMessagesAsRead();
+      } else {
+        // Adicionar mensagens antigas no início do array
+        setMessages(prev => [...sortedMessages, ...prev]);
+        if (sortedMessages.length > 0) {
+          setOldestMessageId(sortedMessages[0].id);
+        }
+      }
+    } catch (error: any) {
+      console.error('Error loading messages:', error);
+      if (!suppressToasts) {
+        toast({
+          variant: 'destructive',
+          title: 'Erro',
+          description: 'Não foi possível carregar as mensagens',
+        });
+      }
+    }
+  }, [conversationId, conversationType, currentUserId, messages, oldestMessageId, suppressToasts, toast, markMessagesAsRead]);
+
+  // Função para carregar mais mensagens antigas
+  const loadMoreMessages = useCallback(async () => {
+    if (!hasMoreMessages || isLoadingMore) return;
+    
+    setIsLoadingMore(true);
+    await loadMessages(false);
+    setIsLoadingMore(false);
+  }, [hasMoreMessages, isLoadingMore, loadMessages]);
 
   // Send message with optimistic UI and content moderation
   const sendMessage = useCallback(async (content: string, attachment?: { file: File; url: string }) => {
@@ -863,7 +886,7 @@ export const useRealtimeMessaging = ({
 
   return {
     messages,
-    isLoading: false, // Sempre false - renderiza instantaneamente
+    isLoading: false,
     isSending,
     isTyping,
     otherUserTyping,
@@ -874,5 +897,9 @@ export const useRealtimeMessaging = ({
     sendMessage,
     handleTyping,
     markMessagesAsRead,
+    isConversationActive,
+    loadMoreMessages,
+    hasMoreMessages,
+    isLoadingMore,
   };
 };

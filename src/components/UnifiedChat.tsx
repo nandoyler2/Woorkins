@@ -128,6 +128,9 @@ export function UnifiedChat({
     blockReason,
     sendMessage: sendMessageHook,
     handleTyping,
+    loadMoreMessages,
+    hasMoreMessages,
+    isLoadingMore,
   } = useRealtimeMessaging({
     conversationId,
     conversationType,
@@ -194,16 +197,58 @@ export function UnifiedChat({
     : blockedUntil;
   const finalBlockReason = systemMessagingBlock?.reason || blockReason;
 
-  // Scroll instantâneo para a última mensagem (mais recente) sem animação - igual WhatsApp
+  // Scroll instantâneo para a última mensagem sem animação
   useLayoutEffect(() => {
+    if (messages.length === 0) return;
+    
     const container = messagesContainerRef.current;
-    if (container && messages.length > 0) {
-      // Força scroll para o final absoluto instantaneamente
-      requestAnimationFrame(() => {
-        container.scrollTop = container.scrollHeight;
-      });
-    }
-  }, [conversationId]);
+    if (!container) return;
+    
+    // Scroll instantâneo para o final
+    const scrollToBottom = () => {
+      container.scrollTop = container.scrollHeight;
+    };
+    
+    scrollToBottom();
+    requestAnimationFrame(scrollToBottom);
+    setTimeout(scrollToBottom, 50);
+  }, [messages.length, conversationId]);
+
+  // Detectar scroll para cima e carregar mais mensagens (infinite scroll reverso)
+  useEffect(() => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+    
+    let isLoadingMoreRef = false;
+    let scrollPositionRef = 0;
+    
+    const handleScroll = () => {
+      const { scrollTop, scrollHeight } = container;
+      
+      // Se usuário rolou até próximo ao topo (margem de 150px)
+      if (scrollTop < 150 && hasMoreMessages && !isLoadingMoreRef) {
+        isLoadingMoreRef = true;
+        
+        // Salvar posição atual relativa
+        scrollPositionRef = scrollHeight - scrollTop;
+        
+        // Carregar mais mensagens antigas
+        loadMoreMessages().then(() => {
+          // Restaurar posição do scroll após carregar
+          requestAnimationFrame(() => {
+            if (container) {
+              const newScrollHeight = container.scrollHeight;
+              container.scrollTop = newScrollHeight - scrollPositionRef;
+            }
+            isLoadingMoreRef = false;
+          });
+        });
+      }
+    };
+    
+    container.addEventListener('scroll', handleScroll, { passive: true });
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, [loadMoreMessages, hasMoreMessages]);
 
   // Marcar mensagens como lidas quando a conversa muda
   useEffect(() => {
@@ -1640,6 +1685,26 @@ export function UnifiedChat({
               })()}
             </>
           )}
+          
+          {/* Indicador de carregamento de mensagens antigas */}
+          {isLoadingMore && (
+            <div className="text-center py-4">
+              <div className="inline-flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 px-4 py-2 rounded-full">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Carregando mensagens anteriores...
+              </div>
+            </div>
+          )}
+          
+          {/* Indicador de início da conversa */}
+          {!hasMoreMessages && messages.length >= 20 && (
+            <div className="text-center py-4">
+              <div className="text-xs text-muted-foreground bg-muted/30 px-3 py-1.5 rounded-full inline-block">
+                📜 Início da conversa
+              </div>
+            </div>
+          )}
+          
           <div ref={messagesEndRef} />
         </div>
       </div>

@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { MessageCircle, Loader2, Search, Inbox, Mail, Star, Archive, AlertCircle, Tag, MoreVertical } from 'lucide-react';
+import { MessageCircle, Loader2, Search, Inbox, Mail, Star, Archive, AlertCircle, Tag, MoreVertical, FileInput, Send } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -805,85 +805,85 @@ export default function Messages() {
           <nav className="space-y-2 flex-1">
             <button
               onClick={() => setActiveFilter('all')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm ${
                 activeFilter === 'all' 
                   ? 'bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/30 scale-105' 
                   : 'hover:bg-gradient-to-r hover:from-muted hover:to-muted/50 text-muted-foreground hover:scale-102'
               }`}
             >
-              <Inbox className="h-5 w-5" />
+              <Inbox className={`h-4 w-4 ${activeFilter === 'all' ? '' : 'text-blue-500'}`} />
               <span>Caixa de Entrada</span>
             </button>
             
             <button
               onClick={() => setActiveFilter('proposals_received')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm ${
                 activeFilter === 'proposals_received' 
                   ? 'bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/30 scale-105' 
                   : 'hover:bg-gradient-to-r hover:from-muted hover:to-muted/50 text-muted-foreground hover:scale-102'
               }`}
             >
-              <Tag className="h-5 w-5" />
+              <FileInput className={`h-4 w-4 ${activeFilter === 'proposals_received' ? '' : 'text-green-500'}`} />
               <span>Propostas Recebidas</span>
             </button>
             
             <button
               onClick={() => setActiveFilter('proposals_sent')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm ${
                 activeFilter === 'proposals_sent' 
                   ? 'bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/30 scale-105' 
                   : 'hover:bg-gradient-to-r hover:from-muted hover:to-muted/50 text-muted-foreground hover:scale-102'
               }`}
             >
-              <Tag className="h-5 w-5" />
+              <Send className={`h-4 w-4 ${activeFilter === 'proposals_sent' ? '' : 'text-purple-500'}`} />
               <span>Propostas Enviadas</span>
             </button>
             
             <button
               onClick={() => setActiveFilter('unread')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm ${
                 activeFilter === 'unread' 
                   ? 'bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/30 scale-105' 
                   : 'hover:bg-gradient-to-r hover:from-muted hover:to-muted/50 text-muted-foreground hover:scale-102'
               }`}
             >
-              <Mail className="h-5 w-5" />
+              <Mail className={`h-4 w-4 ${activeFilter === 'unread' ? '' : 'text-orange-500'}`} />
               <span>Não Lidas</span>
             </button>
             
             <button
               onClick={() => setActiveFilter('starred')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm ${
                 activeFilter === 'starred' 
                   ? 'bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/30 scale-105' 
                   : 'hover:bg-gradient-to-r hover:from-muted hover:to-muted/50 text-muted-foreground hover:scale-102'
               }`}
             >
-              <Star className="h-5 w-5" />
+              <Star className={`h-4 w-4 ${activeFilter === 'starred' ? '' : 'text-yellow-500'}`} />
               <span>Destacadas</span>
             </button>
             
             <button
               onClick={() => setActiveFilter('archived')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm ${
                 activeFilter === 'archived' 
                   ? 'bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/30 scale-105' 
                   : 'hover:bg-gradient-to-r hover:from-muted hover:to-muted/50 text-muted-foreground hover:scale-102'
               }`}
             >
-              <Archive className="h-5 w-5" />
+              <Archive className={`h-4 w-4 ${activeFilter === 'archived' ? '' : 'text-gray-500'}`} />
               <span>Arquivadas</span>
             </button>
             
             <button
               onClick={() => setActiveFilter('disputes')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm ${
                 activeFilter === 'disputes' 
                   ? 'bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/30 scale-105' 
                   : 'hover:bg-gradient-to-r hover:from-muted hover:to-muted/50 text-muted-foreground hover:scale-102'
               }`}
             >
-              <AlertCircle className="h-5 w-5" />
+              <AlertCircle className={`h-4 w-4 ${activeFilter === 'disputes' ? '' : 'text-red-500'}`} />
               <span>Disputa</span>
             </button>
           </nav>

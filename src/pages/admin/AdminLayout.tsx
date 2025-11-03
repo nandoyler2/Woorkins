@@ -14,6 +14,7 @@ import {
   Briefcase,
   BarChart3,
   Megaphone,
+  Home,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -34,19 +35,19 @@ import { cn } from '@/lib/utils';
 
 const adminMenuItems = [
   { title: 'Dashboard', url: '/admin', icon: LayoutDashboard },
-  { title: 'Usuários', url: '/admin/users', icon: Users, badge: 'systemBlocks' },
-  { title: 'Moderação', url: '/admin/moderation', icon: Flag, badge: 'moderation' },
-  { title: 'Suporte', url: '/admin/support', icon: MessageSquare, badge: 'support' },
-  { title: 'Financeiro', url: '/admin/financial', icon: DollarSign, badge: 'withdrawalRequests' },
-  { title: 'Planos', url: '/admin/plans', icon: CreditCard },
-  { title: 'Perfis Profissionais', url: '/admin/businesses', icon: Briefcase },
-  { title: 'Análises', url: '/admin/analytics', icon: TrendingUp },
-  { title: 'Relatórios', url: '/admin/reports', icon: BarChart3 },
-  { title: 'Hub de Artigos', url: '/admin/hub-articles', icon: FileText },
-  { title: 'Páginas Legais', url: '/admin/legal-pages', icon: FileCheck },
-  { title: 'Gestão de Conteúdo', url: '/admin/content', icon: Megaphone },
-  { title: 'Configurações', url: '/admin/settings', icon: Settings },
-  { title: 'IA', url: '/admin/ai', icon: Shield },
+  { title: 'Usuários', url: '/admin/usuarios', icon: Users, badge: 'systemBlocks' },
+  { title: 'Moderação', url: '/admin/moderacao', icon: Flag, badge: 'moderation' },
+  { title: 'Suporte', url: '/admin/suporte', icon: MessageSquare, badge: 'support' },
+  { title: 'Financeiro', url: '/admin/financeiro', icon: DollarSign, badge: 'withdrawalRequests' },
+  { title: 'Planos', url: '/admin/planos', icon: CreditCard },
+  { title: 'Perfis Profissionais', url: '/admin/perfis-profissionais', icon: Briefcase },
+  { title: 'Análises', url: '/admin/analises', icon: TrendingUp },
+  { title: 'Relatórios', url: '/admin/relatorios', icon: BarChart3 },
+  { title: 'Hub de Artigos', url: '/admin/artigos-hub', icon: FileText },
+  { title: 'Páginas Legais', url: '/admin/paginas-legais', icon: FileCheck },
+  { title: 'Gestão de Conteúdo', url: '/admin/conteudo', icon: Megaphone },
+  { title: 'Configurações', url: '/admin/configuracoes', icon: Settings },
+  { title: 'IA', url: '/admin/ia', icon: Shield },
 ];
 
 function AdminSidebar() {
@@ -63,6 +64,17 @@ function AdminSidebar() {
   return (
     <Sidebar collapsible="icon" className="border-r-0">
       <SidebarContent className="relative">
+        {/* Botão Voltar ao Woorkins */}
+        <div className="p-4 border-b border-border">
+          <Link 
+            to="/painel" 
+            className="flex items-center gap-3 px-4 py-3 rounded-lg bg-gradient-to-r from-blue-600 to-teal-600 text-white hover:from-blue-700 hover:to-teal-700 transition-all duration-200 hover:shadow-lg"
+          >
+            <Home className="h-5 w-5" />
+            {!isCollapsed && <span className="font-semibold">Voltar ao Woorkins</span>}
+          </Link>
+        </div>
+        
         <SidebarGroup>
           <SidebarGroupLabel className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-4 py-2">
             {!isCollapsed && 'Painel Administrativo'}

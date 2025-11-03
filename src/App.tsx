@@ -147,21 +147,21 @@ function AppContent() {
 
           <Route path="/admin" element={<ProtectedRoute requireAdmin><AdminLayout /></ProtectedRoute>}>
             <Route index element={<Admin />} />
-            <Route path="users" element={<UsersManagement />} />
-            <Route path="moderation" element={<ModerationManagement />} />
-            <Route path="businesses" element={<AdminBusinesses />} />
-            <Route path="content" element={<ContentManagement />} />
-            <Route path="financial" element={<FinancialManagement />} />
-            <Route path="withdrawals" element={<WithdrawalRequests />} />
-            <Route path="support" element={<AdminSupport />} />
-            <Route path="plans" element={<PlansSettings />} />
-            <Route path="analytics" element={<AdminAnalytics />} />
-            <Route path="reports" element={<AdminReports />} />
-            <Route path="hub-articles" element={<HubArticles />} />
-            <Route path="legal-pages" element={<LegalPages />} />
-            <Route path="settings" element={<SettingsManagement />} />
-            <Route path="ai" element={<AISettings />} />
-            <Route path="user-messages" element={<UserMessages />} />
+            <Route path="usuarios" element={<UsersManagement />} />
+            <Route path="moderacao" element={<ModerationManagement />} />
+            <Route path="perfis-profissionais" element={<AdminBusinesses />} />
+            <Route path="conteudo" element={<ContentManagement />} />
+            <Route path="financeiro" element={<FinancialManagement />} />
+            <Route path="saques" element={<WithdrawalRequests />} />
+            <Route path="suporte" element={<AdminSupport />} />
+            <Route path="planos" element={<PlansSettings />} />
+            <Route path="analises" element={<AdminAnalytics />} />
+            <Route path="relatorios" element={<AdminReports />} />
+            <Route path="artigos-hub" element={<HubArticles />} />
+            <Route path="paginas-legais" element={<LegalPages />} />
+            <Route path="configuracoes" element={<SettingsManagement />} />
+            <Route path="ia" element={<AISettings />} />
+            <Route path="mensagens-usuarios" element={<UserMessages />} />
           </Route>
 
           <Route path="*" element={<NotFound />} />

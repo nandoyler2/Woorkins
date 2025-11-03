@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { AdminCard } from '@/components/admin/AdminCard';
+import { AdminPageLayout } from '@/components/admin/AdminPageLayout';
 import { useAdminCounts } from '@/hooks/useAdminCounts';
 import {
   Users,
@@ -139,67 +140,71 @@ export default function Admin() {
 
   if (loading || countsLoading) {
     return (
-      <div className="space-y-6">
+      <AdminPageLayout title="Dashboard Administrativo" description="Visão geral das atividades da plataforma">
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           {[...Array(8)].map((_, i) => (
             <Skeleton key={i} className="h-[140px]" />
           ))}
         </div>
-      </div>
+      </AdminPageLayout>
     );
   }
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
-      {criticalCount > 0 && (
-        <Card className="border-destructive/50 bg-destructive/5">
-          <CardHeader>
-            <div className="flex items-center gap-3">
-              <AlertTriangle className="h-6 w-6 text-destructive animate-pulse" />
-              <CardTitle className="text-destructive">
-                Atenção: {criticalCount} {criticalCount === 1 ? 'Pendência Crítica' : 'Pendências Críticas'}
-              </CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent>
+    <AdminPageLayout 
+      title="Dashboard Administrativo" 
+      description="Visão geral das atividades da plataforma"
+    >
+      <div className="space-y-8">
+        {criticalCount > 0 && (
+          <Card className="border-destructive/50 bg-destructive/5">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <AlertTriangle className="h-6 w-6 text-destructive animate-pulse" />
+                <CardTitle className="text-destructive">
+                  Atenção: {criticalCount} {criticalCount === 1 ? 'Pendência Crítica' : 'Pendências Críticas'}
+                </CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent>
             <div className="flex flex-wrap gap-3">
               {counts.support > 0 && (
-                <Button variant="destructive" size="sm" onClick={() => navigate('/admin/support')}>
+                <Button variant="destructive" size="sm" onClick={() => navigate('/admin/suporte')}>
                   {counts.support} Suporte{counts.support > 1 ? 's' : ''}
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               )}
               {counts.withdrawalRequests > 0 && (
-                <Button variant="destructive" size="sm" onClick={() => navigate('/admin/financial')}>
+                <Button variant="destructive" size="sm" onClick={() => navigate('/admin/financeiro')}>
                   {counts.withdrawalRequests} Saque{counts.withdrawalRequests > 1 ? 's' : ''}
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               )}
               {counts.pendingProjects > 0 && (
-                <Button variant="destructive" size="sm" onClick={() => navigate('/admin/moderation')}>
+                <Button variant="destructive" size="sm" onClick={() => navigate('/admin/moderacao')}>
                   {counts.pendingProjects} Projeto{counts.pendingProjects > 1 ? 's' : ''}
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               )}
               {counts.documentVerifications > 0 && (
-                <Button variant="destructive" size="sm" onClick={() => navigate('/admin/users')}>
+                <Button variant="destructive" size="sm" onClick={() => navigate('/admin/usuarios')}>
                   {counts.documentVerifications} Verificação{counts.documentVerifications > 1 ? 'ões' : ''}
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+               )}
+             </div>
+           </CardContent>
+         </Card>
+        )}
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <AdminCard
           title="Usuários Totais"
           value={stats.totalUsers.toLocaleString()}
           icon={Users}
           description="Usuários registrados na plataforma"
-          gradient="from-blue-500/10 via-blue-400/10 to-blue-300/10"
-          onClick={() => navigate('/admin/users')}
+          gradient="blue"
+          onClick={() => navigate('/admin/usuarios')}
         />
 
         <AdminCard
@@ -207,8 +212,8 @@ export default function Admin() {
           value={stats.totalBusinesses.toLocaleString()}
           icon={Briefcase}
           description="Perfis de negócios ativos"
-          gradient="from-purple-500/10 via-purple-400/10 to-purple-300/10"
-          onClick={() => navigate('/admin/businesses')}
+          gradient="purple"
+          onClick={() => navigate('/admin/perfis-profissionais')}
         />
 
         <AdminCard
@@ -216,8 +221,8 @@ export default function Admin() {
           value={stats.totalProjects.toLocaleString()}
           icon={FileText}
           description="Projetos publicados"
-          gradient="from-green-500/10 via-green-400/10 to-green-300/10"
-          onClick={() => navigate('/admin/moderation')}
+          gradient="green"
+          onClick={() => navigate('/admin/moderacao')}
         />
 
         <AdminCard
@@ -225,7 +230,7 @@ export default function Admin() {
           value={stats.totalEvaluations.toLocaleString()}
           icon={Star}
           description="Avaliações realizadas"
-          gradient="from-yellow-500/10 via-yellow-400/10 to-yellow-300/10"
+          gradient="orange"
         />
 
         <AdminCard
@@ -233,7 +238,7 @@ export default function Admin() {
           value={stats.totalProposals.toLocaleString()}
           icon={FileText}
           description="Propostas enviadas"
-          gradient="from-orange-500/10 via-orange-400/10 to-orange-300/10"
+          gradient="blue"
         />
 
         <AdminCard
@@ -241,8 +246,8 @@ export default function Admin() {
           value={`R$ ${stats.monthlyRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
           icon={DollarSign}
           description="Receita do mês atual"
-          gradient="from-emerald-500/10 via-emerald-400/10 to-emerald-300/10"
-          onClick={() => navigate('/admin/financial')}
+          gradient="green"
+          onClick={() => navigate('/admin/financeiro')}
         />
 
         <AdminCard
@@ -250,8 +255,8 @@ export default function Admin() {
           value={counts.moderation.toLocaleString()}
           icon={MessageSquare}
           description="Mensagens em moderação"
-          gradient="from-red-500/10 via-red-400/10 to-red-300/10"
-          onClick={() => navigate('/admin/moderation')}
+          gradient="orange"
+          onClick={() => navigate('/admin/moderacao')}
         />
 
         <AdminCard
@@ -259,12 +264,12 @@ export default function Admin() {
           value={counts.systemBlocks.toLocaleString()}
           icon={AlertTriangle}
           description="Usuários bloqueados"
-          gradient="from-pink-500/10 via-pink-400/10 to-pink-300/10"
-          onClick={() => navigate('/admin/users')}
-        />
-      </div>
+          gradient="purple"
+          onClick={() => navigate('/admin/usuarios')}
+          />
+        </div>
 
-      <Card>
+        <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -310,10 +315,10 @@ export default function Admin() {
               ))}
             </div>
           )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
-      <Card>
+        <Card>
         <CardHeader>
           <CardTitle>Ações Rápidas</CardTitle>
         </CardHeader>
@@ -322,7 +327,7 @@ export default function Admin() {
             <Button
               variant="outline"
               className="h-auto flex-col gap-2 p-6 hover:bg-primary/5 hover:border-primary transition-all"
-              onClick={() => navigate('/admin/users')}
+              onClick={() => navigate('/admin/usuarios')}
             >
               <Users className="h-8 w-8 text-primary" />
               <span className="font-semibold">Gerenciar Usuários</span>
@@ -331,7 +336,7 @@ export default function Admin() {
             <Button
               variant="outline"
               className="h-auto flex-col gap-2 p-6 hover:bg-accent/50 hover:border-accent transition-all"
-              onClick={() => navigate('/admin/moderation')}
+              onClick={() => navigate('/admin/moderacao')}
             >
               <MessageSquare className="h-8 w-8 text-accent" />
               <span className="font-semibold">Moderação</span>
@@ -340,7 +345,7 @@ export default function Admin() {
             <Button
               variant="outline"
               className="h-auto flex-col gap-2 p-6 hover:bg-secondary/50 hover:border-secondary transition-all"
-              onClick={() => navigate('/admin/financial')}
+              onClick={() => navigate('/admin/financeiro')}
             >
               <DollarSign className="h-8 w-8 text-secondary" />
               <span className="font-semibold">Financeiro</span>
@@ -349,7 +354,7 @@ export default function Admin() {
             <Button
               variant="outline"
               className="h-auto flex-col gap-2 p-6 hover:bg-orange/10 hover:border-orange transition-all"
-              onClick={() => navigate('/admin/reports')}
+              onClick={() => navigate('/admin/relatorios')}
             >
               <TrendingUp className="h-8 w-8 text-orange" />
               <span className="font-semibold">Relatórios</span>
@@ -358,5 +363,6 @@ export default function Admin() {
         </CardContent>
       </Card>
     </div>
+  </AdminPageLayout>
   );
 }

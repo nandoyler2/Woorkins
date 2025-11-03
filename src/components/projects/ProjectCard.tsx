@@ -313,26 +313,14 @@ export function ProjectCard({ project }: ProjectCardProps) {
             const isOwner = !!(ownsByProfile || ownsByUserId);
             if (isOwner) {
               return (
-                <div className="flex flex-col gap-2">
-                  <Button 
-                    variant="default" 
-                    size="sm" 
-                    className="whitespace-nowrap bg-gradient-to-r from-blue-600 to-teal-600 hover:from-blue-700 hover:to-teal-700 shadow-md"
-                    onClick={() => toast.info("Esse é um projeto feito por você")}
-                  >
-                    Seu Projeto
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="whitespace-nowrap"
-                    asChild
-                  >
-                    <Link to={`/projeto/${project.id}/editar`}>
-                      Editar
-                    </Link>
-                  </Button>
-                </div>
+                <Button 
+                  variant="default" 
+                  size="sm" 
+                  className="whitespace-nowrap bg-gradient-to-r from-blue-600 to-teal-600 hover:from-blue-700 hover:to-teal-700 shadow-md"
+                  onClick={() => toast.info("Esse é um projeto feito por você")}
+                >
+                  Seu Projeto
+                </Button>
               );
             }
             return (

@@ -9,7 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { OptimizedAvatar } from "@/components/ui/optimized-avatar";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Clock, FileText, DollarSign, Calendar, Sparkles, CheckCircle2, Bold, Italic, Paperclip, X } from "lucide-react";
+import { Clock, FileText, DollarSign, Calendar, Sparkles, CheckCircle2, Bold, Italic, Paperclip, X, Crown } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
@@ -43,6 +43,8 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
   const maxChars = 3000;
   const [attachments, setAttachments] = useState<File[]>([]);
   const [showPremiumDialog, setShowPremiumDialog] = useState(false);
+  const [showCooldownDialog, setShowCooldownDialog] = useState(false);
+  const [cooldownMinutes, setCooldownMinutes] = useState(0);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -125,6 +127,41 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
         variant: "destructive",
       });
       return;
+    }
+
+    // Verificar cooldown para usuários gratuitos
+    const currentPlan = userProfile?.subscription_plan || 'free';
+    if (currentPlan === 'free') {
+      const { data: profile } = await supabase
+        .from('profiles' as any)
+        .select('id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (profile) {
+        const profileId = (profile as any).id;
+        const { data: lastProposal } = await supabase
+          .from('proposals' as any)
+          .select('created_at')
+          .eq('freelancer_id', profileId)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (lastProposal) {
+          const lastProposalCreatedAt = (lastProposal as any).created_at;
+          const lastProposalTime = new Date(lastProposalCreatedAt).getTime();
+          const now = new Date().getTime();
+          const diffMinutes = Math.floor((now - lastProposalTime) / (1000 * 60));
+          
+          if (diffMinutes < 15) {
+            const remainingMinutes = 15 - diffMinutes;
+            setCooldownMinutes(remainingMinutes);
+            setShowCooldownDialog(true);
+            return;
+          }
+        }
+      }
     }
 
     setLoading(true);
@@ -723,6 +760,67 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
               }}
             >
               <Sparkles className="w-4 h-4 mr-2" />
+              Ver Planos
+            </Button>
+          </AlertDialogFooter>
+      </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Dialog de cooldown para usuários free */}
+      <AlertDialog open={showCooldownDialog} onOpenChange={setShowCooldownDialog}>
+        <AlertDialogContent className="border-2 border-primary/20 shadow-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-2xl">
+              <Clock className="w-6 h-6 text-primary animate-pulse" />
+              Aguarde um momento
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-4 py-4">
+              <div className="bg-gradient-to-r from-primary/10 to-accent/10 p-4 rounded-lg border border-primary/20">
+                <p className="text-foreground font-semibold text-base mb-2">
+                  Você só pode enviar uma nova proposta em {cooldownMinutes} {cooldownMinutes === 1 ? 'minuto' : 'minutos'}
+                </p>
+                <p className="text-muted-foreground text-sm">
+                  Usuários do plano gratuito podem enviar propostas a cada 15 minutos.
+                </p>
+              </div>
+              
+              <div className="bg-gradient-to-br from-accent/5 to-secondary/5 p-4 rounded-lg border border-accent/20">
+                <p className="font-semibold text-foreground mb-3 flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-accent" />
+                  Torne-se Pro ou Premium e envie propostas a qualquer momento!
+                </p>
+                <ul className="space-y-2 text-sm text-muted-foreground">
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0 mt-0.5" />
+                    <span>Envie propostas ilimitadas sem tempo de espera</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0 mt-0.5" />
+                    <span>Taxas de intermediação reduzidas</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0 mt-0.5" />
+                    <span>Recursos exclusivos e prioridade no atendimento</span>
+                  </li>
+                </ul>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setShowCooldownDialog(false)}
+            >
+              Entendi
+            </Button>
+            <Button 
+              className="bg-gradient-to-r from-accent via-secondary to-primary hover:from-accent/90 hover:via-secondary/90 hover:to-primary/90 shadow-lg"
+              onClick={() => {
+                setShowCooldownDialog(false);
+                window.location.href = '/planos';
+              }}
+            >
+              <Crown className="w-4 h-4 mr-2" />
               Ver Planos
             </Button>
           </AlertDialogFooter>

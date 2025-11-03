@@ -29,7 +29,6 @@ export function FollowingSection({ profileId }: FollowingSectionProps) {
   const { user } = useAuth();
   const [following, setFollowing] = useState<FollowedProfile[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showAll, setShowAll] = useState(false);
   const navigate = useNavigate();
 
   console.log('🚀 FollowingSection renderizou com profileId:', profileId);
@@ -234,7 +233,7 @@ export function FollowingSection({ profileId }: FollowingSectionProps) {
     );
   }
 
-  const displayedProfiles = showAll ? following : following.slice(0, 6);
+  const displayedProfiles = following.slice(0, 6);
 
   return (
     <Card className="bg-white shadow-sm border border-slate-200">
@@ -246,15 +245,15 @@ export function FollowingSection({ profileId }: FollowingSectionProps) {
             </div>
             <h3 className="text-base font-bold text-slate-900">Seguindo</h3>
           </div>
-          {following.length > 6 && (
+          {following.length > 0 && (
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setShowAll(!showAll)}
+              onClick={() => navigate('/seguindo')}
               className="text-primary hover:text-primary hover:bg-primary/10 h-8 gap-1"
             >
-              {showAll ? 'Ver menos' : 'Ver todos'}
-              {!showAll && <ArrowRight className="w-3 h-3" />}
+              Ver todos
+              <ArrowRight className="w-3 h-3" />
             </Button>
           )}
         </div>

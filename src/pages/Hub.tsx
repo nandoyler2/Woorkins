@@ -154,7 +154,7 @@ export default function Hub() {
       </div>
 
       {/* Categories */}
-      <div className="border-b bg-background/95 backdrop-blur sticky top-16 z-40">
+      <div className="border-b bg-background/95 backdrop-blur">
         <div className="container mx-auto px-4 py-4">
           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
             {CATEGORIES.map((cat) => (

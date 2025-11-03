@@ -147,16 +147,12 @@ export const Header = () => {
               <DropdownMenuTrigger asChild>
                 <Link 
                   to="/projetos"
-                  className={`flex items-center gap-2 transition-colors pb-1 border-b-2 ${
-                    isProjectsRoute()
-                      ? 'text-primary border-primary'
-                      : 'text-foreground/80 hover:text-foreground border-transparent'
-                  }`}
+                  className="flex items-center gap-2 transition-colors pb-1 border-b-2 border-transparent"
                   onMouseEnter={() => setProjectsOpen(true)}
                   onMouseLeave={() => setProjectsOpen(false)}
                 >
-                  <Briefcase className="w-5 h-5" />
-                  <span>Projetos</span>
+                  <Briefcase className="w-5 h-5 bg-gradient-to-r from-blue-500 to-teal-500 bg-clip-text text-transparent" style={{ WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }} />
+                  <span className="font-bold bg-gradient-to-r from-blue-500 to-teal-500 bg-clip-text text-transparent" style={{ WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Projetos</span>
                 </Link>
               </DropdownMenuTrigger>
               <DropdownMenuContent 

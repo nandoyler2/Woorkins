@@ -23,6 +23,7 @@ import { MessagesSkeleton } from '@/components/messages/MessagesSkeleton';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { formatShortName } from '@/lib/utils';
+import { toast } from 'sonner';
 import notificationSound from '@/assets/notification-sound.mp3';
 
 interface Conversation {
@@ -410,7 +411,6 @@ export default function Messages() {
           is_favorited,
           hide_from_inbox,
           profiles!negotiations_target_profile_id_fkey(
-            name,
             company_name,
             logo_url,
             id
@@ -712,8 +712,14 @@ export default function Messages() {
       setConversations(prev => prev.map(c => 
         c.id === conv.id ? { ...c, isFavorited: newFavoriteState } : c
       ));
+
+      // Recarregar conversas para garantir consistência
+      setTimeout(() => loadConversations(true), 300);
+      
+      toast.success(newFavoriteState ? "Adicionado às favoritas" : "Removido das favoritas");
     } catch (error) {
       console.error('Error toggling favorite:', error);
+      toast.error("Erro ao atualizar favorita");
     }
   };
 

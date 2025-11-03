@@ -107,6 +107,7 @@ export function UnifiedChat({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messageInputRef = useRef<HTMLInputElement>(null);
   const [activities, setActivities] = useState<any[]>([]);
+  const [visibleTimestamps, setVisibleTimestamps] = useState<Record<string, boolean>>({});
 
   const { isVerified } = useDocumentVerification(profileId);
 
@@ -825,6 +826,13 @@ export function UnifiedChat({
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setMessageInput(e.target.value);
     handleTyping();
+  };
+
+  const showTimestamp = (id: string) => {
+    setVisibleTimestamps(prev => ({ ...prev, [id]: true }));
+    setTimeout(() => {
+      setVisibleTimestamps(prev => ({ ...prev, [id]: false }));
+    }, 2500);
   };
 
   const getMessageStatusIcon = (status?: string) => {
@@ -1566,7 +1574,7 @@ export function UnifiedChat({
                         </Avatar>
                        )}
                        
-                        <div className={`flex flex-col max-w-[75%] group ${isMine ? 'items-end' : 'items-start'}`}>
+                        <div className={`flex flex-col max-w-[75%] group ${isMine ? 'items-end' : 'items-start'}`} onClick={() => showTimestamp(message.id)}>
                           {/* Rejected message */}
                           {message.status === 'rejected' && isMine ? (
                             <div className="bg-red-50 dark:bg-red-950/20 border border-red-300 dark:border-red-800 rounded-2xl px-4 py-3 shadow-sm max-w-md">
@@ -1635,35 +1643,14 @@ export function UnifiedChat({
                                 </p>
                               ) : (
                                 <>
-                                  <div className="flex items-end gap-2">
-                                    <div className="flex-1">
-                                      {message.content && <p className="text-sm leading-relaxed break-words">{message.content}</p>}
-                                      {/* Moderating indicator */}
-                                      {message.status === 'moderating' && isMine && (
-                                        <div className="flex items-center gap-1 mt-1 text-xs opacity-70">
-                                          <Loader2 className="h-3 w-3 animate-spin" />
-                                          <span>Verificando mensagem...</span>
-                                        </div>
-                                      )}
+                                  {message.content && <p className="text-sm leading-relaxed break-words">{message.content}</p>}
+                                  {/* Moderating indicator */}
+                                  {message.status === 'moderating' && isMine && (
+                                    <div className="flex items-center gap-1 mt-1 text-xs opacity-70">
+                                      <Loader2 className="h-3 w-3 animate-spin" />
+                                      <span>Verificando mensagem...</span>
                                     </div>
-                                    {/* Timestamp e status inline */}
-                                    <div className="flex items-center gap-1 flex-shrink-0 self-end">
-                                      <span className="text-[10px] opacity-70 whitespace-nowrap">
-                                        {(() => {
-                                          const messageDate = new Date(message.created_at);
-                                          return messageDate.toLocaleTimeString('pt-BR', {
-                                            hour: '2-digit',
-                                            minute: '2-digit'
-                                          });
-                                        })()}
-                                      </span>
-                                      {isMine && message.status !== 'rejected' && (
-                                        <span className="opacity-70">
-                                          {getMessageStatusIcon(message.status)}
-                                        </span>
-                                      )}
-                                    </div>
-                                  </div>
+                                  )}
                                 </>
                               )}
                               {isMine && !isDeleted && (! (conversationType === 'proposal' && proposalData?.status === 'accepted')) && message.status !== 'rejected' && (
@@ -1681,7 +1668,40 @@ export function UnifiedChat({
                               )}
                              </div>
                           )}
-                       </div>
+                        </div>
+                        
+                        {/* Timestamp fora da caixa - só no hover */}
+                        <div className={`flex items-center gap-1 ${isMine ? 'flex-row-reverse mr-2' : 'ml-2'} ${visibleTimestamps[message.id] ? 'opacity-100' : 'opacity-0'} group-hover:opacity-100 transition-opacity duration-200`}>
+                          <span className="text-xs text-muted-foreground whitespace-nowrap">
+                            {(() => {
+                              const messageDate = new Date(message.created_at);
+                              const now = new Date();
+                              const diffInHours = (now.getTime() - messageDate.getTime()) / (1000 * 60 * 60);
+                              
+                              // Após 24h, mostra data e hora exata
+                              if (diffInHours > 24) {
+                                return messageDate.toLocaleString('pt-BR', {
+                                  day: '2-digit',
+                                  month: '2-digit',
+                                  year: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                });
+                              }
+                              
+                              // Antes de 24h, mostra tempo relativo
+                              return formatDistanceToNow(messageDate, {
+                                addSuffix: true,
+                                locale: ptBR,
+                              });
+                            })()}
+                          </span>
+                          {isMine && message.status !== 'rejected' && (
+                            <span>
+                              {getMessageStatusIcon(message.status)}
+                            </span>
+                          )}
+                        </div>
                     </div>
                   );
                 });

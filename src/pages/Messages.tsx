@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { MessageCircle, Loader2, Search, Inbox, Mail, Star, Archive, AlertCircle, Tag, MoreVertical, FileInput, Send, CheckCircle, EyeOff, Pin } from 'lucide-react';
+import { MessageCircle, Loader2, Search, Inbox, Mail, Star, Archive, AlertCircle, Tag, MoreVertical, FileInput, Send, CheckCircle, EyeOff, Pin, PlayCircle } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -90,7 +90,7 @@ export default function Messages() {
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [profileId, setProfileId] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeFilter, setActiveFilter] = useState<'all' | 'unread' | 'starred' | 'archived' | 'disputes' | 'proposals_received' | 'proposals_sent' | 'completed'>('all');
+  const [activeFilter, setActiveFilter] = useState<'all' | 'unread' | 'starred' | 'archived' | 'disputes' | 'proposals_received' | 'proposals_sent' | 'completed' | 'in_progress'>('all');
   const [isInitialLoading, setIsInitialLoading] = useState(cachedData.conversations.length === 0 || !cachedData.lastFetched);
   const [isFilterChanging, setIsFilterChanging] = useState(false);
   const [isBackgroundLoading, setIsBackgroundLoading] = useState(false);
@@ -1059,6 +1059,11 @@ export default function Messages() {
         c.type === 'proposal' && 
         (c as any).isProposalSent === true
       ).length,
+      in_progress: conversations.filter(c => 
+        c.unreadCount > 0 && 
+        c.type === 'proposal' && 
+        c.workStatus === 'in_progress'
+      ).length,
       unread: conversations.filter(c => c.unreadCount > 0).length,
       disputes: conversations.filter(c => 
         c.unreadCount > 0 && 
@@ -1100,6 +1105,9 @@ export default function Messages() {
         case 'starred':
           // Apenas conversas favoritadas
           return conv.isFavorited === true;
+        case 'in_progress':
+          // Apenas propostas em andamento (pagas e iniciadas)
+          return conv.type === 'proposal' && conv.workStatus === 'in_progress';
         case 'completed':
           // Apenas propostas finalizadas (completed ou payment_complete)
           // Aparecem aqui independentemente de estarem na caixa de entrada ou não
@@ -1112,7 +1120,12 @@ export default function Messages() {
           return conv.type === 'proposal' && (conv as any).isProposalReceived === true;
         case 'proposals_sent':
           // Apenas propostas enviadas (usuário é freelancer)
-          return conv.type === 'proposal' && (conv as any).isProposalSent === true;
+          // Não exibir projetos finalizados nem em andamento
+          return conv.type === 'proposal' && 
+                 (conv as any).isProposalSent === true &&
+                 conv.workStatus !== 'completed' &&
+                 conv.workStatus !== 'payment_complete' &&
+                 conv.workStatus !== 'in_progress';
         case 'all':
           // Caixa de entrada: negociações + propostas (recebidas e enviadas)
           // IMPORTANTE: Projetos finalizados também aparecem aqui até serem manualmente removidos
@@ -1177,6 +1190,24 @@ export default function Messages() {
                 <Badge variant="destructive" className="ml-auto">{unreadCounts.all}</Badge>
               )}
             </button>
+            
+            {/* Filtro Em Andamento - só exibe se houver projetos em andamento */}
+            {conversations.some(c => c.type === 'proposal' && c.workStatus === 'in_progress') && (
+              <button
+                onClick={() => setActiveFilter('in_progress')}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm ${
+                  activeFilter === 'in_progress' 
+                    ? 'bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/30 scale-105' 
+                    : 'hover:bg-gradient-to-r hover:from-muted hover:to-muted/50 text-muted-foreground hover:scale-102'
+                }`}
+              >
+                <PlayCircle className={`h-4 w-4 ${activeFilter === 'in_progress' ? '' : 'text-blue-500'}`} />
+                <span>Em andamento</span>
+                {unreadCounts.in_progress > 0 && (
+                  <Badge variant="destructive" className="ml-auto">{unreadCounts.in_progress}</Badge>
+                )}
+              </button>
+            )}
             
             <button
               onClick={() => setActiveFilter('proposals_received')}

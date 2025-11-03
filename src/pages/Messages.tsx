@@ -1054,12 +1054,19 @@ export default function Messages() {
                 }}
               />
             ) : (
-              <div className="h-full flex items-center justify-center">
-                <div className="text-center p-8">
-                  <MessageCircle className="h-20 w-20 mx-auto mb-4 text-slate-300" />
-                  <h3 className="text-xl font-semibold mb-2">Selecione uma conversa</h3>
-                  <p className="text-slate-600">
-                    Escolha uma conversa da lista para começar
+              <div className="h-full flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/20">
+                <div className="text-center p-8 max-w-md">
+                  <div className="relative inline-block mb-6">
+                    <div className="absolute inset-0 bg-primary/10 blur-2xl rounded-full animate-pulse"></div>
+                    <div className="relative bg-gradient-to-br from-primary/20 to-primary/5 p-6 rounded-full">
+                      <MessageCircle className="h-16 w-16 text-primary" strokeWidth={1.5} />
+                    </div>
+                  </div>
+                  <h3 className="text-2xl font-bold mb-3 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+                    Selecione uma conversa
+                  </h3>
+                  <p className="text-muted-foreground text-base leading-relaxed">
+                    Escolha uma conversa da lista para começar a trocar mensagens
                   </p>
                 </div>
               </div>

@@ -1564,9 +1564,27 @@ export default function Messages() {
                     <h1 className="text-5xl font-bold mb-4 text-white drop-shadow-lg">
                       Grandes negócios acontecem aqui
                     </h1>
-                    <p className="text-xl text-white/90 drop-shadow-md">
+                    <p className="text-xl text-white/90 drop-shadow-md mb-2">
                       Selecione uma conversa na lista
                     </p>
+                    <p className="text-xl text-white/90 drop-shadow-md mb-6">ou:</p>
+                    
+                    <div className="flex gap-4 justify-center">
+                      <Button
+                        onClick={() => navigate('/projetos')}
+                        size="lg"
+                        className="bg-white/20 hover:bg-white/30 text-white border-2 border-white/40 backdrop-blur-sm transition-all hover:scale-105 shadow-xl text-base px-8"
+                      >
+                        Veja projetos
+                      </Button>
+                      <Button
+                        onClick={() => navigate('/projetos/novo')}
+                        size="lg"
+                        className="bg-white text-primary hover:bg-white/90 transition-all hover:scale-105 shadow-xl text-base px-8 font-semibold"
+                      >
+                        Crie um projeto
+                      </Button>
+                    </div>
                   </div>
                 </div>
                 

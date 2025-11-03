@@ -28,6 +28,8 @@ interface ProjectCardProps {
     created_at: string;
     profile_id?: string;
     profiles: {
+      id?: string;
+      user_id?: string;
       username: string;
       full_name: string;
       avatar_url?: string;
@@ -44,39 +46,33 @@ export function ProjectCard({ project }: ProjectCardProps) {
   const [viewProposalDialogOpen, setViewProposalDialogOpen] = useState(false);
   const [userProposal, setUserProposal] = useState<any>(null);
   const [hasProposal, setHasProposal] = useState(false);
-  const [currentUserProfileId, setCurrentUserProfileId] = useState<string>('');
+  const [currentUserProfileIds, setCurrentUserProfileIds] = useState<string[]>([]);
 
   useEffect(() => {
-    const loadUserProfile = async () => {
+    const loadUserProfiles = async () => {
       if (!user) {
-        setCurrentUserProfileId('');
-        console.log('🔍 ProjectCard - No user logged in');
+        setCurrentUserProfileIds([]);
         return;
       }
 
       try {
-        const { data: profile } = await supabase
+        const { data: profiles } = await supabase
           .from('profiles' as any)
           .select('id')
-          .eq('user_id', user.id)
-          .single();
+          .eq('user_id', user.id);
 
-        if (profile) {
-          const profileId = (profile as any).id;
-          setCurrentUserProfileId(profileId);
-          console.log('🔍 ProjectCard - Current User Profile ID:', profileId);
-          console.log('🔍 ProjectCard - Project Profile ID:', project.profile_id);
-          console.log('🔍 ProjectCard - Project Title:', project.title);
-          console.log('🔍 ProjectCard - Is Owner:', profileId === project.profile_id);
-          console.log('🔍 ProjectCard - Profiles object:', project.profiles);
-        }
+        const ids = (profiles || []).map((p: any) => p.id);
+        setCurrentUserProfileIds(ids);
+        console.log('🔍 ProjectCard - User Profile IDs:', ids);
+        console.log('🔍 ProjectCard - Project.profile_id:', project.profile_id);
+        console.log('🔍 ProjectCard - Project.profiles.user_id:', (project as any)?.profiles?.user_id);
       } catch (error) {
-        console.error('Error loading user profile:', error);
+        console.error('Error loading user profiles:', error);
       }
     };
 
-    loadUserProfile();
-  }, [user, project.profile_id, project.title]);
+    loadUserProfiles();
+  }, [user, project.profile_id]);
 
   useEffect(() => {
     const checkUserProposal = async () => {
@@ -212,38 +208,46 @@ export function ProjectCard({ project }: ProjectCardProps) {
           <span className="text-lg font-bold text-primary whitespace-nowrap">
             {formatBudget(project.budget_min, project.budget_max)}
           </span>
-          {currentUserProfileId && project.profile_id && currentUserProfileId === project.profile_id ? (
-            <div className="flex flex-col gap-2">
+          {(() => {
+            const ownsByProfile = (project.profile_id && currentUserProfileIds.includes(project.profile_id));
+            const ownsByUserId = user && (project as any)?.profiles?.user_id === user.id;
+            const isOwner = !!(ownsByProfile || ownsByUserId);
+            if (isOwner) {
+              return (
+                <div className="flex flex-col gap-2">
+                  <Button 
+                    variant="default" 
+                    size="sm" 
+                    className="whitespace-nowrap bg-muted hover:bg-muted cursor-default text-foreground"
+                    disabled
+                  >
+                    Seu Projeto
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="whitespace-nowrap"
+                    asChild
+                  >
+                    <Link to={`/projeto/${project.id}/editar`}>
+                      Editar
+                    </Link>
+                  </Button>
+                </div>
+              );
+            }
+            return (
               <Button 
                 variant="default" 
                 size="sm" 
-                className="whitespace-nowrap bg-muted hover:bg-muted cursor-default text-foreground"
-                disabled
-              >
-                Seu Projeto
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
                 className="whitespace-nowrap"
-                asChild
+                onClick={handleMakeProposal}
+                style={hasProposal ? { backgroundColor: '#11AA9B' } : undefined}
               >
-                <Link to={`/projeto/${project.id}/editar`}>
-                  Editar
-                </Link>
+                {hasProposal ? 'Você já enviou a proposta' : 'Fazer uma proposta'}
               </Button>
-            </div>
-          ) : (
-            <Button 
-              variant="default" 
-              size="sm" 
-              className="whitespace-nowrap"
-              onClick={handleMakeProposal}
-              style={hasProposal ? { backgroundColor: '#11AA9B' } : undefined}
-            >
-              {hasProposal ? 'Você já enviou a proposta' : 'Fazer uma proposta'}
-            </Button>
-          )}
+            );
+          })()}
         </div>
       </div>
 

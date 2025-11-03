@@ -101,6 +101,7 @@ export default function Projects() {
           *,
           profiles:profile_id (
             id,
+            user_id,
             username,
             full_name,
             avatar_url

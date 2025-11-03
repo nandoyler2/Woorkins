@@ -35,15 +35,15 @@ export function FollowingSection({ profileId }: FollowingSectionProps) {
   }, [profileId]);
 
   useEffect(() => {
-    // Subscrever a novas stories
-    const channel = supabase
-      .channel('stories-following')
+    // Subscrever a novas stories e mudanças de follow
+    const storiesChannel = supabase
+      .channel('profile-stories-following')
       .on(
         'postgres_changes',
         {
           event: 'INSERT',
           schema: 'public',
-          table: 'stories' as any,
+          table: 'profile_stories' as any,
         },
         () => {
           loadFollowing();
@@ -51,8 +51,18 @@ export function FollowingSection({ profileId }: FollowingSectionProps) {
       )
       .subscribe();
 
+    const followsChannel = supabase
+      .channel('follows-following')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'follows' as any },
+        () => loadFollowing()
+      )
+      .subscribe();
+
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(storiesChannel);
+      supabase.removeChannel(followsChannel);
     };
   }, []);
 
@@ -80,67 +90,74 @@ export function FollowingSection({ profileId }: FollowingSectionProps) {
 
       if (followsError) throw followsError;
 
-      const userProfiles = (followsData || [])
-        .filter((f: any) => f.profiles)
-        .map((f: any) => ({
-          id: f.profiles.id,
-          username: f.profiles.username,
-          full_name: f.profiles.full_name,
-          avatar_url: f.profiles.avatar_url,
-          lastSeen: f.profiles.last_seen,
-          hasStory: false,
-          latestStoryTime: null,
-          type: 'user' as const,
-        }));
+      // Extrair IDs seguidos
+      const followingIds: string[] = (followsData || []).map((f: any) => f.following_id);
+      console.log('🧾 Following IDs:', followingIds);
 
-      const followingIds = userProfiles.map((p) => p.id);
-      
-      if (followingIds.length > 0) {
-        // Buscar stories ativas (últimas 24h)
-        const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-        const { data: storiesData } = await supabase
-          .from('stories' as any)
-          .select('profile_id, created_at')
-          .in('profile_id', followingIds)
-          .gte('created_at', twentyFourHoursAgo)
-          .order('created_at', { ascending: false });
-
-        // Mapear perfis com stories
-        const profilesWithStories = new Map<string, string>();
-        (storiesData || []).forEach((story: any) => {
-          if (!profilesWithStories.has(story.profile_id)) {
-            profilesWithStories.set(story.profile_id, story.created_at);
-          }
-        });
-
-        // Atualizar perfis com informação de stories
-        const finalProfiles = userProfiles.map((p) => ({
-          ...p,
-          hasStory: profilesWithStories.has(p.id),
-          latestStoryTime: profilesWithStories.get(p.id) || null,
-        }));
-
-        // Ordenar: 1) Com stories (mais recente primeiro), 2) Mais ativos recentemente
-        finalProfiles.sort((a, b) => {
-          // Perfis com stories vêm primeiro
-          if (a.hasStory && !b.hasStory) return -1;
-          if (!a.hasStory && b.hasStory) return 1;
-          
-          // Se ambos têm stories, ordenar por story mais recente
-          if (a.hasStory && b.hasStory) {
-            return new Date(b.latestStoryTime!).getTime() - new Date(a.latestStoryTime!).getTime();
-          }
-          
-          // Se nenhum tem story, ordenar por último visto
-          const aLastSeen = a.lastSeen ? new Date(a.lastSeen).getTime() : 0;
-          const bLastSeen = b.lastSeen ? new Date(b.lastSeen).getTime() : 0;
-          return bLastSeen - aLastSeen;
-        });
-
-        setFollowing(finalProfiles);
-      } else {
+      if (followingIds.length === 0) {
         setFollowing([]);
+        setLoading(false);
+        return;
       }
+
+      // Buscar perfis dos seguidos (sem depender de FK)
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles' as any)
+        .select('id, username, full_name, avatar_url, last_seen')
+        .in('id', followingIds);
+
+      if (profilesError) throw profilesError;
+      console.log('👤 Perfis dos seguidos:', profilesData);
+
+      let userProfiles = (profilesData || []).map((p: any) => ({
+        id: p.id,
+        username: p.username,
+        full_name: p.full_name,
+        avatar_url: p.avatar_url,
+        lastSeen: p.last_seen || null,
+        hasStory: false,
+        latestStoryTime: null as string | null,
+        type: 'user' as const,
+      }));
+
+      // Buscar stories ativas (últimas 24h)
+      const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      const { data: storiesData, error: storiesError } = await supabase
+        .from('profile_stories' as any)
+        .select('profile_id, created_at')
+        .in('profile_id', followingIds)
+        .gte('created_at', twentyFourHoursAgo)
+        .order('created_at', { ascending: false });
+
+      if (storiesError) throw storiesError;
+      console.log('🎞️ Stories ativas:', storiesData);
+
+      const profilesWithStories = new Map<string, string>();
+      (storiesData || []).forEach((story: any) => {
+        if (!profilesWithStories.has(story.profile_id)) {
+          profilesWithStories.set(story.profile_id, story.created_at);
+        }
+      });
+
+      userProfiles = userProfiles.map((p) => ({
+        ...p,
+        hasStory: profilesWithStories.has(p.id),
+        latestStoryTime: profilesWithStories.get(p.id) || null,
+      }));
+
+      // Ordenar: 1) Com stories (mais recente), 2) Mais ativos (lastSeen)
+      userProfiles.sort((a, b) => {
+        if (a.hasStory && !b.hasStory) return -1;
+        if (!a.hasStory && b.hasStory) return 1;
+        if (a.hasStory && b.hasStory) {
+          return new Date(b.latestStoryTime!).getTime() - new Date(a.latestStoryTime!).getTime();
+        }
+        const aLast = a.lastSeen ? new Date(a.lastSeen).getTime() : 0;
+        const bLast = b.lastSeen ? new Date(b.lastSeen).getTime() : 0;
+        return bLast - aLast;
+      });
+
+      setFollowing(userProfiles);
     } catch (error) {
       console.error('Error loading following:', error);
     } finally {

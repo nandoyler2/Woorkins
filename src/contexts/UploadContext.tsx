@@ -263,48 +263,34 @@ export function UploadProvider({ children }: { children: ReactNode }) {
       if (data.stickers && data.stickers.length > 0 && insertData?.id) {
         console.log(`📌 Salvando ${data.stickers.length} stickers para story ${insertData.id}`);
         
-        const stickersToInsert = await Promise.all(
+        const results = await Promise.allSettled(
           data.stickers.map(async (sticker) => {
             console.log(`📌 Processando sticker tipo: ${sticker.type}`, sticker);
             let content = sticker.content;
             
             // Se for sticker de imagem, fazer upload da imagem
-            if (sticker.type === 'image' && sticker.content.imageUrl) {
+            if (sticker.type === 'image' && sticker.content?.imageUrl) {
               try {
                 const imageUrl = sticker.content.imageUrl;
-                
                 // Converter blob URL para arquivo
                 const response = await fetch(imageUrl);
                 const blob = await response.blob();
-                
                 // Upload para storage
                 const fileExt = blob.type.split('/')[1] || 'png';
                 const stickerFileName = `${data.profileId}/sticker-${insertData.id}-${Date.now()}.${fileExt}`;
-                
                 const { error: uploadError } = await supabase.storage
                   .from('stories')
-                  .upload(stickerFileName, blob, {
-                    contentType: blob.type,
-                    cacheControl: '31536000'
-                  });
-                
+                  .upload(stickerFileName, blob, { contentType: blob.type, cacheControl: '31536000' });
                 if (uploadError) {
                   console.error('Error uploading sticker image:', uploadError);
                 } else {
-                  // Obter URL pública
                   const { data: { publicUrl } } = supabase.storage
                     .from('stories')
                     .getPublicUrl(stickerFileName);
-                  
-                  // Substituir imageUrl temporária pela permanente
-                  content = {
-                    ...sticker.content,
-                    imageUrl: publicUrl
-                  };
+                  content = { ...sticker.content, imageUrl: publicUrl };
                 }
               } catch (error) {
                 console.error('Error processing sticker image:', error);
-                // Continua com a URL original se falhar
               }
             }
             
@@ -322,17 +308,24 @@ export function UploadProvider({ children }: { children: ReactNode }) {
           })
         );
 
+        const stickersToInsert = results
+          .filter((r): r is PromiseFulfilledResult<any> => r.status === 'fulfilled')
+          .map((r) => r.value);
+
         console.log('📌 Inserindo stickers no banco:', stickersToInsert);
         
-        const { error: stickersError } = await supabase
-          .from('story_stickers')
-          .insert(stickersToInsert);
+        if (stickersToInsert.length > 0) {
+          const { error: stickersError } = await supabase
+            .from('story_stickers')
+            .insert(stickersToInsert);
 
-        if (stickersError) {
-          console.error('❌ Error inserting stickers:', stickersError);
-          // Não falha o upload se os stickers falharem
+          if (stickersError) {
+            console.error('❌ Error inserting stickers:', stickersError);
+          } else {
+            console.log('✅ Stickers inseridos com sucesso!');
+          }
         } else {
-          console.log('✅ Stickers inseridos com sucesso!');
+          console.log('⚠️ Nenhum sticker válido para inserir.');
         }
       } else {
         console.log('📌 Nenhum sticker para salvar', {

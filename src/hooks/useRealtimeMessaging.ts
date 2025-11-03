@@ -573,7 +573,7 @@ export const useRealtimeMessaging = ({
         icon: message.sender_avatar || '/placeholder.svg',
       });
     }
-  }, [isConversationActive]);
+  }, [suppressToasts, isConversationActive]);
 
   // Setup realtime subscriptions
   useEffect(() => {

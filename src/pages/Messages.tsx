@@ -1188,16 +1188,16 @@ export default function Messages() {
           <nav className="space-y-2 flex-1">
             <button
               onClick={() => setActiveFilter('all')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm ${
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm whitespace-nowrap ${
                 activeFilter === 'all' 
                   ? 'bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/30 scale-105' 
                   : 'hover:bg-gradient-to-r hover:from-muted hover:to-muted/50 text-muted-foreground hover:scale-102'
               }`}
             >
-              <Inbox className={`h-4 w-4 ${activeFilter === 'all' ? '' : 'text-blue-500'}`} />
-              <span>Caixa de Entrada</span>
+              <Inbox className={`h-4 w-4 flex-shrink-0 ${activeFilter === 'all' ? '' : 'text-blue-500'}`} />
+              <span className="flex-1 truncate">Caixa de Entrada</span>
               {unreadCounts.all > 0 && (
-                <Badge variant="destructive" className="ml-auto">{unreadCounts.all}</Badge>
+                <Badge variant="destructive" className="ml-auto flex-shrink-0">{unreadCounts.all}</Badge>
               )}
             </button>
             
@@ -1205,16 +1205,16 @@ export default function Messages() {
             {conversations.some(c => c.type === 'proposal' && c.workStatus === 'in_progress') && (
               <button
                 onClick={() => setActiveFilter('in_progress')}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm ${
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm whitespace-nowrap ${
                   activeFilter === 'in_progress' 
                     ? 'bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/30 scale-105' 
                     : 'hover:bg-gradient-to-r hover:from-muted hover:to-muted/50 text-muted-foreground hover:scale-102'
                 }`}
               >
-                <PlayCircle className={`h-4 w-4 ${activeFilter === 'in_progress' ? '' : 'text-blue-500'}`} />
-                <span>Em andamento</span>
+                <PlayCircle className={`h-4 w-4 flex-shrink-0 ${activeFilter === 'in_progress' ? '' : 'text-blue-500'}`} />
+                <span className="flex-1 truncate">Em andamento</span>
                 {unreadCounts.in_progress > 0 && (
-                  <Badge variant="destructive" className="ml-auto">{unreadCounts.in_progress}</Badge>
+                  <Badge variant="destructive" className="ml-auto flex-shrink-0">{unreadCounts.in_progress}</Badge>
                 )}
               </button>
             )}
@@ -1223,16 +1223,16 @@ export default function Messages() {
             {conversations.some(c => c.type === 'proposal' && (c as any).isProposalReceived) && (
               <button
                 onClick={() => setActiveFilter('proposals_received')}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm ${
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm whitespace-nowrap ${
                   activeFilter === 'proposals_received' 
                     ? 'bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/30 scale-105' 
                     : 'hover:bg-gradient-to-r hover:from-muted hover:to-muted/50 text-muted-foreground hover:scale-102'
                 }`}
               >
-                <FileInput className={`h-4 w-4 ${activeFilter === 'proposals_received' ? '' : 'text-green-500'}`} />
-                <span>Propostas Recebidas</span>
+                <FileInput className={`h-4 w-4 flex-shrink-0 ${activeFilter === 'proposals_received' ? '' : 'text-green-500'}`} />
+                <span className="flex-1 truncate">{unreadCounts.proposals_received > 0 ? 'Recebidas' : 'Propostas Recebidas'}</span>
                 {unreadCounts.proposals_received > 0 && (
-                  <Badge variant="destructive" className="ml-auto">{unreadCounts.proposals_received}</Badge>
+                  <Badge variant="destructive" className="ml-auto flex-shrink-0">{unreadCounts.proposals_received}</Badge>
                 )}
               </button>
             )}
@@ -1247,101 +1247,101 @@ export default function Messages() {
             ) && (
               <button
                 onClick={() => setActiveFilter('proposals_sent')}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm ${
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm whitespace-nowrap ${
                   activeFilter === 'proposals_sent' 
                     ? 'bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/30 scale-105' 
                     : 'hover:bg-gradient-to-r hover:from-muted hover:to-muted/50 text-muted-foreground hover:scale-102'
                 }`}
               >
-                <Send className={`h-4 w-4 ${activeFilter === 'proposals_sent' ? '' : 'text-purple-500'}`} />
-                <span>Propostas Enviadas</span>
+                <Send className={`h-4 w-4 flex-shrink-0 ${activeFilter === 'proposals_sent' ? '' : 'text-purple-500'}`} />
+                <span className="flex-1 truncate">{unreadCounts.proposals_sent > 0 ? 'Enviadas' : 'Propostas Enviadas'}</span>
                 {unreadCounts.proposals_sent > 0 && (
-                  <Badge variant="destructive" className="ml-auto">{unreadCounts.proposals_sent}</Badge>
+                  <Badge variant="destructive" className="ml-auto flex-shrink-0">{unreadCounts.proposals_sent}</Badge>
                 )}
               </button>
             )}
             
             <button
               onClick={() => setActiveFilter('unread')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm ${
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm whitespace-nowrap ${
                 activeFilter === 'unread' 
                   ? 'bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/30 scale-105' 
                   : 'hover:bg-gradient-to-r hover:from-muted hover:to-muted/50 text-muted-foreground hover:scale-102'
               }`}
             >
-              <Mail className={`h-4 w-4 ${activeFilter === 'unread' ? '' : 'text-orange-500'}`} />
-              <span>Não Lidas</span>
+              <Mail className={`h-4 w-4 flex-shrink-0 ${activeFilter === 'unread' ? '' : 'text-orange-500'}`} />
+              <span className="flex-1 truncate">Não Lidas</span>
               {unreadCounts.unread > 0 && (
-                <Badge variant="destructive" className="ml-auto">{unreadCounts.unread}</Badge>
+                <Badge variant="destructive" className="ml-auto flex-shrink-0">{unreadCounts.unread}</Badge>
               )}
             </button>
             
             <button
               onClick={() => setActiveFilter('starred')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm ${
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm whitespace-nowrap ${
                 activeFilter === 'starred' 
                   ? 'bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/30 scale-105' 
                   : 'hover:bg-gradient-to-r hover:from-muted hover:to-muted/50 text-muted-foreground hover:scale-102'
               }`}
             >
-              <Star className={`h-4 w-4 ${activeFilter === 'starred' ? '' : 'text-yellow-500'}`} />
-              <span>Favoritas</span>
+              <Star className={`h-4 w-4 flex-shrink-0 ${activeFilter === 'starred' ? '' : 'text-yellow-500'}`} />
+              <span className="flex-1 truncate">Favoritas</span>
             </button>
             
             {/* Filtro Finalizados - só exibe se houver projetos finalizados */}
             {conversations.some(c => c.type === 'proposal' && (c.workStatus === 'completed' || c.workStatus === 'payment_complete')) && (
               <button
                 onClick={() => setActiveFilter('completed')}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm ${
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm whitespace-nowrap ${
                   activeFilter === 'completed' 
                     ? 'bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/30 scale-105' 
                     : 'hover:bg-gradient-to-r hover:from-muted hover:to-muted/50 text-muted-foreground hover:scale-102'
                 }`}
               >
-                <CheckCircle className={`h-4 w-4 ${activeFilter === 'completed' ? '' : 'text-green-500'}`} />
-                <span>Finalizados</span>
+                <CheckCircle className={`h-4 w-4 flex-shrink-0 ${activeFilter === 'completed' ? '' : 'text-green-500'}`} />
+                <span className="flex-1 truncate">Finalizados</span>
               </button>
             )}
             
             <button
               onClick={() => setActiveFilter('archived')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm ${
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm whitespace-nowrap ${
                 activeFilter === 'archived' 
                   ? 'bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/30 scale-105' 
                   : 'hover:bg-gradient-to-r hover:from-muted hover:to-muted/50 text-muted-foreground hover:scale-102'
               }`}
             >
-              <Archive className={`h-4 w-4 ${activeFilter === 'archived' ? '' : 'text-gray-500'}`} />
-              <span>Arquivadas</span>
+              <Archive className={`h-4 w-4 flex-shrink-0 ${activeFilter === 'archived' ? '' : 'text-gray-500'}`} />
+              <span className="flex-1 truncate">Arquivadas</span>
               {unreadCounts.archived > 0 && (
-                <Badge variant="destructive" className="ml-auto">{unreadCounts.archived}</Badge>
+                <Badge variant="destructive" className="ml-auto flex-shrink-0">{unreadCounts.archived}</Badge>
               )}
             </button>
             
             <button
               onClick={() => setActiveFilter('view_all')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm ${
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm whitespace-nowrap ${
                 activeFilter === 'view_all' 
                   ? 'bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/30 scale-105' 
                   : 'hover:bg-gradient-to-r hover:from-muted hover:to-muted/50 text-muted-foreground hover:scale-102'
               }`}
             >
-              <MessageCircle className={`h-4 w-4 ${activeFilter === 'view_all' ? '' : 'text-purple-500'}`} />
-              <span>Ver Tudo</span>
+              <MessageCircle className={`h-4 w-4 flex-shrink-0 ${activeFilter === 'view_all' ? '' : 'text-purple-500'}`} />
+              <span className="flex-1 truncate">Ver Tudo</span>
             </button>
             
             <button
               onClick={() => setActiveFilter('disputes')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm ${
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm whitespace-nowrap ${
                 activeFilter === 'disputes' 
                   ? 'bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/30 scale-105' 
                   : 'hover:bg-gradient-to-r hover:from-muted hover:to-muted/50 text-muted-foreground hover:scale-102'
               }`}
             >
-              <AlertCircle className={`h-4 w-4 ${activeFilter === 'disputes' ? '' : 'text-red-500'}`} />
-              <span>Disputa</span>
+              <AlertCircle className={`h-4 w-4 flex-shrink-0 ${activeFilter === 'disputes' ? '' : 'text-red-500'}`} />
+              <span className="flex-1 truncate">Disputa</span>
               {unreadCounts.disputes > 0 && (
-                <Badge variant="destructive" className="ml-auto">{unreadCounts.disputes}</Badge>
+                <Badge variant="destructive" className="ml-auto flex-shrink-0">{unreadCounts.disputes}</Badge>
               )}
             </button>
           </nav>

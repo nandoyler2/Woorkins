@@ -19,6 +19,7 @@ import {
 import { UnifiedChat } from '@/components/UnifiedChat';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
+import { MessagesSkeleton } from '@/components/messages/MessagesSkeleton';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { formatShortName } from '@/lib/utils';
@@ -63,8 +64,10 @@ export default function Messages() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<'all' | 'unread' | 'starred' | 'archived' | 'disputes'>('all');
   const [isBackgroundLoading, setIsBackgroundLoading] = useState(false);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
   const isLoadingRef = useRef(false);
   const loadingTimeoutRef = useRef<NodeJS.Timeout>();
+  const hasLoadedData = useRef(false);
   const location = useLocation();
 
   useEffect(() => {
@@ -72,7 +75,8 @@ export default function Messages() {
   }, []);
 
   useEffect(() => {
-    if (user) {
+    if (user && !hasLoadedData.current) {
+      hasLoadedData.current = true;
       loadProfile();
     }
   }, [user]);
@@ -247,9 +251,11 @@ export default function Messages() {
 
       if (profiles && profiles.length > 0) {
         setProfileId(profiles[0].id);
+        setIsInitialLoading(false);
       }
     } catch (error) {
       console.error('Error loading profile:', error);
+      setIsInitialLoading(false);
     }
   };
 
@@ -674,6 +680,18 @@ export default function Messages() {
     });
 
   // Removido loading bloqueante - renderiza imediatamente com cache
+
+  if (isInitialLoading) {
+    return (
+      <div className="h-screen flex flex-col bg-gradient-to-br from-background via-primary/5 to-secondary/10">
+        <Header />
+        <main className="flex-1 container mx-auto py-6">
+          <MessagesSkeleton />
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="h-screen flex flex-col bg-gradient-to-br from-background via-primary/5 to-secondary/10">

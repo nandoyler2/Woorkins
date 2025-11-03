@@ -1,14 +1,15 @@
 import { useState, useEffect, useId } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Star, Building2, User } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Search, Star, Building2, User, FolderOpen, FileText } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { SafeImage } from "@/components/ui/safe-image";
 
 interface SearchResult {
-  type: 'user' | 'business';
+  type: 'user' | 'business' | 'project' | 'article';
   identifier: string;
   name: string;
   category: string | null;
@@ -17,6 +18,7 @@ interface SearchResult {
   average_rating?: number;
   total_reviews?: number;
   username?: string;
+  id?: string;
 }
 
 export const SearchBar = () => {
@@ -26,7 +28,7 @@ export const SearchBar = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [placeholder, setPlaceholder] = useState("");
-  const fullPlaceholder = "Buscar pessoas, empresas e negócios...";
+  const fullPlaceholder = "Buscar pessoas, empresas, projetos e artigos...";
   const gradId = useId();
 
   // Typing animation for placeholder
@@ -58,19 +60,39 @@ export const SearchBar = () => {
     setIsSearching(true);
     const timer = setTimeout(async () => {
       try {
-        // Buscar todos os perfis (usuários e negócios) - excluir perfis deletados
-        const { data } = await supabase
+        const combinedResults: SearchResult[] = [];
+
+        // Buscar perfis (usuários e negócios) - excluir perfis deletados
+        const profilesQuery = await supabase
           .from('profiles')
           .select('username, full_name, company_name, slug, category, description, bio, logo_url, avatar_url, profile_type, average_rating, total_reviews')
           .or(`username.ilike.%${searchTerm}%,full_name.ilike.%${searchTerm}%,company_name.ilike.%${searchTerm}%,category.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%,bio.ilike.%${searchTerm}%`)
           .or('deleted.is.null,deleted.eq.false')
-          .limit(10);
+          .limit(5);
 
-        const combinedResults: SearchResult[] = [];
+        // Buscar projetos
+        const projectsQuery = await supabase
+          .from('projects')
+          .select('id, title, description, category')
+          .or(`title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%,category.ilike.%${searchTerm}%`)
+          .eq('status', 'open')
+          .limit(5);
 
-        // Mapear resultados
-        if (data) {
-          data.forEach((item: any) => {
+        // Buscar artigos do Hub (comentado temporariamente por erro de tipo)
+        // const articlesQuery = await supabase
+        //   .from('hub_articles')
+        //   .select('id, title, excerpt, image_url')
+        //   .or(`title.ilike.%${searchTerm}%,excerpt.ilike.%${searchTerm}%`)
+        //   .eq('status', 'published')
+        //   .limit(5);
+
+        const profilesData = profilesQuery.data;
+        const projectsData = projectsQuery.data;
+        const articlesData = null; // articlesQuery.data;
+
+        // Mapear resultados de perfis
+        if (profilesData) {
+          profilesData.forEach((item: any) => {
             if (item.profile_type === 'business') {
               combinedResults.push({
                 type: 'business',
@@ -96,6 +118,36 @@ export const SearchBar = () => {
           });
         }
 
+        // Mapear resultados de projetos
+        if (projectsData) {
+          projectsData.forEach((item: any) => {
+            combinedResults.push({
+              type: 'project',
+              id: item.id,
+              identifier: item.id,
+              name: item.title,
+              category: item.category,
+              description: item.description,
+              image_url: null,
+            });
+          });
+        }
+
+        // Mapear resultados de artigos
+        if (articlesData) {
+          articlesData.forEach((item: any) => {
+            combinedResults.push({
+              type: 'article',
+              id: item.id,
+              identifier: item.id,
+              name: item.title,
+              category: null,
+              description: item.excerpt,
+              image_url: item.image_url,
+            });
+          });
+        }
+
         setResults(combinedResults);
       } catch (err) {
         console.error('Search error:', err);
@@ -112,18 +164,39 @@ export const SearchBar = () => {
     if (!searchTerm.trim()) return;
     setIsSearching(true);
     try {
-      // Buscar todos os perfis (usuários e negócios) - excluir perfis deletados
-      const { data } = await supabase
+      const combinedResults: SearchResult[] = [];
+
+      // Buscar perfis (usuários e negócios) - excluir perfis deletados
+      const profilesQuery = await supabase
         .from('profiles')
         .select('username, full_name, company_name, slug, category, description, bio, logo_url, avatar_url, profile_type, average_rating, total_reviews')
         .or(`username.ilike.%${searchTerm}%,full_name.ilike.%${searchTerm}%,company_name.ilike.%${searchTerm}%,category.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%,bio.ilike.%${searchTerm}%`)
         .or('deleted.is.null,deleted.eq.false')
-        .limit(10);
+        .limit(5);
 
-      const combinedResults: SearchResult[] = [];
+      // Buscar projetos
+      const projectsQuery = await supabase
+        .from('projects')
+        .select('id, title, description, category')
+        .or(`title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%,category.ilike.%${searchTerm}%`)
+        .eq('status', 'open')
+        .limit(5);
 
-      if (data) {
-        data.forEach((item: any) => {
+      // Buscar artigos do Hub (comentado temporariamente por erro de tipo)
+      // const articlesQuery = await supabase
+      //   .from('hub_articles')
+      //   .select('id, title, excerpt, image_url')
+      //   .or(`title.ilike.%${searchTerm}%,excerpt.ilike.%${searchTerm}%`)
+      //   .eq('status', 'published')
+      //   .limit(5);
+
+      const profilesData = profilesQuery.data;
+      const projectsData = projectsQuery.data;
+      const articlesData = null; // articlesQuery.data;
+
+      // Mapear resultados de perfis
+      if (profilesData) {
+        profilesData.forEach((item: any) => {
           if (item.profile_type === 'business') {
             combinedResults.push({
               type: 'business',
@@ -146,6 +219,36 @@ export const SearchBar = () => {
               username: item.username,
             });
           }
+        });
+      }
+
+      // Mapear resultados de projetos
+      if (projectsData) {
+        projectsData.forEach((item: any) => {
+          combinedResults.push({
+            type: 'project',
+            id: item.id,
+            identifier: item.id,
+            name: item.title,
+            category: item.category,
+            description: item.description,
+            image_url: null,
+          });
+        });
+      }
+
+      // Mapear resultados de artigos
+      if (articlesData) {
+        articlesData.forEach((item: any) => {
+          combinedResults.push({
+            type: 'article',
+            id: item.id,
+            identifier: item.id,
+            name: item.title,
+            category: null,
+            description: item.excerpt,
+            image_url: item.image_url,
+          });
         });
       }
 
@@ -225,69 +328,106 @@ export const SearchBar = () => {
         <div className="absolute top-full mt-4 w-full bg-background border-2 border-foreground/20 rounded-2xl shadow-elegant overflow-hidden z-50">
           {results.length > 0 ? (
             <div className="p-2">
-              {results.map((result, index) => (
-                <div
-                  key={index}
-                  onClick={() => {
-                    navigate(`/${result.identifier}`);
-                    setShowResults(false);
-                    setSearchTerm("");
-                  }}
-                  className="p-4 hover:bg-muted rounded-xl cursor-pointer transition-all hover:shadow-sm"
-                >
-                  <div className="flex gap-4 items-start">
-                    {/* Image/Avatar */}
-                    <div className="flex-shrink-0">
-                      {result.image_url ? (
-                        <SafeImage
-                          src={result.image_url}
-                          alt={result.name}
-                          className="w-16 h-16 md:w-20 md:h-20 rounded-lg object-cover border-2 border-border"
-                        />
-                      ) : (
-                        <div className="w-16 h-16 md:w-20 md:h-20 rounded-lg bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center border-2 border-border">
-                          {result.type === 'business' ? (
-                            <Building2 className="w-8 h-8 text-muted-foreground" />
-                          ) : (
-                            <div className="text-2xl font-bold text-muted-foreground">
-                              {result.name.charAt(0).toUpperCase()}
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
+              {results.map((result, index) => {
+                const getTypeLabel = () => {
+                  switch (result.type) {
+                    case 'user': return { label: 'Usuário', color: 'bg-blue-500/10 text-blue-600 dark:text-blue-400' };
+                    case 'business': return { label: 'Empresa', color: 'bg-purple-500/10 text-purple-600 dark:text-purple-400' };
+                    case 'project': return { label: 'Projeto', color: 'bg-green-500/10 text-green-600 dark:text-green-400' };
+                    case 'article': return { label: 'Artigo', color: 'bg-orange-500/10 text-orange-600 dark:text-orange-400' };
+                  }
+                };
 
-                    {/* Content */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-2 mb-1">
-                        <div className="flex items-center gap-2">
-                          <h3 className="text-base md:text-lg font-bold truncate">{result.name}</h3>
-                          {result.type === 'user' && result.username && (
-                            <span className="text-sm text-muted-foreground">@{result.username}</span>
-                          )}
-                        </div>
-                        
-                        {/* Rating (só para negócios) */}
-                        {result.type === 'business' && result.total_reviews && result.total_reviews > 0 && (
-                          <div className="flex items-center gap-1 px-2 py-1 bg-primary/10 rounded-lg flex-shrink-0">
-                            <Star className="w-4 h-4 fill-primary text-primary" />
-                            <span className="text-sm font-bold">{Number(result.average_rating).toFixed(1)}</span>
-                            <span className="text-xs text-muted-foreground">({result.total_reviews})</span>
+                const getIcon = () => {
+                  switch (result.type) {
+                    case 'user': return <User className="w-8 h-8 text-muted-foreground" />;
+                    case 'business': return <Building2 className="w-8 h-8 text-muted-foreground" />;
+                    case 'project': return <FolderOpen className="w-8 h-8 text-muted-foreground" />;
+                    case 'article': return <FileText className="w-8 h-8 text-muted-foreground" />;
+                  }
+                };
+
+                const getLink = () => {
+                  switch (result.type) {
+                    case 'user':
+                    case 'business':
+                      return `/${result.identifier}`;
+                    case 'project':
+                      return `/projetos/${result.id}`;
+                    case 'article':
+                      return `/hub/${result.id}`;
+                  }
+                };
+
+                const typeInfo = getTypeLabel();
+
+                return (
+                  <div
+                    key={index}
+                    onClick={() => {
+                      navigate(getLink());
+                      setShowResults(false);
+                      setSearchTerm("");
+                    }}
+                    className="p-4 hover:bg-muted rounded-xl cursor-pointer transition-all hover:shadow-sm"
+                  >
+                    <div className="flex gap-4 items-start">
+                      {/* Image/Avatar */}
+                      <div className="flex-shrink-0">
+                        {result.image_url ? (
+                          <SafeImage
+                            src={result.image_url}
+                            alt={result.name}
+                            className="w-16 h-16 md:w-20 md:h-20 rounded-lg object-cover border-2 border-border"
+                          />
+                        ) : (
+                          <div className="w-16 h-16 md:w-20 md:h-20 rounded-lg bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center border-2 border-border">
+                            {result.type === 'user' ? (
+                              <div className="text-2xl font-bold text-muted-foreground">
+                                {result.name.charAt(0).toUpperCase()}
+                              </div>
+                            ) : (
+                              getIcon()
+                            )}
                           </div>
                         )}
                       </div>
 
-                      {result.category && (
-                        <p className="text-sm text-primary font-medium mb-1">{result.category}</p>
-                      )}
-                      
-                      {result.description && (
-                        <p className="text-sm text-muted-foreground line-clamp-2">{result.description}</p>
-                      )}
+                      {/* Content */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2 mb-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <Badge className={cn("text-xs font-semibold", typeInfo.color)}>
+                              {typeInfo.label}
+                            </Badge>
+                            <h3 className="text-base md:text-lg font-bold truncate">{result.name}</h3>
+                            {result.type === 'user' && result.username && (
+                              <span className="text-sm text-muted-foreground">@{result.username}</span>
+                            )}
+                          </div>
+                          
+                          {/* Rating (só para negócios) */}
+                          {result.type === 'business' && result.total_reviews && result.total_reviews > 0 && (
+                            <div className="flex items-center gap-1 px-2 py-1 bg-primary/10 rounded-lg flex-shrink-0">
+                              <Star className="w-4 h-4 fill-primary text-primary" />
+                              <span className="text-sm font-bold">{Number(result.average_rating).toFixed(1)}</span>
+                              <span className="text-xs text-muted-foreground">({result.total_reviews})</span>
+                            </div>
+                          )}
+                        </div>
+
+                        {result.category && (
+                          <p className="text-sm text-primary font-medium mb-1">{result.category}</p>
+                        )}
+                        
+                        {result.description && (
+                          <p className="text-sm text-muted-foreground line-clamp-2">{result.description}</p>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <div className="p-6 md:p-8 text-center">

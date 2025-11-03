@@ -209,31 +209,33 @@ export function UnifiedChat({
     prevMessageCountRef.current = 0;
   }, [conversationId]);
   
-  // Scroll INSTANTÂNEO ao trocar de conversa - SEM animação
+  // Scroll INSTANTÂNEO ao trocar de conversa - SEM animação, somente após carregar mensagens
   useLayoutEffect(() => {
-    if (!isHydratingRef.current) return;
+    if (!isHydratingRef.current || _isLoading) return;
     
     const container = messagesContainerRef.current;
     if (!container) return;
     
-    // Forçar scroll instantâneo IMEDIATAMENTE sem animação
     container.style.scrollBehavior = 'auto';
     
-    // Duplo requestAnimationFrame para garantir DOM renderizado
+    const toBottom = () => {
+      container.scrollTop = container.scrollHeight;
+    };
+    
+    // Garantir diversas chances após renderizações assíncronas
     requestAnimationFrame(() => {
+      toBottom();
       requestAnimationFrame(() => {
-        container.scrollTop = container.scrollHeight;
+        toBottom();
+        setTimeout(toBottom, 60);
+        setTimeout(toBottom, 180);
         
-        // Ajuste final para imagens atrasadas
-        setTimeout(() => {
-          container.scrollTop = container.scrollHeight;
-          isHydratingRef.current = false;
-          setHideOnInit(false);
-          prevMessageCountRef.current = messages.length;
-        }, 80);
+        isHydratingRef.current = false;
+        setHideOnInit(false);
+        prevMessageCountRef.current = messages.length;
       });
     });
-  }, [conversationId, messages.length]);
+  }, [conversationId, _isLoading, messages.length]);
   
   // Scroll suave APENAS para novas mensagens (após a abertura inicial)
   useEffect(() => {

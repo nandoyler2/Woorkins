@@ -419,31 +419,10 @@ export const useRealtimeMessaging = ({
 
       if (error) throw error;
 
-      // Fetch sender details
-      const { data: senderData } = await supabase
-        .from('profiles')
-        .select('full_name, avatar_url')
-        .eq('id', currentUserId)
-        .single();
+      console.log('✅ Mensagem inserida no banco:', data.id);
 
-      // Replace optimistic message with real one
-      setMessages(prev => prev.map(msg => 
-        msg.id === tempId
-          ? {
-              id: data.id,
-              sender_id: data.sender_id,
-              sender_name: senderData?.full_name || 'Você',
-              sender_avatar: senderData?.avatar_url,
-              content: data.content,
-              created_at: data.created_at,
-              status: 'moderating',
-              moderation_status: 'pending',
-              media_url: data.media_url,
-              media_type: data.media_type,
-              media_name: data.media_name,
-            }
-          : msg
-      ));
+      // O realtime subscription irá substituir a mensagem otimista pela real
+      // Não precisamos fazer isso aqui para evitar flicker
 
       // Call moderation in background (no await)
       console.log('🚀 Iniciando moderação assíncrona:', data.id);
@@ -580,8 +559,26 @@ export const useRealtimeMessaging = ({
             media_name: newMessage.media_name,
           };
 
-          // Only add if not from current user (to avoid duplicates from optimistic UI)
-          if (message.sender_id !== currentUserId) {
+          // If from current user, replace any temp message instead of ignoring
+          if (message.sender_id === currentUserId) {
+            setMessages(prev => {
+              // Find and replace temp message with real one
+              const hasTempMessage = prev.some(m => m.id.toString().startsWith('temp-'));
+              if (hasTempMessage) {
+                return prev.map(m => 
+                  m.id.toString().startsWith('temp-') && m.content === message.content
+                    ? message 
+                    : m
+                );
+              }
+              // If no temp message, check if real message already exists
+              if (prev.some(m => m.id === message.id)) {
+                return prev;
+              }
+              return [...prev, message];
+            });
+          } else {
+            // Message from other user
             setMessages(prev => {
               // Check if message already exists
               if (prev.some(m => m.id === message.id)) {

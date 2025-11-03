@@ -31,7 +31,7 @@ interface Story {
   created_at: string;
   expires_at: string;
   media_url: string;
-  media_type: string;
+  type: string;
   caption?: string | null;
   profile_id: string;
   profiles?: {
@@ -59,16 +59,16 @@ export default function Stories() {
     try {
       setLoading(true);
       const { data, error } = await supabase
-        .from('stories' as any)
+        .from('profile_stories' as any)
         .select(`
           id,
           created_at,
           expires_at,
           media_url,
-          media_type,
+          type,
           caption,
           profile_id,
-          profiles:profile_id (
+          profile:profiles!profile_stories_profile_id_fkey (
             full_name,
             username,
             avatar_url
@@ -77,7 +77,13 @@ export default function Stories() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setStories((data as unknown || []) as Story[]);
+      
+      const formattedData = (data || []).map((story: any) => ({
+        ...story,
+        profiles: story.profile
+      }));
+      
+      setStories(formattedData as Story[]);
     } catch (error) {
       console.error('Error loading stories:', error);
       toast({
@@ -137,7 +143,7 @@ export default function Stories() {
       }
 
       const { error } = await supabase
-        .from('stories' as any)
+        .from('profile_stories' as any)
         .delete()
         .in('id', storyIds);
 
@@ -248,7 +254,7 @@ export default function Stories() {
                         />
                       </TableCell>
                       <TableCell>
-                        {story.media_type === 'image' ? (
+                        {story.type === 'image' ? (
                           <img
                             src={story.media_url}
                             alt="Story"
@@ -280,7 +286,7 @@ export default function Stories() {
                           <span className="text-muted-foreground">Usuário não encontrado</span>
                         )}
                       </TableCell>
-                      <TableCell className="capitalize">{story.media_type}</TableCell>
+                      <TableCell className="capitalize">{story.type}</TableCell>
                       <TableCell className="max-w-xs truncate">
                         {story.caption || '-'}
                       </TableCell>

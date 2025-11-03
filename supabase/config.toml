@@ -12,6 +12,9 @@ verify_jwt = true
 [functions.moderate-content]
 verify_jwt = true
 
+[functions.moderate-project]
+verify_jwt = true
+
 [functions.create-stripe-connected-account]
 verify_jwt = true
 

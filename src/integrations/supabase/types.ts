@@ -983,6 +983,81 @@ export type Database = {
           },
         ]
       }
+      pending_projects: {
+        Row: {
+          ai_analysis: Json | null
+          blocked_reason: string | null
+          budget_max: number | null
+          budget_min: number | null
+          categories: string[]
+          created_at: string
+          deadline: string | null
+          description: string
+          id: string
+          moderation_reason: string | null
+          moderation_status: string
+          profile_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          skills: string[]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          ai_analysis?: Json | null
+          blocked_reason?: string | null
+          budget_max?: number | null
+          budget_min?: number | null
+          categories?: string[]
+          created_at?: string
+          deadline?: string | null
+          description: string
+          id?: string
+          moderation_reason?: string | null
+          moderation_status?: string
+          profile_id: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          skills?: string[]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          ai_analysis?: Json | null
+          blocked_reason?: string | null
+          budget_max?: number | null
+          budget_min?: number | null
+          categories?: string[]
+          created_at?: string
+          deadline?: string | null
+          description?: string
+          id?: string
+          moderation_reason?: string | null
+          moderation_status?: string
+          profile_id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          skills?: string[]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pending_projects_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pending_projects_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       platform_activities: {
         Row: {
           activity_type: string
@@ -2135,6 +2210,7 @@ export type Database = {
       }
       projects: {
         Row: {
+          ai_suggested_categories: string[] | null
           budget_max: number | null
           budget_min: number | null
           categories: string[] | null
@@ -2143,6 +2219,8 @@ export type Database = {
           deadline: string | null
           description: string
           id: string
+          moderation_status: string | null
+          original_categories: string[] | null
           profile_id: string
           proposals_count: number | null
           skills: string[] | null
@@ -2151,6 +2229,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          ai_suggested_categories?: string[] | null
           budget_max?: number | null
           budget_min?: number | null
           categories?: string[] | null
@@ -2159,6 +2238,8 @@ export type Database = {
           deadline?: string | null
           description: string
           id?: string
+          moderation_status?: string | null
+          original_categories?: string[] | null
           profile_id: string
           proposals_count?: number | null
           skills?: string[] | null
@@ -2167,6 +2248,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          ai_suggested_categories?: string[] | null
           budget_max?: number | null
           budget_min?: number | null
           categories?: string[] | null
@@ -2175,6 +2257,8 @@ export type Database = {
           deadline?: string | null
           description?: string
           id?: string
+          moderation_status?: string | null
+          original_categories?: string[] | null
           profile_id?: string
           proposals_count?: number | null
           skills?: string[] | null
@@ -4181,6 +4265,10 @@ export type Database = {
           violation_count: number
         }[]
       }
+      approve_pending_project: {
+        Args: { p_admin_profile_id: string; p_pending_project_id: string }
+        Returns: string
+      }
       calculate_payment_split: {
         Args: { _amount: number; _platform_commission_percent?: number }
         Returns: {
@@ -4237,6 +4325,14 @@ export type Database = {
         Returns: boolean
       }
       is_profile_owner: { Args: { _profile_id: string }; Returns: boolean }
+      reject_pending_project: {
+        Args: {
+          p_admin_profile_id: string
+          p_pending_project_id: string
+          p_rejection_reason: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"

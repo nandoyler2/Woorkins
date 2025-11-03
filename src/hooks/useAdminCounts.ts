@@ -7,6 +7,7 @@ interface AdminCounts {
   documentVerifications: number;
   systemBlocks: number;
   withdrawalRequests: number;
+  pendingProjects: number;
 }
 
 export const useAdminCounts = () => {
@@ -15,7 +16,8 @@ export const useAdminCounts = () => {
     support: 0,
     documentVerifications: 0,
     systemBlocks: 0,
-    withdrawalRequests: 0
+    withdrawalRequests: 0,
+    pendingProjects: 0
   });
   const [loading, setLoading] = useState(true);
 
@@ -51,12 +53,19 @@ export const useAdminCounts = () => {
           .select('*', { count: 'exact', head: true })
           .eq('status', 'pending');
 
+        // Contagem de projetos pendentes de moderação
+        const { count: pendingProjectsCount } = await supabase
+          .from('pending_projects')
+          .select('*', { count: 'exact', head: true })
+          .eq('moderation_status', 'pending');
+
         setCounts({
           moderation: moderationCount || 0,
           support: supportCount || 0,
           documentVerifications: verificationCount || 0,
           systemBlocks: blocksCount || 0,
-          withdrawalRequests: withdrawalsCount || 0
+          withdrawalRequests: withdrawalsCount || 0,
+          pendingProjects: pendingProjectsCount || 0
         });
       } catch (error) {
         console.error('Error loading admin counts:', error);

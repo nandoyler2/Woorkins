@@ -278,16 +278,6 @@ export default function ProjectCreate() {
     setCreating(true);
 
     try {
-      const { data: profileData } = await supabase
-        .from('profiles' as any)
-        .select('id')
-        .eq('user_id', user.id)
-        .single();
-
-      if (!profileData) {
-        throw new Error('Perfil não encontrado');
-      }
-
       let budgetMin = null;
       let budgetMax = null;
       
@@ -311,45 +301,57 @@ export default function ProjectCreate() {
         const days = parseInt(deadline);
         const futureDate = new Date();
         futureDate.setDate(futureDate.getDate() + days);
-        deadlineDate = futureDate.toISOString().split('T')[0]; // Formato YYYY-MM-DD
+        deadlineDate = futureDate.toISOString().split('T')[0];
       }
 
-      // Converter a string de categorias em array
-      const categoriesArray = detectedCategory 
-        ? detectedCategory.split(',').map(c => c.trim())
-        : ['Outro'];
-
-      const { data, error } = await supabase
-        .from('projects' as any)
-        .insert({
-          profile_id: (profileData as any).id,
+      // Chamar edge function de moderação
+      const { data: moderationResult, error: moderationError } = await supabase.functions.invoke('moderate-project', {
+        body: {
           title,
           description,
-          category: categoriesArray[0] || 'Outro', // Mantém compatibilidade com coluna antiga
-          categories: categoriesArray, // Nova coluna de array
-          skills: detectedTags, // Nova coluna de skills/tags
           budget_min: budgetMin,
           budget_max: budgetMax,
-          deadline: deadlineDate,
-        })
-        .select()
-        .single();
+          deadline: deadlineDate
+        }
+      });
 
-      if (error) throw error;
+      if (moderationError) throw moderationError;
 
-      // Limpar rascunho do localStorage após publicação bem-sucedida
+      // Limpar rascunho do localStorage
       localStorage.removeItem('projectDraft');
-      
+
+      // Lidar com resultado da moderação
+      if (moderationResult.action === 'blocked') {
+        toast({
+          title: '❌ Projeto não permitido',
+          description: moderationResult.reason,
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      if (moderationResult.action === 'pending') {
+        toast({
+          title: '⏳ Projeto em análise',
+          description: moderationResult.message,
+          duration: 6000,
+        });
+        navigate('/meus-projetos');
+        return;
+      }
+
+      // Projeto aprovado
       toast({
-        title: 'Projeto criado!',
+        title: '✅ Projeto publicado!',
         description: 'Seu projeto foi publicado com sucesso.',
       });
 
-      navigate(`/projetos/${(data as any).id}`);
+      navigate(`/projetos/${moderationResult.projectId}`);
     } catch (error: any) {
+      console.error('Erro ao criar projeto:', error);
       toast({
         title: 'Erro ao criar projeto',
-        description: error.message,
+        description: error.message || 'Ocorreu um erro ao processar seu projeto',
         variant: 'destructive',
       });
     } finally {

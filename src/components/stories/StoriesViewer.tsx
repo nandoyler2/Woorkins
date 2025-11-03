@@ -819,7 +819,7 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
                             <video
                               ref={videoRef}
                               src={currentStory.media_url}
-                              className="w-full h-full object-contain"
+                              className="w-full h-full object-cover"
                               autoPlay
                               loop
                               muted={isMuted}
@@ -957,7 +957,7 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
                                   onLoadStart={() => setMediaLoading(true)}
                                   onLoadedData={() => setMediaLoading(false)}
                                   onError={() => setMediaLoading(false)}
-                                  className="w-full h-full object-contain transition-opacity duration-300"
+                                  className="w-full h-full object-cover transition-opacity duration-300"
                                   style={{ 
                                     opacity: mediaLoading ? 0 : 1,
                                     display: 'block'

@@ -151,8 +151,8 @@ export const Header = () => {
                   onMouseEnter={() => setProjectsOpen(true)}
                   onMouseLeave={() => setProjectsOpen(false)}
                 >
-                  <Briefcase className="w-5 h-5 bg-gradient-to-r from-blue-500 to-teal-500 bg-clip-text text-transparent" style={{ WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }} />
-                  <span className="font-bold bg-gradient-to-r from-blue-500 to-teal-500 bg-clip-text text-transparent" style={{ WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Projetos</span>
+                  <Briefcase className="w-5 h-5 text-[#3b82f6]" />
+                  <span className="font-bold bg-gradient-to-r from-blue-500 to-teal-500 bg-clip-text text-transparent">Projetos</span>
                 </Link>
               </DropdownMenuTrigger>
               <DropdownMenuContent 
@@ -210,14 +210,6 @@ export const Header = () => {
                 </Badge>
               )}
             </Link>
-            
-            <button 
-              onClick={() => setSearchOpen(true)}
-              className="flex items-center gap-2 text-foreground/80 hover:text-foreground transition-colors pb-1 border-b-2 border-transparent"
-            >
-              <Search className="w-5 h-5" />
-              <span>{t('discover')}</span>
-            </button>
           </nav>
         )}
 

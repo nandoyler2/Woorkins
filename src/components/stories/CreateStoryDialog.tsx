@@ -884,6 +884,9 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
                                 muted
                                 autoPlay
                                 loop
+                                disablePictureInPicture
+                                disableRemotePlayback
+                                controlsList="nodownload noremoteplayback"
                                 className="w-full h-full object-cover"
                               />
                             )}

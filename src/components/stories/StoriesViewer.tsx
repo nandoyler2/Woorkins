@@ -651,6 +651,9 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
                             src={story.media_url}
                             className="w-full h-full object-cover"
                             muted
+                            disablePictureInPicture
+                            disableRemotePlayback
+                            controlsList="nodownload noremoteplayback"
                           />
                         )}
                         {story.type === 'text' && (
@@ -821,6 +824,9 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
                               loop
                               muted={isMuted}
                               playsInline
+                              disablePictureInPicture
+                              disableRemotePlayback
+                              controlsList="nodownload noremoteplayback"
                               onLoadedMetadata={() => {
                                 if (videoRef.current) {
                                   videoRef.current.volume = volume;
@@ -940,6 +946,9 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
                                   src={`${currentStory.media_url}#t=5`}
                                   autoPlay
                                   muted={isMuted}
+                                  disablePictureInPicture
+                                  disableRemotePlayback
+                                  controlsList="nodownload noremoteplayback"
                                   onLoadedMetadata={() => {
                                     if (videoRef.current) {
                                       videoRef.current.volume = volume;
@@ -961,6 +970,9 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
                                 src={`${currentStory.media_url}#t=5`}
                                 autoPlay
                                 muted={isMuted}
+                                disablePictureInPicture
+                                disableRemotePlayback
+                                controlsList="nodownload noremoteplayback"
                                 onLoadedMetadata={() => {
                                   if (videoRef.current) {
                                     videoRef.current.volume = volume;
@@ -1225,6 +1237,9 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
                             src={story.media_url}
                             className="w-full h-full object-cover"
                             muted
+                            disablePictureInPicture
+                            disableRemotePlayback
+                            controlsList="nodownload noremoteplayback"
                           />
                         )}
                         {story.type === 'text' && (

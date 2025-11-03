@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { ProfileHoverCard } from '@/components/ProfileHoverCard';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -1384,17 +1385,21 @@ export function UnifiedChat({
       {/* Header for Negotiations */}
       {conversationType === 'negotiation' && (
         <div className="border-b p-4 flex items-center gap-3 bg-gradient-to-r from-card to-card/50 backdrop-blur-sm flex-shrink-0 shadow-md">
-          <div className="relative">
-            <Avatar className="h-12 w-12 ring-2 ring-primary/20 hover:ring-primary/40 transition-all">
-              <AvatarImage src={otherUser.avatar} />
-              <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10 text-primary font-semibold">
-                {otherUser.name.charAt(0).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-            <div className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 bg-green-500 rounded-full border-2 border-background animate-pulse" />
-          </div>
+          <ProfileHoverCard profileId={otherUser.id}>
+            <div className="relative cursor-pointer">
+              <Avatar className="h-12 w-12 ring-2 ring-primary/20 hover:ring-primary/40 transition-all">
+                <AvatarImage src={otherUser.avatar} />
+                <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10 text-primary font-semibold">
+                  {otherUser.name.charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <div className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 bg-green-500 rounded-full border-2 border-background animate-pulse" />
+            </div>
+          </ProfileHoverCard>
           <div className="flex-1 min-w-0">
-            <h3 className="font-bold text-lg truncate">{otherUser.name}</h3>
+            <ProfileHoverCard profileId={otherUser.id}>
+              <h3 className="font-bold text-lg truncate cursor-pointer hover:text-primary transition-colors">{otherUser.name}</h3>
+            </ProfileHoverCard>
             <div className="flex items-center gap-2">
               {otherUserTyping ? (
                 <span className="text-xs text-primary animate-pulse font-medium">Digitando...</span>
@@ -1580,12 +1585,16 @@ export function UnifiedChat({
                       }`}
                     >
                       {!isMine && (
-                        <Avatar className="h-8 w-8 flex-shrink-0 ring-2 ring-background group-hover:ring-primary/50 transition-all">
-                          <AvatarImage src={message.sender_avatar} />
-                          <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10 text-primary text-xs font-semibold">
-                            {message.sender_name.charAt(0).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
+                        <ProfileHoverCard profileId={message.sender_id}>
+                          <div className="cursor-pointer">
+                            <Avatar className="h-8 w-8 flex-shrink-0 ring-2 ring-background group-hover:ring-primary/50 transition-all">
+                              <AvatarImage src={message.sender_avatar} />
+                              <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10 text-primary text-xs font-semibold">
+                                {message.sender_name.charAt(0).toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                          </div>
+                        </ProfileHoverCard>
                        )}
                        
                         <div className={`flex flex-col max-w-[75%] group ${isMine ? 'items-end' : 'items-start'}`} onClick={() => showTimestamp(message.id)}>

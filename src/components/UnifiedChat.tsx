@@ -1459,7 +1459,7 @@ export function UnifiedChat({
       )}
 
       {/* Messages - Scrollable Area */}
-      <div ref={messagesContainerRef} className={`flex-1 overflow-y-auto min-h-0 ${hideOnInit ? 'invisible' : ''}`}>
+      <div ref={messagesContainerRef} className={`flex-1 min-h-0 ${hideOnInit ? 'overflow-hidden opacity-0' : 'overflow-y-auto'}`}>
         <div className="p-3 space-y-1 pb-3">
           {isChatLocked ? (
             <div className="text-center py-12">
@@ -1663,13 +1663,7 @@ export function UnifiedChat({
                               ) : (
                                 <>
                                   {message.content && <p className="text-sm leading-relaxed break-words">{message.content}</p>}
-                                  {/* Moderating indicator */}
-                                  {message.status === 'moderating' && isMine && (
-                                    <div className="flex items-center gap-1 mt-1 text-xs opacity-70">
-                                      <Loader2 className="h-3 w-3 animate-spin" />
-                                      <span>Verificando mensagem...</span>
-                                    </div>
-                                  )}
+                                  {/* moderating indicator hidden during send */}
                                 </>
                               )}
                               {isMine && !isDeleted && (! (conversationType === 'proposal' && proposalData?.status === 'accepted')) && message.status !== 'rejected' && (

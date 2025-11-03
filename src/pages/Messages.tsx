@@ -922,7 +922,7 @@ export default function Messages() {
                       }}
                       className={`w-full p-4 border-b transition-all duration-200 text-left group hover:scale-[1.02] ${
                         selectedConversation?.id === conv.id
-                          ? 'bg-gradient-to-r from-primary/15 to-primary/5 border-l-4 border-l-primary shadow-lg'
+                          ? 'bg-[linear-gradient(90deg,hsl(173_84%_37%/0.25),hsl(173_84%_37%/0.05))] border-l-4 border-l-[#11aa9b] shadow-lg'
                           : 'hover:bg-gradient-to-r hover:from-muted hover:to-transparent'
                       }`}
                     >

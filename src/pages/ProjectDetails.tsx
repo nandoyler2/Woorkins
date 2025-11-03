@@ -13,7 +13,8 @@ import { useToast } from '@/hooks/use-toast';
 import { 
   DollarSign, Calendar, User, MessageSquare, 
   Send, Star, ChevronRight, Target, FileText,
-  Briefcase, Clock, Users, AlertCircle, CheckCircle, Trash2
+  Briefcase, Clock, Users, AlertCircle, CheckCircle, Trash2,
+  Shield, Flag, Zap, UserX, FileWarning
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
@@ -288,6 +289,16 @@ export default function ProjectDetails() {
       return;
     }
 
+    // Validação do comprimento da descrição
+    if (reportDescription.length > 500) {
+      toast({
+        title: 'Erro',
+        description: 'A descrição não pode ter mais de 500 caracteres',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     try {
       const { data: profileData } = await supabase
         .from('profiles')
@@ -297,6 +308,12 @@ export default function ProjectDetails() {
 
       if (!profileData) throw new Error('Profile not found');
 
+      // Sanitiza a descrição removendo caracteres perigosos
+      const sanitizedDescription = reportDescription
+        .trim()
+        .replace(/[<>]/g, '') // Remove tags HTML básicas
+        .slice(0, 500); // Garante limite máximo
+
       const { error } = await supabase
         .from('reports')
         .insert({
@@ -304,14 +321,14 @@ export default function ProjectDetails() {
           content_type: 'project',
           content_id: project.id,
           reason: reportReason,
-          description: reportDescription.trim() || null
+          description: sanitizedDescription || null
         });
 
       if (error) throw error;
 
       toast({
-        title: 'Denúncia enviada',
-        description: 'Obrigado por nos ajudar a manter a comunidade segura.',
+        title: '✓ Denúncia enviada com sucesso',
+        description: 'Nossa equipe analisará sua denúncia em até 24 horas. Obrigado por manter a comunidade segura!',
       });
 
       setReportDialogOpen(false);
@@ -810,65 +827,135 @@ export default function ProjectDetails() {
                         Denunciar como inadequado
                       </Button>
                     </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Denunciar Conteúdo Inadequado</DialogTitle>
-                      <DialogDescription>
-                        Ajude-nos a manter a comunidade segura. Sua denúncia será analisada pela nossa equipe.
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4 pt-4">
-                      <div className="space-y-2">
-                        <Label>Motivo da denúncia *</Label>
-                        <Select value={reportReason} onValueChange={setReportReason}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione o motivo" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="spam">Spam ou propaganda</SelectItem>
-                            <SelectItem value="inappropriate">Conteúdo inadequado</SelectItem>
-                            <SelectItem value="fraud">Fraude ou golpe</SelectItem>
-                            <SelectItem value="harassment">Assédio ou bullying</SelectItem>
-                            <SelectItem value="fake">Informações falsas</SelectItem>
-                            <SelectItem value="other">Outro motivo</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
+                    <DialogContent className="sm:max-w-[500px] border-2 shadow-2xl">
+                      {/* Header com gradiente */}
+                      <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-red-600 via-orange-600 to-red-600"></div>
+                      
+                      <DialogHeader className="space-y-3 pt-2">
+                        <div className="flex items-center gap-3">
+                          <div className="p-3 bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-950 dark:to-orange-950 rounded-full border-2 border-red-500/20">
+                            <Shield className="w-6 h-6 text-red-600" />
+                          </div>
+                          <div className="flex-1">
+                            <DialogTitle className="text-xl bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent">
+                              Denunciar Conteúdo Inadequado
+                            </DialogTitle>
+                          </div>
+                        </div>
+                        <DialogDescription className="text-base">
+                          Ajude-nos a manter a comunidade segura. Sua denúncia será analisada pela nossa equipe de moderação com confidencialidade.
+                        </DialogDescription>
+                      </DialogHeader>
+                      
+                      <div className="space-y-5 pt-4">
+                        <div className="space-y-2">
+                          <Label className="text-base font-semibold">Motivo da denúncia *</Label>
+                          <Select value={reportReason} onValueChange={setReportReason}>
+                            <SelectTrigger className="h-11 border-2">
+                              <SelectValue placeholder="Selecione o motivo" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="offensive">
+                                <div className="flex items-center gap-2">
+                                  <UserX className="w-4 h-4 text-red-600" />
+                                  <span>Conteúdo ofensivo ou discurso de ódio</span>
+                                </div>
+                              </SelectItem>
+                              <SelectItem value="spam">
+                                <div className="flex items-center gap-2">
+                                  <Zap className="w-4 h-4 text-orange-600" />
+                                  <span>Spam ou publicidade enganosa</span>
+                                </div>
+                              </SelectItem>
+                              <SelectItem value="harassment">
+                                <div className="flex items-center gap-2">
+                                  <AlertCircle className="w-4 h-4 text-red-600" />
+                                  <span>Assédio ou bullying</span>
+                                </div>
+                              </SelectItem>
+                              <SelectItem value="copyright">
+                                <div className="flex items-center gap-2">
+                                  <FileWarning className="w-4 h-4 text-yellow-600" />
+                                  <span>Violação de direitos autorais</span>
+                                </div>
+                              </SelectItem>
+                              <SelectItem value="fraud">
+                                <div className="flex items-center gap-2">
+                                  <AlertCircle className="w-4 h-4 text-orange-600" />
+                                  <span>Fraude ou golpe</span>
+                                </div>
+                              </SelectItem>
+                              <SelectItem value="fake">
+                                <div className="flex items-center gap-2">
+                                  <FileText className="w-4 h-4 text-red-600" />
+                                  <span>Informações falsas ou enganosas</span>
+                                </div>
+                              </SelectItem>
+                              <SelectItem value="inappropriate">
+                                <div className="flex items-center gap-2">
+                                  <Flag className="w-4 h-4 text-purple-600" />
+                                  <span>Conteúdo inadequado ou impróprio</span>
+                                </div>
+                              </SelectItem>
+                              <SelectItem value="other">
+                                <div className="flex items-center gap-2">
+                                  <FileText className="w-4 h-4 text-muted-foreground" />
+                                  <span>Outro motivo</span>
+                                </div>
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
 
-                      <div className="space-y-2">
-                        <Label>Descrição adicional (opcional)</Label>
-                        <Textarea
-                          placeholder="Forneça mais detalhes sobre o problema..."
-                          value={reportDescription}
-                          onChange={(e) => setReportDescription(e.target.value)}
-                          rows={4}
-                        />
-                      </div>
+                        <div className="space-y-2">
+                          <Label className="text-base font-semibold">Descrição adicional (opcional)</Label>
+                          <Textarea
+                            placeholder="Forneça mais detalhes sobre o problema para ajudar nossa equipe..."
+                            value={reportDescription}
+                            onChange={(e) => setReportDescription(e.target.value)}
+                            rows={4}
+                            className="resize-none border-2"
+                            maxLength={500}
+                          />
+                          <p className="text-xs text-muted-foreground text-right">
+                            {reportDescription.length}/500 caracteres
+                          </p>
+                        </div>
 
-                      <div className="flex gap-2 pt-2">
-                        <Button
-                          variant="outline"
-                          className="flex-1"
-                          onClick={() => {
-                            setReportDialogOpen(false);
-                            setReportReason('');
-                            setReportDescription('');
-                          }}
-                        >
-                          Cancelar
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          className="flex-1"
-                          onClick={handleReport}
-                          disabled={!reportReason}
-                        >
-                          Enviar Denúncia
-                        </Button>
+                        {/* Info sobre privacidade */}
+                        <div className="bg-muted/30 p-3 rounded-lg border border-border/50">
+                          <div className="flex items-start gap-2 text-xs text-muted-foreground">
+                            <Shield className="w-4 h-4 mt-0.5 text-primary" />
+                            <p>
+                              Sua denúncia é <strong>confidencial</strong> e será analisada por nossa equipe em até 24 horas. Você receberá uma notificação sobre o resultado.
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex gap-3 pt-2">
+                          <Button
+                            variant="outline"
+                            className="flex-1 border-2"
+                            onClick={() => {
+                              setReportDialogOpen(false);
+                              setReportReason('');
+                              setReportDescription('');
+                            }}
+                          >
+                            Cancelar
+                          </Button>
+                          <Button
+                            className="flex-1 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white shadow-md"
+                            onClick={handleReport}
+                            disabled={!reportReason}
+                          >
+                            <Flag className="w-4 h-4 mr-2" />
+                            Enviar Denúncia
+                          </Button>
+                        </div>
                       </div>
-                    </div>
-                  </DialogContent>
-                </Dialog>
+                    </DialogContent>
+                  </Dialog>
                 )}
               </CardContent>
             </Card>

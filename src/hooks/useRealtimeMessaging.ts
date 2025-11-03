@@ -556,7 +556,7 @@ export const useRealtimeMessaging = ({
       console.log('⌨️ User stopped typing');
       setIsTyping(false);
       updateTypingIndicator(false);
-    }, 2000);
+    }, 1500);
   }, [isTyping, updateTypingIndicator]);
 
   // Show browser notification - only if conversation is not active or document is hidden
@@ -730,44 +730,44 @@ export const useRealtimeMessaging = ({
       .subscribe();
 
   // Subscribe to typing indicators
-    const typingChannel = supabase.channel(`typing-${conversationId}`, {
-      config: {
-        broadcast: { self: false }, // Don't receive own typing events
-      }
-    });
+    const typingChannel = supabase.channel(`typing-${conversationId}`);
     
     typingChannel
       .on(
         'postgres_changes',
         {
-          event: '*',
+          event: 'UPDATE',
           schema: 'public',
           table: 'typing_indicators',
           filter: `conversation_id=eq.${conversationId}`,
         },
         (payload) => {
-          console.log('🔔 Typing event received:', payload);
+          console.log('🔔 Typing UPDATE event:', payload);
           const indicator = payload.new as any;
           
           // Only show for other user
           if (indicator?.user_id && indicator.user_id !== currentUserId) {
-            console.log('👤 Other user typing:', indicator.is_typing);
+            console.log('👤 Other user typing status:', indicator.is_typing);
             setOtherUserTyping(indicator?.is_typing || false);
-            
-            // Auto-hide after 3 seconds if still showing
-            if (indicator?.is_typing) {
-              setTimeout(() => {
-                setOtherUserTyping(prev => {
-                  // Only hide if enough time has passed
-                  const now = new Date();
-                  const indicatorTime = new Date(indicator.updated_at);
-                  if (now.getTime() - indicatorTime.getTime() >= 3000) {
-                    return false;
-                  }
-                  return prev;
-                });
-              }, 3000);
-            }
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'typing_indicators',
+          filter: `conversation_id=eq.${conversationId}`,
+        },
+        (payload) => {
+          console.log('🔔 Typing INSERT event:', payload);
+          const indicator = payload.new as any;
+          
+          // Only show for other user
+          if (indicator?.user_id && indicator.user_id !== currentUserId) {
+            console.log('👤 Other user typing status:', indicator.is_typing);
+            setOtherUserTyping(indicator?.is_typing || false);
           }
         }
       )

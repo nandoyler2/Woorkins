@@ -1188,7 +1188,7 @@ export default function Messages() {
           <nav className="space-y-2 flex-1">
             <button
               onClick={() => setActiveFilter('all')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm whitespace-nowrap ${
+              className={`w-full flex items-center justify-start gap-3 px-4 py-3 rounded-xl transition-all text-sm whitespace-nowrap ${
                 activeFilter === 'all' 
                   ? 'bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/30 scale-105' 
                   : 'hover:bg-gradient-to-r hover:from-muted hover:to-muted/50 text-muted-foreground hover:scale-102'
@@ -1205,7 +1205,7 @@ export default function Messages() {
             {conversations.some(c => c.type === 'proposal' && c.workStatus === 'in_progress') && (
               <button
                 onClick={() => setActiveFilter('in_progress')}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm whitespace-nowrap ${
+                className={`w-full flex items-center justify-start gap-3 px-4 py-3 rounded-xl transition-all text-sm whitespace-nowrap ${
                   activeFilter === 'in_progress' 
                     ? 'bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/30 scale-105' 
                     : 'hover:bg-gradient-to-r hover:from-muted hover:to-muted/50 text-muted-foreground hover:scale-102'
@@ -1223,7 +1223,7 @@ export default function Messages() {
             {conversations.some(c => c.type === 'proposal' && (c as any).isProposalReceived) && (
               <button
                 onClick={() => setActiveFilter('proposals_received')}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm whitespace-nowrap ${
+                className={`w-full flex items-center justify-start gap-3 px-4 py-3 rounded-xl transition-all text-sm whitespace-nowrap ${
                   activeFilter === 'proposals_received' 
                     ? 'bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/30 scale-105' 
                     : 'hover:bg-gradient-to-r hover:from-muted hover:to-muted/50 text-muted-foreground hover:scale-102'
@@ -1247,7 +1247,7 @@ export default function Messages() {
             ) && (
               <button
                 onClick={() => setActiveFilter('proposals_sent')}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm whitespace-nowrap ${
+                className={`w-full flex items-center justify-start gap-3 px-4 py-3 rounded-xl transition-all text-sm whitespace-nowrap ${
                   activeFilter === 'proposals_sent' 
                     ? 'bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/30 scale-105' 
                     : 'hover:bg-gradient-to-r hover:from-muted hover:to-muted/50 text-muted-foreground hover:scale-102'
@@ -1263,7 +1263,7 @@ export default function Messages() {
             
             <button
               onClick={() => setActiveFilter('unread')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm whitespace-nowrap ${
+              className={`w-full flex items-center justify-start gap-3 px-4 py-3 rounded-xl transition-all text-sm whitespace-nowrap ${
                 activeFilter === 'unread' 
                   ? 'bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/30 scale-105' 
                   : 'hover:bg-gradient-to-r hover:from-muted hover:to-muted/50 text-muted-foreground hover:scale-102'
@@ -1278,7 +1278,7 @@ export default function Messages() {
             
             <button
               onClick={() => setActiveFilter('starred')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm whitespace-nowrap ${
+              className={`w-full flex items-center justify-start gap-3 px-4 py-3 rounded-xl transition-all text-sm whitespace-nowrap ${
                 activeFilter === 'starred' 
                   ? 'bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/30 scale-105' 
                   : 'hover:bg-gradient-to-r hover:from-muted hover:to-muted/50 text-muted-foreground hover:scale-102'
@@ -1292,7 +1292,7 @@ export default function Messages() {
             {conversations.some(c => c.type === 'proposal' && (c.workStatus === 'completed' || c.workStatus === 'payment_complete')) && (
               <button
                 onClick={() => setActiveFilter('completed')}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm whitespace-nowrap ${
+                className={`w-full flex items-center justify-start gap-3 px-4 py-3 rounded-xl transition-all text-sm whitespace-nowrap ${
                   activeFilter === 'completed' 
                     ? 'bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/30 scale-105' 
                     : 'hover:bg-gradient-to-r hover:from-muted hover:to-muted/50 text-muted-foreground hover:scale-102'
@@ -1305,7 +1305,7 @@ export default function Messages() {
             
             <button
               onClick={() => setActiveFilter('archived')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm whitespace-nowrap ${
+              className={`w-full flex items-center justify-start gap-3 px-4 py-3 rounded-xl transition-all text-sm whitespace-nowrap ${
                 activeFilter === 'archived' 
                   ? 'bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/30 scale-105' 
                   : 'hover:bg-gradient-to-r hover:from-muted hover:to-muted/50 text-muted-foreground hover:scale-102'
@@ -1320,7 +1320,7 @@ export default function Messages() {
             
             <button
               onClick={() => setActiveFilter('view_all')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm whitespace-nowrap ${
+              className={`w-full flex items-center justify-start gap-3 px-4 py-3 rounded-xl transition-all text-sm whitespace-nowrap ${
                 activeFilter === 'view_all' 
                   ? 'bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/30 scale-105' 
                   : 'hover:bg-gradient-to-r hover:from-muted hover:to-muted/50 text-muted-foreground hover:scale-102'
@@ -1332,7 +1332,7 @@ export default function Messages() {
             
             <button
               onClick={() => setActiveFilter('disputes')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm whitespace-nowrap ${
+              className={`w-full flex items-center justify-start gap-3 px-4 py-3 rounded-xl transition-all text-sm whitespace-nowrap ${
                 activeFilter === 'disputes' 
                   ? 'bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/30 scale-105' 
                   : 'hover:bg-gradient-to-r hover:from-muted hover:to-muted/50 text-muted-foreground hover:scale-102'

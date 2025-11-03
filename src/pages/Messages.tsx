@@ -46,6 +46,8 @@ interface Conversation {
   disputeStatus?: string;
   paymentStatus?: string;
   workStatus?: string;
+  isProposalReceived?: boolean;
+  isProposalSent?: boolean;
 }
 
 export default function Messages() {
@@ -63,7 +65,9 @@ export default function Messages() {
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [profileId, setProfileId] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeFilter, setActiveFilter] = useState<'all' | 'unread' | 'starred' | 'archived' | 'disputes'>('all');
+  const [activeFilter, setActiveFilter] = useState<'all' | 'unread' | 'starred' | 'archived' | 'disputes' | 'proposals_received' | 'proposals_sent'>('all');
+  const [proposalsReceivedCount, setProposalsReceivedCount] = useState(0);
+  const [proposalsSentCount, setProposalsSentCount] = useState(0);
   const [isInitialLoading, setIsInitialLoading] = useState(cachedData.conversations.length === 0 || !cachedData.lastFetched);
   const [isFilterChanging, setIsFilterChanging] = useState(false);
   const [isBackgroundLoading, setIsBackgroundLoading] = useState(false);
@@ -438,7 +442,13 @@ export default function Messages() {
       const { data: ownerProposals } = await ownerProposalsQuery;
 
       const negotiations = [...(userNegotiations || []), ...(businessNegotiations || [])];
-      const proposals = [...(freelancerProposals || []), ...(ownerProposals || [])];
+      
+      // Separar propostas recebidas (owner) e enviadas (freelancer)
+      const proposalsReceived = ownerProposals || [];
+      const proposalsSent = freelancerProposals || [];
+      
+      // Para caixa de entrada: apenas negociações e propostas recebidas
+      const proposals = [...proposalsReceived, ...proposalsSent];
 
       // Count unread messages for each negotiation
       const negotiationConvos: Conversation[] = await Promise.all((negotiations || []).map(async (neg) => {
@@ -488,6 +498,7 @@ export default function Messages() {
 
         // Determine if current user is the project owner or freelancer
         const isOwner = prop.project.profile_id === profileId;
+        const isFreelancer = prop.freelancer_id === profileId;
         
         // If owner, show freelancer info; if freelancer, show owner info
         const otherUserData = isOwner 
@@ -517,8 +528,16 @@ export default function Messages() {
           disputeStatus,
           paymentStatus: (prop as any).payment_status,
           workStatus: (prop as any).work_status,
+          isProposalReceived: isOwner,
+          isProposalSent: isFreelancer,
         };
       }));
+
+      // Contar propostas para os badges
+      const receivedCount = proposalConvos.filter(c => (c as any).isProposalReceived).length;
+      const sentCount = proposalConvos.filter(c => (c as any).isProposalSent).length;
+      setProposalsReceivedCount(receivedCount);
+      setProposalsSentCount(sentCount);
 
       const allConvos = [...negotiationConvos, ...proposalConvos].sort(
         (a, b) => new Date(b.lastMessageAt || 0).getTime() - new Date(a.lastMessageAt || 0).getTime()
@@ -743,7 +762,17 @@ export default function Messages() {
         case 'disputes':
           // Only proposals with active disputes
           return conv.type === 'proposal' && conv.hasDispute === true;
+        case 'proposals_received':
+          // Apenas propostas recebidas (usuário é owner do projeto)
+          return conv.type === 'proposal' && (conv as any).isProposalReceived === true;
+        case 'proposals_sent':
+          // Apenas propostas enviadas (usuário é freelancer)
+          return conv.type === 'proposal' && (conv as any).isProposalSent === true;
         case 'all':
+          // Caixa de entrada: negociações + propostas recebidas (NÃO incluir propostas enviadas)
+          if (conv.type === 'negotiation') return true;
+          if (conv.type === 'proposal' && (conv as any).isProposalReceived) return true;
+          return false;
         default:
           return true;
       }
@@ -841,6 +870,44 @@ export default function Messages() {
               <AlertCircle className="h-5 w-5" />
               <span>Disputa</span>
             </button>
+            
+            {proposalsReceivedCount > 0 && (
+              <button
+                onClick={() => setActiveFilter('proposals_received')}
+                className={`w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl transition-all font-medium ${
+                  activeFilter === 'proposals_received' 
+                    ? 'bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/30 scale-105' 
+                    : 'hover:bg-gradient-to-r hover:from-muted hover:to-muted/50 text-muted-foreground hover:scale-102'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <Tag className="h-5 w-5" />
+                  <span>Propostas Recebidas</span>
+                </div>
+                <Badge variant="secondary" className="ml-auto">
+                  {proposalsReceivedCount}
+                </Badge>
+              </button>
+            )}
+            
+            {proposalsSentCount > 0 && (
+              <button
+                onClick={() => setActiveFilter('proposals_sent')}
+                className={`w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl transition-all font-medium ${
+                  activeFilter === 'proposals_sent' 
+                    ? 'bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/30 scale-105' 
+                    : 'hover:bg-gradient-to-r hover:from-muted hover:to-muted/50 text-muted-foreground hover:scale-102'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <Tag className="h-5 w-5" />
+                  <span>Propostas Enviadas</span>
+                </div>
+                <Badge variant="secondary" className="ml-auto">
+                  {proposalsSentCount}
+                </Badge>
+              </button>
+            )}
           </nav>
         </div>
 

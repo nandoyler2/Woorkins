@@ -205,8 +205,15 @@ export function UnifiedChat({
     const container = messagesContainerRef.current;
     if (!container) return;
     
-    // Scroll instantâneo para o final quando a conversa muda
-    container.scrollTop = container.scrollHeight;
+    // Duplo RAF para garantir que o DOM está completamente renderizado
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (container) {
+          container.scrollTop = container.scrollHeight;
+        }
+      });
+    });
+    
     prevMessageCountRef.current = messages.length;
   }, [conversationId]);
   
@@ -1710,14 +1717,6 @@ export function UnifiedChat({
             </div>
           )}
           
-          {/* Indicador de início da conversa */}
-          {!hasMoreMessages && messages.length >= 20 && (
-            <div className="text-center py-4">
-              <div className="text-xs text-muted-foreground bg-muted/30 px-3 py-1.5 rounded-full inline-block">
-                📜 Início da conversa
-              </div>
-            </div>
-          )}
           
           <div ref={messagesEndRef} />
         </div>

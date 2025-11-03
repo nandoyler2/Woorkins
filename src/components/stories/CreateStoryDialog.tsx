@@ -51,10 +51,10 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
 
   // Resetar selectedProfile quando o diálogo abrir ou profiles mudarem
   useEffect(() => {
-    if (isOpen && profiles.length > 0) {
+    if (isOpen && profiles.length > 0 && !selectedProfile) {
       setSelectedProfile(profiles[0].id);
     }
-  }, [isOpen, profiles]);
+  }, [isOpen, profiles, selectedProfile]);
   const [backgroundColor, setBackgroundColor] = useState(backgroundStyles[0].value);
   const [customColor, setCustomColor] = useState('#8B5CF6');
   const [textBold, setTextBold] = useState(false);
@@ -404,10 +404,14 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
                     <div className="text-center py-8">
                       <h3 className="text-2xl font-bold mb-2 bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 bg-clip-text text-transparent">
                         {(() => {
-                          const fullName = profiles.find(p => p.id === selectedProfile)?.full_name || profiles.find(p => p.id === selectedProfile)?.username || '';
+                          const currentProfile = profiles.find(p => p.id === selectedProfile);
+                          if (!currentProfile) return 'O que irá publicar no seu storie?';
+                          
+                          const fullName = currentProfile.full_name || currentProfile.username || '';
                           const firstName = fullName.split(' ')[0];
-                          return firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
-                        })()}, o que irá publicar no seu storie?
+                          const formattedName = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
+                          return `${formattedName}, o que irá publicar no seu storie?`;
+                        })()}
                       </h3>
                       <p className="text-muted-foreground mb-8">Use o storie para postar conteúdos profissionais sobre você</p>
 

@@ -301,11 +301,12 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
     let lastPauseStart = 0;
 
     const updateProgress = () => {
+      // Parar imediatamente se estiver pausado
       if (isPaused || commentsOpen) {
         if (lastPauseStart === 0) {
           lastPauseStart = Date.now();
         }
-        return;
+        return; // Para a execução aqui quando pausado
       }
 
       if (lastPauseStart > 0) {
@@ -778,12 +779,18 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
                           
                           {currentStory.type === 'video' && currentStory.media_url && (
                             <video
+                              ref={videoRef}
                               src={currentStory.media_url}
-                              className="w-full h-full object-cover"
+                              className="w-full h-full object-contain"
                               autoPlay
                               loop
-                              muted
+                              muted={isMuted}
                               playsInline
+                              onLoadedMetadata={() => {
+                                if (videoRef.current) {
+                                  videoRef.current.volume = volume;
+                                }
+                              }}
                               onLoadStart={() => setMediaLoading(true)}
                               onLoadedData={() => setMediaLoading(false)}
                               onError={() => setMediaLoading(false)}
@@ -906,7 +913,7 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
                                   onLoadStart={() => setMediaLoading(true)}
                                   onLoadedData={() => setMediaLoading(false)}
                                   onError={() => setMediaLoading(false)}
-                                  className="w-full h-full object-cover transition-opacity duration-300"
+                                  className="w-full h-full object-contain transition-opacity duration-300"
                                   style={{ 
                                     opacity: mediaLoading ? 0 : 1,
                                     display: 'block'
@@ -927,7 +934,7 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
                                 onLoadStart={() => setMediaLoading(true)}
                                 onLoadedData={() => setMediaLoading(false)}
                                 onError={() => setMediaLoading(false)}
-                                className="w-full h-full object-cover transition-opacity duration-300"
+                                className="w-full h-full object-contain transition-opacity duration-300"
                                 style={{ 
                                   opacity: mediaLoading ? 0 : 1,
                                   display: 'block'

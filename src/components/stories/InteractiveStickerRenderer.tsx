@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import type { CSSProperties } from 'react';
 import { Button } from '@/components/ui/button';
 import { MapPin, ExternalLink } from 'lucide-react';
 import { StorySticker } from '@/hooks/useStoryStickers';
@@ -98,12 +99,14 @@ export const InteractiveStickerRenderer = ({
     }
   };
 
-  const style = {
-    position: 'absolute' as const,
+  const style: CSSProperties = {
+    position: 'absolute',
     left: `${sticker.position_x}%`,
     top: `${sticker.position_y}%`,
     transform: `translate(-50%, -50%) scale(${sticker.scale || 1})`,
     width: sticker.type === 'image' ? `${sticker.width}%` : 'auto',
+    zIndex: 40,
+    pointerEvents: (isPreview ? 'none' : 'auto'),
   };
 
   const renderSticker = () => {

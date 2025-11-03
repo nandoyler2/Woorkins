@@ -294,26 +294,8 @@ export function ProjectCard({ project }: ProjectCardProps) {
 
   return (
     <Card className="p-6 border-2 bg-card/50 backdrop-blur-sm shadow-lg hover:shadow-2xl transition-all duration-200 animate-fade-in">
-      {/* Meta info com badges - movido para o topo */}
-      <div className="flex items-center flex-wrap gap-2 text-xs mb-3">
-        <Badge variant="secondary" className="bg-muted/50 text-foreground">
-          <Clock className="h-3 w-3 mr-1" />
-          {formatDate(project.created_at)}
-        </Badge>
-        <Badge variant="secondary" className="bg-blue-500/10 text-blue-600 dark:text-blue-400">
-          <MessageSquare className="h-3 w-3 mr-1" />
-          {project.proposals_count} Propostas
-        </Badge>
-        {project.deadline && (
-          <Badge variant="secondary" className="bg-orange-500/10 text-orange-600 dark:text-orange-400">
-            <Clock className="h-3 w-3 mr-1" />
-            Prazo: {formatDeadline(project.deadline)}
-          </Badge>
-        )}
-      </div>
-
       {/* Header com gradiente sutil */}
-      <div className="flex justify-between items-start mb-3 pb-3 border-b border-gradient-to-r from-transparent via-border to-transparent">
+      <div className="flex justify-between items-start mb-2 pb-2 border-b border-gradient-to-r from-transparent via-border to-transparent">
         <Link to={`/projetos/${project.id}`} className="flex-1">
           <h3 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-teal-600 bg-clip-text text-transparent hover:from-blue-700 hover:to-teal-700 transition-all">
             {project.title}
@@ -365,6 +347,24 @@ export function ProjectCard({ project }: ProjectCardProps) {
             );
           })()}
         </div>
+      </div>
+
+      {/* Meta info com badges - abaixo do título */}
+      <div className="flex items-center flex-wrap gap-2 text-xs mb-3 mt-3">
+        <Badge variant="secondary" className="bg-muted/50 text-foreground">
+          <Clock className="h-3 w-3 mr-1" />
+          {formatDate(project.created_at)}
+        </Badge>
+        <Badge variant="secondary" className="bg-blue-500/10 text-blue-600 dark:text-blue-400">
+          <MessageSquare className="h-3 w-3 mr-1" />
+          {project.proposals_count} Propostas
+        </Badge>
+        {project.deadline && (
+          <Badge variant="secondary" className="bg-orange-500/10 text-orange-600 dark:text-orange-400">
+            <Clock className="h-3 w-3 mr-1" />
+            Prazo: {formatDeadline(project.deadline)}
+          </Badge>
+        )}
       </div>
 
       {/* Description */}

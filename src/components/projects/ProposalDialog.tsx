@@ -12,6 +12,7 @@ import { ptBR } from "date-fns/locale";
 import { Clock, FileText, DollarSign, Calendar, Sparkles, CheckCircle2, Bold, Italic, Paperclip, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { cn } from "@/lib/utils";
 
 interface ProposalDialogProps {
   open: boolean;
@@ -456,9 +457,17 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
                       value={amountFormatted}
                       onChange={handleAmountChange}
                       required
-                      className="h-9 border-blue-200 focus:border-blue-600 dark:border-blue-800 transition-colors pl-9 font-medium focus-visible:ring-0 focus-visible:ring-offset-0"
+                      className={cn(
+                        "h-9 border-blue-200 focus:border-blue-600 dark:border-blue-800 transition-colors pl-9 font-medium focus-visible:ring-0 focus-visible:ring-offset-0",
+                        amountFormatted && parseCurrencyToNumber(amountFormatted) > 0 && parseCurrencyToNumber(amountFormatted) < 50 && "border-red-500 focus:border-red-600 dark:border-red-600"
+                      )}
                     />
                   </div>
+                  {amountFormatted && parseCurrencyToNumber(amountFormatted) > 0 && parseCurrencyToNumber(amountFormatted) < 50 && (
+                    <p className="text-xs text-red-600 dark:text-red-400 font-semibold animate-pulse">
+                      ⚠️ Valor mínimo para proposta é R$ 50,00
+                    </p>
+                  )}
                 </div>
 
                 <div className="col-span-2 space-y-1.5">
@@ -479,8 +488,8 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
                 </div>
               </div>
 
-              {/* Cálculo de taxas */}
-              {amountFormatted && parseCurrencyToNumber(amountFormatted) > 0 && (() => {
+              {/* Cálculo de taxas - apenas se valor >= 50 */}
+              {amountFormatted && parseCurrencyToNumber(amountFormatted) >= 50 && (() => {
                     const plan = userProfile?.subscription_plan || 'free';
                     const feePercentage = plan === 'premium' ? platformFees.premium : plan === 'pro' ? platformFees.pro : platformFees.free;
                     const amount = parseCurrencyToNumber(amountFormatted);
@@ -659,9 +668,9 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
                     <div className="flex gap-2 justify-end">
                       <Button 
                         type="submit" 
-                        disabled={loading}
+                        disabled={loading || (amountFormatted && parseCurrencyToNumber(amountFormatted) < 50)}
                         size="sm"
-                        className="bg-green-700 hover:bg-green-800 text-white shadow-lg hover:shadow-xl transition-all font-semibold"
+                        className="bg-green-700 hover:bg-green-800 text-white shadow-lg hover:shadow-xl transition-all font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {loading ? (
                           <>

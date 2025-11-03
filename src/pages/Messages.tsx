@@ -1552,7 +1552,7 @@ export default function Messages() {
                   backgroundImage: `url(${emptyMessagesBg})`,
                   backgroundSize: 'cover',
                   backgroundPosition: 'center',
-                  boxShadow: 'inset 0 0 80px 20px rgba(0, 0, 0, 0.5)'
+                  boxShadow: 'inset 0 0 120px 40px rgba(0, 0, 0, 0.8), inset 0 0 200px 80px rgba(0, 0, 0, 0.4)'
                 }}
               >
                 {/* Gradiente overlay das cores do logo - mais forte */}

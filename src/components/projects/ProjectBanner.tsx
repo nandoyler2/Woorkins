@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { X, Wallet, Zap, Camera } from "lucide-react";
+import { Minus, Wallet, Zap, Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import woorkoinsIcon from "@/assets/woorkoins-banner-icon.png";
 import { CoinRain } from "./CoinRain";
@@ -9,42 +9,20 @@ import { useAuth } from "@/contexts/AuthContext";
 
 type BannerType = 'woorkoins' | 'payment' | 'stories';
 
-const FIVE_DAYS_MS = 5 * 24 * 60 * 60 * 1000;
-
 export function ProjectBanner() {
   const { user } = useAuth();
+  // Inicia com um banner baseado no último mostrado, mas sempre mostra algum
   const [currentBanner, setCurrentBanner] = useState<BannerType | null>(() => {
-    const lastDismissedWoorkoins = localStorage.getItem('projectBannerWoorkoinsDismissed');
-    const lastDismissedPayment = localStorage.getItem('projectBannerPaymentDismissed');
-    const lastDismissedStories = localStorage.getItem('projectBannerStoriesDismissed');
+    const lastShown = sessionStorage.getItem('projectBannerLastShown');
     
-    const now = Date.now();
-    const canShowWoorkoins = !lastDismissedWoorkoins || (now - parseInt(lastDismissedWoorkoins)) > FIVE_DAYS_MS;
-    const canShowPayment = !lastDismissedPayment || (now - parseInt(lastDismissedPayment)) > FIVE_DAYS_MS;
-    const canShowStories = !lastDismissedStories || (now - parseInt(lastDismissedStories)) > FIVE_DAYS_MS;
-    
-    // Alterna entre os banners baseado em qual foi mostrado por último
-    const lastShown = localStorage.getItem('projectBannerLastShown');
-    
-    // Sequência fixa e escolha do próximo respeitando dismiss e última exibição
+    // Sequência circular de banners
     const sequence: BannerType[] = ['woorkoins', 'payment', 'stories'];
     const startIndex = lastShown ? (sequence.indexOf(lastShown as BannerType) + 1) % sequence.length : 0;
-
-    // Tenta até 3 opções na ordem circular
-    for (let i = 0; i < sequence.length; i++) {
-      const candidate = sequence[(startIndex + i) % sequence.length];
-      if (candidate === 'woorkoins' && canShowWoorkoins) return 'woorkoins';
-      if (candidate === 'payment' && canShowPayment) return 'payment';
-      if (candidate === 'stories' && canShowStories) return 'stories';
-    }
-
-    // Fallback: qualquer um disponível
-    if (canShowWoorkoins) return 'woorkoins';
-    if (canShowPayment) return 'payment';
-    if (canShowStories) return 'stories';
     
-    return null;
+    return sequence[startIndex];
   });
+
+  const [isMinimized, setIsMinimized] = useState(false);
 
   const [isStoryDialogOpen, setIsStoryDialogOpen] = useState(false);
   const [profiles, setProfiles] = useState<any[]>([]);
@@ -53,7 +31,7 @@ export function ProjectBanner() {
 
   useEffect(() => {
     if (currentBanner) {
-      localStorage.setItem('projectBannerLastShown', currentBanner);
+      sessionStorage.setItem('projectBannerLastShown', currentBanner);
     }
   }, [currentBanner]);
 
@@ -76,19 +54,19 @@ export function ProjectBanner() {
     }
   };
 
-  const handleDismiss = () => {
-    const now = Date.now();
-    if (currentBanner === 'woorkoins') {
-      localStorage.setItem('projectBannerWoorkoinsDismissed', now.toString());
-    } else if (currentBanner === 'payment') {
-      localStorage.setItem('projectBannerPaymentDismissed', now.toString());
-    } else if (currentBanner === 'stories') {
-      localStorage.setItem('projectBannerStoriesDismissed', now.toString());
-    }
-    setCurrentBanner(null);
+  const handleMinimize = () => {
+    setIsMinimized(true);
+    // Muda para o próximo banner após 3 segundos
+    setTimeout(() => {
+      const sequence: BannerType[] = ['woorkoins', 'payment', 'stories'];
+      const currentIndex = sequence.indexOf(currentBanner!);
+      const nextIndex = (currentIndex + 1) % sequence.length;
+      setCurrentBanner(sequence[nextIndex]);
+      setIsMinimized(false);
+    }, 3000);
   };
 
-  if (!currentBanner) return null;
+  if (!currentBanner || isMinimized) return null;
 
   if (currentBanner === 'woorkoins') {
     return (
@@ -101,9 +79,10 @@ export function ProjectBanner() {
             variant="ghost"
             size="icon"
             className="absolute top-2 right-2 text-white hover:bg-white/20"
-            onClick={handleDismiss}
+            onClick={handleMinimize}
+            title="Minimizar"
           >
-            <X className="h-4 w-4" />
+            <Minus className="h-4 w-4" />
           </Button>
           
           <div className="flex items-center justify-between pr-8">
@@ -158,9 +137,10 @@ export function ProjectBanner() {
             variant="ghost"
             size="icon"
             className="absolute top-2 right-2 text-white hover:bg-white/20"
-            onClick={handleDismiss}
+            onClick={handleMinimize}
+            title="Minimizar"
           >
-            <X className="h-4 w-4" />
+            <Minus className="h-4 w-4" />
           </Button>
           
           <div className="flex items-center justify-between pr-8">
@@ -197,9 +177,10 @@ export function ProjectBanner() {
         variant="ghost"
         size="icon"
         className="absolute top-2 right-2 text-white hover:bg-white/20"
-        onClick={handleDismiss}
+        onClick={handleMinimize}
+        title="Minimizar"
       >
-        <X className="h-4 w-4" />
+        <Minus className="h-4 w-4" />
       </Button>
       
       <div className="flex items-center justify-between pr-8">

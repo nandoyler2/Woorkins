@@ -1182,6 +1182,41 @@ export default function Dashboard() {
             {/* Action Cards Grid */}
             <div className="grid grid-cols-2 gap-4">
               <Card 
+                className="bg-gradient-to-br from-blue-500 to-blue-600 border-0 shadow-md hover:shadow-lg transition-all cursor-pointer group"
+                onClick={() => navigate('/projetos/novo')}
+              >
+                <CardContent className="p-5">
+                  <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                    <Briefcase className="w-5 h-5 text-white" />
+                  </div>
+                  <h3 className="text-base font-bold text-white mb-0.5">Criar Projeto</h3>
+                  <p className="text-blue-100 text-xs">Publique um novo projeto</p>
+                </CardContent>
+              </Card>
+
+              <Card 
+                className="bg-gradient-to-br from-teal-500 to-teal-600 border-0 shadow-md hover:shadow-lg transition-all cursor-pointer group relative"
+                onClick={() => navigate('/projetos')}
+              >
+                <CardContent className="p-5">
+                  <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                    <Search className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <h3 className="text-base font-bold text-white">Ver Projetos</h3>
+                    {newProjectsCount > 0 && (
+                      <Badge className="bg-orange-500 hover:bg-orange-600 text-white border-0 px-2 py-0 text-xs font-bold">
+                        {newProjectsCount}
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="text-teal-100 text-xs">
+                    {newProjectsCount > 0 ? `${newProjectsCount} novo${newProjectsCount > 1 ? 's' : ''} nas últimas 24h` : 'Descubra oportunidades'}
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card 
                 className="bg-gradient-to-br from-purple-500 via-pink-500 to-orange-500 border-0 shadow-md hover:shadow-lg transition-all cursor-pointer group relative overflow-hidden"
                 onClick={handleCreateStoryClick}
               >
@@ -1218,41 +1253,6 @@ export default function Dashboard() {
                     </p>
                   </CardContent>
                 </Link>
-              </Card>
-
-              <Card 
-                className="bg-gradient-to-br from-blue-500 to-blue-600 border-0 shadow-md hover:shadow-lg transition-all cursor-pointer group"
-                onClick={() => navigate('/projetos/novo')}
-              >
-                <CardContent className="p-5">
-                  <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                    <Briefcase className="w-5 h-5 text-white" />
-                  </div>
-                  <h3 className="text-base font-bold text-white mb-0.5">Criar Projeto</h3>
-                  <p className="text-blue-100 text-xs">Publique um novo projeto</p>
-                </CardContent>
-              </Card>
-
-              <Card 
-                className="bg-gradient-to-br from-teal-500 to-teal-600 border-0 shadow-md hover:shadow-lg transition-all cursor-pointer group relative"
-                onClick={() => navigate('/projetos')}
-              >
-                <CardContent className="p-5">
-                  <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                    <Search className="w-5 h-5 text-white" />
-                  </div>
-                  <div className="flex items-center gap-2 mb-0.5">
-                    <h3 className="text-base font-bold text-white">Ver Projetos</h3>
-                    {newProjectsCount > 0 && (
-                      <Badge className="bg-orange-500 hover:bg-orange-600 text-white border-0 px-2 py-0 text-xs font-bold">
-                        {newProjectsCount}
-                      </Badge>
-                    )}
-                  </div>
-                  <p className="text-teal-100 text-xs">
-                    {newProjectsCount > 0 ? `${newProjectsCount} novo${newProjectsCount > 1 ? 's' : ''} nas últimas 24h` : 'Descubra oportunidades'}
-                  </p>
-                </CardContent>
               </Card>
             </div>
 

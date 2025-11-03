@@ -94,16 +94,17 @@ export default function Messages() {
     if (profileId) {
       console.log('🔄 Carregando conversas (filtro:', activeFilter, ')');
       
-      // Apenas mostrar skeleton completo no primeiro load
-      if (conversations.length === 0) {
+      // Apenas mostrar skeleton completo no PRIMEIRO load (sem conversas em cache)
+      if (cachedData.conversations.length === 0 && conversations.length === 0) {
         setIsInitialLoading(true);
       } else {
-        // Troca de filtro - transição suave
+        // Qualquer troca de filtro - transição suave
         setIsFilterChanging(true);
       }
       
       loadConversations(true).finally(() => {
         setIsFilterChanging(false);
+        setIsInitialLoading(false);
       });
       
       const channel = setupRealtimeSubscriptions();

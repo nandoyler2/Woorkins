@@ -1237,8 +1237,14 @@ export default function Messages() {
               </button>
             )}
             
-            {/* Filtro Propostas Enviadas - só exibe se houver propostas enviadas */}
-            {conversations.some(c => c.type === 'proposal' && (c as any).isProposalSent) && (
+            {/* Filtro Propostas Enviadas - só exibe se houver propostas enviadas (excluindo finalizadas e em andamento) */}
+            {conversations.some(c => 
+              c.type === 'proposal' && 
+              (c as any).isProposalSent === true &&
+              c.workStatus !== 'completed' &&
+              c.workStatus !== 'payment_complete' &&
+              c.workStatus !== 'in_progress'
+            ) && (
               <button
                 onClick={() => setActiveFilter('proposals_sent')}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm ${

@@ -95,18 +95,24 @@ export default function Messages() {
     if (profileId) {
       console.log('🔄 Carregando conversas (filtro:', activeFilter, ')');
       
-      // Apenas mostrar skeleton completo no PRIMEIRO carregamento ABSOLUTO
-      if (!hasLoadedOnce.current) {
+      // SEMPRE usar cache primeiro se disponível
+      if (cachedData.conversations.length > 0) {
+        setConversations(cachedData.conversations);
+      }
+      
+      // Apenas mostrar skeleton completo no PRIMEIRO carregamento ABSOLUTO (sem cache)
+      if (!hasLoadedOnce.current && cachedData.conversations.length === 0) {
         setIsInitialLoading(true);
         hasLoadedOnce.current = true;
       } else {
-        // Qualquer troca de filtro depois - apenas transição suave
-        setIsFilterChanging(true);
+        // Qualquer outro caso - carregar em background
+        setIsBackgroundLoading(true);
       }
       
       loadConversations(true).finally(() => {
         setIsFilterChanging(false);
         setIsInitialLoading(false);
+        setIsBackgroundLoading(false);
       });
       
       const channel = setupRealtimeSubscriptions();
@@ -284,15 +290,16 @@ export default function Messages() {
       return;
     }
 
-    // Se tem cache válido e não é refresh forçado, usar cache
+    // Se tem cache válido e não é refresh forçado, usar cache sem fetch
     if (!forceRefresh && !cachedData.isStale()) {
       setConversations(cachedData.conversations);
       setIsInitialLoading(false);
+      setIsBackgroundLoading(false);
       return;
     }
 
     isLoadingRef.current = true;
-    setIsBackgroundLoading(true);
+    // NÃO limpar conversas existentes - manter visíveis durante o load
 
     // Timeout de segurança: 10s max
     loadingTimeoutRef.current = setTimeout(() => {
@@ -851,18 +858,15 @@ export default function Messages() {
                 />
               </div>
               {isBackgroundLoading && (
-                <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+                <div className="mt-2 flex items-center gap-2 text-xs text-primary">
                   <Loader2 className="h-3 w-3 animate-spin" />
-                  <span>Atualizando...</span>
+                  <span className="font-medium">Atualizando...</span>
                 </div>
               )}
             </div>
             
-            <div 
-              className="flex-1 overflow-y-auto transition-opacity duration-200" 
-              style={{ opacity: isFilterChanging ? 0.6 : 1 }}
-            >
-              {filteredConversations.length === 0 ? (
+            <div className="flex-1 overflow-y-auto">
+              {filteredConversations.length === 0 && !isBackgroundLoading ? (
                 <div className="text-center py-12 text-muted-foreground px-4">
                   <MessageCircle className="h-12 w-12 mx-auto mb-3 opacity-30" />
                   <p className="font-medium">

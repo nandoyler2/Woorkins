@@ -89,7 +89,7 @@ export default function Messages() {
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [profileId, setProfileId] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeFilter, setActiveFilter] = useState<'all' | 'unread' | 'starred' | 'archived' | 'disputes' | 'proposals_received' | 'proposals_sent' | 'completed' | 'in_progress'>('all');
+  const [activeFilter, setActiveFilter] = useState<'all' | 'unread' | 'starred' | 'archived' | 'disputes' | 'proposals_received' | 'proposals_sent' | 'completed' | 'in_progress' | 'view_all'>('all');
   const [isInitialLoading, setIsInitialLoading] = useState(cachedData.conversations.length === 0 || !cachedData.lastFetched);
   const [isFilterChanging, setIsFilterChanging] = useState(false);
   const [isBackgroundLoading, setIsBackgroundLoading] = useState(false);
@@ -429,6 +429,8 @@ export default function Messages() {
         .order('updated_at', { ascending: false });
       if (activeFilter === 'archived') {
         userNegotiationsQuery = userNegotiationsQuery.eq('archived', true);
+      } else if (activeFilter === 'view_all') {
+        // Ver tudo: não filtra por archived
       } else {
         userNegotiationsQuery = userNegotiationsQuery.or('archived.is.null,archived.eq.false');
       }
@@ -459,6 +461,8 @@ export default function Messages() {
         .order('updated_at', { ascending: false });
       if (activeFilter === 'archived') {
         businessNegotiationsQuery = businessNegotiationsQuery.eq('archived', true);
+      } else if (activeFilter === 'view_all') {
+        // Ver tudo: não filtra por archived
       } else {
         businessNegotiationsQuery = businessNegotiationsQuery.or('archived.is.null,archived.eq.false');
       }
@@ -496,6 +500,8 @@ export default function Messages() {
         .order('updated_at', { ascending: false });
       if (activeFilter === 'archived') {
         freelancerProposalsQuery = freelancerProposalsQuery.eq('archived', true);
+      } else if (activeFilter === 'view_all') {
+        // Ver tudo: não filtra por archived
       } else {
         freelancerProposalsQuery = freelancerProposalsQuery.or('archived.is.null,archived.eq.false');
       }
@@ -533,6 +539,8 @@ export default function Messages() {
         .order('updated_at', { ascending: false });
       if (activeFilter === 'archived') {
         ownerProposalsQuery = ownerProposalsQuery.eq('archived', true);
+      } else if (activeFilter === 'view_all') {
+        // Ver tudo: não filtra por archived
       } else {
         ownerProposalsQuery = ownerProposalsQuery.or('archived.is.null,archived.eq.false');
       }
@@ -1101,6 +1109,9 @@ export default function Messages() {
         case 'archived':
           // Already filtered by archived in loadConversations
           return true;
+        case 'view_all':
+          // Ver tudo: mostra todas as conversas (arquivadas e não arquivadas)
+          return true;
         case 'starred':
           // Apenas conversas favoritadas
           return conv.isFavorited === true;
@@ -1299,6 +1310,18 @@ export default function Messages() {
               {unreadCounts.archived > 0 && (
                 <Badge variant="destructive" className="ml-auto">{unreadCounts.archived}</Badge>
               )}
+            </button>
+            
+            <button
+              onClick={() => setActiveFilter('view_all')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm ${
+                activeFilter === 'view_all' 
+                  ? 'bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/30 scale-105' 
+                  : 'hover:bg-gradient-to-r hover:from-muted hover:to-muted/50 text-muted-foreground hover:scale-102'
+              }`}
+            >
+              <MessageCircle className={`h-4 w-4 ${activeFilter === 'view_all' ? '' : 'text-purple-500'}`} />
+              <span>Ver Tudo</span>
             </button>
             
             <button

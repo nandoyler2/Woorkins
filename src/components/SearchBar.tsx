@@ -58,11 +58,12 @@ export const SearchBar = () => {
     setIsSearching(true);
     const timer = setTimeout(async () => {
       try {
-        // Buscar todos os perfis (usuários e negócios)
+        // Buscar todos os perfis (usuários e negócios) - excluir perfis deletados
         const { data } = await supabase
           .from('profiles')
           .select('username, full_name, company_name, slug, category, description, bio, logo_url, avatar_url, profile_type, average_rating, total_reviews')
           .or(`username.ilike.%${searchTerm}%,full_name.ilike.%${searchTerm}%,company_name.ilike.%${searchTerm}%,category.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%,bio.ilike.%${searchTerm}%`)
+          .or('deleted.is.null,deleted.eq.false')
           .limit(10);
 
         const combinedResults: SearchResult[] = [];
@@ -111,11 +112,12 @@ export const SearchBar = () => {
     if (!searchTerm.trim()) return;
     setIsSearching(true);
     try {
-      // Buscar todos os perfis (usuários e negócios)
+      // Buscar todos os perfis (usuários e negócios) - excluir perfis deletados
       const { data } = await supabase
         .from('profiles')
         .select('username, full_name, company_name, slug, category, description, bio, logo_url, avatar_url, profile_type, average_rating, total_reviews')
         .or(`username.ilike.%${searchTerm}%,full_name.ilike.%${searchTerm}%,company_name.ilike.%${searchTerm}%,category.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%,bio.ilike.%${searchTerm}%`)
+        .or('deleted.is.null,deleted.eq.false')
         .limit(10);
 
       const combinedResults: SearchResult[] = [];

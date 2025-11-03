@@ -299,135 +299,25 @@ export const useRealtimeMessaging = ({
   const sendMessage = useCallback(async (content: string, attachment?: { file: File; url: string }) => {
     if ((!content.trim() && !attachment) || isSending) return;
 
-    // Check if user is blocked before sending
-    const blocked = await checkBlockStatus();
-    if (blocked) {
-      if (!suppressToasts) {
-        toast({
-          variant: 'destructive',
-          title: '🚫 Você está bloqueado',
-          description: blockReason,
-          duration: 8000,
-        });
-      }
-      return;
-    }
-
-    // Check spam tracking before sending
-    const spamContext = conversationType === 'negotiation' ? 'negotiation' : 'proposal';
-    
-    const { data: spamData } = await supabase
-      .from('message_spam_tracking')
-      .select('*')
-      .eq('profile_id', currentUserId)
-      .eq('context', spamContext)
-      .maybeSingle();
-
-    if (spamData?.blocked_until) {
-      const blockedUntil = new Date(spamData.blocked_until);
-      if (blockedUntil > new Date()) {
-        if (!suppressToasts) {
-          toast({
-            variant: 'destructive',
-            title: '🚫 Bloqueio Temporário',
-            description: 'Você está bloqueado temporariamente por enviar mensagens muito rápido.',
-            duration: 5000,
-          });
-        }
-        return;
-      }
-    }
-
-
-    // Check for spam using AI to analyze context
-    const threeSecondsAgo = new Date(Date.now() - 3000).toISOString();
-    const table = conversationType === 'negotiation' ? 'negotiation_messages' : 'proposal_messages';
-    const idField = conversationType === 'negotiation' ? 'negotiation_id' : 'proposal_id';
-    
-    const { data: recentMessages } = await (supabase
-      .from(table) as any)
-      .select('content, created_at')
-      .eq(idField, conversationId)
-      .eq('sender_id', currentUserId)
-      .gte('created_at', threeSecondsAgo);
-
-    if (recentMessages && recentMessages.length > 0) {
-      // Use AI to analyze if this is a real conversation or spam
-      // Get last 5 messages for context
-      const conversationContext = messages
-        .slice(-5)
-        .map(m => `${m.sender_id === currentUserId ? 'Usuário' : 'Outro'}: ${m.content}`)
-        .join('\n');
-
-      try {
-        const { data: spamAnalysis } = await supabase.functions.invoke('analyze-spam', {
-          body: {
-            currentMessage: content.trim(),
-            recentMessages: conversationContext,
-            messagesInLast3Seconds: recentMessages.length,
-          }
-        });
-
-        // Only block if AI confirms it's spam
-        if (spamAnalysis?.isSpam) {
-          const currentCount = spamData?.spam_count || 0;
-          const newCount = currentCount + 1;
-          
-          if (newCount === 1) {
-            // First warning
-            if (!suppressToasts) {
-              toast({
-                variant: 'default',
-                title: '⚠️ Atenção',
-                description: 'Evite enviar mensagens muito rápidas ou repetitivas.',
-                duration: 4000,
-              });
-            }
-            
-            await supabase
-              .from('message_spam_tracking')
-              .upsert({
-                profile_id: currentUserId,
-                context: spamContext,
-                spam_count: newCount,
-                last_spam_at: new Date().toISOString(),
-              });
-          } else {
-            // Block user progressively (5min, 15min, 30min, 1h)
-            const blockDurations = [5, 15, 30, 60];
-            const blockMinutes = blockDurations[Math.min(newCount - 2, blockDurations.length - 1)];
-            const blockedUntil = new Date(Date.now() + blockMinutes * 60 * 1000);
-            
-            await supabase
-              .from('message_spam_tracking')
-              .upsert({
-                profile_id: currentUserId,
-                context: spamContext,
-                spam_count: newCount,
-                last_spam_at: new Date().toISOString(),
-                blocked_until: blockedUntil.toISOString(),
-                block_duration_minutes: blockMinutes,
-              });
-
-            if (!suppressToasts) {
-              toast({
-                variant: 'destructive',
-                title: '🚫 Bloqueio Temporário',
-                description: `Você foi bloqueado por ${blockMinutes} minutos por spam.`,
-                duration: 5000,
-              });
-            }
-            return;
-          }
-        }
-      } catch (aiError) {
-        // If AI analysis fails, allow the message to go through
-        console.error('AI spam analysis failed, allowing message:', aiError);
-      }
-    }
-
-
     const tempId = `temp-${Date.now()}`;
+    
+    // ⚡ INSTANTANEOUS UI UPDATE - Show message IMMEDIATELY (WhatsApp-style)
+    const optimisticMessage: Message = {
+      id: tempId,
+      sender_id: currentUserId,
+      sender_name: 'Você',
+      content: content.trim(),
+      created_at: new Date().toISOString(),
+      status: 'sending',
+      moderation_status: 'pending',
+      media_url: attachment ? URL.createObjectURL(attachment.file) : undefined,
+      media_type: attachment?.file.type,
+      media_name: attachment?.file.name,
+    };
+
+    // Show message immediately for sender
+    setMessages(prev => [...prev, optimisticMessage]);
+    
     setIsSending(true);
 
     // Upload attachment variables
@@ -436,7 +326,7 @@ export const useRealtimeMessaging = ({
     let mediaName: string | undefined;
 
     try {
-      // Upload attachment FIRST if present
+      // Upload attachment in background if present
       if (attachment) {
         try {
           let fileToUpload: File | Blob = attachment.file;
@@ -470,6 +360,11 @@ export const useRealtimeMessaging = ({
           uploadedMediaUrl = publicUrl;
           mediaType = attachment.file.type;
           mediaName = attachment.file.name;
+          
+          // Update optimistic message with real URL
+          setMessages(prev => prev.map(msg => 
+            msg.id === tempId ? { ...msg, media_url: uploadedMediaUrl } : msg
+          ));
         } catch (uploadError) {
           console.error('Error uploading attachment:', uploadError);
           
@@ -489,27 +384,11 @@ export const useRealtimeMessaging = ({
               description: errorDescription,
             });
           }
+          setMessages(prev => prev.filter(msg => msg.id !== tempId));
           setIsSending(false);
           return;
         }
       }
-
-      // Optimistic UI update with "moderating" status
-      const optimisticMessage: Message = {
-        id: tempId,
-        sender_id: currentUserId,
-        sender_name: 'Você',
-        content: content.trim(),
-        created_at: new Date().toISOString(),
-        status: 'moderating',
-        moderation_status: 'pending',
-        media_url: uploadedMediaUrl,
-        media_type: mediaType,
-        media_name: mediaName,
-      };
-
-      // Show message immediately for sender
-      setMessages(prev => [...prev, optimisticMessage]);
 
       const table = conversationType === 'negotiation' ? 'negotiation_messages' : 'proposal_messages';
       

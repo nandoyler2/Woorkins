@@ -326,9 +326,9 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
     }
   }, [isOpen, stories, currentIndex, registerView]);
 
-  // Efeito separado para gerenciar progresso e pausa
+  // Efeito separado para gerenciar progresso
   useEffect(() => {
-    if (!isOpen || stories.length === 0) return;
+    if (!isOpen || stories.length === 0 || isPaused || commentsOpen) return;
 
     const updateProgress = () => {
       const elapsed = Date.now() - startTimeRef.current - pausedTimeRef.current;
@@ -341,30 +341,8 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
       }
     };
 
-    // Se está pausado ou comentários abertos, parar tudo
-    if (isPaused || commentsOpen) {
-      // Parar interval
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
-      
-      // Marcar tempo de pausa
-      if (lastPauseStartRef.current === 0) {
-        lastPauseStartRef.current = Date.now();
-      }
-    } else {
-      // Despausar: calcular tempo pausado acumulado
-      if (lastPauseStartRef.current > 0) {
-        pausedTimeRef.current += Date.now() - lastPauseStartRef.current;
-        lastPauseStartRef.current = 0;
-      }
-      
-      // Iniciar interval se não existir
-      if (!intervalRef.current) {
-        intervalRef.current = setInterval(updateProgress, 100);
-      }
-    }
+    // Iniciar interval
+    intervalRef.current = setInterval(updateProgress, 100);
 
     return () => {
       if (intervalRef.current) {
@@ -373,6 +351,22 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
       }
     };
   }, [isOpen, stories, currentIndex, isPaused, commentsOpen, handleNext]);
+
+  // Efeito para controlar pausa
+  useEffect(() => {
+    if (isPaused || commentsOpen) {
+      // Marcar tempo de pausa se ainda não marcou
+      if (lastPauseStartRef.current === 0) {
+        lastPauseStartRef.current = Date.now();
+      }
+    } else {
+      // Ao despausar, calcular tempo pausado acumulado
+      if (lastPauseStartRef.current > 0) {
+        pausedTimeRef.current += Date.now() - lastPauseStartRef.current;
+        lastPauseStartRef.current = 0;
+      }
+    }
+  }, [isPaused, commentsOpen]);
 
 
   const handlePrevious = () => {

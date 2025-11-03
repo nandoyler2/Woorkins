@@ -971,7 +971,7 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
 
                         {/* Renderizar stickers sobre o conteúdo */}
                         {currentStory.stickers && currentStory.stickers.length > 0 && (
-                          <div className="absolute inset-0 pointer-events-none z-30">
+                          <div className="absolute inset-0 pointer-events-auto z-30">
                             {currentStory.stickers.map((sticker) => (
                               <InteractiveStickerRenderer
                                 key={sticker.id}

@@ -1068,14 +1068,6 @@ export default function Messages() {
                               <p className={`text-sm truncate ${conv.unreadCount > 0 ? 'font-bold' : 'font-semibold'}`}>
                                 {conv.title}
                               </p>
-                              {(conv.type === 'proposal' || conv.type === 'negotiation') && (() => {
-                                const badgeInfo = getProposalBadgeInfo(conv);
-                                return (
-                                  <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium flex-shrink-0 ${badgeInfo.color}`}>
-                                    {badgeInfo.text}
-                                  </span>
-                                );
-                              })()}
                               {conv.hasDispute && (
                                 <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 flex-shrink-0">
                                   <AlertCircle className="h-3 w-3 mr-1" />
@@ -1129,9 +1121,19 @@ export default function Messages() {
                             </DropdownMenu>
                           </div>
                           
-                          <p className="text-xs text-slate-600 truncate">
-                            {conv.otherUser.name}
-                          </p>
+                          <div className="flex items-center gap-2">
+                            <p className="text-xs text-slate-600 truncate">
+                              {conv.otherUser.name}
+                            </p>
+                            {(conv.type === 'proposal' || conv.type === 'negotiation') && (() => {
+                              const badgeInfo = getProposalBadgeInfo(conv);
+                              return (
+                                <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium flex-shrink-0 ${badgeInfo.color}`}>
+                                  {badgeInfo.text}
+                                </span>
+                              );
+                            })()}
+                          </div>
                         </div>
                       </div>
                     </button>

@@ -120,14 +120,6 @@ export function HubArticleCard() {
             {/* Overlay com sombra para legibilidade */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/60 to-transparent"></div>
             
-            {/* Badge Destaque */}
-            <div className="absolute top-4 left-4">
-              <Badge className="bg-red-600 text-white font-bold px-3 py-1.5 shadow-lg">
-                <Sparkles className="h-3 w-3 mr-1 inline" />
-                DESTAQUE
-              </Badge>
-            </div>
-            
             {/* Conteúdo */}
             <div className="absolute bottom-0 left-0 right-0 p-5 space-y-2.5">
               {/* Categoria */}

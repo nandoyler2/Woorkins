@@ -1385,17 +1385,17 @@ export default function Messages() {
                                 <Button 
                                   variant="ghost" 
                                   size="sm" 
-                                  className="h-6 w-6 p-0 hover:bg-muted flex-shrink-0"
+                                  className="h-8 w-8 p-0 hover:bg-primary/10 rounded-full transition-all hover:scale-110 flex-shrink-0"
                                 >
-                                  <MoreVertical className="h-4 w-4" />
+                                  <MoreVertical className="h-4 w-4 text-muted-foreground" />
                                 </Button>
                               </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" className="w-56">
+                              <DropdownMenuContent align="end" className="w-64 bg-card/95 backdrop-blur-sm border-primary/20 shadow-xl">
                                 {(conv.type === 'proposal' || conv.type === 'negotiation') && (() => {
                                   const badgeInfo = getProposalBadgeInfo(conv);
                                   return (
-                                    <DropdownMenuItem className="flex justify-between">
-                                      <span className="text-muted-foreground">Status:</span>
+                                    <DropdownMenuItem className="flex justify-between hover:bg-primary/5 cursor-default">
+                                      <span className="text-muted-foreground text-xs">Status:</span>
                                       <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${badgeInfo.color}`}>
                                         {badgeInfo.text}
                                       </span>
@@ -1403,22 +1403,23 @@ export default function Messages() {
                                   );
                                 })()}
                                 {conv.hasDispute && (
-                                  <DropdownMenuItem className="flex justify-between">
-                                    <span className="text-muted-foreground">Disputa:</span>
+                                  <DropdownMenuItem className="flex justify-between hover:bg-primary/5 cursor-default">
+                                    <span className="text-muted-foreground text-xs">Disputa:</span>
                                     <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300">
                                       {conv.disputeStatus === 'resolved' ? 'Resolvida' : 'Em Disputa'}
                                     </span>
                                   </DropdownMenuItem>
                                 )}
-                                <DropdownMenuSeparator />
+                                <DropdownMenuSeparator className="bg-primary/10" />
                                 <DropdownMenuItem 
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     handleToggleFavorite(conv);
                                   }}
+                                  className="hover:bg-yellow-500/10 cursor-pointer transition-colors"
                                 >
-                                  <Star className={`h-4 w-4 mr-2 ${conv.isFavorited ? 'fill-yellow-500 text-yellow-500' : ''}`} />
-                                  {conv.isFavorited ? 'Remover dos favoritos' : 'Favoritar'}
+                                  <Star className={`h-4 w-4 mr-3 ${conv.isFavorited ? 'fill-yellow-500 text-yellow-500' : 'text-yellow-500'}`} />
+                                  <span className="text-sm">{conv.isFavorited ? 'Remover dos favoritos' : 'Favoritar'}</span>
                                 </DropdownMenuItem>
                                 
                                 {conv.pinnedAt ? (
@@ -1427,9 +1428,10 @@ export default function Messages() {
                                       e.stopPropagation();
                                       handleUnpinConversation(conv);
                                     }}
+                                    className="hover:bg-blue-500/10 cursor-pointer transition-colors"
                                   >
-                                    <Pin className="h-4 w-4 mr-2 fill-primary text-primary" />
-                                    Desfixar do topo
+                                    <Pin className="h-4 w-4 mr-3 fill-blue-500 text-blue-500" />
+                                    <span className="text-sm">Desfixar do topo</span>
                                   </DropdownMenuItem>
                                 ) : (
                                   <DropdownMenuItem 
@@ -1437,9 +1439,10 @@ export default function Messages() {
                                       e.stopPropagation();
                                       handlePinConversation(conv);
                                     }}
+                                    className="hover:bg-blue-500/10 cursor-pointer transition-colors"
                                   >
-                                    <Pin className="h-4 w-4 mr-2" />
-                                    Fixar no topo
+                                    <Pin className="h-4 w-4 mr-3 text-blue-500" />
+                                    <span className="text-sm">Fixar no topo</span>
                                   </DropdownMenuItem>
                                 )}
                                 
@@ -1449,9 +1452,10 @@ export default function Messages() {
                                       e.stopPropagation();
                                       handleShowInInbox(conv);
                                     }}
+                                    className="hover:bg-green-500/10 cursor-pointer transition-colors"
                                   >
-                                    <Inbox className="h-4 w-4 mr-2" />
-                                    Exibir na caixa de entrada
+                                    <Inbox className="h-4 w-4 mr-3 text-green-500" />
+                                    <span className="text-sm">Exibir na caixa de entrada</span>
                                   </DropdownMenuItem>
                                 ) : (
                                   <DropdownMenuItem 
@@ -1459,19 +1463,22 @@ export default function Messages() {
                                       e.stopPropagation();
                                       handleRemoveFromInbox(conv);
                                     }}
+                                    className="hover:bg-red-500/10 cursor-pointer transition-colors"
                                   >
-                                    <EyeOff className="h-4 w-4 mr-2" />
-                                    Remover da caixa de entrada
+                                    <EyeOff className="h-4 w-4 mr-3 text-red-500" />
+                                    <span className="text-sm">Remover da caixa de entrada</span>
                                   </DropdownMenuItem>
                                 )}
+                                <DropdownMenuSeparator className="bg-primary/10" />
                                 <DropdownMenuItem 
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     handleArchiveConversation(conv, activeFilter !== 'archived');
                                   }}
+                                  className="hover:bg-gray-500/10 cursor-pointer transition-colors"
                                 >
-                                  <Archive className="h-4 w-4 mr-2" />
-                                  {activeFilter === 'archived' ? 'Desarquivar' : 'Arquivar'}
+                                  <Archive className="h-4 w-4 mr-3 text-gray-500" />
+                                  <span className="text-sm">{activeFilter === 'archived' ? 'Desarquivar' : 'Arquivar'}</span>
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>

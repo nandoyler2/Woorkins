@@ -24,49 +24,17 @@ export const useAdminCounts = () => {
   useEffect(() => {
     const loadCounts = async () => {
       try {
-        // Contagem de itens de moderação (posts, comentários bloqueados)
-        const { count: moderationCount } = await supabase
-          .from('blocked_messages')
-          .select('*', { count: 'exact', head: true });
+        // Use optimized edge function that fetches all counts in parallel
+        const { data, error } = await supabase.functions.invoke('get-admin-counts');
 
-        // Contagem de conversas de suporte ativas
-        const { count: supportCount } = await supabase
-          .from('support_conversations')
-          .select('*', { count: 'exact', head: true })
-          .eq('status', 'active');
+        if (error) {
+          console.error('Error loading admin counts:', error);
+          return;
+        }
 
-        // Contagem de verificações de documentos pendentes
-        const { count: verificationCount } = await supabase
-          .from('document_verifications')
-          .select('*', { count: 'exact', head: true })
-          .eq('verification_status', 'pending');
-
-        // Contagem de bloqueios do sistema ativos
-        const { count: blocksCount } = await supabase
-          .from('system_blocks')
-          .select('*', { count: 'exact', head: true })
-          .or('is_permanent.eq.true,blocked_until.gt.now()');
-
-        // Contagem de solicitações de saque pendentes
-        const { count: withdrawalsCount } = await supabase
-          .from('withdrawal_requests')
-          .select('*', { count: 'exact', head: true })
-          .eq('status', 'pending');
-
-        // Contagem de projetos pendentes de moderação
-        const { count: pendingProjectsCount } = await supabase
-          .from('pending_projects')
-          .select('*', { count: 'exact', head: true })
-          .eq('moderation_status', 'pending');
-
-        setCounts({
-          moderation: moderationCount || 0,
-          support: supportCount || 0,
-          documentVerifications: verificationCount || 0,
-          systemBlocks: blocksCount || 0,
-          withdrawalRequests: withdrawalsCount || 0,
-          pendingProjects: pendingProjectsCount || 0
-        });
+        if (data) {
+          setCounts(data);
+        }
       } catch (error) {
         console.error('Error loading admin counts:', error);
       } finally {
@@ -76,10 +44,64 @@ export const useAdminCounts = () => {
 
     loadCounts();
 
-    // Atualizar contagens a cada 30 segundos
+    // Update counts every 30 seconds
     const interval = setInterval(loadCounts, 30000);
 
-    return () => clearInterval(interval);
+    // Setup realtime for critical counts (support and withdrawals)
+    const supportChannel = supabase
+      .channel('support_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'support_conversations',
+          filter: 'status=eq.active'
+        },
+        () => {
+          loadCounts();
+        }
+      )
+      .subscribe();
+
+    const withdrawalsChannel = supabase
+      .channel('withdrawal_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'withdrawal_requests',
+          filter: 'status=eq.pending'
+        },
+        () => {
+          loadCounts();
+        }
+      )
+      .subscribe();
+
+    const pendingProjectsChannel = supabase
+      .channel('pending_projects_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'pending_projects',
+          filter: 'moderation_status=eq.pending'
+        },
+        () => {
+          loadCounts();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      clearInterval(interval);
+      supabase.removeChannel(supportChannel);
+      supabase.removeChannel(withdrawalsChannel);
+      supabase.removeChannel(pendingProjectsChannel);
+    };
   }, []);
 
   return { counts, loading };

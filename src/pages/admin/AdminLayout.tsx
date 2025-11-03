@@ -1,21 +1,20 @@
-import { Outlet, useLocation, NavLink } from 'react-router-dom';
-import { 
-  Users, 
-  Flag, 
-  Briefcase, 
-  BarChart3, 
-  Settings, 
-  Shield,
-  Home,
-  CreditCard,
+import { Outlet, useLocation, Link } from 'react-router-dom';
+import {
+  LayoutDashboard,
+  Users,
+  MessageSquare,
+  Settings,
+  FileText,
+  DollarSign,
+  TrendingUp,
+  Flag,
   FileCheck,
-  MessageCircle,
-  ArrowLeft,
-  Ban,
-  Wallet
+  Shield,
+  CreditCard,
+  Briefcase,
+  BarChart3,
+  Megaphone,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import {
   Sidebar,
   SidebarContent,
@@ -28,112 +27,82 @@ import {
   SidebarProvider,
   SidebarTrigger,
   useSidebar,
-} from "@/components/ui/sidebar";
+} from '@/components/ui/sidebar';
+import { Badge } from '@/components/ui/badge';
 import { useAdminCounts } from '@/hooks/useAdminCounts';
+import { cn } from '@/lib/utils';
 
 const adminMenuItems = [
-  { title: "Dashboard", url: "/admin", icon: Home },
-  { title: "Usuários", url: "/admin/users", icon: Users },
-  { title: "Moderação", url: "/admin/moderation", icon: Flag },
-  { title: "Negócios", url: "/admin/businesses", icon: Briefcase },
-  { title: "Conteúdo", url: "/admin/content", icon: FileCheck },
-  { title: "Financeiro", url: "/admin/financial", icon: CreditCard },
-  { title: "Solicitações de Saques", url: "/admin/withdrawals", icon: Wallet },
-  { title: "Suporte", url: "/admin/support", icon: MessageCircle },
-  { title: "Configurações", url: "/admin/settings", icon: Settings },
+  { title: 'Dashboard', url: '/painel', icon: LayoutDashboard },
+  { title: 'Usuários', url: '/painel/usuarios', icon: Users, badge: 'systemBlocks' },
+  { title: 'Moderação', url: '/painel/moderacao', icon: Flag, badge: 'moderation' },
+  { title: 'Suporte', url: '/painel/suporte', icon: MessageSquare, badge: 'support' },
+  { title: 'Financeiro', url: '/painel/financeiro', icon: DollarSign, badge: 'withdrawalRequests' },
+  { title: 'Planos', url: '/painel/planos', icon: CreditCard },
+  { title: 'Perfis Profissionais', url: '/painel/perfis-profissionais', icon: Briefcase },
+  { title: 'Análises', url: '/painel/analises', icon: TrendingUp },
+  { title: 'Relatórios', url: '/painel/relatorios', icon: BarChart3 },
+  { title: 'Hub de Artigos', url: '/painel/hub-artigos', icon: FileText },
+  { title: 'Páginas Legais', url: '/painel/paginas-legais', icon: FileCheck },
+  { title: 'Gestão de Conteúdo', url: '/painel/gestao-conteudo', icon: Megaphone },
+  { title: 'Configurações', url: '/painel/configuracoes', icon: Settings },
+  { title: 'IA', url: '/painel/ia', icon: Shield },
 ];
 
 function AdminSidebar() {
   const { state } = useSidebar();
   const location = useLocation();
-  const collapsed = state === "collapsed";
   const { counts } = useAdminCounts();
+  const isCollapsed = state === 'collapsed';
 
-  const isActive = (path: string) => {
-    if (path === "/admin") {
-      return location.pathname === path;
-    }
-    return location.pathname.startsWith(path);
-  };
-
-  const getBadgeCount = (url: string) => {
-    switch (url) {
-      case '/admin/moderation':
-        return counts.moderation;
-      case '/admin/support':
-        return counts.support;
-      case '/admin/users':
-        return counts.documentVerifications + counts.systemBlocks;
-      case '/admin/withdrawals':
-        return counts.withdrawalRequests;
-      default:
-        return 0;
-    }
+  const getBadgeCount = (badgeKey?: string) => {
+    if (!badgeKey) return null;
+    return counts[badgeKey as keyof typeof counts] || 0;
   };
 
   return (
-    <Sidebar className={collapsed ? "w-14" : "w-60"}>
-      <SidebarContent>
+    <Sidebar collapsible="icon" className="border-r-0">
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-accent/5 to-secondary/5 pointer-events-none" />
+      
+      <SidebarContent className="relative">
         <SidebarGroup>
-          <div className="flex items-center gap-2 px-4 py-3 border-b">
-            <Shield className="h-6 w-6 text-primary" />
-            {!collapsed && <SidebarGroupLabel className="text-lg font-bold">Admin Panel</SidebarGroupLabel>}
-          </div>
-
-          <div className="px-2 py-3">
-            <Button 
-              variant="outline" 
-              className="w-full justify-start gap-2"
-              asChild
-            >
-              <NavLink to="/painel">
-                <ArrowLeft className="h-4 w-4" />
-                {!collapsed && <span>Voltar ao Woorkins</span>}
-              </NavLink>
-            </Button>
-          </div>
-          
+          <SidebarGroupLabel className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-4 py-2">
+            {!isCollapsed && 'Painel Administrativo'}
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {adminMenuItems.map((item) => {
-                const badgeCount = getBadgeCount(item.url);
+                const isActive = location.pathname === item.url;
+                const badgeCount = getBadgeCount(item.badge);
+                const Icon = item.icon;
+
                 return (
                   <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild>
-                      <NavLink 
-                        to={item.url} 
-                        end={item.url === "/admin"}
-                        className={({ isActive }) => 
-                          isActive || (item.url !== "/admin" && location.pathname.startsWith(item.url))
-                            ? "bg-primary/10 text-primary font-medium" 
-                            : "hover:bg-muted/50"
-                        }
-                      >
-                        <div className="flex items-center gap-2 flex-1">
-                          <item.icon className="h-4 w-4" />
-                          {!collapsed && (
-                            <>
-                              <span>{item.title}</span>
-                              {badgeCount > 0 && (
-                                <Badge 
-                                  variant="destructive" 
-                                  className="ml-auto h-5 min-w-5 flex items-center justify-center p-0 px-1.5 text-[10px]"
-                                >
-                                  {badgeCount > 99 ? '99+' : badgeCount}
-                                </Badge>
-                              )}
-                            </>
-                          )}
-                          {collapsed && badgeCount > 0 && (
-                            <Badge 
-                              variant="destructive" 
-                              className="absolute -top-1 -right-1 h-4 min-w-4 flex items-center justify-center p-0 px-1 text-[9px]"
-                            >
-                              {badgeCount > 9 ? '9+' : badgeCount}
-                            </Badge>
-                          )}
-                        </div>
-                      </NavLink>
+                    <SidebarMenuButton
+                      asChild
+                      tooltip={item.title}
+                      className={cn(
+                        'transition-all duration-200',
+                        isActive && 'bg-primary/10 text-primary font-semibold border-l-4 border-primary'
+                      )}
+                    >
+                      <Link to={item.url} className="flex items-center gap-3 px-4 py-2">
+                        <Icon className={cn('h-5 w-5', isActive && 'text-primary')} />
+                        {!isCollapsed && (
+                          <span className="flex-1">{item.title}</span>
+                        )}
+                        {!isCollapsed && badgeCount! > 0 && (
+                          <Badge 
+                            variant="destructive" 
+                            className="ml-auto animate-pulse"
+                          >
+                            {badgeCount}
+                          </Badge>
+                        )}
+                        {isCollapsed && badgeCount! > 0 && (
+                          <div className="absolute -right-1 -top-1 h-3 w-3 rounded-full bg-destructive animate-pulse" />
+                        )}
+                      </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 );
@@ -146,20 +115,27 @@ function AdminSidebar() {
   );
 }
 
-export const AdminLayout = () => {
+export default function AdminLayout() {
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full">
+      <div className="min-h-screen flex w-full bg-gradient-to-br from-background via-background to-muted/20">
         <AdminSidebar />
-        <div className="flex-1 flex flex-col">
-          <header className="h-14 border-b flex items-center px-4 bg-background">
-            <SidebarTrigger />
+        <main className="flex-1 overflow-auto">
+          <header className="sticky top-0 z-10 border-b bg-background/80 backdrop-blur-sm">
+            <div className="flex items-center gap-4 p-4">
+              <SidebarTrigger className="hover:bg-accent/50 transition-colors" />
+              <div className="flex-1">
+                <h1 className="text-xl font-bold bg-gradient-to-r from-primary via-accent to-secondary bg-clip-text text-transparent">
+                  Painel Administrativo Woorkins
+                </h1>
+              </div>
+            </div>
           </header>
-          <main className="flex-1 p-6 overflow-auto">
+          <div className="p-6">
             <Outlet />
-          </main>
-        </div>
+          </div>
+        </main>
       </div>
     </SidebarProvider>
   );
-};
+}

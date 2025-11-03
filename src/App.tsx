@@ -54,7 +54,7 @@ const BusinessAppointments = lazy(() => import("./pages/BusinessAppointments"));
 const UserAppointmentBooking = lazy(() => import("./pages/UserAppointmentBooking"));
 
 // Lazy loading para páginas admin
-const AdminLayout = lazy(() => import("./pages/admin/AdminLayout").then(m => ({ default: m.AdminLayout })));
+const AdminLayout = lazy(() => import("./pages/admin/AdminLayout"));
 const Admin = lazy(() => import("./pages/Admin"));
 const UsersManagement = lazy(() => import("./pages/admin/UsersManagement"));
 const ModerationManagement = lazy(() => import("./pages/admin/ModerationManagement"));

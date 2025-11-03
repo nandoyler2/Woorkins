@@ -1,179 +1,362 @@
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useNavigate } from 'react-router-dom';
+import { AdminCard } from '@/components/admin/AdminCard';
+import { useAdminCounts } from '@/hooks/useAdminCounts';
+import {
+  Users,
+  Briefcase,
+  Star,
+  FileText,
+  TrendingUp,
+  DollarSign,
+  MessageSquare,
+  Activity,
+  AlertTriangle,
+  CheckCircle2,
+  Clock,
+  ArrowRight,
+} from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Users, Building2, Star, TrendingUp, Shield, AlertCircle } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface Stats {
   totalUsers: number;
   totalBusinesses: number;
   totalEvaluations: number;
   totalPosts: number;
+  totalProjects: number;
+  totalProposals: number;
+  monthlyRevenue: number;
+  activeUsers: number;
+}
+
+interface RecentActivity {
+  id: string;
+  type: string;
+  description: string;
+  timestamp: Date;
+  status: 'success' | 'warning' | 'error';
 }
 
 export default function Admin() {
+  const navigate = useNavigate();
+  const { counts, loading: countsLoading } = useAdminCounts();
   const [stats, setStats] = useState<Stats>({
     totalUsers: 0,
     totalBusinesses: 0,
     totalEvaluations: 0,
     totalPosts: 0,
+    totalProjects: 0,
+    totalProposals: 0,
+    monthlyRevenue: 0,
+    activeUsers: 0,
   });
+  const [recentActivities, setRecentActivities] = useState<RecentActivity[]>([]);
   const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
 
   useEffect(() => {
-    document.title = 'Administração - Woorkins';
-  }, []);
-
-  useEffect(() => {
+    document.title = 'Admin Dashboard - Woorkins';
     loadStats();
+    loadRecentActivities();
   }, []);
 
   const loadStats = async () => {
     try {
-      const [usersRes, businessRes, evaluationsRes, postsRes] = await Promise.all([
-        supabase.from('profiles' as any).select('id', { count: 'exact', head: true }),
-        supabase.from('business_profiles' as any).select('id', { count: 'exact', head: true }).or('deleted.is.null,deleted.eq.false'),
-        supabase.from('evaluations' as any).select('id', { count: 'exact', head: true }),
-        supabase.from('posts' as any).select('id', { count: 'exact', head: true }),
+      const [usersResult, businessesResult, evaluationsResult, postsResult, projectsResult, proposalsResult] = await Promise.all([
+        supabase.from('profiles').select('id', { count: 'exact', head: true }).is('deleted', false),
+        supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('profile_type', 'business').is('deleted', false),
+        supabase.from('evaluations').select('id', { count: 'exact', head: true }),
+        supabase.from('profile_stories').select('id', { count: 'exact', head: true }),
+        supabase.from('projects').select('id', { count: 'exact', head: true }),
+        supabase.from('proposals').select('id', { count: 'exact', head: true }),
       ]);
 
       setStats({
-        totalUsers: usersRes.count || 0,
-        totalBusinesses: businessRes.count || 0,
-        totalEvaluations: evaluationsRes.count || 0,
-        totalPosts: postsRes.count || 0,
+        totalUsers: usersResult.count || 0,
+        totalBusinesses: businessesResult.count || 0,
+        totalEvaluations: evaluationsResult.count || 0,
+        totalPosts: postsResult.count || 0,
+        totalProjects: projectsResult.count || 0,
+        totalProposals: proposalsResult.count || 0,
+        monthlyRevenue: 0,
+        activeUsers: 0,
       });
     } catch (error) {
       console.error('Error loading stats:', error);
-      toast({
-        title: 'Erro ao carregar estatísticas',
-        variant: 'destructive',
-      });
     } finally {
       setLoading(false);
     }
   };
 
-  if (loading) {
+  const loadRecentActivities = async () => {
+    try {
+      const { data } = await supabase
+        .from('platform_activities')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      if (data) {
+        const activities: RecentActivity[] = data.map((activity) => ({
+          id: activity.id,
+          type: activity.activity_type,
+          description: getActivityDescription(activity),
+          timestamp: new Date(activity.created_at),
+          status: getActivityStatus(activity.activity_type),
+        }));
+        setRecentActivities(activities);
+      }
+    } catch (error) {
+      console.error('Error loading recent activities:', error);
+    }
+  };
+
+  const getActivityDescription = (activity: any) => {
+    switch (activity.activity_type) {
+      case 'project_published':
+        return `${activity.profile_name} publicou um novo projeto`;
+      case 'story_published':
+        return `${activity.profile_name} publicou um story`;
+      case 'profile_followed':
+        return `${activity.profile_name} seguiu ${activity.target_profile_name}`;
+      case 'proposal_sent':
+        return `${activity.profile_name} enviou uma proposta`;
+      default:
+        return `${activity.profile_name} realizou uma ação`;
+    }
+  };
+
+  const getActivityStatus = (type: string): 'success' | 'warning' | 'error' => {
+    if (type.includes('blocked') || type.includes('rejected')) return 'error';
+    if (type.includes('pending') || type.includes('review')) return 'warning';
+    return 'success';
+  };
+
+  const criticalCount = counts.support + counts.withdrawalRequests + counts.pendingProjects + counts.documentVerifications;
+
+  if (loading || countsLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      <div className="space-y-6">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          {[...Array(8)].map((_, i) => (
+            <Skeleton key={i} className="h-[140px]" />
+          ))}
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8 max-w-woorkins">
-        <div className="flex items-center gap-3 mb-8">
-          <Shield className="w-8 h-8 text-primary" />
-          <div>
-            <h1 className="text-3xl font-bold">Painel Administrativo</h1>
-            <p className="text-muted-foreground">Gerencie a plataforma Woorkins</p>
-          </div>
-        </div>
-
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card className="border-l-4 border-l-primary">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Total de Usuários
+    <div className="space-y-8 animate-in fade-in duration-500">
+      {criticalCount > 0 && (
+        <Card className="border-destructive/50 bg-destructive/5">
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <AlertTriangle className="h-6 w-6 text-destructive animate-pulse" />
+              <CardTitle className="text-destructive">
+                Atenção: {criticalCount} {criticalCount === 1 ? 'Pendência Crítica' : 'Pendências Críticas'}
               </CardTitle>
-              <Users className="w-4 h-4 text-primary" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">{stats.totalUsers.toLocaleString()}</div>
-              <p className="text-xs text-muted-foreground mt-1">Perfis cadastrados</p>
-            </CardContent>
-          </Card>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-3">
+              {counts.support > 0 && (
+                <Button variant="destructive" size="sm" onClick={() => navigate('/painel/suporte')}>
+                  {counts.support} Suporte{counts.support > 1 ? 's' : ''}
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              )}
+              {counts.withdrawalRequests > 0 && (
+                <Button variant="destructive" size="sm" onClick={() => navigate('/painel/financeiro')}>
+                  {counts.withdrawalRequests} Saque{counts.withdrawalRequests > 1 ? 's' : ''}
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              )}
+              {counts.pendingProjects > 0 && (
+                <Button variant="destructive" size="sm" onClick={() => navigate('/painel/moderacao')}>
+                  {counts.pendingProjects} Projeto{counts.pendingProjects > 1 ? 's' : ''}
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              )}
+              {counts.documentVerifications > 0 && (
+                <Button variant="destructive" size="sm" onClick={() => navigate('/painel/usuarios')}>
+                  {counts.documentVerifications} Verificação{counts.documentVerifications > 1 ? 'ões' : ''}
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
-          <Card className="border-l-4 border-l-secondary">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Empresas
-              </CardTitle>
-              <Building2 className="w-4 h-4 text-secondary" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">{stats.totalBusinesses.toLocaleString()}</div>
-              <p className="text-xs text-muted-foreground mt-1">Perfis empresariais</p>
-            </CardContent>
-          </Card>
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <AdminCard
+          title="Usuários Totais"
+          value={stats.totalUsers.toLocaleString()}
+          icon={Users}
+          description="Usuários registrados na plataforma"
+          gradient="from-blue-500/10 via-blue-400/10 to-blue-300/10"
+          onClick={() => navigate('/painel/usuarios')}
+        />
 
-          <Card className="border-l-4 border-l-accent">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Avaliações
-              </CardTitle>
-              <Star className="w-4 h-4 text-accent" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">{stats.totalEvaluations.toLocaleString()}</div>
-              <p className="text-xs text-muted-foreground mt-1">Total de reviews</p>
-            </CardContent>
-          </Card>
+        <AdminCard
+          title="Perfis Profissionais"
+          value={stats.totalBusinesses.toLocaleString()}
+          icon={Briefcase}
+          description="Perfis de negócios ativos"
+          gradient="from-purple-500/10 via-purple-400/10 to-purple-300/10"
+          onClick={() => navigate('/painel/perfis-profissionais')}
+        />
 
-          <Card className="border-l-4 border-l-primary">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Posts
-              </CardTitle>
-              <TrendingUp className="w-4 h-4 text-primary" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">{stats.totalPosts.toLocaleString()}</div>
-              <p className="text-xs text-muted-foreground mt-1">Publicações no feed</p>
-            </CardContent>
-          </Card>
-        </div>
+        <AdminCard
+          title="Projetos Ativos"
+          value={stats.totalProjects.toLocaleString()}
+          icon={FileText}
+          description="Projetos publicados"
+          gradient="from-green-500/10 via-green-400/10 to-green-300/10"
+          onClick={() => navigate('/painel/moderacao')}
+        />
 
-        <div className="grid md:grid-cols-2 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Ações Rápidas</CardTitle>
-              <CardDescription>Ferramentas administrativas</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Button className="w-full justify-start" variant="outline">
-                <Users className="w-4 h-4 mr-2" />
-                Gerenciar Usuários
-              </Button>
-              <Button className="w-full justify-start" variant="outline">
-                <Building2 className="w-4 h-4 mr-2" />
-                Gerenciar Empresas
-              </Button>
-              <Button className="w-full justify-start" variant="outline">
-                <Star className="w-4 h-4 mr-2" />
-                Moderar Avaliações
-              </Button>
-              <Button className="w-full justify-start" variant="outline">
-                <AlertCircle className="w-4 h-4 mr-2" />
-                Ver Denúncias
-              </Button>
-            </CardContent>
-          </Card>
+        <AdminCard
+          title="Avaliações"
+          value={stats.totalEvaluations.toLocaleString()}
+          icon={Star}
+          description="Avaliações realizadas"
+          gradient="from-yellow-500/10 via-yellow-400/10 to-yellow-300/10"
+        />
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Atividade Recente</CardTitle>
-              <CardDescription>Últimas ações na plataforma</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-start gap-3 text-sm">
-                  <div className="w-2 h-2 rounded-full bg-primary mt-1.5"></div>
-                  <div>
-                    <p className="font-medium">Sistema iniciado</p>
-                    <p className="text-muted-foreground text-xs">Painel administrativo ativo</p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        <AdminCard
+          title="Propostas"
+          value={stats.totalProposals.toLocaleString()}
+          icon={FileText}
+          description="Propostas enviadas"
+          gradient="from-orange-500/10 via-orange-400/10 to-orange-300/10"
+        />
+
+        <AdminCard
+          title="Receita Mensal"
+          value={`R$ ${stats.monthlyRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
+          icon={DollarSign}
+          description="Receita do mês atual"
+          gradient="from-emerald-500/10 via-emerald-400/10 to-emerald-300/10"
+          onClick={() => navigate('/painel/financeiro')}
+        />
+
+        <AdminCard
+          title="Mensagens Bloqueadas"
+          value={counts.moderation.toLocaleString()}
+          icon={MessageSquare}
+          description="Mensagens em moderação"
+          gradient="from-red-500/10 via-red-400/10 to-red-300/10"
+          onClick={() => navigate('/painel/moderacao')}
+        />
+
+        <AdminCard
+          title="Bloqueios Ativos"
+          value={counts.systemBlocks.toLocaleString()}
+          icon={AlertTriangle}
+          description="Usuários bloqueados"
+          gradient="from-pink-500/10 via-pink-400/10 to-pink-300/10"
+          onClick={() => navigate('/painel/usuarios')}
+        />
       </div>
+
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Activity className="h-6 w-6 text-primary" />
+              <CardTitle>Atividades Recentes</CardTitle>
+            </div>
+            <Badge variant="outline">{recentActivities.length} atividades</Badge>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {recentActivities.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              Nenhuma atividade recente
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {recentActivities.map((activity) => (
+                <div
+                  key={activity.id}
+                  className="flex items-center gap-4 p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+                >
+                  {activity.status === 'success' && (
+                    <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0" />
+                  )}
+                  {activity.status === 'warning' && (
+                    <Clock className="h-5 w-5 text-yellow-600 flex-shrink-0" />
+                  )}
+                  {activity.status === 'error' && (
+                    <AlertTriangle className="h-5 w-5 text-red-600 flex-shrink-0" />
+                  )}
+                  
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{activity.description}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {activity.timestamp.toLocaleString('pt-BR')}
+                    </p>
+                  </div>
+
+                  <Badge variant={activity.status === 'error' ? 'destructive' : 'secondary'}>
+                    {activity.type}
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Ações Rápidas</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <Button
+              variant="outline"
+              className="h-auto flex-col gap-2 p-6 hover:bg-primary/5 hover:border-primary transition-all"
+              onClick={() => navigate('/painel/usuarios')}
+            >
+              <Users className="h-8 w-8 text-primary" />
+              <span className="font-semibold">Gerenciar Usuários</span>
+            </Button>
+
+            <Button
+              variant="outline"
+              className="h-auto flex-col gap-2 p-6 hover:bg-accent/50 hover:border-accent transition-all"
+              onClick={() => navigate('/painel/moderacao')}
+            >
+              <MessageSquare className="h-8 w-8 text-accent" />
+              <span className="font-semibold">Moderação</span>
+            </Button>
+
+            <Button
+              variant="outline"
+              className="h-auto flex-col gap-2 p-6 hover:bg-secondary/50 hover:border-secondary transition-all"
+              onClick={() => navigate('/painel/financeiro')}
+            >
+              <DollarSign className="h-8 w-8 text-secondary" />
+              <span className="font-semibold">Financeiro</span>
+            </Button>
+
+            <Button
+              variant="outline"
+              className="h-auto flex-col gap-2 p-6 hover:bg-orange/10 hover:border-orange transition-all"
+              onClick={() => navigate('/painel/relatorios')}
+            >
+              <TrendingUp className="h-8 w-8 text-orange" />
+              <span className="font-semibold">Relatórios</span>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

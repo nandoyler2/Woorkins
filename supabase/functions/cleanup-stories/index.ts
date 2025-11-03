@@ -19,10 +19,19 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
     );
 
-    // Buscar stories expirados
+    // Buscar stories expirados com seus stickers
     const { data: expiredStories, error: fetchError } = await supabase
       .from('profile_stories')
-      .select('id, media_url')
+      .select(`
+        id, 
+        media_url,
+        thumbnail_url,
+        story_stickers (
+          id,
+          type,
+          content
+        )
+      `)
       .lte('expires_at', new Date().toISOString());
 
     if (fetchError) {
@@ -52,9 +61,9 @@ Deno.serve(async (req) => {
 
     // Deletar arquivos do storage
     for (const story of expiredStories) {
+      // Deletar mídia principal
       if (story.media_url) {
         try {
-          // Extrair o nome do arquivo do URL
           const urlParts = story.media_url.split('/stories/');
           if (urlParts.length > 1) {
             const fileName = urlParts[1];
@@ -74,6 +83,60 @@ Deno.serve(async (req) => {
         } catch (error) {
           console.error(`❌ Error processing file deletion:`, error);
           filesFailed++;
+        }
+      }
+
+      // Deletar thumbnail se existir
+      if (story.thumbnail_url) {
+        try {
+          const urlParts = story.thumbnail_url.split('/stories/');
+          if (urlParts.length > 1) {
+            const fileName = urlParts[1];
+            
+            const { error: deleteError } = await supabase.storage
+              .from('stories')
+              .remove([fileName]);
+
+            if (deleteError) {
+              console.error(`❌ Failed to delete thumbnail ${fileName}:`, deleteError);
+              filesFailed++;
+            } else {
+              console.log(`✅ Deleted thumbnail: ${fileName}`);
+              filesDeleted++;
+            }
+          }
+        } catch (error) {
+          console.error(`❌ Error processing thumbnail deletion:`, error);
+          filesFailed++;
+        }
+      }
+
+      // Deletar imagens dos stickers de tipo 'image'
+      if (story.story_stickers && Array.isArray(story.story_stickers)) {
+        for (const sticker of story.story_stickers) {
+          if (sticker.type === 'image' && sticker.content?.imageUrl) {
+            try {
+              const urlParts = sticker.content.imageUrl.split('/stories/');
+              if (urlParts.length > 1) {
+                const fileName = urlParts[1];
+                
+                const { error: deleteError } = await supabase.storage
+                  .from('stories')
+                  .remove([fileName]);
+
+                if (deleteError) {
+                  console.error(`❌ Failed to delete sticker image ${fileName}:`, deleteError);
+                  filesFailed++;
+                } else {
+                  console.log(`✅ Deleted sticker image: ${fileName}`);
+                  filesDeleted++;
+                }
+              }
+            } catch (error) {
+              console.error(`❌ Error processing sticker image deletion:`, error);
+              filesFailed++;
+            }
+          }
         }
       }
     }

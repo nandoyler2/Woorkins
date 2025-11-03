@@ -514,52 +514,106 @@ export default function ProjectDetails() {
                   <CardContent className="pt-6">
                     {proposals.length === 0 ? (
                       <div className="text-center py-16 px-6">
-                        {/* Ícone com gradiente e animação */}
-                        <div className="relative inline-block mb-6">
-                          <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-teal-500 rounded-full blur-xl opacity-30 animate-pulse-slow"></div>
-                          <div className="relative bg-gradient-to-br from-blue-50 to-teal-50 dark:from-blue-950 dark:to-teal-950 p-6 rounded-full border-4 border-primary/20">
-                            <MessageSquare className="w-16 h-16 text-primary" />
-                          </div>
-                        </div>
-                        
-                        {/* Título com gradiente */}
-                        <h3 className="text-2xl font-bold mb-3 bg-gradient-to-r from-blue-600 to-teal-600 bg-clip-text text-transparent">
-                          Nenhuma proposta enviada ainda
-                        </h3>
-                        
-                        {/* Descrição */}
-                        <p className="text-muted-foreground mb-8 max-w-md mx-auto text-lg">
-                          Seja o primeiro a enviar uma proposta para este projeto e tenha mais chances de ser selecionado!
-                        </p>
-                        
-                        {/* Botão destacado */}
-                        {!isOwner && (
-                          <div className="space-y-3">
-                            <Button 
-                              onClick={handleMakeProposal}
-                              size="lg"
-                              className="bg-gradient-to-r from-blue-600 to-teal-600 hover:from-blue-700 hover:to-teal-700 shadow-lg hover:shadow-xl transition-all duration-300 text-lg px-8 py-6 h-auto"
-                            >
-                              <Send className="w-5 h-5 mr-3" />
-                              Enviar Primeira Proposta
-                            </Button>
-                            
-                            {/* Benefícios */}
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8 text-sm">
-                              <div className="flex items-center justify-center gap-2 text-muted-foreground">
-                                <CheckCircle className="w-4 h-4 text-green-500" />
-                                <span>Resposta rápida</span>
-                              </div>
-                              <div className="flex items-center justify-center gap-2 text-muted-foreground">
-                                <CheckCircle className="w-4 h-4 text-green-500" />
-                                <span>Pagamento seguro</span>
-                              </div>
-                              <div className="flex items-center justify-center gap-2 text-muted-foreground">
-                                <CheckCircle className="w-4 h-4 text-green-500" />
-                                <span>Sem taxas ocultas</span>
+                        {hasProposal ? (
+                          // Usuário já enviou proposta
+                          <>
+                            {/* Ícone com gradiente e animação */}
+                            <div className="relative inline-block mb-6">
+                              <div className="absolute inset-0 bg-gradient-to-r from-green-500 to-teal-500 rounded-full blur-xl opacity-30 animate-pulse-slow"></div>
+                              <div className="relative bg-gradient-to-br from-green-50 to-teal-50 dark:from-green-950 dark:to-teal-950 p-6 rounded-full border-4 border-green-500/20">
+                                <CheckCircle className="w-16 h-16 text-green-600" />
                               </div>
                             </div>
-                          </div>
+                            
+                            {/* Título com gradiente */}
+                            <h3 className="text-2xl font-bold mb-3 bg-gradient-to-r from-green-600 to-teal-600 bg-clip-text text-transparent">
+                              Proposta Enviada com Sucesso!
+                            </h3>
+                            
+                            {/* Descrição */}
+                            <p className="text-muted-foreground mb-8 max-w-md mx-auto text-lg">
+                              Você já enviou uma proposta para este projeto. O cliente irá analisá-la e entrará em contato em breve.
+                            </p>
+                            
+                            {/* Botão destacado */}
+                            <div className="space-y-3">
+                              <Button 
+                                onClick={() => setViewProposalDialogOpen(true)}
+                                size="lg"
+                                className="bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 shadow-lg hover:shadow-xl transition-all duration-300 text-lg px-8 py-6 h-auto"
+                              >
+                                <MessageSquare className="w-5 h-5 mr-3" />
+                                Ver Sua Proposta
+                              </Button>
+                              
+                              {/* Status */}
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8 text-sm">
+                                <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                                  <CheckCircle className="w-4 h-4 text-green-500" />
+                                  <span>Proposta enviada</span>
+                                </div>
+                                <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                                  <Clock className="w-4 h-4 text-yellow-500" />
+                                  <span>Aguardando análise</span>
+                                </div>
+                                <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                                  <MessageSquare className="w-4 h-4 text-blue-500" />
+                                  <span>Chat disponível</span>
+                                </div>
+                              </div>
+                            </div>
+                          </>
+                        ) : (
+                          // Nenhuma proposta ainda
+                          <>
+                            {/* Ícone com gradiente e animação */}
+                            <div className="relative inline-block mb-6">
+                              <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-teal-500 rounded-full blur-xl opacity-30 animate-pulse-slow"></div>
+                              <div className="relative bg-gradient-to-br from-blue-50 to-teal-50 dark:from-blue-950 dark:to-teal-950 p-6 rounded-full border-4 border-primary/20">
+                                <MessageSquare className="w-16 h-16 text-primary" />
+                              </div>
+                            </div>
+                            
+                            {/* Título com gradiente */}
+                            <h3 className="text-2xl font-bold mb-3 bg-gradient-to-r from-blue-600 to-teal-600 bg-clip-text text-transparent">
+                              Nenhuma proposta enviada ainda
+                            </h3>
+                            
+                            {/* Descrição */}
+                            <p className="text-muted-foreground mb-8 max-w-md mx-auto text-lg">
+                              Seja o primeiro a enviar uma proposta para este projeto e tenha mais chances de ser selecionado!
+                            </p>
+                            
+                            {/* Botão destacado */}
+                            {!isOwner && (
+                              <div className="space-y-3">
+                                <Button 
+                                  onClick={handleMakeProposal}
+                                  size="lg"
+                                  className="bg-gradient-to-r from-blue-600 to-teal-600 hover:from-blue-700 hover:to-teal-700 shadow-lg hover:shadow-xl transition-all duration-300 text-lg px-8 py-6 h-auto"
+                                >
+                                  <Send className="w-5 h-5 mr-3" />
+                                  Enviar Primeira Proposta
+                                </Button>
+                                
+                                {/* Benefícios */}
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8 text-sm">
+                                  <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                                    <CheckCircle className="w-4 h-4 text-green-500" />
+                                    <span>Resposta rápida</span>
+                                  </div>
+                                  <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                                    <CheckCircle className="w-4 h-4 text-green-500" />
+                                    <span>Pagamento seguro</span>
+                                  </div>
+                                  <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                                    <CheckCircle className="w-4 h-4 text-green-500" />
+                                    <span>Sem taxas ocultas</span>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </>
                         )}
                       </div>
                     ) : ownerSubscriptionPlan === 'free' && isOwner ? (

@@ -564,7 +564,7 @@ export default function ProjectDetails() {
                 {/* Action Button */}
                 {isOwner && project.status === 'open' && (
                   <Button 
-                    className="w-full bg-muted hover:bg-muted cursor-default"
+                    className="w-full bg-muted hover:bg-muted cursor-default text-foreground"
                     disabled
                   >
                     Seu Projeto

@@ -28,6 +28,8 @@ import Feed from "./pages/Feed";
 import Dashboard from "./pages/Dashboard";
 import Projects from "./pages/Projects";
 import ProjectDetails from "./pages/ProjectDetails";
+import Hub from "./pages/Hub";
+import HubArticle from "./pages/HubArticle";
 import NotFound from "./pages/NotFound";
 import Plans from "./pages/Plans";
 import FAQ from "./pages/FAQ";
@@ -108,6 +110,8 @@ function AppContent() {
           <Route path="/projetos" element={<Projects />} />
           <Route path="/projetos/:id" element={<ProjectDetails />} />
           <Route path="/projetos/novo" element={<ProtectedRoute><ProjectCreate /></ProtectedRoute>} />
+          <Route path="/hub" element={<Hub />} />
+          <Route path="/hub/:slug" element={<HubArticle />} />
           <Route path="/feed" element={<Feed />} />
           <Route path="/planos" element={<Plans />} />
           <Route path="/faq" element={<FAQ />} />

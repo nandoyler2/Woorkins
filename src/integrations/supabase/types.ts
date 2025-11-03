@@ -524,6 +524,68 @@ export type Database = {
         }
         Relationships: []
       }
+      hub_articles: {
+        Row: {
+          author_profile_id: string
+          category: string
+          content: string
+          cover_image: string | null
+          created_at: string | null
+          featured: boolean | null
+          id: string
+          published: boolean | null
+          published_at: string | null
+          slug: string
+          summary: string
+          tags: string[] | null
+          title: string
+          updated_at: string | null
+          views_count: number | null
+        }
+        Insert: {
+          author_profile_id: string
+          category: string
+          content: string
+          cover_image?: string | null
+          created_at?: string | null
+          featured?: boolean | null
+          id?: string
+          published?: boolean | null
+          published_at?: string | null
+          slug: string
+          summary: string
+          tags?: string[] | null
+          title: string
+          updated_at?: string | null
+          views_count?: number | null
+        }
+        Update: {
+          author_profile_id?: string
+          category?: string
+          content?: string
+          cover_image?: string | null
+          created_at?: string | null
+          featured?: boolean | null
+          id?: string
+          published?: boolean | null
+          published_at?: string | null
+          slug?: string
+          summary?: string
+          tags?: string[] | null
+          title?: string
+          updated_at?: string | null
+          views_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hub_articles_author_profile_id_fkey"
+            columns: ["author_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       legal_pages: {
         Row: {
           content: string

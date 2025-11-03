@@ -2,7 +2,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { Globe, LogOut, User, Home, Search, MessageSquare, Shield, Briefcase, MessageCircle, Plus, FolderOpen, Headset } from 'lucide-react';
+import { Globe, LogOut, User, Home, Search, MessageSquare, Shield, Briefcase, MessageCircle, Plus, FolderOpen, Headset, Newspaper } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import {
   DropdownMenu,
@@ -187,7 +187,19 @@ export const Header = () => {
             </DropdownMenu>
             
             <Link 
-              to="/mensagens" 
+              to="/hub" 
+              className={`flex items-center gap-2 transition-colors pb-1 border-b-2 ${
+                location.pathname.startsWith('/hub')
+                  ? 'text-primary border-primary'
+                  : 'text-foreground/80 hover:text-foreground border-transparent'
+              }`}
+            >
+              <Newspaper className="w-5 h-5" />
+              <span>HUB</span>
+            </Link>
+            
+            <Link 
+              to="/mensagens"
               className={`flex items-center gap-2 transition-colors relative pb-1 border-b-2 ${
                 isActiveRoute('/mensagens')
                   ? 'text-primary border-primary'

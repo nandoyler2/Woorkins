@@ -1,7 +1,8 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { MessageCircle, FileText } from 'lucide-react';
+import { MessageCircle, FileText, Newspaper } from 'lucide-react';
 import AISettings from './AISettings';
 import LegalPages from './LegalPages';
+import HubArticles from './HubArticles';
 
 export default function ContentManagement() {
   return (
@@ -14,10 +15,14 @@ export default function ContentManagement() {
       </div>
 
       <Tabs defaultValue="ai" className="space-y-6">
-        <TabsList className="grid w-full max-w-md grid-cols-2">
+        <TabsList className="grid w-full max-w-2xl grid-cols-3">
           <TabsTrigger value="ai" className="gap-2">
             <MessageCircle className="h-4 w-4" />
             IA & FAQ
+          </TabsTrigger>
+          <TabsTrigger value="hub" className="gap-2">
+            <Newspaper className="h-4 w-4" />
+            Artigos do HUB
           </TabsTrigger>
           <TabsTrigger value="legal" className="gap-2">
             <FileText className="h-4 w-4" />
@@ -27,6 +32,10 @@ export default function ContentManagement() {
 
         <TabsContent value="ai" className="space-y-6">
           <AISettings />
+        </TabsContent>
+
+        <TabsContent value="hub" className="space-y-6">
+          <HubArticles />
         </TabsContent>
 
         <TabsContent value="legal" className="space-y-6">

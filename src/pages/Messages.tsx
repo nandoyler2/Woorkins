@@ -38,12 +38,11 @@ import notificationSound from '@/assets/notification-sound.mp3';
 import emptyMessagesBg from '@/assets/empty-messages-bg.jpg';
 
 const HERO_PHRASES = [
-  "Grandes ideias ganham vida aqui",
-  "Grandes resultados começam aqui",
-  "Grandes marcas nascem aqui",
-  "Grandes parcerias surgem aqui",
-  "Grandes conquistas começam aqui",
-  "Grandes negócios acontecem aqui"
+  "Grandes negócios acontecem aqui",
+  "Grandes coisas começam com uma boa conversa.",
+  "Toda parceria de sucesso começa por aqui.",
+  "Troque ideias, feche projetos, conquiste resultados.",
+  "Mensagens que viram oportunidades."
 ];
 
 interface Conversation {

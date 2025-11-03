@@ -572,7 +572,7 @@ export default function ProjectDetails() {
               <CardContent className="pt-6 space-y-4">
                 {/* Budget */}
                 <div className="text-center py-4 bg-gradient-to-br from-blue-50/50 to-teal-50/50 dark:from-blue-950/20 dark:to-teal-950/20 rounded-lg border-2 border-primary/20">
-                  <p className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-teal-600 bg-clip-text text-transparent">
+                  <p className="text-xl font-bold bg-gradient-to-r from-blue-600 to-teal-600 bg-clip-text text-transparent whitespace-nowrap overflow-hidden text-ellipsis px-2">
                     {formatBudget(project.budget_min, project.budget_max)}
                   </p>
                   {project.budget_min && project.budget_max && (

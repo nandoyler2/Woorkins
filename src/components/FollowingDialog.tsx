@@ -484,7 +484,7 @@ export function FollowingDialog({ open, onOpenChange, initialTab = 'following' }
                   <SelectTrigger className="w-full h-10 border-blue-200 focus:border-blue-600 bg-white">
                     <SelectValue placeholder="Ordenar por" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="z-[9999] bg-white" position="popper" sideOffset={5}>
                     <SelectItem value="alphabetical">📝 Ordem alfabética</SelectItem>
                     <SelectItem value="active">🔥 Mais ativos</SelectItem>
                     <SelectItem value="stories">⭐ Com stories</SelectItem>

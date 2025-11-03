@@ -854,54 +854,30 @@ export default function ProjectDetails() {
                             <SelectTrigger className="h-11 border-2">
                               <SelectValue placeholder="Selecione o motivo" />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent className="z-[9999] bg-background">
                               <SelectItem value="offensive">
-                                <div className="flex items-center gap-2">
-                                  <UserX className="w-4 h-4 text-red-600" />
-                                  <span>Conteúdo ofensivo ou discurso de ódio</span>
-                                </div>
+                                Conteúdo ofensivo ou discurso de ódio
                               </SelectItem>
                               <SelectItem value="spam">
-                                <div className="flex items-center gap-2">
-                                  <Zap className="w-4 h-4 text-orange-600" />
-                                  <span>Spam ou publicidade enganosa</span>
-                                </div>
+                                Spam ou publicidade enganosa
                               </SelectItem>
                               <SelectItem value="harassment">
-                                <div className="flex items-center gap-2">
-                                  <AlertCircle className="w-4 h-4 text-red-600" />
-                                  <span>Assédio ou bullying</span>
-                                </div>
+                                Assédio ou bullying
                               </SelectItem>
                               <SelectItem value="copyright">
-                                <div className="flex items-center gap-2">
-                                  <FileWarning className="w-4 h-4 text-yellow-600" />
-                                  <span>Violação de direitos autorais</span>
-                                </div>
+                                Violação de direitos autorais
                               </SelectItem>
                               <SelectItem value="fraud">
-                                <div className="flex items-center gap-2">
-                                  <AlertCircle className="w-4 h-4 text-orange-600" />
-                                  <span>Fraude ou golpe</span>
-                                </div>
+                                Fraude ou golpe
                               </SelectItem>
                               <SelectItem value="fake">
-                                <div className="flex items-center gap-2">
-                                  <FileText className="w-4 h-4 text-red-600" />
-                                  <span>Informações falsas ou enganosas</span>
-                                </div>
+                                Informações falsas ou enganosas
                               </SelectItem>
                               <SelectItem value="inappropriate">
-                                <div className="flex items-center gap-2">
-                                  <Flag className="w-4 h-4 text-purple-600" />
-                                  <span>Conteúdo inadequado ou impróprio</span>
-                                </div>
+                                Conteúdo inadequado ou impróprio
                               </SelectItem>
                               <SelectItem value="other">
-                                <div className="flex items-center gap-2">
-                                  <FileText className="w-4 h-4 text-muted-foreground" />
-                                  <span>Outro motivo</span>
-                                </div>
+                                Outro motivo
                               </SelectItem>
                             </SelectContent>
                           </Select>

@@ -166,12 +166,12 @@ export const Header = () => {
                   </div>
                   <span className="font-bold bg-gradient-to-r from-blue-500 to-teal-500 bg-clip-text text-transparent">Projetos</span>
                   
-                  {newProjectsCount > 0 && (
+                  {newProjectsCount.count > 0 && (
                     <div className="animate-in fade-in zoom-in duration-300">
                       <div className="relative">
-                        <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-teal-500 rounded-full blur-sm animate-pulse"></div>
-                        <div className="relative bg-gradient-to-r from-blue-500 to-teal-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg whitespace-nowrap">
-                          {newProjectsCount} {newProjectsCount === 1 ? 'novo' : 'novos'}
+                        <div className={`absolute inset-0 bg-gradient-to-r from-blue-500 to-teal-500 rounded-full blur-sm ${newProjectsCount.hasRecent ? 'animate-pulse' : ''}`}></div>
+                        <div className={`relative bg-gradient-to-r from-blue-500 to-teal-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg whitespace-nowrap ${newProjectsCount.hasRecent ? 'animate-[pulse_1s_ease-in-out_infinite]' : ''}`}>
+                          {newProjectsCount.count} {newProjectsCount.count === 1 ? 'novo' : 'novos'}
                         </div>
                         {/* Seta apontando para a esquerda */}
                         <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1">

@@ -3,46 +3,46 @@ import { supabase } from '@/integrations/supabase/client';
 
 export function useNewProjectsCount() {
   const [count, setCount] = useState(0);
-  const [recentCount, setRecentCount] = useState(0);
+  const [hasRecent, setHasRecent] = useState(false);
 
   useEffect(() => {
     const fetchNewProjectsCount = async () => {
       try {
-        const twentyFourHoursAgo = new Date();
-        twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
+        const oneHourAgo = new Date();
+        oneHourAgo.setHours(oneHourAgo.getHours() - 1);
 
         const fiveMinutesAgo = new Date();
         fiveMinutesAgo.setMinutes(fiveMinutesAgo.getMinutes() - 5);
 
-        // Contar projetos das últimas 24h
-        const { count: newCount, error: error24h } = await supabase
+        // Contar projetos da última hora
+        const { count: hourCount, error: errorHour } = await supabase
           .from('projects')
           .select('*', { count: 'exact', head: true })
           .eq('moderation_status', 'approved')
-          .gte('created_at', twentyFourHoursAgo.toISOString());
+          .gte('created_at', oneHourAgo.toISOString());
 
-        if (error24h) throw error24h;
-        setCount(newCount || 0);
+        if (errorHour) throw errorHour;
+        setCount(hourCount || 0);
 
-        // Contar projetos dos últimos 5 minutos
-        const { count: recent, error: error5min } = await supabase
+        // Verificar se tem projetos dos últimos 5 minutos para piscar
+        const { count: recentCount, error: errorRecent } = await supabase
           .from('projects')
           .select('*', { count: 'exact', head: true })
           .eq('moderation_status', 'approved')
           .gte('created_at', fiveMinutesAgo.toISOString());
 
-        if (error5min) throw error5min;
-        setRecentCount(recent || 0);
+        if (errorRecent) throw errorRecent;
+        setHasRecent((recentCount || 0) > 0);
       } catch (error) {
         console.error('Error fetching new projects count:', error);
         setCount(0);
-        setRecentCount(0);
+        setHasRecent(false);
       }
     };
 
     fetchNewProjectsCount();
 
-    // Atualizar a cada minuto para verificar projetos recentes
+    // Atualizar a cada minuto
     const interval = setInterval(fetchNewProjectsCount, 60 * 1000);
 
     // Subscrever a mudanças em tempo real
@@ -67,5 +67,5 @@ export function useNewProjectsCount() {
     };
   }, []);
 
-  return { count, hasRecent: recentCount > 0 };
+  return { count, hasRecent };
 }

@@ -295,9 +295,14 @@ const MyProjects = () => {
                           📝 {project.proposals_count} proposta{project.proposals_count !== 1 ? 's' : ''}
                         </Badge>
                       </div>
-                      <Button variant="outline" size="sm" asChild>
-                        <Link to={`/projetos/${project.id}`}>Ver Detalhes</Link>
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <Button variant="outline" size="sm" asChild>
+                          <Link to={`/projetos/${project.id}`}>Ver Detalhes</Link>
+                        </Button>
+                        <Button variant="outline" size="sm" asChild>
+                          <Link to={`/projeto/${project.id}/editar`}>Editar</Link>
+                        </Button>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>

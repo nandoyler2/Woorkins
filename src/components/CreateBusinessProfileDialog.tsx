@@ -258,6 +258,7 @@ export function CreateBusinessProfileDialog({ open, onOpenChange, onSuccess }: C
 
       // Upload logo usando o ID do novo perfil
       if (logoFile) {
+        console.log('📤 Iniciando upload do logo...');
         const compressed = await compressImage(logoFile, { maxSizeMB: 1, maxWidth: 800, maxHeight: 800 });
         const logoPath = `${newProfile.id}/logo-${Date.now()}.jpg`;
         const { error: uploadError } = await supabase.storage
@@ -269,6 +270,9 @@ export function CreateBusinessProfileDialog({ open, onOpenChange, onSuccess }: C
             .from('profile-photos')
             .getPublicUrl(logoPath);
           logoUrl = publicUrl;
+          console.log('✅ Logo uploaded:', logoUrl);
+        } else {
+          console.error('❌ Erro ao fazer upload do logo:', uploadError);
         }
       }
 
@@ -290,6 +294,7 @@ export function CreateBusinessProfileDialog({ open, onOpenChange, onSuccess }: C
 
       // Atualizar perfil com URLs das imagens
       if (logoUrl || coverUrl) {
+        console.log('🔄 Atualizando perfil com imagens:', { logoUrl, coverUrl });
         const { error: updateError } = await supabase
           .from('profiles')
           .update({
@@ -302,6 +307,7 @@ export function CreateBusinessProfileDialog({ open, onOpenChange, onSuccess }: C
           console.error('❌ Erro ao atualizar imagens:', updateError);
           throw new Error('Erro ao salvar imagens do perfil');
         }
+        console.log('✅ Perfil atualizado com imagens!');
       }
 
       // Ativar features selecionadas para o NOVO perfil
@@ -324,6 +330,9 @@ export function CreateBusinessProfileDialog({ open, onOpenChange, onSuccess }: C
         description: 'Seu perfil profissional está pronto',
       });
 
+      // Aguardar um momento para garantir que o banco propagou as mudanças
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
       onSuccess?.();
       onOpenChange(false);
       

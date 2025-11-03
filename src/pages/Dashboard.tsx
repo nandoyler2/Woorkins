@@ -730,6 +730,7 @@ export default function Dashboard() {
   };
 
   const loadBusinessProfiles = async (profileId: string) => {
+    console.log('🔄 Carregando perfis profissionais...');
     const { data, error } = await supabase
     .from('profiles' as any)
     .select('id, company_name, category, logo_url, slug, username')
@@ -737,7 +738,10 @@ export default function Dashboard() {
       .eq('profile_type', 'business');
     
     if (!error && data) {
+      console.log('✅ Perfis profissionais carregados:', data);
       setBusinessProfiles(data as unknown as BusinessProfile[]);
+    } else {
+      console.error('❌ Erro ao carregar perfis profissionais:', error);
     }
   };
 
@@ -1475,7 +1479,12 @@ export default function Dashboard() {
           <CreateBusinessProfileDialog
             open={showCreateBusinessDialog}
             onOpenChange={setShowCreateBusinessDialog}
-            onSuccess={() => profile && loadBusinessProfiles(profile.id)}
+            onSuccess={() => {
+              // Recarregar todos os dados do dashboard para garantir que os novos perfis apareçam
+              if (profile) {
+                loadBusinessProfiles(profile.id);
+              }
+            }}
           />
           <ProfilePhotoUploadDialog
             open={showPhotoUploadDialog}

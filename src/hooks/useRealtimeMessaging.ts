@@ -443,8 +443,24 @@ export const useRealtimeMessaging = ({
 
       console.log('✅ Mensagem inserida no banco:', data.id);
 
-      // O realtime subscription irá substituir a mensagem otimista pela real
-      // Não precisamos fazer isso aqui para evitar flicker
+      // Replace optimistic message with real one immediately (prevents flicker)
+      setMessages(prev => prev.map(msg => 
+        msg.id === tempId
+          ? {
+              id: data.id,
+              sender_id: data.sender_id,
+              sender_name: 'Você',
+              content: data.content,
+              created_at: data.created_at,
+              status: 'moderating',
+              moderation_status: 'pending',
+              media_url: data.media_url,
+              media_type: data.media_type,
+              media_name: data.media_name,
+            }
+          : msg
+      ));
+      removePendingByContent(content.trim());
 
       // Call moderation in background (no await)
       console.log('🚀 Iniciando moderação assíncrona:', data.id);
@@ -582,21 +598,20 @@ export const useRealtimeMessaging = ({
             media_name: newMessage.media_name,
           };
 
-          // If from current user, replace any temp message instead of ignoring
+          // If from current user, replace any temp message or ignore if already replaced
           if (message.sender_id === currentUserId) {
             setMessages(prev => {
-              // Find and replace temp message with real one
-              const hasTempMessage = prev.some(m => m.id.toString().startsWith('temp-'));
-              if (hasTempMessage) {
+              // If the final message is already present, do nothing
+              if (prev.some(m => m.id === message.id)) return prev;
+
+              // Otherwise, replace the optimistic temp message
+              const hasTemp = prev.some(m => m.id.toString().startsWith('temp-'));
+              if (hasTemp) {
                 return prev.map(m => 
                   m.id.toString().startsWith('temp-') && m.content === message.content
-                    ? message 
+                    ? message
                     : m
                 );
-              }
-              // If no temp message, check if real message already exists
-              if (prev.some(m => m.id === message.id)) {
-                return prev;
               }
               return [...prev, message];
             });

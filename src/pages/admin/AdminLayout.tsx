@@ -119,7 +119,7 @@ export default function AdminLayout() {
       <div className="min-h-screen flex w-full bg-background">
         <AdminSidebar />
         <main className="flex-1 overflow-auto">
-          <header className="sticky top-0 z-10 border-b bg-background/80 backdrop-blur-sm">
+          <header className="sticky top-0 z-10 border-b bg-background">
             <div className="flex items-center gap-4 p-4">
               <SidebarTrigger className="hover:bg-accent/50 transition-colors" />
               <div className="flex-1">

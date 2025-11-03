@@ -75,6 +75,13 @@ export default function Messages() {
     document.title = 'Mensagens - Woorkins';
   }, []);
 
+  // Ao trocar para Arquivadas, limpar busca para não esconder resultados
+  useEffect(() => {
+    if (activeFilter === 'archived' && searchQuery) {
+      setSearchQuery('');
+    }
+  }, [activeFilter]);
+
   useEffect(() => {
     if (user && !hasLoadedData.current) {
       hasLoadedData.current = true;

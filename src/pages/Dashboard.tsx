@@ -21,6 +21,7 @@ import { ProfilePhotoUploadDialog } from '@/components/ProfilePhotoUploadDialog'
 import { IdentityVerificationDialog } from '@/components/IdentityVerificationDialog';
 import { CreateBusinessProfileDialog } from '@/components/CreateBusinessProfileDialog';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
+import { useDashboardCache } from '@/hooks/useDashboardCache';
 import { DashboardSkeleton } from '@/components/dashboard/DashboardSkeleton';
 import { CreateStoryDialog } from '@/components/stories/CreateStoryDialog';
 import { HubArticleCard } from '@/components/dashboard/HubArticleCard';
@@ -120,15 +121,18 @@ export default function Dashboard() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { setOnStoryUploaded } = useUpload();
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [businessProfiles, setBusinessProfiles] = useState<BusinessProfile[]>([]);
+  const { data: cachedData, setData: setCachedData, updatePartial, isStale } = useDashboardCache();
+  
+  // Inicializar com cache se disponível
+  const [profile, setProfile] = useState<Profile | null>(cachedData?.profile || null);
+  const [businessProfiles, setBusinessProfiles] = useState<BusinessProfile[]>(cachedData?.businessProfiles || []);
   const [loadingProfile, setLoadingProfile] = useState(true);
-  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [isInitialLoading, setIsInitialLoading] = useState(!cachedData);
   const [loadingMessages, setLoadingMessages] = useState(true);
   const [loadingBalance, setLoadingBalance] = useState(true);
-  const [lastUnreadMessage, setLastUnreadMessage] = useState<string>('');
-  const [woorkoinsBalance, setWoorkoinsBalance] = useState(0);
-  const [availableBalance, setAvailableBalance] = useState(0);
+  const [lastUnreadMessage, setLastUnreadMessage] = useState<string>(cachedData?.lastUnreadMessage || '');
+  const [woorkoinsBalance, setWoorkoinsBalance] = useState(cachedData?.woorkoinsBalance || 0);
+  const [availableBalance, setAvailableBalance] = useState(cachedData?.availableBalance || 0);
   
   // Flag para controlar se os dados já foram carregados
   const hasLoadedData = useRef(false);
@@ -172,12 +176,12 @@ export default function Dashboard() {
   const [newProjectsCount, setNewProjectsCount] = useState(0);
   const [hasPostedStoryToday, setHasPostedStoryToday] = useState(false);
   
-  // Statistics states
-  const [evaluationsGiven, setEvaluationsGiven] = useState(0);
-  const [evaluationsReceived, setEvaluationsReceived] = useState(0);
-  const [followersCount, setFollowersCount] = useState(0);
-  const [followingCount, setFollowingCount] = useState(0);
-  const [loadingStats, setLoadingStats] = useState(true);
+  // Statistics states - inicializar com cache
+  const [evaluationsGiven, setEvaluationsGiven] = useState(cachedData?.evaluationsGiven || 0);
+  const [evaluationsReceived, setEvaluationsReceived] = useState(cachedData?.evaluationsReceived || 0);
+  const [followersCount, setFollowersCount] = useState(cachedData?.followersCount || 0);
+  const [followingCount, setFollowingCount] = useState(cachedData?.followingCount || 0);
+  const [loadingStats, setLoadingStats] = useState(!cachedData);
 
   const handleCreateStoryClick = () => {
     // Verificar se o perfil principal tem foto
@@ -320,7 +324,16 @@ export default function Dashboard() {
   useEffect(() => {
     if (user && !hasLoadedData.current) {
       hasLoadedData.current = true;
-      loadAllDashboardData();
+      
+      // Se tem cache válido, só atualizar em background
+      if (cachedData && !isStale()) {
+        setIsInitialLoading(false);
+        setLoadingProfile(false);
+        loadAllDashboardData(true); // true = background refresh
+      } else {
+        loadAllDashboardData(false); // false = carregamento completo
+      }
+      
       checkEmailConfirmation();
     }
   }, [user]);
@@ -422,8 +435,10 @@ export default function Dashboard() {
           ? lastMessage.content.substring(0, 50) + '...'
           : lastMessage.content;
         setLastUnreadMessage(preview);
+        updatePartial('lastUnreadMessage', preview);
       } else {
         setLastUnreadMessage('');
+        updatePartial('lastUnreadMessage', '');
       }
     } catch (error) {
       console.error('Error loading last unread message:', error);
@@ -440,10 +455,13 @@ export default function Dashboard() {
   };
   
   // Consolidar todo o carregamento de dados em uma única função otimizada com carregamento progressivo
-  const loadAllDashboardData = async () => {
+  const loadAllDashboardData = async (backgroundRefresh = false) => {
     if (!user) return;
     
-    setLoadingProfile(true);
+    if (!backgroundRefresh) {
+      setLoadingProfile(true);
+    }
+    
     try {
       // FASE 1: Carregar apenas dados essenciais para mostrar o dashboard imediatamente
       const { getOrCreateUserProfile } = await import('@/lib/profiles');
@@ -464,7 +482,13 @@ export default function Dashboard() {
       setProfile(profileData);
       
       // Carregar perfis de negócio imediatamente
-      await loadBusinessProfiles(profileData.id);
+      const businessData = await loadBusinessProfiles(profileData.id);
+      
+      // Atualizar cache com dados essenciais
+      setCachedData({
+        profile: profileData,
+        businessProfiles: businessData,
+      });
       
       // REMOVER SKELETON LOADER IMEDIATAMENTE - Dashboard já pode ser exibido!
       setLoadingProfile(false);
@@ -679,6 +703,7 @@ export default function Dashboard() {
       if (!error && data) {
         const total = data.reduce((sum: number, r: any) => sum + (r.balance || 0), 0);
         setWoorkoinsBalance(total);
+        updatePartial('woorkoinsBalance', total);
       }
       
       // Carregar saldo disponível do freelancer_wallet
@@ -690,6 +715,7 @@ export default function Dashboard() {
       if (walletData) {
         const totalAvailable = walletData.reduce((sum: number, w: any) => sum + (w.available_balance || 0), 0);
         setAvailableBalance(totalAvailable);
+        updatePartial('availableBalance', totalAvailable);
       }
     } catch (error) {
       console.error('Error loading woorkoins balance:', error);
@@ -754,9 +780,12 @@ export default function Dashboard() {
     
     if (!error && data) {
       console.log('✅ Perfis profissionais carregados:', data);
-      setBusinessProfiles(data as unknown as BusinessProfile[]);
+      const businessData = data as unknown as BusinessProfile[];
+      setBusinessProfiles(businessData);
+      return businessData;
     } else {
       console.error('❌ Erro ao carregar perfis profissionais:', error);
+      return [];
     }
   };
 
@@ -792,10 +821,20 @@ export default function Dashboard() {
           .in('follower_id', profileIds)
       ]);
 
-      setEvaluationsGiven(evaluationsGivenData.count || 0);
-      setEvaluationsReceived(evaluationsReceivedData.count || 0);
-      setFollowersCount(followersData.count || 0);
-      setFollowingCount(followingData.count || 0);
+      const stats = {
+        evaluationsGiven: evaluationsGivenData.count || 0,
+        evaluationsReceived: evaluationsReceivedData.count || 0,
+        followersCount: followersData.count || 0,
+        followingCount: followingData.count || 0,
+      };
+      
+      setEvaluationsGiven(stats.evaluationsGiven);
+      setEvaluationsReceived(stats.evaluationsReceived);
+      setFollowersCount(stats.followersCount);
+      setFollowingCount(stats.followingCount);
+      
+      // Atualizar cache
+      setCachedData(stats);
     } catch (error) {
       console.error('Error loading statistics:', error);
       setEvaluationsGiven(0);

@@ -1268,7 +1268,7 @@ export default function Dashboard() {
 
           {/* Sidebar */}
           <div className="lg:col-span-4 space-y-4">
-            {/* Personal Profile Card */}
+            {/* All Profiles Card (Personal + Professional) */}
             <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 shadow-sm border-2 border-blue-200">
               <CardHeader className="border-b border-blue-200 p-4 bg-white/50">
                 <div className="flex items-center justify-between">
@@ -1283,7 +1283,8 @@ export default function Dashboard() {
                   </Button>
                 </div>
               </CardHeader>
-              <CardContent className="p-4">
+              <CardContent className="p-4 space-y-3">
+                {/* Personal Profile */}
                 <div className="flex items-center gap-3 p-3 rounded-lg border-2 border-blue-300 bg-white hover:shadow-md transition-all">
                   <Avatar className="h-10 w-10 border-2 border-blue-400">
                     {profile?.avatar_url ? (
@@ -1317,70 +1318,50 @@ export default function Dashboard() {
                     </Link>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
 
-            {/* Professional Profiles Card */}
-            <Card className="bg-white shadow-sm border border-slate-200">
-              <CardHeader className="border-b border-slate-100 p-4">
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 bg-primary/10 rounded-lg flex items-center justify-center">
-                    <Building2 className="w-4 h-4 text-primary" />
+                {/* Professional Profiles */}
+                {businessProfiles.map((business) => (
+                  <div 
+                    key={business.id} 
+                    className="flex items-center gap-3 p-3 rounded-lg border-2 border-blue-300 bg-white hover:shadow-md transition-all"
+                  >
+                    {business.logo_url ? (
+                      <Avatar className="h-10 w-10 border-2 border-blue-400">
+                        <AvatarImage src={business.logo_url} alt={business.company_name} />
+                      </Avatar>
+                    ) : (
+                      <Avatar className="h-10 w-10 border-2 border-blue-400">
+                        <AvatarFallback className="bg-blue-100 text-blue-700">
+                          <Building2 className="w-5 h-5" />
+                        </AvatarFallback>
+                      </Avatar>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-sm font-semibold text-slate-900 truncate">
+                        {business.company_name}
+                      </h4>
+                      <p className="text-xs text-slate-600 truncate">
+                        @{(business as any).username || business.slug}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <Link to={`/${(business as any).username || business.slug || business.id}`}>
+                        <Button variant="outline" size="sm" className="h-7 w-7 p-0 border-blue-400 text-blue-600 hover:bg-blue-50">
+                          <Eye className="w-3.5 h-3.5" />
+                        </Button>
+                      </Link>
+                      <Link to={`/settings/profile/${business.id}`}>
+                        <Button 
+                          variant="default" 
+                          size="sm" 
+                          className="text-xs h-7 px-2 bg-blue-500 hover:bg-blue-600"
+                        >
+                          Editar
+                        </Button>
+                      </Link>
+                    </div>
                   </div>
-                  <h3 className="text-base font-bold text-slate-900">Perfis Profissionais</h3>
-                </div>
-              </CardHeader>
-              <CardContent className="p-4">
-                {businessProfiles.length === 0 ? (
-                  <div className="text-center py-6">
-                    <Building2 className="w-12 h-12 text-slate-300 mx-auto mb-2" />
-                    <p className="text-sm text-slate-600 mb-3">Você pode criar outros perfis profissionais</p>
-                    <Button variant="default" size="sm" onClick={() => setShowCreateBusinessDialog(true)}>
-                      Criar novo perfil
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {businessProfiles.map((business) => (
-                      <div 
-                        key={business.id} 
-                        className="flex items-center gap-3 p-3 rounded-lg border border-slate-100 bg-white hover:shadow-sm transition-all"
-                      >
-                        {business.logo_url ? (
-                          <img 
-                            src={business.logo_url} 
-                            alt={business.company_name}
-                            className="w-10 h-10 rounded-lg object-cover flex-shrink-0"
-                          />
-                        ) : (
-                          <div className="w-10 h-10 bg-slate-200 rounded-lg flex items-center justify-center flex-shrink-0">
-                            <Building2 className="w-5 h-5 text-slate-500" />
-                          </div>
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <h4 className="text-sm font-semibold text-slate-900 truncate">
-                            {business.company_name}
-                          </h4>
-                          <p className="text-xs text-slate-600 truncate">
-                            @{(business as any).username || business.slug}
-                          </p>
-                        </div>
-                        <div className="flex gap-2 flex-shrink-0">
-                          <Link to={`/${(business as any).username || business.slug || business.id}`}>
-                            <Button variant="outline" size="sm" className="h-7 w-7 p-0">
-                              <Eye className="w-3.5 h-3.5" />
-                            </Button>
-                          </Link>
-                          <Link to={`/settings/profile/${business.id}`}>
-                            <Button variant="default" size="sm" className="text-xs h-7 px-3">
-                              Editar
-                            </Button>
-                          </Link>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                ))}
               </CardContent>
             </Card>
 

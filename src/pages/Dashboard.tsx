@@ -1168,22 +1168,6 @@ export default function Dashboard() {
               </Card>
             )}
 
-            {/* Stories Carousel */}
-            {profile && (
-              <Suspense fallback={<Skeleton className="h-24 w-full" />}>
-                <StoriesCarousel
-                  key={storiesRefreshTrigger}
-                  currentProfile={{
-                    id: profile.id,
-                    username: profile.username,
-                    full_name: profile.full_name || '',
-                    avatar_url: profile.avatar_url || undefined,
-                  }}
-                  onCreateStory={handleCreateStoryClick}
-                />
-              </Suspense>
-            )}
-
             {/* Action Cards Grid */}
             <div className="grid grid-cols-2 gap-4">
               <Card 

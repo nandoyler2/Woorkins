@@ -149,7 +149,7 @@ export const Header = () => {
               <DropdownMenuTrigger asChild>
                 <Link 
                   to="/projetos"
-                  className="flex items-center gap-2 transition-colors pb-1 border-b-2 border-transparent relative"
+                  className="flex items-center gap-2 transition-colors pb-1 border-b-2 border-transparent"
                   onMouseEnter={() => setProjectsOpen(true)}
                   onMouseLeave={() => setProjectsOpen(false)}
                 >
@@ -167,10 +167,10 @@ export const Header = () => {
                   <span className="font-bold bg-gradient-to-r from-blue-500 to-teal-500 bg-clip-text text-transparent">Projetos</span>
                   
                   {newProjectsCount > 0 && (
-                    <div className="absolute -top-2 -right-2 animate-in fade-in zoom-in duration-300">
+                    <div className="animate-in fade-in zoom-in duration-300">
                       <div className="relative">
                         <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-teal-500 rounded-full blur-sm animate-pulse"></div>
-                        <div className="relative bg-gradient-to-r from-blue-500 to-teal-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg whitespace-nowrap animate-bounce">
+                        <div className="relative bg-gradient-to-r from-blue-500 to-teal-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg whitespace-nowrap">
                           {newProjectsCount} {newProjectsCount === 1 ? 'novo' : 'novos'}
                         </div>
                       </div>

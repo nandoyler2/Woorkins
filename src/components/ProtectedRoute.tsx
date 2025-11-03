@@ -28,25 +28,25 @@ export const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRout
         const checks = await Promise.all([
           // Verificar email confirmado
           supabase.auth.getUser(),
-          // Verificar perfil completo (se não for /welcome)
-          location.pathname !== '/welcome' 
-            ? supabase
-                .from('profiles')
-                .select('username, category')
-                .eq('user_id', user.id)
-                .eq('profile_type', 'user')
-                .limit(1)
-            : Promise.resolve({ data: null, error: null }),
           // Verificar admin (se necessário)
           requireAdmin
             ? supabase.rpc('has_role', {
                 _user_id: user.id,
                 _role: 'admin'
               })
+            : Promise.resolve({ data: null, error: null }),
+          // Verificar perfil completo (se não for /welcome e não for admin)
+          (location.pathname !== '/welcome' && !requireAdmin)
+            ? supabase
+                .from('profiles')
+                .select('username, category')
+                .eq('user_id', user.id)
+                .eq('profile_type', 'user')
+                .maybeSingle()
             : Promise.resolve({ data: null, error: null })
         ]);
 
-        const [authResult, profileResult, adminResult] = checks;
+        const [authResult, adminResult, profileResult] = checks;
 
         // Email confirmado
         const confirmed = Boolean(
@@ -55,20 +55,21 @@ export const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRout
         );
         setEmailConfirmed(confirmed);
 
-        // Perfil completo
-        if (location.pathname !== '/welcome' && confirmed) {
-          const profiles = profileResult.data as any[];
-          const hasValidUsername = profiles && profiles.length > 0 && 
-            profiles[0].username && profiles[0].username.length >= 3;
-          const hasCategory = profiles && profiles.length > 0 && profiles[0].category;
-          setProfileComplete(Boolean(hasValidUsername && hasCategory));
-        } else {
-          setProfileComplete(true);
-        }
-
         // Admin
         if (requireAdmin) {
           setIsAdmin(Boolean(adminResult.data));
+          setProfileComplete(true); // Admin não precisa verificar perfil completo
+        } else {
+          // Perfil completo (apenas para não-admin)
+          if (location.pathname !== '/welcome' && confirmed) {
+            const profile = profileResult.data as any;
+            const hasValidUsername = profile && 
+              profile.username && profile.username.length >= 3;
+            const hasCategory = profile && profile.category;
+            setProfileComplete(Boolean(hasValidUsername && hasCategory));
+          } else {
+            setProfileComplete(true);
+          }
         }
       } catch (error) {
         console.error('Error checking user status:', error);

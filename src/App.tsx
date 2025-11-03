@@ -145,31 +145,28 @@ function AppContent() {
           <Route path="/:slug/agendamento" element={<ProtectedRoute><UserAppointmentBooking /></ProtectedRoute>} />
           <Route path="/:slug/*" element={<ProfileRouter />} />
 
+          <Route path="/admin" element={<ProtectedRoute requireAdmin><AdminLayout /></ProtectedRoute>}>
+            <Route index element={<Admin />} />
+            <Route path="usuarios" element={<UsersManagement />} />
+            <Route path="usuarios/:userId/mensagens" element={<UserMessages />} />
+            <Route path="moderacao" element={<ModerationManagement />} />
+            <Route path="perfis-profissionais" element={<AdminBusinesses />} />
+            <Route path="conteudo" element={<ContentManagement />} />
+            <Route path="financeiro" element={<FinancialManagement />} />
+            <Route path="saques" element={<WithdrawalRequests />} />
+            <Route path="suporte" element={<AdminSupport />} />
+            <Route path="planos" element={<PlansSettings />} />
+            <Route path="analises" element={<AdminAnalytics />} />
+            <Route path="relatorios" element={<AdminReports />} />
+            <Route path="artigos-hub" element={<HubArticles />} />
+            <Route path="paginas-legais" element={<LegalPages />} />
+            <Route path="configuracoes" element={<SettingsManagement />} />
+            <Route path="ia" element={<AISettings />} />
+          </Route>
+
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>
-      
-      {/* Rotas Admin - Navegação instantânea sem Suspense */}
-      <Routes>
-        <Route path="/admin" element={<ProtectedRoute requireAdmin><AdminLayout /></ProtectedRoute>}>
-          <Route index element={<Admin />} />
-          <Route path="usuarios" element={<UsersManagement />} />
-          <Route path="moderacao" element={<ModerationManagement />} />
-          <Route path="perfis-profissionais" element={<AdminBusinesses />} />
-          <Route path="conteudo" element={<ContentManagement />} />
-          <Route path="financeiro" element={<FinancialManagement />} />
-          <Route path="saques" element={<WithdrawalRequests />} />
-          <Route path="suporte" element={<AdminSupport />} />
-          <Route path="planos" element={<PlansSettings />} />
-          <Route path="analises" element={<AdminAnalytics />} />
-          <Route path="relatorios" element={<AdminReports />} />
-          <Route path="artigos-hub" element={<HubArticles />} />
-          <Route path="paginas-legais" element={<LegalPages />} />
-          <Route path="configuracoes" element={<SettingsManagement />} />
-          <Route path="ia" element={<AISettings />} />
-          <Route path="mensagens-usuarios" element={<UserMessages />} />
-        </Route>
-      </Routes>
       
       <AuthDialog />
       <AIAssistant />

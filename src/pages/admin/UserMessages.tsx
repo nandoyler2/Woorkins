@@ -70,9 +70,18 @@ export default function UserMessages() {
         .from('profiles')
         .select('*')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
+      if (!data) {
+        toast({
+          title: 'Perfil não encontrado',
+          description: 'Não foi possível encontrar o perfil do usuário',
+          variant: 'destructive'
+        });
+        navigate('/admin/usuarios');
+        return;
+      }
       setUser(data);
     } catch (error: any) {
       toast({
@@ -362,7 +371,7 @@ export default function UserMessages() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate('/admin/users')}
+            onClick={() => navigate('/admin/usuarios')}
           >
             <ArrowLeft className="h-5 w-5" />
           </Button>
@@ -473,7 +482,7 @@ export default function UserMessages() {
                                   className={`flex gap-2 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}
                                 >
                                   <a
-                                    href={`/admin/users/${senderProfileId}`}
+                                    href={`/admin/usuarios/${senderProfileId}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="flex-shrink-0 hover:opacity-80 transition-opacity"
@@ -487,7 +496,7 @@ export default function UserMessages() {
                                   
                                   <div className={`flex flex-col ${isUser ? 'items-end' : 'items-start'}`}>
                                     <a
-                                      href={`/admin/users/${senderProfileId}`}
+                                      href={`/admin/usuarios/${senderProfileId}`}
                                       target="_blank"
                                       rel="noopener noreferrer"
                                       className="text-xs font-medium mb-1 hover:underline"
@@ -571,7 +580,7 @@ export default function UserMessages() {
                                   className={`flex gap-2 ${isFreelancer ? 'flex-row-reverse' : 'flex-row'}`}
                                 >
                                   <a
-                                    href={`/admin/users/${senderProfileId}`}
+                                    href={`/admin/usuarios/${senderProfileId}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="flex-shrink-0 hover:opacity-80 transition-opacity"
@@ -585,7 +594,7 @@ export default function UserMessages() {
                                   
                                   <div className={`flex flex-col ${isFreelancer ? 'items-end' : 'items-start'}`}>
                                     <a
-                                      href={`/admin/users/${senderProfileId}`}
+                                      href={`/admin/usuarios/${senderProfileId}`}
                                       target="_blank"
                                       rel="noopener noreferrer"
                                       className="text-xs font-medium mb-1 hover:underline"

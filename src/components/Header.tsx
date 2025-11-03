@@ -225,7 +225,7 @@ export const Header = () => {
 
         <div className="flex items-center gap-3">
           {isAdmin && activeSupportCount > 0 && (
-            <Link to="/admin/support" className="relative">
+            <Link to="/admin/suporte" className="relative">
               <Button 
                 variant="ghost" 
                 size="icon"

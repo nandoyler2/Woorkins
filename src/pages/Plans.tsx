@@ -292,8 +292,8 @@ export default function Plans() {
                   <div className="space-y-2">
                     <div className="flex items-start gap-3">
                       <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
-                      <span className="text-sm text-foreground">
-                        Taxa de recebimento: <span className="font-semibold">{plan.commission_percentage}%</span>
+                      <span className="text-base text-foreground font-bold">
+                        {plan.commission_percentage}% de taxa de intermediação
                       </span>
                     </div>
                     {plan.slug === 'pro' && <div className="flex items-start gap-3">

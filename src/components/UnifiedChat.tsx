@@ -976,9 +976,10 @@ export function UnifiedChat({
     
     return (
       <div
-        className={`flex gap-2 group ${
+        className={`flex gap-2 mb-1 group ${
           isMine ? 'flex-row-reverse' : 'flex-row'
         }`}
+        onClick={() => showTimestamp(`activity-${activity.id}`)}
       >
         {!isMine && (
           <Avatar className="h-8 w-8 flex-shrink-0">
@@ -1079,33 +1080,34 @@ export function UnifiedChat({
               </div>
             )}
           </div>
-          
-          <div className={`flex items-center gap-1.5 mt-1 ${isMine ? 'flex-row-reverse' : 'flex-row'}`}>
-            <span className="text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-              {(() => {
-                const messageDate = new Date(created_at);
-                const now = new Date();
-                const diffInHours = (now.getTime() - messageDate.getTime()) / (1000 * 60 * 60);
-                
-                // Após 24h, mostra data e hora exata
-                if (diffInHours > 24) {
-                  return messageDate.toLocaleString('pt-BR', {
-                    day: '2-digit',
-                    month: '2-digit',
-                    year: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  });
-                }
-                
-                // Antes de 24h, mostra tempo relativo
-                return formatDistanceToNow(messageDate, {
-                  addSuffix: true,
-                  locale: ptBR,
+        </div>
+        
+        {/* Timestamp fora da caixa - só no hover */}
+        <div className={`flex items-center gap-1 ${isMine ? 'flex-row-reverse mr-2' : 'ml-2'} ${visibleTimestamps[`activity-${activity.id}`] ? 'opacity-100' : 'opacity-0'} group-hover:opacity-100 transition-opacity duration-200`}>
+          <span className="text-xs text-muted-foreground whitespace-nowrap">
+            {(() => {
+              const messageDate = new Date(created_at);
+              const now = new Date();
+              const diffInHours = (now.getTime() - messageDate.getTime()) / (1000 * 60 * 60);
+              
+              // Após 24h, mostra data e hora exata
+              if (diffInHours > 24) {
+                return messageDate.toLocaleString('pt-BR', {
+                  day: '2-digit',
+                  month: '2-digit',
+                  year: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
                 });
-              })()}
-            </span>
-          </div>
+              }
+              
+              // Antes de 24h, mostra tempo relativo
+              return formatDistanceToNow(messageDate, {
+                addSuffix: true,
+                locale: ptBR,
+              });
+            })()}
+          </span>
         </div>
       </div>
     );

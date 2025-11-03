@@ -1,16 +1,14 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { BarChart3, MessageCircleQuestion, Smile, MapPin, Link as LinkIcon, ImageIcon } from 'lucide-react';
+import { BarChart3, Smile, MapPin, Link as LinkIcon } from 'lucide-react';
 import { PollStickerDialog } from './stickers/PollStickerDialog';
-import { QuestionStickerDialog } from './stickers/QuestionStickerDialog';
 import { EmojiStickerDialog } from './stickers/EmojiStickerDialog';
 import { LocationStickerDialog } from './stickers/LocationStickerDialog';
 import { LinkStickerDialog } from './stickers/LinkStickerDialog';
-import { ImageStickerDialog } from './stickers/ImageStickerDialog';
 
 export interface Sticker {
   id: string;
-  type: 'poll' | 'question' | 'emoji' | 'location' | 'link' | 'image';
+  type: 'poll' | 'emoji' | 'location' | 'link';
   position_x: number;
   position_y: number;
   width: number;
@@ -35,8 +33,8 @@ export const StoryStickers = ({ stickers, onAddSticker, onRemoveSticker }: Story
       type: type as any,
       position_x: 50,
       position_y: 50,
-      width: type === 'image' ? 30 : 40,
-      height: type === 'image' ? 30 : 20,
+      width: 40,
+      height: 20,
       rotation: 0,
       content,
       scale: 1
@@ -55,14 +53,6 @@ export const StoryStickers = ({ stickers, onAddSticker, onRemoveSticker }: Story
         >
           <BarChart3 className="w-4 h-4 mr-2" />
           Enquete
-        </Button>
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => setActiveStickerDialog('question')}
-        >
-          <MessageCircleQuestion className="w-4 h-4 mr-2" />
-          Pergunta
         </Button>
         <Button
           size="sm"
@@ -88,25 +78,12 @@ export const StoryStickers = ({ stickers, onAddSticker, onRemoveSticker }: Story
           <LinkIcon className="w-4 h-4 mr-2" />
           Link
         </Button>
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => setActiveStickerDialog('image')}
-        >
-          <ImageIcon className="w-4 h-4 mr-2" />
-          Imagem
-        </Button>
       </div>
 
       <PollStickerDialog
         open={activeStickerDialog === 'poll'}
         onClose={() => setActiveStickerDialog(null)}
         onSave={(content) => handleAddSticker('poll', content)}
-      />
-      <QuestionStickerDialog
-        open={activeStickerDialog === 'question'}
-        onClose={() => setActiveStickerDialog(null)}
-        onSave={(content) => handleAddSticker('question', content)}
       />
       <EmojiStickerDialog
         open={activeStickerDialog === 'emoji'}
@@ -122,11 +99,6 @@ export const StoryStickers = ({ stickers, onAddSticker, onRemoveSticker }: Story
         open={activeStickerDialog === 'link'}
         onClose={() => setActiveStickerDialog(null)}
         onSave={(content) => handleAddSticker('link', content)}
-      />
-      <ImageStickerDialog
-        open={activeStickerDialog === 'image'}
-        onClose={() => setActiveStickerDialog(null)}
-        onSave={(content) => handleAddSticker('image', content)}
       />
     </>
   );

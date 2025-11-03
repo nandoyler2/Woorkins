@@ -104,7 +104,6 @@ export const InteractiveStickerRenderer = ({
     left: `${sticker.position_x}%`,
     top: `${sticker.position_y}%`,
     transform: `translate(-50%, -50%) scale(${sticker.scale || 1})`,
-    width: sticker.type === 'image' ? `${sticker.width}%` : 'auto',
     zIndex: 40,
     pointerEvents: (isPreview ? 'none' : 'auto'),
   };
@@ -157,28 +156,6 @@ export const InteractiveStickerRenderer = ({
           </div>
         );
 
-      case 'question':
-        return (
-          <div style={style} className={containerClass}>
-            <div className="bg-black/60 backdrop-blur-md border border-white/20 rounded-2xl p-4 min-w-[200px]">
-              <p className="text-white font-bold text-sm mb-2">{sticker.content.text}</p>
-              {!isPreview && (
-                <input
-                  type="text"
-                  placeholder={sticker.content.placeholder}
-                  className="w-full px-3 py-2 rounded-full bg-white/20 text-white placeholder:text-white/60 text-xs"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && e.currentTarget.value && !hasResponded) {
-                      handleResponse({ answer: e.currentTarget.value });
-                    }
-                  }}
-                  disabled={hasResponded}
-                />
-              )}
-            </div>
-          </div>
-        );
-
       case 'emoji':
         return (
           <div 
@@ -214,22 +191,6 @@ export const InteractiveStickerRenderer = ({
               <span className="text-white text-sm font-medium">{sticker.content.title}</span>
             </div>
           </a>
-        );
-
-      case 'image':
-        const imageSrc =
-          (sticker as any)?.content?.imageUrl || (sticker as any)?.content?.url || (sticker as any)?.content?.image_url || '';
-        console.log('🎨 Renderizando sticker de imagem:', imageSrc?.substring(0, 50) + '...');
-        return (
-          <div style={style} className={containerClass}>
-            <img
-              src={imageSrc}
-              alt="Sticker"
-              className="w-full h-auto rounded-lg shadow-lg"
-              onLoad={() => console.log('✅ Imagem do sticker carregada com sucesso')}
-              onError={(e) => console.error('❌ Erro ao carregar imagem do sticker:', e)}
-            />
-          </div>
         );
 
       default:

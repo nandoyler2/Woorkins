@@ -533,7 +533,7 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
                                     key={sticker.id}
                                     className="flex items-center gap-1 bg-background px-2 py-1 rounded text-xs"
                                   >
-                                    <span className="capitalize">{sticker.type === 'poll' ? 'Enquete' : sticker.type === 'question' ? 'Pergunta' : sticker.type === 'emoji' ? 'Emoji' : sticker.type === 'location' ? 'Local' : 'Link'}</span>
+                                    <span className="capitalize">{sticker.type === 'poll' ? 'Enquete' : sticker.type === 'emoji' ? 'Emoji' : sticker.type === 'location' ? 'Local' : 'Link'}</span>
                                     <button
                                       onClick={() => handleRemoveSticker(sticker.id)}
                                       className="text-destructive hover:text-destructive/80"
@@ -644,7 +644,7 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
                                       key={sticker.id}
                                       className="flex items-center gap-1 bg-background px-2 py-1 rounded text-xs"
                                     >
-                                      <span className="capitalize">{sticker.type === 'poll' ? 'Enquete' : sticker.type === 'question' ? 'Pergunta' : sticker.type === 'emoji' ? 'Emoji' : sticker.type === 'location' ? 'Local' : sticker.type === 'image' ? 'Imagem' : 'Link'}</span>
+                                      <span className="capitalize">{sticker.type === 'poll' ? 'Enquete' : sticker.type === 'emoji' ? 'Emoji' : sticker.type === 'location' ? 'Local' : 'Link'}</span>
                                       <button
                                         onClick={() => handleRemoveSticker(sticker.id)}
                                         className="text-destructive hover:text-destructive/80"
@@ -769,7 +769,6 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
                                 left: `${sticker.position_x}%`,
                                 top: `${sticker.position_y}%`,
                                 transform: `translate(-50%, -50%) scale(${sticker.scale || 1})`,
-                                width: sticker.type === 'image' ? `${sticker.width}%` : 'auto',
                               }}
                               onMouseDown={() => handleDragStart(`sticker-${sticker.id}`)}
                               onWheel={(e) => {
@@ -780,14 +779,7 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
                                 });
                               }}
                             >
-                              {sticker.type === 'image' ? (
-                                <img
-                                  src={sticker.content.imageUrl}
-                                  alt="Sticker"
-                                  className="w-full h-auto rounded-lg shadow-lg"
-                                  style={{ pointerEvents: 'none' }}
-                                />
-                              ) : sticker.type === 'poll' ? (
+                              {sticker.type === 'poll' ? (
                                 <div className="bg-black/60 backdrop-blur-md border border-white/20 rounded-2xl p-4 min-w-[200px]">
                                   <p className="text-white font-bold text-sm mb-3">{sticker.content.question}</p>
                                   <div className="space-y-2">
@@ -800,16 +792,6 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
                                       </div>
                                     ))}
                                   </div>
-                                </div>
-                              ) : sticker.type === 'question' ? (
-                                <div className="bg-black/60 backdrop-blur-md border border-white/20 rounded-2xl p-4 min-w-[200px]">
-                                  <p className="text-white font-bold text-sm mb-2">{sticker.content.text}</p>
-                                  <input
-                                    type="text"
-                                    placeholder={sticker.content.placeholder}
-                                    className="w-full px-3 py-2 rounded-full bg-white/20 text-white placeholder:text-white/60 text-xs"
-                                    disabled
-                                  />
                                 </div>
                               ) : sticker.type === 'emoji' ? (
                                 <span className="text-4xl hover:scale-110 transition">{sticker.content.emoji}</span>
@@ -879,7 +861,6 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
                                 left: `${sticker.position_x}%`,
                                 top: `${sticker.position_y}%`,
                                 transform: `translate(-50%, -50%) scale(${sticker.scale || 1})`,
-                                width: sticker.type === 'image' ? `${sticker.width}%` : 'auto',
                               }}
                               onMouseDown={() => handleDragStart(`sticker-${sticker.id}`)}
                               onWheel={(e) => {
@@ -890,14 +871,7 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
                                 });
                               }}
                             >
-                              {sticker.type === 'image' ? (
-                                <img
-                                  src={sticker.content.imageUrl}
-                                  alt="Sticker"
-                                  className="w-full h-auto rounded-lg shadow-lg"
-                                  style={{ pointerEvents: 'none' }}
-                                />
-                              ) : sticker.type === 'poll' ? (
+                              {sticker.type === 'poll' ? (
                                 <div className="bg-black/60 backdrop-blur-md border border-white/20 rounded-2xl p-4 min-w-[200px]">
                                   <p className="text-white font-bold text-sm mb-3">{sticker.content.question}</p>
                                   <div className="space-y-2">
@@ -910,16 +884,6 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
                                       </div>
                                     ))}
                                   </div>
-                                </div>
-                              ) : sticker.type === 'question' ? (
-                                <div className="bg-black/60 backdrop-blur-md border border-white/20 rounded-2xl p-4 min-w-[200px]">
-                                  <p className="text-white font-bold text-sm mb-2">{sticker.content.text}</p>
-                                  <input
-                                    type="text"
-                                    placeholder={sticker.content.placeholder}
-                                    className="w-full px-3 py-2 rounded-full bg-white/20 text-white placeholder:text-white/60 text-xs"
-                                    disabled
-                                  />
                                 </div>
                               ) : sticker.type === 'emoji' ? (
                                 <span className="text-4xl hover:scale-110 transition">{sticker.content.emoji}</span>

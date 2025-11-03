@@ -28,6 +28,7 @@ export default function ProfileRouter() {
         .select('id, slug, username')
         .eq('profile_type', 'business')
         .or(`slug.eq.${slug},username.eq.${slug}`)
+        .or('deleted.is.null,deleted.eq.false')
         .maybeSingle();
 
       if (businessError) {
@@ -47,6 +48,7 @@ export default function ProfileRouter() {
         .select('id, username')
         .eq('username', slug)
         .eq('profile_type', 'user')
+        .or('deleted.is.null,deleted.eq.false')
         .maybeSingle();
 
       if (userError) {
@@ -66,6 +68,7 @@ export default function ProfileRouter() {
         .select('id, username, slug')
         .eq('username', slug)
         .eq('profile_type', 'business')
+        .or('deleted.is.null,deleted.eq.false')
         .maybeSingle();
 
       if (legacyError) {

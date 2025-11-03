@@ -62,14 +62,6 @@ export function ProjectFilters({
 
       <Separator />
 
-      {/* Habilidades */}
-      <div>
-        <h3 className="font-semibold mb-3">Habilidades</h3>
-        <Input placeholder="Digite uma habilidade" />
-      </div>
-
-      <Separator />
-
       {/* Data de Publicação */}
       <div>
         <h3 className="font-semibold mb-3">Data de publicação</h3>

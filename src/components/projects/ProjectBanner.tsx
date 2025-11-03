@@ -85,12 +85,13 @@ export function ProjectBanner() {
         >
           <Button
             variant="ghost"
-            size="icon"
-            className="absolute top-2 right-2 text-white hover:bg-white/20"
+            size="sm"
+            className="absolute top-2 right-2 text-white hover:bg-white/20 gap-1"
             onClick={handleMinimize}
             title="Minimizar"
           >
-            <Minus className="h-4 w-4" />
+            <Minus className="h-3 w-3" />
+            <span className="text-[10px]">Fechar</span>
           </Button>
           
           <div className="flex items-center justify-between pr-8">
@@ -143,12 +144,13 @@ export function ProjectBanner() {
         >
           <Button
             variant="ghost"
-            size="icon"
-            className="absolute top-2 right-2 text-white hover:bg-white/20"
+            size="sm"
+            className="absolute top-2 right-2 text-white hover:bg-white/20 gap-1"
             onClick={handleMinimize}
             title="Minimizar"
           >
-            <Minus className="h-4 w-4" />
+            <Minus className="h-3 w-3" />
+            <span className="text-[10px]">Fechar</span>
           </Button>
           
           <div className="flex items-center justify-between pr-8">
@@ -183,12 +185,13 @@ export function ProjectBanner() {
     >
       <Button
         variant="ghost"
-        size="icon"
-        className="absolute top-2 right-2 text-white hover:bg-white/20"
+        size="sm"
+        className="absolute top-2 right-2 text-white hover:bg-white/20 gap-1"
         onClick={handleMinimize}
         title="Minimizar"
       >
-        <Minus className="h-4 w-4" />
+        <Minus className="h-3 w-3" />
+        <span className="text-[10px]">Fechar</span>
       </Button>
       
       <div className="flex items-center justify-between pr-8">

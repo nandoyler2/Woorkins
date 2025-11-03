@@ -123,6 +123,7 @@ export default function Dashboard() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [businessProfiles, setBusinessProfiles] = useState<BusinessProfile[]>([]);
   const [loadingProfile, setLoadingProfile] = useState(true);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [loadingMessages, setLoadingMessages] = useState(true);
   const [loadingBalance, setLoadingBalance] = useState(true);
   const [lastUnreadMessage, setLastUnreadMessage] = useState<string>('');
@@ -454,6 +455,7 @@ export default function Dashboard() {
           description: 'Não foi possível criar seu perfil. Tente fazer logout e login novamente.',
           variant: 'destructive',
         });
+        setIsInitialLoading(false);
         return;
       }
 
@@ -466,6 +468,7 @@ export default function Dashboard() {
       
       // REMOVER SKELETON LOADER IMEDIATAMENTE - Dashboard já pode ser exibido!
       setLoadingProfile(false);
+      setIsInitialLoading(false);
       
       // FASE 2: Carregar o resto dos dados em background (não bloqueia a UI)
       const allProfileIds = profiles.map((p: any) => p.id);
@@ -495,6 +498,7 @@ export default function Dashboard() {
         variant: 'destructive',
       });
       setLoadingProfile(false);
+      setIsInitialLoading(false);
     }
   };
 
@@ -1016,7 +1020,7 @@ export default function Dashboard() {
     <div className="min-h-screen bg-slate-50">
       <Header />
       
-      {loadingProfile ? (
+      {isInitialLoading ? (
         <DashboardSkeleton />
       ) : (
         <div className="container mx-auto px-4 py-6 max-w-7xl">

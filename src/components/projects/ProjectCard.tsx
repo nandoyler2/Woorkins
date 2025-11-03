@@ -313,7 +313,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
       </div>
 
       {/* Header com gradiente sutil */}
-      <div className="flex justify-between items-start mb-3 pb-3 border-b border-gradient-to-r from-transparent via-border to-transparent">
+      <div className="flex justify-between items-start mb-2 pb-2 border-b border-gradient-to-r from-transparent via-border to-transparent">
         <Link to={`/projetos/${project.id}`} className="flex-1">
           <h3 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-teal-600 bg-clip-text text-transparent hover:from-blue-700 hover:to-teal-700 transition-all">
             {project.title}
@@ -368,12 +368,14 @@ export function ProjectCard({ project }: ProjectCardProps) {
       </div>
 
       {/* Description */}
-      <p className="text-sm text-foreground/80 mb-4 leading-relaxed">
-        {truncateDescription(project.description)}
-        <Link to={`/projetos/${project.id}`} className="text-primary hover:underline ml-1">
+      <div className="mb-4">
+        <p className="text-sm text-foreground/80 leading-relaxed mb-1">
+          {truncateDescription(project.description)}
+        </p>
+        <Link to={`/projetos/${project.id}`} className="text-primary hover:underline text-sm">
           Ver mais detalhes
         </Link>
-      </p>
+      </div>
 
       {/* Skills/Tags com gradiente */}
       {project.skills && project.skills.length > 0 && (

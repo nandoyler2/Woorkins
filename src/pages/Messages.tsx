@@ -64,7 +64,7 @@ export default function Messages() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<'all' | 'unread' | 'starred' | 'archived' | 'disputes'>('all');
   const [isBackgroundLoading, setIsBackgroundLoading] = useState(false);
-  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [isInitialLoading, setIsInitialLoading] = useState(cachedConversations.length === 0);
   const isLoadingRef = useRef(false);
   const loadingTimeoutRef = useRef<NodeJS.Timeout>();
   const hasLoadedData = useRef(false);
@@ -86,6 +86,7 @@ export default function Messages() {
       // Carregar do cache primeiro (instantâneo)
       if (cachedConversations.length > 0) {
         setConversations(cachedConversations);
+        setIsInitialLoading(false);
       }
       
       // Forçar atualização para garantir dados frescos com debounce
@@ -251,7 +252,10 @@ export default function Messages() {
 
       if (profiles && profiles.length > 0) {
         setProfileId(profiles[0].id);
-        setIsInitialLoading(false);
+        // Só desligar loading se não tiver cache
+        if (cachedConversations.length === 0) {
+          setIsInitialLoading(false);
+        }
       }
     } catch (error) {
       console.error('Error loading profile:', error);

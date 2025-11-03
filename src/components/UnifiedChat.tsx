@@ -199,36 +199,45 @@ export function UnifiedChat({
 
   // Ref para rastrear número anterior de mensagens
   const prevMessageCountRef = useRef(0);
+  const isInitialForConversationRef = useRef(false);
   
   // Scroll instantâneo ao trocar de conversa
   useLayoutEffect(() => {
     const container = messagesContainerRef.current;
     if (!container) return;
     
+    isInitialForConversationRef.current = true;
+    
     // Duplo RAF para garantir que o DOM está completamente renderizado
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         if (container) {
+          // Forçar scroll instantâneo sem suavização
+          const prevBehavior = container.style.scrollBehavior;
+          container.style.scrollBehavior = 'auto';
           container.scrollTop = container.scrollHeight;
+          container.style.scrollBehavior = prevBehavior || '';
+          
+          prevMessageCountRef.current = messages.length;
+          isInitialForConversationRef.current = false;
         }
       });
     });
-    
-    prevMessageCountRef.current = messages.length;
   }, [conversationId]);
   
-  // Scroll automático quando nova mensagem chega
+  // Scroll suave para novas mensagens (após a abertura inicial)
   useEffect(() => {
+    // Não fazer scroll durante a primeira carga
+    if (isInitialForConversationRef.current) return;
+    
     const container = messagesContainerRef.current;
     if (!container) return;
     
     // Se o número de mensagens aumentou, fazer scroll suave para o final
     if (messages.length > prevMessageCountRef.current) {
-      requestAnimationFrame(() => {
-        container.scrollTo({
-          top: container.scrollHeight,
-          behavior: 'smooth'
-        });
+      container.scrollTo({
+        top: container.scrollHeight,
+        behavior: 'smooth'
       });
     }
     

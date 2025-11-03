@@ -944,9 +944,6 @@ export default function Messages() {
               <div className="p-2 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10">
                 <MessageCircle className="h-6 w-6 text-primary" />
               </div>
-              <h2 className="text-2xl font-bold text-foreground">
-                Mensagens
-              </h2>
             </div>
           </div>
           
@@ -1162,21 +1159,6 @@ export default function Messages() {
                               {conv.unreadCount > 99 ? '99+' : conv.unreadCount}
                             </Badge>
                           )}
-                          {conv.lastMessageAt && (
-                            <span className="text-[10px] text-muted-foreground mt-1 font-medium">
-                              {(() => {
-                                const messageDate = new Date(conv.lastMessageAt);
-                                const now = new Date();
-                                const diffInHours = (now.getTime() - messageDate.getTime()) / (1000 * 60 * 60);
-                                
-                                if (diffInHours < 24) {
-                                  return messageDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) + 'h';
-                                } else {
-                                  return messageDate.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
-                                }
-                              })()}
-                            </span>
-                          )}
                         </div>
                         
                         <div className="flex-1 min-w-0">
@@ -1256,6 +1238,21 @@ export default function Messages() {
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
+                            {conv.lastMessageAt && (
+                              <span className="text-[10px] text-muted-foreground mt-1 font-medium block text-right">
+                                {(() => {
+                                  const messageDate = new Date(conv.lastMessageAt);
+                                  const now = new Date();
+                                  const diffInHours = (now.getTime() - messageDate.getTime()) / (1000 * 60 * 60);
+                                  
+                                  if (diffInHours < 24) {
+                                    return messageDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) + 'h';
+                                  } else {
+                                    return messageDate.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+                                  }
+                                })()}
+                              </span>
+                            )}
                           </div>
                           
                           <div className="flex items-center gap-2">

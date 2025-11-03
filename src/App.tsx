@@ -71,6 +71,7 @@ import AdminReports from "./pages/admin/Reports";
 import HubArticles from "./pages/admin/HubArticles";
 import LegalPages from "./pages/admin/LegalPages";
 import AISettings from "./pages/admin/AISettings";
+import Stories from "./pages/admin/Stories";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -160,6 +161,7 @@ function AppContent() {
             <Route path="relatorios" element={<AdminReports />} />
             <Route path="artigos-hub" element={<HubArticles />} />
             <Route path="paginas-legais" element={<LegalPages />} />
+            <Route path="stories" element={<Stories />} />
             <Route path="configuracoes" element={<SettingsManagement />} />
             <Route path="ia" element={<AISettings />} />
           </Route>

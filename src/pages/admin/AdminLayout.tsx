@@ -15,6 +15,7 @@ import {
   BarChart3,
   Megaphone,
   Home,
+  Film,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -45,6 +46,7 @@ const adminMenuItems = [
   { title: 'Relatórios', url: '/admin/relatorios', icon: BarChart3 },
   { title: 'Hub de Artigos', url: '/admin/artigos-hub', icon: FileText },
   { title: 'Páginas Legais', url: '/admin/paginas-legais', icon: FileCheck },
+  { title: 'Stories', url: '/admin/stories', icon: Film },
   { title: 'Gestão de Conteúdo', url: '/admin/conteudo', icon: Megaphone },
   { title: 'Configurações', url: '/admin/configuracoes', icon: Settings },
   { title: 'IA', url: '/admin/ia', icon: Shield },

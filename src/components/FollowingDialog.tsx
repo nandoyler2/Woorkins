@@ -418,7 +418,7 @@ export function FollowingDialog({ open, onOpenChange, initialTab = 'following' }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[700px] p-0 overflow-hidden max-h-[85vh] flex flex-col gap-0">
+      <DialogContent className="sm:max-w-[700px] p-0 overflow-hidden max-h-[85vh] flex flex-col gap-0" hideClose>
         {/* Header com gradiente bonito */}
         <div className="bg-gradient-to-r from-blue-900 via-teal-700 to-blue-900 p-5 border-b shrink-0 relative">
           <div className="space-y-3">

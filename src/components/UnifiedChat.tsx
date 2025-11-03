@@ -211,7 +211,7 @@ export function UnifiedChat({
   
   // Hidratação instantânea - SÓ REVELAR QUANDO MENSAGENS CARREGARAM
   useLayoutEffect(() => {
-    if (!isHydratingRef.current || _isLoading) return;
+    if (!isHydratingRef.current) return;
     
     const container = messagesContainerRef.current;
     if (!container) return;
@@ -230,10 +230,10 @@ export function UnifiedChat({
           isHydratingRef.current = false;
           setHideOnInit(false);
           prevMessageCountRef.current = messages.length;
-        }, 100);
+        }, 50);
       });
     });
-  }, [conversationId, _isLoading, messages.length]);
+  }, [conversationId, messages.length]);
   
   // Scroll suave APENAS para novas mensagens (após a abertura inicial)
   useEffect(() => {

@@ -56,6 +56,11 @@ serve(async (req) => {
       throw new Error('Accepted amount not defined for this proposal');
     }
 
+    // Verify minimum amount for Stripe (0.50 BRL)
+    if (proposal.accepted_amount < 0.50) {
+      throw new Error('O valor mínimo para pagamento é R$ 0,50');
+    }
+
     // Verify user is the project owner
     const { data: projectOwner } = await supabaseClient
       .from('profiles')

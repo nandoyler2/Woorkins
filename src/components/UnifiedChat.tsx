@@ -427,16 +427,22 @@ export function UnifiedChat({
 
       if (error) throw error;
 
+      const ownerCalculated = data.project.profile_id === profileId;
+      const freelancerCalculated = data.freelancer_id === profileId;
+
       console.log('📥 Proposal Data Loaded:', {
         awaiting_acceptance_from: data.awaiting_acceptance_from,
         current_proposal_by: data.current_proposal_by,
         freelancer_id: data.freelancer_id,
         project_profile_id: data.project.profile_id,
         status: data.status,
+        currentProfileId: profileId,
+        isOwner: ownerCalculated,
+        isFreelancer: freelancerCalculated,
       });
 
       setProposalData(data);
-      setIsOwner(data.project.profile_id === profileId);
+      setIsOwner(ownerCalculated);
     } catch (error) {
       console.error('Error loading proposal data:', error);
     }
@@ -1181,10 +1187,24 @@ export function UnifiedChat({
   // Freelancer não pode enviar mensagens até que o owner responda/interaja
   const ownerHasMessaged = messages.some(msg => msg.sender_id !== profileId);
   const isChatLocked = conversationType === 'proposal' && 
+    proposalData && // Espera proposalData carregar para evitar falsos positivos
     !isOwner && 
     !proposalData?.is_unlocked &&
     !ownerHasMessaged &&
     !_isLoading; // Só mostra bloqueio se já terminou de carregar
+
+  console.log('🔒 Chat Lock Status:', {
+    conversationType,
+    hasProposalData: !!proposalData,
+    isOwner,
+    isUnlocked: proposalData?.is_unlocked,
+    ownerHasMessaged,
+    isLoading: _isLoading,
+    isChatLocked,
+    profileId,
+    freelancerId: proposalData?.freelancer_id,
+    projectProfileId: proposalData?.project?.profile_id,
+  });
 
   const checkCanDelete = async () => {
     // Verificar se há proposta aceita

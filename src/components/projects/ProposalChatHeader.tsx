@@ -44,6 +44,7 @@ interface ProposalChatHeaderProps {
   onMakeCounterProposal?: () => void;
   onViewHistory?: () => void;
   onOpenDispute?: () => void;
+  onRemoveProposal?: () => void;
 }
 
 export function ProposalChatHeader({
@@ -58,6 +59,7 @@ export function ProposalChatHeader({
   onMakeCounterProposal,
   onViewHistory,
   onOpenDispute,
+  onRemoveProposal,
 }: ProposalChatHeaderProps) {
   const { timeRemaining, isExpired } = useCompletionCountdown(proposal.owner_confirmation_deadline || null);
   
@@ -298,6 +300,14 @@ export function ProposalChatHeader({
               {proposal.payment_status === 'paid_escrow' && (
                 <DropdownMenuItem onClick={onOpenDispute}>
                   Abrir Reclamação
+                </DropdownMenuItem>
+              )}
+              {proposal.status === 'pending' && (
+                <DropdownMenuItem 
+                  onClick={onRemoveProposal}
+                  className="text-destructive focus:text-destructive"
+                >
+                  Remover Proposta
                 </DropdownMenuItem>
               )}
             </DropdownMenuContent>

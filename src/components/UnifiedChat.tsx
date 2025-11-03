@@ -105,6 +105,8 @@ export function UnifiedChat({
   const [showCompletionDialog, setShowCompletionDialog] = useState(false);
   const [showFreelancerCompletionDialog, setShowFreelancerCompletionDialog] = useState(false);
   const [showDisputeDialog, setShowDisputeDialog] = useState(false);
+  const [showRemoveProposalDialog, setShowRemoveProposalDialog] = useState(false);
+  const [isRemovingProposal, setIsRemovingProposal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messageInputRef = useRef<HTMLInputElement>(null);
@@ -679,6 +681,69 @@ export function UnifiedChat({
       title: 'Em desenvolvimento',
       description: 'A funcionalidade de disputa será implementada em breve',
     });
+  };
+
+  // Remove proposal
+  const handleRemoveProposal = async () => {
+    try {
+      setIsRemovingProposal(true);
+      
+      // Deletar todas as mensagens da proposta
+      const { error: messagesError } = await supabase
+        .from('proposal_messages')
+        .delete()
+        .eq('proposal_id', conversationId);
+      
+      if (messagesError) throw messagesError;
+      
+      // Deletar contra-propostas associadas
+      const { error: counterError } = await supabase
+        .from('counter_proposals')
+        .delete()
+        .eq('proposal_id', conversationId);
+      
+      if (counterError) throw counterError;
+      
+      // Deletar histórico de status
+      const { error: historyError } = await supabase
+        .from('proposal_status_history')
+        .delete()
+        .eq('proposal_id', conversationId);
+      
+      if (historyError) throw historyError;
+      
+      // Deletar a proposta
+      const { error: proposalError } = await supabase
+        .from('proposals')
+        .delete()
+        .eq('id', conversationId);
+      
+      if (proposalError) throw proposalError;
+      
+      if (!suppressToasts) {
+        toast({
+          title: 'Proposta removida',
+          description: 'A proposta foi removida com sucesso. Você pode enviar uma nova proposta para este projeto.',
+        });
+      }
+      
+      // Chamar callback de exclusão
+      if (onConversationDeleted) {
+        onConversationDeleted();
+      }
+      
+      setShowRemoveProposalDialog(false);
+    } catch (error: any) {
+      if (!suppressToasts) {
+        toast({
+          variant: 'destructive',
+          title: 'Erro ao remover proposta',
+          description: error.message,
+        });
+      }
+    } finally {
+      setIsRemovingProposal(false);
+    }
   };
 
   const handleSendMessage = async (e: React.FormEvent) => {
@@ -1358,6 +1423,7 @@ export function UnifiedChat({
           onMakeCounterProposal={handleMakeCounterProposal}
           onViewHistory={() => setShowHistoryDialog(true)}
           onOpenDispute={handleOpenDispute}
+          onRemoveProposal={() => setShowRemoveProposalDialog(true)}
         />
       )}
       
@@ -1464,10 +1530,30 @@ export function UnifiedChat({
             <>
               {/* Security warning as first message for pending proposals */}
               {conversationType === 'proposal' && proposalData?.status === 'pending' && (
-                <Alert className="mb-4 bg-blue-50 border-blue-200">
-                  <Shield className="h-4 w-4 text-blue-600" />
-                  <AlertDescription className="text-sm text-blue-900">
+                <Alert className="mb-4 bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800">
+                  <Shield className="h-4 w-4 text-blue-600 dark:text-blue-500" />
+                  <AlertDescription className="text-sm text-blue-900 dark:text-blue-100">
                     <strong>Aviso de Segurança:</strong> Todas as conversas são monitoradas para garantir transações seguras. É proibido compartilhar informações de contato (telefone, email, redes sociais). Violações podem resultar em bloqueio permanente da conta.
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              {/* Aviso de proposta bloqueada */}
+              {conversationType === 'proposal' && proposalData && !proposalData.is_unlocked && !isOwner && proposalData.status === 'pending' && (
+                <Alert className="mb-4 bg-yellow-50 dark:bg-yellow-950/20 border-yellow-200 dark:border-yellow-800">
+                  <Lock className="h-4 w-4 text-yellow-600 dark:text-yellow-500" />
+                  <AlertDescription className="text-sm text-yellow-900 dark:text-yellow-100">
+                    <strong>Proposta Bloqueada:</strong> Sua proposta ainda não foi visualizada pelo dono do projeto. 
+                    Você pode removê-la e enviar uma nova se desejar fazer alterações.
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => setShowRemoveProposalDialog(true)}
+                      className="mt-2 w-full border-yellow-300 dark:border-yellow-700 text-yellow-700 dark:text-yellow-300 hover:bg-yellow-100 dark:hover:bg-yellow-900/30"
+                    >
+                      <Trash2 className="h-3.5 w-3.5 mr-2" />
+                      Remover Proposta
+                    </Button>
                   </AlertDescription>
                 </Alert>
               )}
@@ -1865,6 +1951,47 @@ export function UnifiedChat({
             >
               <Trash2 className="w-4 h-4 mr-2" />
               Excluir Permanentemente
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Remove Proposal Dialog */}
+      <AlertDialog open={showRemoveProposalDialog} onOpenChange={setShowRemoveProposalDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-destructive" />
+              Remover Proposta
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-3">
+              <p>Ao remover esta proposta:</p>
+              <ul className="list-disc pl-5 space-y-1">
+                <li>Ela desaparecerá para você e para {isOwner ? 'o freelancer' : 'o dono do projeto'}</li>
+                <li>Todas as mensagens serão excluídas</li>
+                <li>Você poderá enviar uma nova proposta para este projeto</li>
+              </ul>
+              <p className="font-semibold text-foreground">Esta ação não pode ser desfeita.</p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isRemovingProposal}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleRemoveProposal}
+              disabled={isRemovingProposal}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              {isRemovingProposal ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Removendo...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Remover Proposta
+                </>
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

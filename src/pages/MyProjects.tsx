@@ -210,15 +210,33 @@ const MyProjects = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-primary/5 to-secondary/10">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-muted/20 to-background">
       <Header />
+      
+      {/* Hero Header */}
+      <div className="bg-gradient-to-r from-blue-900 via-teal-700 to-blue-900 text-white py-12">
+        <div className="container mx-auto px-4 max-w-woorkins">
+          <h1 className="text-4xl font-bold mb-3">Meus Projetos</h1>
+          <p className="text-lg text-blue-100">Gerencie seus projetos e acompanhe as propostas recebidas</p>
+        </div>
+      </div>
+
       <main className="flex-1 container mx-auto px-4 py-8 max-w-woorkins">
-        <h1 className="text-3xl font-bold mb-8 bg-gradient-primary bg-clip-text text-transparent">Meus Projetos</h1>
 
         <Tabs defaultValue="projects" className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="projects">Projetos ({projects.length})</TabsTrigger>
-            <TabsTrigger value="proposals">Propostas Recebidas ({proposals.length})</TabsTrigger>
+          <TabsList className="bg-card/50 backdrop-blur-sm border-2 p-1">
+            <TabsTrigger 
+              value="projects" 
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-teal-600 data-[state=active]:text-white"
+            >
+              Projetos ({projects.length})
+            </TabsTrigger>
+            <TabsTrigger 
+              value="proposals"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-teal-600 data-[state=active]:text-white"
+            >
+              Propostas Recebidas ({proposals.length})
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="projects" className="space-y-4">
@@ -246,12 +264,12 @@ const MyProjects = () => {
               </Card>
             ) : (
               projects.map((project) => (
-                <Card key={project.id} className="bg-card/50 backdrop-blur-sm shadow-lg border-2 hover:shadow-xl transition-all">
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
+                <Card key={project.id} className="bg-card/50 backdrop-blur-sm shadow-lg border-2 hover:shadow-2xl transition-all duration-200 animate-fade-in">
+                  <CardHeader className="bg-gradient-to-r from-blue-50/50 to-teal-50/50 dark:from-blue-950/30 dark:to-teal-950/30">
+                    <div className="flex items-start justify-between gap-4">
                       <div className="flex-1">
                         <Link to={`/projetos/${project.id}`}>
-                          <CardTitle className="hover:text-primary transition-colors cursor-pointer">
+                          <CardTitle className="text-xl bg-gradient-to-r from-blue-600 to-teal-600 bg-clip-text text-transparent hover:from-blue-700 hover:to-teal-700 transition-all cursor-pointer">
                             {project.title}
                           </CardTitle>
                         </Link>
@@ -259,17 +277,27 @@ const MyProjects = () => {
                           {project.description}
                         </CardDescription>
                       </div>
-                      <Badge variant={project.status === 'open' ? 'default' : 'secondary'}>
-                        {project.status === 'open' ? 'Aberto' : 'Fechado'}
+                      <Badge 
+                        variant={project.status === 'open' ? 'default' : 'secondary'}
+                        className={project.status === 'open' ? 'bg-gradient-to-r from-green-600 to-teal-600' : ''}
+                      >
+                        {project.status === 'open' ? '🟢 Aberto' : '⚪ Fechado'}
                       </Badge>
                     </div>
                   </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center justify-between text-sm text-muted-foreground">
-                      <span>
-                        Orçamento: R$ {project.budget_min?.toLocaleString()} - R$ {project.budget_max?.toLocaleString()}
-                      </span>
-                      <span>{project.proposals_count} proposta{project.proposals_count !== 1 ? 's' : ''}</span>
+                  <CardContent className="pt-4">
+                    <div className="flex items-center justify-between flex-wrap gap-3">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="secondary" className="bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                          💰 R$ {project.budget_min?.toLocaleString()} - R$ {project.budget_max?.toLocaleString()}
+                        </Badge>
+                        <Badge variant="secondary" className="bg-teal-500/10 text-teal-600 dark:text-teal-400">
+                          📝 {project.proposals_count} proposta{project.proposals_count !== 1 ? 's' : ''}
+                        </Badge>
+                      </div>
+                      <Button variant="outline" size="sm" asChild>
+                        <Link to={`/projetos/${project.id}`}>Ver Detalhes</Link>
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
@@ -303,15 +331,15 @@ const MyProjects = () => {
               </Card>
             ) : (
               proposals.map((proposal) => (
-                <Card key={proposal.id} className="bg-card/50 backdrop-blur-sm shadow-lg border-2 hover:shadow-xl transition-all">
-                  <CardContent className="p-4">
+                <Card key={proposal.id} className="bg-card/50 backdrop-blur-sm shadow-lg border-2 hover:shadow-2xl transition-all duration-200 animate-fade-in border-l-4 border-l-blue-500">
+                  <CardContent className="p-5">
                     <div className="flex gap-4">
                       {/* Avatar e Nome */}
-                      <Avatar className="h-12 w-12">
+                      <Avatar className="h-14 w-14 border-2 border-primary/20 shadow-md">
                         {proposal.freelancer.avatar_url ? (
                           <AvatarImage src={proposal.freelancer.avatar_url} alt={proposal.freelancer.full_name} />
                         ) : (
-                          <AvatarFallback className="bg-primary text-primary-foreground">
+                          <AvatarFallback className="bg-gradient-to-r from-blue-600 to-teal-600 text-white text-lg">
                             {formatShortName(proposal.freelancer.full_name)?.[0]?.toUpperCase()}
                           </AvatarFallback>
                         )}
@@ -334,42 +362,46 @@ const MyProjects = () => {
                             </p>
                           </div>
                           <Badge
-                            variant={
-                              proposal.status === 'accepted'
-                                ? 'default'
+                            className={
+                              proposal.status === 'accepted' && proposal.payment_status === 'paid_escrow'
+                                ? 'bg-gradient-to-r from-green-600 to-teal-600 text-white'
+                                : proposal.status === 'accepted'
+                                ? 'bg-gradient-to-r from-blue-600 to-teal-600 text-white'
                                 : proposal.status === 'rejected'
-                                ? 'destructive'
-                                : 'secondary'
+                                ? 'bg-gradient-to-r from-red-600 to-orange-600 text-white'
+                                : 'bg-gradient-to-r from-yellow-600 to-orange-600 text-white'
                             }
                           >
                             {proposal.status === 'accepted' && proposal.payment_status === 'paid_escrow'
-                              ? '💰 Escrow'
+                              ? '💰 Pago (Escrow)'
                               : proposal.status === 'accepted'
-                              ? 'Aceita'
+                              ? '✅ Aceita'
                               : proposal.status === 'rejected'
-                              ? 'Recusada'
-                              : 'Pendente'}
+                              ? '❌ Recusada'
+                              : '⏳ Pendente'}
                           </Badge>
                         </div>
 
                         {/* Mensagem truncada */}
-                        <p className="text-sm text-foreground/80 line-clamp-2">
-                          {truncateMessage(proposal.message)}
-                        </p>
+                        <div className="p-3 bg-muted/30 rounded-lg border border-border/50">
+                          <p className="text-sm text-foreground/80 line-clamp-2">
+                            {truncateMessage(proposal.message)}
+                          </p>
+                        </div>
 
-                        {/* Informações */}
-                        <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                          <div className="flex items-center gap-1">
-                            <span className="font-semibold text-primary">R$ {proposal.budget.toLocaleString()}</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Clock className="h-3 w-3" />
-                            <span>{proposal.delivery_days} dias</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
+                        {/* Informações com badges */}
+                        <div className="flex items-center flex-wrap gap-2 text-xs">
+                          <Badge variant="secondary" className="bg-gradient-to-r from-blue-50 to-teal-50 dark:from-blue-950 dark:to-teal-950 border border-blue-200 dark:border-blue-800">
+                            <span className="font-bold text-blue-600 dark:text-blue-400">💰 R$ {proposal.budget.toLocaleString()}</span>
+                          </Badge>
+                          <Badge variant="secondary" className="bg-gradient-to-r from-orange-50 to-yellow-50 dark:from-orange-950 dark:to-yellow-950 border border-orange-200 dark:border-orange-800">
+                            <Clock className="h-3 w-3 mr-1 text-orange-600 dark:text-orange-400" />
+                            <span className="text-orange-600 dark:text-orange-400">{proposal.delivery_days} dias</span>
+                          </Badge>
+                          <Badge variant="secondary" className="bg-muted/50">
+                            <Calendar className="h-3 w-3 mr-1" />
                             <span>{formatDate(proposal.created_at)}</span>
-                          </div>
+                          </Badge>
                         </div>
 
                         {/* Botões de ação */}
@@ -388,7 +420,7 @@ const MyProjects = () => {
                                 variant="default"
                                 size="sm"
                                 onClick={() => updateProposalStatus(proposal.id, 'accepted')}
-                                className="bg-gradient-primary hover:opacity-90"
+                                className="bg-gradient-to-r from-blue-600 to-teal-600 hover:from-blue-700 hover:to-teal-700 shadow-md"
                               >
                                 <CreditCard className="h-4 w-4 mr-2" />
                                 Aceitar e Pagar

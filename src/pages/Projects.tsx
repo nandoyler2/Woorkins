@@ -204,10 +204,18 @@ export default function Projects() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background">
       <Header />
+      
+      {/* Hero Header com gradiente */}
+      <div className="bg-gradient-to-r from-blue-900 via-teal-700 to-blue-900 text-white py-12">
+        <div className="container mx-auto px-4 max-w-woorkins">
+          <h1 className="text-4xl font-bold mb-3">Projetos Disponíveis</h1>
+          <p className="text-lg text-blue-100">Encontre oportunidades incríveis para desenvolver suas habilidades</p>
+        </div>
+      </div>
 
-      <main className="flex-1 bg-muted/30">
+      <main className="flex-1">
         <div className="container mx-auto px-4 py-6 max-w-7xl">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             {/* Sidebar - Desktop only */}
@@ -224,12 +232,12 @@ export default function Projects() {
               {/* Search and Create Project */}
               <div className="mb-6 flex items-center gap-4">
                 <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-primary" />
                   <Input
-                    placeholder="Buscar projetos..."
+                    placeholder="Buscar projetos por título, descrição ou habilidades..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10"
+                    className="pl-10 border-2 bg-card/50 backdrop-blur-sm focus:ring-2 focus:ring-primary shadow-sm"
                   />
                 </div>
 
@@ -268,7 +276,7 @@ export default function Projects() {
 
                 {user && (
                   <Link to="/projetos/novo">
-                    <Button className="whitespace-nowrap animate-gradient text-white border-0 hover:shadow-lg">
+                    <Button className="whitespace-nowrap bg-gradient-to-r from-blue-600 to-teal-600 hover:from-blue-700 hover:to-teal-700 text-white shadow-md">
                       <Plus className="h-4 w-4 mr-2" />
                       Criar Projeto
                     </Button>

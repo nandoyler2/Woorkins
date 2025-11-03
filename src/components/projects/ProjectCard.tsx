@@ -197,18 +197,20 @@ export function ProjectCard({ project }: ProjectCardProps) {
   };
 
   return (
-    <Card className="p-6 hover:shadow-md transition-shadow">
-      {/* Header */}
-      <div className="flex justify-between items-start mb-3">
+    <Card className="p-6 border-2 bg-card/50 backdrop-blur-sm shadow-lg hover:shadow-2xl transition-all duration-200 animate-fade-in">
+      {/* Header com gradiente sutil */}
+      <div className="flex justify-between items-start mb-3 pb-3 border-b border-gradient-to-r from-transparent via-border to-transparent">
         <Link to={`/projetos/${project.id}`} className="flex-1">
-          <h3 className="text-lg font-bold text-foreground hover:text-primary transition-colors">
+          <h3 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-teal-600 bg-clip-text text-transparent hover:from-blue-700 hover:to-teal-700 transition-all">
             {project.title}
           </h3>
         </Link>
         <div className="flex items-center gap-3 ml-4">
-          <span className="text-lg font-bold text-primary whitespace-nowrap">
-            {formatBudget(project.budget_min, project.budget_max)}
-          </span>
+          <div className="px-4 py-2 bg-gradient-to-r from-blue-50 to-teal-50 dark:from-blue-950 dark:to-teal-950 rounded-lg border-2 border-primary/20">
+            <span className="text-lg font-bold bg-gradient-to-r from-blue-600 to-teal-600 bg-clip-text text-transparent whitespace-nowrap">
+              {formatBudget(project.budget_min, project.budget_max)}
+            </span>
+          </div>
           {(() => {
             const ownsByProfile = (project.profile_id && currentUserProfileIds.includes(project.profile_id));
             const ownsByUserId = user && (project as any)?.profiles?.user_id === user.id;
@@ -219,7 +221,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
                   <Button 
                     variant="default" 
                     size="sm" 
-                    className="whitespace-nowrap bg-blue-600 hover:bg-blue-700 text-white"
+                    className="whitespace-nowrap bg-gradient-to-r from-blue-600 to-teal-600 hover:from-blue-700 hover:to-teal-700 shadow-md"
                     onClick={() => toast.info("Esse é um projeto feito por você")}
                   >
                     Seu Projeto
@@ -241,24 +243,32 @@ export function ProjectCard({ project }: ProjectCardProps) {
               <Button 
                 variant="default" 
                 size="sm" 
-                className="whitespace-nowrap"
+                className={`whitespace-nowrap shadow-md ${hasProposal ? 'bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700' : 'bg-gradient-to-r from-blue-600 to-teal-600 hover:from-blue-700 hover:to-teal-700'}`}
                 onClick={handleMakeProposal}
-                style={hasProposal ? { backgroundColor: '#11AA9B' } : undefined}
               >
-                {hasProposal ? 'Você já enviou a proposta' : 'Fazer uma proposta'}
+                {hasProposal ? 'Ver Sua Proposta' : 'Fazer uma Proposta'}
               </Button>
             );
           })()}
         </div>
       </div>
 
-      {/* Meta info */}
-      <div className="flex items-center gap-2 text-xs text-muted-foreground mb-3">
-        <span>{formatDate(project.created_at)}</span>
-        <span>|</span>
-        <span>Propostas: {project.proposals_count}</span>
-        <span>|</span>
-        <span>Prazo: {formatDeadline(project.deadline)}</span>
+      {/* Meta info com badges */}
+      <div className="flex items-center flex-wrap gap-2 text-xs mb-3">
+        <Badge variant="secondary" className="bg-muted/50">
+          <Clock className="h-3 w-3 mr-1" />
+          {formatDate(project.created_at)}
+        </Badge>
+        <Badge variant="secondary" className="bg-blue-500/10 text-blue-600 dark:text-blue-400">
+          <MessageSquare className="h-3 w-3 mr-1" />
+          {project.proposals_count} Propostas
+        </Badge>
+        {project.deadline && (
+          <Badge variant="secondary" className="bg-orange-500/10 text-orange-600 dark:text-orange-400">
+            <Clock className="h-3 w-3 mr-1" />
+            Prazo: {formatDeadline(project.deadline)}
+          </Badge>
+        )}
       </div>
 
       {/* Description */}
@@ -269,17 +279,21 @@ export function ProjectCard({ project }: ProjectCardProps) {
         </Link>
       </p>
 
-      {/* Skills/Tags */}
+      {/* Skills/Tags com gradiente */}
       {project.skills && project.skills.length > 0 && (
         <div className="flex flex-wrap gap-2 mb-4">
           {project.skills.slice(0, 4).map((skill, index) => (
-            <Badge key={index} variant="secondary" className="bg-muted text-muted-foreground">
+            <Badge 
+              key={index} 
+              variant="secondary" 
+              className="bg-gradient-to-r from-primary/10 to-secondary/10 border border-primary/20 hover:border-primary/40 transition-colors"
+            >
               {skill}
             </Badge>
           ))}
           {project.skills.length > 4 && (
-            <Badge variant="secondary" className="bg-muted text-muted-foreground">
-              +{project.skills.length - 4}
+            <Badge variant="secondary" className="bg-gradient-to-r from-accent/10 to-orange/10 border border-accent/20">
+              +{project.skills.length - 4} mais
             </Badge>
           )}
         </div>

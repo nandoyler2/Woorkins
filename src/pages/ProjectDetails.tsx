@@ -397,41 +397,53 @@ export default function ProjectDetails() {
   const isOwner = user && project.profiles.user_id === user.id;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-secondary/10">
+    <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background">
       <Header />
       
-      <div className="container mx-auto px-4 py-6 max-w-woorkins">
-        {/* Breadcrumbs */}
-        <nav className="mb-4 text-sm text-muted-foreground">
-          <Link to="/" className="hover:text-primary">Woorkins</Link>
-          <ChevronRight className="inline w-3 h-3 mx-1" />
-          <Link to="/projetos" className="hover:text-primary">Projetos</Link>
-          <ChevronRight className="inline w-3 h-3 mx-1" />
-          <span className="text-foreground">{project.category || 'Projeto'}</span>
-        </nav>
+      {/* Hero Header */}
+      <div className="bg-gradient-to-r from-blue-900 via-teal-700 to-blue-900 text-white py-8">
+        <div className="container mx-auto px-4 max-w-woorkins">
+          {/* Breadcrumbs */}
+          <nav className="mb-4 text-sm text-blue-200 flex items-center">
+            <Link to="/" className="hover:text-white transition-colors">Woorkins</Link>
+            <ChevronRight className="w-3 h-3 mx-2" />
+            <Link to="/projetos" className="hover:text-white transition-colors">Projetos</Link>
+            <ChevronRight className="w-3 h-3 mx-2" />
+            <span className="text-white">{project.category || 'Projeto'}</span>
+          </nav>
 
-        {/* Project Title */}
-        <h1 className="text-3xl font-bold mb-2">{project.title}</h1>
-        <p className="text-sm text-muted-foreground mb-6">
-          Publicado em {new Date(project.created_at).toLocaleDateString('pt-BR')} para {project.category || 'Projetos'}
-        </p>
+          {/* Project Title */}
+          <h1 className="text-4xl font-bold mb-2">{project.title}</h1>
+          <p className="text-blue-100">
+            Publicado em {new Date(project.created_at).toLocaleDateString('pt-BR')} • {project.category || 'Projetos'}
+          </p>
+        </div>
+      </div>
+
+      <div className="container mx-auto px-4 py-6 max-w-woorkins">
 
         {/* Main Content */}
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Left Column - Project Details */}
           <div className="lg:col-span-2">
             <Tabs defaultValue="project" className="space-y-4">
-              <TabsList className="w-full grid grid-cols-2">
-                <TabsTrigger value="project" className="data-[state=active]:bg-gradient-primary">
+              <TabsList className="w-full grid grid-cols-2 bg-card/50 backdrop-blur-sm border-2 p-1">
+                <TabsTrigger 
+                  value="project" 
+                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-teal-600 data-[state=active]:text-white"
+                >
                   Projeto
                 </TabsTrigger>
-                <TabsTrigger value="competitors">
+                <TabsTrigger 
+                  value="competitors"
+                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-teal-600 data-[state=active]:text-white"
+                >
                   Propostas recebidas
                 </TabsTrigger>
               </TabsList>
 
-              <TabsContent value="project" className="space-y-6">
-                <Card>
+              <TabsContent value="project" className="space-y-6 animate-fade-in">
+                <Card className="border-2 bg-card/50 backdrop-blur-sm shadow-lg">
                   <CardContent className="pt-6 space-y-6">
                     {/* Sobre este projeto */}
                     <div>
@@ -497,8 +509,8 @@ export default function ProjectDetails() {
                 </Card>
               </TabsContent>
 
-              <TabsContent value="competitors">
-                <Card>
+              <TabsContent value="competitors" className="animate-fade-in">
+                <Card className="border-2 bg-card/50 backdrop-blur-sm shadow-lg">
                   <CardContent className="pt-6">
                     {proposals.length === 0 ? (
                       <div className="text-center py-12">
@@ -548,16 +560,23 @@ export default function ProjectDetails() {
 
           {/* Right Column - Sidebar */}
           <div className="space-y-4">
-            {/* Budget Card */}
-            <Card className="sticky top-4">
+            {/* Budget Card com gradiente */}
+            <Card className="sticky top-4 border-2 bg-card/50 backdrop-blur-sm shadow-lg">
+              {/* Header com gradiente */}
+              <div className="bg-gradient-to-r from-blue-50 to-teal-50 dark:from-blue-950/30 dark:to-teal-950/30 p-4 border-b-2 border-primary/20">
+                <h3 className="text-lg font-bold text-center bg-gradient-to-r from-blue-600 to-teal-600 bg-clip-text text-transparent">
+                  Orçamento do Projeto
+                </h3>
+              </div>
+              
               <CardContent className="pt-6 space-y-4">
                 {/* Budget */}
-                <div className="text-center py-4">
-                  <p className="text-3xl font-bold text-primary">
+                <div className="text-center py-4 bg-gradient-to-br from-blue-50/50 to-teal-50/50 dark:from-blue-950/20 dark:to-teal-950/20 rounded-lg border-2 border-primary/20">
+                  <p className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-teal-600 bg-clip-text text-transparent">
                     {formatBudget(project.budget_min, project.budget_max)}
                   </p>
                   {project.budget_min && project.budget_max && (
-                    <p className="text-sm text-muted-foreground mt-1">/ hora</p>
+                    <p className="text-sm text-muted-foreground mt-1">Orçamento total</p>
                   )}
                 </div>
 
@@ -565,14 +584,14 @@ export default function ProjectDetails() {
                 {isOwner && project.status === 'open' && (
                   <div className="space-y-2">
                     <Button 
-                      className="w-full bg-blue-600 hover:bg-blue-700 text-white cursor-default"
+                      className="w-full bg-gradient-to-r from-blue-600 to-teal-600 text-white shadow-md cursor-default"
                       disabled
                     >
-                      Seu Projeto
+                      ✨ Seu Projeto
                     </Button>
                     <Button 
                       variant="outline" 
-                      className="w-full"
+                      className="w-full border-2 hover:border-primary/50"
                       asChild
                     >
                       <Link to={`/projeto/${project.id}/editar`}>
@@ -584,17 +603,16 @@ export default function ProjectDetails() {
                 
                 {!isOwner && project.status === 'open' && (
                   <Button 
-                    className="w-full bg-gradient-primary hover:opacity-90 shadow-glow"
+                    className={`w-full shadow-md ${hasProposal ? 'bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700' : 'bg-gradient-to-r from-blue-600 to-teal-600 hover:from-blue-700 hover:to-teal-700'}`}
                     onClick={handleMakeProposal}
-                    style={hasProposal ? { backgroundColor: '#11AA9B' } : undefined}
                   >
-                    {hasProposal ? 'Você já enviou a proposta' : 'Fazer uma proposta'}
+                    {hasProposal ? '✅ Ver Sua Proposta' : '📝 Fazer uma Proposta'}
                   </Button>
                 )}
 
                 {!user && project.status === 'open' && (
-                  <Button asChild className="w-full bg-gradient-primary">
-                    <Link to="/auth">Fazer Login para Propor</Link>
+                  <Button asChild className="w-full bg-gradient-to-r from-blue-600 to-teal-600 hover:from-blue-700 hover:to-teal-700 shadow-md">
+                    <Link to="/auth">🔐 Fazer Login para Propor</Link>
                   </Button>
                 )}
 
@@ -602,6 +620,7 @@ export default function ProjectDetails() {
 
                 {/* Client Info */}
                 <div className="space-y-4">
+                  <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Sobre o Cliente</h4>
                   <div className="flex items-center gap-3">
                     <ProfileAvatarWithHover
                       profileId={project.profile_id}
@@ -620,18 +639,18 @@ export default function ProjectDetails() {
                     </div>
                   </div>
 
-                  <div className="text-sm space-y-2">
+                  <div className="text-sm space-y-2 bg-muted/30 p-3 rounded-lg">
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Projetos publicados</span>
-                      <span className="font-medium">0</span>
+                      <span className="text-muted-foreground">📊 Projetos publicados</span>
+                      <Badge variant="secondary" className="bg-blue-500/10 text-blue-600">0</Badge>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Projetos pagos</span>
-                      <span className="font-medium">0</span>
+                      <span className="text-muted-foreground">💰 Projetos pagos</span>
+                      <Badge variant="secondary" className="bg-green-500/10 text-green-600">0</Badge>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Membro desde</span>
-                      <span className="font-medium">{new Date(project.created_at).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}</span>
+                      <span className="text-muted-foreground">📅 Membro desde</span>
+                      <span className="font-medium">{new Date(project.created_at).toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' })}</span>
                     </div>
                   </div>
                 </div>

@@ -249,8 +249,8 @@ export default function Messages() {
   };
 
   const loadConversations = useCallback(async (forceRefresh = false) => {
-    // Controle de concorrência: não iniciar se já estiver carregando
-    if (isLoadingRef.current) {
+    // Controle de concorrência: permitir override quando for forceRefresh
+    if (isLoadingRef.current && !forceRefresh) {
       console.log('⏭️ Carregamento já em andamento, pulando...');
       return;
     }

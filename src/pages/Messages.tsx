@@ -84,25 +84,8 @@ export default function Messages() {
 
   useEffect(() => {
     if (profileId) {
-      // Se tem cache válido, mostrar imediatamente e atualizar em background
-      if (cachedData.conversations.length > 0 && cachedData.lastFetched && !cachedData.isStale()) {
-        console.log('📦 Usando cache de conversas');
-        setConversations(cachedData.conversations);
-        setIsInitialLoading(false);
-        // Atualizar em background após um delay
-        const timer = setTimeout(() => {
-          loadConversations(true);
-        }, 1000);
-        
-        const channel = setupRealtimeSubscriptions();
-        return () => {
-          clearTimeout(timer);
-          supabase.removeChannel(channel);
-        };
-      }
-      
-      // Sem cache válido: carregar normalmente
-      console.log('🔄 Carregando conversas do servidor');
+      // Sempre recarregar quando mudar o filtro
+      console.log('🔄 Carregando conversas do servidor (filtro:', activeFilter, ')');
       setIsInitialLoading(true);
       loadConversations(false);
       

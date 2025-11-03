@@ -959,6 +959,7 @@ export default function Messages() {
           return conv.isFavorited === true;
         case 'completed':
           // Apenas propostas finalizadas (completed ou payment_complete)
+          // Aparecem aqui independentemente de estarem na caixa de entrada ou não
           return conv.type === 'proposal' && (conv.workStatus === 'completed' || conv.workStatus === 'payment_complete');
         case 'disputes':
           // Only proposals with active disputes
@@ -970,13 +971,20 @@ export default function Messages() {
           // Apenas propostas enviadas (usuário é freelancer)
           return conv.type === 'proposal' && (conv as any).isProposalSent === true;
         case 'all':
-          // Caixa de entrada: negociações + propostas recebidas + propostas enviadas que foram respondidas pelo owner
-          // Não mostrar conversas ocultas
+          // Caixa de entrada: negociações + propostas (recebidas e enviadas)
+          // IMPORTANTE: Projetos finalizados também aparecem aqui até serem manualmente removidos
+          // Não mostrar conversas que foram manualmente removidas (hide_from_inbox = true)
           if (conv.hideFromInbox) return false;
+          
+          // Todas as negociações
           if (conv.type === 'negotiation') return true;
+          
+          // Propostas recebidas (incluindo finalizadas)
           if (conv.type === 'proposal' && (conv as any).isProposalReceived) return true;
+          
           // Propostas enviadas aparecem na caixa de entrada apenas se o owner respondeu/interagiu
           if (conv.type === 'proposal' && (conv as any).isProposalSent && ((conv as any).isUnlocked || (conv as any).ownerHasMessaged)) return true;
+          
           return false;
         default:
           return true;

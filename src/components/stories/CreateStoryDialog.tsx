@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -48,6 +48,13 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
   const [mediaPreview, setMediaPreview] = useState<string>('');
   const [originalImage, setOriginalImage] = useState<string>(''); // Imagem original para crop
   const [textContent, setTextContent] = useState('');
+
+  // Resetar selectedProfile quando o diálogo abrir ou profiles mudarem
+  useEffect(() => {
+    if (isOpen && profiles.length > 0) {
+      setSelectedProfile(profiles[0].id);
+    }
+  }, [isOpen, profiles]);
   const [backgroundColor, setBackgroundColor] = useState(backgroundStyles[0].value);
   const [customColor, setCustomColor] = useState('#8B5CF6');
   const [textBold, setTextBold] = useState(false);
@@ -378,9 +385,11 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
                         <Label className="text-sm font-semibold">Postar como:</Label>
                         <Select value={selectedProfile} onValueChange={setSelectedProfile}>
                           <SelectTrigger className="bg-background">
-                            <SelectValue />
+                            <SelectValue>
+                              {formatShortName(profiles.find(p => p.id === selectedProfile)?.full_name || '') || profiles.find(p => p.id === selectedProfile)?.username || ''}
+                            </SelectValue>
                           </SelectTrigger>
-                          <SelectContent>
+                          <SelectContent className="bg-background border z-50">
                             {profiles.map((profile) => (
                               <SelectItem key={profile.id} value={profile.id}>
                                 {formatShortName(profile.full_name) || profile.username}

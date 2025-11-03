@@ -748,6 +748,19 @@ export default function Messages() {
     return 'Arquivadas';
   };
 
+  const getTargetFilterIcon = (conv: Conversation) => {
+    if (conv.type === 'proposal') {
+      if (conv.workStatus === 'completed' || conv.workStatus === 'payment_complete') {
+        return { Icon: CheckCircle, color: 'text-green-500' };
+      } else if ((conv as any).isProposalReceived) {
+        return { Icon: FileInput, color: 'text-green-500' };
+      } else if ((conv as any).isProposalSent) {
+        return { Icon: Send, color: 'text-purple-500' };
+      }
+    }
+    return { Icon: Archive, color: 'text-gray-500' };
+  };
+
   const handleRemoveFromInbox = async (conv: Conversation) => {
     setConversationToRemove(conv);
     setShowRemoveDialog(true);
@@ -1222,6 +1235,23 @@ export default function Messages() {
                               )}
                             </div>
                             
+                            {/* Timestamp antes do menu */}
+                            {conv.lastMessageAt && (
+                              <span className="text-[10px] text-muted-foreground font-medium flex-shrink-0">
+                                {(() => {
+                                  const messageDate = new Date(conv.lastMessageAt);
+                                  const now = new Date();
+                                  const diffInHours = (now.getTime() - messageDate.getTime()) / (1000 * 60 * 60);
+                                  
+                                  if (diffInHours < 24) {
+                                    return messageDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                                  } else {
+                                    return messageDate.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+                                  }
+                                })()}
+                              </span>
+                            )}
+
                             {/* Menu dropdown */}
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
@@ -1297,21 +1327,6 @@ export default function Messages() {
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
-                            {conv.lastMessageAt && (
-                              <span className="text-[10px] text-muted-foreground mt-1 font-medium block text-right">
-                                {(() => {
-                                  const messageDate = new Date(conv.lastMessageAt);
-                                  const now = new Date();
-                                  const diffInHours = (now.getTime() - messageDate.getTime()) / (1000 * 60 * 60);
-                                  
-                                  if (diffInHours < 24) {
-                                    return messageDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) + 'h';
-                                  } else {
-                                    return messageDate.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
-                                  }
-                                })()}
-                              </span>
-                            )}
                           </div>
                           
                           <div className="flex items-center gap-2">
@@ -1385,9 +1400,13 @@ export default function Messages() {
               <p>
                 Esta conversa será removida da sua caixa de entrada, mas você ainda poderá encontrá-la em:
               </p>
-              <div className="bg-primary/10 p-3 rounded-md">
+              <div className="bg-primary/10 p-3 rounded-md flex items-center gap-2">
+                {conversationToRemove && (() => {
+                  const { Icon, color } = getTargetFilterIcon(conversationToRemove);
+                  return <Icon className={`h-5 w-5 ${color} flex-shrink-0`} />;
+                })()}
                 <p className="font-semibold text-foreground">
-                  📁 {conversationToRemove ? getTargetFilterName(conversationToRemove) : ''}
+                  {conversationToRemove ? getTargetFilterName(conversationToRemove) : ''}
                 </p>
               </div>
               <p className="text-sm">

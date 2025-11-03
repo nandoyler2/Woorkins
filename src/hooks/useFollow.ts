@@ -26,13 +26,18 @@ export function useFollow(targetProfileId: string) {
     if (!user) return;
 
     const { data, error } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('user_id', user.id)
-      .maybeSingle();
+      .from('profiles' as any)
+      .select('id, profile_type')
+      .eq('user_id', user.id);
 
-    if (!error && data) {
-      setFollowerProfileId(data.id);
+    if (error) {
+      console.error('useFollow/loadFollowerProfile error:', error);
+      return;
+    }
+
+    if (data && data.length > 0) {
+      const userProfile: any = data.find((p: any) => p.profile_type === 'user') || data[0];
+      setFollowerProfileId(userProfile.id);
     }
   };
 

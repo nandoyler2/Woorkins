@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ProfileAvatarWithHover } from '@/components/ProfileAvatarWithHover';
@@ -25,6 +26,7 @@ interface FollowingSectionProps {
 }
 
 export function FollowingSection({ profileId }: FollowingSectionProps) {
+  const { user } = useAuth();
   const [following, setFollowing] = useState<FollowedProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAll, setShowAll] = useState(false);
@@ -75,19 +77,49 @@ export function FollowingSection({ profileId }: FollowingSectionProps) {
     try {
       console.log('🔍 Carregando seguidos para profileId:', profileId);
       
-      // Buscar IDs dos usuários seguidos (consulta simples, sem join)
+      if (!user && !profileId) {
+        setFollowing([]);
+        setLoading(false);
+        return;
+      }
+
+      // 1) Obter todos os perfis do usuário logado
+      let myProfileIds: string[] = [];
+      if (user) {
+        const { data: myProfiles, error: myProfilesError } = await supabase
+          .from('profiles' as any)
+          .select('id')
+          .eq('user_id', user.id);
+
+        if (myProfilesError) throw myProfilesError;
+        myProfileIds = (myProfiles || []).map((p: any) => p.id);
+      }
+
+      // 2) Consolidar todos os possíveis follower_ids (user + business) + fallback do prop
+      const followerIds = Array.from(
+        new Set([...(myProfileIds || []), ...(profileId ? [profileId] : [])])
+      );
+
+      console.log('🔑 Follower IDs consolidados:', followerIds);
+
+      if (followerIds.length === 0) {
+        setFollowing([]);
+        setLoading(false);
+        return;
+      }
+
+      // 3) Buscar os following_id
       const { data: followsData, error: followsError } = await supabase
         .from('follows' as any)
         .select('following_id')
-        .eq('follower_id', profileId);
+        .in('follower_id', followerIds);
 
       console.log('📋 Follows data (ids):', followsData);
       console.log('❌ Follows error:', followsError);
 
       if (followsError) throw followsError;
 
-      // Extrair IDs seguidos
-      const followingIds: string[] = (followsData || []).map((f: any) => f.following_id);
+      const followingIds = Array.from(new Set((followsData || []).map((f: any) => f.following_id)));
       console.log('🧾 Following IDs:', followingIds);
 
       if (followingIds.length === 0) {
@@ -96,10 +128,10 @@ export function FollowingSection({ profileId }: FollowingSectionProps) {
         return;
       }
 
-      // Buscar perfis dos seguidos (sem depender de FK)
+      // 4) Buscar perfis seguidos (usar updated_at em vez de last_seen)
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles' as any)
-        .select('id, username, full_name, avatar_url, last_seen')
+        .select('id, username, full_name, avatar_url, updated_at')
         .in('id', followingIds);
 
       if (profilesError) throw profilesError;
@@ -110,7 +142,7 @@ export function FollowingSection({ profileId }: FollowingSectionProps) {
         username: p.username,
         full_name: p.full_name,
         avatar_url: p.avatar_url,
-        lastSeen: p.last_seen || null,
+        lastSeen: p.updated_at || null,
         hasStory: false,
         latestStoryTime: null as string | null,
         type: 'user' as const,

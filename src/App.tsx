@@ -65,6 +65,12 @@ const AdminSupport = lazy(() => import("./pages/admin/Support"));
 const SettingsManagement = lazy(() => import("./pages/admin/SettingsManagement"));
 const UserMessages = lazy(() => import("./pages/admin/UserMessages"));
 const AdminBusinesses = lazy(() => import("./pages/admin/Businesses"));
+const PlansSettings = lazy(() => import("./pages/admin/PlansSettings"));
+const AdminAnalytics = lazy(() => import("./pages/admin/Analytics"));
+const AdminReports = lazy(() => import("./pages/admin/Reports"));
+const HubArticles = lazy(() => import("./pages/admin/HubArticles"));
+const LegalPages = lazy(() => import("./pages/admin/LegalPages"));
+const AISettings = lazy(() => import("./pages/admin/AISettings"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -148,7 +154,13 @@ function AppContent() {
             <Route path="financial" element={<FinancialManagement />} />
             <Route path="withdrawals" element={<WithdrawalRequests />} />
             <Route path="support" element={<AdminSupport />} />
+            <Route path="plans" element={<PlansSettings />} />
+            <Route path="analytics" element={<AdminAnalytics />} />
+            <Route path="reports" element={<AdminReports />} />
+            <Route path="hub-articles" element={<HubArticles />} />
+            <Route path="legal-pages" element={<LegalPages />} />
             <Route path="settings" element={<SettingsManagement />} />
+            <Route path="ai" element={<AISettings />} />
             <Route path="user-messages" element={<UserMessages />} />
           </Route>
 

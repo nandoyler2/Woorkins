@@ -164,25 +164,25 @@ export default function Admin() {
           <CardContent>
             <div className="flex flex-wrap gap-3">
               {counts.support > 0 && (
-                <Button variant="destructive" size="sm" onClick={() => navigate('/painel/suporte')}>
+                <Button variant="destructive" size="sm" onClick={() => navigate('/admin/support')}>
                   {counts.support} Suporte{counts.support > 1 ? 's' : ''}
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               )}
               {counts.withdrawalRequests > 0 && (
-                <Button variant="destructive" size="sm" onClick={() => navigate('/painel/financeiro')}>
+                <Button variant="destructive" size="sm" onClick={() => navigate('/admin/financial')}>
                   {counts.withdrawalRequests} Saque{counts.withdrawalRequests > 1 ? 's' : ''}
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               )}
               {counts.pendingProjects > 0 && (
-                <Button variant="destructive" size="sm" onClick={() => navigate('/painel/moderacao')}>
+                <Button variant="destructive" size="sm" onClick={() => navigate('/admin/moderation')}>
                   {counts.pendingProjects} Projeto{counts.pendingProjects > 1 ? 's' : ''}
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               )}
               {counts.documentVerifications > 0 && (
-                <Button variant="destructive" size="sm" onClick={() => navigate('/painel/usuarios')}>
+                <Button variant="destructive" size="sm" onClick={() => navigate('/admin/users')}>
                   {counts.documentVerifications} Verificação{counts.documentVerifications > 1 ? 'ões' : ''}
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
@@ -199,7 +199,7 @@ export default function Admin() {
           icon={Users}
           description="Usuários registrados na plataforma"
           gradient="from-blue-500/10 via-blue-400/10 to-blue-300/10"
-          onClick={() => navigate('/painel/usuarios')}
+          onClick={() => navigate('/admin/users')}
         />
 
         <AdminCard
@@ -208,7 +208,7 @@ export default function Admin() {
           icon={Briefcase}
           description="Perfis de negócios ativos"
           gradient="from-purple-500/10 via-purple-400/10 to-purple-300/10"
-          onClick={() => navigate('/painel/perfis-profissionais')}
+          onClick={() => navigate('/admin/businesses')}
         />
 
         <AdminCard
@@ -217,7 +217,7 @@ export default function Admin() {
           icon={FileText}
           description="Projetos publicados"
           gradient="from-green-500/10 via-green-400/10 to-green-300/10"
-          onClick={() => navigate('/painel/moderacao')}
+          onClick={() => navigate('/admin/moderation')}
         />
 
         <AdminCard
@@ -242,7 +242,7 @@ export default function Admin() {
           icon={DollarSign}
           description="Receita do mês atual"
           gradient="from-emerald-500/10 via-emerald-400/10 to-emerald-300/10"
-          onClick={() => navigate('/painel/financeiro')}
+          onClick={() => navigate('/admin/financial')}
         />
 
         <AdminCard
@@ -251,7 +251,7 @@ export default function Admin() {
           icon={MessageSquare}
           description="Mensagens em moderação"
           gradient="from-red-500/10 via-red-400/10 to-red-300/10"
-          onClick={() => navigate('/painel/moderacao')}
+          onClick={() => navigate('/admin/moderation')}
         />
 
         <AdminCard
@@ -260,7 +260,7 @@ export default function Admin() {
           icon={AlertTriangle}
           description="Usuários bloqueados"
           gradient="from-pink-500/10 via-pink-400/10 to-pink-300/10"
-          onClick={() => navigate('/painel/usuarios')}
+          onClick={() => navigate('/admin/users')}
         />
       </div>
 
@@ -322,7 +322,7 @@ export default function Admin() {
             <Button
               variant="outline"
               className="h-auto flex-col gap-2 p-6 hover:bg-primary/5 hover:border-primary transition-all"
-              onClick={() => navigate('/painel/usuarios')}
+              onClick={() => navigate('/admin/users')}
             >
               <Users className="h-8 w-8 text-primary" />
               <span className="font-semibold">Gerenciar Usuários</span>
@@ -331,7 +331,7 @@ export default function Admin() {
             <Button
               variant="outline"
               className="h-auto flex-col gap-2 p-6 hover:bg-accent/50 hover:border-accent transition-all"
-              onClick={() => navigate('/painel/moderacao')}
+              onClick={() => navigate('/admin/moderation')}
             >
               <MessageSquare className="h-8 w-8 text-accent" />
               <span className="font-semibold">Moderação</span>
@@ -340,7 +340,7 @@ export default function Admin() {
             <Button
               variant="outline"
               className="h-auto flex-col gap-2 p-6 hover:bg-secondary/50 hover:border-secondary transition-all"
-              onClick={() => navigate('/painel/financeiro')}
+              onClick={() => navigate('/admin/financial')}
             >
               <DollarSign className="h-8 w-8 text-secondary" />
               <span className="font-semibold">Financeiro</span>
@@ -349,7 +349,7 @@ export default function Admin() {
             <Button
               variant="outline"
               className="h-auto flex-col gap-2 p-6 hover:bg-orange/10 hover:border-orange transition-all"
-              onClick={() => navigate('/painel/relatorios')}
+              onClick={() => navigate('/admin/reports')}
             >
               <TrendingUp className="h-8 w-8 text-orange" />
               <span className="font-semibold">Relatórios</span>

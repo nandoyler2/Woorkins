@@ -33,20 +33,20 @@ import { useAdminCounts } from '@/hooks/useAdminCounts';
 import { cn } from '@/lib/utils';
 
 const adminMenuItems = [
-  { title: 'Dashboard', url: '/painel', icon: LayoutDashboard },
-  { title: 'Usuários', url: '/painel/usuarios', icon: Users, badge: 'systemBlocks' },
-  { title: 'Moderação', url: '/painel/moderacao', icon: Flag, badge: 'moderation' },
-  { title: 'Suporte', url: '/painel/suporte', icon: MessageSquare, badge: 'support' },
-  { title: 'Financeiro', url: '/painel/financeiro', icon: DollarSign, badge: 'withdrawalRequests' },
-  { title: 'Planos', url: '/painel/planos', icon: CreditCard },
-  { title: 'Perfis Profissionais', url: '/painel/perfis-profissionais', icon: Briefcase },
-  { title: 'Análises', url: '/painel/analises', icon: TrendingUp },
-  { title: 'Relatórios', url: '/painel/relatorios', icon: BarChart3 },
-  { title: 'Hub de Artigos', url: '/painel/hub-artigos', icon: FileText },
-  { title: 'Páginas Legais', url: '/painel/paginas-legais', icon: FileCheck },
-  { title: 'Gestão de Conteúdo', url: '/painel/gestao-conteudo', icon: Megaphone },
-  { title: 'Configurações', url: '/painel/configuracoes', icon: Settings },
-  { title: 'IA', url: '/painel/ia', icon: Shield },
+  { title: 'Dashboard', url: '/admin', icon: LayoutDashboard },
+  { title: 'Usuários', url: '/admin/users', icon: Users, badge: 'systemBlocks' },
+  { title: 'Moderação', url: '/admin/moderation', icon: Flag, badge: 'moderation' },
+  { title: 'Suporte', url: '/admin/support', icon: MessageSquare, badge: 'support' },
+  { title: 'Financeiro', url: '/admin/financial', icon: DollarSign, badge: 'withdrawalRequests' },
+  { title: 'Planos', url: '/admin/plans', icon: CreditCard },
+  { title: 'Perfis Profissionais', url: '/admin/businesses', icon: Briefcase },
+  { title: 'Análises', url: '/admin/analytics', icon: TrendingUp },
+  { title: 'Relatórios', url: '/admin/reports', icon: BarChart3 },
+  { title: 'Hub de Artigos', url: '/admin/hub-articles', icon: FileText },
+  { title: 'Páginas Legais', url: '/admin/legal-pages', icon: FileCheck },
+  { title: 'Gestão de Conteúdo', url: '/admin/content', icon: Megaphone },
+  { title: 'Configurações', url: '/admin/settings', icon: Settings },
+  { title: 'IA', url: '/admin/ai', icon: Shield },
 ];
 
 function AdminSidebar() {

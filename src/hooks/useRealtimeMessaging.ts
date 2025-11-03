@@ -43,7 +43,9 @@ export const useRealtimeMessaging = ({
   suppressToasts = false,
 }: UseRealtimeMessagingProps) => {
   const { getMessages, addMessage } = useMessageCache();
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Message[]>(() => {
+    try { return JSON.parse(sessionStorage.getItem(`pending-${conversationType}-${conversationId}-${currentUserId}`) || '[]'); } catch { return []; }
+  });
   const [isSending, setIsSending] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [otherUserTyping, setOtherUserTyping] = useState(false);
@@ -59,6 +61,19 @@ export const useRealtimeMessaging = ({
   const { toast } = useToast();
   const channelRef = useRef<RealtimeChannel | null>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Persist optimistic messages across remounts to avoid flicker
+  const pendingKey = `pending-${conversationType}-${conversationId}-${currentUserId}`;
+  const getPending = useCallback((): Message[] => {
+    try { return JSON.parse(sessionStorage.getItem(pendingKey) || '[]'); } catch { return []; }
+  }, [pendingKey]);
+  const setPending = useCallback((list: Message[]) => {
+    try { sessionStorage.setItem(pendingKey, JSON.stringify(list)); } catch {}
+  }, [pendingKey]);
+  const removePendingByContent = useCallback((content: string) => {
+    const list = getPending().filter(m => m.content !== content);
+    setPending(list);
+  }, [getPending, setPending]);
 
   // Calculate progressive block duration in minutes
   const getBlockDuration = (violationCount: number): number => {
@@ -262,7 +277,12 @@ export const useRealtimeMessaging = ({
       const sortedMessages = messagesWithSenders.reverse();
       
       if (initialLoad) {
-        setMessages(sortedMessages);
+        // Merge with any existing (optimistic) messages to avoid flicker
+        setMessages(prev => {
+          const byId = new Set(prev.map(m => m.id));
+          const merged = [...prev, ...sortedMessages.filter(m => !byId.has(m.id))];
+          return merged.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+        });
         if (sortedMessages.length > 0) {
           setOldestMessageId(sortedMessages[0].id);
         }
@@ -317,6 +337,8 @@ export const useRealtimeMessaging = ({
 
     // Show message immediately for sender
     setMessages(prev => [...prev, optimisticMessage]);
+    // Persist pending optimistic to survive remounts
+    setPending([...getPending(), optimisticMessage]);
     
     setIsSending(true);
 
@@ -456,6 +478,7 @@ export const useRealtimeMessaging = ({
       
       // Remove optimistic message on error
       setMessages(prev => prev.filter(msg => msg.id !== tempId));
+      removePendingByContent(content.trim());
       
       if (!suppressToasts) {
         toast({
@@ -577,6 +600,8 @@ export const useRealtimeMessaging = ({
               }
               return [...prev, message];
             });
+            // Remove pending optimistic from session
+            removePendingByContent(message.content);
           } else {
             // Message from other user
             setMessages(prev => {
@@ -711,9 +736,14 @@ export const useRealtimeMessaging = ({
 
   // Load messages on mount and check block status
   useEffect(() => {
+    // Seed with pending optimistic messages to avoid flicker on remount
+    const pending = getPending();
+    if (pending.length) {
+      setMessages(pending);
+    }
     loadMessages();
     checkBlockStatus();
-  }, [loadMessages, checkBlockStatus]);
+  }, [loadMessages, checkBlockStatus, getPending]);
 
   // Check block status periodically
   useEffect(() => {

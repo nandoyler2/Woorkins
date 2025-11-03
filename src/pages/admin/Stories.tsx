@@ -259,13 +259,19 @@ export default function Stories() {
                           <img
                             src={story.media_url}
                             alt="Story"
-                            className="h-16 w-16 object-cover rounded-lg"
+                            className="h-16 w-16 object-cover rounded-lg cursor-default"
+                            onClick={(e) => e.preventDefault()}
                           />
-                        ) : (
+                        ) : story.type === 'video' ? (
                           <video
                             src={story.media_url}
-                            className="h-16 w-16 object-cover rounded-lg"
+                            className="h-16 w-16 object-cover rounded-lg cursor-default"
+                            onClick={(e) => e.preventDefault()}
                           />
+                        ) : (
+                          <div className="h-16 w-16 flex items-center justify-center bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg cursor-default">
+                            <span className="text-white text-xs font-bold">Texto</span>
+                          </div>
                         )}
                       </TableCell>
                       <TableCell>

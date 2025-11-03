@@ -855,42 +855,60 @@ export function CreateStoryDialog({ isOpen, onClose, profiles, onStoryCreated }:
                         </div>
                       ) : mediaPreview ? (
                         <div className="w-full h-full relative bg-black">
-                          <div
-                            className="absolute cursor-move"
-                            style={{
-                              left: `${mediaPosition.x}%`,
-                              top: `${mediaPosition.y}%`,
-                              transform: `translate(-50%, -50%) scale(${mediaScale})`,
-                              width: '100%',
-                              height: '100%',
-                            }}
-                            onMouseDown={() => handleDragStart('media')}
-                            onWheel={(e) => {
-                              e.preventDefault();
-                              setMediaInteracted(true);
-                              setMediaScale(prev => Math.max(0.5, Math.min(2, prev + (e.deltaY > 0 ? -0.1 : 0.1))));
-                            }}
-                          >
-                            {type === 'image' ? (
+                          {type === 'image' ? (
+                            <div
+                              className={mediaInteracted ? "absolute cursor-move" : "w-full h-full"}
+                              style={mediaInteracted ? {
+                                left: `${mediaPosition.x}%`,
+                                top: `${mediaPosition.y}%`,
+                                transform: `translate(-50%, -50%) scale(${mediaScale})`,
+                                width: '100%',
+                                height: '100%',
+                              } : undefined}
+                              onMouseDown={() => handleDragStart('media')}
+                              onWheel={(e) => {
+                                e.preventDefault();
+                                setMediaInteracted(true);
+                                setMediaScale(prev => Math.max(0.5, Math.min(2, prev + (e.deltaY > 0 ? -0.1 : 0.1))));
+                              }}
+                            >
                               <img
                                 src={mediaPreview}
                                 alt="Preview"
                                 className="w-full h-full object-cover"
                               />
-                            ) : (
+                            </div>
+                          ) : (
+                            <div
+                              className={mediaInteracted ? "absolute cursor-move" : "w-full h-full"}
+                              style={mediaInteracted ? {
+                                left: `${mediaPosition.x}%`,
+                                top: `${mediaPosition.y}%`,
+                                transform: `translate(-50%, -50%) scale(${mediaScale})`,
+                                width: '100%',
+                                height: '100%',
+                              } : undefined}
+                              onMouseDown={() => handleDragStart('media')}
+                              onWheel={(e) => {
+                                e.preventDefault();
+                                setMediaInteracted(true);
+                                setMediaScale(prev => Math.max(0.5, Math.min(2, prev + (e.deltaY > 0 ? -0.1 : 0.1))));
+                              }}
+                            >
                               <video
                                 src={mediaPreview}
                                 controls
                                 muted
                                 autoPlay
                                 loop
+                                playsInline
                                 disablePictureInPicture
                                 disableRemotePlayback
                                 controlsList="nodownload noremoteplayback"
                                 className="w-full h-full object-cover"
                               />
-                            )}
-                          </div>
+                            </div>
+                          )}
                           
                           {/* Stickers no preview */}
                           {stickers.map((sticker) => (

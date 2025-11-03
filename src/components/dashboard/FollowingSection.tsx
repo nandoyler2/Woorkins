@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { Button } from '@/components/ui/button';
 import { ProfileAvatarWithHover } from '@/components/ProfileAvatarWithHover';
-import { Users, Bell, TrendingUp } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Users, ArrowRight } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import { formatShortName } from '@/lib/utils';
 
 interface FollowedProfile {
@@ -13,7 +12,9 @@ interface FollowedProfile {
   username: string;
   full_name: string | null;
   avatar_url: string | null;
-  hasUpdate: boolean;
+  hasStory: boolean;
+  latestStoryTime: string | null;
+  lastSeen: string | null;
   type: 'user' | 'business';
   company_name?: string;
   slug?: string;
@@ -26,30 +27,26 @@ interface FollowingSectionProps {
 export function FollowingSection({ profileId }: FollowingSectionProps) {
   const [following, setFollowing] = useState<FollowedProfile[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showAll, setShowAll] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     loadFollowing();
   }, [profileId]);
 
   useEffect(() => {
-    // Subscrever a atualizações de perfis seguidos
+    // Subscrever a novas stories
     const channel = supabase
-      .channel('profile-updates-following')
+      .channel('stories-following')
       .on(
         'postgres_changes',
         {
           event: 'INSERT',
           schema: 'public',
-          table: 'profile_updates' as any,
+          table: 'stories' as any,
         },
-        (payload) => {
-          // Verificar se a atualização é de alguém que seguimos
-          const updatedProfileId = (payload.new as any).profile_id;
-          setFollowing((prev) =>
-            prev.map((f) =>
-              f.id === updatedProfileId ? { ...f, hasUpdate: true } : f
-            )
-          );
+        () => {
+          loadFollowing();
         }
       )
       .subscribe();
@@ -70,47 +67,70 @@ export function FollowingSection({ profileId }: FollowingSectionProps) {
             id,
             username,
             full_name,
-            avatar_url
+            avatar_url,
+            last_seen
           )
         `)
         .eq('follower_id', profileId);
 
       if (followsError) throw followsError;
 
-      const userProfiles: FollowedProfile[] = (followsData || [])
+      const userProfiles = (followsData || [])
         .filter((f: any) => f.profiles)
         .map((f: any) => ({
           id: f.profiles.id,
           username: f.profiles.username,
           full_name: f.profiles.full_name,
           avatar_url: f.profiles.avatar_url,
-          hasUpdate: false,
+          lastSeen: f.profiles.last_seen,
+          hasStory: false,
+          latestStoryTime: null,
           type: 'user' as const,
         }));
 
-      // Buscar atualizações não lidas
       const followingIds = userProfiles.map((p) => p.id);
       
       if (followingIds.length > 0) {
-        const { data: updatesData } = await supabase
-          .from('profile_updates' as any)
-          .select('profile_id')
+        // Buscar stories ativas (últimas 24h)
+        const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+        const { data: storiesData } = await supabase
+          .from('stories' as any)
+          .select('profile_id, created_at')
           .in('profile_id', followingIds)
-          .not('id', 'in', `(
-            SELECT update_id 
-            FROM profile_update_reads 
-            WHERE profile_id = '${profileId}'
-          )`);
+          .gte('created_at', twentyFourHoursAgo)
+          .order('created_at', { ascending: false });
 
-        const profilesWithUpdates = new Set(
-          (updatesData || []).map((u: any) => u.profile_id)
-        );
+        // Mapear perfis com stories
+        const profilesWithStories = new Map<string, string>();
+        (storiesData || []).forEach((story: any) => {
+          if (!profilesWithStories.has(story.profile_id)) {
+            profilesWithStories.set(story.profile_id, story.created_at);
+          }
+        });
 
-        // Marcar perfis com atualizações
+        // Atualizar perfis com informação de stories
         const finalProfiles = userProfiles.map((p) => ({
           ...p,
-          hasUpdate: profilesWithUpdates.has(p.id),
+          hasStory: profilesWithStories.has(p.id),
+          latestStoryTime: profilesWithStories.get(p.id) || null,
         }));
+
+        // Ordenar: 1) Com stories (mais recente primeiro), 2) Mais ativos recentemente
+        finalProfiles.sort((a, b) => {
+          // Perfis com stories vêm primeiro
+          if (a.hasStory && !b.hasStory) return -1;
+          if (!a.hasStory && b.hasStory) return 1;
+          
+          // Se ambos têm stories, ordenar por story mais recente
+          if (a.hasStory && b.hasStory) {
+            return new Date(b.latestStoryTime!).getTime() - new Date(a.latestStoryTime!).getTime();
+          }
+          
+          // Se nenhum tem story, ordenar por último visto
+          const aLastSeen = a.lastSeen ? new Date(a.lastSeen).getTime() : 0;
+          const bLastSeen = b.lastSeen ? new Date(b.lastSeen).getTime() : 0;
+          return bLastSeen - aLastSeen;
+        });
 
         setFollowing(finalProfiles);
       } else {
@@ -123,39 +143,6 @@ export function FollowingSection({ profileId }: FollowingSectionProps) {
     }
   };
 
-  const markUpdatesAsRead = async (followedProfileId: string) => {
-    try {
-      // Buscar IDs das atualizações não lidas
-      const { data: updates } = await supabase
-        .from('profile_updates' as any)
-        .select('id')
-        .eq('profile_id', followedProfileId)
-        .not('id', 'in', `(
-          SELECT update_id 
-          FROM profile_update_reads 
-          WHERE profile_id = '${profileId}'
-        )`);
-
-      if (updates && updates.length > 0) {
-        // Marcar como lidas
-        const reads = updates.map((u: any) => ({
-          profile_id: profileId,
-          update_id: u.id,
-        }));
-
-        await supabase.from('profile_update_reads' as any).insert(reads);
-
-        // Atualizar estado local
-        setFollowing((prev) =>
-          prev.map((f) =>
-            f.id === followedProfileId ? { ...f, hasUpdate: false } : f
-          )
-        );
-      }
-    } catch (error) {
-      console.error('Error marking updates as read:', error);
-    }
-  };
 
   if (loading) {
     return (
@@ -197,58 +184,61 @@ export function FollowingSection({ profileId }: FollowingSectionProps) {
     );
   }
 
+  const displayedProfiles = showAll ? following : following.slice(0, 8);
+
   return (
     <Card className="bg-white shadow-sm border border-slate-200">
       <CardHeader className="border-b border-slate-100 p-4">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 bg-primary/10 rounded-lg flex items-center justify-center">
-            <Users className="w-4 h-4 text-primary" />
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 bg-primary/10 rounded-lg flex items-center justify-center">
+              <Users className="w-4 h-4 text-primary" />
+            </div>
+            <h3 className="text-base font-bold text-slate-900">Seguindo</h3>
           </div>
-          <h3 className="text-base font-bold text-slate-900">Seguindo</h3>
+          {following.length > 8 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowAll(!showAll)}
+              className="text-primary hover:text-primary hover:bg-primary/10 h-8 gap-1"
+            >
+              {showAll ? 'Ver menos' : 'Ver todos'}
+              {!showAll && <ArrowRight className="w-3 h-3" />}
+            </Button>
+          )}
         </div>
       </CardHeader>
       <CardContent className="p-4">
-        <ScrollArea className="h-[400px]">
-          <div className="space-y-2">
-            {following.map((profile) => (
-              <Link 
-                key={profile.id}
-                to={`/${profile.username}`}
-                onClick={() => {
-                  if (profile.hasUpdate) {
-                    markUpdatesAsRead(profile.id);
-                  }
-                }}
-              >
-                <div className="flex items-center justify-between py-2 hover:bg-slate-50 transition-colors rounded-lg px-2">
-                  <div className="flex items-center gap-2 flex-1 min-w-0">
-                    <ProfileAvatarWithHover
-                      profileId={profile.id}
-                      username={profile.username}
-                      avatarUrl={profile.avatar_url}
-                      size="sm"
-                      onClick={() => {
-                        if (profile.hasUpdate) {
-                          markUpdatesAsRead(profile.id);
-                        }
-                      }}
-                      hoverCardSide="right"
-                    />
-                    <span className="text-sm text-slate-700 truncate">
-                      {formatShortName(profile.full_name) || `@${profile.username}`}
-                    </span>
+        <div className="grid grid-cols-4 gap-4">
+          {displayedProfiles.map((profile) => (
+            <Link 
+              key={profile.id}
+              to={`/${profile.username}`}
+              className="flex flex-col items-center gap-2 group"
+            >
+              <div className="relative">
+                <ProfileAvatarWithHover
+                  profileId={profile.id}
+                  username={profile.username}
+                  avatarUrl={profile.avatar_url}
+                  size="lg"
+                  hoverCardSide="right"
+                />
+                {profile.hasStory && (
+                  <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-primary rounded-full border-2 border-white flex items-center justify-center">
+                    <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
                   </div>
-                  {profile.hasUpdate && (
-                    <Badge variant="secondary" className="gap-1 flex-shrink-0 bg-blue-100 text-blue-700 border-0 text-xs">
-                      <Bell className="w-3 h-3" />
-                      Novo
-                    </Badge>
-                  )}
-                </div>
-              </Link>
-            ))}
-          </div>
-        </ScrollArea>
+                )}
+              </div>
+              <div className="text-center w-full">
+                <p className="text-xs font-medium text-slate-700 truncate group-hover:text-primary transition-colors">
+                  {formatShortName(profile.full_name) || profile.username}
+                </p>
+              </div>
+            </Link>
+          ))}
+        </div>
       </CardContent>
     </Card>
   );

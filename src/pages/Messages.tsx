@@ -58,13 +58,14 @@ export default function Messages() {
     updateConversation,
     isStale
   } = useConversationCache();
-  const [conversations, setConversations] = useState<Conversation[]>(cachedConversations);
+  const cachedData = useConversationCache();
+  const [conversations, setConversations] = useState<Conversation[]>(cachedData.conversations);
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [profileId, setProfileId] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<'all' | 'unread' | 'starred' | 'archived' | 'disputes'>('all');
   const [isBackgroundLoading, setIsBackgroundLoading] = useState(false);
-  const [isInitialLoading, setIsInitialLoading] = useState(cachedConversations.length === 0);
+  const [isInitialLoading, setIsInitialLoading] = useState(cachedData.conversations.length === 0 || !cachedData.lastFetched);
   const isLoadingRef = useRef(false);
   const loadingTimeoutRef = useRef<NodeJS.Timeout>();
   const hasLoadedData = useRef(false);
@@ -83,152 +84,154 @@ export default function Messages() {
 
   useEffect(() => {
     if (profileId) {
-      // Carregar do cache primeiro (instantâneo)
-      if (cachedConversations.length > 0) {
-        setConversations(cachedConversations);
+      // Se tem cache válido, mostrar imediatamente e atualizar em background
+      if (cachedData.conversations.length > 0 && !cachedData.isStale()) {
+        setConversations(cachedData.conversations);
         setIsInitialLoading(false);
+        // Atualizar em background após um delay
+        const timer = setTimeout(() => {
+          loadConversations(true);
+        }, 1000);
+        
+        const channel = setupRealtimeSubscriptions();
+        return () => {
+          clearTimeout(timer);
+          supabase.removeChannel(channel);
+        };
       }
       
-      // Forçar atualização para garantir dados frescos com debounce
-      const timer = setTimeout(() => {
-        loadConversations(true);
-      }, 400);
+      // Sem cache ou cache expirado: carregar normalmente
+      loadConversations(false);
       
-      // Subscribe to lightweight realtime updates for conversation list (avoid full reload)
-      // IMPORTANTE: Remover selectedConversation das dependências para não recriar canal
-      const channel = supabase
-        .channel('conversations-updates')
-        .on(
-          'postgres_changes',
-          {
-            event: 'INSERT',
-            schema: 'public',
-            table: 'negotiation_messages'
-          },
-          (payload) => {
-            const m: any = payload.new;
-            setConversations(prev => {
-              const updated = prev.map(c => {
-                if (c.type === 'negotiation' && c.id === m.negotiation_id) {
-                  const isActive = selectedConversation?.type === 'negotiation' && selectedConversation?.id === c.id;
-                  const inc = !isActive && m.sender_id !== profileId ? 1 : 0;
-                  const updatedConv = {
-                    ...c,
-                    lastMessageAt: m.created_at,
-                    unreadCount: (c.unreadCount || 0) + inc,
-                  };
-                  // Atualizar cache também
-                  updateConversation(c.id, 'negotiation', updatedConv);
-                  return updatedConv;
-                }
-                return c;
-              });
-              // Sort by last activity desc
-              const sorted = [...updated].sort((a, b) => new Date(b.lastMessageAt || 0).getTime() - new Date(a.lastMessageAt || 0).getTime());
-              setCachedConversations(sorted);
-              return sorted;
-            });
-          }
-        )
-        .on(
-          'postgres_changes',
-          {
-            event: 'INSERT',
-            schema: 'public',
-            table: 'proposal_messages'
-          },
-          (payload) => {
-            const m: any = payload.new;
-            setConversations(prev => {
-              const updated = prev.map(c => {
-                if (c.type === 'proposal' && c.id === m.proposal_id) {
-                  const isActive = selectedConversation?.type === 'proposal' && selectedConversation?.id === c.id;
-                  const inc = !isActive && m.sender_id !== profileId ? 1 : 0;
-                  const updatedConv = {
-                    ...c,
-                    lastMessageAt: m.created_at,
-                    unreadCount: (c.unreadCount || 0) + inc,
-                  };
-                  // Atualizar cache também
-                  updateConversation(c.id, 'proposal', updatedConv);
-                  return updatedConv;
-                }
-                return c;
-              });
-              const sorted = [...updated].sort((a, b) => new Date(b.lastMessageAt || 0).getTime() - new Date(a.lastMessageAt || 0).getTime());
-              setCachedConversations(sorted);
-              return sorted;
-            });
-          }
-        )
-        .on(
-          'postgres_changes',
-          {
-            event: 'UPDATE',
-            schema: 'public',
-            table: 'message_unread_counts',
-            filter: `user_id=eq.${profileId}`
-          },
-          (payload) => {
-            // Quando contadores de não lidas são atualizados, atualizar instantaneamente
-            const update: any = payload.new;
-            setConversations(prev => {
-              const updated = prev.map(c => {
-                if (c.type === update.conversation_type && c.id === update.conversation_id) {
-                  const updatedConv = {
-                    ...c,
-                    unreadCount: update.unread_count || 0,
-                  };
-                  updateConversation(c.id, c.type, updatedConv);
-                  return updatedConv;
-                }
-                return c;
-              });
-              setCachedConversations(updated);
-              return updated;
-            });
-          }
-        )
-        .on(
-          'postgres_changes',
-          {
-            event: 'UPDATE',
-            schema: 'public',
-            table: 'proposals'
-          },
-          (payload) => {
-            // Quando uma proposta é atualizada (status do trabalho ou pagamento), atualizar instantaneamente
-            const updated: any = payload.new;
-            setConversations(prev => {
-              const updatedList = prev.map(c => {
-                if (c.type === 'proposal' && c.id === updated.id) {
-                  const updatedConv = {
-                    ...c,
-                    status: updated.status,
-                    paymentStatus: updated.payment_status,
-                    workStatus: updated.work_status,
-                    lastMessageAt: updated.updated_at,
-                  };
-                  updateConversation(c.id, 'proposal', updatedConv);
-                  return updatedConv;
-                }
-                return c;
-              });
-              // Re-sort by last activity
-              const sorted = [...updatedList].sort((a, b) => new Date(b.lastMessageAt || 0).getTime() - new Date(a.lastMessageAt || 0).getTime());
-              setCachedConversations(sorted);
-              return sorted;
-            });
-          }
-        )
-        .subscribe();
-
+      const channel = setupRealtimeSubscriptions();
       return () => {
-        clearTimeout(timer);
         supabase.removeChannel(channel);
       };
     }
   }, [profileId, activeFilter]);
+
+  const setupRealtimeSubscriptions = () => {
+    return supabase
+      .channel('conversations-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'negotiation_messages'
+        },
+        (payload) => {
+          const m: any = payload.new;
+          setConversations(prev => {
+            const updated = prev.map(c => {
+              if (c.type === 'negotiation' && c.id === m.negotiation_id) {
+                const isActive = selectedConversation?.type === 'negotiation' && selectedConversation?.id === c.id;
+                const inc = !isActive && m.sender_id !== profileId ? 1 : 0;
+                const updatedConv = {
+                  ...c,
+                  lastMessageAt: m.created_at,
+                  unreadCount: (c.unreadCount || 0) + inc,
+                };
+                cachedData.updateConversation(c.id, 'negotiation', updatedConv);
+                return updatedConv;
+              }
+              return c;
+            });
+            const sorted = [...updated].sort((a, b) => new Date(b.lastMessageAt || 0).getTime() - new Date(a.lastMessageAt || 0).getTime());
+            cachedData.setConversations(sorted);
+            return sorted;
+          });
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'proposal_messages'
+        },
+        (payload) => {
+          const m: any = payload.new;
+          setConversations(prev => {
+            const updated = prev.map(c => {
+              if (c.type === 'proposal' && c.id === m.proposal_id) {
+                const isActive = selectedConversation?.type === 'proposal' && selectedConversation?.id === c.id;
+                const inc = !isActive && m.sender_id !== profileId ? 1 : 0;
+                const updatedConv = {
+                  ...c,
+                  lastMessageAt: m.created_at,
+                  unreadCount: (c.unreadCount || 0) + inc,
+                };
+                cachedData.updateConversation(c.id, 'proposal', updatedConv);
+                return updatedConv;
+              }
+              return c;
+            });
+            const sorted = [...updated].sort((a, b) => new Date(b.lastMessageAt || 0).getTime() - new Date(a.lastMessageAt || 0).getTime());
+            cachedData.setConversations(sorted);
+            return sorted;
+          });
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'message_unread_counts',
+          filter: `user_id=eq.${profileId}`
+        },
+        (payload) => {
+          const update: any = payload.new;
+          setConversations(prev => {
+            const updated = prev.map(c => {
+              if (c.type === update.conversation_type && c.id === update.conversation_id) {
+                const updatedConv = {
+                  ...c,
+                  unreadCount: update.unread_count || 0,
+                };
+                cachedData.updateConversation(c.id, c.type, updatedConv);
+                return updatedConv;
+              }
+              return c;
+            });
+            cachedData.setConversations(updated);
+            return updated;
+          });
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'proposals'
+        },
+        (payload) => {
+          const updated: any = payload.new;
+          setConversations(prev => {
+            const updatedList = prev.map(c => {
+              if (c.type === 'proposal' && c.id === updated.id) {
+                const updatedConv = {
+                  ...c,
+                  status: updated.status,
+                  paymentStatus: updated.payment_status,
+                  workStatus: updated.work_status,
+                  lastMessageAt: updated.updated_at,
+                };
+                cachedData.updateConversation(c.id, 'proposal', updatedConv);
+                return updatedConv;
+              }
+              return c;
+            });
+            const sorted = [...updatedList].sort((a, b) => new Date(b.lastMessageAt || 0).getTime() - new Date(a.lastMessageAt || 0).getTime());
+            cachedData.setConversations(sorted);
+            return sorted;
+          });
+        }
+      )
+      .subscribe();
+  };
 
   // Auto-select conversation from query params (only from notifications)
   useEffect(() => {
@@ -252,10 +255,6 @@ export default function Messages() {
 
       if (profiles && profiles.length > 0) {
         setProfileId(profiles[0].id);
-        // Só desligar loading se não tiver cache
-        if (cachedConversations.length === 0) {
-          setIsInitialLoading(false);
-        }
       }
     } catch (error) {
       console.error('Error loading profile:', error);
@@ -271,8 +270,9 @@ export default function Messages() {
     }
 
     // Se tem cache válido e não é refresh forçado, usar cache
-    if (!forceRefresh && !isStale()) {
-      setConversations(cachedConversations);
+    if (!forceRefresh && !cachedData.isStale()) {
+      setConversations(cachedData.conversations);
+      setIsInitialLoading(false);
       return;
     }
 
@@ -478,6 +478,9 @@ export default function Messages() {
         (a, b) => new Date(b.lastMessageAt || 0).getTime() - new Date(a.lastMessageAt || 0).getTime()
       );
 
+      // Atualizar cache
+      cachedData.setConversations(allConvos);
+      
       // Reconcile aggregated unread counts to ensure header badge updates immediately
       const aggregateRows = allConvos.map((c) => ({
         user_id: profileId,

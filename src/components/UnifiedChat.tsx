@@ -1074,6 +1074,7 @@ export function UnifiedChat({
                       .update({
                         status: 'accepted',
                         accepted_amount: new_value?.amount,
+                        current_proposal_amount: new_value?.amount,
                         awaiting_acceptance_from: null,
                       })
                       .eq('id', conversationId);
@@ -1395,11 +1396,13 @@ export function UnifiedChat({
           onAccept={async () => {
             setIsLoading(true);
             try {
+              const acceptedValue = proposalData.current_proposal_amount || proposalData.budget;
               await supabase
                 .from('proposals')
                 .update({
                   status: 'accepted',
-                  accepted_amount: proposalData.current_proposal_amount || proposalData.budget,
+                  accepted_amount: acceptedValue,
+                  current_proposal_amount: acceptedValue,
                   awaiting_acceptance_from: null,
                 })
                 .eq('id', conversationId);

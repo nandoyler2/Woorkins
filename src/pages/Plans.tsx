@@ -451,9 +451,7 @@ export default function Plans() {
               <p className="text-lg">
                 💡 A taxa de recebimento é cobrada apenas quando você recebe pagamentos pelos seus serviços.
               </p>
-              <p className="text-lg">
-                💡 A taxa de recebimento é cobrada apenas quando você recebe pagamentos pelos seus serviços.
-              </p>
+              
               <p className="text-muted-foreground">
                 Criar projetos e contratar freelancers é totalmente grátis!
               </p>

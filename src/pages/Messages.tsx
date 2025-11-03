@@ -1564,10 +1564,9 @@ export default function Messages() {
                     <h1 className="text-5xl font-bold mb-4 text-white drop-shadow-lg">
                       Grandes negócios acontecem aqui
                     </h1>
-                    <p className="text-xl text-white/90 drop-shadow-md mb-2">
-                      Selecione uma conversa na lista
+                    <p className="text-xl text-white/90 drop-shadow-md mb-6">
+                      Selecione uma conversa na lista ou:
                     </p>
-                    <p className="text-xl text-white/90 drop-shadow-md mb-6">ou:</p>
                     
                     <div className="flex gap-4 justify-center">
                       <Button

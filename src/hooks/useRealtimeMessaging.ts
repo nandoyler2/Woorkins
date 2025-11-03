@@ -454,7 +454,8 @@ export const useRealtimeMessaging = ({
               sender_id: data.sender_id,
               sender_name: 'Você',
               content: data.content,
-              created_at: data.created_at,
+              // preserve original created_at to avoid reordering/flicker
+              created_at: msg.created_at,
               status: 'moderating',
               moderation_status: 'pending',
               media_url: data.media_url ?? msg.media_url,
@@ -612,7 +613,7 @@ export const useRealtimeMessaging = ({
               if (hasTemp) {
                 return prev.map(m => 
                   m.id.toString().startsWith('temp-') && m.content === message.content
-                    ? { ...message, client_key: m.client_key || m.id }
+                    ? { ...message, client_key: m.client_key || m.id, created_at: m.created_at }
                     : m
                 );
               }

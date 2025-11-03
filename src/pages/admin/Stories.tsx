@@ -66,7 +66,7 @@ export default function Stories() {
           expires_at,
           media_url,
           type,
-          caption,
+          text_content,
           profile_id,
           profile:profiles!profile_stories_profile_id_fkey (
             full_name,
@@ -80,6 +80,7 @@ export default function Stories() {
       
       const formattedData = (data || []).map((story: any) => ({
         ...story,
+        caption: story.text_content ?? null,
         profiles: story.profile
       }));
       

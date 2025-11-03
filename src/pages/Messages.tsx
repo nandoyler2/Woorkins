@@ -817,7 +817,7 @@ export default function Messages() {
 
         <div className="flex-1 flex overflow-hidden">
           {/* Lista de Conversas */}
-          <div className="w-96 border-r bg-card shadow-md overflow-hidden flex flex-col" key={`conversations-${activeFilter}`}>
+          <div className="w-96 border-r bg-card shadow-md overflow-hidden flex flex-col">
             <div className="p-3 border-b">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -836,7 +836,7 @@ export default function Messages() {
               )}
             </div>
             
-            <div className="flex-1 overflow-y-auto" key={`list-${activeFilter}`}>
+            <div className="flex-1 overflow-y-auto">
               {filteredConversations.length === 0 ? (
                 <div className="text-center py-12 text-muted-foreground px-4">
                   <MessageCircle className="h-12 w-12 mx-auto mb-3 opacity-30" />

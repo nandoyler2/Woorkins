@@ -194,34 +194,16 @@ export function UnifiedChat({
     : blockedUntil;
   const finalBlockReason = systemMessagingBlock?.reason || blockReason;
 
-  // Scroll inicial instantâneo quando a conversa muda
+  // Scroll instantâneo para a última mensagem (mais recente) sem animação - igual WhatsApp
   useLayoutEffect(() => {
     const container = messagesContainerRef.current;
-    if (container) {
-      // Scroll instantâneo (sem animação) como WhatsApp
-      container.scrollTop = container.scrollHeight;
+    if (container && messages.length > 0) {
+      // Força scroll para o final absoluto instantaneamente
+      requestAnimationFrame(() => {
+        container.scrollTop = container.scrollHeight;
+      });
     }
   }, [conversationId]);
-
-  // Scroll suave apenas para novas mensagens
-  useEffect(() => {
-    if (messages.length === 0) return;
-    
-    const container = messagesContainerRef.current;
-    if (container) {
-      const isAtBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
-      
-      // Se já está perto do final, fazer scroll suave
-      if (isAtBottom) {
-        setTimeout(() => {
-          container.scrollTo({
-            top: container.scrollHeight,
-            behavior: 'smooth'
-          });
-        }, 100);
-      }
-    }
-  }, [messages.length]);
 
   // Marcar mensagens como lidas quando a conversa muda
   useEffect(() => {

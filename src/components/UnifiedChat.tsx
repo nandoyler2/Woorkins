@@ -1540,7 +1540,7 @@ export function UnifiedChat({
                   return (
                     <div
                       key={(message as any).client_key || message.id}
-                      className={`flex gap-2 group animate-in slide-in-from-bottom-2 ${
+                      className={`flex gap-2 group ${(((message as any).client_key || '').toString().startsWith('temp-')) ? 'animate-in slide-in-from-bottom-2' : ''} ${
                         isMine ? 'flex-row-reverse' : 'flex-row'
                       }`}
                     >

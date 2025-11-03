@@ -305,7 +305,7 @@ export const useRealtimeMessaging = ({
         });
       }
     }
-  }, [conversationId, conversationType, currentUserId, messages, oldestMessageId, suppressToasts, toast, markMessagesAsRead]);
+  }, [conversationId, conversationType, currentUserId, oldestMessageId, suppressToasts, toast, markMessagesAsRead]);
 
   // Função para carregar mais mensagens antigas
   const loadMoreMessages = useCallback(async () => {
@@ -757,11 +757,17 @@ export const useRealtimeMessaging = ({
     // Seed with pending optimistic messages to avoid flicker on remount
     const pending = getPending();
     if (pending.length) {
-      setMessages(pending);
+      // Merge (do not replace) to keep any already mounted items stable
+      setMessages(prev => {
+        const byId = new Set(prev.map(m => m.id));
+        const merged = [...prev, ...pending.filter(m => !byId.has(m.id))];
+        return merged.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+      });
     }
-    loadMessages();
+    // Perform initial load once per conversation change
+    loadMessages(true);
     checkBlockStatus();
-  }, [loadMessages, checkBlockStatus, getPending]);
+  }, [conversationId, conversationType, currentUserId, checkBlockStatus, getPending]);
 
   // Check block status periodically
   useEffect(() => {

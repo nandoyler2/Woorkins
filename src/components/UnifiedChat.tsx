@@ -197,22 +197,14 @@ export function UnifiedChat({
     : blockedUntil;
   const finalBlockReason = systemMessagingBlock?.reason || blockReason;
 
-  // Scroll instantâneo para a última mensagem sem animação
+  // Scroll instantâneo apenas na troca de conversa (não em toda mudança de mensagem)
   useLayoutEffect(() => {
-    if (messages.length === 0) return;
-    
     const container = messagesContainerRef.current;
     if (!container) return;
     
-    // Scroll instantâneo para o final
-    const scrollToBottom = () => {
-      container.scrollTop = container.scrollHeight;
-    };
-    
-    scrollToBottom();
-    requestAnimationFrame(scrollToBottom);
-    setTimeout(scrollToBottom, 50);
-  }, [messages.length, conversationId]);
+    // Scroll instantâneo para o final apenas quando a conversa muda
+    container.scrollTop = container.scrollHeight;
+  }, [conversationId]);
 
   // Detectar scroll para cima e carregar mais mensagens (infinite scroll reverso)
   useEffect(() => {

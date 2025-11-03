@@ -129,6 +129,11 @@ export default function Messages() {
         (payload) => {
           const m: any = payload.new;
           setConversations(prev => {
+            // Apenas atualizar conversas que já estão na lista atual
+            // Isso evita que conversas arquivadas apareçam quando uma mensagem nova chega
+            const existsInCurrent = prev.some(c => c.type === 'negotiation' && c.id === m.negotiation_id);
+            if (!existsInCurrent) return prev;
+            
             const updated = prev.map(c => {
               if (c.type === 'negotiation' && c.id === m.negotiation_id) {
                 const isActive = selectedConversation?.type === 'negotiation' && selectedConversation?.id === c.id;
@@ -159,6 +164,10 @@ export default function Messages() {
         (payload) => {
           const m: any = payload.new;
           setConversations(prev => {
+            // Apenas atualizar conversas que já estão na lista atual
+            const existsInCurrent = prev.some(c => c.type === 'proposal' && c.id === m.proposal_id);
+            if (!existsInCurrent) return prev;
+            
             const updated = prev.map(c => {
               if (c.type === 'proposal' && c.id === m.proposal_id) {
                 const isActive = selectedConversation?.type === 'proposal' && selectedConversation?.id === c.id;

@@ -107,7 +107,6 @@ export function UnifiedChat({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messageInputRef = useRef<HTMLInputElement>(null);
   const [activities, setActivities] = useState<any[]>([]);
-  const [visibleTimestamps, setVisibleTimestamps] = useState<Record<string, boolean>>({});
 
   const { isVerified } = useDocumentVerification(profileId);
 
@@ -201,44 +200,35 @@ export function UnifiedChat({
   const prevMessageCountRef = useRef(0);
   const isInitialForConversationRef = useRef(false);
   
-  // Scroll instantâneo ao trocar de conversa
+  // Scroll INSTANTÂNEO ao trocar de conversa - SEM animação
   useLayoutEffect(() => {
     const container = messagesContainerRef.current;
     if (!container) return;
     
     isInitialForConversationRef.current = true;
     
-    // Duplo RAF para garantir que o DOM está completamente renderizado
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        if (container) {
-          // Forçar scroll instantâneo sem suavização
-          const prevBehavior = container.style.scrollBehavior;
-          container.style.scrollBehavior = 'auto';
-          container.scrollTop = container.scrollHeight;
-          container.style.scrollBehavior = prevBehavior || '';
-          
-          prevMessageCountRef.current = messages.length;
-          isInitialForConversationRef.current = false;
-        }
-      });
-    });
+    // Forçar scroll instantâneo IMEDIATAMENTE
+    container.style.scrollBehavior = 'auto';
+    container.scrollTop = container.scrollHeight;
+    
+    prevMessageCountRef.current = messages.length;
+    
+    // Aguardar um momento para liberar scroll suave em novas mensagens
+    setTimeout(() => {
+      isInitialForConversationRef.current = false;
+    }, 100);
   }, [conversationId]);
   
-  // Scroll suave para novas mensagens (após a abertura inicial)
+  // Scroll suave APENAS para novas mensagens (após a abertura inicial)
   useEffect(() => {
-    // Não fazer scroll durante a primeira carga
     if (isInitialForConversationRef.current) return;
     
     const container = messagesContainerRef.current;
     if (!container) return;
     
-    // Se o número de mensagens aumentou, fazer scroll suave para o final
     if (messages.length > prevMessageCountRef.current) {
-      container.scrollTo({
-        top: container.scrollHeight,
-        behavior: 'smooth'
-      });
+      container.style.scrollBehavior = 'smooth';
+      container.scrollTop = container.scrollHeight;
     }
     
     prevMessageCountRef.current = messages.length;
@@ -835,13 +825,6 @@ export function UnifiedChat({
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setMessageInput(e.target.value);
     handleTyping();
-  };
-
-  const showTimestamp = (id: string) => {
-    setVisibleTimestamps(prev => ({ ...prev, [id]: true }));
-    setTimeout(() => {
-      setVisibleTimestamps(prev => ({ ...prev, [id]: false }));
-    }, 2500);
   };
 
   const getMessageStatusIcon = (status?: string) => {
@@ -1570,7 +1553,7 @@ export function UnifiedChat({
                   return (
                     <div
                       key={(message as any).client_key || message.id}
-                      className={`flex gap-2 group ${(((message as any).client_key || '').toString().startsWith('temp-')) ? 'animate-in slide-in-from-bottom-2' : ''} ${
+                      className={`flex gap-2 mb-1 group ${(((message as any).client_key || '').toString().startsWith('temp-')) ? 'animate-in slide-in-from-bottom-2' : ''} ${
                         isMine ? 'flex-row-reverse' : 'flex-row'
                       }`}
                     >
@@ -1581,9 +1564,9 @@ export function UnifiedChat({
                             {message.sender_name.charAt(0).toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
-                      )}
-                      
-                       <div className={`flex flex-col max-w-[75%] group ${isMine ? 'items-end' : 'items-start'}`} onClick={() => showTimestamp(message.id)}>
+                       )}
+                       
+                        <div className={`flex flex-col max-w-[75%] group ${isMine ? 'items-end' : 'items-start'}`}>
                           {/* Rejected message */}
                           {message.status === 'rejected' && isMine ? (
                             <div className="bg-red-50 dark:bg-red-950/20 border border-red-300 dark:border-red-800 rounded-2xl px-4 py-3 shadow-sm max-w-md">
@@ -1652,14 +1635,35 @@ export function UnifiedChat({
                                 </p>
                               ) : (
                                 <>
-                                  {message.content && <p className="text-sm leading-relaxed break-words">{message.content}</p>}
-                                  {/* Moderating indicator */}
-                                  {message.status === 'moderating' && isMine && (
-                                    <div className="flex items-center gap-1 mt-1 text-xs opacity-70">
-                                      <Loader2 className="h-3 w-3 animate-spin" />
-                                      <span>Verificando mensagem...</span>
+                                  <div className="flex items-end gap-2">
+                                    <div className="flex-1">
+                                      {message.content && <p className="text-sm leading-relaxed break-words">{message.content}</p>}
+                                      {/* Moderating indicator */}
+                                      {message.status === 'moderating' && isMine && (
+                                        <div className="flex items-center gap-1 mt-1 text-xs opacity-70">
+                                          <Loader2 className="h-3 w-3 animate-spin" />
+                                          <span>Verificando mensagem...</span>
+                                        </div>
+                                      )}
                                     </div>
-                                  )}
+                                    {/* Timestamp e status inline */}
+                                    <div className="flex items-center gap-1 flex-shrink-0 self-end">
+                                      <span className="text-[10px] opacity-70 whitespace-nowrap">
+                                        {(() => {
+                                          const messageDate = new Date(message.created_at);
+                                          return messageDate.toLocaleTimeString('pt-BR', {
+                                            hour: '2-digit',
+                                            minute: '2-digit'
+                                          });
+                                        })()}
+                                      </span>
+                                      {isMine && message.status !== 'rejected' && (
+                                        <span className="opacity-70">
+                                          {getMessageStatusIcon(message.status)}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
                                 </>
                               )}
                               {isMine && !isDeleted && (! (conversationType === 'proposal' && proposalData?.status === 'accepted')) && message.status !== 'rejected' && (
@@ -1675,39 +1679,8 @@ export function UnifiedChat({
                                   Excluir
                                 </button>
                               )}
-                            </div>
+                             </div>
                           )}
-                         <div className={`flex items-center gap-1.5 mt-1 ${isMine ? 'flex-row-reverse' : 'flex-row'}`}>
-                           <span className={`text-xs text-muted-foreground ${visibleTimestamps[message.id] ? 'opacity-100' : 'opacity-0'} group-hover:opacity-100 transition-opacity duration-200`}>
-                             {(() => {
-                               const messageDate = new Date(message.created_at);
-                               const now = new Date();
-                               const diffInHours = (now.getTime() - messageDate.getTime()) / (1000 * 60 * 60);
-                               
-                               // Após 24h, mostra data e hora exata
-                               if (diffInHours > 24) {
-                                 return messageDate.toLocaleString('pt-BR', {
-                                   day: '2-digit',
-                                   month: '2-digit',
-                                   year: 'numeric',
-                                   hour: '2-digit',
-                                   minute: '2-digit'
-                                 });
-                               }
-                               
-                               // Antes de 24h, mostra tempo relativo
-                               return formatDistanceToNow(messageDate, {
-                                 addSuffix: true,
-                                 locale: ptBR,
-                               });
-                             })()}
-                           </span>
-                           {isMine && message.status !== 'rejected' && (
-                             <span className={`transition-opacity duration-200 ${visibleTimestamps[message.id] ? 'opacity-100' : 'opacity-0'} group-hover:opacity-100`}>
-                               {getMessageStatusIcon(message.status)}
-                             </span>
-                           )}
-                         </div>
                        </div>
                     </div>
                   );

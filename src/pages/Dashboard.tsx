@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, lazy, Suspense } from 'react';
+import { useState, useEffect, useMemo, lazy, Suspense, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Header } from '@/components/Header';
@@ -129,9 +129,16 @@ export default function Dashboard() {
   const [woorkoinsBalance, setWoorkoinsBalance] = useState(0);
   const [availableBalance, setAvailableBalance] = useState(0);
   
-  // Garantir que a página sempre inicie no topo
+  // Flag para controlar se os dados já foram carregados
+  const hasLoadedData = useRef(false);
+  
+  // Garantir que a página sempre inicie no topo apenas uma vez
+  const hasScrolledToTop = useRef(false);
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'instant' });
+    if (!hasScrolledToTop.current) {
+      window.scrollTo({ top: 0, behavior: 'instant' });
+      hasScrolledToTop.current = true;
+    }
   }, []);
   
   // Usar hook de mensagens não lidas
@@ -308,8 +315,10 @@ export default function Dashboard() {
     };
   }, [setOnStoryUploaded]);
 
+  // Carregar dados apenas uma vez quando o usuário estiver disponível
   useEffect(() => {
-    if (user) {
+    if (user && !hasLoadedData.current) {
+      hasLoadedData.current = true;
       loadAllDashboardData();
       checkEmailConfirmation();
     }

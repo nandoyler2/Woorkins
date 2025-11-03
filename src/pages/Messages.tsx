@@ -33,7 +33,7 @@ import { MessagesSkeleton } from '@/components/messages/MessagesSkeleton';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { formatShortName } from '@/lib/utils';
-import { toast } from 'sonner';
+import { toast } from '@/hooks/use-toast';
 import notificationSound from '@/assets/notification-sound.mp3';
 
 interface Conversation {
@@ -728,10 +728,10 @@ export default function Messages() {
       // Recarregar conversas para garantir consistência
       setTimeout(() => loadConversations(true), 300);
       
-      toast.success(newFavoriteState ? "Adicionado às favoritas" : "Removido das favoritas");
+      toast({ title: newFavoriteState ? "Adicionado às favoritas" : "Removido das favoritas" });
     } catch (error) {
       console.error('Error toggling favorite:', error);
-      toast.error("Erro ao atualizar favorita");
+      toast({ title: "Erro ao atualizar favorita", description: String(error) });
     }
   };
 
@@ -774,20 +774,43 @@ export default function Messages() {
         }
       }
 
-      toast.success("Conversa removida da caixa de entrada");
+      toast({ title: "Conversa removida da caixa de entrada" });
       
       // Recarregar conversas em background
       setTimeout(() => loadConversations(true), 500);
     } catch (error) {
       console.error('Error removing from inbox:', error);
-      toast.error("Erro ao remover da caixa de entrada");
+      toast({ title: "Erro ao remover da caixa de entrada", description: String(error) });
     } finally {
       setShowRemoveDialog(false);
       setConversationToRemove(null);
     }
   };
 
-  // Função para obter informações dinâmicas do badge baseado no status
+  const handleShowInInbox = async (conv: Conversation) => {
+    try {
+      const table = conv.type === 'negotiation' ? 'negotiations' : 'proposals';
+      const { error } = await supabase
+        .from(table)
+        .update({ hide_from_inbox: false })
+        .eq('id', conv.id);
+
+      if (error) throw error;
+
+      // Atualizar localmente
+      setConversations(prev => prev.map(c => 
+        c.id === conv.id ? { ...c, hideFromInbox: false } : c
+      ));
+
+      toast({ title: 'Conversa exibida na caixa de entrada' });
+
+      // Se estiver em outro filtro, apenas recarregar em background
+      setTimeout(() => loadConversations(true), 300);
+    } catch (error) {
+      console.error('Error showing in inbox:', error);
+      toast({ title: 'Erro ao exibir na caixa de entrada', description: String(error) });
+    }
+  };
   const getProposalBadgeInfo = (conv: Conversation) => {
     const isFreelancer = conv.freelancerId === profileId;
     const isOwner = !isFreelancer;
@@ -1240,16 +1263,28 @@ export default function Messages() {
                                   <Star className={`h-4 w-4 mr-2 ${conv.isFavorited ? 'fill-yellow-500 text-yellow-500' : ''}`} />
                                   {conv.isFavorited ? 'Remover dos favoritos' : 'Favoritar'}
                                 </DropdownMenuItem>
-                                {activeFilter === 'all' && (
+                                {conv.hideFromInbox ? (
                                   <DropdownMenuItem 
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      handleRemoveFromInbox(conv);
+                                      handleShowInInbox(conv);
                                     }}
                                   >
-                                    <EyeOff className="h-4 w-4 mr-2" />
-                                    Remover da caixa de entrada
+                                    <Inbox className="h-4 w-4 mr-2" />
+                                    Exibir na caixa de entrada
                                   </DropdownMenuItem>
+                                ) : (
+                                  activeFilter === 'all' && (
+                                    <DropdownMenuItem 
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleRemoveFromInbox(conv);
+                                      }}
+                                    >
+                                      <EyeOff className="h-4 w-4 mr-2" />
+                                      Remover da caixa de entrada
+                                    </DropdownMenuItem>
+                                  )
                                 )}
                                 <DropdownMenuItem 
                                   onClick={(e) => {

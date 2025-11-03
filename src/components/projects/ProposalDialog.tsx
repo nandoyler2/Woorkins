@@ -127,7 +127,27 @@ export function ProposalDialog({ open, onOpenChange, projectId, projectTitle, pr
     }
 
     setLoading(true);
+    
     try {
+      // Moderar conteúdo da proposta ANTES de enviar
+      const moderationResponse = await supabase.functions.invoke('moderate-content', {
+        body: { 
+          content: message.trim(), 
+          type: 'proposal' 
+        }
+      });
+
+      if (!moderationResponse.data?.approved) {
+        toast({
+          title: 'Proposta não pode ser enviada',
+          description: moderationResponse.data?.reason || 'Sua proposta contém informações de contato externo (WhatsApp, Instagram, telefone) ou conteúdo inapropriado. Por favor, remova essas informações e tente novamente.',
+          variant: 'destructive',
+          duration: 10000,
+        });
+        setLoading(false);
+        return;
+      }
+
       // Get user profile
       const { data: profile, error: profileError } = await supabase
         .from('profiles' as any)

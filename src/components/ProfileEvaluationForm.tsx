@@ -87,6 +87,7 @@ export function ProfileEvaluationForm({ profileId, onSuccess }: ProfileEvaluatio
           description: 'Você precisa estar logado para avaliar',
           variant: 'destructive',
         });
+        setUploading(false);
         return;
       }
 
@@ -103,6 +104,37 @@ export function ProfileEvaluationForm({ profileId, onSuccess }: ProfileEvaluatio
           description: 'Erro ao carregar perfil do usuário',
           variant: 'destructive',
         });
+        setUploading(false);
+        return;
+      }
+
+      // Verificar se está tentando avaliar o próprio perfil
+      if (userProfile.id === profileId) {
+        toast({
+          title: 'Erro',
+          description: 'Você não pode avaliar o seu próprio perfil',
+          variant: 'destructive',
+        });
+        setUploading(false);
+        return;
+      }
+
+      // Moderar texto da avaliação
+      const moderationResponse = await supabase.functions.invoke('moderate-content', {
+        body: { 
+          content: content.trim(), 
+          type: 'evaluation' 
+        }
+      });
+
+      if (!moderationResponse.data?.approved) {
+        toast({
+          title: 'Conteúdo não permitido',
+          description: moderationResponse.data?.reason || 'Sua avaliação contém conteúdo inapropriado. Por favor, revise e tente novamente.',
+          variant: 'destructive',
+          duration: 8000,
+        });
+        setUploading(false);
         return;
       }
 
@@ -112,6 +144,31 @@ export function ProfileEvaluationForm({ profileId, onSuccess }: ProfileEvaluatio
 
       for (const file of mediaFiles) {
         const isImage = file.type.startsWith('image/');
+        
+        // Se for imagem, moderar antes de fazer upload
+        if (isImage) {
+          const reader = new FileReader();
+          const imageDataUrl = await new Promise<string>((resolve) => {
+            reader.onload = (e) => resolve(e.target?.result as string);
+            reader.readAsDataURL(file);
+          });
+
+          const imageModerationResponse = await supabase.functions.invoke('moderate-profile-photo', {
+            body: { imageUrl: imageDataUrl }
+          });
+
+          if (!imageModerationResponse.data?.approved) {
+            toast({
+              title: 'Imagem não permitida',
+              description: imageModerationResponse.data?.reason || 'Uma das imagens contém conteúdo inapropriado. Por favor, remova e tente novamente.',
+              variant: 'destructive',
+              duration: 8000,
+            });
+            setUploading(false);
+            return;
+          }
+        }
+
         let fileToUpload = file;
 
         // Comprimir imagens
@@ -145,8 +202,8 @@ export function ProfileEvaluationForm({ profileId, onSuccess }: ProfileEvaluatio
       const { error: insertError } = await supabase
         .from('evaluations')
         .insert({
-          user_id: userProfile.id,
-          business_id: profileId,
+          author_profile_id: userProfile.id,
+          target_profile_id: profileId,
           rating,
           title: evaluationCategory === 'complaint' ? 'Reclamação' : 'Avaliação Positiva',
           content: content.trim(),

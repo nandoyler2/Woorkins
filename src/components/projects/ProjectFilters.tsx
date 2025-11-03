@@ -21,11 +21,10 @@ interface ProjectFiltersProps {
 
 const BUDGET_RANGES = [
   { label: 'Todos', value: 'all' },
-  { label: 'Até R$ 500', value: '0-500' },
-  { label: 'R$ 500 - R$ 1.000', value: '500-1000' },
-  { label: 'R$ 1.000 - R$ 3.000', value: '1000-3000' },
-  { label: 'R$ 3.000 - R$ 5.000', value: '3000-5000' },
-  { label: 'Acima de R$ 5.000', value: '5000-' },
+  { label: 'Até R$300', value: '0-300' },
+  { label: 'R$300 a R$800', value: '300-800' },
+  { label: 'R$800 a R$2.000', value: '800-2000' },
+  { label: 'Acima de R$2.000', value: '2000-' },
 ];
 
 export function ProjectFilters({

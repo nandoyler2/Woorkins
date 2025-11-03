@@ -939,6 +939,15 @@ export default function Messages() {
     };
   }, [conversations]);
 
+  // Helper function to check if conversation appears in inbox
+  const isConversationInInbox = (conv: Conversation) => {
+    if (conv.hideFromInbox) return false;
+    if (conv.type === 'negotiation') return true;
+    if (conv.type === 'proposal' && (conv as any).isProposalReceived) return true;
+    if (conv.type === 'proposal' && (conv as any).isProposalSent && ((conv as any).isUnlocked || (conv as any).ownerHasMessaged)) return true;
+    return false;
+  };
+
   const filteredConversations = conversations
     .filter(conv => {
       // Search filter
@@ -1301,7 +1310,7 @@ export default function Messages() {
                                   <Star className={`h-4 w-4 mr-2 ${conv.isFavorited ? 'fill-yellow-500 text-yellow-500' : ''}`} />
                                   {conv.isFavorited ? 'Remover dos favoritos' : 'Favoritar'}
                                 </DropdownMenuItem>
-                                {conv.hideFromInbox ? (
+                                {!isConversationInInbox(conv) ? (
                                   <DropdownMenuItem 
                                     onClick={(e) => {
                                       e.stopPropagation();
@@ -1312,17 +1321,15 @@ export default function Messages() {
                                     Exibir na caixa de entrada
                                   </DropdownMenuItem>
                                 ) : (
-                                  activeFilter === 'all' && (
-                                    <DropdownMenuItem 
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleRemoveFromInbox(conv);
-                                      }}
-                                    >
-                                      <EyeOff className="h-4 w-4 mr-2" />
-                                      Remover da caixa de entrada
-                                    </DropdownMenuItem>
-                                  )
+                                  <DropdownMenuItem 
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleRemoveFromInbox(conv);
+                                    }}
+                                  >
+                                    <EyeOff className="h-4 w-4 mr-2" />
+                                    Remover da caixa de entrada
+                                  </DropdownMenuItem>
                                 )}
                                 <DropdownMenuItem 
                                   onClick={(e) => {

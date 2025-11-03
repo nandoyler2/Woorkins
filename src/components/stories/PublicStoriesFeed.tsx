@@ -585,7 +585,7 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
                               sticker={{
                                 ...sticker,
                                 story_id: story.id,
-                                scale: (sticker.scale || 1) * 0.4
+                                scale: (sticker.scale || 1) * 0.25
                               } as any}
                               isPreview={true}
                             />
@@ -704,7 +704,7 @@ export const PublicStoriesFeed: React.FC<PublicStoriesFeedProps> = ({ currentPro
                                 sticker={{
                                   ...sticker,
                                   story_id: story.id,
-                                  scale: (sticker.scale || 1) * 0.65
+                                  scale: (sticker.scale || 1) * 0.4
                                 } as any}
                                 isPreview={true}
                               />

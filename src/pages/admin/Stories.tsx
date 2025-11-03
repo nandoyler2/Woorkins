@@ -4,6 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import { AdminPageLayout } from '@/components/admin/AdminPageLayout';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { StoriesViewer } from '@/components/stories/StoriesViewer';
 import {
   Table,
   TableBody,
@@ -49,6 +50,8 @@ export default function Stories() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteType, setDeleteType] = useState<'single' | 'selected' | 'all'>('single');
   const [storyToDelete, setStoryToDelete] = useState<string | null>(null);
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const [selectedStoryIndex, setSelectedStoryIndex] = useState(0);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -119,6 +122,14 @@ export default function Stories() {
     setDeleteType(type);
     setStoryToDelete(storyId || null);
     setDeleteDialogOpen(true);
+  };
+
+  const handleStoryClick = (storyId: string) => {
+    const index = stories.findIndex(s => s.id === storyId);
+    if (index !== -1) {
+      setSelectedStoryIndex(index);
+      setViewerOpen(true);
+    }
   };
 
   const handleDelete = async () => {
@@ -255,24 +266,27 @@ export default function Stories() {
                         />
                       </TableCell>
                       <TableCell>
-                        {story.type === 'image' ? (
-                          <img
-                            src={story.media_url}
-                            alt="Story"
-                            className="h-16 w-16 object-cover rounded-lg cursor-default"
-                            onClick={(e) => e.preventDefault()}
-                          />
-                        ) : story.type === 'video' ? (
-                          <video
-                            src={story.media_url}
-                            className="h-16 w-16 object-cover rounded-lg cursor-default"
-                            onClick={(e) => e.preventDefault()}
-                          />
-                        ) : (
-                          <div className="h-16 w-16 flex items-center justify-center bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg cursor-default">
-                            <span className="text-white text-xs font-bold">Texto</span>
-                          </div>
-                        )}
+                        <div
+                          className="cursor-pointer transition-transform hover:scale-105"
+                          onClick={() => handleStoryClick(story.id)}
+                        >
+                          {story.type === 'image' ? (
+                            <img
+                              src={story.media_url}
+                              alt="Story"
+                              className="h-16 w-16 object-cover rounded-lg"
+                            />
+                          ) : story.type === 'video' ? (
+                            <video
+                              src={story.media_url}
+                              className="h-16 w-16 object-cover rounded-lg"
+                            />
+                          ) : (
+                            <div className="h-16 w-16 flex items-center justify-center bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg">
+                              <span className="text-white text-xs font-bold">Texto</span>
+                            </div>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell>
                         {story.profiles ? (
@@ -349,6 +363,21 @@ export default function Stories() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {viewerOpen && stories.length > 0 && (
+        <StoriesViewer
+          profileId={stories[selectedStoryIndex].profile_id}
+          isOpen={viewerOpen}
+          onClose={() => setViewerOpen(false)}
+          currentProfileId={null}
+          allStories={stories}
+          initialStoryIndex={selectedStoryIndex}
+          onStoryDeleted={() => {
+            setViewerOpen(false);
+            loadStories();
+          }}
+        />
+      )}
     </>
   );
 }

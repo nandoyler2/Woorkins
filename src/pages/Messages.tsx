@@ -42,7 +42,8 @@ const HERO_PHRASES = [
   "Grandes resultados começam aqui",
   "Grandes marcas nascem aqui",
   "Grandes parcerias surgem aqui",
-  "Grandes conquistas começam aqui"
+  "Grandes conquistas começam aqui",
+  "Grandes negócios acontecem aqui"
 ];
 
 interface Conversation {

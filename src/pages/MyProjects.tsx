@@ -81,23 +81,28 @@ const MyProjects = () => {
     try {
       console.log('🔍 MyProjects - Loading data for user:', user?.id);
       
-      const { data: profile, error: profileError } = await supabase
+      // Buscar todos os perfis do usuário
+      const { data: profiles, error: profileError } = await supabase
         .from('profiles')
-        .select('id')
-        .eq('user_id', user?.id)
-        .single();
+        .select('id, profile_type')
+        .eq('user_id', user?.id);
 
-      console.log('🔍 MyProjects - Profile:', profile, 'Error:', profileError);
+      console.log('🔍 MyProjects - Profiles:', profiles, 'Error:', profileError);
 
-      if (profile) {
-        setCurrentProfileId(profile.id);
+      if (profiles && profiles.length > 0) {
+        // Pegar todos os IDs de perfis
+        const profileIds = profiles.map(p => p.id);
+        console.log('🔍 MyProjects - Profile IDs:', profileIds);
+        
+        // Usar o primeiro perfil como principal
+        setCurrentProfileId(profileIds[0]);
 
         // Load projects and proposals in parallel
         const [projectsResult, proposalsResult] = await Promise.all([
           supabase
             .from('projects')
             .select('*')
-            .eq('profile_id', profile.id)
+            .in('profile_id', profileIds)
             .order('created_at', { ascending: false }),
           
           supabase
@@ -108,7 +113,7 @@ const MyProjects = () => {
               freelancer:freelancer_id (id, full_name, avatar_url),
               business:business_id (company_name)
             `)
-            .eq('project.profile_id', profile.id)
+            .in('project.profile_id', profileIds)
             .order('created_at', { ascending: false })
         ]);
 

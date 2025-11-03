@@ -222,6 +222,33 @@ export function CreateBusinessProfileDialog({ open, onOpenChange, onSuccess }: C
     try {
       console.log('🔄 Iniciando criação de perfil profissional...');
       
+      // Limpar identificador antigo se pertencer a perfil excluído
+      console.log('🔄 Verificando e removendo identificador antigo...');
+      const { data: oldIdentifiers } = await supabase
+        .from('global_identifiers')
+        .select('id, owner_id')
+        .eq('identifier', slug);
+
+      if (oldIdentifiers && oldIdentifiers.length > 0) {
+        for (const identifier of oldIdentifiers) {
+          // Verificar se o perfil dono está excluído
+          const { data: ownerProfile } = await supabase
+            .from('profiles')
+            .select('deleted')
+            .eq('id', identifier.owner_id)
+            .single();
+
+          if (ownerProfile?.deleted) {
+            // Deletar identificador do perfil excluído
+            await supabase
+              .from('global_identifiers')
+              .delete()
+              .eq('id', identifier.id);
+            console.log('✅ Identificador antigo removido');
+          }
+        }
+      }
+      
       // Criar NOVO perfil profissional (INSERT ao invés de UPDATE)
       console.log('🔄 Criando novo perfil profissional...');
       const { data: newProfile, error: insertError } = await supabase

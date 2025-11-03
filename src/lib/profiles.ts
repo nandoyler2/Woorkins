@@ -137,6 +137,33 @@ export async function getOrCreateUserProfile(user: { id: string; email?: string 
   const emailPrefix = user.email ? user.email.split('@')[0] : 'user';
   const username = await generateAvailableUsername(emailPrefix);
 
+  // Limpar identificador antigo se pertencer a perfil excluído
+  console.log('[getOrCreateUserProfile] Checking and removing old identifier...');
+  const { data: oldIdentifiers } = await supabase
+    .from('global_identifiers')
+    .select('id, owner_id')
+    .eq('identifier', username);
+
+  if (oldIdentifiers && oldIdentifiers.length > 0) {
+    for (const identifier of oldIdentifiers) {
+      // Verificar se o perfil dono está excluído
+      const { data: ownerProfile } = await supabase
+        .from('profiles')
+        .select('deleted')
+        .eq('id', identifier.owner_id)
+        .maybeSingle();
+
+      if (ownerProfile?.deleted) {
+        // Deletar identificador do perfil excluído
+        await supabase
+          .from('global_identifiers')
+          .delete()
+          .eq('id', identifier.id);
+        console.log('[getOrCreateUserProfile] Old identifier removed');
+      }
+    }
+  }
+
   // Criar o perfil
   const newProfile = {
     user_id: user.id,

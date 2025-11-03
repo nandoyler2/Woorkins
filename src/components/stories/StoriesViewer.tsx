@@ -88,6 +88,7 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
   const [progress, setProgress] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [isPaused, setIsPaused] = useState(false);
+  const [manualPause, setManualPause] = useState(false); // Pausa via botão
   const [isMuted, setIsMuted] = useState(() => {
     const saved = localStorage.getItem('stories-muted');
     return saved ? JSON.parse(saved) : false;
@@ -315,6 +316,7 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
     // Reset completo ao trocar de story
     setProgress(0);
     setIsPaused(false);
+    setManualPause(false); // Reset pausa manual também
     startTimeRef.current = Date.now();
     pausedTimeRef.current = 0;
     lastPauseStartRef.current = 0;
@@ -402,7 +404,8 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
   };
 
   const togglePause = () => {
-    const newPausedState = !isPaused;
+    const newPausedState = !manualPause;
+    setManualPause(newPausedState);
     setIsPaused(newPausedState);
     if (videoRef.current) {
       if (newPausedState) {
@@ -414,6 +417,9 @@ export function StoriesViewer({ profileId, isOpen, onClose, currentProfileId, on
   };
 
   const handleHoldPause = (shouldPause: boolean) => {
+    // Só funciona se não estiver em pausa manual
+    if (manualPause) return;
+    
     setIsPaused(shouldPause);
     if (videoRef.current && currentStory.type === 'video') {
       if (shouldPause) {

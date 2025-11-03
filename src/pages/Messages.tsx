@@ -94,7 +94,7 @@ export default function Messages() {
       // Sempre recarregar quando mudar o filtro
       console.log('🔄 Carregando conversas do servidor (filtro:', activeFilter, ')');
       setIsInitialLoading(true);
-      loadConversations(false);
+      loadConversations(true);
       
       const channel = setupRealtimeSubscriptions();
       return () => {
@@ -300,6 +300,7 @@ export default function Messages() {
           target_profile_id,
           updated_at,
           archived,
+          archived_at,
           profiles!negotiations_target_profile_id_fkey(
             company_name,
             logo_url,
@@ -326,6 +327,7 @@ export default function Messages() {
           target_profile_id,
           updated_at,
           archived,
+          archived_at,
           profiles!negotiations_target_profile_id_fkey(
             name,
             company_name,
@@ -351,6 +353,7 @@ export default function Messages() {
           message,
           updated_at,
           archived,
+          archived_at,
           freelancer_id,
           payment_status,
           work_status,
@@ -382,6 +385,7 @@ export default function Messages() {
           message,
           updated_at,
           archived,
+          archived_at,
           freelancer_id,
           payment_status,
           work_status,
@@ -425,7 +429,7 @@ export default function Messages() {
           name: (neg.profiles as any)?.company_name || (neg.profiles as any)?.name || 'Usuário',
           avatar: (neg.profiles as any)?.logo_url || (neg.profiles as any)?.avatar_url,
           },
-          lastMessageAt: neg.updated_at,
+          lastMessageAt: activeFilter === 'archived' ? ((neg as any).archived_at ?? neg.updated_at) : neg.updated_at,
           unreadCount: unreadMap.get(`negotiation-${neg.id}`) ?? (count || 0),
           status: neg.status,
           businessName: (neg.profiles as any)?.company_name || (neg.profiles as any)?.name || 'Usuário',
@@ -475,7 +479,7 @@ export default function Messages() {
           title: prop.project.title,
           otherUser: otherUserData,
           lastMessage: prop.message ? prop.message.substring(0, 60) + '...' : undefined,
-          lastMessageAt: prop.updated_at,
+          lastMessageAt: activeFilter === 'archived' ? ((prop as any).archived_at ?? prop.updated_at) : prop.updated_at,
           unreadCount: unreadMap.get(`proposal-${prop.id}`) ?? (count || 0),
           status: prop.status,
           projectId: prop.project.id,
@@ -560,7 +564,10 @@ export default function Messages() {
       
       const { error } = await supabase
         .from(table)
-        .update({ archived })
+        .update({ 
+          archived,
+          archived_at: archived ? new Date().toISOString() : null
+        })
         .eq('id', conv.id);
 
       if (error) throw error;
@@ -580,8 +587,13 @@ export default function Messages() {
           : 'A conversa foi restaurada',
       });
 
-      // Recarregar conversas em background
-      setTimeout(() => loadConversations(true), 500);
+      // Se estiver na aba Arquivadas, forçar reload imediato
+      if (activeFilter === 'archived') {
+        setTimeout(() => loadConversations(true), 300);
+      } else {
+        // Recarregar conversas em background
+        setTimeout(() => loadConversations(true), 500);
+      }
     } catch (error) {
       console.error('Error archiving conversation:', error);
       toast({

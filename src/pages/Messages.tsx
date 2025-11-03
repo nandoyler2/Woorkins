@@ -575,6 +575,14 @@ export default function Messages() {
 
       if (error) throw error;
 
+      // Remover da lista local instantaneamente
+      setConversations(prev => prev.filter(c => c.id !== conv.id));
+      
+      // Se arquivou, limpar seleção
+      if (archived && selectedConversation?.id === conv.id) {
+        setSelectedConversation(null);
+      }
+
       toast({
         title: archived ? 'Conversa arquivada' : 'Conversa desarquivada',
         description: archived 
@@ -582,8 +590,8 @@ export default function Messages() {
           : 'A conversa foi restaurada',
       });
 
-      // Recarregar conversas
-      loadConversations(true);
+      // Recarregar conversas em background
+      setTimeout(() => loadConversations(true), 500);
     } catch (error) {
       console.error('Error archiving conversation:', error);
       toast({

@@ -50,7 +50,6 @@ const AdminInvites = lazy(() => import("./pages/AdminInvites"));
 const ProfileEvaluate = lazy(() => import("./pages/ProfileEvaluate"));
 const BusinessAppointments = lazy(() => import("./pages/BusinessAppointments"));
 const UserAppointmentBooking = lazy(() => import("./pages/UserAppointmentBooking"));
-const Following = lazy(() => import("./pages/Following"));
 
 // Lazy loading para páginas admin
 const AdminLayout = lazy(() => import("./pages/admin/AdminLayout").then(m => ({ default: m.AdminLayout })));
@@ -119,7 +118,6 @@ function AppContent() {
           <Route path="/l/:slug" element={<PublicLinktree />} />
           
           <Route path="/painel" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-          <Route path="/seguindo" element={<ProtectedRoute><Following /></ProtectedRoute>} />
           <Route path="/perfil/editar" element={<ProtectedRoute><ProfileEdit /></ProtectedRoute>} />
           <Route path="/settings/profile/:profileId" element={<ProtectedRoute><ProfileEdit /></ProtectedRoute>} />
           <Route path="/conta" element={<ProtectedRoute><Account /></ProtectedRoute>} />

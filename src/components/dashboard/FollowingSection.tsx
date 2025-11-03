@@ -5,8 +5,9 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ProfileAvatarWithHover } from '@/components/ProfileAvatarWithHover';
 import { Users, ArrowRight } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { formatShortName } from '@/lib/utils';
+import { FollowingDialog } from '@/components/FollowingDialog';
 
 interface FollowedProfile {
   id: string;
@@ -29,7 +30,7 @@ export function FollowingSection({ profileId }: FollowingSectionProps) {
   const { user } = useAuth();
   const [following, setFollowing] = useState<FollowedProfile[]>([]);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   console.log('🚀 FollowingSection renderizou com profileId:', profileId);
 
@@ -249,7 +250,7 @@ export function FollowingSection({ profileId }: FollowingSectionProps) {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => navigate('/seguindo')}
+              onClick={() => setDialogOpen(true)}
               className="text-primary hover:text-primary hover:bg-primary/10 h-8 gap-1"
             >
               Ver todos
@@ -289,6 +290,12 @@ export function FollowingSection({ profileId }: FollowingSectionProps) {
           ))}
         </div>
       </CardContent>
+      
+      <FollowingDialog 
+        open={dialogOpen} 
+        onOpenChange={setDialogOpen}
+        initialTab="following"
+      />
     </Card>
   );
 }

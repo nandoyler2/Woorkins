@@ -1584,18 +1584,16 @@ export function UnifiedChat({
                         isMine ? 'flex-row-reverse' : 'flex-row'
                       }`}
                     >
-                      {!isMine && (
-                        <ProfileHoverCard profileId={message.sender_id}>
-                          <div className="cursor-pointer">
-                            <Avatar className="h-8 w-8 flex-shrink-0 ring-2 ring-background group-hover:ring-primary/50 transition-all">
-                              <AvatarImage src={message.sender_avatar} />
-                              <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10 text-primary text-xs font-semibold">
-                                {message.sender_name.charAt(0).toUpperCase()}
-                              </AvatarFallback>
-                            </Avatar>
-                          </div>
-                        </ProfileHoverCard>
-                       )}
+                      <ProfileHoverCard profileId={message.sender_id}>
+                        <div className="cursor-pointer">
+                          <Avatar className="h-8 w-8 flex-shrink-0 ring-2 ring-background group-hover:ring-primary/50 transition-all">
+                            <AvatarImage src={message.sender_avatar} />
+                            <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10 text-primary text-xs font-semibold">
+                              {message.sender_name.charAt(0).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                        </div>
+                      </ProfileHoverCard>
                        
                         <div className={`flex flex-col max-w-[75%] group ${isMine ? 'items-end' : 'items-start'}`} onClick={() => showTimestamp(message.id)}>
                           {/* Rejected message */}

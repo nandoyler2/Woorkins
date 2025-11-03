@@ -1266,11 +1266,16 @@ export default function Dashboard() {
             {/* Personal Profile Card */}
             <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 shadow-sm border-2 border-blue-200">
               <CardHeader className="border-b border-blue-200 p-4 bg-white/50">
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 bg-blue-500 rounded-lg flex items-center justify-center">
-                    <Users className="w-4 h-4 text-white" />
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 bg-blue-500 rounded-lg flex items-center justify-center">
+                      <Users className="w-4 h-4 text-white" />
+                    </div>
+                    <h3 className="text-base font-bold text-slate-900">Perfil Principal</h3>
                   </div>
-                  <h3 className="text-base font-bold text-slate-900">Seu Perfil</h3>
+                  <Button variant="outline" size="sm" className="text-xs h-7" onClick={() => setShowCreateBusinessDialog(true)}>
+                    + Criar Perfil
+                  </Button>
                 </div>
               </CardHeader>
               <CardContent className="p-4">
@@ -1313,16 +1318,11 @@ export default function Dashboard() {
             {/* Professional Profiles Card */}
             <Card className="bg-white shadow-sm border border-slate-200">
               <CardHeader className="border-b border-slate-100 p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 bg-primary/10 rounded-lg flex items-center justify-center">
-                      <Building2 className="w-4 h-4 text-primary" />
-                    </div>
-                    <h3 className="text-base font-bold text-slate-900">Perfis Profissionais</h3>
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 bg-primary/10 rounded-lg flex items-center justify-center">
+                    <Building2 className="w-4 h-4 text-primary" />
                   </div>
-                  <Button variant="outline" size="sm" className="text-xs h-7" onClick={() => setShowCreateBusinessDialog(true)}>
-                    + Criar Perfil
-                  </Button>
+                  <h3 className="text-base font-bold text-slate-900">Perfis Profissionais</h3>
                 </div>
               </CardHeader>
               <CardContent className="p-4">

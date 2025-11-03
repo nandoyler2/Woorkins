@@ -975,7 +975,9 @@ export type Database = {
           escrow_released: boolean | null
           escrow_released_at: string | null
           final_amount: number | null
+          hide_from_inbox: boolean | null
           id: string
+          is_favorited: boolean | null
           net_amount_to_business: number | null
           paid_at: string | null
           payment_captured_at: string | null
@@ -999,7 +1001,9 @@ export type Database = {
           escrow_released?: boolean | null
           escrow_released_at?: string | null
           final_amount?: number | null
+          hide_from_inbox?: boolean | null
           id?: string
+          is_favorited?: boolean | null
           net_amount_to_business?: number | null
           paid_at?: string | null
           payment_captured_at?: string | null
@@ -1023,7 +1027,9 @@ export type Database = {
           escrow_released?: boolean | null
           escrow_released_at?: string | null
           final_amount?: number | null
+          hide_from_inbox?: boolean | null
           id?: string
+          is_favorited?: boolean | null
           net_amount_to_business?: number | null
           paid_at?: string | null
           payment_captured_at?: string | null
@@ -2709,7 +2715,9 @@ export type Database = {
           freelancer_amount: number | null
           freelancer_completed_at: string | null
           freelancer_id: string
+          hide_from_inbox: boolean | null
           id: string
+          is_favorited: boolean | null
           is_unlocked: boolean | null
           mercadopago_payment_id: string | null
           message: string
@@ -2745,7 +2753,9 @@ export type Database = {
           freelancer_amount?: number | null
           freelancer_completed_at?: string | null
           freelancer_id: string
+          hide_from_inbox?: boolean | null
           id?: string
+          is_favorited?: boolean | null
           is_unlocked?: boolean | null
           mercadopago_payment_id?: string | null
           message: string
@@ -2781,7 +2791,9 @@ export type Database = {
           freelancer_amount?: number | null
           freelancer_completed_at?: string | null
           freelancer_id?: string
+          hide_from_inbox?: boolean | null
           id?: string
+          is_favorited?: boolean | null
           is_unlocked?: boolean | null
           mercadopago_payment_id?: string | null
           message?: string

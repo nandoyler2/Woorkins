@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { MessageCircle, Loader2, Search, Inbox, Mail, Star, Archive, AlertCircle, Tag, MoreVertical, FileInput, Send } from 'lucide-react';
+import { MessageCircle, Loader2, Search, Inbox, Mail, Star, Archive, AlertCircle, Tag, MoreVertical, FileInput, Send, CheckCircle, EyeOff } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -50,6 +50,8 @@ interface Conversation {
   isProposalSent?: boolean;
   isUnlocked?: boolean;
   ownerHasMessaged?: boolean;
+  isFavorited?: boolean;
+  hideFromInbox?: boolean;
 }
 
 export default function Messages() {
@@ -66,7 +68,7 @@ export default function Messages() {
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [profileId, setProfileId] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeFilter, setActiveFilter] = useState<'all' | 'unread' | 'starred' | 'archived' | 'disputes' | 'proposals_received' | 'proposals_sent'>('all');
+  const [activeFilter, setActiveFilter] = useState<'all' | 'unread' | 'starred' | 'archived' | 'disputes' | 'proposals_received' | 'proposals_sent' | 'completed'>('all');
   const [isInitialLoading, setIsInitialLoading] = useState(cachedData.conversations.length === 0 || !cachedData.lastFetched);
   const [isFilterChanging, setIsFilterChanging] = useState(false);
   const [isBackgroundLoading, setIsBackgroundLoading] = useState(false);
@@ -174,7 +176,14 @@ export default function Messages() {
                   ...c,
                   lastMessageAt: m.created_at,
                   unreadCount: (c.unreadCount || 0) + inc,
+                  hideFromInbox: false, // Mensagem nova traz de volta para caixa de entrada
                 };
+                
+                // Se estava oculta, atualizar no banco também
+                if (c.hideFromInbox) {
+                  supabase.from('negotiations').update({ hide_from_inbox: false }).eq('id', c.id);
+                }
+                
                 cachedData.updateConversation(c.id, 'negotiation', updatedConv);
                 return updatedConv;
               }
@@ -214,7 +223,14 @@ export default function Messages() {
                   ...c,
                   lastMessageAt: m.created_at,
                   unreadCount: (c.unreadCount || 0) + inc,
+                  hideFromInbox: false, // Mensagem nova traz de volta para caixa de entrada
                 };
+                
+                // Se estava oculta, atualizar no banco também
+                if (c.hideFromInbox) {
+                  supabase.from('proposals').update({ hide_from_inbox: false }).eq('id', c.id);
+                }
+                
                 cachedData.updateConversation(c.id, 'proposal', updatedConv);
                 return updatedConv;
               }
@@ -362,6 +378,8 @@ export default function Messages() {
           updated_at,
           archived,
           archived_at,
+          is_favorited,
+          hide_from_inbox,
           profiles!negotiations_target_profile_id_fkey(
             company_name,
             logo_url,
@@ -389,6 +407,8 @@ export default function Messages() {
           updated_at,
           archived,
           archived_at,
+          is_favorited,
+          hide_from_inbox,
           profiles!negotiations_target_profile_id_fkey(
             name,
             company_name,
@@ -420,6 +440,8 @@ export default function Messages() {
           work_status,
           is_unlocked,
           owner_has_messaged,
+          is_favorited,
+          hide_from_inbox,
           project:projects!inner(
             id,
             title,
@@ -454,6 +476,8 @@ export default function Messages() {
           work_status,
           is_unlocked,
           owner_has_messaged,
+          is_favorited,
+          hide_from_inbox,
           freelancer:profiles!proposals_freelancer_id_fkey(
             full_name,
             avatar_url
@@ -505,6 +529,8 @@ export default function Messages() {
           status: neg.status,
           businessName: (neg.profiles as any)?.company_name || (neg.profiles as any)?.name || 'Usuário',
           businessId: neg.target_profile_id,
+          isFavorited: (neg as any).is_favorited || false,
+          hideFromInbox: (neg as any).hide_from_inbox || false,
         };
       }));
 
@@ -564,6 +590,8 @@ export default function Messages() {
           isProposalSent: isFreelancer,
           isUnlocked: (prop as any).is_unlocked,
           ownerHasMessaged: (prop as any).owner_has_messaged,
+          isFavorited: (prop as any).is_favorited || false,
+          hideFromInbox: (prop as any).hide_from_inbox || false,
         };
       }));
 
@@ -665,6 +693,68 @@ export default function Messages() {
       }
     } catch (error) {
       console.error('Error archiving conversation:', error);
+    }
+  };
+
+  const handleToggleFavorite = async (conv: Conversation) => {
+    try {
+      const table = conv.type === 'negotiation' ? 'negotiations' : 'proposals';
+      const newFavoriteState = !conv.isFavorited;
+      
+      const { error } = await supabase
+        .from(table)
+        .update({ is_favorited: newFavoriteState })
+        .eq('id', conv.id);
+
+      if (error) throw error;
+
+      // Atualizar na lista local
+      setConversations(prev => prev.map(c => 
+        c.id === conv.id ? { ...c, isFavorited: newFavoriteState } : c
+      ));
+    } catch (error) {
+      console.error('Error toggling favorite:', error);
+    }
+  };
+
+  const handleRemoveFromInbox = async (conv: Conversation) => {
+    try {
+      const table = conv.type === 'negotiation' ? 'negotiations' : 'proposals';
+      
+      const { error } = await supabase
+        .from(table)
+        .update({ hide_from_inbox: true })
+        .eq('id', conv.id);
+
+      if (error) throw error;
+
+      // Determinar para qual filtro a conversa irá
+      let targetFilter = '';
+      if (conv.type === 'proposal') {
+        if (conv.workStatus === 'completed' || conv.workStatus === 'payment_complete') {
+          targetFilter = 'Finalizados';
+        } else if ((conv as any).isProposalReceived) {
+          targetFilter = 'Propostas Recebidas';
+        } else if ((conv as any).isProposalSent) {
+          targetFilter = 'Propostas Enviadas';
+        }
+      }
+
+      // Remover da lista local se estiver na caixa de entrada
+      if (activeFilter === 'all') {
+        setConversations(prev => prev.filter(c => c.id !== conv.id));
+        if (selectedConversation?.id === conv.id) {
+          setSelectedConversation(null);
+        }
+      }
+
+      // Mostrar mensagem informando onde a conversa ficará
+      alert(`Conversa removida da caixa de entrada. Você pode encontrá-la em: ${targetFilter || 'Arquivadas'}`);
+      
+      // Recarregar conversas em background
+      setTimeout(() => loadConversations(true), 500);
+    } catch (error) {
+      console.error('Error removing from inbox:', error);
     }
   };
 
@@ -800,8 +890,11 @@ export default function Messages() {
           // Already filtered by archived in loadConversations
           return true;
         case 'starred':
-          // TODO: Implement starred functionality
-          return false;
+          // Apenas conversas favoritadas
+          return conv.isFavorited === true;
+        case 'completed':
+          // Apenas propostas finalizadas (completed ou payment_complete)
+          return conv.type === 'proposal' && (conv.workStatus === 'completed' || conv.workStatus === 'payment_complete');
         case 'disputes':
           // Only proposals with active disputes
           return conv.type === 'proposal' && conv.hasDispute === true;
@@ -813,6 +906,8 @@ export default function Messages() {
           return conv.type === 'proposal' && (conv as any).isProposalSent === true;
         case 'all':
           // Caixa de entrada: negociações + propostas recebidas + propostas enviadas que foram respondidas pelo owner
+          // Não mostrar conversas ocultas
+          if (conv.hideFromInbox) return false;
           if (conv.type === 'negotiation') return true;
           if (conv.type === 'proposal' && (conv as any).isProposalReceived) return true;
           // Propostas enviadas aparecem na caixa de entrada apenas se o owner respondeu/interagiu
@@ -925,7 +1020,19 @@ export default function Messages() {
               }`}
             >
               <Star className={`h-4 w-4 ${activeFilter === 'starred' ? '' : 'text-yellow-500'}`} />
-              <span>Destacadas</span>
+              <span>Favoritas</span>
+            </button>
+            
+            <button
+              onClick={() => setActiveFilter('completed')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm ${
+                activeFilter === 'completed' 
+                  ? 'bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/30 scale-105' 
+                  : 'hover:bg-gradient-to-r hover:from-muted hover:to-muted/50 text-muted-foreground hover:scale-102'
+              }`}
+            >
+              <CheckCircle className={`h-4 w-4 ${activeFilter === 'completed' ? '' : 'text-green-500'}`} />
+              <span>Finalizados</span>
             </button>
             
             <button
@@ -1118,6 +1225,26 @@ export default function Messages() {
                                   </DropdownMenuItem>
                                 )}
                                 <DropdownMenuSeparator />
+                                <DropdownMenuItem 
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleToggleFavorite(conv);
+                                  }}
+                                >
+                                  <Star className={`h-4 w-4 mr-2 ${conv.isFavorited ? 'fill-yellow-500 text-yellow-500' : ''}`} />
+                                  {conv.isFavorited ? 'Remover dos favoritos' : 'Favoritar'}
+                                </DropdownMenuItem>
+                                {activeFilter === 'all' && (
+                                  <DropdownMenuItem 
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleRemoveFromInbox(conv);
+                                    }}
+                                  >
+                                    <EyeOff className="h-4 w-4 mr-2" />
+                                    Remover da caixa de entrada
+                                  </DropdownMenuItem>
+                                )}
                                 <DropdownMenuItem 
                                   onClick={(e) => {
                                     e.stopPropagation();

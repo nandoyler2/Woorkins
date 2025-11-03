@@ -16,6 +16,16 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { UnifiedChat } from '@/components/UnifiedChat';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
@@ -73,6 +83,8 @@ export default function Messages() {
   const [isInitialLoading, setIsInitialLoading] = useState(cachedData.conversations.length === 0 || !cachedData.lastFetched);
   const [isFilterChanging, setIsFilterChanging] = useState(false);
   const [isBackgroundLoading, setIsBackgroundLoading] = useState(false);
+  const [showRemoveDialog, setShowRemoveDialog] = useState(false);
+  const [conversationToRemove, setConversationToRemove] = useState<Conversation | null>(null);
   const isLoadingRef = useRef(false);
   const loadingTimeoutRef = useRef<NodeJS.Timeout>();
   const hasLoadedData = useRef(false);
@@ -723,44 +735,55 @@ export default function Messages() {
     }
   };
 
+  const getTargetFilterName = (conv: Conversation) => {
+    if (conv.type === 'proposal') {
+      if (conv.workStatus === 'completed' || conv.workStatus === 'payment_complete') {
+        return 'Finalizados';
+      } else if ((conv as any).isProposalReceived) {
+        return 'Propostas Recebidas';
+      } else if ((conv as any).isProposalSent) {
+        return 'Propostas Enviadas';
+      }
+    }
+    return 'Arquivadas';
+  };
+
   const handleRemoveFromInbox = async (conv: Conversation) => {
+    setConversationToRemove(conv);
+    setShowRemoveDialog(true);
+  };
+
+  const confirmRemoveFromInbox = async () => {
+    if (!conversationToRemove) return;
+
     try {
-      const table = conv.type === 'negotiation' ? 'negotiations' : 'proposals';
+      const table = conversationToRemove.type === 'negotiation' ? 'negotiations' : 'proposals';
       
       const { error } = await supabase
         .from(table)
         .update({ hide_from_inbox: true })
-        .eq('id', conv.id);
+        .eq('id', conversationToRemove.id);
 
       if (error) throw error;
 
-      // Determinar para qual filtro a conversa irá
-      let targetFilter = '';
-      if (conv.type === 'proposal') {
-        if (conv.workStatus === 'completed' || conv.workStatus === 'payment_complete') {
-          targetFilter = 'Finalizados';
-        } else if ((conv as any).isProposalReceived) {
-          targetFilter = 'Propostas Recebidas';
-        } else if ((conv as any).isProposalSent) {
-          targetFilter = 'Propostas Enviadas';
-        }
-      }
-
       // Remover da lista local se estiver na caixa de entrada
       if (activeFilter === 'all') {
-        setConversations(prev => prev.filter(c => c.id !== conv.id));
-        if (selectedConversation?.id === conv.id) {
+        setConversations(prev => prev.filter(c => c.id !== conversationToRemove.id));
+        if (selectedConversation?.id === conversationToRemove.id) {
           setSelectedConversation(null);
         }
       }
 
-      // Mostrar mensagem informando onde a conversa ficará
-      alert(`Conversa removida da caixa de entrada. Você pode encontrá-la em: ${targetFilter || 'Arquivadas'}`);
+      toast.success("Conversa removida da caixa de entrada");
       
       // Recarregar conversas em background
       setTimeout(() => loadConversations(true), 500);
     } catch (error) {
       console.error('Error removing from inbox:', error);
+      toast.error("Erro ao remover da caixa de entrada");
+    } finally {
+      setShowRemoveDialog(false);
+      setConversationToRemove(null);
     }
   };
 
@@ -1317,6 +1340,34 @@ export default function Messages() {
           </div>
         </div>
       </main>
+
+      {/* Dialog de confirmação para remover da caixa de entrada */}
+      <AlertDialog open={showRemoveDialog} onOpenChange={setShowRemoveDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remover da caixa de entrada?</AlertDialogTitle>
+            <AlertDialogDescription className="space-y-3">
+              <p>
+                Esta conversa será removida da sua caixa de entrada, mas você ainda poderá encontrá-la em:
+              </p>
+              <div className="bg-primary/10 p-3 rounded-md">
+                <p className="font-semibold text-foreground">
+                  📁 {conversationToRemove ? getTargetFilterName(conversationToRemove) : ''}
+                </p>
+              </div>
+              <p className="text-sm">
+                A conversa retornará automaticamente para a caixa de entrada quando você receber uma nova mensagem.
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmRemoveFromInbox}>
+              Remover
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

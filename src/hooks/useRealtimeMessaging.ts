@@ -515,6 +515,12 @@ export const useRealtimeMessaging = ({
   // Update typing indicator
   const updateTypingIndicator = useCallback(async (typing: boolean) => {
     try {
+      console.log(`📝 Updating typing indicator: ${typing}`, {
+        userId: currentUserId,
+        conversationId,
+        conversationType
+      });
+      
       await supabase
         .from('typing_indicators')
         .upsert({
@@ -523,14 +529,20 @@ export const useRealtimeMessaging = ({
           conversation_type: conversationType,
           is_typing: typing,
           updated_at: new Date().toISOString(),
+        }, {
+          onConflict: 'user_id,conversation_id,conversation_type'
         });
+        
+      console.log('✅ Typing indicator updated successfully');
     } catch (error) {
-      console.error('Error updating typing indicator:', error);
+      console.error('❌ Error updating typing indicator:', error);
     }
   }, [currentUserId, conversationId, conversationType]);
 
   // Handle typing with debounce
   const handleTyping = useCallback(() => {
+    console.log('⌨️ User is typing');
+    
     if (!isTyping) {
       setIsTyping(true);
       updateTypingIndicator(true);
@@ -541,6 +553,7 @@ export const useRealtimeMessaging = ({
     }
 
     typingTimeoutRef.current = setTimeout(() => {
+      console.log('⌨️ User stopped typing');
       setIsTyping(false);
       updateTypingIndicator(false);
     }, 2000);
@@ -716,8 +729,13 @@ export const useRealtimeMessaging = ({
       )
       .subscribe();
 
-    // Subscribe to typing indicators
-    const typingChannel = supabase.channel(`typing-${conversationId}`);
+  // Subscribe to typing indicators
+    const typingChannel = supabase.channel(`typing-${conversationId}`, {
+      config: {
+        broadcast: { self: false }, // Don't receive own typing events
+      }
+    });
+    
     typingChannel
       .on(
         'postgres_changes',
@@ -728,18 +746,34 @@ export const useRealtimeMessaging = ({
           filter: `conversation_id=eq.${conversationId}`,
         },
         (payload) => {
+          console.log('🔔 Typing event received:', payload);
           const indicator = payload.new as any;
-          if (indicator?.user_id !== currentUserId) {
+          
+          // Only show for other user
+          if (indicator?.user_id && indicator.user_id !== currentUserId) {
+            console.log('👤 Other user typing:', indicator.is_typing);
             setOtherUserTyping(indicator?.is_typing || false);
             
-            // Auto-hide after 3 seconds
-            setTimeout(() => {
-              setOtherUserTyping(false);
-            }, 3000);
+            // Auto-hide after 3 seconds if still showing
+            if (indicator?.is_typing) {
+              setTimeout(() => {
+                setOtherUserTyping(prev => {
+                  // Only hide if enough time has passed
+                  const now = new Date();
+                  const indicatorTime = new Date(indicator.updated_at);
+                  if (now.getTime() - indicatorTime.getTime() >= 3000) {
+                    return false;
+                  }
+                  return prev;
+                });
+              }, 3000);
+            }
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('📡 Typing channel status:', status);
+      });
 
     channelRef.current = channel;
 

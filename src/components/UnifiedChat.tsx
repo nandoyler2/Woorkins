@@ -877,7 +877,11 @@ export function UnifiedChat({
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setMessageInput(e.target.value);
-    handleTyping();
+    
+    // Só chamar handleTyping se houver texto no input
+    if (e.target.value.length > 0) {
+      handleTyping();
+    }
   };
 
   const showTimestamp = (id: string) => {
@@ -1450,7 +1454,14 @@ export function UnifiedChat({
             </ProfileHoverCard>
             <div className="flex items-center gap-2">
               {otherUserTyping ? (
-                <span className="text-xs text-primary animate-pulse font-medium">Digitando...</span>
+                <div className="flex items-center gap-2 text-primary">
+                  <div className="flex gap-1">
+                    <span className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                    <span className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                    <span className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+                  </div>
+                  <span className="text-xs font-medium">Digitando</span>
+                </div>
               ) : (
                 <>
                   <span className="text-xs text-green-600 dark:text-green-400 font-medium">Online</span>
@@ -1805,6 +1816,24 @@ export function UnifiedChat({
             </div>
           )}
           
+          {/* Typing Indicator Bubble */}
+          {otherUserTyping && (
+            <div className="flex items-start gap-3 px-6 py-3 animate-fade-in">
+              <Avatar className="w-8 h-8 ring-2 ring-primary/20 shadow-md">
+                <AvatarImage src={otherUser.avatar} />
+                <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10 text-primary font-semibold text-xs">
+                  {otherUser.name.charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <div className="bg-muted/80 backdrop-blur-sm rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm border border-primary/10">
+                <div className="flex gap-1.5">
+                  <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms', animationDuration: '1s' }}></span>
+                  <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '200ms', animationDuration: '1s' }}></span>
+                  <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '400ms', animationDuration: '1s' }}></span>
+                </div>
+              </div>
+            </div>
+          )}
           
           <div ref={messagesEndRef} />
         </div>

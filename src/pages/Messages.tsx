@@ -1195,7 +1195,7 @@ export default function Messages() {
               }`}
             >
               <Inbox className={`h-4 w-4 flex-shrink-0 ${activeFilter === 'all' ? '' : 'text-blue-500'}`} />
-              <span className="flex-1 truncate">Caixa de Entrada</span>
+              <span className="flex-1 truncate text-left">Caixa de Entrada</span>
               {unreadCounts.all > 0 && (
                 <Badge variant="destructive" className="ml-auto flex-shrink-0">{unreadCounts.all}</Badge>
               )}
@@ -1212,7 +1212,7 @@ export default function Messages() {
                 }`}
               >
                 <PlayCircle className={`h-4 w-4 flex-shrink-0 ${activeFilter === 'in_progress' ? '' : 'text-blue-500'}`} />
-                <span className="flex-1 truncate">Em andamento</span>
+                <span className="flex-1 truncate text-left">Em andamento</span>
                 {unreadCounts.in_progress > 0 && (
                   <Badge variant="destructive" className="ml-auto flex-shrink-0">{unreadCounts.in_progress}</Badge>
                 )}
@@ -1230,7 +1230,7 @@ export default function Messages() {
                 }`}
               >
                 <FileInput className={`h-4 w-4 flex-shrink-0 ${activeFilter === 'proposals_received' ? '' : 'text-green-500'}`} />
-                <span className="flex-1 truncate">{unreadCounts.proposals_received > 0 ? 'Recebidas' : 'Propostas Recebidas'}</span>
+                <span className="flex-1 truncate text-left">{unreadCounts.proposals_received > 0 ? 'Recebidas' : 'Propostas Recebidas'}</span>
                 {unreadCounts.proposals_received > 0 && (
                   <Badge variant="destructive" className="ml-auto flex-shrink-0">{unreadCounts.proposals_received}</Badge>
                 )}
@@ -1254,7 +1254,7 @@ export default function Messages() {
                 }`}
               >
                 <Send className={`h-4 w-4 flex-shrink-0 ${activeFilter === 'proposals_sent' ? '' : 'text-purple-500'}`} />
-                <span className="flex-1 truncate">{unreadCounts.proposals_sent > 0 ? 'Enviadas' : 'Propostas Enviadas'}</span>
+                <span className="flex-1 truncate text-left">{unreadCounts.proposals_sent > 0 ? 'Enviadas' : 'Propostas Enviadas'}</span>
                 {unreadCounts.proposals_sent > 0 && (
                   <Badge variant="destructive" className="ml-auto flex-shrink-0">{unreadCounts.proposals_sent}</Badge>
                 )}
@@ -1270,7 +1270,7 @@ export default function Messages() {
               }`}
             >
               <Mail className={`h-4 w-4 flex-shrink-0 ${activeFilter === 'unread' ? '' : 'text-orange-500'}`} />
-              <span className="flex-1 truncate">Não Lidas</span>
+              <span className="flex-1 truncate text-left">Não Lidas</span>
               {unreadCounts.unread > 0 && (
                 <Badge variant="destructive" className="ml-auto flex-shrink-0">{unreadCounts.unread}</Badge>
               )}
@@ -1285,7 +1285,7 @@ export default function Messages() {
               }`}
             >
               <Star className={`h-4 w-4 flex-shrink-0 ${activeFilter === 'starred' ? '' : 'text-yellow-500'}`} />
-              <span className="flex-1 truncate">Favoritas</span>
+              <span className="flex-1 truncate text-left">Favoritas</span>
             </button>
             
             {/* Filtro Finalizados - só exibe se houver projetos finalizados */}
@@ -1299,7 +1299,7 @@ export default function Messages() {
                 }`}
               >
                 <CheckCircle className={`h-4 w-4 flex-shrink-0 ${activeFilter === 'completed' ? '' : 'text-green-500'}`} />
-                <span className="flex-1 truncate">Finalizados</span>
+                <span className="flex-1 truncate text-left">Finalizados</span>
               </button>
             )}
             
@@ -1312,7 +1312,7 @@ export default function Messages() {
               }`}
             >
               <Archive className={`h-4 w-4 flex-shrink-0 ${activeFilter === 'archived' ? '' : 'text-gray-500'}`} />
-              <span className="flex-1 truncate">Arquivadas</span>
+              <span className="flex-1 truncate text-left">Arquivadas</span>
               {unreadCounts.archived > 0 && (
                 <Badge variant="destructive" className="ml-auto flex-shrink-0">{unreadCounts.archived}</Badge>
               )}
@@ -1327,7 +1327,7 @@ export default function Messages() {
               }`}
             >
               <MessageCircle className={`h-4 w-4 flex-shrink-0 ${activeFilter === 'view_all' ? '' : 'text-purple-500'}`} />
-              <span className="flex-1 truncate">Ver Tudo</span>
+              <span className="flex-1 truncate text-left">Ver Tudo</span>
             </button>
             
             <button
@@ -1339,7 +1339,7 @@ export default function Messages() {
               }`}
             >
               <AlertCircle className={`h-4 w-4 flex-shrink-0 ${activeFilter === 'disputes' ? '' : 'text-red-500'}`} />
-              <span className="flex-1 truncate">Disputa</span>
+              <span className="flex-1 truncate text-left">Disputa</span>
               {unreadCounts.disputes > 0 && (
                 <Badge variant="destructive" className="ml-auto flex-shrink-0">{unreadCounts.disputes}</Badge>
               )}

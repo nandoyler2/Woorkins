@@ -1325,7 +1325,7 @@ export function UnifiedChat({
   };
 
   return (
-    <div className="h-full flex flex-col bg-white relative">
+    <div className="h-full flex flex-col bg-gradient-to-br from-slate-50 to-white dark:from-slate-900 dark:to-slate-950 relative">
       {/* Header with Proposal Chat Header */}
       {conversationType === 'proposal' && proposalData && (
         <ProposalChatHeader
@@ -1617,12 +1617,12 @@ export function UnifiedChat({
                           ) : (
                             /* Normal message */
                             <div
-                              className={`group rounded-2xl px-4 py-3 shadow-md hover:shadow-lg transition-shadow relative ${
+                              className={`group rounded-3xl px-5 py-3 shadow-lg hover:shadow-xl transition-all duration-200 relative ${
                                 isDeleted
                                   ? 'bg-destructive/10 border-destructive/20 border'
                                   : isMine
-                                  ? 'bg-gradient-to-br from-primary to-primary/90 text-primary-foreground rounded-tr-sm'
-                                  : 'bg-gradient-to-br from-card to-card/80 border border-border/50 rounded-tl-sm backdrop-blur-sm'
+                                  ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-br-md'
+                                  : 'bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-bl-md'
                               }`}
                             >
                               {message.media_url && message.media_type?.startsWith('image/') && (

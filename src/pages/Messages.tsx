@@ -762,13 +762,11 @@ export default function Messages() {
       
       <main className="flex-1 flex overflow-hidden">
         {/* Sidebar de Navegação */}
-        <div className="w-64 bg-card shadow-lg border-r p-4 flex flex-col">
+        <div className="w-64 bg-gradient-to-br from-primary/10 via-card to-secondary/10 shadow-xl border-r border-primary/20 p-4 flex flex-col backdrop-blur-sm">
           <div className="mb-6">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 rounded-lg bg-gradient-primary">
-                <MessageCircle className="h-5 w-5 text-primary-foreground" />
-              </div>
-              <h2 className="text-xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+            <div className="flex items-center gap-3 mb-4 p-3 rounded-2xl bg-gradient-to-r from-primary to-primary/80 shadow-lg">
+              <MessageCircle className="h-6 w-6 text-white animate-pulse" />
+              <h2 className="text-xl font-bold text-white">
                 Mensagens
               </h2>
             </div>
@@ -839,15 +837,15 @@ export default function Messages() {
 
         <div className="flex-1 flex overflow-hidden">
           {/* Lista de Conversas */}
-          <div className="w-96 border-r bg-gradient-to-b from-card to-card/50 shadow-xl overflow-hidden flex flex-col">
-            <div className="p-4 border-b bg-gradient-to-r from-background to-background/80 backdrop-blur-sm">
+          <div className="w-96 border-r bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-950 shadow-2xl overflow-hidden flex flex-col">
+            <div className="p-4 border-b bg-gradient-to-r from-primary/20 via-primary/10 to-transparent backdrop-blur-sm">
               <div className="relative group">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
                 <Input
-                  placeholder="Buscar por projeto ou cliente"
+                  placeholder="Buscar conversas..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 border-2 focus:border-primary/50 rounded-xl bg-background/50 backdrop-blur-sm"
+                  className="pl-12 h-12 border-2 focus:border-primary rounded-2xl bg-white dark:bg-slate-900 shadow-md text-base font-medium"
                 />
               </div>
               {isBackgroundLoading && (

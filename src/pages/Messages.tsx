@@ -823,6 +823,44 @@ export default function Messages() {
               <span>Caixa de Entrada</span>
             </button>
             
+            {proposalsReceivedCount > 0 && (
+              <button
+                onClick={() => setActiveFilter('proposals_received')}
+                className={`w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl transition-all font-medium ${
+                  activeFilter === 'proposals_received' 
+                    ? 'bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/30 scale-105' 
+                    : 'hover:bg-gradient-to-r hover:from-muted hover:to-muted/50 text-muted-foreground hover:scale-102'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <Tag className="h-5 w-5" />
+                  <span>Propostas Recebidas</span>
+                </div>
+                <Badge variant="secondary" className="ml-auto">
+                  {proposalsReceivedCount}
+                </Badge>
+              </button>
+            )}
+            
+            {proposalsSentCount > 0 && (
+              <button
+                onClick={() => setActiveFilter('proposals_sent')}
+                className={`w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl transition-all font-medium ${
+                  activeFilter === 'proposals_sent' 
+                    ? 'bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/30 scale-105' 
+                    : 'hover:bg-gradient-to-r hover:from-muted hover:to-muted/50 text-muted-foreground hover:scale-102'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <Tag className="h-5 w-5" />
+                  <span>Propostas Enviadas</span>
+                </div>
+                <Badge variant="secondary" className="ml-auto">
+                  {proposalsSentCount}
+                </Badge>
+              </button>
+            )}
+            
             <button
               onClick={() => setActiveFilter('unread')}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${
@@ -870,44 +908,6 @@ export default function Messages() {
               <AlertCircle className="h-5 w-5" />
               <span>Disputa</span>
             </button>
-            
-            {proposalsReceivedCount > 0 && (
-              <button
-                onClick={() => setActiveFilter('proposals_received')}
-                className={`w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl transition-all font-medium ${
-                  activeFilter === 'proposals_received' 
-                    ? 'bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/30 scale-105' 
-                    : 'hover:bg-gradient-to-r hover:from-muted hover:to-muted/50 text-muted-foreground hover:scale-102'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <Tag className="h-5 w-5" />
-                  <span>Propostas Recebidas</span>
-                </div>
-                <Badge variant="secondary" className="ml-auto">
-                  {proposalsReceivedCount}
-                </Badge>
-              </button>
-            )}
-            
-            {proposalsSentCount > 0 && (
-              <button
-                onClick={() => setActiveFilter('proposals_sent')}
-                className={`w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl transition-all font-medium ${
-                  activeFilter === 'proposals_sent' 
-                    ? 'bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/30 scale-105' 
-                    : 'hover:bg-gradient-to-r hover:from-muted hover:to-muted/50 text-muted-foreground hover:scale-102'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <Tag className="h-5 w-5" />
-                  <span>Propostas Enviadas</span>
-                </div>
-                <Badge variant="secondary" className="ml-auto">
-                  {proposalsSentCount}
-                </Badge>
-              </button>
-            )}
           </nav>
         </div>
 

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Check, X, Crown, Sparkles, Loader2 } from 'lucide-react';
@@ -39,19 +39,19 @@ export default function Plans() {
   useEffect(() => {
     document.title = 'Planos - Woorkins';
   }, []);
-  useEffect(() => {
-    loadPlans();
-    if (user) {
-      loadCurrentPlan();
-    }
-  }, [user]);
-  const loadPlans = async () => {
+  const loadData = useCallback(async () => {
+    setLoading(true);
     try {
-      const {
-        data,
-        error
-      } = await supabase.from('subscription_plans').select('*').eq('active', true).order('display_order');
-      if (error) throw error;
+      // Executar todas as queries em paralelo
+      const [plansResult, commissionResult, subscriptionResult] = await Promise.all([
+        supabase.from('subscription_plans').select('*').eq('active', true).order('display_order'),
+        supabase.from('platform_settings').select('setting_key, setting_value').in('setting_key', ['stripe_commission_free', 'stripe_commission_pro', 'stripe_commission_premium']),
+        user 
+          ? supabase.from('user_subscription_plans').select('plan_type').eq('user_id', user.id).eq('is_active', true).order('created_at', { ascending: false }).limit(1).maybeSingle()
+          : Promise.resolve({ data: null, error: null })
+      ]);
+
+      if (plansResult.error) throw plansResult.error;
 
       // Definir preços dos planos
       const planPrices: Record<string, number> = {
@@ -60,35 +60,36 @@ export default function Plans() {
         'premium': 149.90
       };
 
-      // Buscar comissões do banco de dados
-      const {
-        data: commissionData
-      } = await supabase.from('platform_settings').select('setting_key, setting_value').in('setting_key', ['stripe_commission_free', 'stripe_commission_pro', 'stripe_commission_premium']);
       const planCommissions: Record<string, number> = {
         'free': 10,
-        // fallback padrão
         'pro': 8,
-        // fallback padrão
-        'premium': 6 // fallback padrão
+        'premium': 6
       };
 
       // Atualizar com valores do banco
-      if (commissionData) {
-        commissionData.forEach(setting => {
+      if (commissionResult.data) {
+        commissionResult.data.forEach(setting => {
           const plan = setting.setting_key.replace('stripe_commission_', '');
-          const value = setting.setting_value as {
-            percentage: number;
-          };
+          const value = setting.setting_value as { percentage: number };
           planCommissions[plan] = value.percentage || planCommissions[plan];
         });
       }
-      setPlans((data || []).map(p => ({
+
+      setPlans((plansResult.data || []).map(p => ({
         ...p,
         price: planPrices[p.slug] || 0,
         commission_percentage: planCommissions[p.slug] ?? 10,
         features: typeof p.features === 'string' ? JSON.parse(p.features) : p.features as any
       })));
+
+      // Atualizar plano atual se o usuário estiver logado
+      if (subscriptionResult?.data?.plan_type) {
+        setCurrentPlan(subscriptionResult.data.plan_type);
+      } else if (user) {
+        setCurrentPlan('free');
+      }
     } catch (error: any) {
+      console.error('Error loading plans:', error);
       toast({
         title: 'Erro ao carregar planos',
         description: error.message,
@@ -97,27 +98,11 @@ export default function Plans() {
     } finally {
       setLoading(false);
     }
-  };
-  const loadCurrentPlan = async () => {
-    if (!user) return;
-    try {
-      const {
-        data: subscription
-      } = await supabase.from('user_subscription_plans').select('plan_type').eq('user_id', user.id).eq('is_active', true).order('created_at', {
-        ascending: false
-      }).limit(1).maybeSingle();
-      if (subscription?.plan_type) {
-        setCurrentPlan(subscription.plan_type);
-      } else {
-        // Se não tem plano pago, está no plano grátis
-        setCurrentPlan('free');
-      }
-    } catch (error: any) {
-      console.error('Error loading current plan:', error);
-      // Em caso de erro, assume plano grátis
-      setCurrentPlan('free');
-    }
-  };
+  }, [user, toast]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
   const handleSelectPlan = async (plan: Plan) => {
     if (!user) {
       toast({
@@ -200,7 +185,7 @@ export default function Plans() {
     } catch (e: any) {
       console.error('Confirm plan payment error:', e);
     }
-    await loadCurrentPlan();
+    await loadData();
     toast({
       title: 'Plano ativado!',
       description: `Bem-vindo ao plano ${selectedPlan.name}!`

@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import Cropper from 'react-easy-crop';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -69,6 +69,17 @@ export function ImageStickerDialog({ open, onClose, onSave }: ImageStickerDialog
   const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+
+  // Auto-abrir seleção de arquivo ao abrir o diálogo
+  useEffect(() => {
+    if (open && !selectedImage) {
+      // Pequeno delay para garantir que o diálogo renderizou
+      const timer = setTimeout(() => {
+        fileInputRef.current?.click();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [open, selectedImage]);
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

@@ -261,8 +261,11 @@ export function UploadProvider({ children }: { children: ReactNode }) {
 
       // Salvar stickers se houver
       if (data.stickers && data.stickers.length > 0 && insertData?.id) {
+        console.log(`📌 Salvando ${data.stickers.length} stickers para story ${insertData.id}`);
+        
         const stickersToInsert = await Promise.all(
           data.stickers.map(async (sticker) => {
+            console.log(`📌 Processando sticker tipo: ${sticker.type}`, sticker);
             let content = sticker.content;
             
             // Se for sticker de imagem, fazer upload da imagem
@@ -319,14 +322,24 @@ export function UploadProvider({ children }: { children: ReactNode }) {
           })
         );
 
+        console.log('📌 Inserindo stickers no banco:', stickersToInsert);
+        
         const { error: stickersError } = await supabase
           .from('story_stickers')
           .insert(stickersToInsert);
 
         if (stickersError) {
-          console.error('Error inserting stickers:', stickersError);
+          console.error('❌ Error inserting stickers:', stickersError);
           // Não falha o upload se os stickers falharem
+        } else {
+          console.log('✅ Stickers inseridos com sucesso!');
         }
+      } else {
+        console.log('📌 Nenhum sticker para salvar', {
+          hasStickers: !!data.stickers,
+          stickerCount: data.stickers?.length || 0,
+          hasInsertData: !!insertData?.id
+        });
       }
 
       setCurrentUpload({

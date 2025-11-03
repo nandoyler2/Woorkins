@@ -513,17 +513,53 @@ export default function ProjectDetails() {
                 <Card className="border-2 bg-card/50 backdrop-blur-sm shadow-lg">
                   <CardContent className="pt-6">
                     {proposals.length === 0 ? (
-                      <div className="text-center py-12">
-                        <MessageSquare className="w-16 h-16 mx-auto mb-4 text-primary/30" />
-                        <h3 className="text-xl font-semibold mb-2">Nenhuma proposta enviada no momento</h3>
-                        <p className="text-muted-foreground mb-6">Seja o primeiro a enviar uma proposta para este projeto!</p>
+                      <div className="text-center py-16 px-6">
+                        {/* Ícone com gradiente e animação */}
+                        <div className="relative inline-block mb-6">
+                          <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-teal-500 rounded-full blur-xl opacity-30 animate-pulse-slow"></div>
+                          <div className="relative bg-gradient-to-br from-blue-50 to-teal-50 dark:from-blue-950 dark:to-teal-950 p-6 rounded-full border-4 border-primary/20">
+                            <MessageSquare className="w-16 h-16 text-primary" />
+                          </div>
+                        </div>
+                        
+                        {/* Título com gradiente */}
+                        <h3 className="text-2xl font-bold mb-3 bg-gradient-to-r from-blue-600 to-teal-600 bg-clip-text text-transparent">
+                          Nenhuma proposta enviada ainda
+                        </h3>
+                        
+                        {/* Descrição */}
+                        <p className="text-muted-foreground mb-8 max-w-md mx-auto text-lg">
+                          Seja o primeiro a enviar uma proposta para este projeto e tenha mais chances de ser selecionado!
+                        </p>
+                        
+                        {/* Botão destacado */}
                         {!isOwner && (
-                          <Button 
-                            onClick={handleMakeProposal}
-                            className="bg-gradient-primary hover:opacity-90"
-                          >
-                            Enviar primeira proposta
-                          </Button>
+                          <div className="space-y-3">
+                            <Button 
+                              onClick={handleMakeProposal}
+                              size="lg"
+                              className="bg-gradient-to-r from-blue-600 to-teal-600 hover:from-blue-700 hover:to-teal-700 shadow-lg hover:shadow-xl transition-all duration-300 text-lg px-8 py-6 h-auto"
+                            >
+                              <Send className="w-5 h-5 mr-3" />
+                              Enviar Primeira Proposta
+                            </Button>
+                            
+                            {/* Benefícios */}
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8 text-sm">
+                              <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                                <CheckCircle className="w-4 h-4 text-green-500" />
+                                <span>Resposta rápida</span>
+                              </div>
+                              <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                                <CheckCircle className="w-4 h-4 text-green-500" />
+                                <span>Pagamento seguro</span>
+                              </div>
+                              <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                                <CheckCircle className="w-4 h-4 text-green-500" />
+                                <span>Sem taxas ocultas</span>
+                              </div>
+                            </div>
+                          </div>
                         )}
                       </div>
                     ) : ownerSubscriptionPlan === 'free' && isOwner ? (

@@ -995,12 +995,16 @@ export function UnifiedChat({
         onClick={() => showTimestamp(`activity-${activity.id}`)}
       >
         {!isMine && (
-          <Avatar className="h-8 w-8 flex-shrink-0">
-            <AvatarImage src={changed_by_profile?.avatar_url || changed_by_profile?.logo_url} />
-            <AvatarFallback className="bg-primary/10 text-primary text-xs">
-              {(changed_by_profile?.company_name || changed_by_profile?.full_name || 'U').charAt(0).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
+          <ProfileHoverCard profileId={changed_by}>
+            <div className="cursor-pointer">
+              <Avatar className="h-8 w-8 flex-shrink-0 ring-2 ring-background group-hover:ring-primary/50 transition-all">
+                <AvatarImage src={changed_by_profile?.avatar_url || changed_by_profile?.logo_url} />
+                <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                  {(changed_by_profile?.company_name || changed_by_profile?.full_name || 'U').charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+            </div>
+          </ProfileHoverCard>
         )}
         
         <div className={`flex flex-col max-w-[75%] ${isMine ? 'items-end' : 'items-start'}`}>
@@ -1584,16 +1588,18 @@ export function UnifiedChat({
                         isMine ? 'flex-row-reverse' : 'flex-row'
                       }`}
                     >
-                      <ProfileHoverCard profileId={message.sender_id}>
-                        <div className="cursor-pointer">
-                          <Avatar className="h-8 w-8 flex-shrink-0 ring-2 ring-background group-hover:ring-primary/50 transition-all">
-                            <AvatarImage src={message.sender_avatar} />
-                            <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10 text-primary text-xs font-semibold">
-                              {message.sender_name.charAt(0).toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
-                        </div>
-                      </ProfileHoverCard>
+                      {!isMine && (
+                        <ProfileHoverCard profileId={message.sender_id}>
+                          <div className="cursor-pointer">
+                            <Avatar className="h-8 w-8 flex-shrink-0 ring-2 ring-background group-hover:ring-primary/50 transition-all">
+                              <AvatarImage src={message.sender_avatar} />
+                              <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10 text-primary text-xs font-semibold">
+                                {message.sender_name.charAt(0).toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                          </div>
+                        </ProfileHoverCard>
+                      )}
                        
                         <div className={`flex flex-col max-w-[75%] group ${isMine ? 'items-end' : 'items-start'}`} onClick={() => showTimestamp(message.id)}>
                           {/* Rejected message */}

@@ -565,7 +565,7 @@ export default function ProjectDetails() {
                 {isOwner && project.status === 'open' && (
                   <div className="space-y-2">
                     <Button 
-                      className="w-full bg-muted hover:bg-muted cursor-default text-foreground"
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white cursor-default"
                       disabled
                     >
                       Seu Projeto

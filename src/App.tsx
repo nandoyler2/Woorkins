@@ -42,6 +42,7 @@ const ProfileEdit = lazy(() => import("./pages/ProfileEdit"));
 const ProfileRouter = lazy(() => import("./pages/ProfileRouter"));
 const BusinessFinances = lazy(() => import("./pages/BusinessFinances"));
 const ProjectCreate = lazy(() => import("./pages/ProjectCreate"));
+const ProjectEdit = lazy(() => import("./pages/ProjectEdit"));
 const MyProjects = lazy(() => import("./pages/MyProjects"));
 const Account = lazy(() => import("./pages/Account"));
 const Financeiro = lazy(() => import("./pages/Financeiro"));
@@ -117,6 +118,7 @@ function AppContent() {
           <Route path="/projetos" element={<Projects />} />
           <Route path="/projetos/:id" element={<ProjectDetails />} />
           <Route path="/projetos/novo" element={<ProtectedRoute><ProjectCreate /></ProtectedRoute>} />
+          <Route path="/projeto/:id/editar" element={<ProtectedRoute><ProjectEdit /></ProtectedRoute>} />
           <Route path="/hub" element={<Hub />} />
           <Route path="/hub/:slug" element={<HubArticle />} />
           <Route path="/feed" element={<Feed />} />

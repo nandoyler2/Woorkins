@@ -218,7 +218,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
                   <Button 
                     variant="default" 
                     size="sm" 
-                    className="whitespace-nowrap bg-muted hover:bg-muted cursor-default text-foreground"
+                    className="whitespace-nowrap bg-blue-600 hover:bg-blue-700 text-white cursor-default"
                     disabled
                   >
                     Seu Projeto

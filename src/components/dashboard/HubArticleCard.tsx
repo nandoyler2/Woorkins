@@ -102,58 +102,56 @@ export function HubArticleCard() {
         </div>
       </div>
       
-      {/* Content */}
-      <div className="p-4">
-        <Link to={`/hub/${article.slug}`}>
-          <div className="overflow-hidden group cursor-pointer transition-all duration-300 hover:shadow-2xl hover:scale-[1.02] rounded-xl">
-            <div className="relative h-48 overflow-hidden rounded-xl">
-              {/* Imagem de fundo ou gradiente */}
-              {article.cover_image ? (
-                <img 
-                  src={article.cover_image} 
-                  alt={article.title}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                />
-              ) : (
-                <div className="w-full h-full bg-gradient-to-br from-blue-900 via-teal-700 to-blue-900"></div>
-              )}
+      {/* Content - Sem padding, preenche toda a área */}
+      <Link to={`/hub/${article.slug}`}>
+        <div className="overflow-hidden group cursor-pointer transition-all duration-300 hover:shadow-2xl">
+          <div className="relative h-52 overflow-hidden">
+            {/* Imagem de fundo ou gradiente */}
+            {article.cover_image ? (
+              <img 
+                src={article.cover_image} 
+                alt={article.title}
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+              />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-blue-900 via-teal-700 to-blue-900"></div>
+            )}
+            
+            {/* Overlay com sombra para legibilidade */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/60 to-transparent"></div>
+            
+            {/* Badge Destaque */}
+            <div className="absolute top-4 left-4">
+              <Badge className="bg-red-600 text-white font-bold px-3 py-1.5 shadow-lg animate-pulse">
+                <Sparkles className="h-3 w-3 mr-1 inline" />
+                DESTAQUE
+              </Badge>
+            </div>
+            
+            {/* Conteúdo */}
+            <div className="absolute bottom-0 left-0 right-0 p-5 space-y-2.5">
+              {/* Categoria */}
+              <Badge 
+                variant="secondary" 
+                className="bg-blue-500/90 backdrop-blur-sm text-white text-xs font-semibold shadow-lg"
+              >
+                {article.category}
+              </Badge>
               
-              {/* Overlay com sombra para legibilidade */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent"></div>
+              {/* Título - Sem line-clamp, mostra completo */}
+              <h3 className="text-white font-bold text-base leading-snug drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)]">
+                {article.title}
+              </h3>
               
-              {/* Badge Destaque */}
-              <div className="absolute top-4 left-4">
-                <Badge className="bg-red-600 text-white font-bold px-3 py-1.5 shadow-lg animate-pulse">
-                  <Sparkles className="h-3 w-3 mr-1 inline" />
-                  DESTAQUE
-                </Badge>
-              </div>
-              
-              {/* Conteúdo */}
-              <div className="absolute bottom-0 left-0 right-0 p-5 space-y-2.5">
-                {/* Categoria */}
-                <Badge 
-                  variant="secondary" 
-                  className="bg-blue-500/90 backdrop-blur-sm text-white text-xs font-semibold shadow-lg"
-                >
-                  {article.category}
-                </Badge>
-                
-                {/* Título */}
-                <h3 className="text-white font-bold text-lg leading-tight line-clamp-2 drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)]">
-                  {article.title}
-                </h3>
-                
-                {/* Data */}
-                <div className="flex items-center gap-1.5 text-white/95 text-sm drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
-                  <Clock className="h-3.5 w-3.5" />
-                  <span className="font-medium">{getTimeAgo(article.published_at || article.created_at)}</span>
-                </div>
+              {/* Data */}
+              <div className="flex items-center gap-1.5 text-white/95 text-sm drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
+                <Clock className="h-3.5 w-3.5" />
+                <span className="font-medium">{getTimeAgo(article.published_at || article.created_at)}</span>
               </div>
             </div>
           </div>
-        </Link>
-      </div>
+        </div>
+      </Link>
     </Card>
   );
 }

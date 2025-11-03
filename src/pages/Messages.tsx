@@ -833,13 +833,25 @@ export default function Messages() {
 
   const handleShowInInbox = async (conv: Conversation) => {
     try {
+      console.log('🔄 handleShowInInbox - before update:', {
+        id: conv.id,
+        type: conv.type,
+        workStatus: conv.workStatus,
+        status: conv.status,
+        hideFromInbox: conv.hideFromInbox,
+        title: conv.title
+      });
+      
       const table = conv.type === 'negotiation' ? 'negotiations' : 'proposals';
-      const { error } = await supabase
+      const { error, data } = await supabase
         .from(table)
         .update({ hide_from_inbox: false })
-        .eq('id', conv.id);
+        .eq('id', conv.id)
+        .select();
 
       if (error) throw error;
+
+      console.log('✅ handleShowInInbox - update successful:', data);
 
       toast({ title: 'Conversa exibida na caixa de entrada' });
 
@@ -850,7 +862,7 @@ export default function Messages() {
       await loadConversations(true);
       setTimeout(() => loadConversations(true), 300);
     } catch (error) {
-      console.error('Error showing in inbox:', error);
+      console.error('❌ Error showing in inbox:', error);
       toast({ title: 'Erro ao exibir na caixa de entrada', description: String(error) });
     }
   };
@@ -1051,7 +1063,11 @@ export default function Messages() {
     if (conv.hideFromInbox) return false;
     if (conv.type === 'negotiation') return true;
     if (conv.type === 'proposal' && (conv as any).isProposalReceived) return true;
-    if (conv.type === 'proposal' && (conv as any).isProposalSent && ((conv as any).isUnlocked || (conv as any).ownerHasMessaged)) return true;
+    if (conv.type === 'proposal' && (conv as any).isProposalSent) {
+      const isCompleted = conv.workStatus === 'completed' || conv.workStatus === 'payment_complete' || conv.status === 'completed';
+      if (isCompleted) return true;
+      if ((conv as any).isUnlocked || (conv as any).ownerHasMessaged) return true;
+    }
     return false;
   };
 
@@ -1098,8 +1114,12 @@ export default function Messages() {
           // Propostas recebidas (incluindo finalizadas)
           if (conv.type === 'proposal' && (conv as any).isProposalReceived) return true;
           
-          // Propostas enviadas aparecem na caixa de entrada apenas se o owner respondeu/interagiu
-          if (conv.type === 'proposal' && (conv as any).isProposalSent && ((conv as any).isUnlocked || (conv as any).ownerHasMessaged)) return true;
+          // Propostas enviadas: sempre mostrar se finalizadas, senão exigir interação do owner
+          if (conv.type === 'proposal' && (conv as any).isProposalSent) {
+            const isCompleted = conv.workStatus === 'completed' || conv.workStatus === 'payment_complete' || conv.status === 'completed';
+            if (isCompleted) return true;
+            if ((conv as any).isUnlocked || (conv as any).ownerHasMessaged) return true;
+          }
           
           return false;
         default:

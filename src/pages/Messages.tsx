@@ -37,6 +37,16 @@ import { toast } from '@/hooks/use-toast';
 import notificationSound from '@/assets/notification-sound.mp3';
 import emptyMessagesBg from '@/assets/empty-messages-bg.jpg';
 
+const HERO_PHRASES = [
+  "Grandes negócios acontecem aqui",
+  "Conecte-se com profissionais incríveis",
+  "Transforme ideias em realidade",
+  "O futuro do trabalho está aqui",
+  "Sua próxima oportunidade começa agora",
+  "Encontre o talento perfeito",
+  "Projetos que inspiram sucesso"
+];
+
 interface Conversation {
   id: string;
   type: 'negotiation' | 'proposal';
@@ -93,11 +103,27 @@ export default function Messages() {
   const hasLoadedOnce = useRef(false); // Flag para controlar primeiro carregamento
   const location = useLocation();
   const notificationAudioRef = useRef<HTMLAudioElement | null>(null);
+  const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
+  const [isPhraseFading, setIsPhraseFading] = useState(false);
 
   // Inicializar áudio de notificação
   useEffect(() => {
     notificationAudioRef.current = new Audio(notificationSound);
     notificationAudioRef.current.volume = 0.5;
+  }, []);
+
+  // Rotacionar frases do hero
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setIsPhraseFading(true);
+      
+      setTimeout(() => {
+        setCurrentPhraseIndex((prev) => (prev + 1) % HERO_PHRASES.length);
+        setIsPhraseFading(false);
+      }, 500); // Tempo do fade out
+    }, 4000); // Muda a cada 4 segundos
+
+    return () => clearInterval(interval);
   }, []);
 
   // Função para tocar som de notificação
@@ -1561,8 +1587,12 @@ export default function Messages() {
                 {/* Conteúdo */}
                 <div className="relative z-10 text-center p-8 max-w-2xl">
                   <div className="mb-6 animate-fade-in">
-                    <h1 className="text-5xl font-bold mb-4 text-white drop-shadow-lg">
-                      Grandes negócios acontecem aqui
+                    <h1 
+                      className={`text-5xl font-bold mb-4 text-white drop-shadow-lg transition-opacity duration-500 ${
+                        isPhraseFading ? 'opacity-0' : 'opacity-100'
+                      }`}
+                    >
+                      {HERO_PHRASES[currentPhraseIndex]}
                     </h1>
                     <p className="text-xl text-white/90 drop-shadow-md mb-6">
                       Selecione uma conversa na lista ou:

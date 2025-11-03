@@ -23,6 +23,7 @@ import { CreateBusinessProfileDialog } from '@/components/CreateBusinessProfileD
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
 import { DashboardSkeleton } from '@/components/dashboard/DashboardSkeleton';
 import { CreateStoryDialog } from '@/components/stories/CreateStoryDialog';
+import { HubArticleCard } from '@/components/dashboard/HubArticleCard';
 
 // Lazy load heavy components
 const StoriesCarousel = lazy(() => import('@/components/stories/StoriesCarousel').then(m => ({ default: m.StoriesCarousel })));
@@ -1374,6 +1375,9 @@ export default function Dashboard() {
                 ))}
               </CardContent>
             </Card>
+
+            {/* Woorkins Hub - Artigo Aleatório */}
+            <HubArticleCard />
 
             {/* Following Section */}
             {profile && (

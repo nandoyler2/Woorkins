@@ -122,7 +122,7 @@ export function HubArticleCard() {
             
             {/* Badge Destaque */}
             <div className="absolute top-4 left-4">
-              <Badge className="bg-red-600 text-white font-bold px-3 py-1.5 shadow-lg animate-pulse">
+              <Badge className="bg-red-600 text-white font-bold px-3 py-1.5 shadow-lg">
                 <Sparkles className="h-3 w-3 mr-1 inline" />
                 DESTAQUE
               </Badge>
@@ -144,8 +144,8 @@ export function HubArticleCard() {
               </h3>
               
               {/* Data */}
-              <div className="flex items-center gap-1.5 text-white/95 text-sm drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
-                <Clock className="h-3.5 w-3.5" />
+              <div className="flex items-center gap-1.5 text-white/95 text-[0.65rem] drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
+                <Clock className="h-3 w-3" />
                 <span className="font-medium">{getTimeAgo(article.published_at || article.created_at)}</span>
               </div>
             </div>

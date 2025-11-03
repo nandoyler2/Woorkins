@@ -23,7 +23,7 @@ import { MessagesSkeleton } from '@/components/messages/MessagesSkeleton';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { formatShortName } from '@/lib/utils';
-import { useToast } from '@/hooks/use-toast';
+import notificationSound from '@/assets/notification-sound.mp3';
 
 interface Conversation {
   id: string;
@@ -52,7 +52,6 @@ interface Conversation {
 
 export default function Messages() {
   const { user } = useAuth();
-  const { toast } = useToast();
   const navigate = useNavigate();
   const { 
     conversations: cachedConversations, 
@@ -74,6 +73,23 @@ export default function Messages() {
   const hasLoadedData = useRef(false);
   const hasLoadedOnce = useRef(false); // Flag para controlar primeiro carregamento
   const location = useLocation();
+  const notificationAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Inicializar áudio de notificação
+  useEffect(() => {
+    notificationAudioRef.current = new Audio(notificationSound);
+    notificationAudioRef.current.volume = 0.5;
+  }, []);
+
+  // Função para tocar som de notificação
+  const playNotificationSound = () => {
+    if (notificationAudioRef.current) {
+      notificationAudioRef.current.currentTime = 0;
+      notificationAudioRef.current.play().catch(err => {
+        console.log('Erro ao tocar notificação:', err);
+      });
+    }
+  };
 
   useEffect(() => {
     document.title = 'Mensagens - Woorkins';
@@ -146,6 +162,12 @@ export default function Messages() {
               if (c.type === 'negotiation' && c.id === m.negotiation_id) {
                 const isActive = selectedConversation?.type === 'negotiation' && selectedConversation?.id === c.id;
                 const inc = !isActive && m.sender_id !== profileId ? 1 : 0;
+                
+                // Tocar som se for mensagem nova de outro usuário
+                if (inc > 0) {
+                  playNotificationSound();
+                }
+                
                 const updatedConv = {
                   ...c,
                   lastMessageAt: m.created_at,
@@ -180,6 +202,12 @@ export default function Messages() {
               if (c.type === 'proposal' && c.id === m.proposal_id) {
                 const isActive = selectedConversation?.type === 'proposal' && selectedConversation?.id === c.id;
                 const inc = !isActive && m.sender_id !== profileId ? 1 : 0;
+                
+                // Tocar som se for mensagem nova de outro usuário
+                if (inc > 0) {
+                  playNotificationSound();
+                }
+                
                 const updatedConv = {
                   ...c,
                   lastMessageAt: m.created_at,
@@ -620,13 +648,6 @@ export default function Messages() {
         setSelectedConversation(null);
       }
 
-      toast({
-        title: archived ? 'Conversa arquivada' : 'Conversa desarquivada',
-        description: archived 
-          ? 'A conversa foi movida para Arquivadas'
-          : 'A conversa foi restaurada',
-      });
-
       // Se estiver na aba Arquivadas, forçar reload imediato
       if (activeFilter === 'archived') {
         setTimeout(() => loadConversations(true), 300);
@@ -636,11 +657,6 @@ export default function Messages() {
       }
     } catch (error) {
       console.error('Error archiving conversation:', error);
-      toast({
-        title: 'Erro',
-        description: 'Não foi possível arquivar a conversa',
-        variant: 'destructive',
-      });
     }
   };
 

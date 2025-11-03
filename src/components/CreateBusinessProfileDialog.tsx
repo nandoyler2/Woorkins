@@ -581,95 +581,102 @@ export function CreateBusinessProfileDialog({ open, onOpenChange, onSuccess }: C
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl h-[80vh] p-0 flex flex-col">
-        <div className="sticky top-0 z-10 bg-background border-b px-6 pt-6 pb-4">
+      <DialogContent className="sm:max-w-[600px] p-0 overflow-hidden max-h-[90vh] flex flex-col" hideClose>
+        {/* Header com gradiente */}
+        <div className="bg-gradient-to-r from-blue-900 via-teal-700 to-blue-900 p-4 border-b shrink-0">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-xl">
-              <Building2 className="w-6 h-6 text-primary" />
+            <DialogTitle className="flex items-center gap-2 text-white text-lg font-bold">
+              <Building2 className="w-5 h-5" />
               Criar Perfil Profissional
             </DialogTitle>
-            <DialogDescription className="text-sm mt-2">
+            <DialogDescription className="text-blue-100 text-sm mt-1">
               {currentStep === 'photo' && 'Comece com a foto e informações básicas'}
               {currentStep === 'tools' && 'Escolha as ferramentas para o seu perfil'}
               {currentStep === 'cover' && 'Adicione uma capa e informações adicionais'}
               {currentStep === 'final' && 'Revise e finalize seu perfil'}
             </DialogDescription>
           </DialogHeader>
-          <Progress value={getStepProgress()} className="h-2 mt-4" />
+          <Progress value={getStepProgress()} className="h-1.5 mt-3 bg-blue-950/50" />
         </div>
 
-        <div className="flex-1 overflow-y-auto px-6 py-4">
+        {/* Conteúdo rolável */}
+        <div className="flex-1 overflow-y-auto px-5 py-4">
           {renderStepContent()}
         </div>
 
-        <div className="sticky bottom-0 z-10 bg-background border-t px-6 py-4">
-          <div className="flex gap-3 items-center">
-            {currentStep !== 'photo' && (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleBack}
-                disabled={creating}
-                className="h-10"
-              >
-                <ChevronLeft className="w-4 h-4 mr-2" />
-                Voltar
-              </Button>
-            )}
+        {/* Footer fixo com botões */}
+        <div className="border-t bg-gradient-to-b from-muted/30 to-muted/50 px-5 py-3 shrink-0">
+          <div className="flex gap-2 items-center justify-between">
+            <div className="flex gap-2">
+              {currentStep !== 'photo' && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleBack}
+                  disabled={creating}
+                  className="h-9 text-sm"
+                >
+                  <ChevronLeft className="w-4 h-4 mr-1" />
+                  Voltar
+                </Button>
+              )}
+              
+              {currentStep !== 'final' && currentStep !== 'photo' && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={handleSkip}
+                  disabled={creating}
+                  className="h-9 text-sm"
+                >
+                  Pular
+                </Button>
+              )}
+              
+              {currentStep === 'photo' && (
+                <Button
+                  type="button"
+                  onClick={onOpenChange.bind(null, false)}
+                  variant="outline"
+                  className="h-9 text-sm"
+                >
+                  Cancelar
+                </Button>
+              )}
+            </div>
             
-            {currentStep !== 'final' && currentStep !== 'photo' && (
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={handleSkip}
-                disabled={creating}
-                className="h-10"
-              >
-                Pular
-              </Button>
-            )}
-            
-            {currentStep === 'photo' && (
-              <Button
-                type="button"
-                onClick={onOpenChange.bind(null, false)}
-                variant="outline"
-                className="ml-auto h-10"
-              >
-                Cancelar
-              </Button>
-            )}
-            
-            {currentStep !== 'final' ? (
-              <Button
-                type="button"
-                onClick={handleNext}
-                disabled={!canProceedFromStep() || creating}
-                className="ml-auto h-10 bg-primary hover:bg-primary/90 font-semibold shadow-lg hover:shadow-xl transition-all"
-              >
-                Próximo
-                <ChevronRight className="w-4 h-4 ml-2" />
-              </Button>
-            ) : (
-              <Button
-                type="button"
-                onClick={handleFinish}
-                disabled={creating}
-                className="ml-auto h-10 bg-green-700 hover:bg-green-800 font-semibold shadow-lg hover:shadow-xl transition-all"
-              >
-                {creating ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Criando...
-                  </>
-                ) : (
-                  <>
-                    <Check className="w-4 h-4 mr-2" />
-                    Finalizar
-                  </>
-                )}
-              </Button>
-            )}
+            <div>
+              {currentStep !== 'final' ? (
+                <Button
+                  type="button"
+                  onClick={handleNext}
+                  disabled={!canProceedFromStep() || creating}
+                  className="h-9 text-sm bg-gradient-to-r from-blue-600 via-teal-600 to-blue-600 hover:from-blue-700 hover:via-teal-700 hover:to-blue-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all"
+                >
+                  Próximo
+                  <ChevronRight className="w-4 h-4 ml-1" />
+                </Button>
+              ) : (
+                <Button
+                  type="button"
+                  onClick={handleFinish}
+                  disabled={creating}
+                  className="h-9 text-sm bg-green-700 hover:bg-green-800 text-white font-semibold shadow-lg hover:shadow-xl transition-all"
+                >
+                  {creating ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                      Criando...
+                    </>
+                  ) : (
+                    <>
+                      <Check className="w-4 h-4 mr-1" />
+                      Finalizar
+                    </>
+                  )}
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       </DialogContent>

@@ -58,6 +58,8 @@ export function FollowingSection({ profileId }: FollowingSectionProps) {
 
   const loadFollowing = async () => {
     try {
+      console.log('🔍 Carregando seguidos para profileId:', profileId);
+      
       // Buscar perfis de usuários seguidos
       const { data: followsData, error: followsError } = await supabase
         .from('follows')
@@ -72,6 +74,9 @@ export function FollowingSection({ profileId }: FollowingSectionProps) {
           )
         `)
         .eq('follower_id', profileId);
+
+      console.log('📋 Follows data:', followsData);
+      console.log('❌ Follows error:', followsError);
 
       if (followsError) throw followsError;
 
@@ -184,7 +189,7 @@ export function FollowingSection({ profileId }: FollowingSectionProps) {
     );
   }
 
-  const displayedProfiles = showAll ? following : following.slice(0, 8);
+  const displayedProfiles = showAll ? following : following.slice(0, 6);
 
   return (
     <Card className="bg-white shadow-sm border border-slate-200">
@@ -196,7 +201,7 @@ export function FollowingSection({ profileId }: FollowingSectionProps) {
             </div>
             <h3 className="text-base font-bold text-slate-900">Seguindo</h3>
           </div>
-          {following.length > 8 && (
+          {following.length > 6 && (
             <Button
               variant="ghost"
               size="sm"
@@ -210,29 +215,29 @@ export function FollowingSection({ profileId }: FollowingSectionProps) {
         </div>
       </CardHeader>
       <CardContent className="p-4">
-        <div className="grid grid-cols-4 gap-4">
+        <div className="space-y-1">
           {displayedProfiles.map((profile) => (
             <Link 
               key={profile.id}
               to={`/${profile.username}`}
-              className="flex flex-col items-center gap-2 group"
+              className="flex items-center gap-3 py-2 px-2 hover:bg-slate-50 rounded-lg transition-colors group"
             >
-              <div className="relative">
+              <div className="relative flex-shrink-0">
                 <ProfileAvatarWithHover
                   profileId={profile.id}
                   username={profile.username}
                   avatarUrl={profile.avatar_url}
-                  size="lg"
+                  size="sm"
                   hoverCardSide="right"
                 />
                 {profile.hasStory && (
-                  <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-primary rounded-full border-2 border-white flex items-center justify-center">
-                    <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
+                  <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-primary rounded-full border-2 border-white flex items-center justify-center">
+                    <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
                   </div>
                 )}
               </div>
-              <div className="text-center w-full">
-                <p className="text-xs font-medium text-slate-700 truncate group-hover:text-primary transition-colors">
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-slate-700 truncate group-hover:text-primary transition-colors">
                   {formatShortName(profile.full_name) || profile.username}
                 </p>
               </div>

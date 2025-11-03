@@ -202,40 +202,42 @@ export function UnifiedChat({
   // Ref para rastrear número anterior de mensagens
   const prevMessageCountRef = useRef(0);
   
-  // Ao trocar de conversa - preparar hidratação
+  // Ao trocar de conversa - pré-posicionar ANTES de carregar
   useEffect(() => {
+    const container = messagesContainerRef.current;
+    if (container) {
+      // Pré-posicionar no fundo IMEDIATAMENTE
+      container.style.scrollBehavior = 'auto';
+      container.scrollTop = container.scrollHeight;
+    }
+    
     isHydratingRef.current = true;
     setHideOnInit(true);
     prevMessageCountRef.current = 0;
   }, [conversationId]);
   
-  // Scroll INSTANTÂNEO ao trocar de conversa - SEM animação, somente após carregar mensagens
+  // Revelar container após posicionamento instantâneo
   useLayoutEffect(() => {
-    if (!isHydratingRef.current || _isLoading) return;
+    if (!isHydratingRef.current) return;
     
     const container = messagesContainerRef.current;
     if (!container) return;
     
+    // Forçar scroll instantâneo no fundo
     container.style.scrollBehavior = 'auto';
+    container.scrollTop = container.scrollHeight;
     
-    const toBottom = () => {
-      container.scrollTop = container.scrollHeight;
-    };
-    
-    // Garantir diversas chances após renderizações assíncronas
+    // Usar requestAnimationFrame para garantir DOM pintado
     requestAnimationFrame(() => {
-      toBottom();
-      requestAnimationFrame(() => {
-        toBottom();
-        setTimeout(toBottom, 60);
-        setTimeout(toBottom, 180);
-        
-        isHydratingRef.current = false;
-        setHideOnInit(false);
-        prevMessageCountRef.current = messages.length;
-      });
+      // Reforçar posição (caso scrollHeight tenha mudado)
+      container.scrollTop = container.scrollHeight;
+      
+      // Revelar container (já está no lugar certo)
+      isHydratingRef.current = false;
+      setHideOnInit(false);
+      prevMessageCountRef.current = messages.length;
     });
-  }, [conversationId, _isLoading, messages.length]);
+  }, [conversationId]);
   
   // Scroll suave APENAS para novas mensagens (após a abertura inicial)
   useEffect(() => {

@@ -37,6 +37,14 @@ import anaCosta from "@/assets/testimonials/ana-costa.jpg";
 
 // Import background
 import corporateBackground from "@/assets/landing/corporate-background.jpg";
+import benefitsBg from "@/assets/landing/benefits-bg.jpg";
+import freelancersBg from "@/assets/landing/freelancers-bg.jpg";
+import workflowBg from "@/assets/landing/workflow-bg.jpg";
+import progressBg from "@/assets/landing/progress-bg.jpg";
+import analyticsBg from "@/assets/landing/analytics-bg.jpg";
+import communicationBg from "@/assets/landing/communication-bg.jpg";
+import socialBg from "@/assets/landing/social-bg.jpg";
+import communityBg from "@/assets/landing/community-bg.jpg";
 
 interface Project {
   id: string;
@@ -223,7 +231,9 @@ export default function Index() {
 
       {/* Diferenciais Section */}
       <section id="diferenciais" className="py-20 bg-gradient-to-b from-muted/50 to-background relative">
-        <div className="absolute inset-0 bg-grid-pattern opacity-5" />
+        <div className="absolute inset-0 opacity-10">
+          <img src={benefitsBg} alt="" className="w-full h-full object-cover" />
+        </div>
         <div className="container mx-auto px-4 relative z-10">
           <div className="text-center mb-16 animate-fade-in">
             <h2 className="text-4xl font-bold mb-4">Por que escolher o Woorkins?</h2>
@@ -275,7 +285,7 @@ export default function Index() {
       {/* Recent Projects Section */}
       <section className="py-20 bg-gradient-to-b from-background to-primary/5 relative">
         <div className="absolute inset-0">
-          <img src={corporateBackground} alt="" className="w-full h-full object-cover opacity-5" />
+          <img src={freelancersBg} alt="" className="w-full h-full object-cover opacity-15 blur-sm" />
         </div>
         <div className="container mx-auto px-4 relative z-10">
           <div className="text-center mb-12">
@@ -337,7 +347,9 @@ export default function Index() {
 
       {/* Como Funciona Section */}
       <section id="como-funciona" className="py-20 bg-gradient-to-br from-primary/10 via-accent/5 to-muted/30 relative">
-        <div className="absolute inset-0 bg-grid-white/[0.02] bg-[size:30px_30px]" />
+        <div className="absolute inset-0 opacity-10">
+          <img src={workflowBg} alt="" className="w-full h-full object-cover" />
+        </div>
         <div className="container mx-auto px-4 relative z-10">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold mb-4">Como funciona</h2>
@@ -383,7 +395,10 @@ export default function Index() {
       </section>
 
       {/* Milestones Section */}
-      <section className="py-20 bg-gradient-to-b from-background via-muted/20 to-background">
+      <section className="py-20 bg-gradient-to-b from-background via-muted/20 to-background relative">
+        <div className="absolute inset-0 opacity-10">
+          <img src={progressBg} alt="" className="w-full h-full object-cover" />
+        </div>
         <div className="container mx-auto px-4 relative z-10">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div className="order-2 md:order-1 animate-fade-in">
@@ -418,7 +433,7 @@ export default function Index() {
       {/* Dashboard Section */}
       <section className="py-20 bg-gradient-to-br from-accent/10 via-primary/5 to-muted/30 relative">
         <div className="absolute inset-0">
-          <img src={corporateBackground} alt="" className="w-full h-full object-cover opacity-3" />
+          <img src={analyticsBg} alt="" className="w-full h-full object-cover opacity-10 blur-sm" />
         </div>
         <div className="container mx-auto px-4 relative z-10">
           <div className="grid md:grid-cols-2 gap-12 items-center">
@@ -440,7 +455,10 @@ export default function Index() {
       </section>
 
       {/* Chat Section */}
-      <section className="py-20 bg-gradient-to-b from-background to-primary/10">
+      <section className="py-20 bg-gradient-to-b from-background to-primary/10 relative">
+        <div className="absolute inset-0 opacity-10">
+          <img src={communicationBg} alt="" className="w-full h-full object-cover" />
+        </div>
         <div className="container mx-auto px-4 relative z-10">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div className="order-2 md:order-1 animate-fade-in">
@@ -466,7 +484,9 @@ export default function Index() {
 
       {/* Stories Section */}
       <section className="py-20 bg-gradient-to-br from-muted/40 via-accent/10 to-primary/10 relative">
-        <div className="absolute inset-0 bg-grid-white/[0.02] bg-[size:40px_40px]" />
+        <div className="absolute inset-0 opacity-15">
+          <img src={socialBg} alt="" className="w-full h-full object-cover" />
+        </div>
         <div className="container mx-auto px-4 relative z-10">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div className="space-y-6">
@@ -493,7 +513,7 @@ export default function Index() {
       {/* Social Proof Section */}
       <section className="py-20 bg-gradient-to-b from-background via-muted/30 to-background relative">
         <div className="absolute inset-0">
-          <img src={corporateBackground} alt="" className="w-full h-full object-cover opacity-5" />
+          <img src={communityBg} alt="" className="w-full h-full object-cover opacity-10" />
         </div>
         <div className="container mx-auto px-4 relative z-10">
           <div className="grid md:grid-cols-3 gap-8 mb-16">

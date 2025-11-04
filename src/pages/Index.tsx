@@ -35,6 +35,9 @@ import mariaSilva from "@/assets/testimonials/maria-silva.jpg";
 import joaoSantos from "@/assets/testimonials/joao-santos.jpg";
 import anaCosta from "@/assets/testimonials/ana-costa.jpg";
 
+// Import background
+import corporateBackground from "@/assets/landing/corporate-background.jpg";
+
 interface Project {
   id: string;
   title: string;
@@ -107,32 +110,32 @@ export default function Index() {
   return (
     <div className="min-h-screen bg-background">
       {/* Fixed Header */}
-      <header className="fixed top-0 left-0 right-0 bg-background/95 backdrop-blur-sm shadow-sm z-50 border-b">
-        <div className="container mx-auto px-4 py-4">
+      <header className="fixed top-0 left-0 right-0 bg-gradient-to-r from-background via-primary/5 to-background backdrop-blur-md shadow-lg z-50 border-b border-primary/20">
+        <div className="container mx-auto px-4 py-5">
           <div className="flex items-center justify-between">
-            <img src={logo} alt="Woorkins" className="h-10" />
+            <img src={logo} alt="Woorkins" className="h-12 drop-shadow-lg hover:scale-105 transition-transform cursor-pointer" onClick={() => navigate("/")} />
             
             {/* Desktop Menu */}
             <nav className="hidden md:flex items-center gap-8">
-              <button onClick={() => navigate("/projetos")} className="text-foreground hover:text-primary transition-colors">
+              <button onClick={() => navigate("/projetos")} className="text-foreground hover:text-primary transition-all font-medium hover:scale-105 relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 after:bg-primary after:transition-all hover:after:w-full">
                 Projetos
               </button>
-              <button onClick={() => scrollToSection("como-funciona")} className="text-foreground hover:text-primary transition-colors">
+              <button onClick={() => scrollToSection("como-funciona")} className="text-foreground hover:text-primary transition-all font-medium hover:scale-105 relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 after:bg-primary after:transition-all hover:after:w-full">
                 Como funciona
               </button>
-              <button onClick={() => scrollToSection("diferenciais")} className="text-foreground hover:text-primary transition-colors">
+              <button onClick={() => scrollToSection("diferenciais")} className="text-foreground hover:text-primary transition-all font-medium hover:scale-105 relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 after:bg-primary after:transition-all hover:after:w-full">
                 Empresas
               </button>
-              <button onClick={() => scrollToSection("contato")} className="text-foreground hover:text-primary transition-colors">
+              <button onClick={() => scrollToSection("contato")} className="text-foreground hover:text-primary transition-all font-medium hover:scale-105 relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 after:bg-primary after:transition-all hover:after:w-full">
                 Contato
               </button>
             </nav>
 
             <div className="hidden md:flex items-center gap-4">
-              <Button variant="ghost" onClick={() => navigate("/auth")}>
+              <Button variant="ghost" className="hover:bg-primary/10 font-semibold" onClick={() => navigate("/auth")}>
                 Entrar
               </Button>
-              <Button className="bg-gradient-to-r from-primary to-accent hover:opacity-90" onClick={() => navigate("/auth")}>
+              <Button className="bg-gradient-to-r from-primary to-accent hover:opacity-90 shadow-lg hover:shadow-xl transition-all hover:scale-105 font-semibold" onClick={() => navigate("/auth")}>
                 Comece agora grátis
               </Button>
             </div>
@@ -174,6 +177,9 @@ export default function Index() {
 
       {/* Hero Section */}
       <section className="relative bg-gradient-to-br from-primary via-primary to-accent py-20 md:py-32 overflow-hidden">
+        <div className="absolute inset-0 opacity-20">
+          <img src={corporateBackground} alt="" className="w-full h-full object-cover" />
+        </div>
         <div className="absolute inset-0 bg-grid-white/[0.05] bg-[size:20px_20px]" />
         <div className="container mx-auto px-4 relative z-10">
           <div className="grid md:grid-cols-2 gap-12 items-center">
@@ -216,8 +222,9 @@ export default function Index() {
       </section>
 
       {/* Diferenciais Section */}
-      <section id="diferenciais" className="py-20 bg-muted/30">
-        <div className="container mx-auto px-4">
+      <section id="diferenciais" className="py-20 bg-gradient-to-b from-muted/50 to-background relative">
+        <div className="absolute inset-0 bg-grid-pattern opacity-5" />
+        <div className="container mx-auto px-4 relative z-10">
           <div className="text-center mb-16 animate-fade-in">
             <h2 className="text-4xl font-bold mb-4">Por que escolher o Woorkins?</h2>
             <p className="text-xl text-muted-foreground">Diferenciais que fazem a diferença no seu trabalho</p>
@@ -266,8 +273,11 @@ export default function Index() {
       </section>
 
       {/* Recent Projects Section */}
-      <section className="py-20 bg-background">
-        <div className="container mx-auto px-4">
+      <section className="py-20 bg-gradient-to-b from-background to-primary/5 relative">
+        <div className="absolute inset-0">
+          <img src={corporateBackground} alt="" className="w-full h-full object-cover opacity-5" />
+        </div>
+        <div className="container mx-auto px-4 relative z-10">
           <div className="text-center mb-12">
             <h2 className="text-4xl font-bold mb-4">Projetos que acabaram de chegar</h2>
             <p className="text-xl text-muted-foreground">Oportunidades reais esperando por você</p>
@@ -326,8 +336,9 @@ export default function Index() {
       </section>
 
       {/* Como Funciona Section */}
-      <section id="como-funciona" className="py-20 bg-muted/30">
-        <div className="container mx-auto px-4">
+      <section id="como-funciona" className="py-20 bg-gradient-to-br from-primary/10 via-accent/5 to-muted/30 relative">
+        <div className="absolute inset-0 bg-grid-white/[0.02] bg-[size:30px_30px]" />
+        <div className="container mx-auto px-4 relative z-10">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold mb-4">Como funciona</h2>
             <p className="text-xl text-muted-foreground">Simples, rápido e seguro</p>
@@ -372,8 +383,8 @@ export default function Index() {
       </section>
 
       {/* Milestones Section */}
-      <section className="py-20 bg-background">
-        <div className="container mx-auto px-4">
+      <section className="py-20 bg-gradient-to-b from-background via-muted/20 to-background">
+        <div className="container mx-auto px-4 relative z-10">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div className="order-2 md:order-1 animate-fade-in">
               <img 
@@ -405,8 +416,11 @@ export default function Index() {
       </section>
 
       {/* Dashboard Section */}
-      <section className="py-20 bg-muted/30">
-        <div className="container mx-auto px-4">
+      <section className="py-20 bg-gradient-to-br from-accent/10 via-primary/5 to-muted/30 relative">
+        <div className="absolute inset-0">
+          <img src={corporateBackground} alt="" className="w-full h-full object-cover opacity-3" />
+        </div>
+        <div className="container mx-auto px-4 relative z-10">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div className="space-y-6">
               <h2 className="text-4xl font-bold">Um painel completo pra você gerenciar tudo</h2>
@@ -426,8 +440,8 @@ export default function Index() {
       </section>
 
       {/* Chat Section */}
-      <section className="py-20 bg-background">
-        <div className="container mx-auto px-4">
+      <section className="py-20 bg-gradient-to-b from-background to-primary/10">
+        <div className="container mx-auto px-4 relative z-10">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div className="order-2 md:order-1 animate-fade-in">
               <img 
@@ -451,8 +465,9 @@ export default function Index() {
       </section>
 
       {/* Stories Section */}
-      <section className="py-20 bg-muted/30">
-        <div className="container mx-auto px-4">
+      <section className="py-20 bg-gradient-to-br from-muted/40 via-accent/10 to-primary/10 relative">
+        <div className="absolute inset-0 bg-grid-white/[0.02] bg-[size:40px_40px]" />
+        <div className="container mx-auto px-4 relative z-10">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div className="space-y-6">
               <h2 className="text-4xl font-bold">Mostre o que você faz de um jeito novo</h2>
@@ -476,8 +491,11 @@ export default function Index() {
       </section>
 
       {/* Social Proof Section */}
-      <section className="py-20 bg-background">
-        <div className="container mx-auto px-4">
+      <section className="py-20 bg-gradient-to-b from-background via-muted/30 to-background relative">
+        <div className="absolute inset-0">
+          <img src={corporateBackground} alt="" className="w-full h-full object-cover opacity-5" />
+        </div>
+        <div className="container mx-auto px-4 relative z-10">
           <div className="grid md:grid-cols-3 gap-8 mb-16">
             {[
               { number: "+10.000", label: "freelancers cadastrados" },

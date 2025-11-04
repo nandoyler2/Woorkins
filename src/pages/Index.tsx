@@ -30,6 +30,11 @@ import chatMockup from "@/assets/landing/chat-mockup.jpg";
 import storiesMockup from "@/assets/landing/stories-mockup.jpg";
 import logo from "@/assets/woorkins-logo-transparent.png";
 
+// Import testimonial images
+import mariaSilva from "@/assets/testimonials/maria-silva.jpg";
+import joaoSantos from "@/assets/testimonials/joao-santos.jpg";
+import anaCosta from "@/assets/testimonials/ana-costa.jpg";
+
 interface Project {
   id: string;
   title: string;
@@ -272,24 +277,40 @@ export default function Index() {
             {recentProjects.map((project, index) => (
               <Card 
                 key={project.id} 
-                className="p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer"
+                className="group p-0 overflow-hidden hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 cursor-pointer border-2 hover:border-primary/50"
                 onClick={() => setShowLoginDialog(true)}
                 style={{ animationDelay: `${index * 100}ms` }}
               >
-                <div className="flex items-start gap-3 mb-4">
-                  <span className="text-3xl">{getCategoryIcon(project.category)}</span>
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-lg mb-2 line-clamp-2">{project.title}</h3>
-                    <p className="text-sm text-muted-foreground capitalize">{project.category}</p>
+                <div className="bg-gradient-to-br from-primary/10 to-accent/10 p-6 group-hover:from-primary/20 group-hover:to-accent/20 transition-colors">
+                  <div className="flex items-center justify-center w-16 h-16 rounded-full bg-white shadow-md mb-4">
+                    <span className="text-4xl">{getCategoryIcon(project.category)}</span>
+                  </div>
+                  <h3 className="font-bold text-xl mb-2 line-clamp-2 group-hover:text-primary transition-colors">
+                    {project.title}
+                  </h3>
+                  <div className="inline-block px-3 py-1 rounded-full bg-white/80 text-sm font-medium capitalize mb-4">
+                    {project.category}
                   </div>
                 </div>
-                <div className="flex justify-between items-center pt-4 border-t">
-                  <span className="text-primary font-bold">
-                    R$ {(project.budget_min || 0).toLocaleString('pt-BR')} - R$ {(project.budget_max || 0).toLocaleString('pt-BR')}
-                  </span>
-                  <span className="text-sm text-muted-foreground">
-                    {getTimeAgo(project.created_at)}
-                  </span>
+                <div className="p-6 space-y-4">
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                      R$ {(project.budget_min || 0).toLocaleString('pt-BR')}
+                    </span>
+                    <span className="text-muted-foreground">a</span>
+                    <span className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                      R$ {(project.budget_max || 0).toLocaleString('pt-BR')}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground flex items-center gap-1">
+                      <ChevronRight size={16} className="text-primary" />
+                      {getTimeAgo(project.created_at)}
+                    </span>
+                    <span className="text-primary font-semibold group-hover:underline">
+                      Ver detalhes →
+                    </span>
+                  </div>
                 </div>
               </Card>
             ))}
@@ -479,34 +500,44 @@ export default function Index() {
               {
                 name: "Maria Silva",
                 role: "Designer",
-                text: "O Woorkins mudou a forma como trabalho. Projetos organizados e pagamentos em dia!"
+                text: "O Woorkins mudou a forma como trabalho. Projetos organizados e pagamentos em dia!",
+                image: mariaSilva
               },
               {
                 name: "João Santos",
                 role: "Desenvolvedor",
-                text: "Sistema de etapas é perfeito. Consigo entregar com qualidade e receber de forma justa."
+                text: "Sistema de etapas é perfeito. Consigo entregar com qualidade e receber de forma justa.",
+                image: joaoSantos
               },
               {
                 name: "Ana Costa",
                 role: "Redatora",
-                text: "Melhor plataforma para freelancers. Interface limpa e suporte excelente."
+                text: "Melhor plataforma para freelancers. Interface limpa e suporte excelente.",
+                image: anaCosta
               },
             ].map((testimonial, index) => (
               <Card 
                 key={index} 
-                className="p-6 animate-fade-in"
+                className="p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 animate-fade-in border-2 hover:border-primary/30"
                 style={{ animationDelay: `${index * 150}ms` }}
               >
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-bold text-xl">
-                    {testimonial.name[0]}
-                  </div>
+                <div className="flex items-center gap-4 mb-4">
+                  <img 
+                    src={testimonial.image} 
+                    alt={testimonial.name}
+                    className="w-16 h-16 rounded-full object-cover ring-4 ring-primary/20"
+                  />
                   <div>
-                    <div className="font-semibold">{testimonial.name}</div>
-                    <div className="text-sm text-muted-foreground">{testimonial.role}</div>
+                    <div className="font-bold text-lg">{testimonial.name}</div>
+                    <div className="text-sm text-primary font-medium">{testimonial.role}</div>
                   </div>
                 </div>
-                <p className="text-muted-foreground italic">"{testimonial.text}"</p>
+                <p className="text-foreground/80 leading-relaxed italic">"{testimonial.text}"</p>
+                <div className="flex gap-1 mt-4">
+                  {[...Array(5)].map((_, i) => (
+                    <span key={i} className="text-yellow-500 text-lg">★</span>
+                  ))}
+                </div>
               </Card>
             ))}
           </div>

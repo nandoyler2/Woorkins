@@ -69,7 +69,7 @@ export function ProjectFilters({
           <SelectTrigger>
             <SelectValue placeholder="Selecione" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent modal={false}>
             <SelectItem value="all">Todas</SelectItem>
             <SelectItem value="today">Hoje</SelectItem>
             <SelectItem value="week">Última semana</SelectItem>
@@ -87,7 +87,7 @@ export function ProjectFilters({
           <SelectTrigger>
             <SelectValue placeholder="Todos" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent modal={false}>
             {BUDGET_RANGES.map((range) => (
               <SelectItem key={range.value} value={range.value}>
                 {range.label}

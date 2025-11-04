@@ -298,7 +298,7 @@ export default function Index() {
               <Card 
                 key={project.id} 
                 className="group p-0 overflow-hidden hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 cursor-pointer border-2 hover:border-primary/50"
-                onClick={() => setShowLoginDialog(true)}
+                onClick={() => navigate(`/projetos/${project.id}`)}
                 style={{ animationDelay: `${index * 100}ms` }}
               >
                 <div className="bg-gradient-to-br from-primary/10 to-accent/10 p-6 group-hover:from-primary/20 group-hover:to-accent/20 transition-colors">

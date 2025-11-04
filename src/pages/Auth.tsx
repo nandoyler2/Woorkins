@@ -20,7 +20,6 @@ export default function Auth() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [fullName, setFullName] = useState('');
-  const [cpf, setCpf] = useState('');
   const [loading, setLoading] = useState(false);
   const { user, signIn, signUp } = useAuth();
   const { t } = useLanguage();
@@ -49,20 +48,9 @@ export default function Auth() {
       return;
     }
 
-    // Validate CPF format (11 digits)
-    const cpfDigits = cpf.replace(/\D/g, '');
-    if (cpfDigits.length !== 11) {
-      toast({
-        title: 'CPF inválido',
-        description: 'O CPF deve ter 11 dígitos',
-        variant: 'destructive',
-      });
-      return;
-    }
-
     setLoading(true);
 
-    const { error } = await signUp(email, password, fullName, cpfDigits);
+    const { error } = await signUp(email, password, fullName);
 
     if (error) {
       toast({
@@ -178,24 +166,6 @@ export default function Auth() {
                   required
                   className="h-11"
                   placeholder="seu@email.com"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="signup-cpf">CPF</Label>
-                <Input
-                  id="signup-cpf"
-                  type="text"
-                  value={cpf}
-                  onChange={(e) => {
-                    const value = e.target.value.replace(/\D/g, '');
-                    if (value.length <= 11) {
-                      setCpf(value.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4'));
-                    }
-                  }}
-                  required
-                  className="h-11"
-                  placeholder="000.000.000-00"
-                  maxLength={14}
                 />
               </div>
               <div className="space-y-2">

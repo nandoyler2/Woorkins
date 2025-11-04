@@ -391,26 +391,25 @@ export function ProjectCard({ project }: ProjectCardProps) {
             username={project.profiles.username}
             fullName={project.profiles.full_name}
             avatarUrl={project.profiles.avatar_url}
-            avatarSize="xs"
-            className="flex items-center gap-2"
-            nameClassName="text-sm text-muted-foreground"
+            avatarSize="sm"
+            className="flex items-center gap-3"
+            nameClassName="text-sm font-medium"
           />
         ) : (
-          <div className="flex items-center gap-2">
-            <Avatar className="h-3 w-3">
+          <div className="flex items-center gap-3">
+            <Avatar className="h-10 w-10 ring-2 ring-primary/20">
               {project.profiles.avatar_url ? (
-                <img 
+                <AvatarImage 
                   src={project.profiles.avatar_url} 
                   alt={project.profiles.full_name || project.profiles.username}
-                  className="h-full w-full object-cover"
                 />
               ) : (
-                <AvatarFallback className="bg-primary text-primary-foreground text-[6px]">
+                <AvatarFallback className="bg-primary text-primary-foreground text-sm">
                   {formatShortName(project.profiles.full_name || project.profiles.username)?.[0]?.toUpperCase()}
                 </AvatarFallback>
               )}
             </Avatar>
-            <span className="text-sm text-muted-foreground">
+            <span className="text-sm font-medium">
               {formatShortName(project.profiles.full_name) || project.profiles.username}
             </span>
           </div>

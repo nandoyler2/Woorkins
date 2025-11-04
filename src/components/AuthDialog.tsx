@@ -30,7 +30,6 @@ export function AuthDialog() {
   const [signupEmail, setSignupEmail] = useState('');
   const [signupPassword, setSignupPassword] = useState('');
   const [signupFullName, setSignupFullName] = useState('');
-  const [signupCpf, setSignupCpf] = useState('');
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -85,8 +84,7 @@ export function AuthDialog() {
       const { error } = await signUp(
         signupEmail,
         signupPassword,
-        signupFullName,
-        signupCpf
+        signupFullName
       );
 
       if (error) {
@@ -133,7 +131,6 @@ export function AuthDialog() {
     setSignupEmail('');
     setSignupPassword('');
     setSignupFullName('');
-    setSignupCpf('');
   };
 
   const handleOpenChange = (open: boolean) => {
@@ -216,17 +213,6 @@ export function AuthDialog() {
                   value={signupEmail}
                   onChange={(e) => setSignupEmail(e.target.value)}
                   required
-                  disabled={loading}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="signup-cpf">CPF (opcional)</Label>
-                <Input
-                  id="signup-cpf"
-                  type="text"
-                  placeholder="000.000.000-00"
-                  value={signupCpf}
-                  onChange={(e) => setSignupCpf(e.target.value)}
                   disabled={loading}
                 />
               </div>

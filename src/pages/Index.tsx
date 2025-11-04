@@ -1,255 +1,530 @@
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Star, Shield, Users, TrendingUp, MessageSquare, Award, ChevronRight, Globe, User, LogOut, Home } from "lucide-react";
-import { useLanguage } from "@/contexts/LanguageContext";
-import { Link, useNavigate } from "react-router-dom";
-import logoWoorkins from "@/assets/woorkins.png";
-import { SafeImage } from "@/components/ui/safe-image";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import { SearchBar } from "@/components/SearchBar";
-import { SectionDivider } from "@/components/SectionDivider";
 import { Footer } from "@/components/Footer";
-import { useAuth } from "@/contexts/AuthContext";
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { formatShortName } from "@/lib/utils";
-const Index = () => {
-  const {
-    language,
-    setLanguage,
-    t
-  } = useLanguage();
-  const { user, signOut } = useAuth();
+import { LoginPromptDialog } from "@/components/projects/LoginPromptDialog";
+import { 
+  CreditCard, 
+  Percent, 
+  ListChecks, 
+  ClipboardList, 
+  Shield,
+  FileText,
+  Users,
+  CheckCircle2,
+  MessageSquare,
+  Sparkles,
+  ChevronRight,
+  Menu,
+  X
+} from "lucide-react";
+
+// Import mockup images
+import heroMockup from "@/assets/landing/hero-mockup.jpg";
+import milestonesMockup from "@/assets/landing/milestones-mockup.jpg";
+import dashboardMockup from "@/assets/landing/dashboard-mockup.jpg";
+import chatMockup from "@/assets/landing/chat-mockup.jpg";
+import storiesMockup from "@/assets/landing/stories-mockup.jpg";
+import logo from "@/assets/woorkins-logo-transparent.png";
+
+interface Project {
+  id: string;
+  title: string;
+  category: string | null;
+  budget_min: number | null;
+  budget_max: number | null;
+  created_at: string;
+}
+
+export default function Index() {
   const navigate = useNavigate();
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [profile, setProfile] = useState<any>(null);
+  const { user } = useAuth();
+  const [recentProjects, setRecentProjects] = useState<Project[]>([]);
+  const [showLoginDialog, setShowLoginDialog] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
-    document.title = 'Woorkins - Conecte. Trabalhe. Confie.';
-  }, []);
-
-  useEffect(() => {
+    document.title = "Woorkins - Conecte. Trabalhe. Confie.";
+    
     if (user) {
-      navigate('/painel');
+      navigate("/painel");
     }
+
+    // Fetch recent projects
+    const fetchRecentProjects = async () => {
+      const { data } = await supabase
+        .from("projects")
+        .select("id, title, category, budget_min, budget_max, created_at")
+        .eq("status", "open")
+        .order("created_at", { ascending: false })
+        .limit(3);
+      
+      if (data) setRecentProjects(data);
+    };
+
+    fetchRecentProjects();
   }, [user, navigate]);
-  return <div className="min-h-screen bg-background">
-      {/* Top Bar - User Menu */}
-      <div className="absolute top-6 right-6 z-50 flex items-center gap-3">
-        {user ? (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="bg-white/10 backdrop-blur-sm hover:bg-white/20 gap-2">
-                <User className="w-5 h-5" />
-                <span className="hidden sm:inline">{formatShortName(profile?.full_name) || profile?.username}</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem asChild>
-                <Link to="/painel" className="cursor-pointer">
-                  <Home className="w-4 h-4 mr-2" />
-                  Dashboard
-                </Link>
-              </DropdownMenuItem>
-              {isAdmin && (
-                <DropdownMenuItem asChild>
-                  <Link to="/admin" className="cursor-pointer text-primary">
-                    <Shield className="w-4 h-4 mr-2" />
-                    Admin Panel
-                  </Link>
-                </DropdownMenuItem>
-              )}
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={signOut} className="cursor-pointer">
-                <LogOut className="w-4 h-4 mr-2" />
-                Sair
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        ) : (
-          <Button variant="ghost" asChild className="bg-white/10 backdrop-blur-sm hover:bg-white/20">
-            <Link to="/auth?mode=signin">Entrar</Link>
-          </Button>
-        )}
-      </div>
 
-       {/* Hero Section with Large Logo */}
-       <section className="relative min-h-screen flex items-center justify-center overflow-visible bg-gradient-to-br from-background via-primary/5 to-secondary/10">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,hsl(var(--primary)/0.1),transparent_50%),radial-gradient(circle_at_70%_80%,hsl(var(--secondary)/0.1),transparent_50%)]"></div>
-        
-        <div className="container mx-auto px-4 relative z-10 max-w-woorkins">
-          <div className="text-center space-y-10 md:space-y-12 animate-fade-in py-20">
-            {/* Large Logo */}
-            <div className="flex justify-center mb-8">
-              <SafeImage src={logoWoorkins} alt="Woorkins" className="h-20 md:h-24 w-auto drop-shadow-2xl hover:scale-105 transition-transform duration-500" />
+  const scrollToSection = (id: string) => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth" });
+    }
+    setMobileMenuOpen(false);
+  };
+
+  const getCategoryIcon = (category: string | null) => {
+    if (!category) return "📁";
+    const icons: Record<string, string> = {
+      design: "🎨",
+      tecnologia: "💻",
+      marketing: "📈",
+      redacao: "✍️",
+      video: "🎥",
+    };
+    return icons[category.toLowerCase()] || "📁";
+  };
+
+  const getTimeAgo = (date: string) => {
+    const now = new Date();
+    const past = new Date(date);
+    const diffInHours = Math.floor((now.getTime() - past.getTime()) / (1000 * 60 * 60));
+    
+    if (diffInHours < 1) return "Há poucos minutos";
+    if (diffInHours < 24) return `Há ${diffInHours}h`;
+    const days = Math.floor(diffInHours / 24);
+    return `Há ${days} dia${days > 1 ? 's' : ''}`;
+  };
+
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Fixed Header */}
+      <header className="fixed top-0 left-0 right-0 bg-background/95 backdrop-blur-sm shadow-sm z-50 border-b">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <img src={logo} alt="Woorkins" className="h-10" />
+            
+            {/* Desktop Menu */}
+            <nav className="hidden md:flex items-center gap-8">
+              <button onClick={() => navigate("/projetos")} className="text-foreground hover:text-primary transition-colors">
+                Projetos
+              </button>
+              <button onClick={() => scrollToSection("como-funciona")} className="text-foreground hover:text-primary transition-colors">
+                Como funciona
+              </button>
+              <button onClick={() => scrollToSection("diferenciais")} className="text-foreground hover:text-primary transition-colors">
+                Empresas
+              </button>
+              <button onClick={() => scrollToSection("contato")} className="text-foreground hover:text-primary transition-colors">
+                Contato
+              </button>
+            </nav>
+
+            <div className="hidden md:flex items-center gap-4">
+              <Button variant="ghost" onClick={() => navigate("/auth")}>
+                Entrar
+              </Button>
+              <Button className="bg-gradient-to-r from-primary to-accent hover:opacity-90" onClick={() => navigate("/auth")}>
+                Comece agora grátis
+              </Button>
             </div>
 
-            {/* Main Title */}
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-[1.15] md:leading-[1.2] relative z-20">
-              A plataforma que une
-              <span className="block bg-gradient-primary bg-clip-text text-transparent mt-2 px-1 pb-1 md:pb-2">
-                pessoas e negócios
-              </span>
-            </h1>
+            {/* Mobile Menu Button */}
+            <button className="md:hidden" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+              {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+          </div>
 
-            {/* Search Bar */}
-            <div className="relative z-20 -mt-4 md:-mt-8">
-              <SearchBar />
+          {/* Mobile Menu */}
+          {mobileMenuOpen && (
+            <div className="md:hidden mt-4 pb-4 space-y-4 animate-fade-in">
+              <button onClick={() => navigate("/projetos")} className="block w-full text-left py-2 text-foreground hover:text-primary">
+                Projetos
+              </button>
+              <button onClick={() => scrollToSection("como-funciona")} className="block w-full text-left py-2 text-foreground hover:text-primary">
+                Como funciona
+              </button>
+              <button onClick={() => scrollToSection("diferenciais")} className="block w-full text-left py-2 text-foreground hover:text-primary">
+                Empresas
+              </button>
+              <button onClick={() => scrollToSection("contato")} className="block w-full text-left py-2 text-foreground hover:text-primary">
+                Contato
+              </button>
+              <Button variant="ghost" onClick={() => navigate("/auth")} className="w-full">
+                Entrar
+              </Button>
+              <Button className="w-full bg-gradient-to-r from-primary to-accent" onClick={() => navigate("/auth")}>
+                Comece agora grátis
+              </Button>
             </div>
+          )}
+        </div>
+      </header>
 
-            {/* CTAs */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-8">
-              <Button size="lg" className="bg-gradient-primary hover:opacity-90 transition-all shadow-glow hover:shadow-elegant text-base h-14 px-10" asChild>
-                <Link to="/auth?mode=signup">
-                  Comece Agora
-                  <ChevronRight className="ml-2 w-5 h-5" />
-                </Link>
-              </Button>
-              <Button size="lg" variant="outline" className="text-base h-14 px-10 border-2 border-foreground text-foreground hover:bg-foreground hover:text-background" asChild>
-                <Link to="/auth?mode=signup">Sou Empresa</Link>
-              </Button>
+      {/* Spacer for fixed header */}
+      <div className="h-20" />
+
+      {/* Hero Section */}
+      <section className="relative bg-gradient-to-br from-primary via-primary to-accent py-20 md:py-32 overflow-hidden">
+        <div className="absolute inset-0 bg-grid-white/[0.05] bg-[size:20px_20px]" />
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            <div className="text-white space-y-6 animate-fade-in">
+              <h1 className="text-5xl md:text-6xl font-bold leading-tight">
+                Conecte. Trabalhe. Confie.
+              </h1>
+              <p className="text-xl md:text-2xl text-white/90">
+                A plataforma que une freelancers e empresas de forma simples, segura e transparente.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 pt-4">
+                <Button 
+                  size="lg" 
+                  variant="secondary"
+                  className="bg-white text-primary hover:bg-white/90"
+                  onClick={() => navigate("/projetos")}
+                >
+                  Ver projetos abertos
+                  <ChevronRight className="ml-2" size={20} />
+                </Button>
+                <Button 
+                  size="lg" 
+                  variant="outline"
+                  className="border-2 border-white text-white hover:bg-white/10"
+                  onClick={() => navigate("/auth")}
+                >
+                  Comece agora grátis
+                </Button>
+              </div>
+            </div>
+            <div className="animate-scale-in">
+              <img 
+                src={heroMockup} 
+                alt="Interface Woorkins" 
+                className="w-full rounded-lg shadow-2xl transform hover:scale-105 transition-transform duration-300"
+              />
             </div>
           </div>
         </div>
       </section>
 
-      {/* Divider */}
-      <SectionDivider />
-
-      {/* Como Funciona */}
-      <section id="como-funciona" className="py-24 bg-muted/30 relative">
-        <div className="container mx-auto px-4 max-w-woorkins">
-          <div className="text-center mb-16 space-y-4">
-            <h2 className="text-4xl md:text-5xl font-bold">Como Funciona</h2>
-            <p className="text-lg md:text-xl text-muted-foreground">
-              Simples, seguro e transparente. Conecte-se em 3 passos.
-            </p>
+      {/* Diferenciais Section */}
+      <section id="diferenciais" className="py-20 bg-muted/30">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16 animate-fade-in">
+            <h2 className="text-4xl font-bold mb-4">Por que escolher o Woorkins?</h2>
+            <p className="text-xl text-muted-foreground">Diferenciais que fazem a diferença no seu trabalho</p>
           </div>
-          <div className="grid md:grid-cols-3 gap-8">
-            <Card className="p-10 text-center hover:shadow-elegant transition-all duration-300 hover:-translate-y-2 border-2 hover:border-primary/50">
-              <div className="w-20 h-20 mx-auto mb-8 bg-gradient-primary rounded-2xl flex items-center justify-center shadow-glow">
-                <Users className="w-10 h-10 text-white" />
-              </div>
-              <div className="text-6xl font-bold text-primary/10 mb-4">1</div>
-              <h3 className="text-2xl font-bold mb-4">Avalie</h3>
-              <p className="text-muted-foreground text-base leading-relaxed">
-                Compartilhe sua experiência e ajude outros a tomarem decisões informadas
-              </p>
-            </Card>
-            <Card className="p-10 text-center hover:shadow-elegant transition-all duration-300 hover:-translate-y-2 border-2 hover:border-secondary/50">
-              <div className="w-20 h-20 mx-auto mb-8 bg-gradient-secondary rounded-2xl flex items-center justify-center shadow-glow">
-                <MessageSquare className="w-10 h-10 text-white" />
-              </div>
-              <div className="text-6xl font-bold text-secondary/10 mb-4">2</div>
-              <h3 className="text-2xl font-bold mb-4">Conecte-se</h3>
-              <p className="text-muted-foreground text-base leading-relaxed">
-                Chat direto e seguro entre consumidores e empresas verificadas
-              </p>
-            </Card>
-            <Card className="p-10 text-center hover:shadow-elegant transition-all duration-300 hover:-translate-y-2 border-2 hover:border-accent/50">
-              <div className="w-20 h-20 mx-auto mb-8 bg-primary rounded-2xl flex items-center justify-center shadow-glow">
-                <Award className="w-10 h-10 text-white" />
-              </div>
-              <div className="text-6xl font-bold text-primary/10 mb-4">3</div>
-              <h3 className="text-2xl font-bold mb-4">Negocie</h3>
-              <p className="text-muted-foreground text-base leading-relaxed">
-                Feche negócios com confiança e transparência total
-              </p>
-            </Card>
+          
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[
+              {
+                icon: <CreditCard className="w-12 h-12 text-primary" />,
+                title: "Parcele projetos em até 12x",
+                description: "Mais flexibilidade para fechar e escalar seus jobs."
+              },
+              {
+                icon: <Percent className="w-12 h-12 text-accent" />,
+                title: "Menor taxa do mercado (12%)",
+                description: "Receba mais pelo seu trabalho, com transparência total."
+              },
+              {
+                icon: <ListChecks className="w-12 h-12 text-primary" />,
+                title: "Projetos por etapas (milestones)",
+                description: "Entregas organizadas e aprovadas fase por fase."
+              },
+              {
+                icon: <ClipboardList className="w-12 h-12 text-accent" />,
+                title: "Página de acompanhamento",
+                description: "Veja prazos, arquivos e aprovações em tempo real."
+              },
+              {
+                icon: <Shield className="w-12 h-12 text-primary" />,
+                title: "Pagamentos garantidos",
+                description: "Segurança total para quem contrata e para quem entrega."
+              },
+            ].map((item, index) => (
+              <Card 
+                key={index} 
+                className="p-8 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 animate-fade-in cursor-pointer"
+                style={{ animationDelay: `${index * 100}ms` }}
+              >
+                <div className="mb-4">{item.icon}</div>
+                <h3 className="text-xl font-semibold mb-3">{item.title}</h3>
+                <p className="text-muted-foreground">{item.description}</p>
+              </Card>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Divider */}
-      <SectionDivider />
+      {/* Recent Projects Section */}
+      <section className="py-20 bg-background">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold mb-4">Projetos que acabaram de chegar</h2>
+            <p className="text-xl text-muted-foreground">Oportunidades reais esperando por você</p>
+          </div>
 
-      {/* Para Empresas */}
-      <section id="para-empresas" className="py-24 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_50%,hsl(var(--secondary)/0.1),transparent_70%)]"></div>
-        <div className="container mx-auto px-4 relative z-10 max-w-woorkins">
-          <div className="grid md:grid-cols-2 gap-16 items-center">
-            <div className="space-y-8">
-              <div className="inline-flex items-center gap-2 px-6 py-3 bg-secondary/10 rounded-full text-secondary text-sm font-medium">
-                <TrendingUp className="w-4 h-4" />
-                Para Empresas
-              </div>
-              <h2 className="text-4xl md:text-5xl font-bold leading-tight">
-                Destaque seu negócio e atraia mais clientes
-              </h2>
-              <p className="text-lg text-muted-foreground leading-relaxed">
-                Construa uma reputação sólida, mostre seu trabalho e conecte-se com milhares de clientes em potencial.
-              </p>
-              <ul className="space-y-4">
-                {["Perfil verificado com selo de confiança", "Portfólio multimídia com fotos e vídeos", "Sistema de reputação transparente", "Chat seguro para negociações", "Analytics e relatórios detalhados"].map((item, i) => <li key={i} className="flex items-start gap-4 text-base">
-                    <div className="w-7 h-7 rounded-full bg-gradient-primary flex items-center justify-center flex-shrink-0 mt-0.5 shadow-sm">
-                      <ChevronRight className="w-4 h-4 text-white" />
-                    </div>
-                    <span className="leading-relaxed">{item}</span>
-                  </li>)}
-              </ul>
-              <Button className="bg-gradient-primary hover:opacity-90 transition-opacity text-base h-12 px-8 shadow-glow" asChild>
-                <Link to="/auth?mode=signup">Criar Perfil Empresarial</Link>
-              </Button>
-            </div>
-            <Card className="p-10 bg-gradient-to-br from-primary/5 to-secondary/5 border-2">
-              <div className="space-y-6">
-                <div className="bg-background p-8 rounded-2xl shadow-card hover:shadow-elegant transition-shadow">
-                  <div className="flex items-center gap-4 mb-6">
-                    <div className="w-16 h-16 rounded-full bg-gradient-primary shadow-glow"></div>
-                    <div>
-                      <h4 className="font-bold text-lg">Tech Solutions Ltd.</h4>
-                      <div className="flex items-center gap-1 mt-1">
-                        {[...Array(5)].map((_, i) => <Star key={i} className="w-4 h-4 fill-primary text-primary" />)}
-                        <span className="text-sm text-muted-foreground ml-2">(4.9)</span>
-                      </div>
-                    </div>
+          <div className="grid md:grid-cols-3 gap-6 mb-8">
+            {recentProjects.map((project, index) => (
+              <Card 
+                key={project.id} 
+                className="p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer"
+                onClick={() => setShowLoginDialog(true)}
+                style={{ animationDelay: `${index * 100}ms` }}
+              >
+                <div className="flex items-start gap-3 mb-4">
+                  <span className="text-3xl">{getCategoryIcon(project.category)}</span>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-lg mb-2 line-clamp-2">{project.title}</h3>
+                    <p className="text-sm text-muted-foreground capitalize">{project.category}</p>
                   </div>
-                  <p className="text-sm text-muted-foreground italic leading-relaxed">
-                    "Excelente profissionalismo e entrega rápida! Superou minhas expectativas."
-                  </p>
                 </div>
-                <div className="bg-background p-8 rounded-2xl shadow-card">
-                  <div className="flex items-center justify-between mb-6">
-                    <span className="text-sm font-medium">Índice de Confiança</span>
-                    <span className="text-3xl font-bold text-primary">98%</span>
-                  </div>
-                  <div className="h-3 bg-muted rounded-full overflow-hidden">
-                    <div className="h-full w-[98%] bg-gradient-primary shadow-glow"></div>
-                  </div>
+                <div className="flex justify-between items-center pt-4 border-t">
+                  <span className="text-primary font-bold">
+                    R$ {(project.budget_min || 0).toLocaleString('pt-BR')} - R$ {(project.budget_max || 0).toLocaleString('pt-BR')}
+                  </span>
+                  <span className="text-sm text-muted-foreground">
+                    {getTimeAgo(project.created_at)}
+                  </span>
                 </div>
-              </div>
-            </Card>
+              </Card>
+            ))}
+          </div>
+
+          <div className="text-center">
+            <Button size="lg" onClick={() => navigate("/projetos")}>
+              Ver todos os projetos
+              <ChevronRight className="ml-2" size={20} />
+            </Button>
           </div>
         </div>
       </section>
 
-      {/* Divider */}
-      <SectionDivider />
+      {/* Como Funciona Section */}
+      <section id="como-funciona" className="py-20 bg-muted/30">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold mb-4">Como funciona</h2>
+            <p className="text-xl text-muted-foreground">Simples, rápido e seguro</p>
+          </div>
 
-      {/* CTA Final */}
-      <section className="py-24 bg-gradient-hero relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.1),transparent_70%)]"></div>
-        <div className="container mx-auto px-4 relative z-10 max-w-woorkins">
-          <div className="text-center text-white space-y-8">
-            <h2 className="text-4xl md:text-6xl font-bold leading-tight">
-              Pronto para começar?
-            </h2>
-            <p className="text-xl md:text-2xl opacity-90 leading-relaxed">
-              Junte-se a milhares de profissionais e empresas que já confiam na Woorkins.
-            </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-              <Button size="lg" className="bg-white text-primary hover:bg-white/90 text-base h-14 px-10 shadow-lg" asChild>
-                <Link to="/auth?mode=signup">Criar Conta Gratuita</Link>
-              </Button>
-              <Button size="lg" variant="outline" className="text-base h-14 px-10 border-white text-white hover:bg-white hover:text-primary">
-                Falar com Vendas
-              </Button>
+          <div className="grid md:grid-cols-3 gap-8 mb-12">
+            {[
+              {
+                icon: <FileText className="w-16 h-16 text-primary" />,
+                title: "Publique um projeto",
+                description: "Descreva o que precisa e aguarde propostas de profissionais qualificados."
+              },
+              {
+                icon: <Users className="w-16 h-16 text-accent" />,
+                title: "Receba propostas",
+                description: "Analise perfis, portfólios e valores dos freelancers interessados."
+              },
+              {
+                icon: <CheckCircle2 className="w-16 h-16 text-primary" />,
+                title: "Aprove e pague com segurança",
+                description: "Acompanhe as etapas, aprove entregas e libere pagamentos."
+              },
+            ].map((item, index) => (
+              <div 
+                key={index} 
+                className="text-center space-y-4 animate-fade-in"
+                style={{ animationDelay: `${index * 150}ms` }}
+              >
+                <div className="flex justify-center">{item.icon}</div>
+                <h3 className="text-2xl font-semibold">{item.title}</h3>
+                <p className="text-muted-foreground">{item.description}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="text-center">
+            <Button size="lg" className="bg-gradient-to-r from-primary to-accent" onClick={() => navigate("/auth")}>
+              Comece agora grátis
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* Milestones Section */}
+      <section className="py-20 bg-background">
+        <div className="container mx-auto px-4">
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            <div className="order-2 md:order-1 animate-fade-in">
+              <img 
+                src={milestonesMockup} 
+                alt="Sistema de Etapas" 
+                className="w-full rounded-lg shadow-xl"
+              />
             </div>
+            <div className="order-1 md:order-2 space-y-6">
+              <h2 className="text-4xl font-bold">Gerencie tudo por etapas (milestones)</h2>
+              <p className="text-xl text-muted-foreground">
+                Organize, aprove e pague cada fase com transparência total.
+              </p>
+              <div className="space-y-4">
+                {[
+                  { icon: <CheckCircle2 className="w-6 h-6 text-primary" />, text: "Transparência total nas entregas" },
+                  { icon: <CheckCircle2 className="w-6 h-6 text-primary" />, text: "Pagamentos liberados a cada aprovação" },
+                  { icon: <CheckCircle2 className="w-6 h-6 text-primary" />, text: "Mais controle e segurança para todos" },
+                ].map((item, index) => (
+                  <div key={index} className="flex items-center gap-3">
+                    {item.icon}
+                    <span className="text-lg">{item.text}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Dashboard Section */}
+      <section className="py-20 bg-muted/30">
+        <div className="container mx-auto px-4">
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            <div className="space-y-6">
+              <h2 className="text-4xl font-bold">Um painel completo pra você gerenciar tudo</h2>
+              <p className="text-xl text-muted-foreground">
+                Acompanhe mensagens, propostas, pagamentos e notificações num só lugar.
+              </p>
+            </div>
+            <div className="animate-fade-in">
+              <img 
+                src={dashboardMockup} 
+                alt="Painel de Controle" 
+                className="w-full rounded-lg shadow-xl transform hover:scale-105 transition-transform duration-300"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Chat Section */}
+      <section className="py-20 bg-background">
+        <div className="container mx-auto px-4">
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            <div className="order-2 md:order-1 animate-fade-in">
+              <img 
+                src={chatMockup} 
+                alt="Sistema de Mensagens" 
+                className="w-full rounded-lg shadow-xl"
+              />
+            </div>
+            <div className="order-1 md:order-2 space-y-6">
+              <h2 className="text-4xl font-bold">Converse de um jeito diferente</h2>
+              <p className="text-xl text-muted-foreground">
+                Mensagens rápidas, seguras e com histórico de etapas e arquivos. Um sistema de chat pensado pra trabalho.
+              </p>
+              <div className="flex items-center gap-2 text-primary">
+                <MessageSquare className="w-6 h-6" />
+                <span className="font-semibold">Chat integrado ao projeto</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Stories Section */}
+      <section className="py-20 bg-muted/30">
+        <div className="container mx-auto px-4">
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            <div className="space-y-6">
+              <h2 className="text-4xl font-bold">Mostre o que você faz de um jeito novo</h2>
+              <p className="text-xl text-muted-foreground">
+                Publique stories profissionais, compartilhe conquistas e conecte-se com empresas e freelancers.
+              </p>
+              <div className="flex items-center gap-2 text-accent">
+                <Sparkles className="w-6 h-6" />
+                <span className="font-semibold">Stories profissionais</span>
+              </div>
+            </div>
+            <div className="animate-fade-in flex justify-center">
+              <img 
+                src={storiesMockup} 
+                alt="Stories Profissionais" 
+                className="h-[600px] w-auto rounded-lg shadow-xl"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Social Proof Section */}
+      <section className="py-20 bg-background">
+        <div className="container mx-auto px-4">
+          <div className="grid md:grid-cols-3 gap-8 mb-16">
+            {[
+              { number: "+10.000", label: "freelancers cadastrados" },
+              { number: "+500", label: "projetos por dia" },
+              { number: "100%", label: "de pagamentos seguros" },
+            ].map((stat, index) => (
+              <div 
+                key={index} 
+                className="text-center space-y-2 animate-fade-in"
+                style={{ animationDelay: `${index * 100}ms` }}
+              >
+                <div className="text-5xl font-bold text-primary">{stat.number}</div>
+                <div className="text-xl text-muted-foreground">{stat.label}</div>
+              </div>
+            ))}
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-6 mb-12">
+            {[
+              {
+                name: "Maria Silva",
+                role: "Designer",
+                text: "O Woorkins mudou a forma como trabalho. Projetos organizados e pagamentos em dia!"
+              },
+              {
+                name: "João Santos",
+                role: "Desenvolvedor",
+                text: "Sistema de etapas é perfeito. Consigo entregar com qualidade e receber de forma justa."
+              },
+              {
+                name: "Ana Costa",
+                role: "Redatora",
+                text: "Melhor plataforma para freelancers. Interface limpa e suporte excelente."
+              },
+            ].map((testimonial, index) => (
+              <Card 
+                key={index} 
+                className="p-6 animate-fade-in"
+                style={{ animationDelay: `${index * 150}ms` }}
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-bold text-xl">
+                    {testimonial.name[0]}
+                  </div>
+                  <div>
+                    <div className="font-semibold">{testimonial.name}</div>
+                    <div className="text-sm text-muted-foreground">{testimonial.role}</div>
+                  </div>
+                </div>
+                <p className="text-muted-foreground italic">"{testimonial.text}"</p>
+              </Card>
+            ))}
+          </div>
+
+          <div id="contato" className="text-center">
+            <Button size="lg" className="bg-gradient-to-r from-primary to-accent" onClick={() => navigate("/auth")}>
+              Comece agora grátis
+            </Button>
           </div>
         </div>
       </section>
 
       <Footer />
-    </div>;
-};
-export default Index;
+
+      <LoginPromptDialog 
+        open={showLoginDialog}
+        onOpenChange={setShowLoginDialog}
+      />
+    </div>
+  );
+}

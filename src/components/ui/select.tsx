@@ -66,15 +66,22 @@ const SelectContent = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Content>,
   SelectContentProps
 >(({ className, children, position = "popper", modal = true, ...props }, ref) => {
-  // Ensure page scrollbar remains visible when using non-modal Selects
+  // Prevent body scroll lock and layout shift when using non-modal Selects
   React.useEffect(() => {
     if (!modal) {
+      // Store original styles
       const prevBodyOverflow = document.body.style.overflow;
+      const prevBodyPaddingRight = document.body.style.paddingRight;
       const prevHtmlOverflow = document.documentElement.style.overflow;
-      document.body.style.overflow = "auto";
-      document.documentElement.style.overflow = "auto";
+      
+      // Force body to stay scrollable and prevent padding changes
+      document.body.style.overflow = "auto !important";
+      document.body.style.paddingRight = "0px !important";
+      document.documentElement.style.overflow = "auto !important";
+      
       return () => {
         document.body.style.overflow = prevBodyOverflow;
+        document.body.style.paddingRight = prevBodyPaddingRight;
         document.documentElement.style.overflow = prevHtmlOverflow;
       };
     }
@@ -94,6 +101,12 @@ const SelectContent = React.forwardRef<
         position={position}
         onCloseAutoFocus={(e) => {
           if (!modal) e.preventDefault();
+        }}
+        onPointerDownOutside={(e) => {
+          if (!modal) {
+            // Prevent body from getting padding when clicking outside
+            e.preventDefault();
+          }
         }}
         {...props}
       >

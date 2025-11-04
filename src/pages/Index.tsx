@@ -143,7 +143,7 @@ export default function Index() {
               <Button variant="ghost" className="hover:bg-primary/10 font-semibold" onClick={() => navigate("/auth")}>
                 Entrar
               </Button>
-              <Button className="bg-gradient-to-r from-primary to-accent hover:opacity-90 shadow-lg hover:shadow-xl transition-all hover:scale-105 font-semibold" onClick={() => navigate("/auth")}>
+              <Button className="bg-gradient-to-r from-primary to-accent hover:opacity-90 shadow-lg hover:shadow-xl transition-all hover:scale-105 font-semibold" onClick={() => navigate("/auth?mode=signup")}>
                 Comece agora grátis
               </Button>
             </div>
@@ -172,7 +172,7 @@ export default function Index() {
               <Button variant="ghost" onClick={() => navigate("/auth")} className="w-full">
                 Entrar
               </Button>
-              <Button className="w-full bg-gradient-to-r from-primary to-accent" onClick={() => navigate("/auth")}>
+              <Button className="w-full bg-gradient-to-r from-primary to-accent" onClick={() => navigate("/auth?mode=signup")}>
                 Comece agora grátis
               </Button>
             </div>
@@ -212,7 +212,7 @@ export default function Index() {
                   size="lg" 
                   variant="outline"
                   className="border-2 border-white text-white hover:bg-white/10"
-                  onClick={() => navigate("/auth")}
+                  onClick={() => navigate("/auth?mode=signup")}
                 >
                   Comece agora grátis
                 </Button>
@@ -387,7 +387,7 @@ export default function Index() {
           </div>
 
           <div className="text-center">
-            <Button size="lg" className="bg-gradient-to-r from-primary to-accent" onClick={() => navigate("/auth")}>
+            <Button size="lg" className="bg-gradient-to-r from-primary to-accent" onClick={() => navigate("/auth?mode=signup")}>
               Comece agora grátis
             </Button>
           </div>
@@ -581,7 +581,7 @@ export default function Index() {
           </div>
 
           <div id="contato" className="text-center">
-            <Button size="lg" className="bg-gradient-to-r from-primary to-accent" onClick={() => navigate("/auth")}>
+            <Button size="lg" className="bg-gradient-to-r from-primary to-accent" onClick={() => navigate("/auth?mode=signup")}>
               Comece agora grátis
             </Button>
           </div>

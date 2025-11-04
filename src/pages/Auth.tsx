@@ -118,32 +118,36 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-secondary/5 p-4 relative">
-      <Link to="/" className="absolute top-6 left-6 flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary via-primary-glow to-secondary p-4 relative overflow-hidden">
+      {/* Animated background elements */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,_var(--primary-glow)_0%,_transparent_50%)] opacity-30 animate-pulse" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,_var(--secondary)_0%,_transparent_50%)] opacity-20 animate-pulse" style={{ animationDelay: '1s' }} />
+      
+      <Link to="/" className="absolute top-6 left-6 flex items-center gap-2 text-white/80 hover:text-white transition-all z-20 backdrop-blur-sm bg-white/10 px-4 py-2 rounded-full hover:bg-white/20">
         <ArrowLeft className="w-5 h-5" />
-        <span>Voltar</span>
+        <span className="font-medium">Voltar</span>
       </Link>
       
-      <Card className="w-full max-w-md shadow-elegant border-0">
-        <CardHeader className="space-y-4 pb-8">
-          <Link to="/" className="flex justify-center">
-            <SafeImage src={logoWoorkins} alt="Logo Woorkins" className="h-16 w-auto hover:scale-105 transition-transform" />
+      <Card className="w-full max-w-md shadow-2xl border-0 bg-background/95 backdrop-blur-xl relative z-10">
+        <CardHeader className="space-y-4 pb-8 pt-8">
+          <Link to="/" className="flex justify-center mb-2">
+            <SafeImage src={logoWoorkins} alt="Logo Woorkins" className="h-20 w-auto hover:scale-110 transition-transform drop-shadow-lg" />
           </Link>
-          <div className="text-center space-y-2">
-            <CardTitle className="text-3xl font-bold">
+          <div className="text-center space-y-3">
+            <CardTitle className="text-3xl font-bold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
               {mode === 'signup' ? 'Criar Conta' : 'Entrar'}
             </CardTitle>
-            <CardDescription className="text-base">
+            <CardDescription className="text-base text-muted-foreground">
               {mode === 'signup' 
-                ? 'Junte-se à comunidade Woorkins' 
-                : 'Bem-vindo de volta!'}
+                ? 'Junte-se à comunidade Woorkins e comece sua jornada' 
+                : 'Bem-vindo de volta! Continue de onde parou'}
             </CardDescription>
           </div>
         </CardHeader>
         
-        <CardContent className="pb-8">
+        <CardContent className="pb-8 px-8">
           {mode === 'signup' ? (
-            <form onSubmit={handleSignUp} className="space-y-4">
+            <form onSubmit={handleSignUp} className="space-y-5">
               <div className="space-y-2">
                 <Label htmlFor="signup-name">{t('full_name')}</Label>
                 <Input
@@ -194,18 +198,26 @@ export default function Auth() {
                   placeholder="Repita sua senha"
                 />
               </div>
-              <Button type="submit" className="w-full h-11 text-base" disabled={loading}>
+              <Button type="submit" className="w-full h-12 text-base font-semibold shadow-lg hover:shadow-xl transition-all mt-6 bg-gradient-to-r from-primary to-primary-glow" disabled={loading}>
                 {loading ? 'Criando conta...' : 'Criar Conta'}
               </Button>
+              <div className="relative my-6">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-muted" />
+                </div>
+                <div className="relative flex justify-center text-xs">
+                  <span className="bg-background px-3 text-muted-foreground">ou</span>
+                </div>
+              </div>
               <p className="text-center text-sm text-muted-foreground">
                 Já tem uma conta?{' '}
-                <Link to="/auth?mode=signin" className="text-primary hover:underline font-medium">
-                  Entrar
+                <Link to="/auth?mode=signin" className="text-primary hover:text-primary-glow font-semibold transition-colors hover:underline">
+                  Entrar agora
                 </Link>
               </p>
             </form>
           ) : (
-            <form onSubmit={handleSignIn} className="space-y-4">
+            <form onSubmit={handleSignIn} className="space-y-5">
               <div className="space-y-2">
                 <Label htmlFor="signin-email">{t('email')}</Label>
                 <Input
@@ -230,13 +242,21 @@ export default function Auth() {
                   placeholder="Sua senha"
                 />
               </div>
-              <Button type="submit" className="w-full h-11 text-base" disabled={loading}>
+              <Button type="submit" className="w-full h-12 text-base font-semibold shadow-lg hover:shadow-xl transition-all mt-6 bg-gradient-to-r from-primary to-primary-glow" disabled={loading}>
                 {loading ? 'Entrando...' : 'Entrar'}
               </Button>
+              <div className="relative my-6">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-muted" />
+                </div>
+                <div className="relative flex justify-center text-xs">
+                  <span className="bg-background px-3 text-muted-foreground">ou</span>
+                </div>
+              </div>
               <p className="text-center text-sm text-muted-foreground">
                 Não tem uma conta?{' '}
-                <Link to="/auth?mode=signup" className="text-primary hover:underline font-medium">
-                  Criar Conta
+                <Link to="/auth?mode=signup" className="text-primary hover:text-primary-glow font-semibold transition-colors hover:underline">
+                  Criar Conta agora
                 </Link>
               </p>
             </form>

@@ -71,3 +71,28 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+
+## Storage Buckets Management
+
+### Creating Storage Buckets (Idempotent)
+
+This project includes a helper function `public.ensure_bucket()` for creating storage buckets safely:
+
+```sql
+-- Create a new bucket (will not error if it already exists)
+SELECT public.ensure_bucket('my-bucket-name', 'My Bucket Display Name', true);
+```
+
+**Parameters:**
+- `p_id`: Bucket identifier (unique)
+- `p_name`: Display name
+- `p_public`: Whether the bucket is publicly accessible (true/false)
+
+**Usage in migrations:**
+```sql
+-- Create buckets idempotently
+SELECT public.ensure_bucket('avatars', 'avatars', true);
+SELECT public.ensure_bucket('private-docs', 'private-docs', false);
+```
+
+This prevents "duplicate key" errors when running migrations multiple times or across different environments.

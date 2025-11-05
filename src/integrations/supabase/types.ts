@@ -4883,6 +4883,10 @@ export type Database = {
         Returns: undefined
       }
       delete_own_account: { Args: never; Returns: undefined }
+      ensure_bucket: {
+        Args: { p_id: string; p_name: string; p_public?: boolean }
+        Returns: undefined
+      }
       format_full_name: { Args: { name: string }; Returns: string }
       format_short_name: { Args: { name: string }; Returns: string }
       free_identifier_if_owner_deleted: {

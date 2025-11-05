@@ -107,3 +107,6 @@ verify_jwt = true
 
 [functions.mercadopago-transfer-webhook]
 verify_jwt = false
+
+[functions.cleanup-support-attachments]
+verify_jwt = false
